@@ -3,7 +3,7 @@
 ## Purpose
 
 Provides the bottom detail panel for the Execution Result tab (Run Detail view) as an alternative
-to the right sidebar (`RunMetricDetailPanel`). The panel is a single-row pivot of the selected test
+to the right sidebar (the Field/Values row-detail table, see `run-result-row-details`). The panel is a single-row pivot of the selected test
 case’s fields, shown via AppContext sidebar at `SidebarPosition.Bottom`. It supports Display-based
 field visibility/order, horizontal scroll-to-field from grid cell clicks, and a full-value popup.
 

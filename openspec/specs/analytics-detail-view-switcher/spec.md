@@ -3,8 +3,8 @@
 ## Purpose
 
 Defines the switcher control that lets a user toggle the Execution Result tab's test-case detail view
-between the right "Sidebar" panel (`RunMetricDetailPanel` via AppContext) and the bottom pivot panel
-(also via AppContext at `SidebarPosition.Bottom`). Owns the mutual-exclusion invariant (only one
+between the right "Sidebar" panel (the row-detail table via AppContext at `SidebarPosition.Right`) and the
+bottom pivot panel (the same panel component via AppContext at `SidebarPosition.Bottom`). Owns the mutual-exclusion invariant (only one
 detail view visible at a time), preserves the selected row's `resultId` across mode switches, and
 centralizes all sidebar open/close calls in the `useDetailMode` hook so `ExtractionResult.tsx` never
 calls those APIs directly.
@@ -13,39 +13,31 @@ calls those APIs directly.
 
 ### Requirement: Detail mode switcher toggles between sidebar and drawer
 
-The system SHALL provide a switcher control that allows the user to toggle between two mutually exclusive detail view modes: "Sidebar" (right panel via AppContext `sidebar.showSidebar` with `SidebarPosition.Right`) and "Drawer"/bottom (via `sidebar.showSidebar` with `SidebarPosition.Bottom`). Only one detail view SHALL be visible at a time. The default mode SHALL be "Drawer" (bottom). The `useDetailMode` hook SHALL be the sole owner of `sidebar.showSidebar()` / `sidebar.closeSidebar()` calls for Execution Result detail — `ExtractionResult.tsx` SHALL NOT call these APIs directly.
+The system SHALL provide a switcher control that allows the user to toggle between two mutually exclusive detail view modes: "Sidebar" (right panel via AppContext `sidebar.showSidebar` with `SidebarPosition.Right`) and "Drawer"/bottom (via `sidebar.showSidebar` with `SidebarPosition.Bottom`). Both modes SHALL render the same row-detail panel component, positioned right or bottom; the right position shows the Field/Values table of `run-result-row-details` and the bottom position shows the pivot. Only one detail view SHALL be visible at a time. The default mode SHALL be "Drawer" (bottom). The `useDetailMode` hook SHALL be the sole owner of `sidebar.showSidebar()` / `sidebar.closeSidebar()` calls for Execution Result detail — `ExtractionResult.tsx` SHALL NOT call these APIs directly.
 
 #### Scenario: Default mode is bottom drawer
 - **WHEN** the user opens the Execution Result tab and clicks a grid row
 - **THEN** the bottom detail panel opens via `sidebar.showSidebar(..., SidebarPosition.Bottom)` and the right sidebar is not shown
 
 #### Scenario: Switch from sidebar to drawer
-- **WHEN** the right sidebar detail panel is open and the user clicks the "Switch to Drawer" button
+- **WHEN** the right sidebar detail panel is open and the user clicks the "Switch to Bottom" button
 - **THEN** the right sidebar is replaced by the bottom panel for the same selected test case
 
 #### Scenario: Switch from drawer to sidebar
 - **WHEN** the bottom panel is open and the user clicks the "Switch to Sidebar" button
-- **THEN** the bottom panel closes and `sidebar.showSidebar` is called with `RunMetricDetailPanel` for the same `resultId` at `SidebarPosition.Right`
+- **THEN** the bottom panel closes and `sidebar.showSidebar` is called with the row-detail panel for the same `resultId` at `SidebarPosition.Right`
 
-### Requirement: Switcher button in sidebar via `onSwitchMode` prop
+### Requirement: Switcher button in the row-detail header
 
-`RunMetricDetailPanel` SHALL accept an optional `onSwitchMode?: () => void` prop. When provided, the panel header SHALL render an icon button (e.g., `IconLayoutBottombar`) that calls `onSwitchMode()`. When not provided, no switcher button is rendered (preserving backward compatibility with other usages).
-
-#### Scenario: Switcher visible in sidebar header
-- **WHEN** the sidebar is open and `onSwitchMode` prop was provided
-- **THEN** the sidebar header contains a switcher icon button titled "Switch to Drawer"
-
-#### Scenario: No switcher when prop absent
-- **WHEN** `RunMetricDetailPanel` is rendered without `onSwitchMode` prop
-- **THEN** no switcher button appears in the header
-
-### Requirement: Switcher button in drawer toolbar
-
-The bottom panel header SHALL include a "Switch to Sidebar" icon button that triggers the mode switch callback.
+The row-detail panel header SHALL include a layout switch icon button in both positions: "Switch to Sidebar" while the panel is at the bottom, "Switch to Bottom" while it is on the right. The button SHALL trigger the mode switch callback.
 
 #### Scenario: Switcher visible in drawer toolbar
 - **WHEN** the bottom panel is the active detail mode
 - **THEN** the panel header contains a button titled "Switch to Sidebar"
+
+#### Scenario: Switcher visible in the right header
+- **WHEN** the right panel is the active detail mode
+- **THEN** the panel header contains a button titled "Switch to Bottom"
 
 ### Requirement: Selected row context is preserved when switching modes
 
@@ -57,7 +49,7 @@ The system SHALL preserve the currently selected `resultId` when the user switch
 
 #### Scenario: Context preserved drawer to sidebar
 - **WHEN** the bottom panel shows details for a result and the user switches to sidebar mode
-- **THEN** `sidebar.showSidebar` is called with that same `resultId` and `RunMetricDetailPanel`
+- **THEN** `sidebar.showSidebar` is called with that same `resultId` and the row-detail panel at `SidebarPosition.Right`
 
 ### Requirement: Mutual exclusion between sidebar and drawer
 
@@ -65,7 +57,7 @@ The right and bottom AppContext sidebar slots SHALL NOT both show Execution Resu
 
 #### Scenario: Only sidebar visible in sidebar mode
 - **WHEN** the detail mode is "sidebar" and a row is selected
-- **THEN** the right sidebar shows `RunMetricDetailPanel` and the bottom slot does not show the pivot panel
+- **THEN** the right sidebar shows the row-detail table and the bottom slot does not show the pivot panel
 
 #### Scenario: Only drawer visible in drawer mode
 - **WHEN** the detail mode is "drawer" and a row is selected
@@ -73,11 +65,11 @@ The right and bottom AppContext sidebar slots SHALL NOT both show Execution Resu
 
 ### Requirement: Row click opens the active detail mode
 
-When the user clicks a row in the Execution Result grid, the system SHALL open whichever detail mode is currently active. When the user clicks a grid cell that maps to a pivot field, the system SHALL open (or keep open) the bottom panel and focus that field when in drawer mode.
+When the user clicks a row in the Execution Result grid, the system SHALL open whichever detail mode is currently active. When the user clicks a grid cell that maps to a detail field, the system SHALL open (or keep open) the active panel and focus that field: horizontally in the bottom pivot, vertically in the right table.
 
 #### Scenario: Row click in sidebar mode
 - **WHEN** the detail mode is "sidebar" and the user clicks a grid row
-- **THEN** `sidebar.showSidebar(<RunMetricDetailPanel ...>)` is called at `SidebarPosition.Right`
+- **THEN** `sidebar.showSidebar` is called with the row-detail panel for that row at `SidebarPosition.Right`
 
 #### Scenario: Row click in drawer mode
 - **WHEN** the detail mode is "drawer" and the user clicks a grid row
@@ -86,6 +78,10 @@ When the user clicks a row in the Execution Result grid, the system SHALL open w
 #### Scenario: Cell click focuses pivot field in drawer mode
 - **WHEN** the detail mode is "drawer" and the user clicks a grid cell whose column maps to a pivot field
 - **THEN** the bottom panel is open for that row and horizontally scrolls so the matching pivot column is visible
+
+#### Scenario: Cell click focuses table field in sidebar mode
+- **WHEN** the detail mode is "sidebar" and the user clicks a grid cell whose column maps to a detail field
+- **THEN** the right panel is open for that row and vertically scrolls so the matching table row is visible
 
 #### Scenario: Re-click same row in drawer mode without a new field focus
 - **WHEN** the bottom panel is showing a row and the user clicks the same row again without a field focus key
