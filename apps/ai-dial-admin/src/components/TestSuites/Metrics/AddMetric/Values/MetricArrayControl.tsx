@@ -38,7 +38,7 @@ const isArrayOfPrimitiveItems = (field: SchemaFieldRow) =>
   (!field.children || field.children.length === 0) &&
   Boolean(field.itemsType && PRIMITIVE_TYPES.has(field.itemsType));
 
-const ARRAY_ROW_CLASS = 'flex items-end gap-2 border border-primary rounded p-3';
+const ARRAY_ROW_CLASS = 'flex items-end gap-2';
 
 const ArrayItemRow: FC<{ children: ReactNode; onRemove: () => void }> = ({ children, onRemove }) => (
   <div className={ARRAY_ROW_CLASS}>

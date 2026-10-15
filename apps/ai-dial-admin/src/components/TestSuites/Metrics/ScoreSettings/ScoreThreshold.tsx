@@ -1,8 +1,7 @@
 'use client';
 
+import { DialNumberInput, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -21,14 +20,31 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
   const { resetCounter, dispatch } = useSaveValidationContext();
 
   const [error, setError] = useState<FieldError | null>(null);
+  const isEnabled = selectedTestSuite.overallScoreThreshold !== undefined;
+
+  const clearThreshold = useCallback(() => {
+    const { overallScoreThreshold: __, ...rest } = selectedTestSuite;
+    setError(null);
+    dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: true });
+    onChange(rest);
+  }, [dispatch, onChange, selectedTestSuite]);
+
+  const onEnabledChange = useCallback(
+    (enabled: boolean) => {
+      if (!enabled) {
+        clearThreshold();
+        return;
+      }
+
+      onChange({ ...selectedTestSuite, overallScoreThreshold: selectedTestSuite.overallScoreThreshold ?? 0.5 });
+    },
+    [clearThreshold, onChange, selectedTestSuite],
+  );
 
   const onThresholdChange = useCallback(
     (value?: number | string) => {
       if (value === undefined) {
-        const { overallScoreThreshold: __, ...rest } = selectedTestSuite;
-        setError(null);
-        dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: true });
-        onChange(rest);
+        clearThreshold();
         return;
       }
 
@@ -38,7 +54,7 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
       dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: !fieldError });
       onChange({ ...selectedTestSuite, overallScoreThreshold: numericValue });
     },
-    [dispatch, onChange, selectedTestSuite, t],
+    [clearThreshold, dispatch, onChange, selectedTestSuite, t],
   );
 
   useEffect(() => {
@@ -50,23 +66,36 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
   }, [dispatch, resetCounter, selectedTestSuite.overallScoreThreshold, t]);
 
   return (
-    <div className="flex flex-col">
-      <span className="body-semi text-primary">{t(TestSuitesI18nKey.ScoreThreshold)}</span>
-      <p className="mt-2 small text-secondary">{t(TestSuitesI18nKey.ScoreThresholdDescription)}</p>
-      <div className="mt-1 flex flex-row items-center gap-2 small">
-        <span className="text-success">{t(TestSuitesI18nKey.ScoreThresholdPass)}</span>
-        <span>{t(TestSuitesI18nKey.ScoreThresholdCondition)}</span>
-        <DialNumberInput
-          containerClassName="relative max-w-[120px] [&>[role='alert']]:absolute [&>[role='alert']]:top-full [&>[role='alert']]:left-0 [&>[role='alert']]:pt-1 [&>[role='alert']]:whitespace-nowrap"
-          id="overallScoreThreshold"
-          step={0.01}
-          value={selectedTestSuite.overallScoreThreshold}
-          invalid={!!error}
-          error={error?.text}
-          onChange={onThresholdChange}
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
+        <span className="body-semi text-primary">{t(TestSuitesI18nKey.OverallScoreThresholdLabel)}</span>
+        <DialSwitch
+          switchId="enableScoreThreshold"
+          label={t(TestSuitesI18nKey.EnableScoreThreshold)}
+          isOn={isEnabled}
+          onChange={onEnabledChange}
         />
-        <span>{t(TestSuitesI18nKey.ScoreThresholdOtherwise)}</span>
-        <span className="text-error">{t(TestSuitesI18nKey.ScoreThresholdFail)}</span>
+      </div>
+
+      <div className="flex flex-col gap-1 pl-11">
+        <p className="small text-secondary">{t(TestSuitesI18nKey.ScoreThresholdDescription)}</p>
+        {isEnabled && (
+          <div className="flex flex-row items-center gap-3 small">
+            <span>
+              <span className="text-success">{t(TestSuitesI18nKey.ScoreThresholdPass)}</span>
+              <span>{` ${t(TestSuitesI18nKey.ScoreThresholdConditionGe)}`}</span>
+            </span>
+            <DialNumberInput
+              containerClassName="relative max-w-[108px] [&>[role='alert']]:absolute [&>[role='alert']]:top-full [&>[role='alert']]:left-0 [&>[role='alert']]:pt-1 [&>[role='alert']]:whitespace-nowrap"
+              id="overallScoreThreshold"
+              step={0.01}
+              value={selectedTestSuite.overallScoreThreshold}
+              invalid={!!error}
+              error={error?.text}
+              onChange={onThresholdChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
