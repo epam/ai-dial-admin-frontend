@@ -37,6 +37,7 @@ interface Props extends JsonConfiguration {
 const JsonToggleWithFormats: FC<Props> = ({
   view,
   isEditorEnabled,
+  isEditorDisabled,
   selectedFormat,
   onChangeSelectedFormat,
   onToggleEditor,
@@ -56,7 +57,7 @@ const JsonToggleWithFormats: FC<Props> = ({
   ];
 
   return (
-    <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor}>
+    <JsonToggles isEditorEnabled={isEditorEnabled} isEditorDisabled={isEditorDisabled} onToggleEditor={onToggleEditor}>
       {isEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) && !onHideFormatSelector?.() ? (
         <DialSelect
           size={SelectSize.Sm}

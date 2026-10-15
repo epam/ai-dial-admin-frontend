@@ -16,25 +16,25 @@ const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>>
 
   return (
     <div className="heat-map-cell-tooltip flex flex-col items-center isolate">
-      <div className="heat-map-cell-tooltip-arrow h-1 w-[9px] relative z-[2] -mb-px">
+      <div className="heat-map-cell-tooltip-arrow h-[7px] w-[14px] relative z-[2] -mb-px">
         <div className="absolute left-1/2 top-0 -translate-x-1/2">
           <div className="tooltip-arrow" />
         </div>
       </div>
-      <div className="heat-map-cell-tooltip-body z-[1] flex gap-3 items-center rounded border border-primary bg-blackout px-2 py-1">
+      <div className="heat-map-cell-tooltip-body z-[1] flex gap-3 items-center rounded-lg bg-control-inverted px-3 py-2 shadow-xs">
         <div className="flex flex-col gap-1 items-start shrink-0">
           {value.rows.map((row) => (
-            <span key={row.label} className="dial-tiny-text text-secondary whitespace-nowrap">
+            <span key={row.label} className="dial-tiny-text text-control-inverted whitespace-nowrap">
               {row.label}
             </span>
           ))}
           {hasValueDisplay && value.valueLabel != null && (
-            <span className="dial-tiny-text text-secondary whitespace-nowrap">{value.valueLabel}</span>
+            <span className="dial-tiny-text text-control-inverted whitespace-nowrap">{value.valueLabel}</span>
           )}
         </div>
         <div className="flex flex-col gap-1 items-start shrink-0">
           {value.rows.map((row) => (
-            <span key={row.label} className="dial-tiny-text text-primary whitespace-nowrap">
+            <span key={row.label} className="dial-tiny-text text-control-inverted whitespace-nowrap">
               {row.value}
             </span>
           ))}
@@ -44,11 +44,11 @@ const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>>
                 aria-hidden
                 className={classNames('size-[15px] rounded-sm shrink-0 border', value.valueRow.className)}
               />
-              <span className="dial-tiny-text text-primary whitespace-nowrap">{value.valueRow.value}</span>
+              <span className="dial-tiny-text text-control-inverted whitespace-nowrap">{value.valueRow.value}</span>
             </div>
           )}
           {!value.valueRow && value.valueText != null && (
-            <span className="dial-tiny-text text-primary whitespace-nowrap">{value.valueText}</span>
+            <span className="dial-tiny-text text-control-inverted whitespace-nowrap">{value.valueText}</span>
           )}
         </div>
       </div>

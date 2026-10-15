@@ -1,16 +1,19 @@
-import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useState } from 'react';
+import { DialLabel, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useMemo, useState } from 'react';
 
+import AttributeSamplesPreview from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSamplesPreview';
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
-import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AttributeSamples } from '@/src/models/evaluation/attribute-samples';
 import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
-import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
 import MetricControl from './MetricControl';
 import MetricSectionTabs from './MetricSectionTabs';
+import TypedBindingSelect from './TypedBindingSelect';
+import { formatDataTypeLabel, toTypedSelectOption } from './typedSelectOptions';
 
 interface Props {
   title: string;
@@ -19,10 +22,20 @@ interface Props {
   schema?: object;
   selectedTestSuite?: TestSuite;
   testCaseSchema?: TestCaseSchema[];
+  samples?: AttributeSamples;
   onChange?: (bindings: MetricBinding[]) => void;
 }
 
-const MetricInputs: FC<Props> = ({ selectedTestSuite, testCaseSchema, fields, title, bindings, schema, onChange }) => {
+const MetricInputs: FC<Props> = ({
+  selectedTestSuite,
+  testCaseSchema,
+  fields,
+  title,
+  bindings,
+  schema,
+  samples,
+  onChange,
+}) => {
   if (!fields.length && !schema) {
     return null;
   }
@@ -36,6 +49,7 @@ const MetricInputs: FC<Props> = ({ selectedTestSuite, testCaseSchema, fields, ti
           binding={bindings?.find((b) => b.property === field.name)}
           selectedTestSuite={selectedTestSuite}
           testCaseSchema={testCaseSchema}
+          samples={samples}
           onChange={(binding) => {
             const updatedBindings = bindings?.map((b) => (b.property === field.name ? binding : b));
             onChange?.(updatedBindings || []);
@@ -53,16 +67,21 @@ const MetricInput: FC<{
   binding?: MetricBinding;
   selectedTestSuite?: TestSuite;
   testCaseSchema?: TestCaseSchema[];
+  samples?: AttributeSamples;
   onChange: (binding: MetricBinding) => void;
-}> = ({ field, binding, selectedTestSuite, testCaseSchema, onChange }) => {
+}> = ({ field, binding, selectedTestSuite, testCaseSchema, samples, onChange }) => {
   const t = useI18n();
+  const selectPlaceholder = t(EntityPlaceholdersI18nKey.Select);
 
-  const tabs = [
-    { label: t(TabsI18nKey.TestCases), id: MetricBindingType.TestCase },
-    { label: t(TestSuitesI18nKey.ResponseColumn), id: MetricBindingType.Response },
-    { label: t(TestSuitesI18nKey.Constant), id: MetricBindingType.Constant },
-  ];
-  const [activeTab, setActiveTab] = useState(binding?.source.$type || tabs[0].id);
+  const bindingTypeOptions = useMemo<SegmentedControlOption<MetricBindingType>[]>(
+    () => [
+      { value: MetricBindingType.TestCase, label: t(TestSuitesI18nKey.TestCase) },
+      { value: MetricBindingType.Response, label: t(TestSuitesI18nKey.ResponseColumn) },
+      { value: MetricBindingType.Constant, label: t(TestSuitesI18nKey.Constant) },
+    ],
+    [t],
+  );
+  const [activeTab, setActiveTab] = useState(binding?.source.$type || MetricBindingType.TestCase);
 
   const onChangeColumn = useCallback(
     (value: string) => {
@@ -85,24 +104,72 @@ const MetricInput: FC<{
     [onChange, binding],
   );
 
-  const onReset = useCallback(
+  const onBindingTypeChange = useCallback(
     (tab: MetricBindingType) => {
       onChange({ ...binding, source: { $type: tab } } as MetricBinding);
+      setActiveTab(tab);
     },
     [onChange, binding],
   );
 
+  const testCaseOptions = useMemo(() => {
+    const schema = testCaseSchema ?? [];
+    return schema.map((item) => {
+      const values = samples?.valuesByField[item.name] ?? [];
+      return toTypedSelectOption({
+        value: item.name,
+        label: item.name,
+        type: item.type,
+        interactiveTooltip:
+          values.length > 0
+            ? {
+                content: (
+                  <AttributeSamplesPreview
+                    title={item.name}
+                    type={formatDataTypeLabel(item.type)}
+                    values={values}
+                    totalCount={samples?.totalCount ?? 0}
+                  />
+                ),
+              }
+            : undefined,
+      });
+    });
+  }, [testCaseSchema, samples]);
+
+  const responseOptions = useMemo(() => {
+    const columns: ResponseColumn[] = selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : [];
+    return columns.map((item) =>
+      toTypedSelectOption({
+        value: item.name,
+        label: item.displayName,
+        type: item.type,
+        interactiveTooltip: {
+          content: (
+            <div className="flex flex-col gap-1 min-w-[200px] text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-primary truncate">{item.displayName}</span>
+                <span className="text-secondary">{formatDataTypeLabel(item.type)}</span>
+              </div>
+              {item.expression ? <p className="text-secondary break-all">{item.expression}</p> : null}
+            </div>
+          ),
+        },
+      }),
+    );
+  }, [selectedTestSuite]);
+
   return (
     <div className="flex flex-col gap-1">
       <DialLabel label={field.name} caption={field.description} required={field.required} />
-      <TabSelector
-        tabs={tabs}
-        activeTab={activeTab}
-        onChange={(tabId) => {
-          onReset(tabId as MetricBindingType);
-          setActiveTab(tabId as MetricBindingType);
-        }}
-      />
+      <div className="w-fit mb-2">
+        <DialSegmentedControl
+          ariaLabel={field.name}
+          options={bindingTypeOptions}
+          value={activeTab}
+          onChange={onBindingTypeChange}
+        />
+      </div>
 
       {binding?.source.$type === MetricBindingType.Constant && (
         <MetricControl
@@ -114,23 +181,22 @@ const MetricInput: FC<{
       )}
 
       {binding?.source.$type === MetricBindingType.Response && (
-        <DialSelect
+        <TypedBindingSelect
           elementId={field.id}
-          options={(selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : []).map((item) => ({
-            label: item.displayName,
-            value: item.name,
-          }))}
+          options={responseOptions}
           value={binding?.source.columnName as string | undefined}
-          onChange={(v) => onChangeColumn(v as string)}
+          placeholder={selectPlaceholder}
+          onChange={onChangeColumn}
         />
       )}
 
       {binding?.source.$type === MetricBindingType.TestCase && (
-        <DialSelect
+        <TypedBindingSelect
           elementId={field.id}
-          options={testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
+          options={testCaseOptions}
           value={binding?.source.columnName as string | undefined}
-          onChange={(v) => onChangeTestCase(v as string)}
+          placeholder={selectPlaceholder}
+          onChange={onChangeTestCase}
         />
       )}
     </div>

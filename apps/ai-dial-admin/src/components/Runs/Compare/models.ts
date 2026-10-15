@@ -5,7 +5,7 @@ import {
   RUN_COMPARE_PRIMARY_INDEX,
   RUN_COMPARE_SECONDARY_INDEX,
 } from '@/src/components/Runs/Compare/constants';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 
 export type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
 
@@ -20,6 +20,11 @@ export interface CompareRun {
   id: string;
   name: string;
   isBaseline: boolean;
+}
+
+/** A run offered in the compare picker, with the name of the suite it belongs to (suites differ across a dataset). */
+export interface CompareCandidateRun extends Run {
+  testSuiteName?: string;
 }
 
 export interface CompareRunSource {

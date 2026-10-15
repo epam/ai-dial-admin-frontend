@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -60,22 +60,33 @@ vi.mock('../ScoreSettings/ScoreSettings', () => ({
   ),
 }));
 
-vi.mock('../MetricBindingsDisplay', () => ({
-  default: ({ title, bindings }: any) =>
-    bindings?.length ? (
-      <div role="region" aria-label="metric-bindings">
-        <span>{title}</span>
-        {bindings.map((binding: any) => (
-          <div key={binding.property}>
-            {binding.property}: {binding.source.value}
-          </div>
-        ))}
-      </div>
-    ) : null,
+vi.mock('../MetricCard', () => ({
+  default: ({ metric, onEdit, onDelete }: any) => (
+    <div role="article" aria-label={metric.name}>
+      <span>{metric.name}</span>
+      {metric.description ? <span>{metric.description}</span> : null}
+      <span>{metric.condition?.trim() || TestSuitesI18nKey.ConditionAlwaysRun}</span>
+      {metric.configBindings?.length ? (
+        <div role="region" aria-label="metric-bindings">
+          <span>{TestSuitesI18nKey.Configuration}</span>
+          {metric.configBindings.map((binding: any) => (
+            <div key={binding.property}>
+              {binding.property}: {binding.source.value}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <button type="button" onClick={onDelete}>
+        {ButtonsI18nKey.Delete}
+      </button>
+      <button type="button" onClick={onEdit}>
+        {ButtonsI18nKey.Edit}
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  ButtonAppearance: { Outlined: 'outlined' },
   DialLoader: () => <div role="progressbar" aria-label="loading" />,
   DialNoDataContent: ({ title }: any) => (
     <div role="status" aria-label={title}>
@@ -87,16 +98,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
-  DialNeutralButton: ({ label, onClick }: any) => (
-    <button type="button" onClick={onClick}>
-      {label}
-    </button>
-  ),
-  DialDangerButton: ({ label, onClick }: any) => (
-    <button type="button" onClick={onClick}>
-      {label}
-    </button>
-  ),
   DialConfirmationPopup: ({ open, onConfirm, confirmLabel }: any) =>
     open ? (
       <div role="dialog" aria-label="delete-metric-confirmation">
@@ -105,7 +106,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         </button>
       </div>
     ) : null,
-  ElementSize: { Small: 'small' },
 }));
 
 describe('Metrics', () => {
@@ -148,10 +148,22 @@ describe('Metrics', () => {
     expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
   });
 
-  test('renders ScoreSettings column', async () => {
+  test('hides Overall Score card when there are no metrics', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
+
+    expect(screen.queryByRole('region', { name: 'score-settings' })).not.toBeInTheDocument();
+  });
+
+  test('shows Overall Score card when metrics exist', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
 
     expect(screen.getByRole('region', { name: 'score-settings' })).toBeInTheDocument();
   });

@@ -187,13 +187,29 @@ describe('Assets route :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getConfigFileRoute action', async () => {
-    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+  test('preserves supplied upstream keys and omits empty upstream secrets on route writes', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await getConfigFileRoute('my-route');
+    await updateRoute(
+      {
+        name: 'bearer-route',
+        upstreams: [
+          { endpoint: 'https://existing.test', key: '' },
+          { endpoint: 'https://copy.test', key: 'replacement-key' },
+        ],
+      },
+      'etag',
+    );
 
-    expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes, 'my-route');
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.ROUTE,
+      'bearer-route',
+      {
+        name: 'bearer-route',
+        upstreams: [{ endpoint: 'https://existing.test' }, { endpoint: 'https://copy.test', key: 'replacement-key' }],
+      },
+      { etag: 'etag' },
+    );
   });
 });
