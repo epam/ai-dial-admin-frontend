@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -49,6 +49,13 @@ const rule: Pipeline = {
 
 const renderView = () => render(<PipelineDetailView pipeline={rule} takenTargets={['turn_feedback']} />);
 
+// The source's bound field renders once the target and then the source table have resolved.
+const renderLoaded = async () => {
+  const view = renderView();
+  await screen.findByRole('group', { name: 'dial_usage_log' });
+  return view;
+};
+
 describe('PipelineDetailView — without full-admin rights', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -64,14 +71,12 @@ describe('PipelineDetailView — without full-admin rights', () => {
   test('renders the rule so it can still be read', async () => {
     renderView();
 
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
-    expect(screen.getByRole('heading', { name: 'feedback-live' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'feedback-live' })).toBeTruthy();
   });
 
   test('offers no save even after a value is edited', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     const rowsPerScan = screen.getByLabelText(AnalyticsPipelinesI18nKey.RowsPerScan, { exact: false });
     await user.clear(rowsPerScan);
@@ -82,24 +87,19 @@ describe('PipelineDetailView — without full-admin rights', () => {
   });
 
   test('offers no enable or disable action', async () => {
-    renderView();
-
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
     expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeNull();
   });
 
   test('offers no delete action', async () => {
-    renderView();
-
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
     expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline })).toBeNull();
   });
 
   test('offers them all once the caller has full-admin rights', async () => {
     isFullAdmin.value = true;
-    renderView();
+    await renderLoaded();
 
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeTruthy();
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline })).toBeTruthy();
   });

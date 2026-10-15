@@ -11,6 +11,7 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { stripEmptyUpstreamSecrets } from '@/src/utils/models/upstream-secrets';
 
 /**
  * Core's `Route extends RoleBasedEntity` — neither it nor its base class declares any of the merge
@@ -31,7 +32,8 @@ function toRoutePayload(route: DialRouteResource) {
     updatedAt: __updatedAt,
     ...payload
   } = stripMetadata(route) as Omit<DialRouteResource, '_metadata'> & { description?: string };
-  return payload;
+
+  return { ...payload, ...(payload.upstreams && { upstreams: stripEmptyUpstreamSecrets(payload.upstreams) }) };
 }
 
 export async function getRoutes(path: string) {

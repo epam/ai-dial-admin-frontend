@@ -7,6 +7,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import UsageControls from '@/src/components/Analytics/Usage/Controls/UsageControls';
 import { ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
 import UsageBlock from '@/src/components/Analytics/Usage/UsageBlock';
+import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import { useAnalyticsAccess } from '@/src/components/Analytics/Usage/use-analytics-access';
 import { useLoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
@@ -73,8 +74,20 @@ const EntityUsageDashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onT
     return <Page403 />;
   }
 
+  /*
+   * Rendering nothing here left the Audit tab blank — no figures, no frame, nothing to read as a
+   * state at all, which is how a wiring fault looked for as long as it took someone to report it.
+   * This is not an empty window: the entity could not be named in the log, so no request was worth
+   * issuing, and the panel says that rather than drawing widgets that would all state no data.
+   */
   if (!scope || !block) {
-    return null;
+    return (
+      <UsageEmptyState
+        className="size-full"
+        title={t(AnalyticsUsageI18nKey.EntityUnmatchedTitle)}
+        lines={[t(AnalyticsUsageI18nKey.EntityUnmatchedHint)]}
+      />
+    );
   }
 
   return (

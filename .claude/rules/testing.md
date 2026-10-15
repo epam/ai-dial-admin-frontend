@@ -8,7 +8,7 @@
 # picks up nothing else there — a file must be named `*.instructions.md` to count — so this rule loads
 # once, through the mirror, not twice. Copilot instructions affect chat/agent only — never inline
 # tab-completions.
-description: Test-authoring rules — queries, mocks, per-type approach, cost discipline. Use when editing test files.
+description: Test-authoring rules — queries, mocks, async stability, per-type approach, cost discipline. Use when editing test files.
 paths:
   - "**/*.test.ts"
   - "**/*.test.tsx"
@@ -210,7 +210,48 @@ url/params/response + error path.
 - The targeted file/test passes via `vitest run`.
 - No duplicated mocks (reused from `test-setup.tsx`).
 - No `data-testid`.
+- The async rules in §9 are followed.
 - Coverage gate not regressed.
 - Lint passes.
 
 Report actual command output rather than asserting success.
+
+## §9 Async & stability
+
+CI runs the suite on 4 CPUs with coverage, so tests run slower there than on your machine. Write them so
+they are correct at any speed.
+
+1. **Wait on what the user sees, not on a mock call.** A mock having been called does not mean React has
+   re-rendered. Await the element the next line needs, then assert the mock:
+
+   ```tsx
+   // Wrong: the call happened, the UI may not have caught up
+   await waitFor(() => expect(save).toHaveBeenCalled());
+   expect(screen.getByText(SavedI18nKey.Title)).toBeTruthy();
+
+   // Correct
+   expect(await screen.findByText(SavedI18nKey.Title)).toBeTruthy();
+   expect(save).toHaveBeenCalledOnce();
+   ```
+
+   A mock-only wait is fine as a test's **last** statement, written `await vi.waitFor(() => expect(mock)…)`.
+2. **Keep `waitFor` simple.** One condition, no clicks or state changes inside it (it is retried), no
+   `{ timeout }`. Use RTL's `waitFor` for `renderHook` state and for a condition on an element you
+   already hold (`toBeEnabled()`); use `findBy*` for an element appearing.
+3. **No real sleeps.** Use fake timers (`vi.useFakeTimers()`, `await vi.advanceTimersByTimeAsync(ms)`,
+   `vi.useRealTimers()` in `afterEach`) or `await act(async () => {})` to flush. RTL's `findBy*` does not
+   advance Vitest's fake timers.
+4. **Anchor absence checks.** Polling for something to be absent passes at once. Await something that only
+   appears once the result is in (another element, a loader that has gone), then assert the absence.
+5. **Stub heavy children, but keep one real test per grid.** Stub `GridView` unless the spec is about the
+   grid, and copy an existing stub, for example `Analytics/Pipelines/tests/PipelinesPermissions.spec.tsx`.
+   Every grid keeps at least one spec that renders it for real, so a change in the real grid still fails a
+   test.
+6. **Keep shared mocks stable and re-armed.** The notification mock in `test-setup.tsx` returns one stable
+   `showNotification`; a shared mock that builds a new `vi.fn()` per render makes every effect that lists it
+   as a dependency refetch in a loop. `vi.clearAllMocks()` keeps implementations, so re-arm any mock whose
+   default matters in `beforeEach`.
+
+`npm run lint:specs` (it also runs on staged specs at commit time) rejects the shapes in rules 1–3: a `waitFor` on a
+mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–6 are judgement calls and are not
+linted.

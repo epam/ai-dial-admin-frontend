@@ -20,6 +20,7 @@ interface CapturedGrid {
   /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
   rowData?: BreakdownRowModel[];
   columnDefs: { colId?: string; filter?: boolean | string; tooltipValueGetter?: () => unknown }[];
+  additionalGridOptions?: { domLayout?: string };
 }
 
 const RUNNER = {
@@ -355,5 +356,31 @@ describe('BreakdownTable in the Routes view', () => {
     expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('routeKind');
     expect(cardGrid().rowData[0].displayLabel).toBe(AnalyticsUsageI18nKey.DirectCall);
     expect(cardGrid().rowData[0].fallbackTooltip).toBe(AnalyticsUsageI18nKey.DirectCallRouteTooltip);
+  });
+});
+
+describe('BreakdownTable card height', () => {
+  beforeEach(() => {
+    grids.length = 0;
+  });
+
+  test('sizes the card to its rows while they are few, so one row is not a box of empty space', () => {
+    renderTable({ rows: loaded<BreakdownRow[]>([row('gpt-4o', 10)]) });
+
+    expect(cardGrid().additionalGridOptions?.domLayout).toBe('autoHeight');
+  });
+
+  test('keeps the fixed box once there are enough rows to scroll', () => {
+    const many = Array.from({ length: 8 }, (_, index) => row(`model-${index}`, 10 - index));
+
+    renderTable({ rows: loaded<BreakdownRow[]>(many) });
+
+    expect(cardGrid().additionalGridOptions?.domLayout).toBeUndefined();
+  });
+
+  test('keeps the fixed box when there are no rows, so the message has room', () => {
+    renderTable({ rows: loaded<BreakdownRow[]>([]) });
+
+    expect(cardGrid().additionalGridOptions?.domLayout).toBeUndefined();
   });
 });

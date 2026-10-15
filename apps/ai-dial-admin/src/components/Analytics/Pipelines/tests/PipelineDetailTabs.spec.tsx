@@ -19,10 +19,6 @@ vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
-}));
-
 // The global AppContext mock in test-setup.tsx carries `featureFlags: { deploymentsEnabled: true }`,
 // so the strip is off in every shipped pipeline spec; this file is the one that turns it on.
 const context = { analyticsEnabled: true, isFullAdmin: true };
@@ -263,7 +259,13 @@ describe('PipelineDetailFrame — the Groups tab', () => {
   test('sits between Runtime and Audit when the runner holds groups', () => {
     renderView({ trigger: { kind: TriggerKind.Group, group_by: 'response_id', ready_when: { idle: '10m' } } }, true);
 
-    expect(tabNames()).toEqual([TabsI18nKey.Properties, TabsI18nKey.Runtime, TabsI18nKey.Groups, TabsI18nKey.Audit]);
+    expect(tabNames()).toEqual([
+      TabsI18nKey.Properties,
+      TabsI18nKey.Preview,
+      TabsI18nKey.Runtime,
+      TabsI18nKey.Groups,
+      TabsI18nKey.Audit,
+    ]);
   });
 
   test('is absent when the page found no groups', () => {

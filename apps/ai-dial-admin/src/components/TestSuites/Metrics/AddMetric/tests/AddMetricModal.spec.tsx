@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -142,9 +142,7 @@ describe('AddMetricModal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Select metric' }));
 
-    await waitFor(() => {
-      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('metric-1');
-    });
+    await vi.waitFor(() => expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('metric-1'));
   });
 
   test('keeps the chosen column order when returning from configuration to metric selection', async () => {
@@ -185,14 +183,11 @@ describe('AddMetricModal', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-1', 'suite-metric-1');
-      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
-    });
-
+    expect(await screen.findByRole('region', { name: 'metric-configuration' })).toBeInTheDocument();
+    expect(mockGetTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-1', 'suite-metric-1');
+    expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
     expect(screen.getByRole('dialog', { name: TestSuitesI18nKey.EditMetric })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'steps' })).not.toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'metric-configuration' })).toBeInTheDocument();
   });
 
   test('calls onClose when cancel is clicked', async () => {
@@ -226,9 +221,8 @@ describe('AddMetricModal', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
-    });
+    await screen.findByRole('region', { name: 'metric-configuration' });
+    expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
 
@@ -255,9 +249,8 @@ describe('AddMetricModal', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
-    });
+    await screen.findByRole('region', { name: 'metric-configuration' });
+    expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
 
     const confirmButton = screen.getByRole('button', { name: ButtonsI18nKey.Confirm });
     expect(confirmButton).toBeDisabled();
@@ -286,9 +279,8 @@ describe('AddMetricModal', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
-    });
+    await screen.findByRole('region', { name: 'metric-configuration' });
+    expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
 

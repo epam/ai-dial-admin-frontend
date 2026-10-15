@@ -11,16 +11,19 @@ vi.mock('../WeightRow', () => ({
   default: ({
     index,
     availableOptions,
+    disableRemove,
     onUpdate,
     onRemove,
   }: {
     index: number;
     availableOptions: unknown[];
+    disableRemove?: boolean;
     onUpdate: (row: OverallScoreWeight, index: number) => void;
     onRemove: (index: number) => void;
   }) => (
     <div>
       <span>{`row-${index}-options-${availableOptions.length}`}</span>
+      <span>{`row-${index}-disableRemove-${Boolean(disableRemove)}`}</span>
       <button onClick={() => onUpdate({ metricName: 'A', outputField: 'score', weight: 1 }, index)}>
         {`update-${index}`}
       </button>
@@ -55,16 +58,28 @@ describe('WeightedMean', () => {
     expect(screen.queryByText(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)).not.toBeInTheDocument();
   });
 
-  test('clicking Add appends an empty draft row', async () => {
+  test('clicking Add appends the next unused metric output with weight 1', async () => {
     const onChange = vi.fn();
+    const weights: OverallScoreWeight[] = [{ metricName: 'A', outputField: 'score', weight: 1 }];
 
-    render(<WeightedMean weights={[]} metrics={metrics} onChange={onChange} />);
+    render(<WeightedMean weights={weights} metrics={metrics} onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    expect(onChange).toHaveBeenCalledWith([{ metricName: '', outputField: '', weight: undefined }]);
+    expect(onChange).toHaveBeenCalledWith([
+      { metricName: 'A', outputField: 'score', weight: 1 },
+      { metricName: 'B', outputField: 'score', weight: 1 },
+    ]);
   });
 
-  test('disables Add once rows reach the available option count', () => {
+  test('disables remove when only one row is selected', () => {
+    const weights: OverallScoreWeight[] = [{ metricName: 'A', outputField: 'score', weight: 1 }];
+
+    render(<WeightedMean weights={weights} metrics={metrics} onChange={vi.fn()} />);
+
+    expect(screen.getByText('row-0-disableRemove-true')).toBeInTheDocument();
+  });
+
+  test('enables remove when more than one row is selected', () => {
     const weights: OverallScoreWeight[] = [
       { metricName: 'A', outputField: 'score', weight: 1 },
       { metricName: 'B', outputField: 'score', weight: 0.5 },
@@ -72,7 +87,27 @@ describe('WeightedMean', () => {
 
     render(<WeightedMean weights={weights} metrics={metrics} onChange={vi.fn()} />);
 
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeDisabled();
+    expect(screen.getByText('row-0-disableRemove-false')).toBeInTheDocument();
+    expect(screen.getByText('row-1-disableRemove-false')).toBeInTheDocument();
+  });
+
+  test('hides Add once every available output is selected', () => {
+    const weights: OverallScoreWeight[] = [
+      { metricName: 'A', outputField: 'score', weight: 1 },
+      { metricName: 'B', outputField: 'score', weight: 0.5 },
+    ];
+
+    render(<WeightedMean weights={weights} metrics={metrics} onChange={vi.fn()} />);
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
+  });
+
+  test('shows Add when unused outputs remain', () => {
+    const weights: OverallScoreWeight[] = [{ metricName: 'A', outputField: 'score', weight: 1 }];
+
+    render(<WeightedMean weights={weights} metrics={metrics} onChange={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
 
   test('removing a row splices it out of the weights array', async () => {

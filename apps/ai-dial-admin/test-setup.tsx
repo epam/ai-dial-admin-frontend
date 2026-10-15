@@ -4,10 +4,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { ReactNode, useId } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+
+// `findBy*` / `waitFor` default to 1 s, which a loaded runner misses on tests that mount a grid.
+configure({ asyncUtilTimeout: 4_000 });
 
 // ------------------ Fetch Mock ------------------
 const fetchMocker = createFetchMock(vi);
@@ -39,9 +42,13 @@ vi.mock('next/navigation', () => ({
 // ------------------ Contexts ------------------
 const createFnContext = () => vi.fn();
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
-}));
+// One instance for the whole file: the real context hands out stable functions, and many components list
+// `showNotification` in an effect's dependencies. A fresh `vi.fn()` per render re-ran those effects on every
+// render, so a component could refetch in a loop under test and its outcome depended on how fast it ran.
+vi.mock('@/src/context/NotificationContext', () => {
+  const notification = { showNotification: vi.fn(), removeNotification: vi.fn() };
+  return { useNotification: () => notification };
+});
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
   useFileFolder: createFnContext,

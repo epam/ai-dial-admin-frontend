@@ -38,6 +38,40 @@ const RECORD: SessionDetailRow = {
 
 const label = SessionsTraceI18nKey.DetailTokensIn;
 
+describe('resolveSessionField — share', () => {
+  const definition = {
+    labelKey: SessionsTraceI18nKey.DetailCacheHit,
+    column: SessionsField.CachedPromptTokens,
+    baseColumn: SessionsField.PromptTokens,
+    format: SessionFieldFormat.Share,
+  };
+  const resolve = (over: Partial<SessionDetailRow>) => resolveSessionField(definition, { ...RECORD, ...over });
+
+  test('states the cached count as a percentage of the prompt count', () => {
+    expect(resolve({ prompt_tokens: 200, cached_prompt_tokens: 50 })).toMatchObject({
+      state: SessionFieldState.Available,
+      text: '25%',
+    });
+  });
+
+  test('reads string-typed counts, which the service may return for a long', () => {
+    expect(resolve({ prompt_tokens: '200', cached_prompt_tokens: '50' }).text).toBe('25%');
+  });
+
+  test('states a reported zero as 0%', () => {
+    expect(resolve({ cached_prompt_tokens: 0 })).toMatchObject({ state: SessionFieldState.Available, text: '0%' });
+  });
+
+  test.each([
+    ['a null cached count', { cached_prompt_tokens: null }],
+    ['a cached count the row does not carry', {}],
+    ['a zero prompt count', { prompt_tokens: 0, cached_prompt_tokens: 0 }],
+    ['a null prompt count', { prompt_tokens: null, cached_prompt_tokens: 5 }],
+  ])('is unavailable for %s', (_, over) => {
+    expect(resolve(over)).toMatchObject({ state: SessionFieldState.Unavailable, text: UNAVAILABLE_VALUE });
+  });
+});
+
 describe('sessionTitle', () => {
   test('states the insight title when the enrichment carries one', () => {
     expect(sessionTitle({ ...RECORD, 'session_insights.title': 'Refund policy for EU orders' })).toBe(

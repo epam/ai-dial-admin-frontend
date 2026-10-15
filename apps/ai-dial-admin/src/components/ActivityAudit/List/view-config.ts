@@ -3,7 +3,11 @@ import {
   getAnalyticsActivities,
   getDeploymentActivities,
 } from '@/src/app/[lang]/activity-audit/actions';
-import { ActivityAuditHrefParams, ActivityAuditViewConfig } from '@/src/components/ActivityAudit/List/models';
+import {
+  ActivityAuditFetcher,
+  ActivityAuditHrefParams,
+  ActivityAuditViewConfig,
+} from '@/src/components/ActivityAudit/List/models';
 import {
   getActivityAuditColumns,
   getAnalyticsActivityAuditColumns,
@@ -11,9 +15,18 @@ import {
   getDeploymentActivityAuditColumns,
 } from '@/src/components/ActivityAudit/List/utils';
 import { ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import { AuditRequestError } from '@/src/utils/audit/audit-request-error';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const isAnyRowNavigable = (): boolean => true;
+
+const fetchAnalyticsActivities: ActivityAuditFetcher = async (pageSize, pageNumber, sorts, filters) => {
+  const res = await getAnalyticsActivities(pageSize, pageNumber, sorts, filters);
+  if (!res.success) {
+    throw new AuditRequestError(res);
+  }
+  return res.response ?? null;
+};
 
 const getNamespacedEntityActivityHref = ({ entity, entityType, activityId }: ActivityAuditHrefParams): string =>
   getAuditActivityHref(entity, entityType, activityId);
@@ -59,7 +72,7 @@ export const ACTIVITY_AUDIT_VIEW_CONFIG: Record<ActivityAuditView, ActivityAudit
     getEntityActivityHref: getNamespacedEntityActivityHref,
   },
   [ActivityAuditView.Analytics]: {
-    fetchActivities: getAnalyticsActivities,
+    fetchActivities: fetchAnalyticsActivities,
     // No `onRollback`: the analytics view offers no row rollback in any mode. `isSingleEntity` is
     // forwarded, and the caller decides it from the tab's resource type — a table Audit tab keeps
     // `Resource type` / `Resource identifier` because its feed carries both `Table` and

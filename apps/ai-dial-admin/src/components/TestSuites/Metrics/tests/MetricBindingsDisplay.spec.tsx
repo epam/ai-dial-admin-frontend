@@ -18,7 +18,7 @@ describe('MetricBindingsDisplay', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test('renders title and bindings values', () => {
+  test('renders title without a colon and bindings values', () => {
     const bindings: MetricBinding[] = [
       { property: 'threshold', source: { $type: MetricBindingType.Constant, value: '0.7' } },
       { property: 'maxTokens', source: { $type: MetricBindingType.Constant, value: 100 as unknown as string } },
@@ -26,7 +26,8 @@ describe('MetricBindingsDisplay', () => {
 
     render(<MetricBindingsDisplay title="Configuration" bindings={bindings} />);
 
-    expect(screen.getByText('Configuration:')).toBeInTheDocument();
+    expect(screen.getByText('Configuration')).toBeInTheDocument();
+    expect(screen.queryByText('Configuration:')).not.toBeInTheDocument();
     expect(screen.getByText(/threshold\s*:\s*0\.7/)).toBeInTheDocument();
     expect(screen.getByText(/maxTokens\s*:\s*100/)).toBeInTheDocument();
   });
@@ -72,5 +73,16 @@ describe('MetricBindingsDisplay', () => {
     render(<MetricBindingsDisplay title="Inputs" bindings={bindings} />);
 
     expect(screen.getByText(/inputText\s*:\s*promptColumn/)).toBeInTheDocument();
+  });
+
+  test('uses a full-width tag for long display values', () => {
+    const longValue = 'x'.repeat(80);
+    const bindings: MetricBinding[] = [
+      { property: 'prompt', source: { $type: MetricBindingType.Constant, value: longValue } },
+    ];
+
+    render(<MetricBindingsDisplay title="Inputs" bindings={bindings} />);
+
+    expect(screen.getByText(new RegExp(`prompt:\\s*${longValue}`))).toHaveClass('w-full');
   });
 });

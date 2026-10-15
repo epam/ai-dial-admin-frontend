@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -118,8 +118,9 @@ describe('PublicationsButtonsWrapper :: success notifications', () => {
     const dialog = screen.getByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Publish' }));
 
-    await waitFor(() => expect(approvePublication).toHaveBeenCalledWith('publications/public/request-path'));
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(approvePublication).toHaveBeenCalledWith('publications/public/request-path'));
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith(ApplicationRoute.Publications));
 
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toContain(PublicationsI18nKey.NotificationPublishTitle);
@@ -137,8 +138,8 @@ describe('PublicationsButtonsWrapper :: success notifications', () => {
     const dialog = screen.getByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Unpublish' }));
 
-    await waitFor(() => expect(approvePublication).toHaveBeenCalledOnce());
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(approvePublication).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
 
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toContain(PublicationsI18nKey.NotificationUnpublishTitle);
@@ -155,10 +156,10 @@ describe('PublicationsButtonsWrapper :: success notifications', () => {
     fireEvent.change(within(dialog).getByRole('textbox'), { target: { value: 'a valid decline reason' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Decline' }));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(declinePublication).toHaveBeenCalledWith('publications/public/request-path', 'a valid decline reason'),
     );
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
 
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toContain(PublicationsI18nKey.NotificationDeclineTitle);
@@ -174,8 +175,8 @@ describe('PublicationsButtonsWrapper :: success notifications', () => {
     const dialog = screen.getByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
 
-    await waitFor(() => expect(deletePublication).toHaveBeenCalledWith('publications/public/request-path'));
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(deletePublication).toHaveBeenCalledWith('publications/public/request-path'));
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
 
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toContain(PublicationsI18nKey.NotificationDeleteTitle);
@@ -202,7 +203,7 @@ describe('PublicationsButtonsWrapper :: failure path preserved', () => {
     const dialog = screen.getByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Publish' }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toBe('Error.Header');
     expect(notification.description).toBe('Error.Message');
@@ -222,7 +223,7 @@ describe('PublicationsButtonsWrapper :: failure path preserved', () => {
     fireEvent.change(within(dialog).getByRole('textbox'), { target: { value: 'a valid decline reason' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Decline' }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toBe('Error.Header');
     expect(notification.description).toBe('Error.Message');
@@ -240,7 +241,7 @@ describe('PublicationsButtonsWrapper :: failure path preserved', () => {
     const dialog = screen.getByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toBe('Error.Header');
     expect(notification.description).toBe('Error.Message');

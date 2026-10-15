@@ -101,7 +101,7 @@ describe('buildSessionDetailQuery', () => {
     const names = selectedNames(detailQuery().select);
 
     expect(names).toEqual(Object.values(SessionsField));
-    expect(names).toHaveLength(24);
+    expect(names).toHaveLength(25);
   });
 
   // `traces` is catalogued heavy, so a default projection returns no value for it and the metadata panel's
@@ -201,6 +201,46 @@ describe('buildSessionDetailQuery', () => {
     expect(names).not.toContain(SessionsField.InsightTitle);
     expect(names).toContain(SessionsField.Traces);
     expect(names).toContain(SessionsField.ChatId);
+  });
+
+  test('names a column of the record no frontend list enumerates', () => {
+    const names = selectedNames(detailQuery([...ALL_FIELDS, 'cache_creation_tokens']).select);
+
+    expect(names).toContain('cache_creation_tokens');
+  });
+
+  test('names a sensitive column only where the schema reports it', () => {
+    const sensitive: AnalyticsEntityField = {
+      name: 'user_email',
+      source: 'user_email',
+      type: AnalyticsFieldType.String,
+      sensitive: true,
+    };
+
+    expect(
+      selectedNames(buildSessionDetailQuery(CHAT_ID, [...asSchemaFields(ALL_FIELDS), sensitive]).select),
+    ).toContain('user_email');
+    expect(selectedNames(buildSessionDetailQuery(CHAT_ID, asSchemaFields(ALL_FIELDS)).select)).not.toContain(
+      'user_email',
+    );
+    expect(selectedNames(buildSessionDetailQuery(CHAT_ID).select)).not.toContain('user_email');
+  });
+
+  test('never names a heavy column the schema reports beyond the known ones', () => {
+    const fields: AnalyticsEntityField[] = [
+      ...asSchemaFields(ALL_FIELDS),
+      { name: 'raw_blob', source: 'raw_blob', type: AnalyticsFieldType.String, heavy: true },
+    ];
+    const names = selectedNames(buildSessionDetailQuery(CHAT_ID, fields).select);
+
+    expect(names).not.toContain('raw_blob');
+  });
+
+  test('names the cached prompt tokens only where the schema reports the column', () => {
+    const withoutCache = ALL_FIELDS.filter((name) => name !== SessionsField.CachedPromptTokens);
+
+    expect(selectedNames(detailQuery(ALL_FIELDS).select)).toContain(SessionsField.CachedPromptTokens);
+    expect(selectedNames(detailQuery(withoutCache).select)).not.toContain(SessionsField.CachedPromptTokens);
   });
 
   test('names the required core alone when no schema is available', () => {

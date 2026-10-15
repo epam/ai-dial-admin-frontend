@@ -116,7 +116,7 @@ describe('useSummaryOverviewData', () => {
 
     renderOverviewData();
 
-    await waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalled());
+    await vi.waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalledTimes(4));
 
     // NOT (field IN [...]) shape: and([runFilter, not(in(field, values))]).
     const exclusionField = (query: { filter: { args: unknown[] } }) => {

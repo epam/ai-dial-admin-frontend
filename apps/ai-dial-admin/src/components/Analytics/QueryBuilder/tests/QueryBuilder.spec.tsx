@@ -203,7 +203,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, sql);
+    await user.click(editor);
+    await user.paste(sql);
   };
 
   test('edited SQL switched to JSON is shown as its translated body', async () => {
@@ -318,7 +319,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT project_id FROM dial_usage_log');
+    await user.click(editor);
+    await user.paste('SELECT project_id FROM dial_usage_log');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
     // No discard prompt — the SQL was translated and shown in the builder.
@@ -336,7 +338,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT bad');
+    await user.click(editor);
+    await user.paste('SELECT bad');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
@@ -382,7 +385,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT bad');
+    await user.click(editor);
+    await user.paste('SELECT bad');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
     await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
 
@@ -913,7 +917,8 @@ describe('QueryBuilder AI view', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT bad');
+    await user.click(editor);
+    await user.paste('SELECT bad');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
@@ -936,7 +941,8 @@ describe('QueryBuilder :: SQL view Run', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, sql);
+    await user.click(editor);
+    await user.paste(sql);
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
   };
 

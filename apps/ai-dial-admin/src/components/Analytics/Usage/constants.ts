@@ -19,6 +19,17 @@ export const PAGE_SCOPE: UsageScope = { own: [] };
 export const BREAKDOWN_PAGE_SIZE = 10;
 
 /**
+ * Rows the card draws before it starts scrolling. Below this it takes the height of what it holds:
+ * a single row in a box sized for ten is mostly empty space, and the empty space reads as rows that
+ * failed to load. Chosen so the content height stays under the fixed one — five rows and a header
+ * come to less than `BREAKDOWN_CARD_HEIGHT` — so the card never grows when it switches.
+ */
+export const BREAKDOWN_CARD_SCROLL_AFTER_ROWS = 5;
+
+/** The card's height once it scrolls, and the height its empty state keeps. */
+export const BREAKDOWN_CARD_HEIGHT = 'h-[320px]';
+
+/**
  * Rows the dialog reads per block as it is scrolled. The full list is not one request: a dimension
  * can hold more rows than the service will answer in one page, and a reader who opened the dialog
  * to look at the head should not wait for the tail.

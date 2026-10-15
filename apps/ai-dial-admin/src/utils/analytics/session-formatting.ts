@@ -273,3 +273,19 @@ export const sessionTopics = (raw: SessionScalar | undefined): string[] =>
 // and two calls within one request colliding on six characters is not a case worth designing for. The whole
 // id stays available in the raw body.
 export const shortCallId = (id: string | null): string => (id == null ? '' : id.slice(-6));
+
+// A share of a whole as a percentage. Below 10% one decimal is kept, and a real share under 0.1% reads as
+// `<0.1%`, so a zero part is exact and the only input that states `0%`.
+export const formatShare = (part: number, whole: number): string => {
+  if (part === 0) {
+    return '0%';
+  }
+
+  const percent = (part / whole) * 100;
+
+  if (percent < 0.1) {
+    return '<0.1%';
+  }
+
+  return `${percent < 10 ? stripTrailingZeros(percent.toFixed(1)) : Math.round(percent)}%`;
+};

@@ -1,14 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricConfiguration from '../Configuration';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  SelectSize: { Sm: 'Sm' },
-  SelectVariant: { Secondary: 'Secondary' },
   DialInput: ({ labelProps, value, onChange, error }: any) => (
     <>
       <input
@@ -20,14 +18,18 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {error ? <span>{error}</span> : null}
     </>
   ),
-  DialSelect: ({ value, onChange, options = [] }: any) => (
-    <select role="combobox" value={value ?? ''} onChange={(e) => onChange?.(e.target.value)}>
-      {options.map((option: { label: string; value: string }) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+  DialSwitch: ({ switchId, label, isOn, onChange }: any) => (
+    <label>
+      <input
+        type="checkbox"
+        role="switch"
+        id={switchId}
+        aria-label={typeof label === 'string' ? label : switchId}
+        checked={!!isOn}
+        onChange={(e) => onChange?.(e.target.checked)}
+      />
+      {label}
+    </label>
   ),
 }));
 
@@ -53,6 +55,10 @@ vi.mock('../Values/Outputs', () => ({
       {`fields:${fields?.length ?? 0}`}
     </div>
   ),
+}));
+
+vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
+  default: () => <div data-testid="json-editor">JSON Editor</div>,
 }));
 
 describe('MetricConfiguration', () => {
@@ -100,6 +106,8 @@ describe('MetricConfiguration', () => {
 
     expect(screen.getByText('Selected Name')).toBeInTheDocument();
     expect(screen.getByText('Selected Description')).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.Metric)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.SetUpMetric)).toBeInTheDocument();
   });
 
   test('falls back to details name and description when selected metric is not provided', () => {
@@ -119,15 +127,39 @@ describe('MetricConfiguration', () => {
       />,
     );
 
+    expect(screen.getByText(TabsI18nKey.Properties)).toBeInTheDocument();
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.Configuration })).toHaveTextContent('fields:1');
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.Inputs })).toHaveTextContent('fields:1');
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.Outputs })).toHaveTextContent('fields:1');
+  });
+
+  test('keeps left rail and shows JSON editor when JSON mode is on', () => {
+    const onJsonViewChange = vi.fn();
+
+    render(
+      <MetricConfiguration
+        metricName="Metric Name"
+        selectedMetric={selectedMetric}
+        selectedMetricDetails={selectedMetricDetails}
+        onJsonViewChange={onJsonViewChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('switch', { name: TestSuitesI18nKey.JsonMode }));
+
+    expect(onJsonViewChange).toHaveBeenCalledWith(true);
+    expect(screen.getByText('Selected Name')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: TestSuitesI18nKey.Outputs })).toBeInTheDocument();
+    expect(screen.getByTestId('json-editor')).toBeInTheDocument();
+    expect(screen.queryByText(TabsI18nKey.Properties)).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: TestSuitesI18nKey.Configuration })).not.toBeInTheDocument();
   });
 
   test('renders plain URLs as clickable links', () => {
     const descriptionWithUrl: Metric = {
       id: 'metric-6',
       name: 'URL Metric',
+      displayName: 'URL Metric',
       description: 'Check this link: https://example.com for more info',
     };
 
@@ -144,6 +176,7 @@ describe('MetricConfiguration', () => {
     const descriptionWithMarkdownLink: Metric = {
       id: 'metric-7',
       name: 'Markdown Link Metric',
+      displayName: 'Markdown Link Metric',
       description: 'Check [documentation](https://docs.example.com) for details',
     };
 
@@ -159,6 +192,7 @@ describe('MetricConfiguration', () => {
     const descriptionWithMultipleLinks: Metric = {
       id: 'metric-8',
       name: 'Multiple Links Metric',
+      displayName: 'Multiple Links Metric',
       description:
         'Visit [our site](https://example.com) or check https://docs.example.com and [more info](https://info.example.com)',
     };
@@ -184,6 +218,7 @@ describe('MetricConfiguration', () => {
 
     const conditionInput = screen.getByRole('textbox', { name: TestSuitesI18nKey.Condition });
     expect(conditionInput).toHaveValue('$exists(response.answer)');
+    expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.displayName })).toBeInTheDocument();
 
     fireEvent.change(conditionInput, { target: { value: '$exists(response.score)' } });
     expect(onChangeCondition).toHaveBeenCalledWith('$exists(response.score)');

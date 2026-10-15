@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -171,16 +171,14 @@ describe('TestCasesList', () => {
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith('dataset-123', 0, 1000, [], []);
-    });
+    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledWith('dataset-123', 0, 1000, [], []));
   });
 
   test('does not fetch when datasetId is missing', async () => {
     const suiteNoDataset: TestSuite = { id: 'suite-1', name: 'Suite' };
     render(<TestCasesList selectedTestSuite={suiteNoDataset} onChange={mockOnChange} dataset={null} />);
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await act(async () => {});
     expect(actions.getTestCases).not.toHaveBeenCalled();
   });
 
@@ -189,9 +187,7 @@ describe('TestCasesList', () => {
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalled();
-    });
+    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalled());
   });
 
   test('refetches when datasetId changes', async () => {
@@ -201,7 +197,7 @@ describe('TestCasesList', () => {
       <TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />,
     );
 
-    await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(1));
 
     rerender(
       <TestCasesList
@@ -211,7 +207,7 @@ describe('TestCasesList', () => {
       />,
     );
 
-    await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
     expect(actions.getTestCases).toHaveBeenLastCalledWith('dataset-456', 0, 1000, [], []);
   });
 
@@ -267,7 +263,7 @@ describe('TestCasesList — column auto-fit', () => {
   ])('%s measures the content-fit columns, then fits the rest to the grid width', async (_name, getHandler) => {
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
-    await waitFor(() => expect(capturedGridOptions).not.toBeNull());
+    await vi.waitFor(() => expect(capturedGridOptions).not.toBeNull());
 
     const autoSizeColumns = vi.fn();
     const sizeColumnsToFit = vi.fn();
@@ -324,7 +320,7 @@ describe('TestCasesList — dirty tracking', () => {
       />,
     );
 
-    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData).toHaveLength(1));
 
     capturedOnCellChange!({ ...row, testCaseName: 'changed' }, 'testCaseName', 'changed');
 
@@ -359,10 +355,7 @@ describe('TestCasesList — dirty tracking', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(2);
-    });
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(2));
 
     expect(capturedRowData![0]).not.toHaveProperty('enabled');
     expect(capturedGridOptions?.onCellValueChanged).toBeUndefined();
@@ -413,7 +406,7 @@ describe('TestCasesList — header and included-only filter', () => {
       />,
     );
 
-    await waitFor(() => expect(capturedListLabel).toBe(TabsI18nKey.TestCases));
+    await vi.waitFor(() => expect(capturedListLabel).toBe(TabsI18nKey.TestCases));
     expect(String(capturedListLabel)).not.toContain(':');
     const toolbar = within(screen.getByTestId('toolbar'));
     expect(toolbar.getByText('CaseCollection_Eta')).toBeInTheDocument();
@@ -428,9 +421,7 @@ describe('TestCasesList — header and included-only filter', () => {
       <TestCasesList selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }} onChange={mockOnChange} dataset={null} />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('view-only-included-in-run')).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId('view-only-included-in-run')).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.ViewOnlyIncludedInRun)).toBeInTheDocument();
   });
 
@@ -447,7 +438,7 @@ describe('TestCasesList — header and included-only filter', () => {
       />,
     );
 
-    await waitFor(() => expect(capturedGridOptions).not.toBeNull());
+    await vi.waitFor(() => expect(capturedGridOptions).not.toBeNull());
     capturedOnGridReady?.({
       api: {
         onFilterChanged,
@@ -469,7 +460,7 @@ describe('TestCasesList — header and included-only filter', () => {
 
     fireEvent.click(screen.getByTestId('view-only-included-in-run'));
 
-    await waitFor(() => expect(isPresent()).toBe(true));
+    await vi.waitFor(() => expect(isPresent()).toBe(true));
     expect(doesPass({ data: { id: 'row-1' } })).toBe(true);
     expect(doesPass({ data: { id: 'row-2' } })).toBe(false);
   });
@@ -489,7 +480,7 @@ describe('TestCasesList — header and included-only filter', () => {
       />,
     );
 
-    await waitFor(() => expect(capturedOnGridReady).not.toBeNull());
+    await vi.waitFor(() => expect(capturedOnGridReady).not.toBeNull());
 
     capturedOnGridReady?.({
       api: {
@@ -552,10 +543,7 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(1);
-    });
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.GROUP);
     expect(capturedRowData![0].turnCount).toBe(3);
   });
@@ -565,11 +553,11 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedOnToggleExpand).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
 
     capturedOnToggleExpand!('case-1');
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(4));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(4));
     expect(capturedRowData!.map((row) => row.rowType)).toEqual([
       GridRowType.GROUP,
       GridRowType.TURN,
@@ -579,7 +567,7 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     capturedOnToggleExpand!('case-1');
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.GROUP);
   });
 
@@ -588,10 +576,7 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(1);
-    });
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
     expect(capturedRowData![0].turnCount).toBeUndefined();
     expect(capturedRowData![0].turns).toBeUndefined();
@@ -602,16 +587,15 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => {
-      expect(capturedTurnActionHandlers).not.toBeNull();
-      expect(capturedRowData).toEqual([expect.objectContaining({ id: 'case-2', rowType: GridRowType.SINGLE })]);
-    });
+    await vi.waitFor(() =>
+      expect(capturedRowData).toEqual([expect.objectContaining({ id: 'case-2', rowType: GridRowType.SINGLE })]),
+    );
 
     act(() => {
       capturedTurnActionHandlers!.onAddTurn('case-2');
     });
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(3));
     expect(capturedRowData!.map((row) => row.rowType)).toEqual([GridRowType.GROUP, GridRowType.TURN, GridRowType.TURN]);
     expect(capturedRowData![0].turnCount).toBe(2);
   });
@@ -621,13 +605,13 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedTurnActionHandlers).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
 
     capturedTurnActionHandlers!.onDeleteTurn({ groupKey: 'case-1', _turnIndex: 2 });
-    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(3));
 
     capturedTurnActionHandlers!.onDeleteTurn({ groupKey: 'case-1', _turnIndex: 1 });
-    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
   });
 
@@ -636,15 +620,12 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(2);
-    });
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(2));
     expect(capturedTestCaseCount).toBe(2);
 
     capturedOnToggleExpand!('case-1');
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(5));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(5));
     expect(capturedTestCaseCount).toBe(2);
   });
 
@@ -655,16 +636,16 @@ describe('TestCasesList — multi-turn grouping', () => {
       <TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />,
     );
 
-    await waitFor(() => expect(capturedOnToggleExpand).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     capturedOnToggleExpand!('case-1');
-    await waitFor(() => expect(capturedRowData!.length).toBe(4));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(4));
 
     const turnRow = capturedRowData![2];
     expect(turnRow.rowType).toBe(GridRowType.TURN);
 
     capturedRemoveIconClick!(turnRow);
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(3));
     expect(capturedRowData![0].turnCount).toBe(2);
     expect(queryByText('Delete modal for case-1')).toBeNull();
   });
@@ -676,7 +657,7 @@ describe('TestCasesList — multi-turn grouping', () => {
       <TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />,
     );
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     const groupRow = capturedRowData![0];
     expect(groupRow.rowType).toBe(GridRowType.GROUP);
 
@@ -699,8 +680,7 @@ describe('TestCasesList — multi-turn grouping', () => {
       />,
     );
 
-    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
-    expect(capturedRowData!.length).toBe(1); // still collapsed — never toggled
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1)); // still collapsed — never toggled
 
     capturedOnCellChange!({ id: 'case-1', _turnIndex: 1, data: { value: 'b' } }, 'value', 'edited-b');
 
