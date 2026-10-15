@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -135,8 +135,8 @@ describe('ConnectPanel :: roles', () => {
     vi.mocked(getTableAccess).mockRejectedValue(new Error('403'));
     renderPanel();
 
-    await waitFor(() =>
-      expect(screen.queryByRole('img', { name: AnalyticsTablesI18nKey.ConnectRolesLoading })).not.toBeInTheDocument(),
+    await waitForElementToBeRemoved(() =>
+      screen.queryByRole('img', { name: AnalyticsTablesI18nKey.ConnectRolesLoading }),
     );
     expect(screen.queryByText('analytics-writer')).not.toBeInTheDocument();
     expect(showNotification).not.toHaveBeenCalled();

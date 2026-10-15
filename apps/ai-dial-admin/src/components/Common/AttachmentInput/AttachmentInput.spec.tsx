@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -87,9 +87,7 @@ describe('Common components - AttachmentInput', () => {
 
     await userEvent.type(input, 'p');
 
-    await waitFor(() => {
-      expect(screen.getByText('PDF')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('PDF')).toBeInTheDocument();
   });
 
   test('toggles suggestion list based on typing and blur', async () => {
@@ -101,17 +99,13 @@ describe('Common components - AttachmentInput', () => {
 
     await userEvent.type(input, 'p');
 
-    await waitFor(() => {
-      expect(screen.getByText('PDF')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('PDF')).toBeInTheDocument();
 
     fireEvent.blur(input);
 
-    await waitFor(() => {
-      expect(screen.queryByText('PDF')).not.toBeInTheDocument();
-      expect(screen.queryByText('DOC')).not.toBeInTheDocument();
-      expect(screen.queryByText('ZIP')).not.toBeInTheDocument();
-    });
+    expect(screen.queryByText('PDF')).not.toBeInTheDocument();
+    expect(screen.queryByText('DOC')).not.toBeInTheDocument();
+    expect(screen.queryByText('ZIP')).not.toBeInTheDocument();
   });
 
   test('shows required error when Specific is selected with no types', async () => {
@@ -140,18 +134,12 @@ describe('Common components - AttachmentInput', () => {
 
     await userEvent.click(allRadio);
 
-    await waitFor(() => {
-      expect(onChange).toHaveBeenLastCalledWith(['*/*'], AttachmentType.ALL);
-    });
+    expect(onChange).toHaveBeenLastCalledWith(['*/*'], AttachmentType.ALL);
 
     await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
-    await waitFor(() => {
-      expect(onChange).toHaveBeenLastCalledWith([], AttachmentType.SPECIFIC);
-
-      const input = screen.getByPlaceholderText(placeHolder);
-      expect(input).toBeInTheDocument();
-    });
+    expect(onChange).toHaveBeenLastCalledWith([], AttachmentType.SPECIFIC);
+    expect(await screen.findByPlaceholderText(placeHolder)).toBeInTheDocument();
   });
 });
 

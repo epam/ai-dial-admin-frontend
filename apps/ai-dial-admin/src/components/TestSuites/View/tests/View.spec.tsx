@@ -165,7 +165,7 @@ describe('TestSuiteView', () => {
 
       await user.click(screen.getByRole('button', { name: 'Update dataset schema' }));
 
-      await waitFor(() => expect(mockRefresh).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalledOnce());
     });
 
     test('does not refresh the TestSuite validation after a failed dataset schema update', async () => {
@@ -213,7 +213,7 @@ describe('TestSuiteView', () => {
       const saveButton = screen.getByRole('button', { name: 'Save' });
       await user.click(saveButton);
 
-      await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+      await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalled());
       expect(saveButton).toBeDisabled();
 
       rerender(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag-2" />);
@@ -230,7 +230,7 @@ describe('TestSuiteView', () => {
       const saveButton = screen.getByRole('button', { name: 'Save' });
       await user.click(saveButton);
 
-      await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+      await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalled());
       expect(saveButton).toBeDisabled();
       expect(updateTestSuite).toHaveBeenCalledOnce();
 

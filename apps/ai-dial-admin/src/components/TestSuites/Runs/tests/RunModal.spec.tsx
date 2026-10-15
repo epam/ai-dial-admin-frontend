@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -78,17 +78,13 @@ describe('RunModal', () => {
   test('counts included multi-turn cases after expanding per-turn rows', async () => {
     renderModal();
 
-    await waitFor(() => {
-      expect(screen.getByText('2 of 3')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('2 of 3')).toBeInTheDocument();
   });
 
   test('counts all valid cases when no run condition is set', async () => {
     renderModal({ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: null });
 
-    await waitFor(() => {
-      expect(screen.getByText('3 of 3')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('3 of 3')).toBeInTheDocument();
   });
 
   test('ignores a second Run click while the first request is in flight', async () => {
@@ -97,9 +93,7 @@ describe('RunModal', () => {
 
     render(<RunModal isModalOpen={true} selectedTestSuite={suite} onClose={vi.fn()} onRun={onRun} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('2 of 3')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('2 of 3')).toBeInTheDocument();
 
     const runButton = screen.getByRole('button', { name: ButtonsI18nKey.Run });
     await user.click(runButton);

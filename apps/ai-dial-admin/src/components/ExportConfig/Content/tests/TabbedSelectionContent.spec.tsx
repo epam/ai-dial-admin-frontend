@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -58,8 +58,8 @@ describe('TabbedSelectionContent', () => {
     loadCandidates.mockRejectedValue(new Error('fetch failed'));
     renderContent();
 
-    await waitFor(() => expect(getErrorNotification).toHaveBeenCalledWith(ExportI18nKey.CandidatesReadFailed));
-    expect(screen.getByRole('button', { name: 'add-first' })).toBeInTheDocument();
+    await vi.waitFor(() => expect(getErrorNotification).toHaveBeenCalledWith(ExportI18nKey.CandidatesReadFailed));
+    expect(await screen.findByRole('button', { name: 'add-first' })).toBeInTheDocument();
   });
 
   test('keeps the loader of a tab still loading when an earlier tab finishes', async () => {
@@ -77,8 +77,8 @@ describe('TabbedSelectionContent', () => {
     await user.click(screen.getByText('Second'));
     resolveFirst({ success: true, response: [{ name: 'a' }] });
 
-    await waitFor(() => expect(loadCandidates).toHaveBeenCalledWith('second'));
-    expect(screen.getByText('Second: 0')).toBeInTheDocument();
+    expect(await screen.findByText('Second: 0')).toBeInTheDocument();
+    expect(loadCandidates).toHaveBeenCalledWith('second');
     expect(screen.queryByText('empty')).toBeNull();
   });
 });

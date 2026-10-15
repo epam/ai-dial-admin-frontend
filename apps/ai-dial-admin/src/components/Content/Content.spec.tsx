@@ -46,9 +46,9 @@ describe('Content', () => {
     );
 
     expect(screen.getByText(/Admin: \[FE\]/)).toBeInTheDocument();
-    await waitFor(() => expect(getAppProcessStatus).toHaveBeenCalledOnce());
-    await waitFor(() => expect(getCoreVersions).toHaveBeenCalledOnce());
-    await waitFor(() => expect(getBeVersion).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getAppProcessStatus).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getCoreVersions).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getBeVersion).toHaveBeenCalledOnce());
   });
 
   test('shows only FE and Core versions in the Footer and polls Core version when the admin API is disabled', async () => {
@@ -61,7 +61,7 @@ describe('Content', () => {
     );
 
     expect(screen.queryByText(/Admin: \[FE\]/)).toBeInTheDocument();
-    await waitFor(() => expect(getCoreVersions).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getCoreVersions).toHaveBeenCalledOnce());
     expect(getAppProcessStatus).not.toHaveBeenCalled();
     expect(getBeVersion).not.toHaveBeenCalled();
   });

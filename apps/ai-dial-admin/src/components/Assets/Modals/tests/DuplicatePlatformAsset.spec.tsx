@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -79,8 +79,10 @@ describe('DuplicatePlatformAsset', () => {
     fireEvent.change(idInput, { target: { value: 'http://runner/other' } });
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://runner/other'));
-    expect(onDuplicate).toHaveBeenCalledWith({ ...runner, name: 'runner-copy', $id: 'http://runner/other' });
+    await vi.waitFor(() =>
+      expect(onDuplicate).toHaveBeenCalledWith({ ...runner, name: 'runner-copy', $id: 'http://runner/other' }),
+    );
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://runner/other');
   });
 
   test('Should close without duplicating on cancel', async () => {
@@ -118,14 +120,14 @@ describe('DuplicatePlatformAsset', () => {
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    await waitFor(() => expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument());
+    expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
     expect(onDuplicate).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
       target: { value: 'http://runner/available' },
     });
 
-    await waitFor(() => expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull());
+    expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull();
   });
 
   test('Should render only a name field for a route, which has no displayName', () => {

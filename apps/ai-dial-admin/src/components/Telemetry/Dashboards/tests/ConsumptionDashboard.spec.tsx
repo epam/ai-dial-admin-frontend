@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConsumptionDashboard from '../ConsumptionDashboard';
@@ -72,9 +72,7 @@ describe('ConsumptionDashboard', () => {
   test('fires the extended consumption query (groupBy includes project_id)', async () => {
     render(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={getData} />);
 
-    await waitFor(() => {
-      expect(getData).toHaveBeenCalledTimes(1);
-    });
+    await vi.waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
     expect(getData).toHaveBeenCalledWith(
       expect.objectContaining({
         query: expect.objectContaining({
@@ -97,34 +95,31 @@ describe('ConsumptionDashboard', () => {
 
     render(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={getData} />);
 
-    await waitFor(() => {
-      const tree = screen.getByTestId('tree-grid');
-      // 1 deployment triplet across 3 projects → 1 tree root
-      expect(Number(tree.getAttribute('data-row-count'))).toBe(1);
+    const tree = await screen.findByTestId('tree-grid');
+    // 1 deployment triplet across 3 projects → 1 tree root
+    expect(Number(tree.getAttribute('data-row-count'))).toBe(1);
 
-      const projects = screen.getByTestId('projects-grid');
-      // 3 distinct project roots → 3 project rows
-      expect(Number(projects.getAttribute('data-row-count'))).toBe(3);
-    });
+    const projects = await screen.findByTestId('projects-grid');
+    // 3 distinct project roots → 3 project rows
+    expect(Number(projects.getAttribute('data-row-count'))).toBe(3);
   });
 
   test('failed response leaves both children in the no-data state', async () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue({ success: false });
     render(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={getData} />);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('tree-grid')).not.toBeInTheDocument();
-    });
+    // The projects grid only mounts once loading has finished, so it is the settle signal.
+    const projects = await screen.findByTestId('projects-grid');
+    // The mocked TreeGrid mounts once loading ends and shows the empty shell (0 rows).
+    expect(Number(screen.getByTestId('tree-grid').getAttribute('data-row-count'))).toBe(0);
     // Projects grid renders with empty data → row count 0 (not a missing element)
-    expect(Number(screen.getByTestId('projects-grid').getAttribute('data-row-count'))).toBe(0);
+    expect(Number(projects.getAttribute('data-row-count'))).toBe(0);
   });
 
   test('non-Dashboard route hides the tree but still renders the projects grid', async () => {
     render(<ConsumptionDashboard route={ApplicationRoute.Applications} getData={getData} />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('projects-grid')).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId('projects-grid')).toBeInTheDocument();
     expect(screen.queryByTestId('tree-grid')).not.toBeInTheDocument();
   });
 
@@ -132,20 +127,19 @@ describe('ConsumptionDashboard', () => {
     getData = vi.fn<GetDataFn>().mockRejectedValue(new Error('boom'));
     render(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={getData} />);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('tree-grid')).not.toBeInTheDocument();
-    });
-    expect(Number(screen.getByTestId('projects-grid').getAttribute('data-row-count'))).toBe(0);
+    const projects = await screen.findByTestId('projects-grid');
+    expect(Number(screen.getByTestId('tree-grid').getAttribute('data-row-count'))).toBe(0);
+    expect(Number(projects.getAttribute('data-row-count'))).toBe(0);
   });
 
   test('refetches when the getData reference changes (time period / filter change)', async () => {
     const { rerender } = render(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={getData} />);
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
 
     const replacement = vi.fn<GetDataFn>().mockResolvedValue(makeResponse([row({})]));
     rerender(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={replacement} />);
 
-    await waitFor(() => expect(replacement).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(replacement).toHaveBeenCalledTimes(1));
     expect(getData).toHaveBeenCalledTimes(1);
   });
 });

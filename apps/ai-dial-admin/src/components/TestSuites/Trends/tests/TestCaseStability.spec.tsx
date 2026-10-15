@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import TestCaseStability from '@/src/components/TestSuites/Trends/TestCaseStability';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -45,9 +45,7 @@ describe('TestCaseStability', () => {
 
     expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('stability-grid')).toHaveTextContent('Run#2,Run#1');
-    });
+    expect(await screen.findByTestId('stability-grid')).toHaveTextContent('Run#2,Run#1');
   });
 
   test('shows no-data when summaries are empty', async () => {
@@ -55,8 +53,6 @@ describe('TestCaseStability', () => {
 
     render(<TestCaseStability runOrder={runOrder} runCount={2} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(BasicI18nKey.NoData)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(BasicI18nKey.NoData)).toBeInTheDocument();
   });
 });
