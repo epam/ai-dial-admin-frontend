@@ -2599,6 +2599,11 @@ export default {
     UseCase: 'Use Case',
     Expression: 'Expression',
     ResultType: 'Result Type',
+    ReferenceFields: 'Reference fields',
+    CollapseReferenceFields: 'Collapse reference fields',
+    ExpandReferenceFields: 'Expand reference fields',
+    ExpandField: 'Expand {name}',
+    CollapseField: 'Collapse {name}',
     ToggleLabel: 'JSONata',
   },
   ActionMenuOperation: {
