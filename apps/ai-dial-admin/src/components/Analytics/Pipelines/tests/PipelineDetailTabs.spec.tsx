@@ -263,7 +263,13 @@ describe('PipelineDetailFrame — the Groups tab', () => {
   test('sits between Runtime and Audit when the runner holds groups', () => {
     renderView({ trigger: { kind: TriggerKind.Group, group_by: 'response_id', ready_when: { idle: '10m' } } }, true);
 
-    expect(tabNames()).toEqual([TabsI18nKey.Properties, TabsI18nKey.Runtime, TabsI18nKey.Groups, TabsI18nKey.Audit]);
+    expect(tabNames()).toEqual([
+      TabsI18nKey.Properties,
+      TabsI18nKey.Preview,
+      TabsI18nKey.Runtime,
+      TabsI18nKey.Groups,
+      TabsI18nKey.Audit,
+    ]);
   });
 
   test('is absent when the page found no groups', () => {

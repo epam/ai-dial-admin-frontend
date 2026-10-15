@@ -4,6 +4,8 @@ import GroupKeysEditor from '@/src/components/Analytics/Pipelines/Aggregate/Grou
 import MeasuresEditor from '@/src/components/Analytics/Pipelines/Aggregate/MeasuresEditor';
 import { AggregateFormState } from '@/src/components/Analytics/Pipelines/Aggregate/use-aggregate-form';
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
+import { PREVIEW_SECTION_ANCHORS } from '@/src/components/Analytics/Pipelines/Preview/constants';
+import { PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import PipelineSharedFields from '@/src/components/Analytics/Pipelines/Common/PipelineSharedFields';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
@@ -31,6 +33,7 @@ const AggregateSection: FC<Props> = ({ form, functions }) => {
       )}
 
       <PipelineSection
+        id={PREVIEW_SECTION_ANCHORS[PreviewSection.GroupKeys]}
         title={t(AnalyticsPipelinesI18nKey.SectionGroupKeys)}
         description={t(AnalyticsPipelinesI18nKey.GroupKeysDerived)}
       >
