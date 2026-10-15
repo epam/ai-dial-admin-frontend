@@ -251,3 +251,7 @@ they are correct at any speed.
    `showNotification`; a shared mock that builds a new `vi.fn()` per render makes every effect that lists it
    as a dependency refetch in a loop. `vi.clearAllMocks()` keeps implementations, so re-arm any mock whose
    default matters in `beforeEach`.
+
+`npm run lint:specs` (it also runs on staged specs at commit time) rejects the shapes in rules 1–3: a `waitFor` on a
+mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–6 are judgement calls and are not
+linted.

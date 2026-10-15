@@ -23,6 +23,18 @@ const BANNED_SYNTAX = [
     message: `Don't wait on a mock call: it says nothing about React having re-rendered. Await what the next line needs with findBy*; as a test's last statement use vi.waitFor (${RULE} §9 rule 1).`,
   },
   {
+    // A click or a keystroke inside waitFor runs again on every retry.
+    selector:
+      "CallExpression[callee.name='waitFor'] CallExpression[callee.object.name=/^(user|userEvent|fireEvent)$/][callee.property.name!='setup'], CallExpression[callee.name='waitFor'] CallExpression[callee.object.callee.object.name='userEvent']",
+    message: `Don't act inside waitFor: it is retried, so the action repeats. Do the action first, then wait for its result (${RULE} §9 rule 2).`,
+  },
+  {
+    // A longer timeout hides a test that mounts too much or waits on the wrong thing.
+    selector:
+      "CallExpression[callee.name=/^(waitFor|waitForElementToBeRemoved)$/] > ObjectExpression > Property[key.name='timeout'], CallExpression[callee.property.name=/^(findBy|findAllBy)/] > ObjectExpression > Property[key.name='timeout'], CallExpression[callee.name=/^(findBy|findAllBy)/] > ObjectExpression > Property[key.name='timeout']",
+    message: `Don't raise a wait's timeout to fix a slow test; find why it is slow or what it should wait for (${RULE} §9 rule 2).`,
+  },
+  {
     // Any real timer: a sleep is shorter than the work it waits for on a loaded runner.
     selector: "CallExpression[callee.name='setTimeout']",
     message: `Don't sleep in a spec. Use fake timers (vi.useFakeTimers + vi.advanceTimersByTimeAsync), await the result with findBy*, or await act(async () => {}) to flush (${RULE} §9 rule 3).`,

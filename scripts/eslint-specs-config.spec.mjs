@@ -27,6 +27,12 @@ const BANNED = {
   'a mock-call waitFor with once': 'await waitFor(() => expect(save).toHaveBeenCalledOnce());',
   'a negated mock-call waitFor': 'await waitFor(() => expect(save).not.toHaveBeenCalled());',
   'a block-bodied mock-call waitFor': 'await waitFor(() => {\n  expect(save).toHaveBeenCalled();\n});',
+  'a click inside waitFor': "await waitFor(() => {\n  user.click(screen.getByRole('button'));\n});",
+  'a fireEvent inside waitFor': "await waitFor(() => fireEvent.click(screen.getByRole('button')));",
+  'a userEvent call inside waitFor': "await waitFor(() => userEvent.click(screen.getByRole('button')));",
+  'a timeout on waitFor': 'await waitFor(() => expect(value).toBe(1), { timeout: 5000 });',
+  'a timeout on findBy': "await screen.findByText('x', {}, { timeout: 5000 });",
+  'a timeout on waitForElementToBeRemoved': 'await waitForElementToBeRemoved(el, { timeout: 5000 });',
   'a real sleep': 'await new Promise((resolve) => setTimeout(resolve, 50));',
   'a bare setTimeout': 'setTimeout(() => done(), 10);',
 };
@@ -39,6 +45,8 @@ const ALLOWED = {
   'waitFor on renderHook state': 'await waitFor(() => expect(result.current.isLoading).toBe(false));',
   'a block waitFor on one non-mock condition':
     "await waitFor(() => {\n  expect(screen.getByRole('status')).toBeTruthy();\n});",
+  'findBy with a name option': "expect(await screen.findByRole('button', { name: 'Save' })).toBeTruthy();",
+  'a click before waitFor': 'await user.click(button);\nawait waitFor(() => expect(button).toBeEnabled());',
   'advancing fake timers': 'await vi.advanceTimersByTimeAsync(150);',
   'a microtask flush': 'await act(async () => {});',
 };
@@ -73,4 +81,11 @@ test('does not lint non-spec files', async () => {
   });
 
   assert.deepEqual(result?.messages ?? [], []);
+});
+
+test('reports a userEvent.setup() call inside waitFor', async () => {
+  const messages = await lint("await waitFor(() => userEvent.setup().click(screen.getByRole('button')));");
+
+  assert.equal(messages.length, 1, JSON.stringify(messages));
+  assert.equal(messages[0].ruleId, 'no-restricted-syntax');
 });
