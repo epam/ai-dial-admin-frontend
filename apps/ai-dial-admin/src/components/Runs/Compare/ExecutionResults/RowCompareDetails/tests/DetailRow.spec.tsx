@@ -63,7 +63,7 @@ describe('DetailRow alignment', () => {
     expect(primary).toHaveClass('text-right');
   });
 
-  test('right-aligns a metric field rendered as a ScoreBar', () => {
+  test('right-aligns a metric field rendered as a score value', () => {
     const { container } = renderDetailRow(
       row('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8', secondaryRaw: '0.6' }),
     );
@@ -71,6 +71,27 @@ describe('DetailRow alignment', () => {
 
     expect(primary.querySelector('.justify-end')).toBeTruthy();
     expect(secondary.querySelector('.justify-end')).toBeTruthy();
+  });
+
+  test('drops the cell padding so a score fills the cell, in both runs', () => {
+    const { container } = renderDetailRow(
+      row('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8', secondaryRaw: '0.6' }),
+    );
+    const [primary, secondary] = getValueCells(container, 'Accuracy_precision');
+
+    for (const cell of [primary, secondary]) {
+      expect(cell).toHaveClass('p-0', 'flex');
+      expect(cell).not.toHaveClass('p-3');
+    }
+  });
+
+  test('keeps the cell padding for a score field with no value', () => {
+    const { container } = renderDetailRow(
+      row('Accuracy_precision', { isScoreIndicator: true, primaryRaw: null, secondaryRaw: null }),
+    );
+    const [primary] = getValueCells(container, 'Accuracy_precision');
+
+    expect(primary).toHaveClass('p-3');
   });
 
   test('leaves an unrelated field left-aligned, even a numeric one', () => {

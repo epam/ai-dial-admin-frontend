@@ -73,6 +73,18 @@ describe('ModelResourceFeatures', () => {
     expect(screen.getAllByRole('switch')).toHaveLength(totalSwitches);
   });
 
+  test('renders the skills switch and toggling it stores skills_supported', async () => {
+    const onChangeEntity = vi.fn();
+    const user = userEvent.setup();
+    render(<ModelResourceFeatures entity={baseEntity} onChangeEntity={onChangeEntity} />);
+
+    await user.click(screen.getByRole('switch', { name: modelResourceFeatureLabelMap.skills_supported }));
+
+    expect(onChangeEntity).toHaveBeenCalledWith(
+      expect.objectContaining({ features: expect.objectContaining({ skills_supported: true }) }),
+    );
+  });
+
   test('reflects existing feature values on the switches', () => {
     const entity: DialModelResource = {
       ...baseEntity,

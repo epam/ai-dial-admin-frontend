@@ -24,7 +24,6 @@ export const auditResourceRoute: Partial<Record<ActivityAuditResourceType, Appli
   [ActivityAuditResourceType.ADAPTER_DEPLOYMENT]: ApplicationRoute.Containers,
   [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: ApplicationRoute.Containers,
   [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: ApplicationRoute.Containers,
-  [ActivityAuditResourceType.NIM_DEPLOYMENT]: ApplicationRoute.ModelServings,
   [ActivityAuditResourceType.INFERENCE_DEPLOYMENT]: ApplicationRoute.ModelServings,
 };
 
@@ -45,7 +44,6 @@ export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditR
 
 export const CONTAINER_TYPE_TO_AUDIT: Record<CONTAINER_TYPE, ActivityAuditResourceType> = {
   [CONTAINER_TYPE.MCP]: ActivityAuditResourceType.MCP_DEPLOYMENT,
-  [CONTAINER_TYPE.NIM]: ActivityAuditResourceType.NIM_DEPLOYMENT,
   [CONTAINER_TYPE.HF]: ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
   [CONTAINER_TYPE.ADAPTER]: ActivityAuditResourceType.ADAPTER_DEPLOYMENT,
   [CONTAINER_TYPE.APPLICATION]: ActivityAuditResourceType.APPLICATION_DEPLOYMENT,

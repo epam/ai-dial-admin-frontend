@@ -36,11 +36,6 @@ describe('Utils :: getDeploymentExportComponentType', () => {
       expect(result).toBe(DeploymentExportComponentType.APPLICATION_DEPLOYMENT);
     });
 
-    test('maps NIM container to NIM_DEPLOYMENT', () => {
-      const result = getDeploymentExportComponentType(DeploymentExportEntityType.MODEL_SERVING, CONTAINER_TYPE.NIM);
-      expect(result).toBe(DeploymentExportComponentType.NIM_DEPLOYMENT);
-    });
-
     test('maps HF container to INFERENCE_DEPLOYMENT', () => {
       const result = getDeploymentExportComponentType(DeploymentExportEntityType.MODEL_SERVING, CONTAINER_TYPE.HF);
       expect(result).toBe(DeploymentExportComponentType.INFERENCE_DEPLOYMENT);

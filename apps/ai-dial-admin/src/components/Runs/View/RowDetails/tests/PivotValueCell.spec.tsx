@@ -45,10 +45,46 @@ describe('PivotValueCell', () => {
     expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
   });
 
-  test('right-aligns a metric field rendered as a ScoreBar', () => {
+  test('right-aligns a metric field rendered as a score value', () => {
     render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
 
     expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+  });
+
+  test('drops the cell padding so a score fills the cell', () => {
+    render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
+
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('p-0');
+    expect(button).not.toHaveClass('p-3');
+    expect(screen.getByText('0.800')).toHaveClass('bg-score-abs-09');
+  });
+
+  test('draws no right or bottom border around a score, so adjacent scores read as one field', () => {
+    render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
+
+    expect(screen.getByRole('button')).toHaveClass('border-r-0', 'border-b-0');
+  });
+
+  test('still draws the diff wrapper border around a score', () => {
+    render(
+      <PivotValueCell
+        field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })}
+        className="border-solid border-l border-r border-b border-accent-primary"
+      />,
+    );
+
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('border-r', 'border-b');
+    expect(button).not.toHaveClass('border-r-0', 'border-b-0');
+  });
+
+  test('keeps the cell padding for a failed score field', () => {
+    render(
+      <PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: null })} isFailed />,
+    );
+
+    expect(screen.getByRole('button')).toHaveClass('p-3');
   });
 
   test('leaves an unrelated field left-aligned, even a numeric one', () => {

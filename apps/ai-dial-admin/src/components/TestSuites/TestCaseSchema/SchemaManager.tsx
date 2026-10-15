@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton, DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GetRowIdParams, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getSchemaFieldGridColumns } from '@/src/components/TestSuites/utils/columns';
@@ -30,62 +30,102 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   const schemaRef = useRef(testCaseSchema);
   const onChangeRef = useRef(onChangeTestCaseSchema);
+  const rowKeysRef = useRef(new WeakMap<TestCaseSchema, string>());
+  const nextRowKeyRef = useRef(0);
 
   useEffect(() => {
     onChangeRef.current = onChangeTestCaseSchema;
     schemaRef.current = testCaseSchema;
   }, [onChangeTestCaseSchema, testCaseSchema]);
 
+  const commitSchema = useCallback((schema: TestCaseSchema[], skipRefresh?: boolean) => {
+    schemaRef.current = schema;
+    if (skipRefresh == null) {
+      onChangeRef.current(schema);
+    } else {
+      onChangeRef.current(schema, skipRefresh);
+    }
+  }, []);
+
+  const getSchemaRowId = useCallback(({ data }: GetRowIdParams<TestCaseSchema>) => {
+    if (data.id) return data.id;
+
+    const existingKey = rowKeysRef.current.get(data);
+    if (existingKey) return existingKey;
+
+    const key = `new-schema-field-${nextRowKeyRef.current++}`;
+    rowKeysRef.current.set(data, key);
+    return key;
+  }, []);
+
   // CRITICAL: mutate row data IN PLACE (same pattern as test cases grid).
   // When EditableCellRenderer calls setValue(), the value is already in the row node data,
   // so ag-grid sees no change and doesn't refresh/recreate the cell.
-  const onCellChange = useCallback((value: string | number, data: unknown, column: string, index?: number) => {
-    if (index == null) return;
-    (data as Record<string, unknown>)[column] = value;
-    const schema = [...schemaRef.current];
-    schema[index] = data as TestCaseSchema;
-    schemaRef.current = schema;
-    onChangeRef.current(schema, true);
-  }, []);
+  const onCellChange = useCallback(
+    (value: string | number, data: unknown, column: string) => {
+      const field = data as TestCaseSchema;
+      const index = schemaRef.current.indexOf(field);
+      if (index === -1) return;
 
-  const onSelectChange = useCallback((value: string | string[], data: unknown, column?: string, index?: number) => {
-    if (index == null || !column) return;
-    (data as Record<string, unknown>)[column] = value;
-    const schema = [...schemaRef.current];
-    schema[index] = data as TestCaseSchema;
-    schemaRef.current = schema;
-    onChangeRef.current(schema);
-  }, []);
+      (field as unknown as Record<string, unknown>)[column] = value;
+      const schema = [...schemaRef.current];
+      schema[index] = field;
+      commitSchema(schema, true);
+    },
+    [commitSchema],
+  );
 
-  const onChangeRequired = useCallback((value: boolean, data: TestCaseSchema) => {
-    data.required = value;
-    const schema = [...schemaRef.current];
-    schemaRef.current = schema;
-    onChangeRef.current(schema);
-  }, []);
+  const onSelectChange = useCallback(
+    (value: string | string[], data: unknown, column?: string) => {
+      if (!column) return;
 
-  const onChangePerTurn = useCallback((value: boolean, data: TestCaseSchema) => {
-    data.perTurn = value;
-    const schema = [...schemaRef.current];
-    schemaRef.current = schema;
-    onChangeRef.current(schema);
-  }, []);
+      const field = data as TestCaseSchema;
+      const index = schemaRef.current.indexOf(field);
+      if (index === -1) return;
+
+      (field as unknown as Record<string, unknown>)[column] = value;
+      const schema = [...schemaRef.current];
+      schema[index] = field;
+      commitSchema(schema);
+    },
+    [commitSchema],
+  );
+
+  const onChangeRequired = useCallback(
+    (value: boolean, data: TestCaseSchema) => {
+      data.required = value;
+      const schema = [...schemaRef.current];
+      commitSchema(schema);
+    },
+    [commitSchema],
+  );
+
+  const onChangePerTurn = useCallback(
+    (value: boolean, data: TestCaseSchema) => {
+      data.perTurn = value;
+      const schema = [...schemaRef.current];
+      commitSchema(schema);
+    },
+    [commitSchema],
+  );
 
   const onAddField = useCallback(() => {
     const schema = [
       ...schemaRef.current,
       { name: '', type: TestCaseItemType.STRING, required: false, description: '' },
     ];
-    onChangeRef.current(schema);
-  }, []);
+    commitSchema(schema);
+  }, [commitSchema]);
 
-  const onRemoveField = useCallback((_?: TestCaseSchema, index?: number) => {
-    if (index != null) {
-      const schema = [...schemaRef.current];
-      schema.splice(index, 1);
-      onChangeRef.current(schema);
-    }
-  }, []);
+  const onRemoveField = useCallback(
+    (field?: TestCaseSchema) => {
+      if (!field) return;
+
+      const schema = schemaRef.current.filter((item) => item !== field);
+      commitSchema(schema);
+    },
+    [commitSchema],
+  );
 
   const columnDefs: ColDef[] = useMemo(
     () => [
@@ -149,6 +189,8 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
         <GridView<TestCaseSchema>
           getIsEmptyData={() => testCaseSchema.length === 0}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoSchemaFields) }}
+          isLiveData
+          getRowId={getSchemaRowId}
           onGridReady={onGridReady}
         />
       </div>

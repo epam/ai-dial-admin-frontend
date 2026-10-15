@@ -107,6 +107,12 @@ export enum CoreSyncI18nKey {
   Admin = 'CoreSync.Admin',
 }
 
+export enum StatusBadgeI18nKey {
+  Valid = 'StatusBadge.Valid',
+  Invalid = 'StatusBadge.Invalid',
+  Details = 'StatusBadge.Details',
+}
+
 export enum CoreVersionModalI18nKey {
   Title = 'CoreVersionModal.Title',
   DefinitionType = 'CoreVersionModal.DefinitionType',
@@ -413,6 +419,7 @@ export enum ButtonsI18nKey {
   Add = 'Buttons.Add',
   AddDefault = 'Buttons.AddDefault',
   AddInterface = 'Buttons.AddInterface',
+  AddOverridePath = 'Buttons.AddOverridePath',
   Defaults = 'Buttons.Defaults',
   Features = 'Buttons.Features',
   Columns = 'Buttons.Columns',
@@ -683,6 +690,7 @@ export enum FeaturesI18nKey {
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
   reasoningEfforts = 'Features.reasoningEfforts',
+  skillsSupported = 'Features.skillsSupported',
   GroupSamplingOutputControl = 'Features.Groups.SamplingOutputControl',
   GroupToolsFunctionCalling = 'Features.Groups.ToolsFunctionCalling',
   GroupPromptMessageComposition = 'Features.Groups.PromptMessageComposition',
@@ -1281,7 +1289,6 @@ export enum SourceI18nKey {
   InternalImage = 'Source.InternalImage',
   DockerImageReference = 'Source.DockerImageReference',
   DockerImage = 'Source.DockerImage',
-  NgcRegistry = 'Source.NgcRegistry',
   HuggingFace = 'Source.HuggingFace',
   ConfigRunner = 'Source.ConfigRunner',
   PlatformRunner = 'Source.PlatformRunner',
@@ -1582,7 +1589,6 @@ export enum EntityFieldsI18nKey {
   TransportType = 'EntityFields.TransportType',
   Transport = 'EntityFields.Transport',
   Port = 'EntityFields.Port',
-  GRPCPort = 'EntityFields.GRPCPort',
   Arguments = 'EntityFields.Arguments',
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
@@ -1718,6 +1724,10 @@ export enum InterfacesI18nKey {
   Translator = 'Interfaces.Translator',
   SelectTranslator = 'Interfaces.SelectTranslator',
   Custom = 'Interfaces.Custom',
+  OverridePaths = 'Interfaces.OverridePaths',
+  OverridePathsInfo = 'Interfaces.OverridePathsInfo',
+  SelectOverridePath = 'Interfaces.SelectOverridePath',
+  OverridePathIdNotSupported = 'Interfaces.OverridePathIdNotSupported',
 }
 
 export enum ImagesI18nKey {
@@ -1786,7 +1796,6 @@ export enum ContainersI18nKey {
   Annotations = 'Containers.Annotations',
   ContainerImage = 'Containers.ContainerImage',
   ContainerProperties = 'Containers.ContainerProperties',
-  ModelTypeNIM = 'Containers.ModelTypeNIM',
   ModelTypeHF = 'Containers.ModelTypeHF',
   Running = 'Containers.Running',
   NotRunning = 'Containers.NotRunning',
@@ -2076,8 +2085,10 @@ export enum TestSuitesI18nKey {
   PublishSuccess = 'TestSuites.PublishSuccess',
   PublishFailed = 'TestSuites.PublishFailed',
   DetachFromDataset = 'TestSuites.DetachFromDataset',
-  DetachConfirmTitle = 'TestSuites.DetachConfirmTitle',
-  DetachConfirmDescription = 'TestSuites.DetachConfirmDescription',
+  DetachKeepTestCases = 'TestSuites.DetachKeepTestCases',
+  DetachKeepTestCasesDescription = 'TestSuites.DetachKeepTestCasesDescription',
+  DetachStartEmpty = 'TestSuites.DetachStartEmpty',
+  DetachStartEmptyDescription = 'TestSuites.DetachStartEmptyDescription',
   DetachSuccess = 'TestSuites.DetachSuccess',
   DetachFailed = 'TestSuites.DetachFailed',
   AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',

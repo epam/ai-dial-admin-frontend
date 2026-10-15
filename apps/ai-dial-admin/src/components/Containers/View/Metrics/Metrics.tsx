@@ -90,8 +90,8 @@ const Metrics: FC<Props> = ({ containerId, route, inferenceTask, containerType }
     const servingAvailable = loading || !!metrics?.availability?.[MetricsBlockKey.Serving]?.available;
     const operationalAvailable = loading || !!metrics?.availability?.[MetricsBlockKey.Operational]?.available;
     // GPU telemetry is engine-independent (resources.gpu can be available for any GPU-requesting
-    // deployment, NIM included), so it needs its own type gate — GPU cards are supported for
-    // INFERENCE (HF) Model Servings only, not NIM.
+    // deployment), so it needs its own type gate — GPU cards are supported for INFERENCE (HF)
+    // Model Servings only.
     const gpuAvailable =
       containerType === CONTAINER_TYPE.HF &&
       (loading || !!metrics?.availability?.[MetricsBlockKey.ResourcesGpu]?.available);

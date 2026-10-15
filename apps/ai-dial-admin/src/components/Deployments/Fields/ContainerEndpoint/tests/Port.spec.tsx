@@ -21,20 +21,4 @@ describe('Common components :: PortField', () => {
 
     expect(screen.getByRole('spinbutton')).toBeInTheDocument();
   });
-
-  test('renders grpc port for ModelServings and updates it', async () => {
-    render(
-      <Port
-        container={{
-          ...mockContainer,
-          $type: CONTAINER_TYPE.NIM,
-          source: { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY },
-          containerGrpcPort: 1234,
-        }}
-        setContainer={vi.fn()}
-      />,
-    );
-
-    expect(screen.getAllByRole('spinbutton')).toHaveLength(2);
-  });
 });

@@ -79,8 +79,8 @@ describe('EntityAudit', () => {
     expect(screen.getByRole('activities')).toBeInTheDocument();
   });
 
-  test('forwards container audit type via resolveEntityAuditType for a NIM Model Serving', () => {
-    const container = { name: 'gpt-4-turbo', $type: CONTAINER_TYPE.NIM };
+  test('forwards container audit type via resolveEntityAuditType for an Inference Model Serving', () => {
+    const container = { name: 'gpt-4-turbo', $type: CONTAINER_TYPE.HF };
 
     render(
       <EntityAudit entity={container} view={ApplicationRoute.ModelServings} viewMode={ActivityAuditView.Deployments} />,
@@ -88,7 +88,7 @@ describe('EntityAudit', () => {
 
     expect(listPropsSpy).toHaveBeenCalled();
     const props = listPropsSpy.mock.calls[listPropsSpy.mock.calls.length - 1][0];
-    expect(props.entityType).toBe(ActivityAuditResourceType.NIM_DEPLOYMENT);
+    expect(props.entityType).toBe(ActivityAuditResourceType.INFERENCE_DEPLOYMENT);
     expect(props.viewMode).toBe(ActivityAuditView.Deployments);
     expect(props.entity).toBe(container);
   });

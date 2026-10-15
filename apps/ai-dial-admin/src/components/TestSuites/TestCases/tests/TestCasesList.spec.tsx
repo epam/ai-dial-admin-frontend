@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -59,6 +59,7 @@ vi.mock('@/src/components/ListView/List', () => ({
   default: ({
     listLabel,
     listLabelAddon,
+    toolbar,
     emptyDataProps,
     onGridReady,
     additionalGridOptions,
@@ -74,6 +75,7 @@ vi.mock('@/src/components/ListView/List', () => ({
         <div>List View Component</div>
         <div>Title: {listLabel}</div>
         <div data-testid="list-label-addon">{listLabelAddon}</div>
+        <div data-testid="toolbar">{toolbar}</div>
         <div>Empty Title: {emptyDataProps?.title}</div>
         <div>{children}</div>
       </div>
@@ -397,7 +399,7 @@ describe('TestCasesList — header and included-only filter', () => {
     );
   });
 
-  test('renders title without count or dataset tag', async () => {
+  test('renders title without count and shows the dataset banner for a public dataset', async () => {
     render(
       <TestCasesList
         selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }}
@@ -413,7 +415,12 @@ describe('TestCasesList — header and included-only filter', () => {
 
     await waitFor(() => expect(capturedListLabel).toBe(TabsI18nKey.TestCases));
     expect(String(capturedListLabel)).not.toContain(':');
-    expect(screen.getByTestId('dataset-tag').textContent).toContain('CaseCollection_Eta');
+    const toolbar = within(screen.getByTestId('toolbar'));
+    expect(toolbar.getByText('CaseCollection_Eta')).toBeInTheDocument();
+    expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.OpenDataset })).toBeInTheDocument();
+    expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeInTheDocument();
+    expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeInTheDocument();
+    expect(screen.getByTestId('dataset-tag').textContent).toBe('');
   });
 
   test('renders included-only switch addon', async () => {

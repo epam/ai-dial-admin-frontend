@@ -217,17 +217,10 @@ describe('Export Config Utils :: getDeploymentExportPreviewTabs', () => {
     expect(convertedData[DeploymentExportEntityType.IMAGE]).toHaveLength(2);
   });
 
-  test('groups NIM and INFERENCE into MODEL_SERVING tab', () => {
+  test('groups INFERENCE into MODEL_SERVING tab', () => {
     const response: DeploymentExportPreviewResponse = {
       ...emptyResponse,
       deployments: [
-        {
-          id: 'nim-1',
-          displayName: 'NIM 1',
-          description: null,
-          version: null,
-          type: DeploymentExportComponentType.NIM_DEPLOYMENT,
-        },
         {
           id: 'inf-1',
           displayName: 'INF 1',
@@ -239,7 +232,7 @@ describe('Export Config Utils :: getDeploymentExportPreviewTabs', () => {
     };
     const { tabs, convertedData } = getDeploymentExportPreviewTabs(response, t);
     expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.MODEL_SERVING)).toBe(true);
-    expect(convertedData[DeploymentExportEntityType.MODEL_SERVING]).toHaveLength(2);
+    expect(convertedData[DeploymentExportEntityType.MODEL_SERVING]).toHaveLength(1);
   });
 
   test('tab labels include counts', () => {

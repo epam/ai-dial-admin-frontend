@@ -13,6 +13,7 @@ import {
   ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
@@ -66,11 +67,17 @@ const DetailRow: FC<Props> = ({
   const renderRunCell = (run: CompareRun) => {
     const { raw, isFailed } = getRowDetailRunValue(row, run.slot);
     const isMissing = run.slot === CompareRunSlot.Secondary && !hasComparedMatch;
+    const hasScore = !isMissing && !isStatusRow && getScoreFieldValue(raw, row.isScoreIndicator, isFailed) != null;
 
     return (
       <div
         key={run.slot}
-        className={mergeClasses(ROW_DETAIL_CELL_BASE, isRightAligned && 'text-right', valueProps.className)}
+        className={mergeClasses(
+          ROW_DETAIL_CELL_BASE,
+          isRightAligned && 'text-right',
+          hasScore && 'p-0 flex',
+          valueProps.className,
+        )}
         {...diffCellDataAttr(valueProps)}
       >
         {isMissing && <span className="text-secondary dial-small-text">{noMatchLabel}</span>}
@@ -81,7 +88,6 @@ const DetailRow: FC<Props> = ({
             isFailed={isFailed}
             isScoreIndicator={row.isScoreIndicator}
             failedLabel={failedLabel}
-            isRightAligned={isRightAligned}
             onOverflowChange={(isOverflowing) => onRunOverflowChange(run.slot, isOverflowing)}
           />
         )}

@@ -621,7 +621,7 @@ describe('Container detail :: resources handler', () => {
       },
     };
     const after = before;
-    const result = generateCurrentResource(before, after, ActivityAuditResourceType.NIM_DEPLOYMENT, true);
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, true);
     const rows = result[EntityParameterKeys.RESOURCES] || [];
     expect(rows.map((r) => r.parameter)).toEqual([
       'cpuRequest',
@@ -696,14 +696,14 @@ describe('Container detail :: scaling handler', () => {
         strategy: { $type: 'active_requests', threshold: 80 },
       },
     };
-    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.NIM_DEPLOYMENT, true);
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, true);
     const rows = result[EntityParameterKeys.SCALING] || [];
     expect(rows.map((r) => r.parameter)).toEqual(['minReplicas', 'maxReplicas', 'scaleToZeroDelaySeconds']);
   });
 
   test('missing scaling field produces no Scaling section', () => {
     const snap: ActivityAuditEntity = {};
-    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.NIM_DEPLOYMENT, true);
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, true);
     expect(result[EntityParameterKeys.SCALING]).toBeUndefined();
   });
 });

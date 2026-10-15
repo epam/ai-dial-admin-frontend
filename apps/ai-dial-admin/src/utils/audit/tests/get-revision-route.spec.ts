@@ -79,7 +79,6 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
     ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
     ActivityAuditResourceType.MCP_DEPLOYMENT,
-    ActivityAuditResourceType.NIM_DEPLOYMENT,
     ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
   ])('returns correct route for %s', (type) => {
     expect(getRevisionRouteForEntityType(type, id)).toBe(`/deployments/${id}/revision/`);

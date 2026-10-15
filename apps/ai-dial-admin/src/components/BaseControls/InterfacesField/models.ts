@@ -12,6 +12,13 @@ export interface BaseUrlInterfaceValue {
   defaultHeaders?: Record<string, string>;
   defaults?: Record<string, unknown>;
   features?: Record<string, unknown>;
+  overridePaths?: Record<string, string>;
+}
+
+export interface OverridePathOperation {
+  key: string;
+  defaultPath: string;
+  isIdApplicable: boolean;
 }
 
 export type BaseUrlKey = 'baseUrl' | 'base_url';

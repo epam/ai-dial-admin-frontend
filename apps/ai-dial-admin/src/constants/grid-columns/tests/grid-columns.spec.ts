@@ -608,6 +608,16 @@ describe('RUNS_COLUMN', () => {
     expect(testCases?.filter).toBe(false);
   });
 
+  test('gives the flexible columns a floor below the grid default, so a full suite Runs row fits the page', () => {
+    const flexible = ['testRunName', 'testSuiteId', 'metrics'].map((colId) =>
+      RUNS_COLUMN.find((col) => col.colId === colId),
+    );
+
+    flexible.forEach((col) => {
+      expect(col?.minWidth).toBeLessThan(GRID_DEFAULT_MIN_WIDTH);
+    });
+  });
+
   test('caps the narrow columns, so the grid-wide flex cannot stretch them to the default width', () => {
     const capped = RUNS_COLUMN.filter((col) => CAPPED_COL_IDS.includes(col.colId ?? ''));
 

@@ -26,8 +26,7 @@ describe('container types config', () => {
     });
   });
 
-  test('NIM and inference are not container kinds', () => {
-    expect(CONTAINER_KIND_BY_TYPE[CONTAINER_TYPE.NIM]).toBeUndefined();
+  test('inference is not a container kind', () => {
     expect(CONTAINER_KIND_BY_TYPE[CONTAINER_TYPE.HF]).toBeUndefined();
   });
 

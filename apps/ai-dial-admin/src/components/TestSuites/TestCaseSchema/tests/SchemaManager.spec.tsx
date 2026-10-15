@@ -1,13 +1,18 @@
 import { render, screen } from '@testing-library/react';
-import { ColDef } from 'ag-grid-community';
-import { describe, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { ColDef, GetRowIdParams } from 'ag-grid-community';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import SchemaManager from '../SchemaManager';
 
-const gridOptions = vi.hoisted(() => ({ columnDefs: [] as ColDef[] }));
+const gridOptions = vi.hoisted(() => ({
+  columnDefs: [] as ColDef[],
+  getRowId: undefined as ((params: GetRowIdParams<TestCaseSchema>) => string) | undefined,
+  isLiveData: false,
+}));
 
 // Mock GridView since ag-grid doesn't render in jsdom; a stable fake api hands back the column defs so a
 // test can drive a cell's onChange.
@@ -20,7 +25,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', async () => {
     isDestroyed: () => false,
   };
   return {
-    default: ({ getIsEmptyData, emptyDataProps, onGridReady }: any) => {
+    default: ({ getIsEmptyData, emptyDataProps, getRowId, isLiveData, onGridReady }: any) => {
+      gridOptions.getRowId = getRowId;
+      gridOptions.isLiveData = isLiveData;
       useEffect(() => {
         onGridReady?.({ api });
       }, []);
@@ -44,6 +51,13 @@ describe('SchemaManager', () => {
     onChangeTestCaseSchema: vi.fn(),
   };
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+    gridOptions.columnDefs = [];
+    gridOptions.getRowId = undefined;
+    gridOptions.isLiveData = false;
+  });
+
   test('renders schema manager with title and description', () => {
     render(<SchemaManager {...defaultProps} />);
     expect(screen.getByText(TestSuitesI18nKey.SchemaDescription)).toBeInTheDocument();
@@ -53,6 +67,47 @@ describe('SchemaManager', () => {
     render(<SchemaManager {...defaultProps} />);
 
     expect(screen.getByText(BasicI18nKey.AddField)).toBeInTheDocument();
+  });
+
+  test('appends a distinct schema field for every Add field action before parent props refresh', async () => {
+    const user = userEvent.setup();
+    const onChangeTestCaseSchema = vi.fn();
+    render(<SchemaManager testCaseSchema={[]} onChangeTestCaseSchema={onChangeTestCaseSchema} />);
+    const addFieldButton = screen.getByRole('button', { name: BasicI18nKey.AddField });
+
+    await user.click(addFieldButton);
+    await user.click(addFieldButton);
+    await user.click(addFieldButton);
+
+    expect(onChangeTestCaseSchema).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: '' }),
+      expect.objectContaining({ name: '' }),
+      expect.objectContaining({ name: '' }),
+    ]);
+
+    const schema = onChangeTestCaseSchema.mock.lastCall?.[0] as TestCaseSchema[];
+    expect(schema.every((field) => field.id == null)).toBe(true);
+    expect(gridOptions.isLiveData).toBe(true);
+    const rowIds = schema.map((field) => gridOptions.getRowId?.({ data: field } as GetRowIdParams<TestCaseSchema>));
+    expect(new Set(rowIds).size).toBe(3);
+  });
+
+  test('updates only the selected unsaved schema field', async () => {
+    const user = userEvent.setup();
+    const onChangeTestCaseSchema = vi.fn();
+    render(<SchemaManager testCaseSchema={[]} onChangeTestCaseSchema={onChangeTestCaseSchema} />);
+    const addFieldButton = screen.getByRole('button', { name: BasicI18nKey.AddField });
+
+    await user.click(addFieldButton);
+    await user.click(addFieldButton);
+    const schema = onChangeTestCaseSchema.mock.lastCall?.[0] as TestCaseSchema[];
+    const nameColumn = gridOptions.columnDefs.find((column) => column.colId === 'name');
+    nameColumn?.cellRendererParams.onChange('first', schema[0], 'name', 1);
+
+    expect(onChangeTestCaseSchema).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ name: 'first' }), expect.objectContaining({ name: '' })],
+      true,
+    );
   });
 
   test('renders grid view', () => {

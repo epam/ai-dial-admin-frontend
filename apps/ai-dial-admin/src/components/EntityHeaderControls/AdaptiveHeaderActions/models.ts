@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type AdaptiveHeaderActionAppearance = 'link' | 'neutral' | 'danger' | 'ghost';
+export type AdaptiveHeaderActionAppearance = 'link' | 'neutral' | 'danger' | 'ghost' | 'primary';
 
 export interface AdaptiveHeaderAction {
   id: string;

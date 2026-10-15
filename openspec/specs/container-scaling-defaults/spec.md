@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Ensures non-serving containers (MCP, Interceptor, Adapter) default to scale-to-zero after 5 minutes of inactivity, while model servings (NIM, HF) retain their current always-on defaults. Also refactors `getContainerTemplate` from a fragile if-chain into composed helper functions.
+Ensures non-serving containers (MCP, Interceptor, Adapter) default to scale-to-zero after 5 minutes of inactivity, while model servings (HF) retain their current always-on defaults. Also refactors `getContainerTemplate` from a fragile if-chain into composed helper functions.
 
 ## MODIFIED Requirements
 
@@ -21,7 +21,7 @@ The system SHALL define two scaling constants:
 - **AND** the container SHALL have `minReplicas: 0`, `maxReplicas: 1`, `scaleToZeroDelaySeconds: 300`
 
 #### Scenario: SERVING_SCALING used for model servings
-- **WHEN** a new NIM or HF container template is created
+- **WHEN** a new HF container template is created
 - **THEN** the template SHALL use `SERVING_SCALING`
 - **AND** the container SHALL have `minReplicas: 1`, `maxReplicas: 1`
 - **AND** `scaleToZeroDelaySeconds` SHALL NOT be set
@@ -41,7 +41,7 @@ The `getContainerTemplate` function SHALL be refactored from an if-chain into a 
 
 Returns the appropriate scaling configuration based on container type.
 
-- **WHEN** `type` is `NIM` or `HF`
+- **WHEN** `type` is `HF`
 - **THEN** SHALL return `SERVING_SCALING`
 - **OTHERWISE** SHALL return `DEFAULT_SCALING`
 
@@ -49,7 +49,7 @@ Returns the appropriate scaling configuration based on container type.
 
 Returns the resource configuration based on container type and optional defaults.
 
-- **WHEN** `type` is `NIM` or `HF`
+- **WHEN** `type` is `HF`
 - **THEN** SHALL return CPU + memory resources AND `nvidia.com/gpu` in both requests and limits
 - **OTHERWISE** SHALL return CPU + memory resources only
 
@@ -59,7 +59,6 @@ Resource values SHALL fall back to: CPU `'1'`, memory `2048 MiB`, GPU `'1'` when
 
 Returns the source configuration based on container type, source type, and options.
 
-- **WHEN** `type` is `NIM` — SHALL return `{ $type: NGC_REGISTRY }`
 - **WHEN** `type` is `HF` — SHALL return `{ $type: HUGGINGFACE }`
 - **WHEN** `sourceType` is `IMAGE_REFERENCE` and `options.mcpRegistry` is true — SHALL return `{ $type: IMAGE_REFERENCE, imageReference: '', externalRegistryRef: { $type: 'mcp-registry', packageName: '' } }`
 - **WHEN** `sourceType` is `IMAGE_REFERENCE` — SHALL return `{ $type: IMAGE_REFERENCE, imageReference: '' }`
@@ -81,7 +80,7 @@ Returns the source configuration based on container type, source type, and optio
 ```
 
 #### Scenario: Every CONTAINER_TYPE is explicitly handled
-- **GIVEN** any value of `CONTAINER_TYPE` enum (MCP, INTERCEPTOR, ADAPTER, NIM, HF)
+- **GIVEN** any value of `CONTAINER_TYPE` enum (MCP, INTERCEPTOR, ADAPTER, HF)
 - **WHEN** `getContainerTemplate` is called with that type
 - **THEN** each helper SHALL resolve to a defined value — no container type falls through to a generic default
 

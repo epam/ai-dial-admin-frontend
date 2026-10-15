@@ -104,15 +104,6 @@ describe('Metrics', () => {
     expect(screen.queryByText(DeploymentMetricsI18nKey.GpuUtilization)).not.toBeInTheDocument();
   });
 
-  test('hides GPU cards for a NIM deployment even when resources.gpu is available', async () => {
-    getContainerMetricsMock.mockResolvedValue(inferenceSnapshot());
-    render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} containerType={CONTAINER_TYPE.NIM} />);
-
-    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionCompute)).toBeInTheDocument();
-    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuMemory)).not.toBeInTheDocument();
-    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuUtilization)).not.toBeInTheDocument();
-  });
-
   test('shows only Scale & Health + Compute base cards (no inference sections/cards) on a non-inference view', async () => {
     getContainerMetricsMock.mockResolvedValue(nonInferenceSnapshot());
     render(<Metrics containerId="c1" route={ApplicationRoute.McpContainers} />);

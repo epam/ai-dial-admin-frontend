@@ -35,7 +35,6 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
   const { dispatch, resetCounter } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
-  const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
   const [imageReferenceError, setImageReferenceError] = useState<FieldError | null>(null);
 
   const mcpServerName = container.source?.externalRegistryRef?.packageName || '';
@@ -82,20 +81,6 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
     [container, setContainer],
   );
 
-  const onChangeImageRef = useCallback(
-    (value?: string) => {
-      const error = getDeploymentsURIError(value, t);
-      setImageRefError(error);
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'modelSourceName',
-        isValid: !error,
-      });
-      setContainer({ ...container, source: { ...container.source, imageRef: value } });
-    },
-    [t, dispatch, setContainer, container],
-  );
-
   const onChangeImageReference = useCallback(
     (value?: string) => {
       const error = getDeploymentsURIError(value, t);
@@ -111,13 +96,6 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
   );
 
   useEffect(() => {
-    if (resetCounter || (container.source?.imageRef && container.source?.imageRef.length > 0)) {
-      const error = getDeploymentsURIError(container.source?.imageRef, t);
-      setImageRefError(error);
-    }
-  }, [container.source?.imageRef, resetCounter, t]);
-
-  useEffect(() => {
     if (resetCounter || (container.source?.imageReference && container.source?.imageReference.length > 0)) {
       const error = getDeploymentsURIError(container.source?.imageReference, t);
       setImageReferenceError(error);
@@ -126,39 +104,16 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
 
   useEffect(() => {
     const sourceType = container.source?.$type;
-    if (sourceType === CONTAINER_SOURCE_TYPE.NGC_REGISTRY) {
-      const error = getDeploymentsURIError(container.source?.imageRef);
-      dispatch({ type: ValidationActionType.SetField, field: 'modelSourceName', isValid: !error });
-    } else if (sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE && !container.source?.externalRegistryRef) {
+    if (sourceType === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE && !container.source?.externalRegistryRef) {
       const error = getDeploymentsURIError(container.source?.imageReference);
       dispatch({ type: ValidationActionType.SetField, field: 'modelSourceName', isValid: !error });
     }
-  }, [
-    container.source?.$type,
-    container.source?.imageRef,
-    container.source?.imageReference,
-    container.source?.externalRegistryRef,
-    dispatch,
-  ]);
+  }, [container.source?.$type, container.source?.imageReference, container.source?.externalRegistryRef, dispatch]);
 
   const renderSourceField = () => {
     switch (container.source?.$type) {
       case CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE:
         return <InternalImageField container={container} image={image} route={route} disabled={isDisabled} />;
-      case CONTAINER_SOURCE_TYPE.NGC_REGISTRY:
-        return (
-          <DialInput
-            id="imageRef"
-            labelProps={{ label: t(EntityFieldsI18nKey.ImageURI), required: true }}
-            placeholder={t(EntityPlaceholdersI18nKey.URI)}
-            value={container.source?.imageRef}
-            error={imageRefError?.text}
-            invalid={!!imageRefError}
-            onChange={onChangeImageRef}
-            containerClassName={containerClassName}
-            disabled={isDisabled}
-          />
-        );
       case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
         return container.source?.externalRegistryRef ? (
           <McpServerNameField

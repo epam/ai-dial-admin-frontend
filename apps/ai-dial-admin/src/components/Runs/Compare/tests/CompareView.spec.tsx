@@ -61,7 +61,6 @@ const defaultFeatureFlags: FeatureFlags = {
   deploymentsEnabled: false,
   evaluationEnabled: true,
   mcpRegistryEnabled: false,
-  nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
   analyticsSessionsEnabled: false,
