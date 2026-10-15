@@ -46,6 +46,7 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  getMetricSnapshots: vi.fn().mockResolvedValue([]),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
   getTestCaseRunResultDetails: vi.fn().mockResolvedValue({
     id: 'r1',
@@ -156,6 +157,7 @@ describe('ExtractionResultTab', () => {
               testCaseName: 'Test Case 1',
             },
           ],
+          snapshots: [],
         }}
       />,
     );

@@ -27,13 +27,15 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
-import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
+import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 
-import { CompareAnalyticsRow } from './models';
+import { CompareAnalyticsRow, MetricGroup } from './models';
 import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
+export type { MetricGroup } from './models';
 
 export const RUN_FILTER = (id?: string | null): FilterDto[] => [
   { column: 'runId', operator: FilterOperatorDto.EQUALS, value: id || '' },
@@ -409,6 +411,71 @@ export const getFormattedDuration = (durationMs: number | undefined) => {
   if (durationMs == null) return '—';
   if (durationMs >= 1000) return `${(durationMs / 1000).toFixed(1)}s`;
   return `${durationMs}ms`;
+};
+
+export const getPanelTitle = (result: ExtractionResult | AnalyticsResult | null) => {
+  return `${result?.testCaseName} - Run #${(result?.runIndex ?? 0) + 1}`;
+};
+
+export const getDetailEntries = (data: Record<string, unknown>): Array<[string, unknown]> => {
+  return Object.keys(data).map((key) => {
+    const val = data[key];
+    if (typeof val === 'string') return [key, val];
+    if (typeof val === 'number' || typeof val === 'boolean' || typeof val === 'bigint') {
+      return [key, String(val)];
+    }
+    if (val == null) return [key, String(val)];
+    return [key, val];
+  });
+};
+
+export const getMetricGroups = (
+  metricValues?: Record<string, Record<string, unknown>>,
+  metricInfos?: Record<string, Record<string, unknown>>,
+): MetricGroup[] => {
+  if (!metricValues) return [];
+
+  return Object.entries(metricValues).map(([groupKey, values]) => {
+    const infoGroup = metricInfos?.[groupKey];
+    const hasOnlyNullError = Object.keys(values).length === 1 && 'error' in values && values.error == null;
+    const infoError = infoGroup?.error;
+    const hasError = (hasOnlyNullError && !!infoError) || Object.values(values).every((v) => v == null);
+
+    const metrics = Object.entries(values)
+      .filter(([key]) => key !== 'error' || !hasOnlyNullError)
+      .map(([key, val]) => ({
+        key,
+        value: typeof val === 'number' ? val : null,
+        isError: val == null,
+      }));
+
+    const infos = infoGroup
+      ? Object.fromEntries(Object.entries(infoGroup).filter(([key]) => key !== 'error' || !hasError))
+      : undefined;
+
+    return {
+      title: groupKey,
+      metrics,
+      info: infos && Object.keys(infos).length > 0 ? infos : undefined,
+      hasError,
+      errorMessage: hasError && infoError ? String(infoError) : undefined,
+    };
+  });
+};
+
+export const snapshotsToBindingsMap = (snapshots: MetricSnapshot[]): Record<string, MetricBindings> => {
+  return snapshots.reduce(
+    (acc, snapshot) => {
+      if (snapshot.tsmdName) {
+        acc[snapshot.tsmdName] = {
+          configBindings: snapshot.configBindings ?? [],
+          inputBindings: snapshot.inputBindings ?? [],
+        };
+      }
+      return acc;
+    },
+    {} as Record<string, MetricBindings>,
+  );
 };
 
 export const getDetailNestedEntries = (

@@ -5,11 +5,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ColDef } from 'ag-grid-community';
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
-import { ROW_DETAIL_BOTTOM_CLASS, ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
+import { ROW_DETAIL_BOTTOM_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
+import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
 import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
-import ExecutionRowDetailPanel from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailPanel';
+import ExecutionRowDetailBottomPanel from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel';
 import { useAppContext } from '@/src/context/AppContext';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { MetricBindings } from '@/src/models/evaluation/metric';
 
 export interface OpenDetailOptions {
   /** Present when the open was triggered by a grid cell click. */
@@ -28,6 +30,7 @@ interface UseDetailModeReturn {
 }
 
 export function useDetailMode(
+  metricBindings: Record<string, MetricBindings> = {},
   metricGroupOrder: readonly string[] = [],
   fieldSchema?: RowDetailFieldSchema,
 ): UseDetailModeReturn {
@@ -73,33 +76,43 @@ export function useDetailMode(
     setDetailMode(DetailMode.Sidebar);
     const currentId = selectedResultIdRef.current;
     if (currentId) {
-      showDetailPanelRef.current(currentId, DetailMode.Sidebar, null, focusRequestIdRef.current);
+      showDetailPanelRef.current(currentId, DetailMode.Sidebar, null);
     }
   }, []);
 
   const showDetailPanel = useCallback(
     (resultId: string, mode: DetailMode, fieldKey: string | null, focusRequestId = 0) => {
-      const isDrawer = mode === DetailMode.Drawer;
-      const position = isDrawer ? SidebarPosition.Bottom : SidebarPosition.Right;
+      if (mode === DetailMode.Drawer) {
+        sidebarRef.current.showSidebar(
+          <ExecutionRowDetailBottomPanel
+            resultId={resultId}
+            focusFieldKey={fieldKey}
+            focusRequestId={focusRequestId}
+            metricGroupOrder={metricGroupOrder}
+            fieldSchema={fieldSchema}
+            initialDisplayTree={displayTreeRef.current}
+            onDisplayTreeChange={persistDisplayTree}
+            onClose={closeDetail}
+            onSwitchToSidebar={switchToSidebar}
+          />,
+          ROW_DETAIL_BOTTOM_CLASS,
+          SidebarPosition.Bottom,
+        );
+        return;
+      }
 
       sidebarRef.current.showSidebar(
-        <ExecutionRowDetailPanel
+        <RunMetricDetailPanel
           resultId={resultId}
-          position={position}
-          focusFieldKey={fieldKey}
-          focusRequestId={focusRequestId}
-          metricGroupOrder={metricGroupOrder}
-          fieldSchema={fieldSchema}
-          initialDisplayTree={displayTreeRef.current}
-          onDisplayTreeChange={persistDisplayTree}
           onClose={closeDetail}
-          onSwitchDisplayMode={isDrawer ? switchToSidebar : switchToDrawer}
+          onSwitchMode={switchToDrawer}
+          metricBindings={metricBindings}
         />,
-        isDrawer ? ROW_DETAIL_BOTTOM_CLASS : ROW_DETAIL_SIDEBAR_CLASS,
-        position,
+        'w-[750px]',
+        SidebarPosition.Right,
       );
     },
-    [closeDetail, switchToSidebar, switchToDrawer, persistDisplayTree, metricGroupOrder, fieldSchema],
+    [closeDetail, switchToSidebar, switchToDrawer, persistDisplayTree, metricBindings, metricGroupOrder, fieldSchema],
   );
 
   showDetailPanelRef.current = showDetailPanel;
