@@ -31,7 +31,7 @@ export default {
     Partially: 'Out of sync',
     Fully: 'Fully synced',
     Synced: 'Synced',
-    Unknown: 'Sync unavailable',
+    Unknown: 'Sync Unavailable',
     Format: 'JSON format',
     Core: 'Core',
     Admin: 'Admin',

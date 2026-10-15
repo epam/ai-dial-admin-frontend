@@ -1,10 +1,8 @@
-import { StatusBadgeVariant, StatusBadgeVariantStyle } from './models';
+import { StatusBadgeTone, StatusBadgeToneStyle } from './models';
 
-export const STATUS_BADGE_VARIANTS: Record<StatusBadgeVariant, StatusBadgeVariantStyle> = {
-  [StatusBadgeVariant.Valid]: {
-    pillClassName: 'bg-success text-success',
-  },
-  [StatusBadgeVariant.Invalid]: {
-    pillClassName: 'bg-error text-error',
-  },
+export const STATUS_BADGE_TONES: Record<StatusBadgeTone, StatusBadgeToneStyle> = {
+  [StatusBadgeTone.Success]: { backgroundClassName: 'bg-success', textClassName: 'text-success' },
+  [StatusBadgeTone.Error]: { backgroundClassName: 'bg-error', textClassName: 'text-error' },
+  [StatusBadgeTone.Info]: { backgroundClassName: 'bg-info', textClassName: 'text-info' },
+  [StatusBadgeTone.Neutral]: { backgroundClassName: 'bg-layer-4', textClassName: 'text-secondary' },
 };

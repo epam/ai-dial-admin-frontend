@@ -11,8 +11,7 @@ interface Props {
   className?: string;
 }
 
-// Modeled on Common/SyncCoreStatus/CoreSyncStatusBadge, minus its polling/etag/diff-modal machinery —
-// table status only changes on the user's own schema submission, so there's nothing to poll for.
+// Table status only changes on the user's own schema submission, so there's nothing to poll for.
 const TableStatusBadge: FC<Props> = ({ status, className }) => {
   const t = useI18n();
 

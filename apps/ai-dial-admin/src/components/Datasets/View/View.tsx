@@ -201,6 +201,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
           activeTab={activeTab}
           onChangeActiveTab={setActiveTab}
           onRemove={removeDataset}
+          hasValidityBadge={false}
         >
           {!isPublic && (
             <DialNeutralButton label={t(DatasetsI18nKey.MakePublic)} onClick={() => setIsMakePublicOpen(true)} />

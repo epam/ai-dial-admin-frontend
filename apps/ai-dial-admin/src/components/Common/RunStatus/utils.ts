@@ -1,6 +1,8 @@
 import { INCOMPLETE_RUN_STATUSES, TRANSITIONAL_RUN_STATUSES } from '@/src/constants/runs';
 import { RunsI18nKey } from '@/src/constants/i18n';
-import { RunStatus } from '@/src/models/evaluation/run';
+import { Run, RunStatus } from '@/src/models/evaluation/run';
+import { RUN_STATUS_PRESENTATION, UNKNOWN_RUN_STATUS_PRESENTATION } from './constants';
+import { RunStatusPresentation } from './models';
 
 /**
  * Falls back to the raw status so a status the backend adds later stays legible instead of rendering
@@ -30,3 +32,9 @@ export const isTransitionalRunStatus = (status?: RunStatus | string): boolean =>
 
 export const isIncompleteRunStatus = (status?: RunStatus | string): boolean =>
   INCOMPLETE_RUN_STATUSES.some((incompleteStatus) => incompleteStatus === status);
+
+export const getRunStatusPresentation = (status?: RunStatus | string): RunStatusPresentation =>
+  RUN_STATUS_PRESENTATION[status as RunStatus] ?? UNKNOWN_RUN_STATUS_PRESENTATION;
+
+export const getRunErrorHint = (run: Run): string | undefined =>
+  run.status === RunStatus.FAILED ? run.errorMessage || run.errorDetails?.message || undefined : undefined;

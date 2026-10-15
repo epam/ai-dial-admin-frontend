@@ -1,4 +1,3 @@
-import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 import { ExportFormat } from '@/src/types/export';
 
 export interface JsonConfiguration {
@@ -8,8 +7,4 @@ export interface JsonConfiguration {
   onHideFormatSelector?: () => boolean;
   onChangeSelectedFormat?: (format: ExportFormat) => void;
   onToggleEditor?: () => void;
-}
-
-export interface EntityWithMetadata {
-  _metadata?: CoreResourceEntityMetadata;
 }
