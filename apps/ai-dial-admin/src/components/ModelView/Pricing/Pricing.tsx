@@ -48,7 +48,7 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
     model.pricing?.completion,
     model.pricing?.cacheRead,
     model.pricing?.cacheWrite,
-  ].some((rate) => typeof rate === 'object');
+  ].some((rate) => rate != null && typeof rate === 'object');
 
   const onChangePricingType = useCallback(
     (type: string) => {
