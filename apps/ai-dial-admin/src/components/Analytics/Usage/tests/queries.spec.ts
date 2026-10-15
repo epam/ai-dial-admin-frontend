@@ -3,10 +3,12 @@ import { describe, expect, test } from 'vitest';
 import { BUCKET_ROW_LIMIT, USAGE_ENTITY } from '@/src/components/Analytics/Usage/constants';
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
+  AVG_LATENCY_ALIAS,
   BUCKET_ALIAS,
   CALLERS_ALIAS,
   CALLS_ALIAS,
   COMPLETION_TOKENS_ALIAS,
+  ERROR_RATE_ALIAS,
   PROMPT_TOKENS_ALIAS,
   P50_LATENCY_ALIAS,
   P95_LATENCY_ALIAS,
@@ -550,5 +552,41 @@ describe('the spend column', () => {
       expect(spendOf(query)).toMatchObject({ args: [{ name: 'deployment_price' }] });
       expect(JSON.stringify(query)).not.toContain('total_price');
     }
+  });
+});
+
+describe('the tab request order', () => {
+  test('ranks in the direction asked for, with the tab columns last so a block is a stable slice', () => {
+    const query = buildTabQuery(scope({ view: UsageView.Mcp }), BreakdownTab.Tools, 25, {
+      orderBy: AVG_LATENCY_ALIAS,
+      orderDir: QuerySortDirection.Asc,
+    });
+
+    expect(query.sort).toEqual([
+      { field: AVG_LATENCY_ALIAS, dir: QuerySortDirection.Asc },
+      { field: 'deployment', dir: QuerySortDirection.Asc },
+      { field: 'mcp_tool_call_name', dir: QuerySortDirection.Asc },
+    ]);
+  });
+
+  test('computes the error rate only where it is sorted on, and breaks its ties by calls', () => {
+    const query = buildTabQuery(scope(), BreakdownTab.Models, 25, { orderBy: ERROR_RATE_ALIAS });
+    const rate = (query.select ?? []).find((entry) => entry.as === ERROR_RATE_ALIAS);
+
+    expect(rate?.expr).toMatchObject({ type: QueryExprType.Fn, name: 'div' });
+    expect(query.sort?.slice(0, 2)).toEqual([
+      { field: ERROR_RATE_ALIAS, dir: QuerySortDirection.Desc },
+      { field: CALLS_ALIAS, dir: QuerySortDirection.Desc },
+    ]);
+    expect(aliasesOf(buildTabQuery(scope(), BreakdownTab.Models, 25))).not.toContain(ERROR_RATE_ALIAS);
+  });
+
+  test('does not repeat the dimension as a tie key when it is the key sorted on', () => {
+    const query = buildTabQuery(scope(), BreakdownTab.Models, 25, {
+      orderBy: 'deployment',
+      orderDir: QuerySortDirection.Asc,
+    });
+
+    expect(query.sort).toEqual([{ field: 'deployment', dir: QuerySortDirection.Asc }]);
   });
 });

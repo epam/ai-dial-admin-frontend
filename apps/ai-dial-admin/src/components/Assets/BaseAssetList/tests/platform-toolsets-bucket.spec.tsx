@@ -185,6 +185,23 @@ describe('BaseAssetList :: AssetsToolsets bucket-aware branches', () => {
     await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/assets-toolsets/copy-of-platform-toolset'));
   });
 
+  test('Does not redirect when Core rejects a duplicate', async () => {
+    const push = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(createPlatformToolset).mockResolvedValueOnce({
+      success: false,
+      errorHeader: 'Validation Failed',
+      errorMessage: "authType 'BEARER' requires a key",
+    });
+
+    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
+
+    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
+
+    await vi.waitFor(() => expect(createPlatformToolset).toHaveBeenCalledOnce());
+    expect(push).not.toHaveBeenCalled();
+  });
+
   test('Confirming a duplicate of a public-bucket asset calls createToolset, not createPlatformToolset', async () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
 

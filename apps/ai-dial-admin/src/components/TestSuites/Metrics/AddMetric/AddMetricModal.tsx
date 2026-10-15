@@ -20,6 +20,7 @@ import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import classNames from 'classnames';
+import { useAttributeSamples } from '@/src/components/TestSuites/View/use-attribute-samples';
 import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } from '../../utils/metric-bindings';
 import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
@@ -48,6 +49,7 @@ const AddMetricModal: FC<Props> = ({
 }) => {
   const t = useI18n();
   const prevSelectedMetricIdRef = useRef<string>(undefined);
+  const attributeSamples = useAttributeSamples(dataset?.id, dataset?.testCaseSchema);
 
   const isEditMode = !!editingMetric;
   const [currentStepId, setCurrentStepId] = useState<string>(
@@ -179,7 +181,7 @@ const AddMetricModal: FC<Props> = ({
       portalId="AddMetricModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[800px]"
+      className="h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]"
       dividers
       footer={
         isEditMode ? (
@@ -223,6 +225,7 @@ const AddMetricModal: FC<Props> = ({
               onChangeName={setMetricName}
               selectedTestSuite={selectedTestSuite}
               testCaseSchema={dataset?.testCaseSchema}
+              samples={attributeSamples}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
               onChangeInputBindings={setInputBindings}

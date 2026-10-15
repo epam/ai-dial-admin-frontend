@@ -69,7 +69,7 @@ import {
   sortItem,
   value,
 } from '@/src/utils/analytics/query-build';
-import { availableSelectFields } from '@/src/utils/analytics/session-column-catalog';
+import { availableSelectFields, sessionFields } from '@/src/utils/analytics/session-column-catalog';
 import { toMillis } from '@/src/utils/analytics/session-formatting';
 import { insightColumnsOf } from '@/src/utils/analytics/session-insights';
 
@@ -355,14 +355,17 @@ export const buildSessionDetailQuery = (chatId: string, schemaFields?: Analytics
     OPTIONAL_DETAIL_SELECT_FIELDS,
     schemaFields?.map(({ name }) => name),
   );
-  const named = new Set(curated);
+  // Everything else the schema reports for the record, so the dump and the metadata groups read the full
+  // available record rather than the columns this frontend happens to know.
+  const discovered = sessionFields(schemaFields).names.filter((name) => !curated.includes(name));
+  const named = new Set([...curated, ...discovered]);
   const insights = insightColumnsOf(schemaFields)
     .map(({ name }) => name)
     .filter((name) => !named.has(name));
 
   return rowQuery({
     entity: SESSIONS_ENTITY,
-    select: [...curated, ...insights].map((fieldName) => col(field(fieldName))),
+    select: [...curated, ...discovered, ...insights].map((fieldName) => col(field(fieldName))),
     filter: eq(SessionsField.ChatId, value(QueryValueType.String, chatId)),
     page: offsetPage(0, 1, true),
   });

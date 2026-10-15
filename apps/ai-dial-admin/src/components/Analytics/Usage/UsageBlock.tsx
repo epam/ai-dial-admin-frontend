@@ -28,7 +28,7 @@ import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-fai
 import { useUsageDashboardData } from '@/src/components/Analytics/Usage/use-usage-dashboard-data';
 import { UsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
 import { resolveBlockRows } from '@/src/components/Analytics/Usage/utils/entity-blocks';
-import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
+import { getDefaultDonutMetric, isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 
 const NO_MADE_TABS: BreakdownTab[] = [];
 
@@ -68,7 +68,7 @@ const UsageBlock: FC<Props> = ({
 
   const [tab, setTab] = useState<BreakdownTab>(leadingTab);
   const [isShowingAll, setIsShowingAll] = useState(false);
-  const [donutMetric, setDonutMetric] = useState<DonutMetric>(DonutMetric.Calls);
+  const [donutMetric, setDonutMetric] = useState<DonutMetric>(() => getDefaultDonutMetric(view));
   const [isDonutFullOpen, setIsDonutFullOpen] = useState(false);
   // Blocks of the donut's dimension read so far. The dialog starts at one and grows as its legend
   // is scrolled; the card never reads more than its five slices.
@@ -80,8 +80,9 @@ const UsageBlock: FC<Props> = ({
   const [renderedView, setRenderedView] = useState(view);
   if (renderedView !== view) {
     setRenderedView(view);
-    // The MCP view prices nothing, so a cost ring there would be empty whatever the window.
-    setDonutMetric(DonutMetric.Calls);
+    // A choice made in one view does not carry over: the MCP view prices nothing, so a cost ring
+    // there would be empty whatever the window.
+    setDonutMetric(getDefaultDonutMetric(view));
     setTab(leadingTab);
     setTimeSeriesView((current) =>
       VIEW_TIME_SERIES_VIEWS[view].includes(current) ? current : VIEW_TIME_SERIES_VIEWS[view][0],

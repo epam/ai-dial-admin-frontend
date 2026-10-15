@@ -65,8 +65,25 @@ describe('ACTIVITY_AUDIT_VIEW_CONFIG', () => {
       expect(ACTIVITY_AUDIT_VIEW_CONFIG[ActivityAuditView.Deployments].fetchActivities).toBe(getDeploymentActivities);
     });
 
-    test('names the analytics server action for the Analytics view', () => {
-      expect(ACTIVITY_AUDIT_VIEW_CONFIG[ActivityAuditView.Analytics].fetchActivities).toBe(getAnalyticsActivities);
+    test('unwraps the analytics server action result into the page', async () => {
+      const page = { data: [], total: 0, totalPages: 0 };
+      vi.mocked(getAnalyticsActivities).mockResolvedValue({ success: true, response: page });
+
+      await expect(
+        ACTIVITY_AUDIT_VIEW_CONFIG[ActivityAuditView.Analytics].fetchActivities(25, 0, [], []),
+      ).resolves.toBe(page);
+    });
+
+    test('raises the error the analytics server action returned', async () => {
+      vi.mocked(getAnalyticsActivities).mockResolvedValue({
+        success: false,
+        errorHeader: 'invalid_filter_value',
+        errorMessage: 'expects one of [Table]',
+      });
+
+      await expect(
+        ACTIVITY_AUDIT_VIEW_CONFIG[ActivityAuditView.Analytics].fetchActivities(25, 0, [], []),
+      ).rejects.toMatchObject({ errorHeader: 'invalid_filter_value', message: 'expects one of [Table]' });
     });
   });
 

@@ -198,6 +198,14 @@ export const SPAN_GROUP_SUMMARY_FIELD: Record<string, UsageLogField> = {
   [SpanFieldTag.Response]: UsageLogField.ResponseStatus,
 };
 
+// What a closed group of the session's record previews, by tag. The hop log's choices stay (token usage previews
+// the total, cost the price); the caller group previews who called, which its first field by name does not say.
+// Where the column has no value the group previews its first stated field, as every group does.
+export const SESSION_GROUP_SUMMARY_FIELD: Record<string, string> = {
+  ...SPAN_GROUP_SUMMARY_FIELD,
+  [SpanFieldTag.Principal]: 'user_display_name',
+};
+
 export const HOP_REQUEST_BODY_FIELD: UsageLogField = UsageLogField.RequestBody;
 
 export const HOP_RESPONSE_BODY_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
@@ -276,6 +284,7 @@ export const OPTIONAL_DETAIL_SELECT_FIELDS: SessionsField[] = [
   ...IDENTITY_ENRICHMENT_FIELDS,
   ...DETAIL_INSIGHT_FIELDS,
   SessionsField.Traces,
+  SessionsField.CachedPromptTokens,
 ];
 
 // Only where the query can order the whole result by the field: paging is server-side, so a sort the backend
@@ -617,6 +626,26 @@ export const SESSION_FEEDBACK_PANEL: SessionPanelFrame = {
   labelKey: SessionsTraceI18nKey.DetailPanelFeedback,
 };
 
+export const SESSION_METADATA_PANEL: SessionPanelFrame = {
+  panel: SessionDetailPanel.Metadata,
+  sourceEntity: SESSIONS_ENTITY,
+  provenance: ColumnProvenance.Sessions,
+  labelKey: SessionsTraceI18nKey.DetailPanelMetadata,
+};
+
+// The label the metadata groups give a column over the one the schema reports, where this view states what the
+// column holds more exactly than its catalog name does: `success_count` counts turns in which at least one hop
+// succeeded, which "Success count" does not say.
+export const SESSION_FIELD_LABEL_KEY: Record<string, string> = {
+  [SessionsField.ChatId]: SessionsTraceI18nKey.Session,
+  [SessionsField.UserHash]: SessionsTraceI18nKey.DetailUser,
+  [SessionsField.ProjectId]: SessionsTraceI18nKey.Project,
+  [SessionsField.FirstRequestTime]: SessionsTraceI18nKey.DetailStarted,
+  [SessionsField.SuccessCount]: SessionsTraceI18nKey.DetailSuccessful,
+  [SessionsField.Traces]: SessionsTraceI18nKey.DetailTrace,
+  [SessionsField.Deployments]: SessionsTraceI18nKey.DetailDeployment,
+};
+
 export const SESSION_DETAIL_PANELS: SessionPanelDefinition[] = [
   {
     panel: SessionDetailPanel.Usage,
@@ -636,9 +665,11 @@ export const SESSION_DETAIL_PANELS: SessionPanelDefinition[] = [
         format: SessionFieldFormat.Count,
       },
       {
-        labelKey: SessionsTraceI18nKey.DetailTotalTokens,
-        column: SessionsField.TotalTokens,
-        format: SessionFieldFormat.Count,
+        labelKey: SessionsTraceI18nKey.DetailCacheHit,
+        column: SessionsField.CachedPromptTokens,
+        baseColumn: SessionsField.PromptTokens,
+        format: SessionFieldFormat.Share,
+        hintKey: SessionsTraceI18nKey.CacheHitHint,
       },
       {
         labelKey: SessionsTraceI18nKey.Cost,
@@ -660,38 +691,6 @@ export const SESSION_DETAIL_PANELS: SessionPanelDefinition[] = [
         column: SessionsField.AvgDurationMs,
         format: SessionFieldFormat.Duration,
         hintKey: SessionsTraceI18nKey.AvgDurationHint,
-      },
-    ],
-  },
-  {
-    panel: SessionDetailPanel.Metadata,
-    sourceEntity: SESSIONS_ENTITY,
-    provenance: ColumnProvenance.Sessions,
-    labelKey: SessionsTraceI18nKey.DetailPanelMetadata,
-    layout: SessionPanelLayout.Rows,
-    fields: [
-      { labelKey: SessionsTraceI18nKey.Session, column: SessionsField.ChatId },
-      { labelKey: SessionsTraceI18nKey.DetailUser, column: SessionsField.UserHash },
-      { labelKey: SessionsTraceI18nKey.Project, column: SessionsField.ProjectId },
-      {
-        labelKey: SessionsTraceI18nKey.DetailStarted,
-        column: SessionsField.FirstRequestTime,
-        format: SessionFieldFormat.DateTime,
-      },
-      {
-        labelKey: SessionsTraceI18nKey.DetailSuccessful,
-        column: SessionsField.SuccessCount,
-        format: SessionFieldFormat.Count,
-      },
-      {
-        labelKey: SessionsTraceI18nKey.DetailTrace,
-        column: SessionsField.Traces,
-        format: SessionFieldFormat.List,
-      },
-      {
-        labelKey: SessionsTraceI18nKey.DetailDeployment,
-        column: SessionsField.Deployments,
-        format: SessionFieldFormat.List,
       },
     ],
   },

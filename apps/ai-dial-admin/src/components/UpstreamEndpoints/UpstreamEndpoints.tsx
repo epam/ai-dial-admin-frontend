@@ -21,6 +21,8 @@ interface Props<T> {
   view?: ApplicationRoute;
   withResponses?: boolean;
   collapsible?: boolean;
+  isAuthTypeSupported?: boolean;
+  originalUpstreams?: DialModelEndpoint[];
 }
 
 const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
@@ -32,6 +34,8 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
   view,
   withResponses,
   collapsible = true,
+  isAuthTypeSupported,
+  originalUpstreams,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -87,6 +91,8 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
           index={index}
           isKeyOptional={isKeyOptional}
           required={required}
+          isAuthTypeSupported={isAuthTypeSupported}
+          isBearerKeyRequired={isAuthTypeSupported && originalUpstreams?.[index]?.authType !== endpoint.authType}
           updateEndpoint={(point) => onUpdateEndPoint(point, index)}
           removeEndpoint={onRemoveEndpoint}
           view={view}

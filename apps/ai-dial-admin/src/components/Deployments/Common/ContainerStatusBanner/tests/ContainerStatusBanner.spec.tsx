@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
@@ -35,7 +35,16 @@ const buildContainer = (overrides: Partial<Container> = {}): Container => ({
   ...overrides,
 });
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+const flush = () => act(async () => {});
+
+// Nothing renders for these outcomes, so there is no element to wait for. Wait on the fetch itself: it was
+// made, its promise has settled (a rejection is an outcome here, not a failure), and the component has
+// then had a flush to act on the answer.
+const fetchConsumed = async () => {
+  expect(protectedRequestMock).toHaveBeenCalledOnce();
+  await Promise.resolve(protectedRequestMock.mock.results[0].value).catch(() => {});
+  await flush();
+};
 
 const mockFetchResponse = (containers: Container[] | null) => {
   const stubAction = vi.fn();
@@ -60,14 +69,14 @@ describe('ContainerStatusBanner', () => {
   test('renders nothing when the referenced container is not present in the response', async () => {
     mockFetchResponse([buildContainer({ name: 'other-container' })]);
     const { container } = render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
-    await flush();
+    await fetchConsumed();
     expect(container.firstChild).toBeNull();
   });
 
   test('renders nothing when the container is running', async () => {
     mockFetchResponse([buildContainer({ status: CONTAINER_STATUS.RUNNING })]);
     const { container } = render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
-    await flush();
+    await fetchConsumed();
     expect(container.firstChild).toBeNull();
   });
 
@@ -80,7 +89,7 @@ describe('ContainerStatusBanner', () => {
   ])('renders the banner when the container status is %s', async (status) => {
     mockFetchResponse([buildContainer({ status })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
-    await waitFor(() => expect(screen.queryByText('Containers.ContainerNotRunningTitle')).toBeInTheDocument());
+    expect(await screen.findByText('Containers.ContainerNotRunningTitle')).toBeInTheDocument();
     expect(screen.queryByText('Containers.ContainerNotRunningDescription')).toBeInTheDocument();
     expect(screen.queryByText('Containers.GoToContainer')).toBeInTheDocument();
   });
@@ -89,46 +98,43 @@ describe('ContainerStatusBanner', () => {
     getContainersByViewMock.mockReturnValue(null);
     const { container } = render(<ContainerStatusBanner view={ApplicationRoute.Home} containerId="ykchattest" />);
     await flush();
+    expect(getContainersByViewMock).toHaveBeenCalledWith(ApplicationRoute.Home);
+    expect(protectedRequestMock).not.toHaveBeenCalled();
     expect(container.firstChild).toBeNull();
   });
 
   test('clicking "Go to Container" opens Model Servings for an inference container', async () => {
     mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.HF })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
-    await waitFor(() => screen.getByText('Containers.GoToContainer'));
-    fireEvent.click(screen.getByText('Containers.GoToContainer'));
+    fireEvent.click(await screen.findByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.ModelServings, { name: 'ykchattest' });
   });
 
   test('clicking "Go to Container" opens the correct route for an application container', async () => {
     mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.APPLICATION })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Applications} containerId="ykchattest" />);
-    await waitFor(() => screen.getByText('Containers.GoToContainer'));
-    fireEvent.click(screen.getByText('Containers.GoToContainer'));
+    fireEvent.click(await screen.findByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.ApplicationContainers, { name: 'ykchattest' });
   });
 
   test('clicking "Go to Container" opens MCP Containers for an MCP toolset source', async () => {
     mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.MCP })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Toolsets} containerId="ykchattest" />);
-    await waitFor(() => screen.getByText('Containers.GoToContainer'));
-    fireEvent.click(screen.getByText('Containers.GoToContainer'));
+    fireEvent.click(await screen.findByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.McpContainers, { name: 'ykchattest' });
   });
 
   test('clicking "Go to Container" opens Model Servings for a Model Serving toolset source', async () => {
     mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.HF })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Toolsets} containerId="ykchattest" />);
-    await waitFor(() => screen.getByText('Containers.GoToContainer'));
-    fireEvent.click(screen.getByText('Containers.GoToContainer'));
+    fireEvent.click(await screen.findByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.ModelServings, { name: 'ykchattest' });
   });
 
   test('clicking "Go to Container" opens the correct route for an interceptor container', async () => {
     mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.INTERCEPTOR })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Interceptors} containerId="ykchattest" />);
-    await waitFor(() => screen.getByText('Containers.GoToContainer'));
-    fireEvent.click(screen.getByText('Containers.GoToContainer'));
+    fireEvent.click(await screen.findByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.InterceptorContainers, { name: 'ykchattest' });
   });
 
@@ -137,7 +143,7 @@ describe('ContainerStatusBanner', () => {
     getContainersByViewMock.mockReturnValue(stubAction);
     protectedRequestMock.mockRejectedValue(new Error('network down'));
     const { container } = render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
-    await flush();
+    await fetchConsumed();
     expect(container.firstChild).toBeNull();
   });
 
@@ -151,7 +157,7 @@ describe('ContainerStatusBanner', () => {
       response: [buildContainer()], // payload should be ignored because success === false
     });
     const { container } = render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
-    await flush();
+    await fetchConsumed();
     expect(container.firstChild).toBeNull();
   });
 });

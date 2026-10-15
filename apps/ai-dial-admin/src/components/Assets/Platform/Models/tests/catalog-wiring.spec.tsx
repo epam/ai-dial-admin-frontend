@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -136,14 +136,14 @@ describe('Catalog model :: catalog metadata wiring', () => {
   test('validates the stored values with the Catalog tab never opened', async () => {
     renderTabs(EntityViewTab.Properties, { catalogSchemaId: 'https://host/agent-card' });
 
-    await waitFor(() => expect(getCatalogSchemaById).toHaveBeenCalledWith('https://host/agent-card'));
+    await vi.waitFor(() => expect(getCatalogSchemaById).toHaveBeenCalledWith('https://host/agent-card'));
     expect(screen.queryByRole('button', { name: 'catalog-values-editor' })).toBeNull();
   });
 
   test('re-resolves the schema when the selection changes, so the gate follows it', async () => {
     renderTabs(EntityViewTab.Properties, { catalogSchemaId: 'https://host/model-card' });
 
-    await waitFor(() => expect(getCatalogSchemaById).toHaveBeenCalledWith('https://host/model-card'));
+    await vi.waitFor(() => expect(getCatalogSchemaById).toHaveBeenCalledWith('https://host/model-card'));
   });
 
   test('resolves nothing when no schema is selected', () => {

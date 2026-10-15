@@ -178,9 +178,7 @@ describe('session detail route', () => {
     const pending = render(CHAT_ID);
     // The route awaits the access check and the route params before the read wave, so a single microtask
     // is not enough to reach it.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(feedback()).toHaveBeenCalledWith(CHAT_ID);
+    await vi.waitFor(() => expect(feedback()).toHaveBeenCalledWith(CHAT_ID));
     expect(detail()).not.toHaveBeenCalled();
 
     releaseSchema({ success: true, response: { fields: SCHEMA_FIELDS } });

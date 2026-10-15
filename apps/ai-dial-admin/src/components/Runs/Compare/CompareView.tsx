@@ -20,10 +20,11 @@ import HeatMapToolbar from '@/src/components/Runs/Compare/HeatMap/HeatMapToolbar
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { resolveMetricGroupsSelection } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-metric-selection';
 import { swapComparePairColumnState } from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-state';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
 import { useCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
 import {
-  fetchSuiteCompletedRuns,
+  fetchCompareCandidateRuns,
   getCompareRunsUrn,
   getCompareViewTabs,
   getCompareRuns,
@@ -62,7 +63,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
-  const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
+  const [suiteRuns, setSuiteRuns] = useState<CompareCandidateRun[]>([]);
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -160,7 +161,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   useEffect(() => {
     if (!run?.testSuiteId) return;
 
-    fetchSuiteCompletedRuns(run.testSuiteId).then((runs) => {
+    fetchCompareCandidateRuns(run.testSuiteId).then((runs) => {
       setSuiteRuns(runs);
     });
   }, [run?.testSuiteId]);

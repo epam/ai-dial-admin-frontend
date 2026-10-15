@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -232,6 +232,13 @@ describe('TablesView — Backfill data', () => {
     Object.assign(useAppContext(), { isFullAdmin: true });
   });
 
+  // The banner has no state of its own to wait on when it stays hidden, so wait for the read's promise itself
+  // to resolve and let the component's continuation run before asserting the banner never appeared.
+  const settledRead = async () => {
+    await vi.mocked(listTableBackfillRuns).mock.results[0].value;
+    await act(async () => {});
+  };
+
   test('offers the button to a full admin when no run is in progress', async () => {
     render(<TablesView initialTables={TABLES} />);
 
@@ -264,7 +271,8 @@ describe('TablesView — Backfill data', () => {
   test('asks only for runs that are running, so a finished run shows no banner', async () => {
     render(<TablesView initialTables={TABLES} />);
 
-    await waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalledWith(TableBackfillState.Running));
+    await vi.waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalledWith(TableBackfillState.Running));
+    await settledRead();
     expect(screen.queryByText(BackfillI18nKey.BannerTable)).toBeNull();
   });
 
@@ -273,7 +281,8 @@ describe('TablesView — Backfill data', () => {
 
     render(<TablesView initialTables={TABLES} />);
 
-    await waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalled());
+    await vi.waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalled());
+    await settledRead();
     expect(screen.queryByText(BackfillI18nKey.BannerTable)).toBeNull();
   });
 
@@ -291,8 +300,8 @@ describe('TablesView — Backfill data', () => {
         await vi.advanceTimersByTimeAsync(5_000);
       });
 
-      await waitFor(() => expect(screen.queryByText(BackfillI18nKey.BannerTable)).toBeNull());
       expect(await screen.findByRole('button', { name: BackfillI18nKey.TableTitle })).toBeInTheDocument();
+      expect(screen.queryByText(BackfillI18nKey.BannerTable)).toBeNull();
     } finally {
       vi.useRealTimers();
     }

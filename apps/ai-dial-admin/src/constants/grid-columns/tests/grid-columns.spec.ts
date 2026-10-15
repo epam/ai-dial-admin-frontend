@@ -36,6 +36,7 @@ import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/c
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
 import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import { GridFilterType } from '@/src/types/grid-filter';
+import { AUDIT_ENUM_VALUES_FILTER } from '@/src/components/ActivityAudit/List/audit-filter-components';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -142,35 +143,53 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'version')).toBe(false);
   });
 
-  describe('ACTIVITY_AUDIT_COLUMNS filter operators', () => {
+  describe('ACTIVITY_AUDIT_COLUMNS filters', () => {
     const t = (s: string) => s;
-    const exactColumns = ['activityType', 'resourceType', 'activityId', 'parentActivityId'];
-    const filterParamsOf = (view: ActivityAuditView, field: string) =>
-      ACTIVITY_AUDIT_COLUMNS(t, view).find((c) => c.field === field)?.filterParams;
+    const columnOf = (view: ActivityAuditView, field: string) =>
+      ACTIVITY_AUDIT_COLUMNS(t, view).find((c) => c.field === field);
+    const valuesOf = (field: string) =>
+      (columnOf(ActivityAuditView.Analytics, field)?.filterParams as { values: { value: string }[] }).values.map(
+        ({ value }) => value,
+      );
 
-    test.each(exactColumns)('%s offers only equals and not-equal in the Analytics view', (field) => {
-      expect(filterParamsOf(ActivityAuditView.Analytics, field)).toMatchObject({
-        filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL],
-        defaultOption: GridFilterType.EQUALS,
+    test('Activity type is picked from the three values the analytics backend defines', () => {
+      expect(columnOf(ActivityAuditView.Analytics, 'activityType')?.filter).toBe(AUDIT_ENUM_VALUES_FILTER);
+      expect(valuesOf('activityType')).toEqual(['Create', 'Update', 'Delete']);
+    });
+
+    test('Resource type is picked from the four resource types the analytics backend defines', () => {
+      expect(columnOf(ActivityAuditView.Analytics, 'resourceType')?.filter).toBe(AUDIT_ENUM_VALUES_FILTER);
+      expect(valuesOf('resourceType')).toEqual(['Table', 'TableColumn', 'Pipeline', 'SavedQuery']);
+    });
+
+    test.each(['activityId', 'parentActivityId'])(
+      '%s offers only equals and not-equal in the Analytics view',
+      (field) => {
+        expect(columnOf(ActivityAuditView.Analytics, field)?.filterParams).toMatchObject({
+          filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL],
+          defaultOption: GridFilterType.EQUALS,
+        });
+      },
+    );
+
+    test('Resource identifier keeps its text operators in the Analytics view', () => {
+      expect(columnOf(ActivityAuditView.Analytics, 'resourceId')?.filterParams).toMatchObject({
+        filterOptions: expect.arrayContaining([GridFilterType.CONTAINS]),
       });
     });
 
     test.each([ActivityAuditView.Config, ActivityAuditView.Deployments])(
-      'keeps the text operators in the %s view',
+      'keeps the text operators on the enum and identifier columns in the %s view',
       (view) => {
-        exactColumns.forEach((field) => {
-          expect(filterParamsOf(view, field)).toMatchObject({
+        ['activityType', 'resourceType', 'activityId', 'parentActivityId'].forEach((field) => {
+          const column = columnOf(view, field);
+          expect(column?.filter).not.toBe(AUDIT_ENUM_VALUES_FILTER);
+          expect(column?.filterParams).toMatchObject({
             filterOptions: expect.arrayContaining([GridFilterType.CONTAINS, GridFilterType.NOT_CONTAINS]),
           });
         });
       },
     );
-
-    test('the Resource identifier column keeps its text operators in the Analytics view', () => {
-      expect(filterParamsOf(ActivityAuditView.Analytics, 'resourceId')).toMatchObject({
-        filterOptions: expect.arrayContaining([GridFilterType.CONTAINS]),
-      });
-    });
   });
 
   test('ACTIVITY_AUDIT_COLUMNS returns expected columns for embedded (single-entity) Config view', () => {
@@ -529,6 +548,16 @@ describe('Constants :: grid columns', () => {
     expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
   });
 
+  test('Created By offers Equals, Does not equal, and Contains', () => {
+    const createdBy = TEST_SUITES_COLUMN.find((c) => c.field === 'createdBy');
+
+    expect((createdBy?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
     expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
@@ -709,6 +738,7 @@ describe('SUITE_RUNS_COLUMN', () => {
 describe('COMPARE_RUN_PICKER_COLUMN', () => {
   test('carries only the columns that identify a run, leaving out the mock-backed ones', () => {
     expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
+      'testSuiteName',
       'status',
       'testRunName',
       'runConfig.numberOfRuns',
@@ -716,5 +746,13 @@ describe('COMPARE_RUN_PICKER_COLUMN', () => {
       'startedAt',
       'completedAt',
     ]);
+  });
+
+  test('names the suite of each run, falling back to its id', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'testSuiteName');
+    const getValue = (data: object) => (column?.valueGetter as (params: { data: object }) => unknown)({ data });
+
+    expect(getValue({ testSuiteId: 'suite-1', testSuiteName: 'Suite One' })).toBe('Suite One');
+    expect(getValue({ testSuiteId: 'suite-1' })).toBe('suite-1');
   });
 });

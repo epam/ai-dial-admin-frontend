@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Methods from '../Methods';
@@ -71,9 +71,7 @@ describe('Methods component', () => {
 
     render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
   });
 
   test('fetches deployment and generates methods on mount', async () => {
@@ -82,11 +80,10 @@ describe('Methods component', () => {
 
     render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
-    await waitFor(() => {
-      expect(mockGetDeploymentById).toHaveBeenCalledOnce();
-      expect(mockGetDeploymentById).toHaveBeenCalledWith('test-deployment');
-      expect(mockGenerateMethodPathCombinations).toHaveBeenCalledWith(mockDeployment.routes);
-    });
+    await screen.findByRole('button', { name: 'GET /api/users' });
+    expect(mockGetDeploymentById).toHaveBeenCalledOnce();
+    expect(mockGetDeploymentById).toHaveBeenCalledWith('test-deployment');
+    expect(mockGenerateMethodPathCombinations).toHaveBeenCalledWith(mockDeployment.routes);
   });
 
   test('renders all generated methods after chat-completion', async () => {
@@ -95,11 +92,9 @@ describe('Methods component', () => {
 
     render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'GET /api/users' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'GET /api/data' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('button', { name: 'GET /api/data' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'GET /api/users' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
   });
 
   test('sets active method based on existing endpointRef on mount', async () => {
@@ -110,11 +105,7 @@ describe('Methods component', () => {
 
     render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
   });
 
   test('defaults to chat-completion when endpointRef does not match any method', async () => {
@@ -125,11 +116,7 @@ describe('Methods component', () => {
 
     render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /POST.*\/api\/users/ })).toBeInTheDocument();
   });
 
   test('does not fetch deployment if already loaded', async () => {
@@ -140,9 +127,8 @@ describe('Methods component', () => {
       <Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />,
     );
 
-    await waitFor(() => {
-      expect(mockGetDeploymentById).toHaveBeenCalledOnce();
-    });
+    await screen.findByRole('button', { name: 'GET /api/users' });
+    expect(mockGetDeploymentById).toHaveBeenCalledOnce();
 
     rerender(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 

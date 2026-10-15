@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { ComponentProps } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -109,7 +109,7 @@ describe('Compare Summary :: Analytics', () => {
     renderAnalytics();
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument());
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
   });
 
   test('renders dual overall score with delta when scores are present', async () => {

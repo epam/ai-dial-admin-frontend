@@ -6,12 +6,7 @@ import {
   SPAN_METERED_TAGS,
   UNTAGGED_SPAN_FIELD_TAG,
 } from '@/src/constants/analytics/sessions-trace';
-import {
-  SpanFieldDescriptor,
-  SpanFieldGroup,
-  SpanFieldRow,
-  SpanObjectEntry,
-} from '@/src/models/analytics/sessions-trace';
+import { SpanFieldDescriptor, SpanFieldGroup, SpanObjectEntry } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { formatSignificantCost, readableWords } from '@/src/utils/analytics/session-formatting';
 import { formatDateTimeWithMillisToLocalString } from '@/src/utils/formatting/date';
@@ -83,7 +78,11 @@ export const spanFieldText = (value: unknown, type: AnalyticsFieldType, tag = ''
   return String(value);
 };
 
-export const spanGroupSummary = (row: SpanFieldRow, group: SpanFieldGroup): string => {
+export const spanGroupSummary = (
+  row: Record<string, unknown>,
+  group: SpanFieldGroup,
+  summaryFields: Record<string, string> = SPAN_GROUP_SUMMARY_FIELD,
+): string => {
   const stated = statedSpanFields(row, group);
   const [first] = stated;
 
@@ -91,7 +90,7 @@ export const spanGroupSummary = (row: SpanFieldRow, group: SpanFieldGroup): stri
     return '';
   }
 
-  const summaryField = SPAN_GROUP_SUMMARY_FIELD[group.tag];
+  const summaryField = summaryFields[group.tag];
   if (summaryField && !isSpanFieldEmpty(row[summaryField], group.tag)) {
     // The named column need not belong to the group previewing it, so it can have no descriptor here.
     const type = group.fields.find(({ name }) => name === summaryField)?.type ?? SPAN_SUMMARY_FIELD_TYPE;
@@ -108,5 +107,5 @@ export const spanGroupSummary = (row: SpanFieldRow, group: SpanFieldGroup): stri
   return spanFieldText(row[first.name], first.type, first.tag);
 };
 
-export const statedSpanFields = (row: SpanFieldRow, { fields }: SpanFieldGroup): SpanFieldDescriptor[] =>
+export const statedSpanFields = (row: Record<string, unknown>, { fields }: SpanFieldGroup): SpanFieldDescriptor[] =>
   fields.filter(({ name, tag }) => !isSpanFieldEmpty(row[name], tag));

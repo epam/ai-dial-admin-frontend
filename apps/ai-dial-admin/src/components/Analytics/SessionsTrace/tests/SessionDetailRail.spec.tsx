@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import SessionDetailRail from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailRail';
@@ -18,9 +19,19 @@ import {
   SessionFeedbackRow,
   SessionRatingCounts,
   SessionsField,
+  SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { insightColumnsOf } from '@/src/utils/analytics/session-insights';
+
+vi.mock('@/src/components/Common/FullscreenViewer/FullscreenViewer', () => ({
+  default: ({ title, content, onClose }: { title: string; content: string; onClose: () => void }) => (
+    <div role="dialog" aria-label={title}>
+      <pre>{content}</pre>
+      <button onClick={onClose}>close</button>
+    </div>
+  ),
+}));
 
 const SESSION: SessionDetailRow = {
   client_session_id: 'Lrr0e6L5bpTND3IY_dN0_',
@@ -77,6 +88,32 @@ const INSIGHT_SCHEMA: AnalyticsEntityField[] = [
   { name: SessionsField.InsightLanguage, source: 'language', type: AnalyticsFieldType.String },
 ];
 
+const field = (name: string, type: AnalyticsFieldType, tag: string) => ({ name, label: name, type, tag });
+
+// The groups the server derives for the metadata block: the record's own fields under the schema's tags.
+const METADATA_GROUPS: SpanFieldGroup[] = [
+  {
+    tag: 'identity',
+    fields: [
+      field('client_session_id', AnalyticsFieldType.String, 'identity'),
+      field('first_request_time', AnalyticsFieldType.Timestamp, 'identity'),
+      field('traces', AnalyticsFieldType.Array, 'identity'),
+    ],
+  },
+  {
+    tag: 'principal',
+    fields: [
+      field('project_id', AnalyticsFieldType.String, 'principal'),
+      field('user_hash', AnalyticsFieldType.String, 'principal'),
+    ],
+  },
+  { tag: 'response', fields: [field('success_count', AnalyticsFieldType.Long, 'response')] },
+  { tag: 'deployment', fields: [field('deployments', AnalyticsFieldType.Array, 'deployment')] },
+];
+
+const openGroup = async (name: RegExp | string) =>
+  userEvent.setup().click(screen.getByRole('button', { name, expanded: false }));
+
 const setup = (
   feedback: SessionFeedbackRow[] = FEEDBACK,
   total: number | null = feedback.length,
@@ -84,11 +121,13 @@ const setup = (
   session: SessionDetailRow = SESSION,
   isCommentTextReadable = false,
   schema: AnalyticsEntityField[] = INSIGHT_SCHEMA,
+  metadataGroups: SpanFieldGroup[] = METADATA_GROUPS,
 ) =>
   render(
     <SessionDetailRail
       session={session}
       insightColumns={insightColumnsOf(schema)}
+      metadataGroups={metadataGroups}
       feedback={feedback}
       feedbackTotal={total}
       ratings={ratings}
@@ -191,21 +230,59 @@ describe('SessionDetailRail', () => {
     expect(screen.getByText('4.3 M')).toBeInTheDocument();
     expect(screen.getByText('70.2 K')).toBeInTheDocument();
     expect(screen.getByText('$10.8')).toBeInTheDocument();
+    expect(screen.queryByText(/total tokens/i)).toBeNull();
   });
 
-  test('the metadata panel states the trace ids the rollup carries', () => {
+  describe('cache hit', () => {
+    const cacheHitValue = () =>
+      screen.getByText(SessionsTraceI18nKey.DetailCacheHit).closest('div')?.querySelector('dd')?.textContent;
+
+    test('states the cached share of the prompt tokens', () => {
+      setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, prompt_tokens: 1000, cached_prompt_tokens: 250 });
+
+      expect(cacheHitValue()).toBe('25%');
+    });
+
+    test('states a reported zero as a miss', () => {
+      setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, cached_prompt_tokens: 0 });
+
+      expect(cacheHitValue()).toBe('0%');
+    });
+
+    test('marks an unreported cached count as unavailable rather than a miss', () => {
+      setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, cached_prompt_tokens: null });
+
+      expect(cacheHitValue()).toBe(UNAVAILABLE_VALUE);
+    });
+
+    test('marks the figure unavailable where the instance has no cached-token column', () => {
+      setup();
+
+      expect(cacheHitValue()).toBe(UNAVAILABLE_VALUE);
+    });
+
+    test('carries a keyboard-reachable caveat', () => {
+      setup();
+
+      expect(screen.getByRole('button', { name: SessionsTraceI18nKey.CacheHitHint })).toBeInTheDocument();
+    });
+  });
+
+  test('the metadata panel states the trace ids the rollup carries', async () => {
     setup();
+    await openGroup(/identity/i);
 
-    const label = screen.getByText(SessionsTraceI18nKey.DetailTrace);
+    const row = screen.getByText(SessionsTraceI18nKey.DetailTrace).parentElement;
 
-    expect(label.parentElement).toHaveTextContent('0a3f1d9c8b7e6a5f, 4c81be02d5aa77e1');
-    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+    expect(row).toHaveTextContent('0a3f1d9c8b7e6a5f, 4c81be02d5aa77e1');
+    expect(row).not.toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
   // The trace array is ordered by id rather than by turn, so numbering the entries would assert a sequence
   // the rollup does not record — and turn_count, not this array, is the count of record.
-  test('the trace ids carry no turn numbering and no count', () => {
+  test('the trace ids carry no turn numbering and no count', async () => {
     setup();
+    await openGroup(/identity/i);
 
     const row = screen.getByText(SessionsTraceI18nKey.DetailTrace).parentElement;
 
@@ -222,20 +299,30 @@ describe('SessionDetailRail', () => {
 
   // success_count counts a turn in which at least one hop succeeded, which is weaker than "the turn
   // succeeded" — the label has to say which.
-  test('the successful-request field states what it counts', () => {
+  test('the successful-request field states what it counts', async () => {
     setup();
+    await openGroup(/response/i);
 
     expect(screen.getByText(SessionsTraceI18nKey.DetailSuccessful)).toBeTruthy();
   });
 
   // The rollup carries the deployments, so marking the row unavailable would misreport data already fetched.
-  test('the metadata panel states the deployments the rollup carries', () => {
+  test('the metadata panel states the deployments the rollup carries', async () => {
     setup();
+    await openGroup(/deployment/i);
 
-    const label = screen.getByText(SessionsTraceI18nKey.DetailDeployment);
+    const row = screen.getByText(SessionsTraceI18nKey.DetailDeployment).parentElement;
 
-    expect(label.parentElement).toHaveTextContent('anthropic_switchyard-model, anthropic.claude-opus-4-8');
-    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+    expect(row).toHaveTextContent('anthropic_switchyard-model, anthropic.claude-opus-4-8');
+    expect(row).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('a metadata row keeps the label this view gives its column', async () => {
+    setup();
+    await openGroup(/identity/i);
+
+    expect(screen.getByText(SessionsTraceI18nKey.Session)).toBeInTheDocument();
+    expect(screen.getByText(SessionsTraceI18nKey.DetailStarted)).toBeInTheDocument();
   });
 
   // A session that ran took time, so a recorded 0 means the backend never measured it. The grid states
@@ -248,20 +335,21 @@ describe('SessionDetailRail', () => {
     expect(label.parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
-  test('a zero success count renders as a number, not as the unavailable marker', () => {
+  test('a zero success count renders as a number, not as the unavailable marker', async () => {
     setup();
+    await openGroup(/response/i);
 
-    const label = screen.getByText(SessionsTraceI18nKey.DetailSuccessful);
-    expect(label.parentElement).toHaveTextContent('0');
-    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+    const row = screen.getByText(SessionsTraceI18nKey.DetailSuccessful).parentElement;
+
+    expect(row).toHaveTextContent('0');
+    expect(row).not.toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
-  test('an empty project renders its own empty presentation, not the marker', () => {
+  test('an empty project renders the unavailable marker', async () => {
     setup();
+    await openGroup(/principal/i);
 
-    const label = screen.getByText(SessionsTraceI18nKey.Project);
-    expect(label.parentElement).toHaveTextContent(SessionsTraceI18nKey.DetailEmptyValue);
-    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+    expect(screen.getByText(SessionsTraceI18nKey.Project).parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
   test('lists each rated response with its direction and its comment count', () => {
@@ -327,7 +415,7 @@ describe('SessionDetailRail', () => {
   test('a figure with nothing to qualify carries no caveat', () => {
     setup();
 
-    expect(screen.queryByRole('button', { name: SessionsTraceI18nKey.DetailTotalTokens })).toBeNull();
+    expect(screen.queryByRole('button', { name: SessionsTraceI18nKey.DetailTokensIn })).toBeNull();
   });
 
   // Every origin the view can render needs a colour, so a newly added source cannot render unstyled.
@@ -338,5 +426,192 @@ describe('SessionDetailRail', () => {
     for (const { provenance } of SESSION_DETAIL_PANELS) {
       expect(PROVENANCE_TEXT_CLASS[provenance]).toBeTruthy();
     }
+  });
+});
+
+describe('SessionDetailRail — metadata groups', () => {
+  const GROUPS: SpanFieldGroup[] = [
+    {
+      tag: 'client',
+      fields: [
+        field('client_type', AnalyticsFieldType.String, 'client'),
+        field('client_types', AnalyticsFieldType.Array, 'client'),
+      ],
+    },
+    { tag: 'token-usage', fields: [field('reasoning_tokens', AnalyticsFieldType.Long, 'token-usage')] },
+  ];
+  const SESSION_WITH_GROUPS = {
+    ...SESSION,
+    client_type: 'claudecode',
+    client_types: ['chat', 'claudecode'],
+  } as SessionDetailRow;
+
+  const setupGroups = (session: SessionDetailRow = SESSION_WITH_GROUPS, groups: SpanFieldGroup[] = GROUPS) =>
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, session, false, INSIGHT_SCHEMA, groups);
+
+  test('previews the caller group by the user name, and by its first field where there is none', () => {
+    const principal: SpanFieldGroup = {
+      tag: 'principal',
+      fields: [
+        field('auth_types', AnalyticsFieldType.Array, 'principal'),
+        field('user_display_name', AnalyticsFieldType.String, 'principal'),
+      ],
+    };
+    const { unmount } = setup(
+      FEEDBACK,
+      FEEDBACK.length,
+      RATINGS,
+      { ...SESSION, auth_types: ['jwt'], user_display_name: 'Ada Lovelace' } as SessionDetailRow,
+      false,
+      INSIGHT_SCHEMA,
+      [principal],
+    );
+
+    expect(screen.getByRole('button', { name: /principal/i })).toHaveTextContent('Ada Lovelace');
+    unmount();
+
+    setup(
+      FEEDBACK,
+      FEEDBACK.length,
+      RATINGS,
+      { ...SESSION, auth_types: ['api_key'], user_display_name: null } as SessionDetailRow,
+      false,
+      INSIGHT_SCHEMA,
+      [principal],
+    );
+
+    expect(screen.getByRole('button', { name: /principal/i })).toHaveTextContent('api_key');
+  });
+
+  test('renders every group inside the one Metadata panel', () => {
+    setupGroups();
+
+    expect(screen.getAllByRole('heading', { name: SessionsTraceI18nKey.DetailPanelMetadata })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /client/i })).toBeInTheDocument();
+  });
+
+  test('renders one collapsed group per reported tag', () => {
+    setupGroups();
+
+    expect(screen.getByRole('button', { name: /client/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('button', { name: SessionsTraceI18nKey.SpanTagTokenUsage })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.queryByText('client_type')).toBeNull();
+  });
+
+  test('opens one group at a time and states its fields from the record', async () => {
+    const user = userEvent.setup();
+    setupGroups();
+
+    await user.click(screen.getByRole('button', { name: /client/i }));
+
+    expect(screen.getByText('client_type')).toBeInTheDocument();
+    expect(screen.getByText('claudecode')).toBeInTheDocument();
+    expect(screen.getByText('chat, claudecode')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.SpanTagTokenUsage }));
+
+    expect(screen.queryByText('client_type')).toBeNull();
+    expect(screen.getByText('reasoning_tokens')).toBeInTheDocument();
+  });
+
+  test('states a reported zero in a token group rather than marking it unavailable', async () => {
+    setup(
+      FEEDBACK,
+      FEEDBACK.length,
+      RATINGS,
+      { ...SESSION, reasoning_tokens: 0 } as SessionDetailRow,
+      false,
+      INSIGHT_SCHEMA,
+      [{ tag: 'token-usage', fields: [field('reasoning_tokens', AnalyticsFieldType.Long, 'token-usage')] }],
+    );
+    await openGroup(SessionsTraceI18nKey.SpanTagTokenUsage);
+
+    const row = screen.getByText('reasoning_tokens').parentElement;
+
+    expect(row).toHaveTextContent('0');
+    expect(row).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('marks a field the record lacks as unavailable', async () => {
+    setupGroups(SESSION);
+    await openGroup(/client/i);
+
+    expect(screen.getAllByText(UNAVAILABLE_VALUE).length).toBeGreaterThan(0);
+  });
+
+  test('says the schema could not be read where there are no groups, and keeps the JSON control', () => {
+    setupGroups(SESSION, []);
+
+    expect(screen.getByText(SessionsTraceI18nKey.DetailFieldsUnavailable)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: SessionsTraceI18nKey.SessionJsonOpen })).toBeInTheDocument();
+  });
+});
+
+describe('SessionDetailRail — copy and JSON', () => {
+  const writeText = vi.fn();
+
+  // Installed at the click: opening a group goes through `userEvent.setup()`, which replaces the clipboard
+  // with its own stub, so a stub installed earlier would never see the copy.
+  const copy = (label: string) => {
+    writeText.mockClear();
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    fireEvent.click(screen.getByRole('button', { name: `copy ${label}` }));
+
+    return writeText.mock.lastCall?.[0];
+  };
+
+  test('copies the full value of a row', async () => {
+    setup();
+    await openGroup(/identity/i);
+
+    expect(copy(SessionsTraceI18nKey.Session)).toBe(SESSION.client_session_id);
+  });
+
+  test('copies a list value as its items separated by a comma and a space', async () => {
+    setup();
+    await openGroup(/deployment/i);
+
+    expect(copy(SessionsTraceI18nKey.DetailDeployment)).toBe(SESSION.deployments?.join(', '));
+  });
+
+  test('offers no copy control on a row with no value', async () => {
+    setup();
+    await openGroup(/principal/i);
+
+    expect(screen.queryByRole('button', { name: `copy ${SessionsTraceI18nKey.Project}` })).toBeNull();
+  });
+
+  test('offers no copy control on the insights panel', () => {
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS } as SessionDetailRow);
+
+    expect(screen.getByText('Sentiment')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'copy Sentiment' })).toBeNull();
+  });
+
+  test('opens the whole record as JSON, keyed by the published names and without a read', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockClear();
+    setup();
+
+    await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.SessionJsonOpen }));
+
+    const dump = screen.getByRole('dialog').querySelector('pre')?.textContent ?? '';
+
+    expect(JSON.parse(dump)).toEqual(SESSION);
+    expect(Object.keys(JSON.parse(dump))).toEqual(Object.keys(SESSION));
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test('closes the dump', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.SessionJsonOpen }));
+    await user.click(screen.getByRole('button', { name: 'close' }));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

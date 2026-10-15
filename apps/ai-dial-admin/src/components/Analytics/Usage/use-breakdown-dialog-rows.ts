@@ -21,6 +21,7 @@ import {
 } from '@/src/components/Analytics/Usage/queries';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
+import { toTabSort } from '@/src/components/Analytics/Usage/utils/dialog-sort';
 import { foldBreakdownRows } from '@/src/components/Analytics/Usage/utils/folds';
 import { RowModelContext, toPreviousMeasures, toRowModels } from '@/src/components/Analytics/Usage/utils/row-models';
 
@@ -147,6 +148,9 @@ export const useBreakdownDialogRows = ({
             buildTabQuery(baseScope, tab, limit, {
               offset: params.startRow,
               rowClauses: term ? [buildDimensionSearchClause(tab, term)] : [],
+              // The grid re-reads from the first block when its sort changes; the order is the
+              // backend's, over the whole dimension, never a reorder of the blocks in hand.
+              ...toTabSort(tab, params.sortModel),
             }),
           );
 

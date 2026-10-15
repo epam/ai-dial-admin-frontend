@@ -11,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
 import WeightRow from './WeightRow';
-import { getAvailableOptionsForRow, getMetricOutputOptions } from './utils';
+import { createNextWeightedMeanWeight, getAvailableOptionsForRow, getMetricOutputOptions } from './utils';
 
 interface Props {
   weights: OverallScoreWeight[];
@@ -28,6 +28,8 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
   const options = useMemo(() => getMetricOutputOptions(metrics), [metrics]);
 
   const isEmpty = weights.length === 0;
+  const canRemoveRow = weights.length > 1;
+  const canAddRow = weights.length < options.length;
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: WEIGHTED_MEAN_ROWS_FIELD, isValid: !isEmpty });
@@ -38,8 +40,13 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
   }, [dispatch, isEmpty]);
 
   const onAdd = useCallback(() => {
-    onChange([...weights, { metricName: '', outputField: '', weight: undefined as unknown as number }]);
-  }, [onChange, weights]);
+    const nextWeight = createNextWeightedMeanWeight(metrics, weights);
+    if (!nextWeight) {
+      return;
+    }
+
+    onChange([...weights, nextWeight]);
+  }, [metrics, onChange, weights]);
 
   const onUpdateRow = useCallback(
     (row: OverallScoreWeight, index: number) => {
@@ -50,6 +57,10 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
 
   const onRemoveRow = useCallback(
     (index: number) => {
+      if (weights.length <= 1) {
+        return;
+      }
+
       const updatedWeights = [...weights];
       updatedWeights.splice(index, 1);
       onChange(updatedWeights);
@@ -69,19 +80,21 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
           index={index}
           row={weight}
           availableOptions={getAvailableOptionsForRow(options, weights, index)}
+          disableRemove={!canRemoveRow}
           onUpdate={onUpdateRow}
           onRemove={onRemoveRow}
         />
       ))}
 
-      <div className="mt-3">
-        <DialGhostButton
-          label={t(ButtonsI18nKey.Add)}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onAdd}
-          disabled={weights.length >= options.length}
-        />
-      </div>
+      {canAddRow && (
+        <div className="mt-3">
+          <DialGhostButton
+            label={t(ButtonsI18nKey.Add)}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={onAdd}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -35,11 +35,11 @@ const answer = (rows: Record<string, unknown>[]) => ({ isSuccess: true, result: 
 const deploymentRows = (count: number, from = 0) =>
   Array.from({ length: count }, (_, index) => ({ deployment: `model-${from + index}`, calls: 10 }));
 
-const getRowsParams = (startRow: number, endRow: number) =>
+const getRowsParams = (startRow: number, endRow: number, sortModel: { colId: string; sort: string }[] = []) =>
   ({
     startRow,
     endRow,
-    sortModel: [],
+    sortModel,
     filterModel: {},
     successCallback: vi.fn(),
     failCallback: vi.fn(),
@@ -82,6 +82,26 @@ describe('useBreakdownDialogRows', () => {
 
     expect(queryOf(0).page).toMatchObject({ offset: 50, limit: 25 });
     expect(params.successCallback).toHaveBeenCalledOnce();
+  });
+
+  test("reads in the ranking's own order while the grid sorts nothing", async () => {
+    const { result } = renderRows();
+
+    await act(async () => {
+      await result.current.datasource.getRows(getRowsParams(0, 25));
+    });
+
+    expect(queryOf(0).sort?.[0]).toEqual({ field: 'calls', dir: 'desc' });
+  });
+
+  test("hands the grid's sort to the backend, over the whole dimension", async () => {
+    const { result } = renderRows();
+
+    await act(async () => {
+      await result.current.datasource.getRows(getRowsParams(0, 25, [{ colId: 'latency', sort: 'asc' }]));
+    });
+
+    expect(queryOf(0).sort?.[0]).toEqual({ field: 'avg_latency', dir: 'asc' });
   });
 
   test('states the end of the list when a block comes back short', async () => {

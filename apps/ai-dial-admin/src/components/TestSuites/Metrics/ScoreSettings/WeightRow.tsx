@@ -9,17 +9,18 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
 import { MetricOutputOption } from './models';
-import { getMetricSelectionError, getWeightError } from './utils';
+import { formatWeightedMeanWeightInputValue, getMetricSelectionError, getWeightError } from './utils';
 
 export interface Props {
   index: number;
   row: OverallScoreWeight;
   availableOptions: MetricOutputOption[];
+  disableRemove?: boolean;
   onUpdate: (row: OverallScoreWeight, index: number) => void;
   onRemove: (index: number) => void;
 }
 
-const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove }) => {
+const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = false, onUpdate, onRemove }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
@@ -127,7 +128,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
           id={`overallScoreWeight_${index}`}
           labelProps={index === 0 ? { label: t(TestSuitesI18nKey.OverallScoreWeightLabel) } : undefined}
           step={0.01}
-          value={row.weight}
+          value={formatWeightedMeanWeightInputValue(row.weight)}
           invalid={!!weightError}
           error={weightError?.text}
           onChange={onWeightChange}
@@ -137,6 +138,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
         onClick={onRemoveRow}
         aria-label={t(ButtonsI18nKey.Remove)}
         className={index === 0 ? 'mt-7' : ''}
+        disabled={disableRemove}
       />
     </div>
   );

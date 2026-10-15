@@ -123,7 +123,8 @@ describe('usePipelineRuntimeView', () => {
 
     const { result } = renderRead();
 
-    await waitFor(() => expect(read).toHaveBeenCalledOnce());
+    await waitFor(() => expect(result.current.outcome).toBe(RuntimeReadOutcome.Read));
+    expect(read).toHaveBeenCalledOnce();
     await act(async () => {
       await result.current.reload();
     });

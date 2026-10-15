@@ -475,6 +475,7 @@ export const getSchemaFieldGridColumns = (
   onChangeRequired: (value: boolean, data: TestCaseSchema) => void,
   onChangePerTurn: (value: boolean, data: TestCaseSchema) => void,
   t: (key: string) => string,
+  isReadOnly = false,
 ): ColDef<TestCaseSchema>[] => {
   return [
     {
@@ -487,6 +488,7 @@ export const getSchemaFieldGridColumns = (
       valueGetter: (params: ValueGetterParams) => params.data?.name ?? '',
       cellRendererParams: {
         onChange: onChangeEditable,
+        isReadonly: isReadOnly,
         hideTriangle: true,
         skipRequired: true,
         required: true,
@@ -504,6 +506,7 @@ export const getSchemaFieldGridColumns = (
       cellRendererParams: {
         items: TYPE_OPTIONS,
         onChange: onChangeSelect,
+        isReadonly: isReadOnly,
       },
       sortable: false,
       filter: false,
@@ -517,6 +520,7 @@ export const getSchemaFieldGridColumns = (
       cellRenderer: BooleanButtonCellRenderer,
       cellRendererParams: {
         onChange: onChangeRequired,
+        isReadonly: isReadOnly,
         trueLabel: t(BasicI18nKey.Required),
         falseLabel: t(BasicI18nKey.Optional),
       },
@@ -534,6 +538,7 @@ export const getSchemaFieldGridColumns = (
       cellRenderer: BooleanButtonCellRenderer,
       cellRendererParams: {
         onChange: onChangePerTurn,
+        isReadonly: isReadOnly,
         trueLabel: t(BasicI18nKey.PerTurn),
         falseLabel: t(BasicI18nKey.Shared),
       },
@@ -553,6 +558,7 @@ export const getSchemaFieldGridColumns = (
       valueGetter: (params: ValueGetterParams) => params.data?.description ?? '',
       cellRendererParams: {
         onChange: onChangeEditable,
+        isReadonly: isReadOnly,
         hideTriangle: true,
         skipRequired: true,
       },
@@ -587,10 +593,8 @@ export const getColumnsGridColumns = (
         onChange,
         hideTriangle: true,
       },
-      // Keep narrow and stable across request switches: without suppressSizeToFit,
-      // AgGridWrapper's fitGridWidth (sizeColumnsToFit) can expand this past the flex:1 share.
-      flex: 1,
-      maxWidth: 200,
+      // Fixed start width so every request opens the same. No maxWidth, so it can still be dragged wider.
+      width: 200,
       suppressSizeToFit: true,
     },
     {

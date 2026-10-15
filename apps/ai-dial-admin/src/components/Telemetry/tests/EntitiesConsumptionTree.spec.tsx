@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import EntitiesConsumptionTree from '../EntitiesConsumptionTree';
@@ -75,15 +75,15 @@ describe('EntitiesConsumptionTree', () => {
   test('fetches tree data on mount with ENTITY_CONSUMPTION_TREE_QUERY shape', async () => {
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(getData).toHaveBeenCalledWith(
         expect.objectContaining({
           query: expect.objectContaining({
             groupBy: expect.arrayContaining(['deployment', 'parent_deployment', 'execution_path']),
           }),
         }),
-      );
-    });
+      ),
+    );
   });
 
   test('renders title in header', () => {
@@ -105,37 +105,33 @@ describe('EntitiesConsumptionTree', () => {
 
     resolve!(makeTelemetryResponse(TREE_ROWS));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('tree-grid')).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId('tree-grid')).toBeInTheDocument();
     expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
   });
 
   test('renders TreeGrid with rows from response', async () => {
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      expect(Number(grid.getAttribute('data-row-count'))).toBeGreaterThan(0);
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    expect(Number(grid.getAttribute('data-row-count'))).toBeGreaterThan(0);
   });
 
   test('empty response shows no-data message instead of TreeGrid', async () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse([]));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('tree-grid')).not.toBeInTheDocument();
-    });
+    // The mocked TreeGrid always mounts once loading ends and renders the empty-data shell itself.
+    const grid = await screen.findByTestId('tree-grid');
+    expect(grid.getAttribute('data-row-count')).toBe('0');
   });
 
   test('failed response shows no-data message', async () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue({ success: false });
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('tree-grid')).not.toBeInTheDocument();
-    });
+    // The mocked TreeGrid always mounts once loading ends and renders the empty-data shell itself.
+    const grid = await screen.findByTestId('tree-grid');
+    expect(grid.getAttribute('data-row-count')).toBe('0');
   });
 
   test('same deployment in different execution paths produces distinct tree nodes', async () => {
@@ -177,14 +173,12 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      // 3 root rows visible (children collapsed by default):
-      // - gpt-4o (direct, depth-1 path, root with no children)
-      // - app-A (synthetic root, has gpt-4o as child)
-      // - app-B (synthetic root, has gpt-4o as child)
-      expect(Number(grid.getAttribute('data-row-count'))).toBe(3);
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    // 3 root rows visible (children collapsed by default):
+    // - gpt-4o (direct, depth-1 path, root with no children)
+    // - app-A (synthetic root, has gpt-4o as child)
+    // - app-B (synthetic root, has gpt-4o as child)
+    expect(Number(grid.getAttribute('data-row-count'))).toBe(3);
   });
 
   test('REAL DATA: dial-rag with two instances each attaches its own children', async () => {
@@ -247,13 +241,11 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      const summary = grid.getAttribute('data-summary');
-      // Two roots visible: the app (with dial-rag inside) and the direct dial-rag.
-      // Each root has 1 child — the gpt-4.1 attaches to the correct dial-rag instance.
-      expect(summary).toBe(`${longApp}(1),dial-rag(1)`);
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    const summary = grid.getAttribute('data-summary');
+    // Two roots visible: the app (with dial-rag inside) and the direct dial-rag.
+    // Each root has 1 child — the gpt-4.1 attaches to the correct dial-rag instance.
+    expect(summary).toBe(`${longApp}(1),dial-rag(1)`);
   });
 
   test('REAL DATA: Ocr synthetic root with three siblings each having a dots-ocr child', async () => {
@@ -324,11 +316,9 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      // Single synthetic root "Ocr" with 3 children (layout-detector, markdown-extractor, tables-extractor)
-      expect(grid.getAttribute('data-summary')).toBe('Ocr(3)');
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    // Single synthetic root "Ocr" with 3 children (layout-detector, markdown-extractor, tables-extractor)
+    expect(grid.getAttribute('data-summary')).toBe('Ocr(3)');
   });
 
   test('REAL DATA: world-economy-v2-hybrid root must have 2 children attached', async () => {
@@ -370,14 +360,12 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      const summary = grid.getAttribute('data-summary');
-      // Only the root visible while collapsed
-      expect(Number(grid.getAttribute('data-row-count'))).toBe(1);
-      // ...and that root should have 2 children attached
-      expect(summary).toBe('world-economy-v2-hybrid(2)');
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    const summary = grid.getAttribute('data-summary');
+    // Only the root visible while collapsed
+    expect(Number(grid.getAttribute('data-row-count'))).toBe(1);
+    // ...and that root should have 2 children attached
+    expect(summary).toBe('world-economy-v2-hybrid(2)');
   });
 
   test('deployment names containing `/` are treated as single entities (not split into segments)', async () => {
@@ -409,11 +397,9 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      // One root (the long-named app); its gpt-4o child is collapsed.
-      expect(Number(grid.getAttribute('data-row-count'))).toBe(1);
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    // One root (the long-named app); its gpt-4o child is collapsed.
+    expect(Number(grid.getAttribute('data-row-count'))).toBe(1);
   });
 
   test('NEW BE format: escaped `\\/` inside execution_path correctly links rows whose name contains "/"', async () => {
@@ -457,13 +443,11 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      // Single root "x" with one direct child ("a/b"). Grandchild "c" is nested
-      // under "a/b" and not visible while collapsed.
-      expect(Number(grid.getAttribute('data-row-count'))).toBe(1);
-      expect(grid.getAttribute('data-summary')).toBe('x(1)');
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    // Single root "x" with one direct child ("a/b"). Grandchild "c" is nested
+    // under "a/b" and not visible while collapsed.
+    expect(Number(grid.getAttribute('data-row-count'))).toBe(1);
+    expect(grid.getAttribute('data-summary')).toBe('x(1)');
   });
 
   test('OLD BE format: legacy `/`-only paths with slashy names still nest single-level', async () => {
@@ -495,10 +479,8 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      expect(grid.getAttribute('data-summary')).toBe('x(1)');
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    expect(grid.getAttribute('data-summary')).toBe('x(1)');
   });
 
   test('renders provided rows without fetching when `rows` prop is supplied', async () => {
@@ -517,9 +499,7 @@ describe('EntitiesConsumptionTree', () => {
 
     render(<EntitiesConsumptionTree title="Entities" rows={rows} loading={false} getData={getData} />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('tree-grid')).toBeInTheDocument();
-    });
+    expect(await screen.findByTestId('tree-grid')).toBeInTheDocument();
     expect(getData).not.toHaveBeenCalled();
   });
 
@@ -536,20 +516,19 @@ describe('EntitiesConsumptionTree', () => {
     // The promise rejects → catch sets treeData to null → finally clears loading.
     // The empty-data shell renders (data-row-count="0"); the only failure mode
     // we care about is "stuck spinner forever," which the loader assertion guards.
-    await waitFor(() => {
-      expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
-    });
-    const grid = screen.getByTestId('tree-grid');
+    const grid = await screen.findByTestId('tree-grid');
+    expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
     expect(grid.getAttribute('data-row-count')).toBe('0');
   });
 
   test('does not refetch when only the getData function reference changes', async () => {
     const { rerender } = render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+    await screen.findByTestId('tree-grid');
 
     const replacement = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(TREE_ROWS));
     rerender(<EntitiesConsumptionTree title="Entities" getData={replacement} />);
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    // Flush the effects and microtasks the rerender could have scheduled before asserting the absence.
+    await act(async () => {});
 
     expect(getData).toHaveBeenCalledTimes(1);
     expect(replacement).not.toHaveBeenCalled();
@@ -583,10 +562,8 @@ describe('EntitiesConsumptionTree', () => {
     getData = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(rows));
     render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
 
-    await waitFor(() => {
-      const grid = screen.getByTestId('tree-grid');
-      // Two synthetic roots: app-A and app-B. Each has its own router → leaf chain.
-      expect(Number(grid.getAttribute('data-row-count'))).toBe(2);
-    });
+    const grid = await screen.findByTestId('tree-grid');
+    // Two synthetic roots: app-A and app-B. Each has its own router → leaf chain.
+    expect(Number(grid.getAttribute('data-row-count'))).toBe(2);
   });
 });

@@ -69,12 +69,12 @@ describe('TryOut - MCP Container', () => {
     const sendButton = screen.getByRole('button', { name: ButtonsI18nKey.SendRequest });
     fireEvent.click(sendButton);
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(mockTryOutContainerTool).toHaveBeenCalledWith('container-123', {
         name: 'test-tool',
         arguments: {},
-      });
-    });
+      }),
+    );
 
     expect(mockTryOutTool).not.toHaveBeenCalled();
   });
@@ -87,12 +87,12 @@ describe('TryOut - MCP Container', () => {
     const sendButton = screen.getByRole('button', { name: ButtonsI18nKey.SendRequest });
     fireEvent.click(sendButton);
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(mockTryOutTool).toHaveBeenCalledWith('test-toolset', {
         name: 'test-tool',
         arguments: {},
-      });
-    });
+      }),
+    );
 
     expect(mockTryOutContainerTool).not.toHaveBeenCalled();
   });
@@ -105,14 +105,9 @@ describe('TryOut - MCP Container', () => {
     const sendButton = screen.getByRole('button', { name: ButtonsI18nKey.SendRequest });
     fireEvent.click(sendButton);
 
-    await waitFor(() => {
-      expect(mockTryOutContainerTool).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
-      const codeElements = screen.getAllByRole('code');
-      const hasError = codeElements.some((el) => el.textContent?.includes('Container is not running'));
-      expect(hasError).toBe(true);
-    });
+    await waitFor(() =>
+      expect(screen.getAllByRole('code').some((el) => el.textContent?.includes('Container is not running'))).toBe(true),
+    );
+    expect(mockTryOutContainerTool).toHaveBeenCalled();
   });
 });

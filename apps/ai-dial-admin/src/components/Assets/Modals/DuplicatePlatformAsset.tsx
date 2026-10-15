@@ -1,10 +1,16 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useState } from 'react';
+import { DialFormPopup, DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import { ButtonsI18nKey, EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  UpstreamEndpointsI18nKey,
+} from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import {
@@ -12,9 +18,11 @@ import {
   DialModelResource,
   DialPlatformApplicationResource,
   DialPlatformToolsetResource,
+  DialRouteResource,
   PlatformAsset,
   ToolsetAuthType,
 } from '@/src/models/dial/resource';
+import { UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
@@ -78,6 +86,17 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     return clone;
   });
   const [idExistsError, setIdExistsError] = useState<string>();
+  const [bearerKeys, setBearerKeys] = useState<Record<number, string>>({});
+  const bearerUpstreamIndexes = useMemo(() => {
+    if (view !== ApplicationRoute.PlatformRoutes) {
+      return [];
+    }
+
+    return ((clonedAsset as DialRouteResource).upstreams ?? []).flatMap((upstream, index) =>
+      upstream.authType === UpstreamAuthType.BEARER ? [index] : [],
+    );
+  }, [clonedAsset, view]);
+  const hasMissingBearerKey = bearerUpstreamIndexes.some((index) => !bearerKeys[index]);
 
   const onChangeId = useCallback(
     ({ name }: { name?: string }) => {
@@ -111,9 +130,23 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
       ? (clonedAsset as DialPlatformApplicationResource | DialPlatformToolsetResource).display_name
       : (clonedAsset as DialModelResource).displayName;
 
+  const onChangeBearerKey = useCallback((index: number, key?: string) => {
+    setBearerKeys((keys) => ({ ...keys, [index]: key ?? '' }));
+  }, []);
+
   const onDuplicateClick = useCallback(async () => {
+    const duplicate =
+      view === ApplicationRoute.PlatformRoutes
+        ? {
+            ...clonedAsset,
+            upstreams: (clonedAsset as DialRouteResource).upstreams?.map((upstream, index) =>
+              upstream.authType === UpstreamAuthType.BEARER ? { ...upstream, key: bearerKeys[index] } : upstream,
+            ),
+          }
+        : clonedAsset;
+
     if (!isRunner) {
-      onDuplicate(clonedAsset);
+      onDuplicate(duplicate);
       return;
     }
 
@@ -131,7 +164,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     }
 
     onDuplicate(clonedAsset);
-  }, [clonedAsset, isRunner, onDuplicate, t]);
+  }, [bearerKeys, clonedAsset, isRunner, onDuplicate, t, view]);
 
   return (
     <DialFormPopup
@@ -141,7 +174,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
       open={isModalOpen}
       onSubmit={onDuplicateClick}
       onCancel={onClose}
-      disableSubmitButton={!isValid}
+      disableSubmitButton={!isValid || hasMissingBearerKey}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
@@ -166,6 +199,16 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
           onChangeEntity={onChangeId}
         />
         {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}
+        {bearerUpstreamIndexes.map((index) => (
+          <DialPasswordInput
+            key={index}
+            id={`bearer-key-${index}`}
+            value={bearerKeys[index]}
+            placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+            labelProps={{ label: t(UpstreamEndpointsI18nKey.BearerKey, { index: index + 1 }), required: true }}
+            onChange={(key?: string) => onChangeBearerKey(index, key)}
+          />
+        ))}
       </div>
     </DialFormPopup>
   );

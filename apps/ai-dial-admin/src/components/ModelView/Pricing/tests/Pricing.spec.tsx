@@ -74,6 +74,18 @@ describe('Pricing', () => {
     expect(pricingControls).toHaveClass('flex-row');
   });
 
+  test('renders null rates in one row', () => {
+    const { container } = render(
+      <Pricing<TestModel>
+        model={{ pricing: { ...tokenPricing, prompt: null } as unknown as DialModelPricing }}
+        onChangeModel={vi.fn()}
+      />,
+    );
+
+    const pricingControls = container.querySelector('div.flex.gap-x-2.gap-y-4.items-start');
+    expect(pricingControls).toHaveClass('flex-row');
+  });
+
   test('renders the pricing group vertically when a rate is conditional', () => {
     const { container } = render(
       <Pricing<TestModel>

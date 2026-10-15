@@ -2,16 +2,15 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { DialInput, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
-import classnames from 'classnames';
+import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
-import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
-import { CompareI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AttributeSamples } from '@/src/models/evaluation/attribute-samples';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { CONDITION_MAX_LENGTH } from './constants';
@@ -22,6 +21,7 @@ import MetricSchemaSection from './Values/SchemaSection';
 interface Props {
   selectedTestSuite?: TestSuite;
   testCaseSchema?: TestCaseSchema[];
+  samples?: AttributeSamples;
   metricName?: string;
   selectedMetric?: Metric;
   selectedMetricDetails?: Metric;
@@ -56,6 +56,7 @@ const MetricConfiguration: FC<Props> = ({
   onChangeName,
   selectedTestSuite,
   testCaseSchema,
+  samples,
   onJsonViewChange,
   onChangeCondition,
 }) => {
@@ -67,16 +68,10 @@ const MetricConfiguration: FC<Props> = ({
     : undefined;
 
   const description = selectedMetric?.description || selectedMetricDetails?.description || '';
+  const displayName = selectedMetric?.displayName || selectedMetricDetails?.displayName;
 
-  const viewOptions: SelectOption[] = [
-    { value: 'controls', label: t(TestSuitesI18nKey.Controls) },
-    { value: 'json', label: 'JSON' },
-  ];
-
-  const onViewSelectChange = useCallback(
-    (value: string | string[]) => {
-      const v = Array.isArray(value) ? value[0] : value;
-      const jsonView = v === 'json';
+  const onJsonModeChange = useCallback(
+    (jsonView: boolean) => {
       setIsJsonView(jsonView);
       onJsonViewChange?.(jsonView);
     },
@@ -124,85 +119,94 @@ const MetricConfiguration: FC<Props> = ({
   }, [selectedMetricDetails]);
 
   return (
-    <div className={classnames('h-full flex flex-col gap-y-6', isJsonView ? 'w-full' : 'w-1/2')}>
-      <div className="flex flex-col">
-        <div className="flex flex-row justify-between items-start mb-4">
-          <p className="dial-small-semi">{selectedMetric?.displayName || selectedMetricDetails?.displayName}</p>
-          <DialSelect
-            prefix={`${t(CompareI18nKey.View)}: `}
-            size={SelectSize.Sm}
-            variant={SelectVariant.Secondary}
-            options={viewOptions}
-            value={isJsonView ? 'json' : 'controls'}
-            onChange={onViewSelectChange}
-          />
+    <div className="h-full flex gap-8 min-h-0">
+      <div className="w-[400px] shrink-0 flex flex-col gap-3 overflow-auto">
+        <div className="bg-layer-4 rounded p-3 flex flex-col gap-2 min-w-0 overflow-hidden">
+          <div className="flex flex-col gap-1 min-w-0">
+            <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.Metric)}</p>
+            <p className="text-base font-semibold text-primary leading-6 break-words">{displayName}</p>
+          </div>
+          {description ? (
+            <p className="dial-tiny-text text-secondary min-w-0 break-words [overflow-wrap:anywhere]">
+              <ContentWithLinks text={description} />
+            </p>
+          ) : null}
         </div>
-        <ExpandableText
-          lines={3}
-          className={classnames('h-full dial-tiny-text text-secondary', !isJsonView ? 'w-full' : 'w-1/2')}
-        >
-          <ContentWithLinks text={description} />
-        </ExpandableText>
+
+        {(selectedMetricOutputs?.length ?? 0) > 0 ? (
+          <div className="bg-layer-4 rounded p-3">
+            <MetricOutputs title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
+          </div>
+        ) : null}
       </div>
 
-      {isJsonView ? (
-        <div className="flex-1 min-h-0">
-          <JsonEditor
-            entity={metricConfigData as object}
-            options={{ stickyScroll: { enabled: false } }}
-            setSelectedEntity={onChangeMetricConfigData as Dispatch<SetStateAction<MetricConfigurationData>>}
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-3">
+        <div className="flex flex-row items-center justify-between shrink-0">
+          <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.SetUpMetric)}</p>
+          <DialSwitch
+            switchId="metric-json-mode"
+            label={t(TestSuitesI18nKey.JsonMode)}
+            isOn={isJsonView}
+            onChange={onJsonModeChange}
           />
         </div>
-      ) : (
-        <>
-          <DialInput
-            labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
-            value={metricName}
-            error={metricNameError}
-            invalid={!!metricNameError}
-            onChange={onChangeName}
-          />
 
-          <DialInput
-            labelProps={{ label: t(TestSuitesI18nKey.Condition) }}
-            caption={t(TestSuitesI18nKey.ConditionHint)}
-            placeholder="$exists(response.answer)"
-            maxLength={CONDITION_MAX_LENGTH}
-            value={condition ?? ''}
-            error={conditionError}
-            invalid={!!conditionError}
-            onChange={(value) => onChangeCondition?.(value ?? '')}
-          />
-
-          <div className="flex-1 min-h-0 gap-y-6 flex flex-col">
-            <div className="flex flex-col gap-y-4 border border-primary rounded p-4">
-              <MetricSchemaSection
-                title={t(TestSuitesI18nKey.Configuration)}
-                fields={selectedMetricParameters || []}
-                bindings={configBindings}
-                schema={selectedMetricDetails?.configSchema}
-                onChange={onChangeConfigBindings}
-              />
-            </div>
-
-            <div className="flex flex-col gap-y-4 border border-primary rounded p-4">
-              <MetricInputs
-                title={t(TestSuitesI18nKey.Inputs)}
-                bindings={inputBindings}
-                fields={selectedMetricInputs || []}
-                schema={selectedMetricDetails?.inputSchema}
-                onChange={onChangeInputBindings}
-                selectedTestSuite={selectedTestSuite}
-                testCaseSchema={testCaseSchema}
-              />
-            </div>
-
-            <div className="flex flex-col gap-y-4 border border-primary rounded p-4">
-              <MetricOutputs title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
-            </div>
+        {isJsonView ? (
+          <div className="flex-1 min-h-0">
+            <JsonEditor
+              entity={metricConfigData as object}
+              options={{ stickyScroll: { enabled: false } }}
+              setSelectedEntity={onChangeMetricConfigData as Dispatch<SetStateAction<MetricConfigurationData>>}
+            />
           </div>
-        </>
-      )}
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
+              <p className="dial-small-semi text-primary">{t(TabsI18nKey.Properties)}</p>
+              <DialInput
+                labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
+                value={metricName}
+                error={metricNameError}
+                invalid={!!metricNameError}
+                onChange={onChangeName}
+              />
+              <DialInput
+                labelProps={{ label: t(TestSuitesI18nKey.Condition) }}
+                caption={t(TestSuitesI18nKey.ConditionHint)}
+                placeholder="$exists(response.answer)"
+                maxLength={CONDITION_MAX_LENGTH}
+                value={condition ?? ''}
+                error={conditionError}
+                invalid={!!conditionError}
+                onChange={(value) => onChangeCondition?.(value ?? '')}
+              />
+            </div>
+
+            <div className="border-b border-secondary" />
+
+            <MetricSchemaSection
+              title={t(TestSuitesI18nKey.Configuration)}
+              fields={selectedMetricParameters || []}
+              bindings={configBindings}
+              schema={selectedMetricDetails?.configSchema}
+              onChange={onChangeConfigBindings}
+            />
+
+            <div className="border-b border-secondary" />
+
+            <MetricInputs
+              title={t(TestSuitesI18nKey.Inputs)}
+              bindings={inputBindings}
+              fields={selectedMetricInputs || []}
+              schema={selectedMetricDetails?.inputSchema}
+              onChange={onChangeInputBindings}
+              selectedTestSuite={selectedTestSuite}
+              testCaseSchema={testCaseSchema}
+              samples={samples}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

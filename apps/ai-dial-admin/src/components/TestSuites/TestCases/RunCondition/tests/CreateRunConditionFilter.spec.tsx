@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -143,12 +143,12 @@ describe('CreateRunConditionFilter', () => {
       />,
     );
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(onChange).toHaveBeenCalledWith(
         expect.objectContaining({
           predicates: [{ operator: RunConditionOperator.Contain, value: 'a' }],
         }),
-      );
-    });
+      ),
+    );
   });
 });

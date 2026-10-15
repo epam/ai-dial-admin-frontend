@@ -1,7 +1,7 @@
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import DuplicateToolset from '../DuplicateToolset';
 
@@ -147,7 +147,7 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(onDuplicate).toHaveBeenCalledWith(
           expect.objectContaining({
             name: expect.stringContaining('toolset1'),
@@ -182,7 +182,7 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(onDuplicate).toHaveBeenCalledWith(
           expect.objectContaining({
             authSettings: expect.objectContaining({
@@ -210,7 +210,7 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(onDuplicate).toHaveBeenCalledWith(
           expect.objectContaining({
             displayName: 'New Toolset Name',
@@ -235,7 +235,7 @@ describe('DuplicateToolset', () => {
 
       fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(onDuplicate).toHaveBeenCalledWith(
           expect.objectContaining({
             name: expect.stringContaining('toolset1'),

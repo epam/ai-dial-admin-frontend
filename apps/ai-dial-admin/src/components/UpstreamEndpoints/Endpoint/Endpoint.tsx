@@ -2,7 +2,15 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInput, DialNumberInput, DialPasswordInput, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import {
+  DialInput,
+  DialNumberInput,
+  DialPasswordInput,
+  DialRemoveButton,
+  DialSelectField,
+  DialTooltip,
+  SelectOption,
+} from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -21,7 +29,12 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { InterfaceFieldVariant } from '@/src/models/dial/interfaces';
-import { DialEndpointExtraData, DialModelEndpoint, DialUpstreamInterface } from '@/src/models/dial/model';
+import {
+  DialEndpointExtraData,
+  DialModelEndpoint,
+  DialUpstreamInterface,
+  UpstreamAuthType,
+} from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
@@ -34,6 +47,8 @@ interface Props {
   required?: boolean;
   view?: ApplicationRoute;
   withResponses?: boolean;
+  isAuthTypeSupported?: boolean;
+  isBearerKeyRequired?: boolean;
   updateEndpoint: (endpoint: DialModelEndpoint) => void;
   removeEndpoint: (index: number) => void;
 }
@@ -46,6 +61,8 @@ const Endpoint: FC<Props> = ({
   required,
   view,
   withResponses,
+  isAuthTypeSupported,
+  isBearerKeyRequired,
   updateEndpoint,
   removeEndpoint,
 }) => {
@@ -63,6 +80,12 @@ const Endpoint: FC<Props> = ({
     view === ApplicationRoute.ApplicationRunners ||
     view === ApplicationRoute.PlatformAppRunners;
   const idValidationField = `upstream-id-${index}`;
+  const keyValidationField = `upstream-key-${index}`;
+  const isKeyRequired = isAuthTypeSupported ? !!isBearerKeyRequired : !isKeyOptional;
+  const authTypeOptions: SelectOption[] = [
+    { value: UpstreamAuthType.API_KEY, label: t(UpstreamEndpointsI18nKey.ApiKey) },
+    { value: UpstreamAuthType.BEARER, label: t(UpstreamEndpointsI18nKey.Bearer) },
+  ];
   const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
   const [responsesEndpointWarning, setResponsesEndpointWarning] = useState('');
@@ -108,6 +131,29 @@ const Endpoint: FC<Props> = ({
     };
   }, [dispatch, idValidationField, isModelView, isIdRequiredForResponses]);
 
+  useEffect(() => {
+    if (!isAuthTypeSupported) {
+      return;
+    }
+
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: keyValidationField,
+      isValid: !isBearerKeyRequired || !!endpoint.key,
+    });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: keyValidationField });
+    };
+  }, [dispatch, endpoint.key, isAuthTypeSupported, isBearerKeyRequired, keyValidationField]);
+
+  const onChangeAuthType = useCallback(
+    (authType: string) => {
+      updateEndpoint({ ...endpoint, authType: authType as UpstreamAuthType });
+    },
+    [endpoint, updateEndpoint],
+  );
+
   const onChangeExtraData = useCallback(
     (extraData: DialEndpointExtraData | undefined | null) => {
       updateEndpoint({ ...endpoint, extraData });
@@ -146,7 +192,7 @@ const Endpoint: FC<Props> = ({
         </div>
       )}
 
-      <div className="flex flex-1 min-w-0 flex-col rounded border border-primary p-3 lg:border-none lg:p-0">
+      <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-primary p-3 lg:border-none lg:p-0">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
             <h3 className="small flex items-center">
@@ -236,13 +282,27 @@ const Endpoint: FC<Props> = ({
                 label={t(EntityFieldsI18nKey.baseUrl)}
                 onChange={onChangeBaseUrl}
               />
+              {isAuthTypeSupported && (
+                <DialSelectField
+                  disabled={disabled}
+                  id={`auth-type-${index}`}
+                  className="w-full"
+                  containerClassName="w-full"
+                  label={t(UpstreamEndpointsI18nKey.AuthenticationType)}
+                  value={endpoint.authType ?? UpstreamAuthType.API_KEY}
+                  options={authTypeOptions}
+                  onChange={(authType) => onChangeAuthType(authType as string)}
+                />
+              )}
               <DialPasswordInput
                 disabled={disabled}
                 id={`key-${index}`}
                 value={endpoint.key}
                 placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-                labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-                required={!isKeyOptional}
+                labelProps={{ label: t(UpstreamEndpointsI18nKey.Key), required: isKeyRequired }}
+                required={isKeyRequired}
+                error={isBearerKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
+                invalid={isBearerKeyRequired && !endpoint.key}
                 onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
               />
             </>
@@ -301,8 +361,8 @@ const Endpoint: FC<Props> = ({
         {/* Desktop expanded rows: row 2 (key full-width), row 3 (extraData + secretExtraData 50/50) */}
         {!isTablet && isExpanded && (
           <>
-            <div className="flex flex-row gap-x-2 mt-2 w-full">
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-row gap-x-2 w-full">
+              <div className={classNames('min-w-0', isAuthTypeSupported ? 'w-full' : 'flex-1')}>
                 <EndpointControl
                   disabled={disabled}
                   id={`upstream-base-url-${index}`}
@@ -313,20 +373,54 @@ const Endpoint: FC<Props> = ({
                   onChange={onChangeBaseUrl}
                 />
               </div>
-              <div className="flex-1 min-w-0">
-                <DialPasswordInput
-                  disabled={disabled}
-                  id={`key-${index}`}
-                  value={endpoint.key}
-                  placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-                  labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-                  required={!isKeyOptional}
-                  containerClassName="w-full"
-                  onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
-                />
-              </div>
+              {!isAuthTypeSupported && (
+                <div className="flex-1 min-w-0">
+                  <DialPasswordInput
+                    disabled={disabled}
+                    id={`key-${index}`}
+                    value={endpoint.key}
+                    placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                    labelProps={{ label: t(UpstreamEndpointsI18nKey.Key), required: isKeyRequired }}
+                    required={isKeyRequired}
+                    error={isBearerKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
+                    invalid={isBearerKeyRequired && !endpoint.key}
+                    containerClassName="w-full"
+                    onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+                  />
+                </div>
+              )}
             </div>
-            <div className="flex flex-row gap-x-2 mt-2 w-full">
+            {isAuthTypeSupported && (
+              <div className="flex flex-row gap-x-2 w-full">
+                <div className="flex-1 min-w-0">
+                  <DialSelectField
+                    disabled={disabled}
+                    id={`auth-type-${index}`}
+                    className="w-full"
+                    containerClassName="w-full"
+                    label={t(UpstreamEndpointsI18nKey.AuthenticationType)}
+                    value={endpoint.authType ?? UpstreamAuthType.API_KEY}
+                    options={authTypeOptions}
+                    onChange={(authType) => onChangeAuthType(authType as string)}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <DialPasswordInput
+                    disabled={disabled}
+                    id={`key-${index}`}
+                    value={endpoint.key}
+                    placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                    labelProps={{ label: t(UpstreamEndpointsI18nKey.Key), required: isKeyRequired }}
+                    required={isKeyRequired}
+                    error={isBearerKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
+                    invalid={isBearerKeyRequired && !endpoint.key}
+                    containerClassName="w-full"
+                    onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex flex-row gap-x-2 w-full">
               <ExtraDataField
                 label={t(EntityFieldsI18nKey.extraData)}
                 value={endpoint.extraData}

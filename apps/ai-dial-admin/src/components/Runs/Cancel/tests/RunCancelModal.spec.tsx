@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Run } from '@/src/models/evaluation/run';
@@ -35,9 +35,9 @@ describe('RunCancelModal', () => {
     render(<RunCancelModal run={run} onClose={onClose} onCancelRun={onCancelRun} onSuccess={onSuccess} />);
     confirmCancel();
 
-    await waitFor(() => expect(onCancelRun).toHaveBeenCalledWith('run-1'));
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    expect(onCancelRun).toHaveBeenCalledWith('run-1');
     expect(onClose).toHaveBeenCalledOnce();
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
     expect(showNotification.mock.calls[0][0]).toEqual(
       expect.objectContaining({ title: 'Runs.CancelRunSuccess', description: 'Runs.CancelRunSuccessDescription' }),
     );
@@ -50,7 +50,7 @@ describe('RunCancelModal', () => {
     render(<RunCancelModal run={run} onClose={vi.fn()} onCancelRun={onCancelRun} />);
     confirmCancel();
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
   });
 
   test('shows an error notification and does not call onSuccess when cancellation fails', async () => {
@@ -64,7 +64,7 @@ describe('RunCancelModal', () => {
     render(<RunCancelModal run={run} onClose={vi.fn()} onCancelRun={onCancelRun} onSuccess={onSuccess} />);
     confirmCancel();
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
     expect(showNotification.mock.calls[0][0]).toEqual(
       expect.objectContaining({ title: 'Error', description: 'Run already completed' }),
     );

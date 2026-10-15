@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ReactNode } from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import {
@@ -94,6 +94,10 @@ const singleTurnCase: TestCase = {
   data: { prompt: 'once' },
 };
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe('TryOutRequestPreview section labels', () => {
   test('renders one Variables section per turn when multi-turn only', async () => {
     getTestCaseTemplateVariables.mockResolvedValue({ '0': variables });
@@ -110,9 +114,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
-    });
+    expect(await screen.findAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
 
     expect(screen.getByText('Variables:prompt=turn-a')).toBeInTheDocument();
     expect(screen.getByText('Variables:prompt=turn-b')).toBeInTheDocument();
@@ -152,9 +154,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:shared=value')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:shared=value')).toBeInTheDocument();
 
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
     expect(screen.getAllByText('Variables:shared=value')).toHaveLength(1);
@@ -172,9 +172,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:shared=value')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:shared=value')).toBeInTheDocument();
   });
 
   test('shows Turn labels inside the active request tab for combined suites', async () => {
@@ -193,9 +191,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
-    });
+    expect(await screen.findAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
 
     expect(screen.getByText('Variables:prompt=turn-a')).toBeInTheDocument();
     expect(screen.getByText('Variables:prompt=turn-b')).toBeInTheDocument();
@@ -220,9 +216,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:prompt=once')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:prompt=once')).toBeInTheDocument();
   });
 
   test('fills per-turn attribute bindings from single-turn data without multiTurnData', async () => {
@@ -250,9 +244,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:prompt=once')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:prompt=once')).toBeInTheDocument();
   });
 
   test('keeps a single Variables section for single-turn cases', async () => {
@@ -270,9 +262,7 @@ describe('TryOutRequestPreview section labels', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:prompt=once')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:prompt=once')).toBeInTheDocument();
 
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.RequestLabel)).not.toBeInTheDocument();
@@ -319,17 +309,13 @@ describe('TryOutRequestPreview per-request variables', () => {
 
     const { unmount } = renderChain(chainSuite, 0);
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:greeting=zero')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:greeting=zero')).toBeInTheDocument();
     unmount();
 
     getTestCaseTemplateVariables.mockResolvedValue(byRequest);
     renderChain(chainSuite, 1);
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:greeting=one')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:greeting=one')).toBeInTheDocument();
   });
 
   test('does not inherit an earlier request constant binding', async () => {
@@ -337,9 +323,7 @@ describe('TryOutRequestPreview per-request variables', () => {
 
     renderChain({ ...chainSuite, additionalRequests: [{}] }, 1);
 
-    await waitFor(() => {
-      expect(screen.getByText('Variables:greeting=null')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Variables:greeting=null')).toBeInTheDocument();
 
     expect(screen.queryByText('Variables:greeting=zero')).not.toBeInTheDocument();
   });
@@ -349,9 +333,7 @@ describe('TryOutRequestPreview per-request variables', () => {
 
     renderChain(chainSuite, 0);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.RequestNoTemplateVariables)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.RequestNoTemplateVariables)).toBeInTheDocument();
   });
 
   test('treats a request the response does not mention as declaring no variables', async () => {
@@ -359,9 +341,7 @@ describe('TryOutRequestPreview per-request variables', () => {
 
     renderChain(chainSuite, 1);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.RequestNoTemplateVariables)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.RequestNoTemplateVariables)).toBeInTheDocument();
   });
 
   test('seeds the suite-level body with an entry per chain request', async () => {
@@ -378,8 +358,8 @@ describe('TryOutRequestPreview per-request variables', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(onChangeRequestBody).toHaveBeenCalledWith({ '0': { greeting: '' }, '1': { greeting: '' } });
-    });
+    await vi.waitFor(() =>
+      expect(onChangeRequestBody).toHaveBeenCalledWith({ '0': { greeting: '' }, '1': { greeting: '' } }),
+    );
   });
 });

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import { ButtonsI18nKey, EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { UpstreamAuthType } from '@/src/models/dial/model';
 import { PlatformAsset, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import DuplicatePlatformAsset from '../DuplicatePlatformAsset';
@@ -79,8 +80,10 @@ describe('DuplicatePlatformAsset', () => {
     fireEvent.change(idInput, { target: { value: 'http://runner/other' } });
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://runner/other'));
-    expect(onDuplicate).toHaveBeenCalledWith({ ...runner, name: 'runner-copy', $id: 'http://runner/other' });
+    await vi.waitFor(() =>
+      expect(onDuplicate).toHaveBeenCalledWith({ ...runner, name: 'runner-copy', $id: 'http://runner/other' }),
+    );
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://runner/other');
   });
 
   test('Should close without duplicating on cancel', async () => {
@@ -118,14 +121,14 @@ describe('DuplicatePlatformAsset', () => {
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    await waitFor(() => expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument());
+    expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
     expect(onDuplicate).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
       target: { value: 'http://runner/available' },
     });
 
-    await waitFor(() => expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull());
+    expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull();
   });
 
   test('Should render only a name field for a route, which has no displayName', () => {
@@ -212,12 +215,7 @@ describe('DuplicatePlatformAsset', () => {
       const application = {
         name: 'pl_App',
         display_name: 'Platform Application',
-        external_services: {
-          svc: {
-            display_name: 'Service',
-            auth_settings: { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' },
-          },
-        },
+        external_services: { svc: { auth_settings: { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' } } },
       } as unknown as PlatformAsset;
       const { onDuplicate } = renderModal(ApplicationRoute.AssetsApplications, application);
 
@@ -226,16 +224,11 @@ describe('DuplicatePlatformAsset', () => {
       expect(onDuplicate).toHaveBeenCalledWith({
         ...application,
         name: 'pl_App-copy',
-        external_services: {
-          svc: {
-            display_name: 'Service',
-            auth_settings: { authentication_type: ToolsetAuthType.NONE },
-          },
-        },
+        external_services: { svc: { auth_settings: { authentication_type: ToolsetAuthType.NONE } } },
       });
     });
 
-    test('resets only the OAuth entry in a mix of OAuth and non-OAuth external services', async () => {
+    test('resets only OAuth entries in a mixed set of external services', async () => {
       const user = userEvent.setup();
       const application = {
         name: 'pl_App',
@@ -267,6 +260,30 @@ describe('DuplicatePlatformAsset', () => {
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
       expect(onDuplicate).toHaveBeenCalledWith({ ...application, name: 'pl_App-copy' });
+    });
+  });
+
+  test('collects replacement keys for Bearer route upstreams before duplicating', async () => {
+    const user = userEvent.setup();
+    const route = {
+      name: 'bearer-route',
+      upstreams: [{ endpoint: 'https://example.test', authType: UpstreamAuthType.BEARER }],
+    } as PlatformAsset;
+    const { onDuplicate } = renderModal(ApplicationRoute.PlatformRoutes, route);
+
+    const duplicateButton = screen.getByRole('button', { name: ButtonsI18nKey.Duplicate });
+    expect(duplicateButton).toBeDisabled();
+
+    fireEvent.change(screen.getByPlaceholderText('EntityPlaceholders.UpstreamKey'), {
+      target: { value: 'replacement-key' },
+    });
+    await waitFor(() => expect(duplicateButton).toBeEnabled());
+    await user.click(duplicateButton);
+
+    expect(onDuplicate).toHaveBeenCalledWith({
+      ...route,
+      name: 'bearer-route-copy',
+      upstreams: [{ endpoint: 'https://example.test', authType: UpstreamAuthType.BEARER, key: 'replacement-key' }],
     });
   });
 });
