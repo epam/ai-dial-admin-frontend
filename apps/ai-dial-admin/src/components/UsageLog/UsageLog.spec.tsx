@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -47,10 +47,8 @@ describe('UsageLog', () => {
   test('renders UsageLog with a predefined entity', async () => {
     render(<UsageLog route={ApplicationRoute.Models} entityView={EntityViewTab.Traces} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: TabsI18nKey.Traces })).toBeInTheDocument();
-      expect(screen.queryByRole('tab')).toBeFalsy();
-    });
+    expect(await screen.findByRole('heading', { name: TabsI18nKey.Traces })).toBeInTheDocument();
+    expect(screen.queryByRole('tab')).toBeFalsy();
   });
 
   test('renders TimeFilter component', async () => {

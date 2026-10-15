@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -145,7 +145,7 @@ describe('Pipelines :: PipelinesView', () => {
       />,
     );
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Upstream unavailable',
@@ -161,7 +161,7 @@ describe('Pipelines :: PipelinesView', () => {
   test('falls back to its own title when the seeded failure carries no header', async () => {
     render(<PipelinesView initialPipelines={[]} loadFailure={{}} />);
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: AnalyticsPipelinesI18nKey.PipelinesLoadFailed }),
       ),
@@ -171,8 +171,8 @@ describe('Pipelines :: PipelinesView', () => {
   test('raises exactly one report for one seeded failure', async () => {
     render(<PipelinesView initialPipelines={[]} loadFailure={{ errorMessage: 'registry timed out' }} />);
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledTimes(1));
-    expect(showNotification).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
+    expect(showNotification).toHaveBeenCalledOnce();
   });
 
   test('renders the seeded rules and the specified columns', () => {
@@ -235,7 +235,7 @@ describe('Pipelines :: PipelinesView', () => {
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() => expect(screen.getByText('rows: 0')).toBeInTheDocument());
+    expect(await screen.findByText('rows: 0')).toBeInTheDocument();
     expect(screen.getByText('panel: closed')).toBeInTheDocument();
   });
 
@@ -277,7 +277,7 @@ describe('Pipelines :: PipelinesView', () => {
   test('offers the create action to a full admin', async () => {
     render(<PipelinesView initialPipelines={[rule()]} />);
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeEnabled());
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeEnabled();
   });
 
   // With the transform on the declaration there is no second registry the create action could depend on.
@@ -296,8 +296,8 @@ describe('Pipelines :: PipelinesView', () => {
 
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith('turn-feedback-live'));
-    await waitFor(() => expect(getPipelines).toHaveBeenCalled());
+    await vi.waitFor(() => expect(deletePipeline).toHaveBeenCalledWith('turn-feedback-live'));
+    await vi.waitFor(() => expect(getPipelines).toHaveBeenCalled());
   });
 
   test('reports a failed delete with the service message and keeps the row', async () => {
@@ -312,7 +312,7 @@ describe('Pipelines :: PipelinesView', () => {
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'rule_validation_failed', description: 'the rule is referenced elsewhere' }),
       ),
@@ -334,7 +334,7 @@ describe('Pipelines :: PipelinesView', () => {
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Upstream unavailable',
@@ -353,18 +353,18 @@ describe('Pipelines :: PipelinesView', () => {
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() => expect(getPipelines).toHaveBeenCalledWith());
+    await vi.waitFor(() => expect(getPipelines).toHaveBeenCalledWith());
   });
 
   test('a successful re-fetch after a seeded failure raises no further report', async () => {
     const user = userEvent.setup();
     render(<PipelinesView initialPipelines={[rule()]} loadFailure={{ errorMessage: 'registry timed out' }} />);
-    await waitFor(() => expect(showNotification).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
 
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() => expect(getPipelines).toHaveBeenCalledWith());
+    await vi.waitFor(() => expect(getPipelines).toHaveBeenCalledWith());
     expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: expect.any(String) }));
     expect(showNotification.mock.calls.filter(([n]) => n.description === 'registry timed out')).toHaveLength(1);
   });

@@ -17,6 +17,7 @@ import {
 } from '@/src/models/analytics/pipeline-backfill';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
 import { GroupListOrder, PipelineGroupsPage } from '@/src/models/analytics/pipeline-groups';
+import { PipelinePreview } from '@/src/models/analytics/pipeline-preview';
 import {
   PausedPipeline,
   PipelineRuntimeView,
@@ -51,6 +52,10 @@ export async function getPipelines(filters?: PipelinesListFilters): Promise<Serv
 
 export async function getPipeline(name: string): Promise<ServerActionResponse<Pipeline>> {
   return analyticsDataApi.getPipeline(name, await token());
+}
+
+export async function previewPipeline(name: string): Promise<ServerActionResponse<PipelinePreview>> {
+  return analyticsDataApi.previewPipeline(name, await token());
 }
 
 export async function createPipeline(dto: CreatePipelineDto): Promise<ServerActionResponse> {

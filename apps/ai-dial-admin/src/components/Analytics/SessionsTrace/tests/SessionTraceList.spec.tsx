@@ -314,6 +314,32 @@ describe('SessionTraceList — grouping', () => {
 // card's own root row, and the bottom tier is trace-level, read from the figures query. These assert that
 // placement — not how any of it is styled — because a value drifting between tiers is a value changing what
 // it claims to be.
+describe('SessionTraceList — started', () => {
+  test('states the date as well as the time, so cards on different days are told apart', () => {
+    renderList({
+      groups: [
+        group({
+          cards: [
+            card({ coreSpanId: 'a', startedAt: Date.UTC(2026, 7, 27, 10, 9, 18) }),
+            card({ coreSpanId: 'b', startedAt: Date.UTC(2026, 7, 28, 10, 9, 18) }),
+          ],
+        }),
+      ],
+    });
+
+    const started = screen.getAllByText(SessionsTraceI18nKey.TraceCardStarted).map((label) => label.parentElement);
+
+    expect(started[0]?.textContent).toContain(new Date(Date.UTC(2026, 7, 27, 10, 9, 18)).toLocaleString());
+    expect(started[1]?.textContent).toContain(new Date(Date.UTC(2026, 7, 28, 10, 9, 18)).toLocaleString());
+  });
+
+  test('marks a card with no recorded start as unavailable', () => {
+    renderList({ groups: [group({ cards: [card({ startedAt: null })] })] });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceCardStarted).parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+});
+
 describe('SessionTraceList — tiers', () => {
   test('states the card own facts in the middle tier, each labelled', () => {
     renderList();

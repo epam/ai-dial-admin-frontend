@@ -10,7 +10,13 @@ import DimensionCell from '@/src/components/Analytics/Usage/Breakdown/cells/Dime
 import MeasureCell, { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import ShareCell from '@/src/components/Analytics/Usage/Breakdown/cells/ShareCell';
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
-import { DIALOG_BLOCK_SIZE, ROUTE_KIND_TABS, SEARCH_DEBOUNCE_MS } from '@/src/components/Analytics/Usage/constants';
+import {
+  BREAKDOWN_CARD_HEIGHT,
+  BREAKDOWN_CARD_SCROLL_AFTER_ROWS,
+  DIALOG_BLOCK_SIZE,
+  ROUTE_KIND_TABS,
+  SEARCH_DEBOUNCE_MS,
+} from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -342,13 +348,18 @@ const BreakdownTable: FC<Props> = ({
     onHideAll();
     setSearchTerm('');
   }, [onHideAll]);
+  // Only with rows to size to: an empty card keeps the full box, so its message has somewhere to
+  // sit rather than being squeezed under the header.
+  const isCardAutoHeight = rowModels.length > 0 && rowModels.length <= BREAKDOWN_CARD_SCROLL_AFTER_ROWS;
+
   const grid = (
     <BreakdownGrid
       rows={rowModels}
       columnDefs={columnDefs}
       isLoading={rows.isLoading}
       hasFailed={rows.hasFailed}
-      className="h-[320px]"
+      isAutoHeight={isCardAutoHeight}
+      className={isCardAutoHeight ? void 0 : BREAKDOWN_CARD_HEIGHT}
     />
   );
 

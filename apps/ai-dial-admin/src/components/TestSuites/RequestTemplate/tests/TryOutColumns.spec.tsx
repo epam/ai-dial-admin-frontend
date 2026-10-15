@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { evaluateTryOutColumnSections } from '@/src/components/TestSuites/utils/evaluate-columns';
@@ -81,9 +81,7 @@ describe('TryOutColumns', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('testCol')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('testCol')).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.Results)).toBeInTheDocument();
     expect(screen.getByText('FlatResponseBody')).toBeInTheDocument();
     expect(evaluateTryOutColumnSections).toHaveBeenCalledWith(
@@ -157,9 +155,7 @@ describe('TryOutColumns', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('answer')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('answer')).toBeInTheDocument();
 
     expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
     expect(screen.queryByText('JsonEditor:{"out":"b"}')).not.toBeInTheDocument();
@@ -178,9 +174,7 @@ describe('TryOutColumns', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('is_correct')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('is_correct')).toBeInTheDocument();
     expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
     expect(screen.queryByText('answer')).not.toBeInTheDocument();
   });
@@ -239,9 +233,7 @@ describe('TryOutColumns', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
-    });
+    expect(await screen.findAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
 
     expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
     expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
@@ -261,11 +253,11 @@ describe('TryOutColumns', () => {
       <TryOutColumns testSuite={baseSuite} columns={[makeColumn()]} invocation={invocation} responseBody={null} />,
     );
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(evaluateTryOutColumnSections).toHaveBeenCalledWith(
         expect.objectContaining({ fallbackInvocation: invocation }),
-      );
-    });
+      ),
+    );
   });
 
   describe('column result cards', () => {
@@ -274,9 +266,7 @@ describe('TryOutColumns', () => {
 
       render(<TryOutColumns testSuite={baseSuite} columns={[makeColumn()]} responseBody={null} />);
 
-      await waitFor(() => {
-        expect(screen.getByText(columns[0].name)).toBeInTheDocument();
-      });
+      expect(await screen.findByText(columns[0].name)).toBeInTheDocument();
     };
 
     test('an extracted column shows its value and the valid badge', async () => {
@@ -374,9 +364,7 @@ describe('TryOutColumns', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
-    });
+    expect(await screen.findAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
 
     expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
     expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
@@ -394,8 +382,11 @@ describe('TryOutColumns', () => {
       <TryOutColumns testSuite={baseSuite} columns={[makeColumn()]} response={{}} request={{}} responseBody={null} />,
     );
 
-    await waitFor(() => {
-      expect(screen.queryByText('testCol')).not.toBeInTheDocument();
-    });
+    // The Results section replaces the loader once the evaluation has been consumed.
+    expect(await screen.findByText(TestSuitesI18nKey.Results)).toBeInTheDocument();
+
+    expect(evaluateTryOutColumnSections).toHaveBeenCalledOnce();
+    expect(screen.queryByText('testCol')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: TestSuitesI18nKey.ColumnResultLabel })).not.toBeInTheDocument();
   });
 });

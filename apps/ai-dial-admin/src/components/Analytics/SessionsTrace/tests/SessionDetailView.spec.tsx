@@ -93,6 +93,7 @@ const renderView = (props: Partial<ComponentProps<typeof SessionDetailView>> = {
     <SessionDetailView
       session={SESSION}
       insightColumns={[]}
+      metadataGroups={[]}
       feedback={null}
       bodyGrants={{ isRequestReadable: true, isResponseReadable: true }}
       nowMs={1000}
@@ -266,8 +267,8 @@ describe('SessionDetailView — opening a trace', () => {
 
     await openFirstTrace();
 
+    expect(await screen.findByText(SessionsTraceI18nKey.TraceLoadFailed)).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: BasicI18nKey.Loading })).toBeNull();
-    expect(screen.getByText(SessionsTraceI18nKey.TraceLoadFailed)).toBeInTheDocument();
   });
 
   test('clears the loader when the read reports a failure', async () => {
@@ -276,8 +277,8 @@ describe('SessionDetailView — opening a trace', () => {
 
     await openFirstTrace();
 
+    expect(await screen.findByText(SessionsTraceI18nKey.TraceLoadFailed)).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: BasicI18nKey.Loading })).toBeNull();
-    expect(screen.getByText(SessionsTraceI18nKey.TraceLoadFailed)).toBeInTheDocument();
   });
 
   // A loaded chain under a spinner reads as a chain that never loaded.
@@ -286,7 +287,7 @@ describe('SessionDetailView — opening a trace', () => {
 
     await openFirstTrace();
 
+    expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: BasicI18nKey.Loading })).toBeNull();
-    expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 });

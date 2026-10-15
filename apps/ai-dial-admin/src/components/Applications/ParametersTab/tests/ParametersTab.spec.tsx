@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -87,8 +87,8 @@ describe('Applications - ApplicationParametersTab', () => {
       />,
     );
 
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('publication-scheme'));
     expect(await screen.findByText('publication-model')).toBeInTheDocument();
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('publication-scheme');
   });
 
   test('resolves a platform-origin runner via its content $id before rendering', async () => {
@@ -106,7 +106,7 @@ describe('Applications - ApplicationParametersTab', () => {
       />,
     );
 
-    await waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
+    await vi.waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
+    await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
   });
 });

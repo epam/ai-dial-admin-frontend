@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getPipelines } from '@/src/app/[lang]/pipelines/actions';
@@ -67,7 +67,7 @@ describe('PipelinesView — permissions', () => {
     isFullAdmin.value = true;
     render(<PipelinesView initialPipelines={[rule]} />);
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeTruthy());
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeTruthy();
     expect(screen.getByText('hidden actions: false')).toBeTruthy();
   });
 });

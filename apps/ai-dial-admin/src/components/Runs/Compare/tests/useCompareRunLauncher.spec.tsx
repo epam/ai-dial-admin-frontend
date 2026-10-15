@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -89,9 +89,7 @@ describe('useCompareRunLauncher', () => {
 
     await user.click(screen.getByRole('button', { name: 'Compare' }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'apply-compare' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('button', { name: 'apply-compare' })).toBeInTheDocument();
   });
 
   test('opens compare page in new tab on confirm', async () => {
@@ -102,9 +100,7 @@ describe('useCompareRunLauncher', () => {
 
     await user.click(screen.getByRole('button', { name: 'Compare' }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'apply-compare' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('button', { name: 'apply-compare' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'apply-compare' }));
 

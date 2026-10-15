@@ -243,7 +243,7 @@ describe('RoleDrawer — adding a role', () => {
       modify: false,
       sensitive: false,
     });
-    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
 });
 

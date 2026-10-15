@@ -15,6 +15,9 @@ import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioName
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import { AUDIT_ENUM_VALUES_FILTER } from '@/src/components/ActivityAudit/List/audit-filter-components';
+import { EnumFilterValue } from '@/src/components/ActivityAudit/List/models';
+import { ANALYTICS_ACTIVITY_TYPES } from '@/src/constants/activity-audit';
 import OptionalValueCellRenderer, {
   MISSING_VALUE_DISPLAY,
 } from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
@@ -138,7 +141,7 @@ import RatingCellRenderer from '@/src/components/Analytics/SessionsTrace/List/Ra
 import UserCellRenderer from '@/src/components/Analytics/SessionsTrace/List/UserCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
-import { ActivityAuditView } from '@/src/types/activity-audit';
+import { ANALYTICS_AUDIT_RESOURCE_TYPES, ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { formatRunCost } from '@/src/components/Runs/Summary/utils';
 import {
@@ -312,9 +315,14 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
   },
 ];
 
-// Core takes a substring on these columns; the analytics backend does not.
-const getExactValueFilter = (view: ActivityAuditView): Partial<ColDef> =>
+// Core takes a substring on UUID columns; the analytics backend does not.
+const getIdentifierFilter = (view: ActivityAuditView): Partial<ColDef> =>
   view === ActivityAuditView.Analytics ? exactMatchFilter : baseStringFilter;
+
+const getEnumFilter = (view: ActivityAuditView, values: EnumFilterValue[]): Partial<ColDef> =>
+  view === ActivityAuditView.Analytics
+    ? { filter: AUDIT_ENUM_VALUES_FILTER, filterParams: { values }, floatingFilterComponent: EmptyFloatingFilter }
+    : baseStringFilter;
 
 export const ACTIVITY_AUDIT_COLUMNS = (
   t: (s: string) => string,
@@ -341,7 +349,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
   {
     field: 'activityType',
     headerName: 'Activity type',
-    ...getExactValueFilter(view),
+    ...getEnumFilter(
+      view,
+      ANALYTICS_ACTIVITY_TYPES.map((type) => ({ value: type, label: type })),
+    ),
     cellRenderer: ChildrenActivityTypeCellRenderer,
     cellRendererParams: {
       showIcon: !isSingleEntity,
@@ -354,7 +365,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
           tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-          ...getExactValueFilter(view),
+          ...getEnumFilter(
+            view,
+            ANALYTICS_AUDIT_RESOURCE_TYPES.map((type) => ({ value: type, label: getFormattedResourceType(type, t) })),
+          ),
         } as ColDef,
         { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,
       ]
@@ -371,8 +385,8 @@ export const ACTIVITY_AUDIT_COLUMNS = (
     filter: false,
   },
   { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
-  { field: 'activityId', headerName: 'Activity ID', ...getExactValueFilter(view) },
-  { field: 'parentActivityId', headerName: 'Parent ID', ...getExactValueFilter(view) },
+  { field: 'activityId', headerName: 'Activity ID', ...getIdentifierFilter(view) },
+  { field: 'parentActivityId', headerName: 'Parent ID', ...getIdentifierFilter(view) },
 ];
 
 export const BASE_KEYS_COLUMNS: ColDef[] = [

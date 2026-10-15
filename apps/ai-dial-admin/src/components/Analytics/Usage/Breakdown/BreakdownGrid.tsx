@@ -27,6 +27,8 @@ interface Props {
   datasourceKey?: string;
   blockSize?: number;
   isLoadingBlock?: boolean;
+  /** Sizes the grid to its rows instead of to `className`'s height. */
+  isAutoHeight?: boolean;
 }
 
 /** Roughly the grid's own header row, so the message sits in the body rather than across it. */
@@ -56,6 +58,7 @@ const BreakdownGrid: FC<Props> = ({
   datasourceKey,
   blockSize,
   isLoadingBlock,
+  isAutoHeight,
 }) => {
   const t = useI18n();
 
@@ -87,7 +90,7 @@ const BreakdownGrid: FC<Props> = ({
                 maxBlocksInCache: blockSize ? Math.floor(QUERY_ROW_LIMIT / blockSize) : void 0,
                 datasource,
               }
-            : { suppressNoRowsOverlay: true }
+            : { suppressNoRowsOverlay: true, ...(isAutoHeight ? { domLayout: 'autoHeight' as const } : {}) }
         }
         getIsEmptyData={() => false}
       />

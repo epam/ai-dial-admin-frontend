@@ -20,6 +20,10 @@ import PipelineBackfillBanner from '@/src/components/Analytics/Pipelines/Backfil
 import PipelineBackfillSidebar from '@/src/components/Analytics/Pipelines/Backfill/PipelineBackfillSidebar';
 import { usePipelineBackfillEntry } from '@/src/components/Analytics/Pipelines/Backfill/use-pipeline-backfill-entry';
 import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
+import PipelinePreview from '@/src/components/Analytics/Pipelines/Preview/PipelinePreview';
+import { PREVIEW_SECTION_ANCHORS } from '@/src/components/Analytics/Pipelines/Preview/constants';
+import { PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
+import { usePipelinePreview } from '@/src/components/Analytics/Pipelines/Preview/use-pipeline-preview';
 import PipelineGroups from '@/src/components/Analytics/Pipelines/Groups/PipelineGroups';
 import PipelineRuntime from '@/src/components/Analytics/Pipelines/PipelineRuntime';
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
@@ -57,7 +61,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineRuntimeStatus, RuntimeReadOutcome } from '@/src/models/analytics/pipeline-runtime';
 import { ApplicationRoute } from '@/src/types/routes';
-import { auditTab, EntityViewTab, groupsTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
+import { auditTab, EntityViewTab, groupsTab, previewTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { shouldShowPipelineBackfillBanner } from '@/src/utils/analytics/backfill';
@@ -121,6 +125,10 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
   const failures = usePipelineFailures(pipeline.name, canDeadLetter && !!featureFlags.analyticsEnabled);
   const failureCount = failures.counts.total;
 
+  // Held here, not by the tab: a result has to survive the reader switching to another tab and back, and a
+  // preview must never start by being looked at. The hook issues nothing until a run is asked for.
+  const preview = usePipelinePreview(pipeline.name, pipeline.generation);
+
   const pausedEntry = pauseOf(runtime.view?.status);
   const runtimeStatus = runtimeStatusOfView(runtime, pipeline.enabled, pipeline.kind);
   // Not the same question as what the chip states, and deliberately so: a read that did not land
@@ -158,8 +166,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
       : runtimeTab(t);
 
     return hasGroups
-      ? [propertiesTab(t), runtime, groupsTab(t), auditTab(t)]
-      : [propertiesTab(t), runtime, auditTab(t)];
+      ? [propertiesTab(t), previewTab(t), runtime, groupsTab(t), auditTab(t)]
+      : [propertiesTab(t), previewTab(t), runtime, auditTab(t)];
   }, [t, isFullAdmin, failureCount, hasGroups]);
 
   const assemblyContext = useMemo(
@@ -253,6 +261,20 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
     router,
   ]);
 
+  // The declaration's sections live on `Properties`, which mounts on the next commit, so the section is looked up
+  // after it. Scrolling and focus only: what the section holds, and any edit in it, is left as it is.
+  const onOpenSection = useCallback((section: PreviewSection) => {
+    setActiveTab(EntityViewTab.Properties);
+
+    if (section === PreviewSection.Properties) return;
+
+    requestAnimationFrame(() => {
+      const anchor = document.getElementById(PREVIEW_SECTION_ANCHORS[section]);
+      anchor?.scrollIntoView({ block: 'start' });
+      anchor?.focus({ preventScroll: true });
+    });
+  }, []);
+
   const onTryToSave = useCallback(() => {
     if (isEditorEnabled && jsonErrors?.length) {
       const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
@@ -329,6 +351,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
   // runtime toggle, and gating on it would hide the history of the toggle itself.
   const isTabStripShown = !!featureFlags.analyticsEnabled && !isEditorEnabled;
   const isAuditShown = isTabStripShown && activeTab === EntityViewTab.Audit;
+  const isPreviewShown = isTabStripShown && isFullAdmin && activeTab === EntityViewTab.Preview;
   const isRuntimeShown = isTabStripShown && isFullAdmin && activeTab === EntityViewTab.Runtime;
   const isGroupsShown = isTabStripShown && isFullAdmin && hasGroups && activeTab === EntityViewTab.Groups;
 
@@ -487,6 +510,14 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
             readonly={!isFullAdmin}
           />
         )}
+        {isPreviewShown && (
+          <PipelinePreview
+            pipeline={pipeline}
+            preview={preview}
+            hasUnsavedEdits={isChanged}
+            onOpenSection={onOpenSection}
+          />
+        )}
         {isRuntimeShown && (
           <PipelineRuntime
             pipeline={pipeline}
@@ -529,7 +560,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
             <PipelineAudit pipeline={pipeline} />
           </div>
         )}
-        {!isEditorEnabled && !isAuditShown && !isRuntimeShown && !isGroupsShown && properties}
+        {!isEditorEnabled && !isAuditShown && !isPreviewShown && !isRuntimeShown && !isGroupsShown && properties}
       </div>
     </div>
   );
