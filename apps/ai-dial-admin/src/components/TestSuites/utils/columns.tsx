@@ -587,10 +587,8 @@ export const getColumnsGridColumns = (
         onChange,
         hideTriangle: true,
       },
-      // Keep narrow and stable across request switches: without suppressSizeToFit,
-      // AgGridWrapper's fitGridWidth (sizeColumnsToFit) can expand this past the flex:1 share.
-      flex: 1,
-      maxWidth: 200,
+      // Fixed start width so every request opens the same. No maxWidth, so it can still be dragged wider.
+      width: 200,
       suppressSizeToFit: true,
     },
     {
