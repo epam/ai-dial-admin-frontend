@@ -245,6 +245,7 @@ export enum SessionsField {
   TotalPrice = 'total_price',
   PromptTokens = 'prompt_tokens',
   CompletionTokens = 'completion_tokens',
+  CachedPromptTokens = 'cached_prompt_tokens',
   SuccessCount = 'success_count',
   DurationMs = 'duration_ms',
   AvgDurationMs = 'avg_duration_ms',
@@ -333,6 +334,8 @@ export interface SessionDetailRow {
   last_request_time: number | string | null;
   prompt_tokens: number | string | null;
   completion_tokens: number | string | null;
+  // Optional because an instance's `sessions` entity may not report the column; absent reads as unavailable.
+  cached_prompt_tokens?: number | string | null;
   total_tokens: number | string | null;
   total_price: number | string | null;
   success_count: number | string | null;
@@ -735,6 +738,8 @@ export interface SpanFactRowProps {
   value: string;
   isMono?: boolean;
   valueClassName?: string;
+  // What the row's copy control puts on the clipboard. Absent where there is nothing to copy.
+  copyText?: string;
 }
 
 export interface SpanFieldGroup {
@@ -1056,6 +1061,7 @@ export enum SessionFieldFormat {
   DateTime = 'date-time',
   Duration = 'duration',
   List = 'list',
+  Share = 'share',
 }
 
 export enum SessionPanelLayout {
@@ -1066,6 +1072,8 @@ export enum SessionPanelLayout {
 export interface SessionFieldDefinition {
   labelKey: string;
   column?: SessionsField;
+  // The denominator of a `Share` field, which reads `column` as the part.
+  baseColumn?: SessionsField;
   format?: SessionFieldFormat;
   accentClassName?: string;
   // A caveat for a figure that cannot be read at face value. The panel exposes it through a focusable

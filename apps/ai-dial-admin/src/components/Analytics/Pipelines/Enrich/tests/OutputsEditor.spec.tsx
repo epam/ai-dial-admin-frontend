@@ -203,6 +203,15 @@ describe('OutputsEditor — a sql transform', () => {
     expect(screen.queryByLabelText(`${AnalyticsPipelinesI18nKey.OutputProse} 1`, { exact: false })).toBeNull();
     expect(screen.queryByLabelText(AnalyticsPipelinesI18nKey.OutputRefinement)).toBeNull();
   });
+
+  test('sizes the column headings the way the row sizes its fields, so they line up', () => {
+    render(<Host type={TransformType.Sql} seed={[{ name: 'topic', sql: 'count(*)' }]} />);
+
+    const headingItem = (key: AnalyticsPipelinesI18nKey) => screen.getByText(key).closest('label')?.parentElement;
+
+    expect(headingItem(AnalyticsPipelinesI18nKey.OutputColumn)?.className).toContain('flex-1');
+    expect(headingItem(AnalyticsPipelinesI18nKey.VarExpression)?.className).toContain('flex-[2]');
+  });
 });
 
 describe('OutputsEditor — editing', () => {

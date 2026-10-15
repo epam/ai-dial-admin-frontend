@@ -4,57 +4,69 @@ import { FC, useCallback } from 'react';
 
 import { DialIconButton, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import classNames from 'classnames';
 
+import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
+import { JsonAtaI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { SchemaTreeNode } from './utils';
-
-export interface SchemaTreeSelectResult {
-  expression: string;
-  type: string;
-}
 
 interface TreeItemProps {
   node: SchemaTreeNode;
   depth: number;
   expandedSet: Set<string>;
+  selectedPath?: string;
   onToggleExpand: (path: string) => void;
   onSelect: (result: SchemaTreeSelectResult) => void;
 }
 
-const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleExpand, onSelect }) => {
+const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, selectedPath, onToggleExpand, onSelect }) => {
+  const t = useI18n();
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedSet.has(node.path);
+  const isSelected = selectedPath === node.path;
 
-  const toggleExpand = useCallback(() => {
+  const onToggleNode = useCallback(() => {
     if (hasChildren) {
       onToggleExpand(node.path);
     }
   }, [hasChildren, node.path, onToggleExpand]);
 
-  const handleSelect = useCallback(() => {
-    toggleExpand();
+  const onSelectNode = useCallback(() => {
+    onToggleNode();
     onSelect({ expression: node.path, type: node.type.toUpperCase() });
-  }, [node.path, node.type, onSelect, toggleExpand]);
+  }, [node.path, node.type, onSelect, onToggleNode]);
 
   return (
     <div className="flex flex-col">
       <div
-        className="flex flex-row items-center gap-x-2 py-1 pr-1 rounded hover:bg-accent-primary-alpha group"
-        style={{ paddingLeft: depth ? depth * 20 : 4 }}
+        className={classNames(
+          'flex flex-row items-center gap-x-2 py-1 pr-2 rounded hover:bg-accent-primary-alpha',
+          isSelected && 'bg-accent-primary-alpha',
+        )}
+        style={{ paddingLeft: 4 + depth * 24 }}
       >
         {hasChildren ? (
           <DialIconButton
             className="flex items-center justify-center rounded text-secondary hover:bg-accent-primary-alpha hover:text-accent-primary cursor-pointer"
-            onClick={toggleExpand}
+            onClick={onToggleNode}
             size={ElementSize.Small}
-            icon={isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+            aria-label={t(isExpanded ? JsonAtaI18nKey.CollapseField : JsonAtaI18nKey.ExpandField, { name: node.name })}
+            aria-expanded={isExpanded}
+            icon={isExpanded ? <IconChevronDown size={16} aria-hidden /> : <IconChevronRight size={16} aria-hidden />}
           />
         ) : (
-          <div className="w-[24px] h-[24px]" />
+          <div className="w-[24px] h-[24px] shrink-0" />
         )}
-        <div className="flex-1 min-w-0 flex justify-between items-center truncate" onClick={handleSelect}>
+        <button
+          type="button"
+          className="flex-1 min-w-0 flex justify-between items-center gap-x-2 text-left cursor-pointer"
+          aria-current={isSelected || undefined}
+          onClick={onSelectNode}
+        >
           <span className="flex-1 min-w-0 small truncate">{node.name}</span>
           <DialTag label={node.type} className="rounded" />
-        </div>
+        </button>
       </div>
       {hasChildren &&
         isExpanded &&
@@ -64,6 +76,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
             node={child}
             depth={depth + 1}
             expandedSet={expandedSet}
+            selectedPath={selectedPath}
             onToggleExpand={onToggleExpand}
             onSelect={onSelect}
           />

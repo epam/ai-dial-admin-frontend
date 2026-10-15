@@ -1,13 +1,15 @@
 'use client';
 
 import { IconDatabase, IconGauge, IconMessage2, IconSparkles } from '@tabler/icons-react';
-import { FC, ReactNode, memo } from 'react';
+import { FC, ReactNode, memo, useMemo } from 'react';
 
 import SessionDetailPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailPanel';
 import SessionRailShell from '@/src/components/Analytics/SessionsTrace/Detail/SessionRailShell';
 import RatingCounts from '@/src/components/Analytics/SessionsTrace/RatingCounts';
 import SessionFeedbackPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionFeedbackPanel';
 import SessionFieldRows from '@/src/components/Analytics/SessionsTrace/Detail/SessionFieldRows';
+import SessionRecordJson from '@/src/components/Analytics/SessionsTrace/Detail/SessionRecordJson';
+import SpanFieldsSection from '@/src/components/Analytics/SessionsTrace/Detail/SpanFieldsSection';
 import SessionInsightsPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionInsightsPanel';
 import {
   SESSION_DETAIL_PANELS,
@@ -15,7 +17,11 @@ import {
   SESSION_INSIGHTS_PANEL,
   INSIGHTS_ABSENCE_KEY,
   PROVENANCE_TEXT_CLASS,
+  SESSION_FIELD_LABEL_KEY,
+  SESSION_GROUP_SUMMARY_FIELD,
+  SESSION_METADATA_PANEL,
 } from '@/src/constants/analytics/sessions-trace';
+import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
   SessionDetailPanel as Panel,
@@ -24,6 +30,7 @@ import {
   SessionInsightField,
   SessionInsightsState,
   SessionRatingCounts,
+  SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
 import { resolveSessionField } from '@/src/utils/analytics/session-detail-fields';
 import { sessionInsightsState } from '@/src/utils/analytics/session-insights';
@@ -40,6 +47,7 @@ const PANEL_ICON: Record<Panel, ReactNode> = {
 interface Props {
   session: SessionDetailRow;
   insightColumns: SessionInsightField[];
+  metadataGroups: SpanFieldGroup[];
   feedback: SessionFeedbackRow[];
   feedbackTotal: number | null;
   ratings: SessionRatingCounts | null;
@@ -49,6 +57,7 @@ interface Props {
 const SessionDetailRail: FC<Props> = ({
   session,
   insightColumns,
+  metadataGroups,
   feedback,
   feedbackTotal,
   ratings,
@@ -56,6 +65,20 @@ const SessionDetailRail: FC<Props> = ({
 }) => {
   const t = useI18n();
   const insightsState = sessionInsightsState(session, insightColumns);
+  // The schema's own label unless this view states the column more exactly: `success_count` counts turns with
+  // at least one successful hop, which the catalog's name does not say.
+  const groups = useMemo(
+    () =>
+      metadataGroups.map((group) => ({
+        ...group,
+        fields: group.fields.map((field) => {
+          const labelKey = SESSION_FIELD_LABEL_KEY[field.name];
+
+          return labelKey ? { ...field, label: t(labelKey) } : field;
+        }),
+      })),
+    [metadataGroups, t],
+  );
 
   return (
     <SessionRailShell className="flex-col gap-4 overflow-y-auto">
@@ -85,6 +108,25 @@ const SessionDetailRail: FC<Props> = ({
           />
         </SessionDetailPanel>
       ))}
+      <SessionDetailPanel
+        icon={PANEL_ICON[Panel.Metadata]}
+        iconClassName={PROVENANCE_TEXT_CLASS[SESSION_METADATA_PANEL.provenance]}
+        title={t(SESSION_METADATA_PANEL.labelKey)}
+        source={SESSION_METADATA_PANEL.sourceEntity}
+        action={<SessionRecordJson session={session} />}
+        isFramed={groups.length === 0}
+      >
+        {groups.length > 0 ? (
+          <SpanFieldsSection
+            groups={groups}
+            row={session as unknown as Record<string, unknown>}
+            isRecord
+            summaryFields={SESSION_GROUP_SUMMARY_FIELD}
+          />
+        ) : (
+          <p className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.DetailFieldsUnavailable)}</p>
+        )}
+      </SessionDetailPanel>
       <SessionDetailPanel
         icon={PANEL_ICON[Panel.Feedback]}
         iconClassName={PROVENANCE_TEXT_CLASS[SESSION_FEEDBACK_PANEL.provenance]}

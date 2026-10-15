@@ -41,28 +41,28 @@ describe('Activity audit :: server action', () => {
     expect(result).toEqual(RESPONSE_MOCK);
   });
 
-  test('Should call the analytics getActivitiesList action with the user token', async () => {
-    (analyticsAuditApi.getActivitiesList as any).mockResolvedValue(RESPONSE_MOCK);
+  test('Should call the analytics getActivitiesListAction action with the user token', async () => {
+    (analyticsAuditApi.getActivitiesListAction as any).mockResolvedValue(RESPONSE_MOCK);
 
     const sorts = [{ column: 'epochTimestampMs', direction: SortDirectionDto.DESC }] as SortDto[];
     const filters = [{ column: 'resourceType', value: 'Table' }] as FilterDto[];
 
     const result = await getAnalyticsActivities(25, 0, sorts, filters);
 
-    expect(analyticsAuditApi.getActivitiesList).toHaveBeenCalledWith(25, 0, TOKEN_MOCK, sorts, filters);
+    expect(analyticsAuditApi.getActivitiesListAction).toHaveBeenCalledWith(25, 0, TOKEN_MOCK, sorts, filters);
     expect(activityAuditApi.getActivitiesList).not.toHaveBeenCalled();
     expect(result).toEqual(RESPONSE_MOCK);
   });
 
   test('Should forward an incremented page number for a subsequent analytics block', async () => {
-    (analyticsAuditApi.getActivitiesList as any).mockResolvedValue(RESPONSE_MOCK);
+    (analyticsAuditApi.getActivitiesListAction as any).mockResolvedValue(RESPONSE_MOCK);
 
     const sorts = [{ column: 'epochTimestampMs', direction: SortDirectionDto.DESC }] as SortDto[];
     const filters = [{ column: 'resourceType', value: 'Table' }] as FilterDto[];
 
     await getAnalyticsActivities(25, 1, sorts, filters);
 
-    expect(analyticsAuditApi.getActivitiesList).toHaveBeenCalledWith(25, 1, TOKEN_MOCK, sorts, filters);
+    expect(analyticsAuditApi.getActivitiesListAction).toHaveBeenCalledWith(25, 1, TOKEN_MOCK, sorts, filters);
   });
 
   test('Should call getRevisionDetails action', async () => {

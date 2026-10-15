@@ -111,7 +111,8 @@ export const useSummaryOverviewData = ({
 
   const [primaryRun, setPrimaryRun] = useState<Run | null>(null);
   const [comparedRun, setComparedRun] = useState<Run | null>(null);
-  const [testSuite, setTestSuite] = useState<TestSuite | null>(null);
+  const [primaryTestSuite, setPrimaryTestSuite] = useState<TestSuite | null>(null);
+  const [comparedTestSuite, setComparedTestSuite] = useState<TestSuite | null>(null);
   const [primaryMetricScores, setPrimaryMetricScores] = useState<MetricScoresData | null>(null);
   const [comparedMetricScores, setComparedMetricScores] = useState<MetricScoresData | null>(null);
   const [primaryMetricOptions, setPrimaryMetricOptions] = useState<MetricOption[]>([]);
@@ -181,21 +182,30 @@ export const useSummaryOverviewData = ({
   }, [primaryRunId, comparedRunId]);
 
   useEffect(() => {
-    const suiteId = primaryRun?.testSuiteId ?? comparedRun?.testSuiteId;
-    if (!suiteId) {
-      setTestSuite(null);
-      return;
-    }
-
-    let cancelled = false;
-    getTestSuite(suiteId, DEFAULT_ETAG).then((res) => {
-      if (!cancelled) {
-        setTestSuite((res?.response as TestSuite | null) ?? null);
+    // Runs of different test suites can be compared, so each run resolves its own suite.
+    const loadSuite = (suiteId: string | undefined, setSuite: (suite: TestSuite | null) => void) => {
+      if (!suiteId) {
+        setSuite(null);
+        return () => {};
       }
-    });
+
+      let cancelled = false;
+      getTestSuite(suiteId, DEFAULT_ETAG).then((res) => {
+        if (!cancelled) {
+          setSuite((res?.response as TestSuite | null) ?? null);
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    };
+
+    const cancelPrimary = loadSuite(primaryRun?.testSuiteId, setPrimaryTestSuite);
+    const cancelCompared = loadSuite(comparedRun?.testSuiteId, setComparedTestSuite);
 
     return () => {
-      cancelled = true;
+      cancelPrimary();
+      cancelCompared();
     };
   }, [primaryRun?.testSuiteId, comparedRun?.testSuiteId]);
 
@@ -350,7 +360,8 @@ export const useSummaryOverviewData = ({
   return {
     primaryRun,
     comparedRun,
-    testSuite,
+    primaryTestSuite,
+    comparedTestSuite,
     enrichedPrimaryScores,
     enrichedComparedScores,
     metricOptions,

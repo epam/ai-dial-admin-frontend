@@ -1,4 +1,5 @@
 import { ComparisonOp } from '@/src/models/evaluation/structured-query';
+import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 
 export const TEST_SUITES_ENTITY = 'test_suites';
@@ -35,7 +36,15 @@ export const TEST_SUITE_COLUMN_TO_DSL_FIELD: Record<string, string> = {
   createdBy: 'created_by',
   createdAt: 'created_at_ms',
   updatedAt: 'updated_at_ms',
+  datasetId: 'dataset_id',
 };
+
+/** Scopes a test suites query to the suites bound to one dataset. */
+export const TEST_SUITE_DATASET_FILTER = (datasetId: string): FilterDto => ({
+  column: 'datasetId',
+  operator: FilterOperatorDto.EQUALS,
+  value: datasetId,
+});
 
 export const TEST_SUITE_SELECT_FIELDS = [
   'id',

@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import { ResponseColumn, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import FunctionParameterRow from '../FunctionParameterRow';
@@ -14,11 +14,26 @@ import { TestCaseItemType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialLabel: ({ label }: any) => <span>{label}</span>,
-  DialSelect: ({ options, value, searchable, onChange }: any) => (
+  DialSegmentedControl: ({ options, value, onChange }: any) => (
+    <div>
+      {options.map((option: any) => (
+        <button
+          key={option.value}
+          type="button"
+          data-active={String(value === option.value)}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  ),
+  DialSelect: ({ options, value, searchable, placeholder, onChange }: any) => (
     <>
       <select
         role="combobox"
         data-searchable={String(!!searchable)}
+        data-placeholder={placeholder ?? ''}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -33,18 +48,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         <span key={option.value}>{option.labelNode ?? option.label}</span>
       ))}
     </>
-  ),
-}));
-
-vi.mock('@/src/components/Common/TabSelector/TabSelector', () => ({
-  default: ({ tabs, activeTab, onChange }: any) => (
-    <div>
-      {tabs.map((tab: any) => (
-        <button key={tab.id} type="button" data-active={String(activeTab === tab.id)} onClick={() => onChange(tab.id)}>
-          {tab.label}
-        </button>
-      ))}
-    </div>
   ),
 }));
 
@@ -69,7 +72,7 @@ describe('FunctionParameterRow', () => {
     );
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreDatasetColumn)).toBeInTheDocument();
-    expect(screen.getByText(TabsI18nKey.TestCases)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.TestCase)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.ResponseColumn)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.Metric)).toBeInTheDocument();
   });
@@ -192,6 +195,6 @@ describe('FunctionParameterRow', () => {
 
     expect(onChangeSpy).toHaveBeenCalledWith({ $type: FunctionParameterSourceType.Response });
     expect(screen.getByText(TestSuitesI18nKey.ResponseColumn).closest('button')).toHaveAttribute('data-active', 'true');
-    expect(screen.getByText(TabsI18nKey.TestCases).closest('button')).toHaveAttribute('data-active', 'false');
+    expect(screen.getByText(TestSuitesI18nKey.TestCase).closest('button')).toHaveAttribute('data-active', 'false');
   });
 });

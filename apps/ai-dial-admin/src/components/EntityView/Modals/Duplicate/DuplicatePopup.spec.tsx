@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 
 import { ApplicationRoute } from '@/src/types/routes';
@@ -56,18 +56,14 @@ describe('DuplicatePopup', () => {
 
     fireEvent.click(duplicateBtn);
 
-    await waitFor(() => {
-      expect(duplicateBtn).toBeDisabled();
-      expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
+    expect(duplicateBtn).toBeDisabled();
 
     const idInput = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id);
 
     fireEvent.change(idInput, { target: { value: 'NewId' } });
 
-    await waitFor(() => {
-      expect(duplicateBtn).not.toBeDisabled();
-      expect(screen.queryByText(ErrorI18nKey.NameExists)).not.toBeInTheDocument();
-    });
+    expect(duplicateBtn).not.toBeDisabled();
+    expect(screen.queryByText(ErrorI18nKey.NameExists)).not.toBeInTheDocument();
   });
 });

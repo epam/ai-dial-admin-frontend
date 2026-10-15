@@ -71,3 +71,9 @@
 - [x] 10.10 Lay out a run's facts the same way for both kinds of run in one component (`BackfillRunFacts`): id, window, outcome in one coloured row, other measures, times; explain skipped and dropped rows behind an info icon; drop the retention sentence and the yellow failed-days line beside the status.
 - [x] 10.11 Replace the shared sidebar slot with the shared `Drawer` (the panel the table permissions use) at 600px through a `BackfillDrawer` wrapper that also closes on a press on the scrim; the page owns whether it is open, the sidebar content is a child, and the shell's own header and close control go.
 - [x] 10.12 Show rows inserted, skipped and dropped in one row beside the days, start and finish in a row of their own, drop the failed-days list and rename the re-run control "Rerun failed".
+
+## 11. Follow-up: re-ingest already ingested data
+
+- [x] 11.1 Thread `includeIngested` from the UI through `useTableBackfillRuns.start`, the `startTableBackfill` action and `analyticsDataApi.startTableBackfill`, replacing the hard-coded `false`; keep the shared `BackfillRange` free of it.
+- [x] 11.2 Add `TableBackfillReingestField` (2.0 `Checkbox` with a caption stating the cost) to the start form and beside **Rerun failed**, off by default in both, never inherited from the run; the re-run's caption says the succeeded days of its range are written again, and the run view is keyed by run so the choice resets per run.
+- [x] 11.3 Update the API and action tests for the passed flag; add sidebar tests for the default, both captions, a start with it on, a re-run with it on, its reset when another run is presented, and its absence on a run with nothing to re-run.

@@ -12,6 +12,7 @@ import {
 import { SuiteType } from '@/src/models/evaluation/test-suite';
 import { FilterOperatorDto, SortDirectionDto } from '@/src/types/request';
 
+import { TEST_SUITE_DATASET_FILTER } from '../constants';
 import {
   buildTestSuitesFilter,
   buildTestSuitesQuery,
@@ -21,6 +22,29 @@ import {
 } from '../test-suites-query';
 
 describe('test-suites-query', () => {
+  test('TEST_SUITE_DATASET_FILTER becomes a string-typed eq on dataset_id', () => {
+    expect(buildTestSuitesFilter([TEST_SUITE_DATASET_FILTER('DATASET_abc')])).toEqual({
+      op: ComparisonOp.Eq,
+      args: [
+        { type: ExprType.Field, name: 'dataset_id' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'DATASET_abc' },
+      ],
+    });
+  });
+
+  test('dataset scope combines with grid filters via and', () => {
+    const filter = buildTestSuitesFilter([
+      TEST_SUITE_DATASET_FILTER('ds-1'),
+      { column: 'name', value: 'x', operator: FilterOperatorDto.CONTAINS },
+    ]);
+    expect(filter).toMatchObject({ op: LogicalOp.And });
+    expect((filter as { args: unknown[] }).args).toHaveLength(2);
+  });
+
+  test('a query without a dataset scope carries no dataset_id filter', () => {
+    expect(JSON.stringify(buildTestSuitesQuery(0, 10, [], []).filter ?? null)).not.toContain('dataset_id');
+  });
+
   test('buildTestSuitesFilter returns undefined for empty filters', () => {
     expect(buildTestSuitesFilter([])).toBeUndefined();
   });

@@ -1,4 +1,4 @@
-import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { EntityType } from '@/src/types/entity-type';
@@ -68,3 +68,6 @@ export const importPreviewResource: Partial<Record<EntityType, ActivityAuditReso
   [EntityType.INTERCEPTOR_RUNNER]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
   [EntityType.ADAPTER]: ActivityAuditResourceType.ADAPTER,
 };
+
+// The activity types the analytics backend defines; the frontend's enum also holds Core's.
+export const ANALYTICS_ACTIVITY_TYPES = [ActivityAuditType.Create, ActivityAuditType.Update, ActivityAuditType.Delete];

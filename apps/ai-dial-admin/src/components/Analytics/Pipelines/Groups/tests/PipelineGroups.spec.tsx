@@ -164,7 +164,7 @@ describe('PipelineGroups', () => {
 
     await queueFirstGroup(user);
 
-    await waitFor(() => expect(getPipelineGroups).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(getPipelineGroups).toHaveBeenCalledTimes(2));
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupsQueued)).toBeNull();
   });
 });

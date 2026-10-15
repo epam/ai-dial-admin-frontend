@@ -92,7 +92,7 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
             />
             <DialPasswordInput
               id={`${fieldId}-key`}
-              labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+              labelProps={{ label: t(UpstreamEndpointsI18nKey.Key) }}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
               value={value.key}
               onChange={(key?: string) => onChange({ ...value, key })}

@@ -15,7 +15,7 @@ import { TableBackfillRun } from '@/src/models/analytics/table-backfill';
 interface Props {
   runs: TableBackfillRun[];
   isStarting: boolean;
-  onStart: (range: BackfillRange) => Promise<boolean>;
+  onStart: (range: BackfillRange, shouldIncludeIngested: boolean) => Promise<boolean>;
 }
 
 /**
@@ -34,8 +34,8 @@ const TableBackfillSidebarView: FC<Props> = ({ runs, isStarting, onStart }) => {
   const presented = runs.find((run) => run.runId === selectedRunId) ?? runningRun ?? runs[0];
 
   const onStartRange = useCallback(
-    async (range: BackfillRange) => {
-      if (await onStart(range)) setSelectedRunId(undefined);
+    async (range: BackfillRange, shouldIncludeIngested: boolean) => {
+      if (await onStart(range, shouldIncludeIngested)) setSelectedRunId(undefined);
     },
     [onStart],
   );
@@ -44,16 +44,21 @@ const TableBackfillSidebarView: FC<Props> = ({ runs, isStarting, onStart }) => {
     <div className="flex flex-col gap-y-4">
       {!runningRun && (
         <BackfillSection title={t(BackfillI18nKey.SectionStart)}>
-          <TableBackfillStartForm isStarting={isStarting} onStart={(range) => void onStartRange(range)} />
+          <TableBackfillStartForm
+            isStarting={isStarting}
+            onStart={(range, shouldIncludeIngested) => void onStartRange(range, shouldIncludeIngested)}
+          />
         </BackfillSection>
       )}
       {presented && (
         <BackfillSection title={t(BackfillI18nKey.SectionRun)}>
+          {/* Keyed by run, so a re-ingest choice made for one run does not carry to the next one shown. */}
           <TableBackfillRunView
+            key={presented.runId}
             run={presented}
             isAnyRunInProgress={Boolean(runningRun)}
             isStarting={isStarting}
-            onRerun={(range) => void onStartRange(range)}
+            onRerun={(range, shouldIncludeIngested) => void onStartRange(range, shouldIncludeIngested)}
           />
         </BackfillSection>
       )}

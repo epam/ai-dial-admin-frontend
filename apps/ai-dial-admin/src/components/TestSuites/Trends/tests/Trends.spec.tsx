@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import Trends from '@/src/components/TestSuites/Trends/Trends';
@@ -65,10 +65,8 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={suite} onStartRun={onStartRun} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.TrendsNoRunsTitle)).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.TrendsNoRunsDescription)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.TrendsNoRunsTitle)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.TrendsNoRunsDescription)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Run }));
     expect(onStartRun).toHaveBeenCalledTimes(1);
@@ -82,13 +80,11 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={suite} />);
 
-    await waitFor(() => {
-      expect(screen.queryByText(TestSuitesI18nKey.TrendsNoRunsTitle)).not.toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.TrendsNoRunsTitle)).not.toBeInTheDocument();
   });
 
   test('renders KPI and section titles when data is available', async () => {
@@ -123,13 +119,11 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={suite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('0.58')).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText('0.58')).toBeInTheDocument();
 
     expect(screen.queryByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).not.toBeInTheDocument();
   });
@@ -162,13 +156,11 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.5 }} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
-      expect(screen.getAllByText(new RegExp(TestSuitesI18nKey.TrendsRunsCount)).length).toBeGreaterThan(0);
-      expect(screen.getByText('/ 2')).toBeInTheDocument();
-      expect(screen.getByText(`1 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
-      expect(screen.getByText(`0 ${RunsI18nKey.Fail}`)).toBeInTheDocument();
-      expect(screen.getByText(`1 ${RunsI18nKey.ExecError}`)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
+    expect((await screen.findAllByText(new RegExp(TestSuitesI18nKey.TrendsRunsCount))).length).toBeGreaterThan(0);
+    expect(await screen.findByText('/ 2')).toBeInTheDocument();
+    expect(await screen.findByText(`1 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
+    expect(await screen.findByText(`0 ${RunsI18nKey.Fail}`)).toBeInTheDocument();
+    expect(await screen.findByText(`1 ${RunsI18nKey.ExecError}`)).toBeInTheDocument();
   });
 });

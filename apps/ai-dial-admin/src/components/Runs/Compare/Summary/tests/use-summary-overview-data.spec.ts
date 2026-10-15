@@ -64,6 +64,19 @@ describe('useSummaryOverviewData', () => {
     executeStructuredQueryMock.mockResolvedValue({ rows: [] });
   });
 
+  test('resolves the test suite of each run when the runs belong to different suites', async () => {
+    getMetricScoresComparisonMock.mockResolvedValue({ runs: [] });
+    getRunMock.mockImplementation((id: string) =>
+      Promise.resolve({ id, testSuiteId: id === 'run-1' ? 'suite-1' : 'suite-2' }),
+    );
+    getTestSuiteMock.mockImplementation((id: string) => Promise.resolve({ response: { id, name: `Name ${id}` } }));
+
+    const { result } = renderOverviewData();
+
+    await waitFor(() => expect(result.current.comparedTestSuite?.name).toBe('Name suite-2'));
+    expect(result.current.primaryTestSuite?.name).toBe('Name suite-1');
+  });
+
   test('treats an empty comparison payload as no matching test cases without toasting', async () => {
     getMetricScoresComparisonMock.mockResolvedValue({ runs: [] });
 
@@ -116,7 +129,7 @@ describe('useSummaryOverviewData', () => {
 
     renderOverviewData();
 
-    await waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalled());
+    await vi.waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalledTimes(4));
 
     // NOT (field IN [...]) shape: and([runFilter, not(in(field, values))]).
     const exclusionField = (query: { filter: { args: unknown[] } }) => {

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -120,9 +120,7 @@ describe('RoleEntities', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(gridState.gridOptions.some((options) => 'rowData' in options)).toBe(true);
-    });
+    await vi.waitFor(() => expect(gridState.gridOptions.some((options) => 'rowData' in options)).toBe(true));
 
     const initialGridOptions = gridState.gridOptions.find((options) => 'rowData' in options) as {
       columnDefs: Array<{
@@ -166,9 +164,7 @@ describe('RoleEntities', () => {
       <RoleEntities selectedRole={initialRole} models={models} isSkipRefresh onChangeRole={onChangeRole} />,
     );
 
-    await waitFor(() => {
-      expect(gridState.gridOptions.some((options) => 'rowData' in options)).toBe(true);
-    });
+    await vi.waitFor(() => expect(gridState.gridOptions.some((options) => 'rowData' in options)).toBe(true));
 
     const initialGridOptions = gridState.gridOptions.find((options) => 'rowData' in options) as {
       columnDefs: { field?: string; cellRendererParams?: { onChange?: (value: string, data: unknown) => void } }[];

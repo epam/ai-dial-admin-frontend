@@ -1,6 +1,6 @@
 import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { ExportComponentType } from '@/src/types/export';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -114,9 +114,7 @@ describe('ConfigurationPreview (deployments) — validation', () => {
 
     renderPreview();
 
-    await waitFor(() => {
-      expect(screen.getByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();
     const importButton = screen.getByRole('button', { name: /Buttons\.Import/i });
     expect(importButton).toBeDisabled();
   });
@@ -139,10 +137,7 @@ describe('ConfigurationPreview (deployments) — validation', () => {
 
     renderPreview();
 
-    await waitFor(() => {
-      expect(screen.getByText('bad!')).toBeInTheDocument();
-    });
-    expect(screen.getByText('bad!')).toHaveClass('text-error');
+    expect(await screen.findByText('bad!')).toHaveClass('text-error');
     const importButton = screen.getByRole('button', { name: /Buttons\.Import/i });
     expect(importButton).toBeDisabled();
   });
@@ -159,9 +154,8 @@ describe('ConfigurationPreview (deployments) — validation', () => {
 
     renderPreview();
 
-    await waitFor(() => {
-      expect(screen.queryByText(ImportI18nKey.ValidationBannerHeading)).not.toBeInTheDocument();
-    });
+    expect(await screen.findByText('echo')).toBeInTheDocument();
+    expect(screen.queryByText(ImportI18nKey.ValidationBannerHeading)).not.toBeInTheDocument();
     const importButton = screen.getByRole('button', { name: /Buttons\.Import/i });
     expect(importButton).not.toBeDisabled();
   });
@@ -177,9 +171,7 @@ describe('ConfigurationPreview (deployments) — validation', () => {
 
     renderPreview();
 
-    await waitFor(() => {
-      expect(mockShowNotification).toHaveBeenCalled();
-    });
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(screen.queryByText(ImportI18nKey.ValidationBannerHeading)).not.toBeInTheDocument();
   });
 
@@ -205,9 +197,7 @@ describe('ConfigurationPreview (deployments) — validation', () => {
 
     renderPreview();
 
-    await waitFor(() => {
-      expect(screen.getByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();
 
     fireEvent.click(screen.getByText(/AdapterContainers/i));
     expect(screen.getByText(ImportI18nKey.ValidationBannerHeading)).toBeInTheDocument();

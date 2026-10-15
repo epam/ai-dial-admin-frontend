@@ -1,35 +1,18 @@
 import { FC, ReactNode } from 'react';
 
-import classNames from 'classnames';
-
 import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
-import StatusBadge from '@/src/components/Common/StatusBadge/StatusBadge';
-import { StatusBadgeI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { CoreResourceValidity } from '@/src/models/dial/resource';
-import { getOverallStatusBadgeProps } from '@/src/utils/entities/overall-status';
 
 interface Props {
   id: string;
-  metadata?: CoreResourceValidity;
-  /** Rendered between the overall status badge and the id — the sync status slot. */
-  children?: ReactNode;
+  /** Independent badge elements; the row collapses when none of them renders anything. */
+  statusBadges?: ReactNode;
 }
 
-const HeaderIdBlock: FC<Props> = ({ id, metadata, children }) => {
-  const t = useI18n();
-  const badgeProps = getOverallStatusBadgeProps(metadata, {
-    valid: t(StatusBadgeI18nKey.Valid),
-    invalid: t(StatusBadgeI18nKey.Invalid),
-  });
-
-  return (
-    <div className={classNames('flex flex-col min-w-0', badgeProps ? 'gap-2' : 'gap-0.5')}>
-      {badgeProps && <StatusBadge {...badgeProps} />}
-      {children}
-      <ReadonlyId value={id} />
-    </div>
-  );
-};
+const HeaderIdBlock: FC<Props> = ({ id, statusBadges }) => (
+  <div className="flex flex-col gap-1 min-w-0">
+    <div className="flex items-center gap-5 py-1 empty:hidden">{statusBadges}</div>
+    <ReadonlyId value={id} />
+  </div>
+);
 
 export default HeaderIdBlock;

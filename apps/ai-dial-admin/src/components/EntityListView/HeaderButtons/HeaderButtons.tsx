@@ -20,6 +20,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { useImportProgress } from '@/src/hooks/use-import-progress';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -32,7 +33,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
+import { getErrorNotification } from '@/src/utils/notification';
 import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 
 interface Props<T> {
@@ -63,7 +64,8 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   isReadOnlyAdmin,
 }: Props<T>) => {
   const t = useI18n();
-  const { showNotification, removeNotification } = useNotification();
+  const { showNotification } = useNotification();
+  const runImport = useImportProgress();
   const getReqRef = useRef(useProtectedRequest());
 
   const folderContext = context?.();
@@ -98,12 +100,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         route,
       );
       const folderName = getFolderName(path) || '';
-      const prepareNotificationId = showNotification(
-        getPrepareNotification(
-          t(ImportI18nKey.PrepareTitle, { folder: folderName }),
-          t(ImportI18nKey.PrepareDescription, { folder: folderName }),
-        ),
-      );
 
       const importFunction = getImportFunction(route);
       const translatedType = t(getImportTitle(route)).toLowerCase();
@@ -111,7 +107,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
       const { maxFileSizeMb } = getImportSizeLimits(route);
       if (fileSize > maxFileSizeMb * (1024 * 1024)) {
-        removeNotification(prepareNotificationId);
         showNotification(
           getErrorNotification(
             t(ImportI18nKey.FileSizeErrorHeader),
@@ -119,8 +114,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           ),
         );
       } else {
-        getReqRef.current(importFunction, body, fileType).then((res) => {
-          removeNotification(prepareNotificationId);
+        runImport(folderName, () => getReqRef.current(importFunction, body, fileType)).then((res) => {
           if (res.success) {
             const error = (res.response as { error: string })?.error;
             if (error) {
@@ -138,7 +132,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
       handleModalClose();
     },
-    [folderContext, handleModalClose, removeNotification, route, showNotification, t],
+    [folderContext, handleModalClose, route, runImport, showNotification, t],
   );
 
   const onToggleColumnsPanel = useCallback(

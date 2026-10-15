@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
   resumePipeline,
 } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
-import { AnalyticsPipelinesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsPipelinesI18nKey, BackfillI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { DlqPage } from '@/src/models/analytics/pipeline-dlq';
@@ -156,7 +156,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   test('asks for no failures at all for a SQL enrichment', async () => {
     renderView();
 
-    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
+    await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeRunning);
     expect(getPipelineFailures).not.toHaveBeenCalled();
   });
 
@@ -195,7 +195,8 @@ describe('PipelineDetailView — runtime and pause', () => {
   test('states no runtime status for a disabled pipeline', async () => {
     renderView({ enabled: false });
 
-    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
+    // The Backfill entry is offered only once the runner's read has left `Pending`.
+    expect(await screen.findByRole('button', { name: BackfillI18nKey.Title })).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeNull();
   });
@@ -242,7 +243,8 @@ describe('PipelineDetailView — runtime and pause', () => {
     vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false });
     renderView();
 
-    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
+    // The Backfill entry is offered only once the runner's read has left `Pending`.
+    expect(await screen.findByRole('button', { name: BackfillI18nKey.Title })).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
   });
 
@@ -297,7 +299,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   test('raises no banner for a pipeline the runner does not report as paused', async () => {
     renderView();
 
-    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
+    await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeRunning);
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitle)).toBeNull();
   });
 
@@ -323,9 +325,9 @@ describe('PipelineDetailView — runtime and pause', () => {
     asPaused(OPERATOR_PAUSE);
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: AnalyticsPipelinesI18nKey.Pause }));
 
-    await waitFor(() => expect(pausePipeline).toHaveBeenCalledWith('feedback-live'));
-    expect(showNotification).toHaveBeenCalled();
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeTruthy());
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeTruthy();
+    expect(pausePipeline).toHaveBeenCalledWith('feedback-live');
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
   });
 
   test('resumes without a confirmation step', async () => {
@@ -336,7 +338,7 @@ describe('PipelineDetailView — runtime and pause', () => {
     await openRuntime(user);
     await user.click(tabControl(AnalyticsPipelinesI18nKey.Resume));
 
-    await waitFor(() => expect(resumePipeline).toHaveBeenCalledWith('feedback-live'));
+    await vi.waitFor(() => expect(resumePipeline).toHaveBeenCalledWith('feedback-live'));
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.PauseConfirmTitle)).toBeNull();
   });
 
@@ -354,7 +356,7 @@ describe('PipelineDetailView — runtime and pause', () => {
     await user.click(tabControl(AnalyticsPipelinesI18nKey.Pause));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: AnalyticsPipelinesI18nKey.Pause }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({
         title: AnalyticsPipelinesI18nKey.PauseFailed,
@@ -449,11 +451,11 @@ describe('PipelineDetailView — runtime and pause', () => {
     renderView();
 
     await openRuntime(user);
-    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalledOnce());
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.RuntimeReadAgain }));
 
-    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalledTimes(2));
-    expect(refresh).toHaveBeenCalled();
+    await vi.waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 });

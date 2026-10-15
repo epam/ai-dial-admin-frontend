@@ -1,17 +1,16 @@
-import { FC, KeyboardEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialInputPopup, DialLabel, DialTextarea } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInputPopup, DialLabel, PopupSize } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import SchemaTree from '@/src/components/Common/SchemaGrid/SchemaTree';
-import { schemaToTreeNodes } from '@/src/components/Common/SchemaGrid/utils';
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import JsonataEditor from '@/src/components/Common/JsonataEditor/JsonataEditor';
+import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { JsonataVariable } from '@/src/models/jsonata';
-import Suggestions, { SuggestionOption } from './Suggestions';
-import { getSchemaSuggestions, getVariableSuggestions } from './utils';
-import classNames from 'classnames';
+import { EDITOR_HINTS_OFF_OPTIONS } from './constants';
+import ReferenceFieldsPanel from './ReferenceFieldsPanel';
 
 interface Props {
   value: string;
@@ -24,9 +23,6 @@ interface Props {
   variables?: JsonataVariable[];
   onChangeValue: (expression: string, type?: string) => void;
 }
-
-const textareaScrollClassnames =
-  '[scrollbar-width:initial] [scrollbar-color:initial] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--stroke-primary,#57647A)] [&::-webkit-scrollbar-thumb]:rounded-full';
 
 const JsonAtaInput: FC<Props> = ({
   value,
@@ -45,40 +41,10 @@ const JsonAtaInput: FC<Props> = ({
 
   const [expression, setExpression] = useState(value);
   const [type, setType] = useState<string | undefined>(undefined);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const expressionFieldRef = useRef<HTMLDivElement>(null);
 
-  const resizeExpressionTextarea = useCallback(() => {
-    const textarea = expressionFieldRef.current?.querySelector('textarea');
-    if (!textarea) return;
-
-    const currentHeight = textarea.clientHeight;
-    textarea.style.height = '0px';
-    const contentHeight = textarea.scrollHeight;
-    textarea.style.height = `${Math.max(contentHeight, currentHeight)}px`;
-  }, []);
-
-  useLayoutEffect(() => {
-    resizeExpressionTextarea();
-  }, [expression, resizeExpressionTextarea]);
-
-  const onExpressionFieldRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      expressionFieldRef.current = node;
-      if (node) resizeExpressionTextarea();
-    },
-    [resizeExpressionTextarea],
-  );
-
-  const treeNodes = useMemo(() => {
-    if (!responseSchema || responseSchema.type !== 'object') return [];
-    return schemaToTreeNodes(responseSchema, '', responseSchema);
-  }, [responseSchema]);
-
-  const filteredSuggestions = useMemo(
-    () => [...getVariableSuggestions(variables ?? [], expression), ...getSchemaSuggestions(treeNodes, expression)],
-    [treeNodes, variables, expression],
+  const editorOptions = useMemo(
+    () => ({ stickyScroll: { enabled: false }, ...EDITOR_HINTS_OFF_OPTIONS, ariaLabel: header }),
+    [header],
   );
 
   const resetDraftFromValue = useCallback(() => {
@@ -105,48 +71,15 @@ const JsonAtaInput: FC<Props> = ({
     onCloseModal();
   }, [expression, type, onChangeValue, onCloseModal]);
 
-  const onPickFromSchema = useCallback((result: { expression: string; type: string }) => {
+  const onPickFromSchema = useCallback((result: SchemaTreeSelectResult) => {
     setExpression(result.expression);
     setType(result.type);
   }, []);
 
-  const onSelectSuggestion = useCallback((suggestion: SuggestionOption) => {
-    let newExpression = suggestion.value;
-
-    if (suggestion.type === 'array') {
-      newExpression += '[0]';
-    } else if (suggestion.type === 'object') {
-      newExpression += '.';
-    }
-
-    setExpression(newExpression);
-    setType(suggestion.type);
-    setHighlightIndex(0);
-    // Keep suggestions open for container types to allow drill-down
-    setShowSuggestions(suggestion.type === 'array' || suggestion.type === 'object');
+  const onChangeExpression = useCallback((updated: string) => {
+    setExpression(updated);
+    setType(undefined);
   }, []);
-
-  const onHighlightSuggestion = useCallback((idx: number) => setHighlightIndex(idx), []);
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setShowSuggestions(true);
-        setHighlightIndex((h) => (h + 1) % Math.max(filteredSuggestions.length, 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setShowSuggestions(true);
-        setHighlightIndex((h) => (h - 1 + filteredSuggestions.length) % Math.max(filteredSuggestions.length, 1));
-      } else if (e.key === 'Enter' && showSuggestions && filteredSuggestions[highlightIndex]) {
-        e.preventDefault();
-        onSelectSuggestion(filteredSuggestions[highlightIndex]);
-      } else if (e.key === 'Escape') {
-        setShowSuggestions(false);
-      }
-    },
-    [filteredSuggestions, highlightIndex, onSelectSuggestion, showSuggestions],
-  );
 
   return (
     <div className="flex flex-col gap-y-1">
@@ -163,39 +96,25 @@ const JsonAtaInput: FC<Props> = ({
           header={header}
           portalId="jsonAtaInputModal"
           open={isModalOpen}
+          size={PopupSize.Lg}
           onSubmit={onApply}
           submitLabel={t(ButtonsI18nKey.Apply)}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
           onCancel={onCancelModal}
           disableSubmitButton={!expression}
         >
-          <div className="px-6 py-4 h-[540px] flex flex-col gap-4">
-            <SchemaTree responseSchema={responseSchema} onSelect={onPickFromSchema} />
-            <div className="relative" ref={onExpressionFieldRef}>
-              <DialTextarea
-                id="expression"
-                className={classNames('resize-y !min-h-[36px] !max-h-[164px]', textareaScrollClassnames)}
-                labelProps={{ label: header, required: true }}
-                placeholder={t(EntityPlaceholdersI18nKey.Expression)}
-                value={expression}
-                onChange={(value) => {
-                  setExpression(value || '');
-                  setType(undefined);
-                  setShowSuggestions(true);
-                  setHighlightIndex(0);
-                }}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setShowSuggestions(false)}
-              />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <Suggestions
-                  suggestions={filteredSuggestions}
-                  highlightIndex={highlightIndex}
-                  onSelectSuggestion={onSelectSuggestion}
-                  onHighlightSuggestion={onHighlightSuggestion}
+          <div className="px-6 py-4 h-[512px] flex flex-row gap-x-3">
+            <ReferenceFieldsPanel responseSchema={responseSchema} onSelect={onPickFromSchema} />
+            <div className="flex flex-col flex-1 basis-0 min-w-0 min-h-0 gap-y-1">
+              <DialLabel label={header} />
+              <div className="flex-1 min-h-0 py-2 bg-layer-2 rounded overflow-hidden border border-secondary">
+                <JsonataEditor
+                  value={expression}
+                  onChange={onChangeExpression}
+                  options={editorOptions}
+                  variables={variables}
                 />
-              )}
+              </div>
             </div>
           </div>
         </DialFormPopup>

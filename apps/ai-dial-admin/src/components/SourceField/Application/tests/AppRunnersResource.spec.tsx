@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -97,7 +97,7 @@ describe('AppRunnersResource', () => {
 
     await selectRunner(ASSET_ID);
 
-    await waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
+    await vi.waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
     expect(onChangeValue).toHaveBeenCalledWith('http://asdqwe', { propA: 'default-a' });
   });
 
@@ -116,7 +116,7 @@ describe('AppRunnersResource', () => {
 
     await selectRunner(ASSET_ID);
 
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
+    await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
     expect(onChangeValue).toHaveBeenCalledWith('http://asdqwe/edited', { propA: 'default-a' });
   });
 
@@ -126,7 +126,7 @@ describe('AppRunnersResource', () => {
 
     await selectRunner('urn:runner:entity');
 
-    await waitFor(() => expect(onChangeValue).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' }));
     expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' });
   });
 
@@ -137,7 +137,7 @@ describe('AppRunnersResource', () => {
     render(<AppRunnersResource selectedValue="" onChangeValue={vi.fn()} runners={options} />);
     await selectRunner(ASSET_ID);
 
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe'));
+    await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe'));
     expect(getResolvedApplicationScheme).not.toHaveBeenCalled();
   });
 
@@ -149,7 +149,7 @@ describe('AppRunnersResource', () => {
     render(<AppRunnersResource selectedValue="" onChangeValue={vi.fn()} runners={options} />);
     await selectRunner('urn:runner:entity');
 
-    await waitFor(() => expect(getResolvedApplicationScheme).toHaveBeenCalledWith('urn:runner:entity'));
+    await vi.waitFor(() => expect(getResolvedApplicationScheme).toHaveBeenCalledWith('urn:runner:entity'));
   });
 
   test('a stored $id reopens as the selected option, not blank', () => {
@@ -165,7 +165,7 @@ describe('AppRunnersResource', () => {
 
     await selectRunner('urn:runner:entity');
 
-    await waitFor(() => expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' }));
+    await vi.waitFor(() => expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' }));
   });
 
   test('a stored id missing from the list is still shown, without an Open control', () => {

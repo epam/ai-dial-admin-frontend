@@ -9,6 +9,7 @@ import { IconColumns2, IconFileExport, IconPlayerStop } from '@tabler/icons-reac
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
 import { cancelRun, getRun } from '@/src/app/[lang]/runs/actions';
+import RunStatusBadge from '@/src/components/Common/RunStatus/RunStatusBadge';
 import { AdaptiveHeaderActionsConfig } from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
@@ -190,6 +191,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
           onChangeActiveTab={onChangeActiveTab}
           adaptiveActions={adaptiveActions}
           tabsTrailing={columnsTabsTrailing}
+          statusBadges={<RunStatusBadge run={selectedRun} />}
         />
 
         <div className="flex-1 overflow-auto min-h-0">

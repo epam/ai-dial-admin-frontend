@@ -46,8 +46,8 @@ describe('ImportConflicts', () => {
     expect(screen.getByText(`${MenuI18nKey.Prompts}: 1`)).toBeInTheDocument();
     expect(screen.queryByText(ImportI18nKey.EditManually)).not.toBeInTheDocument();
 
-    await waitFor(() => expect(setEditedFileMap).toHaveBeenCalledWith(filesMap));
-    await waitFor(() => expect(setStepsState).toHaveBeenCalledWith(StepStatus.VALID));
+    await vi.waitFor(() => expect(setEditedFileMap).toHaveBeenCalledWith(filesMap));
+    await vi.waitFor(() => expect(setStepsState).toHaveBeenCalledWith(StepStatus.VALID));
     await waitFor(() => expect(container.querySelector('.ag-error-row')).toBeInTheDocument());
   });
 });

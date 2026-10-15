@@ -142,6 +142,65 @@ describe('Assets Toolset :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('updateToolset sends no client_secret_hint or empty client_secret, so Core keeps the stored secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id' } }),
+      { etag: 'etag' },
+    );
+  });
+
+  test('updateToolset keeps a client secret the user typed', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', client_secret: 'typed-secret', client_secret_hint: 'cret' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id', client_secret: 'typed-secret' } }),
+      { etag: 'etag' },
+    );
+  });
+
+  test('createToolset sends no client_secret_hint or empty client_secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createToolset(
+      toolsetResource({ auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' } }),
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      expect.any(String),
+      expect.objectContaining({ auth_settings: { client_id: 'id' } }),
+    );
+  });
+
   test('updateToolset resolves identity from _metadata when the flat fields are absent', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 

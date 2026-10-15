@@ -12,11 +12,21 @@ export const getErrorForClientId = (clientId?: string, t?: (str: string) => stri
   return null;
 };
 
-export const getErrorForClientSecret = (clientSecret?: string, t?: (str: string) => string): FieldError | null => {
+export const getErrorForClientSecret = (
+  clientSecret?: string,
+  t?: (str: string, args?: Record<string, string | number>) => string,
+  minLength?: number,
+): FieldError | null => {
   if (!clientSecret || clientSecret.trim().length === 0) {
     return {
       type: ErrorType.EMPTY,
       text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
+  if (minLength != null && clientSecret.length < minLength) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t ? t(ErrorI18nKey.ClientSecretMinLength, { number: minLength }) : '',
     };
   }
   return null;

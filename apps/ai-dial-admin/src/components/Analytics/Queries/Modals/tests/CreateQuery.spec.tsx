@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -88,7 +88,7 @@ describe('CreateQuery', () => {
     typeName('Top chats');
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.name).toBe('Top chats');
     expect(request.query?.entity).toBe('dial_usage_log');
@@ -103,7 +103,7 @@ describe('CreateQuery', () => {
     typeName('Top chats');
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().scope).toBe(SavedQueryScope.Personal);
   });
 
@@ -114,7 +114,7 @@ describe('CreateQuery', () => {
     typeName('Top chats');
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect('description' in request).toBeFalsy();
     expect('tag' in request).toBeFalsy();
@@ -127,7 +127,7 @@ describe('CreateQuery', () => {
     typeName('Top chats');
     await submit(user);
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/queries/sq_new'));
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalledWith('/queries/sq_new'));
     expect(mockShowNotification).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
@@ -145,7 +145,7 @@ describe('CreateQuery', () => {
     typeName('Top chats');
     await submit(user);
 
-    await waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
     expect(screen.getByDisplayValue('Top chats')).toBeInTheDocument();
@@ -158,7 +158,7 @@ describe('CreateQuery', () => {
     typeName('Top chats');
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().query?.entity).toBe('');
   });
 });

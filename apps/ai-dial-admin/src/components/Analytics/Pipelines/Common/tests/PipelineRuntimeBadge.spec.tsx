@@ -24,6 +24,13 @@ describe('PipelineRuntimeBadge', () => {
     });
   });
 
+  // A grid cell is wider than any label, and a chip stretched across it reads as a bar, not a status.
+  test('sizes to its label rather than to its container', () => {
+    render(<PipelineRuntimeBadge status={PipelineRuntimeStatus.Running} />);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeRunning).parentElement?.className).toContain('w-fit');
+  });
+
   // A disabled pipeline, an unread runner and a caller without the rights to ask are all cases where
   // the console has no answer, and an "unknown" chip would imply it looked.
   test('renders nothing when there is no answer to state', () => {

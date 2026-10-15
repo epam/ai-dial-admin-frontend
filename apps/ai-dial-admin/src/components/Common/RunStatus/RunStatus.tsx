@@ -3,22 +3,17 @@ import { FC } from 'react';
 
 import { DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
 
+import { STATUS_BADGE_TONES } from '@/src/components/Common/StatusBadge/constants';
+import { StatusBadgeLeading } from '@/src/components/Common/StatusBadge/models';
 import { useI18n } from '@/src/locales/client';
 import { RunStatus } from '@/src/models/evaluation/run';
-import { getStatusLabel, isTransitionalRunStatus } from './utils';
+import { getRunStatusPresentation, getStatusLabel } from './utils';
 
 interface Props {
   status?: RunStatus | string;
   /** Dense surfaces (a list row) show the indicator only; the label stays in the tooltip and the a11y tree. */
   isLabelHidden?: boolean;
 }
-
-const SETTLED_STATUS_DOT_CLASS: Partial<Record<RunStatus, string>> = {
-  [RunStatus.PENDING]: 'bg-secondary',
-  [RunStatus.COMPLETED]: 'bg-accent-secondary',
-  [RunStatus.FAILED]: 'bg-error',
-  [RunStatus.CANCELLED]: 'bg-secondary',
-};
 
 const RunStatusComponent: FC<Props> = ({ status, isLabelHidden }) => {
   const t = useI18n();
@@ -28,13 +23,13 @@ const RunStatusComponent: FC<Props> = ({ status, isLabelHidden }) => {
   }
 
   const statusLabel = getStatusLabel(status, t);
-  const dotClass = SETTLED_STATUS_DOT_CLASS[status as RunStatus] ?? 'bg-secondary';
-  const isTransitional = isTransitionalRunStatus(status);
+  const { tone, leading } = getRunStatusPresentation(status);
+  const isTransitional = leading === StatusBadgeLeading.Spinner;
 
   const indicator = isTransitional ? (
     <DialLoader size={12} className="size-2" />
   ) : (
-    <div className={classNames('size-[10px] rounded-full', dotClass)}></div>
+    <div className={classNames('size-[10px] rounded-full bg-[currentColor]', STATUS_BADGE_TONES[tone].textClassName)} />
   );
 
   if (isLabelHidden) {

@@ -29,7 +29,7 @@ export async function getAnalyticsActivities(
   filters: FilterDto[],
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return analyticsAuditApi.getActivitiesList(pageSize, pageNumber, token, sorts, filters);
+  return analyticsAuditApi.getActivitiesListAction(pageSize, pageNumber, token, sorts, filters);
 }
 
 export async function getRevisionDetails(url: string) {

@@ -218,6 +218,8 @@ export interface CreatePipelineDto {
   advanced?: PipelineAdvanced;
   group_by?: GroupKey[];
   measures?: Measure[];
+  /** An aggregate's declaration as one statement, the alternative to `group_by` + `measures`; never alongside them. */
+  sql?: string;
 }
 
 /** Body of the enable/disable toggle, which is a state change rather than a re-declaration. */

@@ -17,7 +17,10 @@ Things that cost time or fail silently if you don't know them:
 - **`@/` resolves from `apps/ai-dial-admin/`**, so vitest must run from that directory or the alias
   won't resolve.
 - **`npm run test` always runs with coverage.** While iterating use
-  `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate.
+  `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate. It goes through
+  `scripts/run-tests.mjs`, which sets the heap limit (so it works on Windows too) and logs the exit code
+  and **signal** at the end: a run that stops with no test output and `signal=SIGKILL` was killed (out of
+  memory), not failed by a test.
 - **Two typecheck gates, both blocking, both at zero.** `npm run typecheck`
   (`tsc -p tsconfig.app.json`) covers app source; `npm run typecheck:specs`
   (`tsc -p tsconfig.spec.json`) covers `*.spec.ts(x)` plus `test-setup.tsx`. Both run in

@@ -8,6 +8,7 @@ import {
   formatHopDuration,
   formatSessionSpan,
   formatRelativeTime,
+  formatShare,
   formatSignificantCost,
   formatFixedCost,
 } from '@/src/utils/analytics/session-formatting';
@@ -279,5 +280,22 @@ describe('formatFixedCost', () => {
 
   test('renders an empty cell for a missing value', () => {
     expect(formatFixedCost(null)).toBe('');
+  });
+});
+
+describe('formatShare', () => {
+  test('states a whole percentage from 10% up', () => {
+    expect(formatShare(250, 1000)).toBe('25%');
+    expect(formatShare(999, 1000)).toBe('100%');
+  });
+
+  test('keeps one decimal below 10% so a small share does not read as zero', () => {
+    expect(formatShare(5, 1000)).toBe('0.5%');
+    expect(formatShare(40, 1000)).toBe('4%');
+  });
+
+  test('states 0% only for a zero part', () => {
+    expect(formatShare(0, 1000)).toBe('0%');
+    expect(formatShare(1, 100000)).toBe('<0.1%');
   });
 });

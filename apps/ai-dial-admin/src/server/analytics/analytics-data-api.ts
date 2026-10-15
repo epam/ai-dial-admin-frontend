@@ -25,6 +25,7 @@ import {
   PipelineView,
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
+import { PipelinePreview } from '@/src/models/analytics/pipeline-preview';
 import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
@@ -78,6 +79,7 @@ const UNPROCESSABLE = 422;
 
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
+export const PIPELINE_PREVIEW_URL = (name: string): string => `${PIPELINE_URL(name)}/preview`;
 
 // `Compiled` is what carries everything the service resolved — the composed response schema, the grain
 // key, the version column, the output mapping and the read source — and it resolves for the `Enrich`
@@ -346,6 +348,19 @@ export class AnalyticsDataApi extends BaseApi {
     return this.deleteAction(PIPELINE_URL(name), token);
   }
 
+  /**
+   * The dry-run of the saved declaration. No body is sent: the body only narrows an enrich sample, and an
+   * aggregate refuses any. A failure is returned untouched, its `errorHeader` carrying the service's code,
+   * because the caller tells a refused declaration from a budget refusal and from no access by that code.
+   */
+  async previewPipeline(name: string, token: Token): Promise<ServerActionResponse<PipelinePreview>> {
+    const res = await this.sendActionRequest(PIPELINE_PREVIEW_URL(name), 'POST', token);
+
+    if (!res.success) return res;
+
+    return res.response ? res : unreadableBody(res);
+  }
+
   previewCatalogExport(
     request: CatalogExportRequest,
     token: Token,
@@ -383,8 +398,13 @@ export class AnalyticsDataApi extends BaseApi {
     );
   }
 
-  startTableBackfill(from: string, to: string, token: Token): Promise<ServerActionResponse<TableBackfillStart>> {
-    return this.postAction<TableBackfillRequest>(TABLE_BACKFILL_URL, { from, to, includeIngested: false }, token);
+  startTableBackfill(
+    from: string,
+    to: string,
+    includeIngested: boolean,
+    token: Token,
+  ): Promise<ServerActionResponse<TableBackfillStart>> {
+    return this.postAction<TableBackfillRequest>(TABLE_BACKFILL_URL, { from, to, includeIngested }, token);
   }
 
   /** At most five, in one instance's memory: an empty list is a run-less instance, not proof that none exists. */

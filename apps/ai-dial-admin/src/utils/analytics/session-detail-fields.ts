@@ -13,6 +13,7 @@ import {
 import {
   formatCompactNumber,
   formatSessionDuration,
+  formatShare,
   formatSignificantCost,
   toMillis,
 } from '@/src/utils/analytics/session-formatting';
@@ -45,6 +46,23 @@ const formatValue = (raw: FieldValue, format?: SessionFieldFormat): string => {
 export const sessionTitle = (record: SessionTitleSource): string | null =>
   record[SessionsField.InsightTitle]?.trim() || null;
 
+// A reported zero is a measurement and states `0%`; a part the rollup did not report, or a whole that is not
+// positive, is not a measurement of anything, so it is unavailable rather than a miss.
+const resolveShare = (
+  base: Pick<ResolvedSessionField, 'labelKey' | 'accentClassName' | 'hintKey'>,
+  part: FieldValue | undefined,
+  whole: FieldValue | undefined,
+): ResolvedSessionField => {
+  const partValue = toNumber(part as number | string | null);
+  const wholeValue = toNumber(whole as number | string | null);
+
+  if (partValue == null || wholeValue == null || wholeValue <= 0) {
+    return { ...base, state: SessionFieldState.Unavailable, text: UNAVAILABLE_VALUE };
+  }
+
+  return { ...base, state: SessionFieldState.Available, text: formatShare(partValue, wholeValue) };
+};
+
 export const resolveSessionField = (
   definition: SessionFieldDefinition,
   record: SessionDetailRow,
@@ -56,6 +74,10 @@ export const resolveSessionField = (
 
   if (!column) {
     return { ...base, state: SessionFieldState.Unavailable, text: UNAVAILABLE_VALUE };
+  }
+
+  if (format === SessionFieldFormat.Share) {
+    return resolveShare(base, record[column], definition.baseColumn && record[definition.baseColumn]);
   }
 
   const raw = record[column];

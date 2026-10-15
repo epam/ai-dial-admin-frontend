@@ -51,7 +51,7 @@ describe('useCatalogProperties', () => {
   test('reports values matching the schema as valid', async () => {
     renderHook(() => useCatalogProperties(AGENT_ID, { tag: 'New' }));
 
-    await waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(true));
+    await vi.waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(true));
     expect(validityOf(dispatch.mock.calls)).not.toContain(false);
   });
 
@@ -59,14 +59,14 @@ describe('useCatalogProperties', () => {
   test('blocks the save for stored values that violate the schema, with no editor ever rendered', async () => {
     const { result } = renderHook(() => useCatalogProperties(AGENT_ID, { tag: 'Retired' }));
 
-    await waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(false));
-    expect(result.current.errors.map((error) => error.field)).toEqual(['tag']);
+    await waitFor(() => expect(result.current.errors.map((error) => error.field)).toEqual(['tag']));
+    await vi.waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(false));
   });
 
   test('blocks the save for a required value left empty', async () => {
     renderHook(() => useCatalogProperties(AGENT_ID, {}));
 
-    await waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(false));
+    await vi.waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(false));
   });
 
   test('re-validates against the new schema when the selection changes on another tab', async () => {
@@ -79,13 +79,13 @@ describe('useCatalogProperties', () => {
     rerender({ id: MODEL_ID });
 
     await waitFor(() => expect(result.current.errors.map((error) => error.field)).toEqual(['rank']));
-    expect(validityOf(dispatch.mock.calls)).toContain(false);
+    await vi.waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(false));
   });
 
   test('reports no schema selected as valid, so an unrelated save is not blocked', async () => {
     renderHook(() => useCatalogProperties(undefined, undefined));
 
-    await waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(true));
+    await vi.waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(true));
     expect(getCatalogSchemaById).not.toHaveBeenCalled();
   });
 
@@ -96,12 +96,12 @@ describe('useCatalogProperties', () => {
 
     await waitFor(() => expect(result.current.hasReadFailed).toBe(true));
     expect(result.current.schema).toBeUndefined();
-    expect(validityOf(dispatch.mock.calls)).toContain(true);
+    await vi.waitFor(() => expect(validityOf(dispatch.mock.calls)).toContain(true));
   });
 
   test('resolves the schema by its own id', async () => {
     renderHook(() => useCatalogProperties(AGENT_ID, {}));
 
-    await waitFor(() => expect(getCatalogSchemaById).toHaveBeenCalledWith(AGENT_ID));
+    await vi.waitFor(() => expect(getCatalogSchemaById).toHaveBeenCalledWith(AGENT_ID));
   });
 });
