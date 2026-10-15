@@ -88,6 +88,9 @@ const BreakdownGrid: FC<Props> = ({
                 // block count holds a quarter of the rows, and scrolling back re-read every one of
                 // them — twice over, since a block also re-asks the previous window.
                 maxBlocksInCache: blockSize ? Math.floor(QUERY_ROW_LIMIT / blockSize) : void 0,
+                // One column at a time, Shift held or not: the backend ranks on one key, so a second
+                // sort would show an order the rows do not have.
+                suppressMultiSort: true,
                 datasource,
               }
             : { suppressNoRowsOverlay: true, ...(isAutoHeight ? { domLayout: 'autoHeight' as const } : {}) }
