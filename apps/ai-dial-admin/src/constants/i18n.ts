@@ -548,7 +548,11 @@ export enum UpstreamEndpointsI18nKey {
   Endpoints = 'UpstreamEndpoints.Endpoints',
   EndpointsWithResponses = 'UpstreamEndpoints.EndpointsWithResponses',
   EndpointResponseCaption = 'UpstreamEndpoints.EndpointResponseCaption',
-  Keys = 'UpstreamEndpoints.Keys',
+  Key = 'UpstreamEndpoints.Key',
+  AuthenticationType = 'UpstreamEndpoints.AuthenticationType',
+  ApiKey = 'UpstreamEndpoints.ApiKey',
+  Bearer = 'UpstreamEndpoints.Bearer',
+  BearerKey = 'UpstreamEndpoints.BearerKey',
 }
 
 export enum ModelViewI18nKey {
