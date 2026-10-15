@@ -61,7 +61,7 @@ The CI cause is unknown, so no fix is chosen from guesswork. The first PR change
 
 `testTimeout: 15_000`, `hookTimeout: 15_000`, and `configure({ asyncUtilTimeout: 4_000 })` in `test-setup.tsx`. Measured: the slowest tests are 2.7–3.4 s in isolation on an idle machine against a 5 s limit; 15 s gives ~4x, and 4 s for `findBy*`/`waitFor` gives ~4x over the 1 s default. Remove the dead `threads: false`.
 
-*Alternatives:* much larger values (hides hangs); separate local and CI values (two behaviours to reason about, and the failure mode we are chasing is CI-only anyway); per-test overrides (the rule in `testing.md` §9.2 forbids them).
+*Alternatives:* much larger values (hides hangs); separate local and CI values (two behaviours to reason about, and the failure mode we are chasing is CI-only anyway); per-test overrides (the rule in `testing.md` §9 rule 2 forbids them).
 
 **Retry is off.** `retry` re-runs a failed test and reports it green, which would hide both genuine regressions and the very failures we are trying to name. It stays out until after D1/D2, and is reconsidered only if a measured residual rate remains.
 
@@ -69,7 +69,7 @@ The CI cause is unknown, so no fix is chosen from guesswork. The first PR change
 
 `.claude/rules/testing.md` §9 tells authors what to do, but §4.5 already said "mock heavy children" and 12 specs outside `components/Grid` still render the real grid, so prose alone is not enough. The main ESLint config ignores all specs (`**/**.spec.ts(x)`), and un-ignoring them would surface unrelated rules. Instead:
 
-- A separate `eslint.specs.config.mjs` and a `lint:specs` script, lint-staged for `*.spec.{ts,tsx}`. It enables only `no-restricted-syntax` with esquery selectors for (a) `waitFor(() => expect(<call>).toHaveBeenCalled*(…))` and (b) any `setTimeout` call in a spec, with a message pointing at `testing.md` §9.1/§9.3. It does not use `eslint-plugin-testing-library`, to avoid a new dependency; its `prefer-find-by` and `no-wait-for-*` rules are an option if the two selectors prove too narrow.
+- A separate `eslint.specs.config.mjs` and a `lint:specs` script, lint-staged for `*.spec.{ts,tsx}`. It enables only `no-restricted-syntax` with esquery selectors for (a) `waitFor(() => expect(<call>).toHaveBeenCalled*(…))` and (b) any `setTimeout` call in a spec, with a message pointing at `testing.md` §9 rule 1/§9 rule 3. It does not use `eslint-plugin-testing-library`, to avoid a new dependency; its `prefer-find-by` and `no-wait-for-*` rules are an option if the two selectors prove too narrow.
 - **No baseline.** Because the whole migration ships in the same PR, the rule is turned on in the last commit, after the migration has removed every violation, and starts at zero errors. (With per-area PRs this would have needed a directory-level override file deleted one area at a time; that machinery is not worth building for a single PR.) It is added *after* the migration in commit order so every intermediate commit still lints clean.
 
 *Alternatives:* a `warn`-level rule (ignored in practice); a codemod only (cannot stop regressions); a grep in `validate:agent-docs` (not parsed code, false positives on strings and comments).
@@ -78,9 +78,9 @@ The CI cause is unknown, so no fix is chosen from guesswork. The first PR change
 
 Order by payoff, one commit each: `Analytics` (345 `waitFor`, 152 barriers, 40 single-`getBy`) split into its sub-folders (`Pipelines`, `SessionsTrace`, `QueryBuilder`, rest); then `Assets`, `TestSuites` + `Datasets`, `Runs`, then the rest in one PR (`Telemetry`, `UsageLog`, `EntityListView`, `ExportConfig`, …).
 
-A script (kept under the scratchpad, not committed) lists candidate sites; the rewrite is by hand per site because the replacement depends on what the next assertion needs (§9.1). Mechanical-only cases are done directly: single-`getBy` waits → `await screen.findBy*`; empty-callback waits removed. The "was this barrier covering a real wait?" question is answered by running the file with the barrier deleted and a deliberately slowed mock; a test that still passes needed no barrier.
+A script (kept under the scratchpad, not committed) lists candidate sites; the rewrite is by hand per site because the replacement depends on what the next assertion needs (§9 rule 1). Mechanical-only cases are done directly: single-`getBy` waits → `await screen.findBy*`; empty-callback waits removed. The "was this barrier covering a real wait?" question is answered by running the file with the barrier deleted and a deliberately slowed mock; a test that still passes needed no barrier.
 
-Each area commit must show: every touched file green alone, green twice, green with `--sequence.shuffle`, and no test lost or its assertions weakened (the diff is reviewed for assertions, not for waits). Real-grid specs are moved to the stubbed `GridView` per `testing.md` §9.4 in the same commit as their area, except one genuine grid spec per grid.
+Each area commit must show: every touched file green alone, green twice, green with `--sequence.shuffle`, and no test lost or its assertions weakened (the diff is reviewed for assertions, not for waits). Real-grid specs are moved to the stubbed `GridView` per `testing.md` §9 rule 5 in the same commit as their area, except one genuine grid spec per grid.
 
 ### D5a. Everything ships as one PR
 
@@ -100,7 +100,7 @@ Decided by the user. Consequences, and how they are handled:
 ## Risks / Trade-offs
 
 - **The CI cause is not a test at all** → D1/D2 find it before any migration is justified by it; migration is still justified by the local flakiness evidence, and the proposal says so.
-- **Longer timeouts hide a hang** → a hang still fails, just at 15 s; per-test budget in §9.6 and the verbose duration check catch creep.
+- **Longer timeouts hide a hang** → a hang still fails, just at 15 s.
 - **A migrated test passes for the wrong reason** (the barrier it removed was covering a real wait, or the new `findBy` asserts less) → D5's verification step and review-by-assertions.
 - **One big PR is hard to review and all-or-nothing** → ordered commits, per-area verification, diagnostics/config first, and a full-run-matches-baseline check before merge (D5a).
 - **The wrapper script hides nx output or changes exit codes** → it forwards stdio unchanged and exits with the child's code; it has its own spec.

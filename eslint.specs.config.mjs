@@ -14,18 +14,18 @@ const BANNED_SYNTAX = [
     // `waitFor(() => expect(mock).toHaveBeenCalled…)`, also with `.not.`, `…With(…)` and `…Times(…)`.
     selector:
       "CallExpression[callee.name='waitFor'] > ArrowFunctionExpression[body.type='CallExpression'][body.callee.property.name=/^toHaveBeenCalled/]",
-    message: `Don't wait on a mock call: it says nothing about React having re-rendered. Await what the next line needs with findBy*; as a test's last statement use vi.waitFor (${RULE} §9.1).`,
+    message: `Don't wait on a mock call: it says nothing about React having re-rendered. Await what the next line needs with findBy*; as a test's last statement use vi.waitFor (${RULE} §9 rule 1).`,
   },
   {
     // The same wait written with a block body that holds only the mock assertion.
     selector:
       "CallExpression[callee.name='waitFor'] > ArrowFunctionExpression > BlockStatement > ExpressionStatement > CallExpression[callee.property.name=/^toHaveBeenCalled/]",
-    message: `Don't wait on a mock call: it says nothing about React having re-rendered. Await what the next line needs with findBy*; as a test's last statement use vi.waitFor (${RULE} §9.1).`,
+    message: `Don't wait on a mock call: it says nothing about React having re-rendered. Await what the next line needs with findBy*; as a test's last statement use vi.waitFor (${RULE} §9 rule 1).`,
   },
   {
     // Any real timer: a sleep is shorter than the work it waits for on a loaded runner.
     selector: "CallExpression[callee.name='setTimeout']",
-    message: `Don't sleep in a spec. Use fake timers (vi.useFakeTimers + vi.advanceTimersByTimeAsync), await the result with findBy*, or await act(async () => {}) to flush (${RULE} §9.3).`,
+    message: `Don't sleep in a spec. Use fake timers (vi.useFakeTimers + vi.advanceTimersByTimeAsync), await the result with findBy*, or await act(async () => {}) to flush (${RULE} §9 rule 3).`,
   },
 ];
 

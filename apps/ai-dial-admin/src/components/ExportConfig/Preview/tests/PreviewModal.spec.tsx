@@ -3,6 +3,7 @@ import { ExportComponentType, ExportType } from '@/src/types/export';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { previewAnalyticsExportConfig, previewExportConfig } from '@/src/app/[lang]/export-config/actions';
+import { useNotification } from '@/src/context/NotificationContext';
 import { CatalogComponentType } from '@/src/types/analytics/export';
 import PreviewModal from '../PreviewModal';
 
@@ -23,14 +24,6 @@ vi.mock('@/src/app/[lang]/export-config/actions', () => ({
   previewAnalyticsExportConfig: vi.fn(),
 }));
 
-const { showNotification } = vi.hoisted(() => ({ showNotification: vi.fn() }));
-
-// The shared mock returns a fresh `showNotification` on every render, which sits in the preview effect's deps and
-// re-fires the fetch forever. A stable one lets the preview actually settle.
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
-
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData }: { rowData?: unknown[] }) => <div role="grid" aria-rowcount={rowData?.length ?? 0} />,
 }));
@@ -41,7 +34,12 @@ vi.mock('@/src/components/ExportConfig/Content/ConfigContentGrid', () => ({
   ),
 }));
 
+// The shared mock in test-setup.tsx hands out one stable instance, so it can be read here.
+const { showNotification } = useNotification();
+
 describe('PreviewModal', () => {
+  beforeEach(() => vi.clearAllMocks());
+
   test('renders popup and tabs', async () => {
     let resolvePreview: (value: { success: true; response: Record<string, unknown[]> }) => void = () => {};
     vi.mocked(previewExportConfig).mockReturnValueOnce(
