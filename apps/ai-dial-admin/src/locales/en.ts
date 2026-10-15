@@ -3559,7 +3559,7 @@ export default {
     DonutMetricCalls: 'Calls',
     DonutMetricCost: 'Cost',
 
-    BreakdownTitle: 'Breakdown',
+    BreakdownTitleTop: 'Breakdown · Top {count}',
     BreakdownTabModels: 'Models',
     BreakdownTabApplications: 'Applications',
     BreakdownTabProjects: 'Projects',

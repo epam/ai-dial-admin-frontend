@@ -198,6 +198,7 @@ export const SPEND_ALIAS = 'spend';
 export const PROMPT_TOKENS_ALIAS = 'prompt_tokens';
 export const COMPLETION_TOKENS_ALIAS = 'completion_tokens';
 export const FAILED_ALIAS = 'failed';
+export const ERROR_RATE_ALIAS = 'error_rate';
 export const AVG_LATENCY_ALIAS = 'avg_latency';
 export const CALLERS_ALIAS = 'callers';
 export const BUCKET_ALIAS = 'bucket';
@@ -348,12 +349,38 @@ export interface TabQueryShape {
   /** Row-level clauses: they narrow which rows are grouped, not which groups are kept. */
   rowClauses?: QueryFilterNode[];
   /**
-   * Which measure the top-N is taken on. The cut happens on the backend, so ranking by one measure
+   * Which measure or column the rows are ranked on. The cut happens on the backend, so ranking by one measure
    * and reading another returns the wrong rows outright: the five busiest models are not the five
    * costliest, and re-sorting a page by spend only reorders what the call ranking already kept.
    */
   orderBy?: string;
+  /** Absent: descending, the ranking's own direction. */
+  orderDir?: QuerySortDirection;
 }
+
+/** Failed calls over all calls, computed by the backend so the dialog can be ordered by it. */
+const errorRateMeasure = () => ({
+  expr: fn('div', [
+    fn('sum', [fn('if', [field('success'), value('0', QueryValueType.Integer), value('1', QueryValueType.Integer)])]),
+    fn('count', []),
+  ]),
+  as: ERROR_RATE_ALIAS,
+});
+
+/**
+ * The ranking's keys: the measure or column asked for first, then the tab's columns, so a block is a
+ * stable slice whichever order the reader picked. An error rate ties often — every row that never
+ * failed sits at zero — so calls break the tie, the busier row first.
+ */
+const tabSort = (columns: string[], shape: TabQueryShape) => {
+  const orderBy = shape.orderBy ?? CALLS_ALIAS;
+
+  return [
+    { field: orderBy, dir: shape.orderDir ?? QuerySortDirection.Desc },
+    ...(orderBy === ERROR_RATE_ALIAS ? [{ field: CALLS_ALIAS, dir: QuerySortDirection.Desc }] : []),
+    ...columns.filter((name) => name !== orderBy).map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
+  ];
+};
 
 /**
  * Which deployments a row aggregates, for a tab whose own dimension does not name them.
@@ -413,12 +440,10 @@ export const buildTabQuery = (
       ...columns.map(selectColumn),
       ...commonMeasures(scope.view),
       ...(NAMES_GROUPED_DEPLOYMENTS.includes(tab) ? groupNameMeasures() : []),
+      ...(shape.orderBy === ERROR_RATE_ALIAS ? [errorRateMeasure()] : []),
     ],
     group_by: columns,
-    sort: [
-      { field: shape.orderBy ?? CALLS_ALIAS, dir: QuerySortDirection.Desc },
-      ...columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
-    ],
+    sort: tabSort(columns, shape),
     page: {
       type: 'offset',
       offset: shape.offset ?? 0,

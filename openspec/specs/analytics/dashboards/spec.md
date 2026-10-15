@@ -6,9 +6,7 @@ The Dashboards page of the Analytics group, read from the usage log through the 
 endpoint: how the page is reached at runtime and what it shares with the existing telemetry
 dashboard, how many requests it issues and what each one answers, the page-wide `Compare` control,
 the KPI row, the activity heatmap, the share donut, and the tabbed breakdown table with its dialog.
-
 ## Requirements
-
 ### Requirement: An environment flag decides which page Dashboards renders
 
 The system SHALL expose an environment variable that, when truthy per the existing flag helper and
@@ -976,9 +974,10 @@ than skipped, so a gap in traffic reads as a gap.
 
 ### Requirement: The heatmap paints the figure the reader picks
 
-The heatmap SHALL offer a switch between the figures it can paint per hour — requests and cost —
+The heatmap SHALL offer a switch between the figures it can paint per hour — cost and requests —
 placed with the week pager, since both decide what the grid shows: one which week, the other which
-figure.
+figure. Where cost is offered it SHALL be listed first and SHALL be the figure the heatmap opens
+with, because the LLM view is read for where the money goes.
 
 Both figures SHALL be read from the heatmap's own hourly response rather than a second request, so
 switching paints what is already in hand. The shading ceiling SHALL follow the active figure: an
@@ -986,9 +985,16 @@ hour's cost has nothing to do with the busiest hour's call count.
 
 Cost SHALL be offered in the LLM view only. An MCP row carries no price, so the grid there would be
 a week of empty cells. An hour with no price SHALL read as nothing rather than as its call count.
+Where cost is not offered, the heatmap SHALL paint requests.
 
 A cell SHALL state the active figure in its own words — a count of requests, or an amount spent —
 in both its tooltip and the label a screen reader reads.
+
+#### Scenario: The LLM view opens on cost
+
+- **WHEN** the LLM view's heatmap renders
+- **THEN** it offers `Cost` and then `Requests`
+- **AND** `Cost` is the selected figure
 
 #### Scenario: Switching the figure repaints the grid
 
@@ -1355,10 +1361,11 @@ Every column SHALL take an equal share of the table's width, and every figure SH
 cell's right edge, so a column reads down as one set of numbers. Each measure carries its own change
 beside it, so the columns hold figures of one kind and deserve one width.
 
-Rows SHALL be ordered by calls, descending, with ties broken by the dimension value so repeated
-renders of one window agree. That order is the backend's and the table offers no control over it,
-so the header SHALL NOT claim a sort state: `aria-sort` belongs to a column a reader can reorder,
-and announcing one that cannot be changed offers an interaction that does not exist.
+On the card, rows SHALL be ordered by calls, descending, with ties broken by the dimension value so
+repeated renders of one window agree. That order is the backend's and the card offers no control
+over it, so the card's header SHALL NOT claim a sort state: `aria-sort` belongs to a column a reader
+can reorder, and announcing one that cannot be changed offers an interaction that does not exist.
+The full-list dialog opens on cost where the rows carry it, and lets the reader change the order.
 
 #### Scenario: Share is relative to the window total
 
@@ -1380,8 +1387,8 @@ and announcing one that cannot be changed offers an interaction that does not ex
 
 #### Scenario: No column claims a sort a reader cannot change
 
-- **WHEN** the table renders ordered by calls
-- **THEN** no column header announces a sort state
+- **WHEN** the card renders ordered by calls
+- **THEN** no column header of the card announces a sort state
 
 ### Requirement: Each measure states its own change beside it
 
@@ -1472,14 +1479,26 @@ When comparison is off, no change SHALL be stated.
 
 ### Requirement: Top-N is answered by the backend and the dialog holds the full list
 
-The card SHALL show the ranked head of the dimension — ten rows — offering a `View all` affordance
-that opens the full list in a dialog. Both the card's page and the full list SHALL be ordered and
-limited by the backend, not by trimming a client-side list.
+The card SHALL show the ranked head of the dimension — ten rows — and SHALL say so beside its title,
+naming the number it is cut at, so the head is not taken for the whole list. It SHALL offer a
+`View all` affordance that opens the full list in a dialog. Both the card's page and the full list
+SHALL be ordered and limited by the backend, not by trimming a client-side list.
 
-Neither surface SHALL offer column sorting or per-column filters. The card holds one ranked page, so
-both would reorder or sieve that page while hiding that the rest of the dimension was never fetched.
-The dialog reads the whole dimension, but block by block, so a filter there would sift the blocks it
-has read and silently miss the rest.
+The card SHALL NOT offer column sorting. It holds one ranked page, so a sort there would reorder that
+page while hiding that the rest of the dimension was never fetched.
+
+The dialog SHALL let the reader sort by any of its columns — the dimension, share, calls, error rate,
+average latency and cost — ascending or descending. The sort SHALL be taken by the backend over the
+whole dimension, never applied to the blocks already read: the dialog reads block by block, and a
+client-side sort would order the rows in hand and silently leave the rest where they were. The sort
+SHALL be part of what identifies the list: a new sort drops the blocks in hand and reads from the
+first one again. Where cost is offered the dialog SHALL open sorted by cost, descending, because the
+full list is read for where the money went; where it is not, the dialog SHALL open in the card's order.
+The sort SHALL be one column at a time: choosing another column SHALL replace the opening sort rather
+than join it, since the backend ranks on one key. The sorted column SHALL announce its direction. Share orders as calls do, its denominator being the same for every row.
+
+Neither surface SHALL offer per-column filters: the dialog reads the whole dimension block by block,
+so a filter there would sift the blocks it has read and silently miss the rest.
 
 The card SHALL NOT offer a search field either: a term pushed into the aggregate re-ranks the whole
 window and answers with rows the card never loaded, so the field read as a page that reorders
@@ -1491,6 +1510,25 @@ itself. Finding a row outside the head is the dialog's job.
 - **WHEN** the table renders
 - **THEN** it offers `View all`
 - **AND** it states no row count, since the count it holds is the count of its own page
+
+#### Scenario: The card says it shows the top rows
+
+- **WHEN** the card renders
+- **THEN** its title states that it lists the top 10
+
+#### Scenario: The dialog opens on cost and gives it up to the reader's sort
+
+- **GIVEN** the LLM view
+- **WHEN** the full-list dialog opens
+- **THEN** its rows are ordered by cost, descending, and only the cost column announces a sort
+- **WHEN** the reader sorts by error rate
+- **THEN** the rows are ordered by error rate and cost no longer announces a sort
+
+#### Scenario: The dialog opens on calls where there is no cost
+
+- **GIVEN** the MCP view
+- **WHEN** the full-list dialog opens
+- **THEN** its rows are ordered by calls, descending
 
 #### Scenario: No column offers a filter on either surface
 
@@ -1510,6 +1548,24 @@ itself. Finding a row outside the head is the dialog's job.
 - **GIVEN** a deployment ranks below the card's ten rows
 - **WHEN** the user opens `View all` and searches for its name
 - **THEN** the row is listed
+
+#### Scenario: The dialog sorts on the backend
+
+- **GIVEN** the full-list dialog is open
+- **WHEN** the reader sorts by average latency, descending
+- **THEN** the dialog reads its first block again, ordered by average latency on the backend
+- **AND** the latency column announces a descending sort
+
+#### Scenario: The dialog sorts by error rate
+
+- **GIVEN** the full-list dialog is open
+- **WHEN** the reader sorts by error rate
+- **THEN** the rows arrive ordered by their share of failed calls over the whole dimension
+
+#### Scenario: The card offers no sort
+
+- **WHEN** the card renders
+- **THEN** none of its columns can be sorted
 
 ### Requirement: The dialog reads the dimension a block at a time
 
@@ -1652,12 +1708,14 @@ question from what the row is called.
 
 ### Requirement: The share chart splits by calls or by cost, and the backend ranks on the choice
 
-The share chart SHALL offer the measure it splits by: `Calls` and `Cost`. `Calls` SHALL be listed
-first and SHALL be the selection the card opens with, so the default reading is unchanged.
+The share chart SHALL offer the measure it splits by: `Cost` and `Calls`. `Cost` SHALL be listed
+first and SHALL be the selection the card opens with, because the LLM view is read for where the
+money goes.
 
 The MCP and Routes views SHALL offer no such choice and SHALL split by calls alone: no `mcp` row and
 no route row carries a price, so a cost ring there would be empty whatever the window. Switching
-the view SHALL return the selection to `Calls`.
+the view SHALL return the selection to that view's default — `Cost` in the LLM view, `Calls`
+wherever cost is not offered.
 
 Choosing a measure SHALL re-issue the chart's ranking request **ordered by that measure**. The top-N
 cut is taken by the backend, so a ring ranked on calls and rendered on spend would show the five
@@ -1683,8 +1741,8 @@ the new. The selection flips the figures when its rows arrive.
 #### Scenario: Cost is offered in the LLM view
 
 - **WHEN** the share chart renders in the LLM view
-- **THEN** it offers both `Calls` and `Cost`
-- **AND** `Calls` is the selected measure
+- **THEN** it offers `Cost` and then `Calls`
+- **AND** `Cost` is the selected measure
 
 #### Scenario: The MCP view offers no cost split
 
@@ -1728,6 +1786,12 @@ the new. The selection flips the figures when its rows arrive.
 - **GIVEN** the share chart is split by cost in the LLM view
 - **WHEN** the reader switches to the MCP view
 - **THEN** the chart splits by calls
+
+#### Scenario: Returning to the LLM view returns to cost
+
+- **GIVEN** the reader switched from the LLM view to the MCP view
+- **WHEN** the reader switches back to the LLM view
+- **THEN** the chart splits by cost
 
 ### Requirement: A tool row is one tool on one server
 
@@ -2014,3 +2078,4 @@ tab or in a copied cell.
 - **GIVEN** the `Applications` tab, whose fallback bucket outranks every named row
 - **WHEN** the table renders
 - **THEN** `Direct call` sits in its ranked place
+
