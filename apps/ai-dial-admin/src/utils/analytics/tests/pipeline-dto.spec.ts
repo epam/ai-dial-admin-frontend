@@ -264,3 +264,56 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
     ['transform', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 });
+
+describe('Utils :: analytics :: buildPipelineDto — the aggregate declaration mode', () => {
+  const base: PipelineDraft = {
+    kind: PipelineKind.Aggregate,
+    name: 'rollup',
+    target: 'sessions',
+    trigger: { kind: TriggerKind.Schedule },
+  };
+  const statement = 'INSERT INTO sessions (id, n)\n  SELECT id, count(*)\n  FROM log\n  GROUP BY id';
+
+  test('a SQL declaration sends the statement and no form member', () => {
+    const dto = buildPipelineDto({
+      ...base,
+      sql: statement,
+      group_by: [{ column: 'id' }],
+      measures: [{ name: 'n', fn: 'count' }],
+      filter: 'id > 0',
+    });
+
+    expect(dto.sql).toBe(statement);
+    ['group_by', 'measures', 'filter'].forEach((key) => expect(dto).not.toHaveProperty(key));
+  });
+
+  test('a form declaration sends no statement', () => {
+    const dto = buildPipelineDto({ ...base, group_by: [{ column: 'id' }], measures: [{ name: 'n', fn: 'count' }] });
+
+    expect(dto).not.toHaveProperty('sql');
+    expect(dto.group_by).toEqual([{ column: 'id' }]);
+  });
+
+  test('a form declaration keeps its filter', () => {
+    expect(buildPipelineDto({ ...base, filter: 'id > 0' }).filter).toBe('id > 0');
+  });
+
+  test.each([
+    ['empty', ''],
+    ['blank', '  \n '],
+  ])('a %s statement is not sent', (_, sql) => {
+    const dto = buildPipelineDto({ ...base, sql, measures: [{ name: 'n', fn: 'count' }] });
+
+    ['sql', 'group_by', 'measures'].forEach((key) => expect(dto).not.toHaveProperty(key));
+  });
+
+  test('an enrichment declaration sends no statement', () => {
+    expect(buildPipelineDto({ ...toPipelineDraft(pipeline), sql: statement })).not.toHaveProperty('sql');
+  });
+
+  test('a pipeline served with a statement keeps it in the draft', () => {
+    const draft = toPipelineDraft({ ...pipeline, kind: PipelineKind.Aggregate, sql: statement });
+
+    expect(draft.sql).toBe(statement);
+  });
+});

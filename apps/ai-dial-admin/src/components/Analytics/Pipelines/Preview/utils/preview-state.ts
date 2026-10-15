@@ -57,7 +57,10 @@ export const getRemedySection = (
     return isTemplateProblem ? PreviewSection.RequestTemplate : PreviewSection.Properties;
   }
 
-  if (pipeline.kind === PipelineKind.Aggregate) return PreviewSection.GroupKeys;
+  // A SQL declaration has no group keys section to open: its statement is on Properties.
+  if (pipeline.kind === PipelineKind.Aggregate) {
+    return pipeline.sql !== undefined ? PreviewSection.Properties : PreviewSection.GroupKeys;
+  }
   if (pipeline.transform?.type !== TransformType.Llm) return PreviewSection.Properties;
 
   return isGroupTrigger(pipeline) ? PreviewSection.MemberSelection : PreviewSection.Inputs;

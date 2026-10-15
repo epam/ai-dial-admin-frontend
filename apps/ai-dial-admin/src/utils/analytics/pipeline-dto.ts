@@ -34,7 +34,10 @@ const READ_ONLY_MEMBERS: (keyof Pipeline)[] = [
 
 const ENRICH_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['transform', 'advanced'];
 
-const AGGREGATE_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['group_by', 'measures'];
+const AGGREGATE_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['group_by', 'measures', 'sql'];
+
+// The service refuses `sql` beside any of these, and reads a patch that names one mode as clearing the other.
+const FORM_MODE_MEMBERS: (keyof CreatePipelineDto)[] = ['group_by', 'measures', 'filter'];
 
 export const getReadOnlyMembers = (): string[] => [...READ_ONLY_MEMBERS];
 
@@ -58,6 +61,14 @@ export const buildPipelineDto = (
 
   READ_ONLY_MEMBERS.forEach((key) => delete dto[key]);
   membersOfOtherKind(draft.kind).forEach((key) => delete dto[key]);
+
+  if (draft.kind === PipelineKind.Aggregate) {
+    // `sql` present in the draft is what makes it SQL mode, so a blank statement still prunes the form
+    // members and is itself dropped below: an author who has not written the statement yet sends no declaration.
+    if (draft.sql !== undefined) FORM_MODE_MEMBERS.forEach((key) => delete dto[key]);
+    else delete dto.sql;
+    if (dto.sql != null && !dto.sql.trim()) delete dto.sql;
+  }
 
   dto.name = trimmedString(draft.name);
   dto.trigger = buildTrigger(draft, grainKey);

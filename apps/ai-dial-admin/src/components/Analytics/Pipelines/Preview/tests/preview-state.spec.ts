@@ -112,6 +112,12 @@ describe('getRemedySection', () => {
     expect(getRemedySection(PreviewFailureKind.Budget, aggregatePipeline())).toBe(PreviewSection.GroupKeys);
   });
 
+  test('points a budget refusal of a SQL-declared aggregate at its declaration, which has no group keys section', () => {
+    expect(
+      getRemedySection(PreviewFailureKind.Budget, { ...aggregatePipeline(), sql: 'INSERT INTO t (a) SELECT 1' }),
+    ).toBe(PreviewSection.Properties);
+  });
+
   test('points a budget refusal of a row-by-row LLM enrichment at its inputs', () => {
     expect(getRemedySection(PreviewFailureKind.Budget, llmPipeline())).toBe(PreviewSection.Inputs);
   });
