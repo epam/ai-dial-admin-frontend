@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CustomComponentContext, CustomFilterProps } from 'ag-grid-react';
 import { ReactNode } from 'react';
@@ -100,7 +100,7 @@ describe('SessionValueFilter', () => {
     await openFilter();
 
     expect(requestFieldValues).toHaveBeenCalledWith(COLUMN_FIELD);
-    await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
+    expect(await screen.findByRole('group', { name: SessionsTraceI18nKey.ValueFilterGroup })).toBeInTheDocument();
   });
 
   // The name is what a selection means; a name carrying the count would rename the same option every time
@@ -109,7 +109,7 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'pending' })).toBeInTheDocument());
+    expect(await screen.findByRole('checkbox', { name: 'pending' })).toBeInTheDocument();
 
     expect(screen.getByRole('checkbox', { name: 'failed' })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'pending (920)' })).toBeNull();
@@ -122,7 +122,8 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() => expect(valueCheckboxes()).toHaveLength(2));
+    await screen.findByRole('group', { name: SessionsTraceI18nKey.ValueFilterGroup });
+    expect(valueCheckboxes()).toHaveLength(2);
 
     // Rendered order is the query's order; each value is followed by its own count.
     expect(optionsGroup().textContent).toBe('pending920failed41');
@@ -132,7 +133,7 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'pending' })));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'pending' }));
 
     expect(onModelChange).toHaveBeenCalledWith({ values: ['pending'] });
   });
@@ -141,7 +142,7 @@ describe('SessionValueFilter', () => {
     renderFilter({ values: ['pending'] });
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'failed' })));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'failed' }));
 
     expect(onModelChange).toHaveBeenCalledWith({ values: ['pending', 'failed'] });
   });
@@ -151,7 +152,7 @@ describe('SessionValueFilter', () => {
     renderFilter({ values: ['pending'] });
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'pending' })));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'pending' }));
 
     expect(onModelChange).toHaveBeenCalledWith(null);
   });
@@ -160,7 +161,7 @@ describe('SessionValueFilter', () => {
     renderFilter({ values: ['failed'] });
     await openFilter();
 
-    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'failed' })).toBeChecked());
+    expect(await screen.findByRole('checkbox', { name: 'failed' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'pending' })).not.toBeChecked();
   });
 
@@ -169,7 +170,7 @@ describe('SessionValueFilter', () => {
       const { rerender } = renderFilter();
       await openFilter();
 
-      await userEvent.click(await waitFor(() => selectAllCheckbox()));
+      await userEvent.click(await screen.findByRole('checkbox', { name: SessionsTraceI18nKey.ValueFilterSelectAll }));
       expect(onModelChange).toHaveBeenCalledWith({ values: ['pending', 'failed'] });
 
       // The model is the grid's to hold, so the "everything selected" state has to be fed back in.
@@ -196,7 +197,7 @@ describe('SessionValueFilter', () => {
       renderFilter({ values: ['pending'] });
       await openFilter();
 
-      await waitFor(() => expect(selectAllCheckbox()).toBeInTheDocument());
+      await screen.findByRole('checkbox', { name: SessionsTraceI18nKey.ValueFilterSelectAll });
 
       expect(selectAllCheckbox()).toHaveAttribute('aria-checked', 'mixed');
     });
@@ -207,7 +208,7 @@ describe('SessionValueFilter', () => {
       renderFilter();
       await openFilter();
 
-      await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
+      expect(await screen.findByRole('group', { name: SessionsTraceI18nKey.ValueFilterGroup })).toBeInTheDocument();
       expect(screen.queryAllByRole('textbox')).toHaveLength(0);
 
       requestFieldValues.mockResolvedValue({ success: true, response: MANY_VALUES });
@@ -216,7 +217,7 @@ describe('SessionValueFilter', () => {
       });
       await openFilter();
 
-      await waitFor(() => expect(screen.getByRole('textbox')).toBeInTheDocument());
+      expect(await screen.findByRole('textbox')).toBeInTheDocument();
     });
 
     // Presentational only: narrowing what renders must never change what is selected, or clearing the term
@@ -226,16 +227,19 @@ describe('SessionValueFilter', () => {
       renderFilter({ values: ['pending'] });
       await openFilter();
 
-      const search = await waitFor(() => screen.getByRole('textbox'));
+      const search = await screen.findByRole('textbox');
       await userEvent.type(search, 'value_1');
 
-      await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'pending' })).toBeNull());
+      // The term was applied: a value it matches is still listed, so 'pending' is gone because of the term
+      // and not because the list had not rendered.
+      expect(screen.getByRole('checkbox', { name: 'value_1' })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: 'pending' })).toBeNull();
       // Hiding the selected value did not deselect it.
       expect(onModelChange).not.toHaveBeenCalled();
 
       await userEvent.clear(search);
 
-      await waitFor(() => expect(screen.getByRole('checkbox', { name: 'pending' })).toBeChecked());
+      expect(await screen.findByRole('checkbox', { name: 'pending' })).toBeChecked();
     });
   });
 
@@ -243,7 +247,7 @@ describe('SessionValueFilter', () => {
     renderFilter({ values: ['pending'] });
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('button', { name: ButtonsI18nKey.Reset })));
+    await userEvent.click(await screen.findByRole('button', { name: ButtonsI18nKey.Reset }));
 
     expect(onModelChange).toHaveBeenCalledWith(null);
   });
@@ -252,7 +256,7 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
+    expect(await screen.findByRole('group', { name: SessionsTraceI18nKey.ValueFilterGroup })).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Reset })).toBeDisabled();
   });
@@ -272,7 +276,8 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(SessionsTraceI18nKey.ValueFilterEmpty));
+    await screen.findByText(SessionsTraceI18nKey.ValueFilterEmpty);
+    expect(screen.getByRole('status')).toHaveTextContent(SessionsTraceI18nKey.ValueFilterEmpty);
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
     expect(onModelChange).not.toHaveBeenCalled();
   });
@@ -284,9 +289,8 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent(SessionsTraceI18nKey.ValueFilterLoadFailed),
-    );
+    await screen.findByText(SessionsTraceI18nKey.ValueFilterLoadFailed);
+    expect(screen.getByRole('status')).toHaveTextContent(SessionsTraceI18nKey.ValueFilterLoadFailed);
     expect(screen.getByRole('status')).toHaveClass('text-error');
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);
@@ -304,7 +308,7 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Upstream unavailable',
@@ -320,7 +324,8 @@ describe('SessionValueFilter', () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('value read timed out'));
+    await screen.findByText('value read timed out');
+    expect(screen.getByRole('status')).toHaveTextContent('value read timed out');
     expect(screen.getByRole('status')).not.toHaveTextContent(SessionsTraceI18nKey.ValueFilterEmpty);
   });
 
@@ -329,7 +334,7 @@ describe('SessionValueFilter', () => {
   test('re-opening the filter reads the values again', async () => {
     renderFilter();
     await openFilter();
-    await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
+    expect(await screen.findByRole('group', { name: SessionsTraceI18nKey.ValueFilterGroup })).toBeInTheDocument();
 
     await act(async () => {
       lifecycle.afterGuiDetached?.();

@@ -199,7 +199,7 @@ describe('SessionsTraceView :: header', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
+    expect(await screen.findByText('212')).toBeInTheDocument();
     expect(screen.queryByText('212+')).not.toBeInTheDocument();
   });
 });
@@ -421,7 +421,7 @@ describe('SessionsTraceView :: capped feedback result', () => {
     await selectNegative();
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument();
   });
 
   test('shows no disclosure when the candidate set is below the limit', async () => {
@@ -451,7 +451,7 @@ describe('SessionsTraceView :: capped feedback result', () => {
 
     await selectNegative();
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument();
 
     await user.click(screen.getByText(SessionsTraceI18nKey.FeedbackAll));
     getSessions.mockResolvedValue(okPage(FIRST_PAGE));
@@ -470,7 +470,7 @@ describe('SessionsTraceView :: schema availability', () => {
       />,
     );
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotificationSpy).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Upstream unavailable', description: 'schema read timed out' }),
       ),
@@ -481,7 +481,7 @@ describe('SessionsTraceView :: schema availability', () => {
   test('falls back to its own title when the service supplied no header', async () => {
     render(<SessionsTraceView schemaFields={null} schemaFailure={{}} />);
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotificationSpy).toHaveBeenCalledWith(
         expect.objectContaining({ title: SessionsTraceI18nKey.SchemaLoadFailed }),
       ),
@@ -506,7 +506,7 @@ describe('SessionsTraceView :: projection', () => {
   test('sends every source-backed field even with its column hidden', async () => {
     columnState = [{ colId: SessionsField.TotalTokens, hide: true }];
     renderView(SCHEMA_FIELDS);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -516,7 +516,7 @@ describe('SessionsTraceView :: projection', () => {
   test('sends an enrichment-backed field only while its column is visible', async () => {
     columnState = [{ colId: SessionsField.InsightTopics, hide: false }];
     renderView(SCHEMA_FIELDS);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -526,7 +526,7 @@ describe('SessionsTraceView :: projection', () => {
   test('omits a hidden enrichment-backed column', async () => {
     columnState = [{ colId: SessionsField.InsightTopics, hide: true }];
     renderView(SCHEMA_FIELDS);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -541,7 +541,7 @@ describe('SessionsTraceView :: projection', () => {
       ...SCHEMA_FIELDS,
       { name: SessionsField.InsightTitle, type: AnalyticsFieldType.String, source: 'title' },
     ] as AnalyticsEntityField[]);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -554,7 +554,7 @@ describe('SessionsTraceView :: projection', () => {
       { colId: SessionsField.ChatId, hide: false },
     ];
     renderView(SCHEMA_FIELDS);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -586,7 +586,7 @@ describe('SessionsTraceView :: projecting a heavy field', () => {
   test('omits a heavy source field while its column is hidden', async () => {
     columnState = [{ colId: HEAVY_FIELD, hide: true }];
     renderView(HEAVY_SCHEMA_FIELDS);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -597,7 +597,7 @@ describe('SessionsTraceView :: projecting a heavy field', () => {
   test('sends a heavy source field once its column is visible, as a source field', async () => {
     columnState = [{ colId: HEAVY_FIELD, hide: false }];
     renderView(HEAVY_SCHEMA_FIELDS);
-    await waitFor(() => expect(datasource).toBeDefined());
+    await awaitGridReady();
 
     await fetchBlock();
 
@@ -708,7 +708,7 @@ describe('SessionsTraceView :: period figures', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
+    expect(await screen.findByText('212')).toBeInTheDocument();
   });
 
   test('shows the rating figures the first block resolved, not a count of its rows', async () => {
@@ -716,7 +716,7 @@ describe('SessionsTraceView :: period figures', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
+    expect(await screen.findByText('19')).toBeInTheDocument();
     expect(screen.getByText('13')).toBeInTheDocument();
   });
 
@@ -724,7 +724,7 @@ describe('SessionsTraceView :: period figures', () => {
     renderView();
 
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
+    expect(await screen.findByText('19')).toBeInTheDocument();
 
     getSessions.mockResolvedValue(laterPage(SECOND_PAGE));
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
@@ -737,7 +737,7 @@ describe('SessionsTraceView :: period figures', () => {
     renderView();
 
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
+    expect(await screen.findByText('19')).toBeInTheDocument();
 
     getSessions.mockResolvedValue(laterPage(SECOND_PAGE));
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
@@ -752,7 +752,7 @@ describe('SessionsTraceView :: period figures', () => {
     renderView(SCHEMA_FIELDS);
 
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
+    expect(await screen.findByText('19')).toBeInTheDocument();
 
     columnState = [{ colId: 'success_count', hide: false }];
     await fetchBlock();
@@ -765,13 +765,13 @@ describe('SessionsTraceView :: period figures', () => {
     renderView();
 
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
+    expect(await screen.findByText('19')).toBeInTheDocument();
 
     await user.type(searchBox(), 'acme');
     await awaitFilterApplied();
     await fetchBlock();
 
-    await waitFor(() => expect(lastRequest().search).toBe('acme'));
+    await vi.waitFor(() => expect(lastRequest().search).toBe('acme'));
     expect(screen.getByText('19')).toBeInTheDocument();
     expect(screen.getByText('212')).toBeInTheDocument();
   });
@@ -797,7 +797,7 @@ describe('SessionsTraceView :: empty and failed states', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.NoSessions)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.NoSessions)).toBeInTheDocument();
   });
 
   // The state a filter that matched nothing produces. Covering the header stack would hide the very filter
@@ -839,7 +839,7 @@ describe('SessionsTraceView :: empty and failed states', () => {
 
     expect(params.failCallback).toHaveBeenCalled();
     expect(showNotificationSpy).toHaveBeenCalled();
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.SessionsLoadFailed)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.SessionsLoadFailed)).toBeInTheDocument();
   });
 
   // A later failure is not an empty result, so the empty state must stay away too.
@@ -847,7 +847,7 @@ describe('SessionsTraceView :: empty and failed states', () => {
     renderView();
 
     const first = await fetchBlock();
-    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
+    expect(await screen.findByText('212')).toBeInTheDocument();
 
     getSessions.mockResolvedValue({ success: false, status: 500 });
     const later = await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
@@ -861,6 +861,7 @@ describe('SessionsTraceView :: empty and failed states', () => {
     getSessions.mockResolvedValue({ success: false, status: 500 });
     renderView();
     await fetchBlock();
+    await screen.findByText(SessionsTraceI18nKey.SessionsLoadFailed);
 
     getSessions.mockResolvedValue(okPage(FIRST_PAGE));
     await fetchBlock();
@@ -874,7 +875,10 @@ describe('SessionsTraceView :: empty and failed states', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(4));
+    // Pending and failed both draw a dash; only the hint says the wait is over.
+    expect(await screen.findAllByText(SessionsTraceI18nKey.SummaryUnavailableHint)).toHaveLength(4);
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryPendingHint)).toBeNull();
+    expect(screen.getAllByText('—')).toHaveLength(4);
   });
 
   test('keeps the figures when the rows fail but the summary resolved', async () => {
@@ -887,7 +891,7 @@ describe('SessionsTraceView :: empty and failed states', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
+    expect(await screen.findByText('212')).toBeInTheDocument();
   });
 
   test('reports the figures as unavailable when nothing could be resolved for the filter state', async () => {
@@ -896,6 +900,9 @@ describe('SessionsTraceView :: empty and failed states', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(4));
+    // Pending and failed both draw a dash; only the hint says the wait is over.
+    expect(await screen.findAllByText(SessionsTraceI18nKey.SummaryUnavailableHint)).toHaveLength(4);
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryPendingHint)).toBeNull();
+    expect(screen.getAllByText('—')).toHaveLength(4);
   });
 });

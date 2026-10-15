@@ -1,5 +1,5 @@
 import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { Mock, describe, expect, test, vi } from 'vitest';
 import CreateEntity from '../CreateEntity';
@@ -37,7 +37,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createModel).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createModel).toHaveBeenCalled());
     expect(createModel.mock.calls[0][0]).not.toHaveProperty('version');
 
     const createApp = vi.fn().mockResolvedValue({ success: true, response: { name: 'app1' } });
@@ -54,7 +54,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getAllByText(ButtonsI18nKey.Create)[1]);
 
-    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createApp).toHaveBeenCalled());
     expect(createApp.mock.calls[0][0]).toMatchObject({ version: '1.0.0' });
   });
 
@@ -80,7 +80,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createApp).toHaveBeenCalled());
     expect(createApp.mock.calls[0][0]).not.toHaveProperty('version');
   });
 
@@ -106,7 +106,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createToolset).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createToolset).toHaveBeenCalled());
     expect(createToolset.mock.calls[0][0]).not.toHaveProperty('version');
   });
 
@@ -129,7 +129,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createModel).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createModel).toHaveBeenCalled());
     expect(createModel.mock.calls[0][0]).toMatchObject({ displayVersion: '1.0.0' });
   });
 
@@ -150,7 +150,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createModel).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createModel).toHaveBeenCalled());
     expect(createModel.mock.calls[0][0]).toMatchObject({ userRoles: [] });
   });
 
@@ -177,7 +177,7 @@ describe('CreateEntity', () => {
     });
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createRoute).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createRoute).toHaveBeenCalled());
     expect(createRoute).toHaveBeenCalledWith(expect.objectContaining({ userRoles: [], paths: ['/v1'] }));
   });
 
@@ -201,7 +201,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createApp).toHaveBeenCalled());
     expect(createApp.mock.calls[0][0]).toMatchObject({ user_roles: [] });
   });
 
@@ -225,7 +225,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createToolset).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createToolset).toHaveBeenCalled());
     expect(createToolset.mock.calls[0][0]).toMatchObject({ user_roles: [] });
   });
 
@@ -246,7 +246,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createApp).toHaveBeenCalled());
     expect(createApp.mock.calls[0][0]).not.toHaveProperty('userRoles');
     expect(createApp.mock.calls[0][0]).not.toHaveProperty('user_roles');
   });
@@ -272,7 +272,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(push).toHaveBeenCalledWith('/platform-models/anthropic.claude-haiku-4-5-20251001-v1%3A0'),
     );
   });
@@ -302,8 +302,8 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(createSkill).toHaveBeenCalled());
-    await waitFor(() => expect(push).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createSkill).toHaveBeenCalled());
+    await vi.waitFor(() => expect(push).toHaveBeenCalled());
     expect(push.mock.calls[0][0]).not.toContain('undefined');
     expect(push.mock.calls[0][0]).toContain('my-skill');
   });
@@ -341,7 +341,7 @@ describe('CreateEntity', () => {
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
-    await waitFor(() => expect(push).toHaveBeenCalled());
+    await vi.waitFor(() => expect(push).toHaveBeenCalled());
     // The navigation target embeds the resolved path as an encoded query param, so the `/` between
     // the folder and the skill name is itself percent-encoded (`%2F`) — the separator this test
     // guards against being dropped entirely.

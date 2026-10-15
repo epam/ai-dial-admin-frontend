@@ -22,6 +22,9 @@ const PREVIEW_DATA: unknown[][] = [
   ['run-1', 'hello', 'world'],
 ];
 
+const waitForExportEnabled = () =>
+  waitFor(() => expect(screen.getByText(ButtonsI18nKey.ExportCsv).closest('button')).toBeEnabled());
+
 describe('ExportRunModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,41 +35,35 @@ describe('ExportRunModal', () => {
 
   test('renders modal title with run id', async () => {
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
-    await waitFor(() => {
-      expect(screen.getByText(`${ExportRunI18nKey.ExportRunTitle} run-1`)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(`${ExportRunI18nKey.ExportRunTitle} run-1`)).toBeInTheDocument();
   });
 
   test('fetches preview on mount with the correct runId', async () => {
     render(<ExportRunModal runId="run-42" onClose={vi.fn()} />);
-    await waitFor(() => {
-      expect(mockExportRunPreview).toHaveBeenCalledWith('run-42');
-    });
+    await vi.waitFor(() => expect(mockExportRunPreview).toHaveBeenCalledWith('run-42'));
   });
 
   test('fetches preview exactly once on mount', async () => {
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
-    await waitFor(() => expect(mockExportRunPreview).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(mockExportRunPreview).toHaveBeenCalledOnce());
   });
 
   test('Export CSV button is enabled after preview loads', async () => {
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
-    await waitFor(() => {
-      expect(screen.getByText(ButtonsI18nKey.ExportCsv)).not.toBeDisabled();
-    });
+    await waitForExportEnabled();
   });
 
   test('Export CSV button is disabled while exporting', async () => {
     fetchMock.mockResponseOnce(() => new Promise(() => {})); // never resolves
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
 
-    await waitFor(() => expect(mockExportRunPreview).toHaveBeenCalled());
+    await waitForExportEnabled();
 
     const exportBtn = screen.getByText(ButtonsI18nKey.ExportCsv);
     // Use fireEvent (synchronous) to avoid waiting for the never-resolving fetch
     fireEvent.click(exportBtn);
 
-    await waitFor(() => expect(exportBtn.closest('button')).toBeDisabled());
+    expect(exportBtn.closest('button')).toBeDisabled();
   });
 
   test('shows success notification after successful export', async () => {
@@ -76,30 +73,30 @@ describe('ExportRunModal', () => {
     });
 
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
-    await waitFor(() => expect(mockExportRunPreview).toHaveBeenCalled());
+    await waitForExportEnabled();
 
     await userEvent.click(screen.getByText(ButtonsI18nKey.ExportCsv));
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(mockShowNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: ExportRunI18nKey.ExportSuccess }),
-      );
-    });
+      ),
+    );
   });
 
   test('shows error notification when export fails', async () => {
     fetchMock.mockResponseOnce('Internal server error', { status: 500 });
 
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
-    await waitFor(() => expect(mockExportRunPreview).toHaveBeenCalled());
+    await waitForExportEnabled();
 
     await userEvent.click(screen.getByText(ButtonsI18nKey.ExportCsv));
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(mockShowNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: ExportRunI18nKey.ExportError }),
-      );
-    });
+      ),
+    );
   });
 
   test('shows no preview when preview data is unavailable', async () => {
@@ -107,9 +104,7 @@ describe('ExportRunModal', () => {
 
     render(<ExportRunModal runId="run-1" onClose={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(ExportRunI18nKey.NoPreview)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(ExportRunI18nKey.NoPreview)).toBeInTheDocument();
   });
 
   test('calls onClose when Cancel is clicked', async () => {

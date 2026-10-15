@@ -86,7 +86,7 @@ const advanceToSource = async () => {
   await user.click(screen.getByRole('button', { name: 'set id' }));
   await user.click(screen.getByRole('button', { name: 'set display name' }));
   await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
-  await waitFor(() => expect(screen.getByText('resource-source-field')).toBeInTheDocument());
+  expect(await screen.findByText('resource-source-field')).toBeInTheDocument();
   return user;
 };
 
@@ -147,7 +147,7 @@ describe('CreateApplication', () => {
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
     expect(screen.getByText('resource-source-field')).toBeInTheDocument();
   });
 
@@ -160,7 +160,7 @@ describe('CreateApplication', () => {
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         folderId: 'public/',

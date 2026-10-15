@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -228,7 +228,7 @@ describe('HopChatPanel', () => {
 
     await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.InspectorShowFullMessage }));
 
-    await waitFor(() => expect(screen.getByText('the whole prompt')).toBeTruthy());
+    expect(await screen.findByText('the whole prompt')).toBeTruthy();
     expect(getSessionHopMessage).toHaveBeenCalledOnce();
   });
 

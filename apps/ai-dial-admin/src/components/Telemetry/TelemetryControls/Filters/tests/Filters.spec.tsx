@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
@@ -96,7 +96,7 @@ describe('Components - Filters', () => {
       <Filters filters={[]} setFilters={setFilters} route={ApplicationRoute.Dashboard} getBaseData={getBaseDataFull} />,
     );
 
-    await waitFor(() => expect(screen.getByText('projects:p1,p2')).toBeInTheDocument());
+    expect(await screen.findByText('projects:p1,p2')).toBeInTheDocument();
 
     // A new time period / view returns no rows — the stale options must be cleared, not kept.
     const getBaseDataEmpty = vi.fn().mockResolvedValue({ success: true, response: { data: [] } });
@@ -109,7 +109,7 @@ describe('Components - Filters', () => {
       />,
     );
 
-    await waitFor(() => expect(screen.getByText('projects:')).toBeInTheDocument());
+    expect(await screen.findByText('projects:')).toBeInTheDocument();
     expect(screen.getByText('entities:')).toBeInTheDocument();
   });
 });

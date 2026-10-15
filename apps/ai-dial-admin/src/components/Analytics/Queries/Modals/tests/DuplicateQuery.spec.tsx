@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -108,7 +108,7 @@ describe('DuplicateQuery', () => {
     setName('Shared');
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().name).toBe('Shared');
   });
 
@@ -118,7 +118,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.query).toEqual(STRUCTURED.query);
     expect(request.time).toEqual(STRUCTURED.time);
@@ -132,7 +132,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.sql).toBe('SELECT count(*) FROM dial_usage_log');
     expect('query' in request).toBeFalsy();
@@ -145,7 +145,7 @@ describe('DuplicateQuery', () => {
     setName('Weekly adoption');
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.name).toBe('Weekly adoption');
     expect(request.description).toBe('For the Monday review');
@@ -158,7 +158,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     ['id', 'owner_id', 'owner_email', 'source', 'generation', 'created_at', 'updated_at'].forEach((member) => {
       expect(member in request).toBeFalsy();
@@ -171,7 +171,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(updateSavedQuery).not.toHaveBeenCalled();
   });
 
@@ -181,7 +181,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
     expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('sq_new'));
     expect(onClose).toHaveBeenCalled();
     expect(mockShowNotification).toHaveBeenCalled();
@@ -199,7 +199,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
     expect(mockShowNotification).toHaveBeenCalledWith(
@@ -219,7 +219,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
     expect(mockShowNotification).toHaveBeenCalledWith(
       expect.objectContaining({ description: "unknown column 'project_id'" }),
@@ -238,7 +238,7 @@ describe('DuplicateQuery', () => {
 
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().scope).toBe(SavedQueryScope.Personal);
   });
 
@@ -258,7 +258,7 @@ describe('DuplicateQuery', () => {
     await user.click(screen.getByRole('radio', { name: /Queries.ScopePersonal/ }));
     await submit(user);
 
-    await waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().scope).toBe(SavedQueryScope.Personal);
   });
 });
