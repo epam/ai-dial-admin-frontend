@@ -2,17 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import ClientSecretControl from '../ClientSecretControl';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: mockDispatch }),
-  ValidationActionType: {
-    SetField: 'SetField',
-  },
-}));
+const mockDispatch = vi.mocked(useSaveValidationContext().dispatch);
 
 describe('ClientSecretControl', () => {
   beforeEach(() => {
@@ -132,7 +125,7 @@ describe('ClientSecretControl — stored secret hint', () => {
   test('still requires a value when there is no hint', () => {
     render(<ClientSecretControl clientSecret="" />);
 
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeTruthy();
     expect(mockDispatch).toHaveBeenCalledWith({
       type: ValidationActionType.SetField,
       field: 'authSettings.clientSecret',
@@ -160,7 +153,7 @@ describe('ClientSecretControl — minLength', () => {
   test('is invalid and shows the length error for a value below the minimum', () => {
     render(<ClientSecretControl clientSecret="short" minLength={8} />);
 
-    expect(screen.getByText('Error.ClientSecretMinLength')).toBeInTheDocument();
+    expect(screen.getByText('Error.ClientSecretMinLength')).toBeTruthy();
     expect(mockDispatch).toHaveBeenCalledWith({
       type: ValidationActionType.SetField,
       field: 'authSettings.clientSecret',
@@ -171,7 +164,7 @@ describe('ClientSecretControl — minLength', () => {
   test('is invalid for a short typed value even when a hint is present', () => {
     render(<ClientSecretControl clientSecret="short" minLength={8} hasSecretHint />);
 
-    expect(screen.getByText('Error.ClientSecretMinLength')).toBeInTheDocument();
+    expect(screen.getByText('Error.ClientSecretMinLength')).toBeTruthy();
     expect(mockDispatch).toHaveBeenCalledWith({
       type: ValidationActionType.SetField,
       field: 'authSettings.clientSecret',

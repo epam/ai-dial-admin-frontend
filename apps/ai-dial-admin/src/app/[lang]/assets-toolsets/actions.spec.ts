@@ -155,10 +155,13 @@ describe('Assets Toolset :: server actions', () => {
       'etag',
     );
 
-    const body = (assetApi.put as any).mock.calls[0][3];
-    expect(body.auth_settings).toEqual({ client_id: 'id' });
-    expect('client_secret_hint' in body.auth_settings).toBe(false);
-    expect('client_secret' in body.auth_settings).toBe(false);
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id' } }),
+      { etag: 'etag' },
+    );
   });
 
   test('updateToolset keeps a client secret the user typed', async () => {
@@ -174,10 +177,13 @@ describe('Assets Toolset :: server actions', () => {
       'etag',
     );
 
-    expect((assetApi.put as any).mock.calls[0][3].auth_settings).toEqual({
-      client_id: 'id',
-      client_secret: 'typed-secret',
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id', client_secret: 'typed-secret' } }),
+      { etag: 'etag' },
+    );
   });
 
   test('createToolset sends no client_secret_hint or empty client_secret', async () => {
@@ -187,7 +193,12 @@ describe('Assets Toolset :: server actions', () => {
       toolsetResource({ auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' } }),
     );
 
-    expect((assetApi.put as any).mock.calls[0][3].auth_settings).toEqual({ client_id: 'id' });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      expect.any(String),
+      expect.objectContaining({ auth_settings: { client_id: 'id' } }),
+    );
   });
 
   test('updateToolset resolves identity from _metadata when the flat fields are absent', async () => {

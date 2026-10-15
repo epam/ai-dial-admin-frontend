@@ -222,10 +222,18 @@ describe('Assets application :: server actions', () => {
       'etag',
     );
 
-    expect((assetApi.put as any).mock.calls[0][3].external_services).toEqual({
-      untouched: { auth_settings: { client_id: 'id' } },
-      retyped: { auth_settings: { client_id: 'id', client_secret: 'typed-secret' } },
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.objectContaining({
+        external_services: {
+          untouched: { auth_settings: { client_id: 'id' } },
+          retyped: { auth_settings: { client_id: 'id', client_secret: 'typed-secret' } },
+        },
+      }),
+      { etag: 'etag' },
+    );
   });
 
   test('updateApp passes interfaces through unchanged before calling Core', async () => {

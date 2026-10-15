@@ -2,18 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DialToolsetResourceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
 import ResourceOAuthSection from '../ResourceOAuthSection';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: mockDispatch }),
-  ValidationActionType: {
-    SetField: 'SetField',
-  },
-}));
+const mockDispatch = vi.mocked(useSaveValidationContext().dispatch);
 
 const oauthSettings = (overrides: Partial<DialToolsetResourceAuthSettings> = {}): DialToolsetResourceAuthSettings => ({
   authentication_type: ToolsetAuthType.OAUTH,
@@ -51,7 +44,7 @@ describe('ResourceOAuthSection — client secret', () => {
   test('rejects a typed client secret shorter than the Core minimum', () => {
     render(<ResourceOAuthSection authSettings={oauthSettings({ client_secret: 'short' })} />);
 
-    expect(screen.getByText('Error.ClientSecretMinLength')).toBeInTheDocument();
+    expect(screen.getByText('Error.ClientSecretMinLength')).toBeTruthy();
     expect(mockDispatch).toHaveBeenCalledWith({
       type: ValidationActionType.SetField,
       field: 'authSettings.clientSecret',
