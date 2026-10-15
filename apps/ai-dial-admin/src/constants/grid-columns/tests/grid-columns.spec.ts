@@ -548,6 +548,16 @@ describe('Constants :: grid columns', () => {
     expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
   });
 
+  test('Created By offers Equals, Does not equal, and Contains', () => {
+    const createdBy = TEST_SUITES_COLUMN.find((c) => c.field === 'createdBy');
+
+    expect((createdBy?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
     expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
@@ -728,6 +738,7 @@ describe('SUITE_RUNS_COLUMN', () => {
 describe('COMPARE_RUN_PICKER_COLUMN', () => {
   test('carries exactly the requested columns, in the requested order', () => {
     expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
+      'testSuiteName',
       'testRunName',
       'numberOfTestCases',
       'testSuiteId',
@@ -737,5 +748,13 @@ describe('COMPARE_RUN_PICKER_COLUMN', () => {
       'duration',
       'cost',
     ]);
+  });
+
+  test('names the suite of each run, falling back to its id', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'testSuiteName');
+    const getValue = (data: object) => (column?.valueGetter as (params: { data: object }) => unknown)({ data });
+
+    expect(getValue({ testSuiteId: 'suite-1', testSuiteName: 'Suite One' })).toBe('Suite One');
+    expect(getValue({ testSuiteId: 'suite-1' })).toBe('suite-1');
   });
 });

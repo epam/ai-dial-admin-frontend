@@ -150,6 +150,7 @@ import {
   getRunDurationMs,
   resolveRunTarget,
 } from '@/src/components/Runs/utils/run-list-values';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import { Metric } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
 import { getMetricOutputTags } from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
@@ -1341,7 +1342,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     field: 'createdBy',
     headerName: 'Created By',
     hide: false,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     field: 'method',
@@ -1360,6 +1361,13 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     valueGetter: (params) => params.data?.endpointRef?.relativeUrlPattern || '',
   },
 ];
+
+const DATASET_TEST_SUITES_HIDDEN_COL_IDS = ['method', 'url'];
+
+/** The test suites list's columns minus the two it hides by default; the dataset's tab shows only the rest. */
+export const DATASET_TEST_SUITES_COLUMN: ColDef[] = TEST_SUITES_COLUMN.filter(
+  (col) => !DATASET_TEST_SUITES_HIDDEN_COL_IDS.includes(col.field ?? ''),
+);
 
 export const DATASETS_COLUMN: ColDef[] = [
   {
@@ -1536,9 +1544,18 @@ const COMPARE_RUN_PICKER_COL_IDS = [
   'cost',
 ];
 
-export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) =>
-  RUNS_COLUMN.filter((col) => col.colId === colId),
-);
+/** The compare picker may span sibling suites, so it leads with the suite's name before the run's own columns. */
+export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = [
+  {
+    colId: 'testSuiteName',
+    headerName: 'Test Suite',
+    valueGetter: ({ data }) => (data as CompareCandidateRun).testSuiteName || (data as CompareCandidateRun).testSuiteId,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
+  },
+  ...COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) => RUNS_COLUMN.filter((col) => col.colId === colId)),
+];
 
 export const METRICS_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID', hide: false },

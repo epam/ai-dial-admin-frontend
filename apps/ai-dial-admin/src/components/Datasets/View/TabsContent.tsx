@@ -5,6 +5,7 @@ import { FC, RefObject } from 'react';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
 import DatasetSchemaTab from '@/src/components/Datasets/Schema/SchemaTab';
+import DatasetTestSuites from '@/src/components/Datasets/TestSuites/TestSuites';
 import DatasetTestCases from '@/src/components/Datasets/TestCases/TestCases';
 import { DatasetTestCasesActions } from '@/src/components/Datasets/TestCases/TestCasesList';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -21,6 +22,7 @@ interface Props {
   selectedDataset: Dataset;
   savedSchema?: TestCaseSchema[];
   isSkipRefresh?: boolean;
+  isSchemaReadOnly?: boolean;
   onChange: (dataset: Dataset, isSkipRefresh?: boolean) => void;
   nameExistsError?: string;
 }
@@ -32,6 +34,7 @@ const DatasetTabsContent: FC<Props> = ({
   selectedDataset,
   savedSchema,
   isSkipRefresh,
+  isSchemaReadOnly,
   onChange,
   nameExistsError,
 }) => {
@@ -58,7 +61,12 @@ const DatasetTabsContent: FC<Props> = ({
         </div>
       )}
       {activeTab === EntityViewTab.Schema && (
-        <DatasetSchemaTab dataset={selectedDataset} isSkipRefresh={isSkipRefresh} onChange={onChange} />
+        <DatasetSchemaTab
+          dataset={selectedDataset}
+          isSkipRefresh={isSkipRefresh}
+          isReadOnly={isSchemaReadOnly}
+          onChange={onChange}
+        />
       )}
       {activeTab === EntityViewTab.TestCases && (
         <DatasetTestCases
@@ -68,6 +76,7 @@ const DatasetTabsContent: FC<Props> = ({
           onDirtyChange={onTestCaseDirtyChange}
         />
       )}
+      {activeTab === EntityViewTab.TestSuites && <DatasetTestSuites datasetId={selectedDataset.id as string} />}
     </>
   );
 };

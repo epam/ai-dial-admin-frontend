@@ -153,3 +153,36 @@ describe('SchemaManager', () => {
     );
   });
 });
+
+describe('SchemaManager read-only', () => {
+  const schema: TestCaseSchema[] = [
+    { name: 'temperature', type: TestCaseItemType.NUMBER, required: true, description: 'Sampling temp' },
+  ];
+
+  beforeEach(() => {
+    gridOptions.columnDefs = [];
+  });
+
+  test('is editable by default: Add field enabled, remove column present', () => {
+    render(<SchemaManager testCaseSchema={schema} onChangeTestCaseSchema={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: BasicI18nKey.AddField })).toBeEnabled();
+    expect(gridOptions.columnDefs.some((column) => column.colId === 'action-remove')).toBe(true);
+    expect(gridOptions.columnDefs.find((column) => column.colId === 'name')?.cellRendererParams.isReadonly).toBe(false);
+  });
+
+  test('disables Add field and drops the remove column', () => {
+    render(<SchemaManager testCaseSchema={schema} onChangeTestCaseSchema={vi.fn()} isReadOnly />);
+
+    expect(screen.getByRole('button', { name: BasicI18nKey.AddField })).toBeDisabled();
+    expect(gridOptions.columnDefs.some((column) => column.colId === 'action-remove')).toBe(false);
+  });
+
+  test('marks every field column read-only', () => {
+    render(<SchemaManager testCaseSchema={schema} onChangeTestCaseSchema={vi.fn()} isReadOnly />);
+
+    ['name', 'type', 'required', 'perTurn', 'description'].forEach((colId) => {
+      expect(gridOptions.columnDefs.find((column) => column.colId === colId)?.cellRendererParams.isReadonly).toBe(true);
+    });
+  });
+});

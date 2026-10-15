@@ -1,9 +1,13 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
+import { getDatasetTestSuites } from '@/src/app/[lang]/datasets/actions';
 import { getRunsQuery } from '@/src/app/[lang]/runs/actions';
+import { getTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult, Run, RunStatus } from '@/src/models/evaluation/run';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterOperatorDto } from '@/src/types/request';
 
 import {
@@ -15,14 +19,14 @@ import {
   RUN_COMPARE_SECONDARY_INDEX,
   RUN_COMPARE_SEGMENT,
 } from './constants';
-import { CompareRun, CompareRunSource } from './models';
+import { CompareCandidateRun, CompareRun, CompareRunSource } from './models';
 
 export const getSelectableCompareRuns = (
-  suiteRuns: Run[],
+  suiteRuns: CompareCandidateRun[],
   slot: CompareRunSlot,
   primaryRunId?: string,
   comparedRunId?: string | null,
-): Run[] => {
+): CompareCandidateRun[] => {
   const excludedRunId = slot === CompareRunSlot.Primary ? comparedRunId : primaryRunId;
   return suiteRuns.filter((run) => run.id !== excludedRunId);
 };
@@ -78,6 +82,37 @@ export const fetchSuiteCompletedRuns = async (testSuiteId: string): Promise<Run[
     ],
   );
   return (res?.content || []) as Run[];
+};
+
+/**
+ * The suite itself first, then the other suites bound to the same dataset. A suite with no dataset, or
+ * a lookup that fails, degrades to the suite alone — the picker then behaves as it did before.
+ */
+const getDatasetSuites = async (testSuiteId: string): Promise<TestSuite[]> => {
+  let suite: TestSuite | undefined;
+  try {
+    suite = (await getTestSuite(testSuiteId, DEFAULT_ETAG))?.response as TestSuite | undefined;
+    const ownSuite: TestSuite = { id: testSuiteId, name: suite?.name };
+    if (!suite?.datasetId) {
+      return [ownSuite];
+    }
+
+    const siblings = ((await getDatasetTestSuites(suite.datasetId))?.response ?? []) as TestSuite[];
+    return [ownSuite, ...siblings.filter((sibling) => sibling.id && sibling.id !== testSuiteId)];
+  } catch {
+    return [{ id: testSuiteId, name: suite?.name }];
+  }
+};
+
+export const fetchCompareCandidateRuns = async (testSuiteId: string): Promise<CompareCandidateRun[]> => {
+  const suites = await getDatasetSuites(testSuiteId);
+  const runsBySuite = await Promise.all(
+    suites.map(async (suite) => {
+      const runs = await fetchSuiteCompletedRuns(suite.id as string);
+      return runs.map((run) => ({ ...run, testSuiteName: suite.name }));
+    }),
+  );
+  return runsBySuite.flat();
 };
 
 export const getCompareViewTabs = (t: (key: string) => string): TabModel[] => [

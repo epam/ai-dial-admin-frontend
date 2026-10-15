@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { datasetsApi } from '@/src/app/api/api';
+import { datasetsApi, structuredQueryApi } from '@/src/app/api/api';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
+import { ComparisonOp, ExprType, LogicalOp, ValueType } from '@/src/models/evaluation/structured-query';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -16,6 +17,7 @@ import {
   getDatasetFiles,
   getDatasetByName,
   getDatasetTestSuites,
+  getDatasetTestSuitesPage,
   getDatasets,
   getTestCases,
   importTestCase,
@@ -128,6 +130,47 @@ describe('Datasets :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(datasetsApi.getDatasetTestSuites).toHaveBeenCalledWith('dataset-1', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should query test suites scoped to the dataset through the Query DSL', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue({ rows: [{ id: 's1', name: 'Suite' }], totalCount: 1 });
+
+    const result = await getDatasetTestSuitesPage(
+      'dataset-1',
+      0,
+      20,
+      [],
+      [{ column: 'name', value: 'x', operator: FilterOperatorDto.CONTAINS }],
+    );
+
+    expect(structuredQueryApi.execute).toHaveBeenCalledOnce();
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entity: 'test_suites',
+        filter: {
+          op: LogicalOp.And,
+          args: [
+            {
+              op: ComparisonOp.Eq,
+              args: [
+                { type: ExprType.Field, name: 'dataset_id' },
+                { type: ExprType.Value, value_type: ValueType.String, value: 'dataset-1' },
+              ],
+            },
+            {
+              op: ComparisonOp.Co,
+              args: [
+                { type: ExprType.Field, name: 'name' },
+                { type: ExprType.Value, value_type: ValueType.String, value: 'x' },
+              ],
+            },
+          ],
+        },
+      }),
+      TOKEN_MOCK,
+    );
+    expect(result?.content).toEqual([expect.objectContaining({ id: 's1' })]);
+    expect(result?.totalElements).toBe(1);
   });
 
   test('Should call transitionVisibility action', async () => {

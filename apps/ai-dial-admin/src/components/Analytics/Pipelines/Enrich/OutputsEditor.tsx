@@ -118,11 +118,17 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
       )}
 
       {/* A sql output is one line, so its columns are named once above the list. An llm output is a block
-          of several fields, where a heading row names nothing that lines up — each row labels its own. */}
+          of several fields, where a heading row names nothing that lines up — each row labels its own.
+          The widths go on `containerClassName`: the 2.0 label's outer element is the flex item, and
+          `className` would size only the inner `<label>`, leaving the headings off the row's 1:2 split. */}
       {isSql && rows.length > 0 && (
         <div className="flex flex-row items-end gap-3 pl-7">
-          <Label label={t(AnalyticsPipelinesI18nKey.OutputColumn)} className="min-w-[180px] flex-1" required />
-          <Label label={t(AnalyticsPipelinesI18nKey.VarExpression)} className="min-w-[220px] flex-[2]" required />
+          <Label label={t(AnalyticsPipelinesI18nKey.OutputColumn)} containerClassName="min-w-[180px] flex-1" required />
+          <Label
+            label={t(AnalyticsPipelinesI18nKey.VarExpression)}
+            containerClassName="min-w-[220px] flex-[2]"
+            required
+          />
           <span className="w-9 shrink-0" />
         </div>
       )}

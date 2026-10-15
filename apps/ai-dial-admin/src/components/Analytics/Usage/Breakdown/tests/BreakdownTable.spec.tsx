@@ -19,8 +19,15 @@ import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-qu
 interface CapturedGrid {
   /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
   rowData?: BreakdownRowModel[];
-  columnDefs: { colId?: string; filter?: boolean | string; tooltipValueGetter?: () => unknown }[];
-  additionalGridOptions?: { domLayout?: string };
+  columnDefs: {
+    colId?: string;
+    filter?: boolean | string;
+    sortable?: boolean;
+    sort?: string;
+    initialSort?: string;
+    tooltipValueGetter?: () => unknown;
+  }[];
+  additionalGridOptions?: { domLayout?: string; suppressMultiSort?: boolean };
 }
 
 const RUNNER = {
@@ -305,6 +312,51 @@ describe('BreakdownTable cost column and tab description', () => {
 
     expect(card.rowData).toBeTruthy();
     expect(dialog.rowData).toBeUndefined();
+  });
+
+  test('titles the card as the top rows it holds, with the number it is cut at', () => {
+    renderTable();
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTitleTop)).toBeTruthy();
+  });
+
+  test('lets the dialog sort by every measure and the dimension, and the card by none', () => {
+    renderTable({ isShowingAll: true });
+
+    const [card, dialog] = grids;
+    const sortableOf = (grid: CapturedGrid) =>
+      grid.columnDefs.filter((column) => column.sortable).map((column) => column.colId);
+
+    expect(sortableOf(card)).toEqual([]);
+    expect(sortableOf(dialog)).toEqual(['dimension', 'share', 'calls', 'errors', 'latency', 'cost']);
+  });
+
+  const openingSortOf = (grid: CapturedGrid) =>
+    grid.columnDefs.filter((column) => column.initialSort).map((column) => [column.colId, column.initialSort]);
+
+  test("opens the dialog on cost without pinning it, so a reader's sort replaces it", () => {
+    renderTable({ isShowingAll: true });
+
+    const [, dialog] = grids;
+
+    expect(openingSortOf(dialog)).toEqual([['cost', 'desc']]);
+    expect(dialog.columnDefs.every((column) => column.sort === undefined)).toBe(true);
+  });
+
+  test('opens the dialog on calls where the rows carry no cost', () => {
+    renderTable({ isShowingAll: true, isCostOffered: false });
+
+    const [, dialog] = grids;
+
+    expect(openingSortOf(dialog)).toEqual([['calls', 'desc']]);
+  });
+
+  test('sorts the dialog by one column at a time, the one key the backend ranks on', () => {
+    renderTable({ isShowingAll: true });
+
+    const [, dialog] = grids;
+
+    expect(dialog.additionalGridOptions).toMatchObject({ suppressMultiSort: true });
   });
 });
 

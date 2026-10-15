@@ -31,9 +31,10 @@ import DatasetTabsContent from './TabsContent';
 interface Props {
   originalDataset: Dataset;
   etag: string;
+  isSchemaReadOnly?: boolean;
 }
 
-const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
+const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaReadOnly = false }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification, removeNotification } = useNotification();
@@ -52,14 +53,18 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [nameExistsError, setNameExistsError] = useState<string>();
 
+  // A lock that appears while the editor is already open (a suite bound elsewhere) must not strand the user in it.
+  const isJsonEditorShown = isEditorEnabled && !isSchemaReadOnly;
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
-      isEditorEnabled,
+      isEditorEnabled: isJsonEditorShown,
+      isEditorDisabled: isSchemaReadOnly,
       onToggleEditor: () => {
         setIsEditorEnabled((prev) => !prev);
       },
     }),
-    [isEditorEnabled],
+    [isJsonEditorShown, isSchemaReadOnly],
   );
 
   useEffect(() => {
@@ -209,7 +214,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
         </SimpleEntityHeader>
 
         <div className="flex-1 overflow-auto min-h-0">
-          {isEditorEnabled ? (
+          {isJsonEditorShown ? (
             <EntityJsonEditor
               key={discardKey}
               entity={selectedDataset}
@@ -222,6 +227,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
               testCasesActionsRef={testCasesActionsRef}
               onTestCaseDirtyChange={setHasTestCaseChanges}
               isSkipRefresh={isSkipRefresh}
+              isSchemaReadOnly={isSchemaReadOnly}
               activeTab={activeTab}
               selectedDataset={selectedDataset}
               savedSchema={originalDataset.testCaseSchema}

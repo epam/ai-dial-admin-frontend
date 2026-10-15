@@ -21,9 +21,10 @@ interface Props {
   testCaseSchema: TestCaseSchema[];
   onChangeTestCaseSchema: (schema: TestCaseSchema[], isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  isReadOnly?: boolean;
 }
 
-const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSkipRefresh }) => {
+const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSkipRefresh, isReadOnly = false }) => {
   const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -129,13 +130,17 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, onChangePerTurn, t),
-      {
-        ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4')),
-        colId: 'action-remove',
-      },
+      ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, onChangePerTurn, t, isReadOnly),
+      ...(isReadOnly
+        ? []
+        : [
+            {
+              ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4')),
+              colId: 'action-remove',
+            },
+          ]),
     ],
-    [onCellChange, onSelectChange, onChangeRequired, onChangePerTurn, t, onRemoveField],
+    [onCellChange, onSelectChange, onChangeRequired, onChangePerTurn, t, onRemoveField, isReadOnly],
   );
 
   const rowData = useMemo(() => testCaseSchema, [testCaseSchema]);
@@ -182,6 +187,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
           label={t(BasicI18nKey.AddField)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAddField}
+          disabled={isReadOnly}
         />
       </div>
 
