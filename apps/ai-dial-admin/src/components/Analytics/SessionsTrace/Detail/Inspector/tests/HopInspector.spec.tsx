@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -241,7 +241,7 @@ describe('HopInspector — the request side', () => {
 
     await user.click(await screen.findByRole('button', { name: SessionsTraceI18nKey.InspectorShowFullMessage }));
 
-    await waitFor(() => expect(screen.getByText('the whole prompt')).toBeInTheDocument());
+    expect(await screen.findByText('the whole prompt')).toBeInTheDocument();
     expect(getSessionHopMessage).toHaveBeenCalledOnce();
   });
 
@@ -289,7 +289,7 @@ describe('HopInspector — the request side', () => {
     getSessionHopRequest.mockResolvedValue({ success: true, response: envelope({ isClamped: true }) });
     renderInspector();
 
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.InspectorEnvelopeClamped)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.InspectorEnvelopeClamped)).toBeInTheDocument();
   });
 
   // An unrecognised dialect is answered with the body rather than with a dead end.
@@ -309,7 +309,7 @@ describe('HopInspector — the request side', () => {
     renderInspector();
 
     // Pretty-printed rather than dumped as recorded: a body arrives as one unwrapped line.
-    await waitFor(() => expect(screen.getByText(/"raw": true/)).toBeInTheDocument());
+    expect(await screen.findByText(/"raw": true/)).toBeInTheDocument();
     // The spec requires the inspector to state that it cannot structure the body, not just to show it.
     expect(screen.getByText(SessionsTraceI18nKey.InspectorUnstructured)).toBeInTheDocument();
   });
@@ -329,7 +329,7 @@ describe('HopInspector — the recorded bytes', () => {
 
     await user.click(screen.getByRole('tab', { name: /InspectorChat/ }));
 
-    await waitFor(() => expect(getSessionHopResponse).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getSessionHopResponse).toHaveBeenCalledOnce());
   });
 
   test('offers the raw switch on the request side too', async () => {
@@ -355,7 +355,7 @@ describe('HopInspector — the recorded bytes', () => {
 
     await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.InspectorRaw }));
 
-    await waitFor(() => expect(screen.getByText(/"messages": \[\]/)).toBeInTheDocument());
+    expect(await screen.findByText(/"messages": \[\]/)).toBeInTheDocument();
   });
 
   test('the raw switch closes the facts line, at its end', async () => {
@@ -470,7 +470,7 @@ describe('HopInspector — the response side', () => {
     await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
     await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.InspectorRaw }));
 
-    await waitFor(() => expect(getSessionHopRawBody).toHaveBeenCalled());
+    await vi.waitFor(() => expect(getSessionHopRawBody).toHaveBeenCalled());
   });
 
   test('states what a clamped raw body withheld', async () => {
@@ -488,7 +488,7 @@ describe('HopInspector — the response side', () => {
     await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
     await user.click(screen.getByRole('button', { name: SessionsTraceI18nKey.InspectorRaw }));
 
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.InspectorRawClamped)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.InspectorRawClamped)).toBeInTheDocument();
   });
 });
 
@@ -680,7 +680,7 @@ describe('HopInspector — absence and entitlement', () => {
     getSessionHopRequest.mockResolvedValue({ success: false, response: undefined });
     renderInspector();
 
-    await waitFor(() => expect(screen.getByText(SessionsTraceI18nKey.InspectorLoadFailed)).toBeInTheDocument());
+    expect(await screen.findByText(SessionsTraceI18nKey.InspectorLoadFailed)).toBeInTheDocument();
   });
 
   test('a failed read is reported by notification as well, quoting the service', async () => {
@@ -694,7 +694,8 @@ describe('HopInspector — absence and entitlement', () => {
     });
     renderInspector();
 
-    await waitFor(() =>
+    expect(await screen.findByText(SessionsTraceI18nKey.InspectorLoadFailed)).toBeInTheDocument();
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Upstream unavailable',
@@ -703,14 +704,13 @@ describe('HopInspector — absence and entitlement', () => {
         }),
       ),
     );
-    expect(screen.getByText(SessionsTraceI18nKey.InspectorLoadFailed)).toBeInTheDocument();
   });
 
   test('a failed read falls back to its own title when the service supplied no header', async () => {
     getSessionHopRequest.mockResolvedValue({ success: false, status: 500, response: undefined });
     renderInspector();
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: SessionsTraceI18nKey.InspectorLoadFailed }),
       ),
@@ -720,7 +720,8 @@ describe('HopInspector — absence and entitlement', () => {
   test('a read that succeeds raises no notification', async () => {
     renderInspector();
 
-    await waitFor(() => expect(getSessionHopRequest).toHaveBeenCalled());
+    await screen.findByText('who are you?');
+    expect(getSessionHopRequest).toHaveBeenCalled();
     expect(showNotification).not.toHaveBeenCalled();
   });
 

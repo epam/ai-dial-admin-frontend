@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -142,8 +142,8 @@ describe('AiPanel', () => {
     await user.type(promptBox(), 'cost');
     await user.click(sendButton());
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
-    expect(screen.getByText('cost')).toBeInTheDocument();
+    expect(await screen.findByText('cost')).toBeInTheDocument();
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
   });
 
   test('inline Run is disabled for the currently loaded message, and while a run is in flight', async () => {
@@ -178,7 +178,7 @@ describe('AiPanel', () => {
     await user.type(promptBox(), 'cost by project');
     await user.click(sendButton());
 
-    await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
     expect(generateQuery).toHaveBeenCalledWith([{ role: QueryAssistantRole.User, content: 'cost by project' }]);
   });
 
@@ -194,7 +194,7 @@ describe('AiPanel', () => {
     await user.type(promptBox(), 'now group by day');
     await user.click(sendButton());
 
-    await waitFor(() => expect(generateQuery).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(generateQuery).toHaveBeenCalledTimes(2));
     expect(generateQuery).toHaveBeenLastCalledWith([
       { role: QueryAssistantRole.User, content: 'cost by project' },
       { role: QueryAssistantRole.Assistant, content: 'first answer' },
@@ -210,7 +210,7 @@ describe('AiPanel', () => {
     await user.type(promptBox(), 'anything');
     await user.click(sendButton());
 
-    await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
     expect(generateQuery).toHaveBeenCalledWith([{ role: QueryAssistantRole.User, content: 'anything' }]);
   });
 });

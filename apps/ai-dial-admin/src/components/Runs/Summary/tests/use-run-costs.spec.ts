@@ -134,7 +134,8 @@ describe('useRunCosts', () => {
 
       const { result } = renderHook(() => useRunCosts('run-1'));
 
-      await waitFor(() => expect(getRunCostsMock).toHaveBeenCalledTimes(1));
+      await act(async () => {});
+      expect(getRunCostsMock).toHaveBeenCalledOnce();
       expect(result.current.isPending).toBe(true);
       expect(result.current.costs).toBeNull();
       expect(result.current.unavailable).toBe(false);
@@ -158,7 +159,8 @@ describe('useRunCosts', () => {
 
     const { result } = renderHook(() => useRunCosts('run-1'));
 
-    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalledTimes(1));
+    await act(async () => {});
+    expect(getRunCostsMock).toHaveBeenCalledOnce();
     expect(result.current.isPending).toBe(true);
 
     await act(async () => {
@@ -219,7 +221,8 @@ describe('useRunCosts', () => {
 
     const { result } = renderHook(() => useRunCosts('run-1'));
 
-    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalledTimes(1));
+    await act(async () => {});
+    expect(getRunCostsMock).toHaveBeenCalledOnce();
     expect(result.current.isPending).toBe(true);
 
     await act(async () => {
@@ -237,7 +240,8 @@ describe('useRunCosts', () => {
 
     const { unmount } = renderHook(() => useRunCosts('run-1'));
 
-    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalledTimes(1));
+    await act(async () => {});
+    expect(getRunCostsMock).toHaveBeenCalledOnce();
     unmount();
 
     await act(async () => {

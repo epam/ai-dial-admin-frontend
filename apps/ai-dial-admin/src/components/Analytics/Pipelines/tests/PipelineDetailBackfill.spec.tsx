@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -12,7 +12,7 @@ import {
 } from '@/src/app/[lang]/pipelines/actions';
 import { runtimeView } from '@/src/components/Analytics/Pipelines/Common/tests/mock';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
-import { BackfillI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsPipelinesI18nKey, BackfillI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
@@ -93,6 +93,14 @@ const serve = (...runs: PipelineBackfillRun[]) =>
 
 const renderView = () => render(<PipelineDetailView pipeline={pipeline} takenTargets={['turn_feedback']} />);
 
+// The drawer's own read hands the run to the page the same way the banner's read does, and it shows the run's
+// section only once it has — so the banner's verdict on that run is in by the time this resolves.
+const openDrawerOnTheRun = async () => {
+  await userEvent.click(await screen.findByRole('button', { name: BackfillI18nKey.Title }));
+  const drawer = await screen.findByRole('dialog', { name: BackfillI18nKey.Title });
+  expect(await within(drawer).findByText(BackfillI18nKey.SectionRun)).toBeInTheDocument();
+};
+
 const backfillButton = () => screen.queryByRole('button', { name: BackfillI18nKey.Title });
 
 describe('PipelineDetailView — backfill', () => {
@@ -145,10 +153,13 @@ describe('PipelineDetailView — backfill', () => {
 
     test('is withheld when no runner host is configured', async () => {
       vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
-      renderView();
+      const user = userEvent.setup();
+      render(<PipelineDetailView pipeline={{ ...pipeline, state: undefined }} takenTargets={['turn_feedback']} />);
 
-      await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
-      await screen.findByText(TabsI18nKey.Runtime);
+      // With no runner and no registry state, the Runtime tab states the read as unavailable — which it can
+      // only do once the runner's answer has been taken in.
+      await user.click(await screen.findByText(TabsI18nKey.Runtime));
+      expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeUnavailableTitle)).toBeInTheDocument();
 
       expect(backfillButton()).toBeNull();
       expect(listPipelineBackfills).not.toHaveBeenCalled();
@@ -257,8 +268,7 @@ describe('PipelineDetailView — backfill', () => {
         serve(run({ state: PipelineBackfillState.Paused, paused_reason: reason }));
         renderView();
 
-        await waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
-        await screen.findByRole('button', { name: BackfillI18nKey.Title });
+        await openDrawerOnTheRun();
 
         expect(screen.queryByText(BackfillI18nKey.BannerPaused)).toBeNull();
         expect(screen.queryByText(BackfillI18nKey.BannerRunning)).toBeNull();
@@ -271,8 +281,7 @@ describe('PipelineDetailView — backfill', () => {
         serve(run({ state }));
         renderView();
 
-        await waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
-        await screen.findByRole('button', { name: BackfillI18nKey.Title });
+        await openDrawerOnTheRun();
 
         expect(screen.queryByText(BackfillI18nKey.BannerRunning)).toBeNull();
         expect(screen.queryByText(BackfillI18nKey.BannerPaused)).toBeNull();
@@ -282,7 +291,7 @@ describe('PipelineDetailView — backfill', () => {
     test('is read for the pipeline by its name, so a reload finds the run without its id', async () => {
       renderView();
 
-      await waitFor(() => expect(listPipelineBackfills).toHaveBeenCalledWith('feedback-live', 10));
+      await vi.waitFor(() => expect(listPipelineBackfills).toHaveBeenCalledWith('feedback-live', 10));
     });
 
     test('shows nothing to a caller who is not a full admin even when a run is running', async () => {

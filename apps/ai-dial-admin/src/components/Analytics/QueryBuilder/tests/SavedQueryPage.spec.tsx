@@ -272,9 +272,9 @@ describe('QueryBuilder — a stored saved query', () => {
     await addProjectionField(user);
     await user.click(saveButton()!);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+    expect(updateSavedQuery).toHaveBeenCalledOnce();
     expect(vi.mocked(updateSavedQuery).mock.calls[0][0]).toBe('sq_1');
-    expect(mockRefresh).toHaveBeenCalled();
     expect(mockShowNotification).toHaveBeenCalled();
   });
 
@@ -285,7 +285,7 @@ describe('QueryBuilder — a stored saved query', () => {
     await addProjectionField(user);
     await user.click(saveButton()!);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.time).toEqual({ mode: SavedQueryTimeMode.Relative, period: '7d' });
     expect(JSON.stringify(request.query?.filter ?? {})).not.toContain('request_time');
@@ -304,7 +304,7 @@ describe('QueryBuilder — a stored saved query', () => {
     await addProjectionField(user);
     await user.click(saveButton()!);
 
-    await waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(saveButton()).toBeInTheDocument();
     expect(mockRefresh).not.toHaveBeenCalled();
   });
@@ -317,7 +317,7 @@ describe('QueryBuilder — a stored saved query', () => {
     await addProjectionField(user);
     await user.click(saveButton()!);
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/queries'));
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalledWith('/queries'));
   });
 
   test('reverts to the last saved query when a discard is confirmed', async () => {
@@ -433,7 +433,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
       await user.click(saveButton()!);
 
-      await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       const request = sentRequest();
       expect(request.sql).toBe('SELECT count(*) FROM dial_usage_log');
       expect('query' in request).toBeFalsy();
@@ -452,7 +452,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await screen.findByLabelText('json-editor');
       await user.click(saveButton()!);
 
-      await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       const request = sentRequest();
       expect(request.query?.entity).toBe('dial_usage_log');
       expect('sql' in request).toBeFalsy();
@@ -479,7 +479,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
       await user.click(saveButton()!);
 
-      await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       // Re-seeding the builder from the response used to clear the result the user had just run.
       expect(screen.getByText('result: present')).toBeInTheDocument();
     });
@@ -491,7 +491,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
       await user.click(saveButton()!);
 
-      await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       await waitFor(() => expect(saveButton()).toBeNull());
       // The view the user chose survives the save rather than reverting to the stored one.
       expect(screen.getByText(`view: ${QueryResultView.Chart}`)).toBeInTheDocument();
@@ -513,7 +513,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
       // The builder state is never hydrated from a diverged body, so the buffer itself has to reach the
       // payload — otherwise the edit is untracked and lost on navigation.
-      await waitFor(() => expect(saveButton()).toBeInTheDocument());
+      expect(await screen.findByRole('button', { name: 'Buttons.Save' })).toBeInTheDocument();
     });
 
     test('saves the edited body the builder cannot display', async () => {
@@ -524,10 +524,10 @@ describe('QueryBuilder — a stored saved query', () => {
       const edited = { ...UNREPRESENTABLE_BODY, distinct: true };
       fireEvent.change(editor, { target: { value: JSON.stringify(edited, null, 2) } });
 
-      await waitFor(() => expect(saveButton()).toBeInTheDocument());
+      expect(await screen.findByRole('button', { name: 'Buttons.Save' })).toBeInTheDocument();
       await user.click(saveButton()!);
 
-      await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       expect(sentRequest().query).toEqual(edited);
     });
 

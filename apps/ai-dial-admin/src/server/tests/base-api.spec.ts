@@ -83,16 +83,24 @@ describe('BaseApi request cancellation', () => {
 
   test('cancelAll aborts in-flight request', async () => {
     let abortController: AbortController | undefined;
+    let markStarted!: () => void;
+    const hasStarted = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
 
-    // Capture the AbortController passed to sendRequest
+    // Capture the AbortController passed to sendRequest and keep the request in flight until it is aborted
     vi.spyOn(sendRequestModule, 'sendRequest').mockImplementation(async (_url, _type, _headers, _dto, signal) => {
-      // Store the signal to check if it gets aborted
       if (signal) {
         abortController = { signal } as AbortController;
       }
+      markStarted();
 
-      // Simulate a delayed request
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        if (signal?.aborted) {
+          resolve();
+        }
+        signal?.addEventListener('abort', () => resolve());
+      });
 
       // If aborted, throw AbortError
       if (signal?.aborted) {
@@ -107,8 +115,8 @@ describe('BaseApi request cancellation', () => {
     // Start request (don't await yet)
     const requestPromise = api.testSendRequest('/test', 'GET');
 
-    // Cancel all requests while in flight
-    await new Promise((resolve) => setTimeout(resolve, 10)); // Let request start
+    // Cancel all requests once the request is in flight
+    await hasStarted;
     requestRegistry.cancelAll();
 
     // Wait for request to complete

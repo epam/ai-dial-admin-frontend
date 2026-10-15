@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import Suggestions from './Suggestions';
@@ -25,28 +25,24 @@ describe('Suggestions', () => {
     expect(screen.getByText('ZIP')).toBeInTheDocument();
   });
 
-  test('selects particular suggestion when clicked', async () => {
+  test('selects particular suggestion when clicked', () => {
     renderComponent();
 
     const suggestionListItems = screen.getAllByRole('listitem');
 
     fireEvent.mouseDown(suggestionListItems[0]);
 
-    await waitFor(() => {
-      expect(onSelectSuggestionSpy).toHaveBeenCalledWith(options.at(0));
-    });
+    expect(onSelectSuggestionSpy).toHaveBeenCalledWith(options.at(0));
   });
 
-  test('highlights particular suggestion when hovered', async () => {
+  test('highlights particular suggestion when hovered', () => {
     renderComponent();
 
     const suggestionListItems = screen.getAllByRole('listitem');
 
     fireEvent.mouseEnter(suggestionListItems[0]);
 
-    await waitFor(() => {
-      expect(onHightLightSuggestionSpy).toHaveBeenCalledWith(0);
-    });
+    expect(onHightLightSuggestionSpy).toHaveBeenCalledWith(0);
   });
 });
 

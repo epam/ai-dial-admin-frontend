@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { cancelRun, getRun, getRunsQuery } from '@/src/app/[lang]/runs/actions';
@@ -95,6 +95,10 @@ describe('Runs', () => {
   const selectedTestSuite = { id: 'suite-1' } as TestSuite;
   const runRefreshRef = { current: null };
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('shows the Stop action only for running and pending rows', () => {
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
 
@@ -139,15 +143,15 @@ describe('Runs', () => {
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
     // Let the initial getRunsQuery() fetch settle so its own datasource refresh isn't mistaken for one
     // triggered by the cancel confirmation below.
-    await waitFor(() => expect(getRunsQuery).toHaveBeenCalled());
+    await vi.waitFor(() => expect(getRunsQuery).toHaveBeenCalled());
     await act(() => Promise.resolve());
     const datasourceCallsAfterMount = mockGridApi.setGridOption.mock.calls.length;
 
     fireEvent.click(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-running` }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Cancel' }));
 
-    await waitFor(() => expect(cancelRun).toHaveBeenCalledWith('run-running'));
-    expect(nodeSetData).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(nodeSetData).toHaveBeenCalledOnce());
+    expect(cancelRun).toHaveBeenCalledWith('run-running');
     expect(nodeSetData).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'run-running', status: RunStatus.CANCELLING }),
     );
@@ -163,7 +167,8 @@ describe('Runs', () => {
     fireEvent.click(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-running` }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Cancel' }));
 
-    await waitFor(() => expect(cancelRun).toHaveBeenCalledWith('run-running'));
+    await vi.waitFor(() => expect(cancelRun).toHaveBeenCalledWith('run-running'));
+    await act(async () => {});
     expect(nodeSetData).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 import { ColDef } from 'ag-grid-community';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -105,8 +105,8 @@ describe('SkillView', () => {
     const saveButton = await screen.findByRole('button', { name: /save/i });
     await user.click(saveButton);
 
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(uploadSkillFile).toHaveBeenCalledWith('public/my-skill', 'notes.md', expect.any(FormData));
-    expect(refresh).toHaveBeenCalled();
   });
 
   test('discarding a staged add clears it without calling Core', async () => {
@@ -140,8 +140,8 @@ describe('SkillView', () => {
     const saveButton = await screen.findByRole('button', { name: /save/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(removeSkillFile).toHaveBeenCalledWith('public/my-skill', 'notes.md'));
-    expect(refresh).toHaveBeenCalled();
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(removeSkillFile).toHaveBeenCalledWith('public/my-skill', 'notes.md');
   });
 
   test('changing the destination folder and saving moves the skill and navigates to its new path', async () => {
@@ -153,8 +153,8 @@ describe('SkillView', () => {
     const saveButton = await screen.findByRole('button', { name: /save/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(moveSkills).toHaveBeenCalledWith(['public/my-skill'], 'archive'));
-    expect(push).toHaveBeenCalled();
+    await vi.waitFor(() => expect(push).toHaveBeenCalled());
+    expect(moveSkills).toHaveBeenCalledWith(['public/my-skill'], 'archive');
   });
 
   test('shows an error notification and does not navigate when Core rejects the move', async () => {
@@ -166,7 +166,7 @@ describe('SkillView', () => {
     const saveButton = await screen.findByRole('button', { name: /save/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(push).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
   });
@@ -180,7 +180,7 @@ describe('SkillView', () => {
     const saveButton = await screen.findByRole('button', { name: /save/i });
     await user.click(saveButton);
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -194,8 +194,8 @@ describe('SkillView', () => {
 
       await user.click(screen.getByRole('tab', { name: 'Tabs.Skill' }));
 
-      await waitFor(() => expect(getSkillManifest).toHaveBeenCalledWith('public/my-skill'));
       const nameInput = (await screen.findByLabelText(EntityFieldsI18nKey.name)) as HTMLInputElement;
+      expect(getSkillManifest).toHaveBeenCalledWith('public/my-skill');
       expect(nameInput.value).toBe('my-skill');
       expect(nameInput).toBeDisabled();
     });
@@ -207,7 +207,7 @@ describe('SkillView', () => {
 
       await user.click(screen.getByRole('tab', { name: 'Tabs.Skill' }));
 
-      await waitFor(() => expect(showNotification).toHaveBeenCalled());
+      await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     });
 
     test('editing description stages a change, and saving reassembles and uploads SKILL.md', async () => {
@@ -223,13 +223,12 @@ describe('SkillView', () => {
       const saveButton = await screen.findByRole('button', { name: /save/i });
       await user.click(saveButton);
 
-      await waitFor(() => expect(uploadSkillFile).toHaveBeenCalled());
+      await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
       const [path, filePath, formData] = vi.mocked(uploadSkillFile).mock.calls[0];
       expect(path).toBe('public/my-skill');
       expect(filePath).toBe('SKILL.md');
       const uploadedContent = await (formData.get('file') as File).text();
       expect(uploadedContent).toContain('description: Does a thing!');
-      expect(refresh).toHaveBeenCalled();
     });
 
     test('discarding a staged description edit reverts it without calling Core', async () => {

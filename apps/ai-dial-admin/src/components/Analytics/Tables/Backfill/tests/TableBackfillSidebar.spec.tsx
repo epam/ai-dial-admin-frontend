@@ -72,8 +72,8 @@ const renderSidebar = async (runs: TableBackfillRun[]) => {
   const props = { onRunsChange: vi.fn() };
   const view = render(<TableBackfillSidebar {...props} />);
 
-  await waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalled());
-  await waitFor(() => expect(props.onRunsChange).toHaveBeenCalled());
+  if (runs.length > 0) await screen.findByRole('heading', { name: BackfillI18nKey.SectionRun });
+  await vi.waitFor(() => expect(props.onRunsChange).toHaveBeenCalled());
 
   return { ...view, ...props };
 };
@@ -565,7 +565,7 @@ describe('TableBackfillSidebar', () => {
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Start }));
 
       expect(startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30');
-      await waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalled());
+      await vi.waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalled());
     });
 
     test('shows the service’s own message when it refuses, and leaves the form as it was', async () => {
@@ -581,13 +581,13 @@ describe('TableBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Start }));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(
           expect.objectContaining({ description: 'A run is already in progress' }),
         ),
       );
+      await waitFor(() => expect(screen.getByRole('button', { name: BackfillI18nKey.Start })).toBeEnabled());
       expect(screen.getByLabelText(BackfillI18nKey.FieldFrom)).toHaveValue('2026-09-01');
-      expect(screen.getByRole('button', { name: BackfillI18nKey.Start })).toBeEnabled();
     });
 
     test('shows the refusal of a backfill that is switched off', async () => {
@@ -602,7 +602,7 @@ describe('TableBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Start }));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ description: 'Backfill is disabled' })),
       );
     });
@@ -624,7 +624,7 @@ describe('TableBackfillSidebar', () => {
 
       render(<TableBackfillSidebar onRunsChange={vi.fn()} />);
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ description: 'service unavailable' })),
       );
     });

@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import EntityUsageDashboard from '@/src/components/Analytics/Usage/EntityUsageDashboard';
-import { AnalyticsUsageI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { AnalyticsUsageI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { StructuredQuery } from '@/src/models/analytics/query';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -29,6 +29,13 @@ vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({ default: () => <
 const queriesSent = (): StructuredQuery[] => runQueryMock.mock.calls.map(([query]) => query as StructuredQuery);
 
 const renderModel = () => render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{ name: 'gpt-4o' }} />);
+
+// Refresh is disabled while any of the dashboard's reads is in flight, so it coming back is the page
+// saying every read it started has landed.
+const settled = async () => {
+  await waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Refresh })).toBeEnabled());
+  await act(async () => {});
+};
 
 beforeEach(() => {
   runQueryMock.mockReset();
@@ -60,8 +67,9 @@ describe('EntityUsageDashboard', () => {
   test("narrows every request to the model's own calls", async () => {
     renderModel();
 
-    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    await settled();
 
+    expect(queriesSent().length).toBeGreaterThan(0);
     for (const query of queriesSent()) {
       expect(JSON.stringify(query.filter)).toContain('"value":"gpt-4o"');
     }
@@ -70,8 +78,9 @@ describe('EntityUsageDashboard', () => {
   test('reads no call tree for a model, having none', async () => {
     renderModel();
 
-    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    await settled();
 
+    expect(queriesSent().length).toBeGreaterThan(0);
     for (const query of queriesSent()) {
       expect(JSON.stringify(query.filter)).not.toContain('"name":"execution_path"');
     }
@@ -86,7 +95,7 @@ describe('EntityUsageDashboard', () => {
   test('ranks its share chart by caller, never by the model it is scoped to', async () => {
     renderModel();
 
-    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
 
     const groupings = queriesSent().flatMap((query) => query.group_by ?? []);
     expect(groupings).toContain('parent_deployment');
@@ -120,9 +129,10 @@ describe('EntityUsageDashboard', () => {
   });
 
   test('reads nothing for an entity it cannot name', async () => {
-    render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{}} />);
+    const { container } = render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{}} />);
 
-    await waitFor(() => expect(isForbiddenMock).toHaveBeenCalled());
+    // The access loader is the only thing on screen until the check answers; the page then draws nothing.
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
 
     expect(runQueryMock).not.toHaveBeenCalled();
   });
@@ -167,7 +177,7 @@ describe('EntityUsageDashboard on an application', () => {
     runQueryMock.mockClear();
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
 
-    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     for (const query of queriesSent()) {
       expect(JSON.stringify(query.filter)).toContain('"name":"execution_path"');
     }
@@ -176,7 +186,7 @@ describe('EntityUsageDashboard on an application', () => {
   test('reads its own calls and the priced model calls in its tree, and never a total price', async () => {
     renderApplication();
 
-    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    await settled();
     const sent = queriesSent().map((query) => JSON.stringify(query));
 
     expect(
@@ -192,7 +202,7 @@ describe('EntityUsageDashboard on an application', () => {
 
     await user.click(await screen.findByText(AnalyticsUsageI18nKey.TimeSeriesTabCost));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(
         queriesSent().some(
           (query) =>

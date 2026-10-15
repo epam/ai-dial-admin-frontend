@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -131,14 +131,11 @@ describe('Metrics', () => {
   test('loads metrics with the aggregated and plain-list requests and shows empty state when list is empty', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-1');
-    });
-
+    expect(await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-1');
     expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
     expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
     expect(screen.getByText(`${TabsI18nKey.Metrics}: 0`)).toBeInTheDocument();
-    expect(screen.getByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
   });
 
   test('does not fetch metric declarations when the tab loads', async () => {
@@ -146,9 +143,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
   });
@@ -156,9 +151,7 @@ describe('Metrics', () => {
   test('renders ScoreSettings column', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     expect(screen.getByRole('region', { name: 'score-settings' })).toBeInTheDocument();
   });
@@ -173,9 +166,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('metric-1:score,latency')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('metric-1:score,latency')).toBeInTheDocument();
 
     expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
   });
@@ -190,17 +181,13 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('metric-1:accuracy,recall')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('metric-1:accuracy,recall')).toBeInTheDocument();
   });
 
   test('renders Add button with correct label', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
@@ -210,9 +197,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
@@ -224,17 +209,13 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    await waitFor(() => {
-      expect(mockGetDetailedMetricDeclarations).toHaveBeenCalledOnce();
-    });
+    await vi.waitFor(() => expect(mockGetDetailedMetricDeclarations).toHaveBeenCalledOnce());
   });
 
   test('renders metric card and bindings when metrics exist', async () => {
@@ -242,11 +223,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
-    });
-
-    expect(screen.getByText('Metric One')).toBeInTheDocument();
+    expect(await screen.findByText('Metric One')).toBeInTheDocument();
     expect(screen.getByText('First metric')).toBeInTheDocument();
     const bindingsRegion = screen.getByRole('region', { name: 'metric-bindings' });
     expect(within(bindingsRegion).getByText(TestSuitesI18nKey.Configuration)).toBeInTheDocument();
@@ -258,16 +235,12 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
     await user.click(screen.getByRole('button', { name: 'Confirm modal' }));
 
-    await waitFor(() => {
-      expect(mockCreateTestSuiteMetric).toHaveBeenCalledWith('suite-1', { id: 'new-metric', name: 'New Metric' });
-    });
+    expect(mockCreateTestSuiteMetric).toHaveBeenCalledWith('suite-1', { id: 'new-metric', name: 'New Metric' });
   });
 
   test('deletes metric and refreshes list', async () => {
@@ -276,9 +249,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
 
@@ -288,11 +259,9 @@ describe('Metrics', () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');
-    });
-
-    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-1');
+    expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');
+    await vi.waitFor(() => expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledTimes(2));
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenLastCalledWith('suite-1');
   });
 
   test('opens edit modal and updates metric on confirmation', async () => {
@@ -301,21 +270,17 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
 
     expect(screen.getByRole('dialog', { name: 'Edit metric' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Confirm modal' }));
 
-    await waitFor(() => {
-      expect(mockUpdateTestSuiteMetric).toHaveBeenCalledWith(
-        'suite-1',
-        expect.objectContaining({ id: 'metric-1', name: 'Edited Metric' }),
-      );
-    });
+    expect(mockUpdateTestSuiteMetric).toHaveBeenCalledWith(
+      'suite-1',
+      expect.objectContaining({ id: 'metric-1', name: 'Edited Metric' }),
+    );
   });
 
   test('renders metric condition when present', async () => {
@@ -327,9 +292,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(screen.getByText('turn.value > 0.5')).toBeInTheDocument();
   });
@@ -343,9 +306,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(screen.getByText(TestSuitesI18nKey.ConditionAlwaysRun)).toBeInTheDocument();
   });
@@ -360,9 +321,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(screen.getByText('$exists(data.expected)')).toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.ConditionAlwaysRun)).not.toBeInTheDocument();
@@ -378,9 +337,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(screen.getByText('from-aggregated')).toBeInTheDocument();
   });
@@ -396,9 +353,7 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
 

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -124,11 +124,8 @@ describe('HeatMapTab', () => {
   test('renders grid and compact color scale after data loads', async () => {
     renderHeatMapTab();
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
   });
@@ -136,11 +133,8 @@ describe('HeatMapTab', () => {
   test('renders delta color scale in delta mode', async () => {
     renderHeatMapTab(HeatMapColorDisplayMode.Delta);
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(screen.getByText('-1')).toBeInTheDocument();
     expect(screen.getByText('+1')).toBeInTheDocument();
   });
@@ -148,9 +142,7 @@ describe('HeatMapTab', () => {
   test('shows only selected metric groups in the grid', async () => {
     renderHeatMapTab(HeatMapColorDisplayMode.Absolute, new Set(['Accuracy']));
 
-    await waitFor(() => {
-      expect(screen.getByText('Accuracy')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Accuracy')).toBeInTheDocument();
 
     expect(screen.queryByText('Quality')).not.toBeInTheDocument();
   });
@@ -214,18 +206,14 @@ describe('HeatMapTab', () => {
 
     const { rerender } = render(<ModeSwitchHarness colorDisplayMode={HeatMapColorDisplayMode.Absolute} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Accuracy')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Accuracy')).toBeInTheDocument();
 
     expect(screen.getAllByText('precision').length).toBeGreaterThan(0);
     expect(screen.queryByText('score')).not.toBeInTheDocument();
 
     rerender(<ModeSwitchHarness colorDisplayMode={HeatMapColorDisplayMode.Delta} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Accuracy')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Accuracy')).toBeInTheDocument();
 
     expect(screen.getAllByText('precision').length).toBeGreaterThan(0);
     expect(screen.queryByText('score')).not.toBeInTheDocument();

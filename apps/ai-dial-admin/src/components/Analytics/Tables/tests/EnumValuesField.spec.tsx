@@ -116,7 +116,7 @@ describe('EnumValuesField', () => {
       await waitFor(() => expect(apply).toBeEnabled());
       await user.click(apply);
 
-      await waitFor(() => expect(onChange).toHaveBeenCalledWith(['pending']));
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(['pending']));
     });
 
     test('publishes both values in the order they were authored', async () => {
@@ -132,7 +132,7 @@ describe('EnumValuesField', () => {
       await waitFor(() => expect(apply).toBeEnabled());
       await user.click(apply);
 
-      await waitFor(() => expect(onChange).toHaveBeenCalledWith(['low', 'high']));
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(['low', 'high']));
     });
 
     test('cancelling publishes nothing', async () => {
