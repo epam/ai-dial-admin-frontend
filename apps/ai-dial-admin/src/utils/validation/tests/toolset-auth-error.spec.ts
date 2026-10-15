@@ -224,3 +224,35 @@ describe('getErrorForApiKeyHeader', () => {
     });
   });
 });
+
+describe('getErrorForClientSecret — minLength', () => {
+  test('returns a LENGTH error for a non-empty value below the minimum', () => {
+    expect(getErrorForClientSecret('1234567', (key) => key, 8)).toEqual({
+      type: ErrorType.LENGTH,
+      text: ErrorI18nKey.ClientSecretMinLength,
+    });
+  });
+
+  test('passes the minimum to the translator', () => {
+    const t = vi.fn().mockReturnValue('too short');
+
+    getErrorForClientSecret('abc', t, 8);
+
+    expect(t).toHaveBeenCalledWith(ErrorI18nKey.ClientSecretMinLength, { number: 8 });
+  });
+
+  test('returns null for a value at the minimum', () => {
+    expect(getErrorForClientSecret('12345678', mockT, 8)).toBeNull();
+  });
+
+  test('keeps the required error for an empty value', () => {
+    expect(getErrorForClientSecret('', (key) => key, 8)).toEqual({
+      type: ErrorType.EMPTY,
+      text: ErrorI18nKey.RequiredField,
+    });
+  });
+
+  test('does not enforce a length when no minimum is given', () => {
+    expect(getErrorForClientSecret('a', mockT)).toBeNull();
+  });
+});

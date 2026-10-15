@@ -207,6 +207,35 @@ describe('Assets application :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('updateApp sends no client_secret_hint or empty client_secret for external services', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+        external_services: {
+          untouched: { auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' } },
+          retyped: { auth_settings: { client_id: 'id', client_secret: 'typed-secret', client_secret_hint: 'cret' } },
+        },
+      }),
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.objectContaining({
+        external_services: {
+          untouched: { auth_settings: { client_id: 'id' } },
+          retyped: { auth_settings: { client_id: 'id', client_secret: 'typed-secret' } },
+        },
+      }),
+      { etag: 'etag' },
+    );
+  });
+
   test('updateApp passes interfaces through unchanged before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
