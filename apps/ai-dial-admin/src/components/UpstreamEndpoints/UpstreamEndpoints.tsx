@@ -8,7 +8,7 @@ import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModelEndpoint } from '@/src/models/dial/model';
+import { DialModelEndpoint, UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import Endpoint from './Endpoint/Endpoint';
 
@@ -92,7 +92,11 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
           isKeyOptional={isKeyOptional}
           required={required}
           isAuthTypeSupported={isAuthTypeSupported}
-          isBearerKeyRequired={isAuthTypeSupported && originalUpstreams?.[index]?.authType !== endpoint.authType}
+          isBearerKeyRequired={
+            isAuthTypeSupported &&
+            endpoint.authType === UpstreamAuthType.BEARER &&
+            originalUpstreams?.[index]?.authType !== endpoint.authType
+          }
           updateEndpoint={(point) => onUpdateEndPoint(point, index)}
           removeEndpoint={onRemoveEndpoint}
           view={view}
