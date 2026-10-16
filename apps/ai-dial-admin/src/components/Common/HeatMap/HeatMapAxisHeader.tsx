@@ -3,7 +3,7 @@
 import { IHeaderParams } from 'ag-grid-community';
 import { FC } from 'react';
 
-import { DialEllipsisTooltip, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, Tooltip } from '@epam/ai-dial-ui-kit';
 
 import {
   HEAT_MAP_HEADER_LABEL_BOTTOM_PADDING,
@@ -29,7 +29,7 @@ const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
   if (isHorizontal) {
     return (
       <div className="flex h-full w-full min-w-0 items-center justify-center px-1">
-        <DialEllipsisTooltip
+        <EllipsisTooltip
           text={headerLabel}
           className="min-w-0 max-w-full dial-small-semi-text text-secondary text-end"
           contentClassName="truncate"
@@ -50,7 +50,7 @@ const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
         paddingBottom: HEAT_MAP_HEADER_LABEL_BOTTOM_PADDING,
       }}
     >
-      <DialTooltip tooltip={headerLabel} hideTooltip={hideTooltip} triggerClassName="min-w-0 max-h-full">
+      <Tooltip tooltip={headerLabel} hideTooltip={hideTooltip} triggerClassName="min-w-0 max-h-full">
         <span
           className="font-semibold text-secondary whitespace-nowrap truncate"
           style={{
@@ -65,7 +65,7 @@ const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
         >
           {headerLabel}
         </span>
-      </DialTooltip>
+      </Tooltip>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -18,9 +18,9 @@ const TelemetryFallbackCellRenderer: FC<Props> = ({ value, valueFormatted, toolt
     <div className="flex items-center gap-2">
       <span className="truncate">{label}</span>
       {missing && tooltip && (
-        <DialTooltip tooltip={tooltip}>
+        <Tooltip tooltip={tooltip}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" aria-label={tooltip} />
-        </DialTooltip>
+        </Tooltip>
       )}
     </div>
   );

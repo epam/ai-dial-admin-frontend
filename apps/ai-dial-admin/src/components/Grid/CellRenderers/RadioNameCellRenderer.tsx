@@ -1,6 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { Avatar, DialEllipsisTooltip, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { Avatar, EllipsisTooltip, DialRadioButton } from '@epam/ai-dial-ui-kit';
 
 import { getAvatarInitials } from '@/src/components/Grid/CellRenderers/utils';
 
@@ -43,7 +43,7 @@ const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }:
       </span>
 
       <label htmlFor={inputId} className="min-w-0 cursor-pointer">
-        <DialEllipsisTooltip className="small text-primary" text={name} />
+        <EllipsisTooltip className="small text-primary" text={name} />
       </label>
     </div>
   );

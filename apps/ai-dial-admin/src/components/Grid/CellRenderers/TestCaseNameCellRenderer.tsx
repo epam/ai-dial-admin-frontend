@@ -1,6 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { DialEllipsisTooltip, DialTag } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, DialTag } from '@epam/ai-dial-ui-kit';
 
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -35,7 +35,7 @@ const TestCaseNameCellRenderer = (params: TestCaseNameCellRendererParams) => {
     <div className="flex items-center gap-2 min-w-0">
       <div className="relative flex-1 min-w-0">
         {isReadonly ? (
-          <DialEllipsisTooltip className="min-w-0" text={name} />
+          <EllipsisTooltip className="min-w-0" text={name} />
         ) : (
           <EditableCellRenderer {...params} hideTriangle skipRequired />
         )}
