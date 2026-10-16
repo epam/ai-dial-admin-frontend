@@ -102,7 +102,7 @@ The `Configuration` step in the import wizard (`DialSteps`) SHALL be marked with
 ---
 
 ### Requirement: State column with tooltip
-`DeploymentConfigurationGrid` SHALL append a State column to its `colDefs` for all non-firewall tabs. The cell renderer MUST be `ImportValidationCellRenderer` (located at `src/components/Grid/CellRenderers/ImportValidationCellRenderer.tsx`). For `VALIDATED` rows it renders `IconCheck` (with `text-success`) plus the translated `Validated` label. For `FAILED` rows it renders `IconX` (with `text-error`) plus the translated `Failed` label, plus a right-aligned `IconInfoCircle` (with `text-secondary`) wrapped in `DialTooltip` whose content lists every error in `__import.validationErrors`. The info icon MUST carry an `aria-label` matching the state label (`Failed`). Tooltip lines MUST be formatted via `formatValidationLine`: `${fieldPath}: ${message}` when `fieldPath` is non-empty, else `${message}`.
+`DeploymentConfigurationGrid` SHALL append a State column to its `colDefs` for all non-firewall tabs. The cell renderer MUST be `ImportValidationCellRenderer` (located at `src/components/Grid/CellRenderers/ImportValidationCellRenderer.tsx`). For `VALIDATED` rows it renders `IconCheck` (with `text-success`) plus the translated `Validated` label. For `FAILED` rows it renders `IconX` (with `text-error`) plus the translated `Failed` label, plus a right-aligned `IconInfoCircle` (with `text-secondary`) wrapped in `Tooltip` whose content lists every error in `__import.validationErrors`. The info icon MUST carry an `aria-label` matching the state label (`Failed`). Tooltip lines MUST be formatted via `formatValidationLine`: `${fieldPath}: ${message}` when `fieldPath` is non-empty, else `${message}`.
 
 #### Scenario: Validated row shows green check + Validated label
 - **WHEN** a row has `__import.validationState === 'VALIDATED'`
@@ -110,7 +110,7 @@ The `Configuration` step in the import wizard (`DialSteps`) SHALL be marked with
 
 #### Scenario: Failed row shows red X + label + right-aligned info icon
 - **WHEN** a row has `__import.validationState === 'FAILED'` with two errors `{ fieldPath: 'name', message: 'invalid' }` and `{ fieldPath: 'displayName', message: 'must not be null' }`
-- **THEN** the State cell renders an `IconX` styled with `text-error`, the label `t(BasicI18nKey.Failed)`, and a right-aligned (`ml-auto`) `IconInfoCircle` styled with `text-secondary`. Hovering the info icon opens a `DialTooltip` containing two lines: `name: invalid` and `displayName: must not be null`
+- **THEN** the State cell renders an `IconX` styled with `text-error`, the label `t(BasicI18nKey.Failed)`, and a right-aligned (`ml-auto`) `IconInfoCircle` styled with `text-secondary`. Hovering the info icon opens a `Tooltip` containing two lines: `name: invalid` and `displayName: must not be null`
 
 #### Scenario: Empty fieldPath renders message-only line
 - **WHEN** a row's error has `fieldPath: ''` and `message: 'Mapping failed: NPE'`
@@ -123,11 +123,11 @@ The `Configuration` step in the import wizard (`DialSteps`) SHALL be marked with
 ---
 
 ### Requirement: Import button gated by errors with hover tooltip
-`isImportDisabled` SHALL be true when `validationSummary.totalFailed > 0`, in addition to existing disable conditions (loading, missing files, ongoing import). Because `validationSummary.totalFailed` counts `GLOBAL_DOMAIN_WHITELIST` errors, an invalid firewall domain alone SHALL disable the Import button. The Import button SHALL be wrapped in a single `DialTooltip` whose `hideTooltip` prop is `true` unless the button is disabled SOLELY because of validation errors. When shown, the tooltip text is `t(ImportI18nKey.ImportBlockedTooltip)`.
+`isImportDisabled` SHALL be true when `validationSummary.totalFailed > 0`, in addition to existing disable conditions (loading, missing files, ongoing import). Because `validationSummary.totalFailed` counts `GLOBAL_DOMAIN_WHITELIST` errors, an invalid firewall domain alone SHALL disable the Import button. The Import button SHALL be wrapped in a single `Tooltip` whose `hideTooltip` prop is `true` unless the button is disabled SOLELY because of validation errors. When shown, the tooltip text is `t(ImportI18nKey.ImportBlockedTooltip)`.
 
 #### Scenario: Artifact errors block Import with tooltip
 - **WHEN** `validationSummary.totalFailed > 0` from artifact errors and files are present and not loading
-- **THEN** the Import button is disabled and hovering it surfaces a `DialTooltip` with text `t(ImportI18nKey.ImportBlockedTooltip)`
+- **THEN** the Import button is disabled and hovering it surfaces a `Tooltip` with text `t(ImportI18nKey.ImportBlockedTooltip)`
 
 #### Scenario: Firewall-only errors block Import
 - **WHEN** the only validation errors are `GLOBAL_DOMAIN_WHITELIST` errors and files are present and not loading
@@ -171,7 +171,7 @@ The `importDeploymentConfig` action's error path SHALL remain identical to today
 ---
 
 ### Requirement: Performance and accessibility
-The validation enrichment SHALL run once per preview response in O(n) over the errors array; no memoization is required because the response arrives once per upload. The banner and tooltip primitives (`DialNotification`, `DialTooltip`) MUST inherit accessibility behavior from `@epam/ai-dial-ui-kit` (WCAG AA target). The State cell's tooltip trigger MUST carry an `aria-label` matching the state label so screen readers announce failure context even if the tooltip text is not exposed.
+The validation enrichment SHALL run once per preview response in O(n) over the errors array; no memoization is required because the response arrives once per upload. The banner and tooltip primitives (`DialNotification`, `Tooltip`) MUST inherit accessibility behavior from `@epam/ai-dial-ui-kit` (WCAG AA target). The State cell's tooltip trigger MUST carry an `aria-label` matching the state label so screen readers announce failure context even if the tooltip text is not exposed.
 
 #### Scenario: Single-pass enrichment
 - **WHEN** the preview response is processed
@@ -197,11 +197,11 @@ The validation enrichment SHALL run once per preview response in O(n) over the e
 ---
 
 ### Requirement: Per-domain decoration in the Global Firewall domain list
-The Global Firewall tab's `DomainList` SHALL accept an optional per-domain error map. For each domain that has a matching error entry, the row SHALL render the domain text in error color (`text-error`) plus a trailing `IconInfoCircle` (`text-error`) wrapped in a `DialTooltip` listing that domain's message(s). The info icon SHALL carry an `aria-label` identifying the domain. Domains without a matching entry SHALL render unchanged (cloud icon + primary-colored text, no tooltip). When no error map is provided, `DomainList` SHALL behave exactly as before (used by the editor and compare flows).
+The Global Firewall tab's `DomainList` SHALL accept an optional per-domain error map. For each domain that has a matching error entry, the row SHALL render the domain text in error color (`text-error`) plus a trailing `IconInfoCircle` (`text-error`) wrapped in a `Tooltip` listing that domain's message(s). The info icon SHALL carry an `aria-label` identifying the domain. Domains without a matching entry SHALL render unchanged (cloud icon + primary-colored text, no tooltip). When no error map is provided, `DomainList` SHALL behave exactly as before (used by the editor and compare flows).
 
 #### Scenario: Invalid domain rendered with error styling and tooltip
 - **WHEN** the domain `"bad!"` has an error `"domain 'bad!' is not a valid domain name"`
-- **THEN** the `"bad!"` row renders with `text-error` text and a trailing `IconInfoCircle` whose `DialTooltip` contains that message, and the icon's `aria-label` is `"bad!"`
+- **THEN** the `"bad!"` row renders with `text-error` text and a trailing `IconInfoCircle` whose `Tooltip` contains that message, and the icon's `aria-label` is `"bad!"`
 
 #### Scenario: Valid domains in the same list are not decorated
 - **WHEN** the list contains `"good.com"` (no error) alongside `"bad!"` (error)

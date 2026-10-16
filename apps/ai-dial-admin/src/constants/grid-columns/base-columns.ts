@@ -104,7 +104,6 @@ export const TOPICS_COLUMN: ColDef = {
     items: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
-  tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
   hide: false,
 };
 
@@ -130,7 +129,6 @@ export const PATHS_COLUMN: ColDef = {
     items: params.data?.paths,
   }),
   filterValueGetter: (params) => params.data?.paths,
-  tooltipValueGetter: (params) => params.data?.paths?.join(', ') || null,
   hide: false,
 };
 
@@ -148,7 +146,6 @@ export const ATTACHMENT_COLUMN: ColDef = {
   hide: true,
   valueFormatter: ({ value }) => formatAttachment(value),
   filterValueGetter: (params) => formatAttachment(params.data[params.colDef.field || '']),
-  tooltipValueGetter: ({ value }) => formatAttachment(value),
 };
 
 export const SOURCE_TYPE_COLUMN = (
@@ -168,7 +165,6 @@ export const SOURCE_TYPE_COLUMN = (
       params.data,
       codeAppEditorUrl,
     ),
-  tooltipValueGetter: ({ value, data }) => sourceTypeFormatter(value, t, view, data, codeAppEditorUrl),
 });
 
 const SOURCE_VALUE_COLUMN = (view?: ApplicationRoute): ColDef => ({
@@ -177,7 +173,6 @@ const SOURCE_VALUE_COLUMN = (view?: ApplicationRoute): ColDef => ({
   hide: false,
   valueFormatter: ({ data, value }) => sourceValueFormatter(data, value, view) || '',
   filterValueGetter: ({ data, colDef }) => sourceValueFormatter(data, data[colDef.field || ''], view),
-  tooltipValueGetter: ({ data, value }) => sourceValueFormatter(data, value, view),
 });
 
 export const SOURCE_FIELD_COLUMNS = (
@@ -192,7 +187,6 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
     headerName: 'Entity type',
     valueFormatter: (params) => t(params.value),
     filterValueGetter: (params) => t(params.data[params.colDef.field || ''] as string),
-    tooltipValueGetter: (params) => t(params.value),
   };
 };
 

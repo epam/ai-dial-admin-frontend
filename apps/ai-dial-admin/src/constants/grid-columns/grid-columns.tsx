@@ -181,7 +181,7 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
 
 // A pricing rate is flat-or-tree: a flat rate keeps its stored string as before, while a tree renders
 // as the readable conditional with per-million leaves under the token unit.
-const getPricingRateTooltip = (
+const getPricingRate = (
   rate: PricingRate | undefined,
   unit: string | undefined,
   t: (str: string) => string,
@@ -203,42 +203,30 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'limits.maxTotalTokens',
     headerName: 'Interaction limit',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.limits?.maxTotalTokens,
   },
   {
     field: 'pricing.prompt',
     headerName: 'Prompt price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) => getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.prompt, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.completion',
     headerName: 'Completion price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.completion, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.cacheRead',
     headerName: 'Cache read price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.cacheWrite',
     headerName: 'Cache write price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t) ?? '',
   },
 ];
 
@@ -367,7 +355,6 @@ export const ACTIVITY_AUDIT_COLUMNS = (
           field: RESOURCE_TYPE_COLUMN,
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
-          tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
           ...getEnumFilter(
             view,
             ANALYTICS_AUDIT_RESOURCE_TYPES.map((type) => ({ value: type, label: getFormattedResourceType(type, t) })),

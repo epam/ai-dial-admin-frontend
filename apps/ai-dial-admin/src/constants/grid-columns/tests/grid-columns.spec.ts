@@ -10,6 +10,9 @@ import {
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
   APPLICATIONS_COLUMNS,
+  TOOLSETS_COLUMNS,
+  INTERCEPTORS_COLUMNS,
+  ROUTES_COLUMNS,
   ACTIVITY_AUDIT_COLUMNS,
   IMAGE_DEPENDENCIES_COLUMNS,
   IMAGES_LIST_COLUMNS,
@@ -55,7 +58,7 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
   });
 
-  test('MODELS_COLUMNS format pricing rate cells and tooltips consistently', () => {
+  test('MODELS_COLUMNS format pricing rate cells and leave the tooltip to the cell renderer', () => {
     const t = (s: string) => s;
     const cols = MODELS_COLUMNS(t);
     const promptColumn = cols.find((c) => c.field === 'pricing.prompt')!;
@@ -69,12 +72,8 @@ describe('Constants :: grid columns', () => {
       }
       return valueFormatter({ data: { pricing } } as never);
     };
-    const tooltip = (column: ColDef, pricing: Record<string, unknown>) =>
-      column.tooltipValueGetter!({ data: { pricing } } as never);
-
     const flatCacheRead = { unit: 'token', cacheRead: '0.0000002' };
     expect(value(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
-    expect(tooltip(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
 
     const tree = {
       test: { field: 'ttl', operator: '==', value: '1h' },
@@ -91,10 +90,24 @@ describe('Constants :: grid columns', () => {
     expect(value(cacheReadColumn, cacheReadPricing)).toBe('ttl == 1h ? 6 : 3.75');
     expect(value(cacheWriteColumn, cacheWritePricing)).toBe('ttl == 1h ? 6 : 3.75');
 
-    expect(tooltip(promptColumn, promptPricing)).toBe(value(promptColumn, promptPricing));
-    expect(tooltip(completionColumn, completionPricing)).toBe(value(completionColumn, completionPricing));
-    expect(tooltip(cacheReadColumn, cacheReadPricing)).toBe(value(cacheReadColumn, cacheReadPricing));
-    expect(tooltip(cacheWriteColumn, cacheWritePricing)).toBe(value(cacheWriteColumn, cacheWritePricing));
+    [promptColumn, completionColumn, cacheReadColumn, cacheWriteColumn].forEach((column) => {
+      expect(column.tooltipValueGetter).toBeUndefined();
+    });
+  });
+
+  test('entity list columns never repeat their cell text in an AG Grid tooltip', () => {
+    const t = (s: string) => s;
+    const entityColumns = [
+      ...MODELS_COLUMNS(t),
+      ...APPLICATIONS_COLUMNS(t),
+      ...TOOLSETS_COLUMNS(t),
+      ...INTERCEPTORS_COLUMNS(t),
+      ...ROUTES_COLUMNS,
+    ];
+
+    entityColumns.forEach((column) => {
+      expect(column.tooltipValueGetter).toBeUndefined();
+    });
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {

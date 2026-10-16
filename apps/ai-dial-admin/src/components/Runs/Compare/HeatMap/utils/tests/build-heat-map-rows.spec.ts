@@ -226,6 +226,20 @@ describe('buildHeatMapDeltaRows', () => {
     expect(deltaRow?.values[formatHeatMapTestCaseColId('tc-4', 0)]).toBeUndefined();
   });
 
+  test('measures the delta from the baseline, so swapping the runs negates it', () => {
+    const buildDelta = (primary: number, compared: number) =>
+      buildHeatMapDeltaRows([
+        makeRow({
+          testCaseId: 'tc-1',
+          metricValues: { Accuracy: { precision: primary } },
+          _compared: makeResult({ metricValues: { Accuracy: { precision: compared } } }),
+        }),
+      ]).find((row) => row.rowType === HeatMapRowType.Metric)?.values[formatHeatMapTestCaseColId('tc-1', 0)];
+
+    expect(buildDelta(1, 0.444)).toBe(-0.556);
+    expect(buildDelta(0.444, 1)).toBe(0.556);
+  });
+
   test('omits delta when either run is missing a numeric value', () => {
     const rows = buildHeatMapDeltaRows([
       makeRow({
@@ -301,20 +315,20 @@ describe('buildHeatMapRows run order', () => {
       _compared: makeResult({ id: 'result-2', metricValues: { Accuracy: { precision: 0.8 } } }),
     }),
   ];
-  const flippedRuns = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' }, true);
+  const reversedRuns = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' }).reverse();
   const metricRunIndexes = (heatMapRows: ReturnType<typeof buildHeatMapRows>) =>
     heatMapRows.filter((row) => row.rowType === HeatMapRowType.Metric).map((row) => row.runIndex);
 
   test('lists run rows in the order of the runs', () => {
     expect(metricRunIndexes(buildRows(rows))).toEqual([RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX]);
-    expect(metricRunIndexes(buildRows(rows, flippedRuns))).toEqual([
+    expect(metricRunIndexes(buildRows(rows, reversedRuns))).toEqual([
       RUN_COMPARE_SECONDARY_INDEX,
       RUN_COMPARE_PRIMARY_INDEX,
     ]);
   });
 
   test('keeps each row bound to its own run values', () => {
-    const [, first, second] = buildRows(rows, flippedRuns);
+    const [, first, second] = buildRows(rows, reversedRuns);
     const colId = Object.keys(first.values)[0];
 
     expect(first.runIndex).toBe(RUN_COMPARE_SECONDARY_INDEX);
@@ -323,10 +337,10 @@ describe('buildHeatMapRows run order', () => {
   });
 
   test('passes the runs through buildHeatMapRowsForMode but never reorders the delta rows', () => {
-    expect(metricRunIndexes(buildHeatMapRowsForMode(rows, HeatMapColorDisplayMode.Absolute, flippedRuns))[0]).toBe(
+    expect(metricRunIndexes(buildHeatMapRowsForMode(rows, HeatMapColorDisplayMode.Absolute, reversedRuns))[0]).toBe(
       RUN_COMPARE_SECONDARY_INDEX,
     );
-    expect(buildHeatMapRowsForMode(rows, HeatMapColorDisplayMode.Delta, flippedRuns)).toEqual(
+    expect(buildHeatMapRowsForMode(rows, HeatMapColorDisplayMode.Delta, reversedRuns)).toEqual(
       buildHeatMapDeltaRows(rows),
     );
   });

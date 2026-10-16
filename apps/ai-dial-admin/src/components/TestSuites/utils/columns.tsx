@@ -1,4 +1,4 @@
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import {
   ColDef,
@@ -272,9 +272,9 @@ export const getDynamicConfigurationsColumns = (
       cellRenderer: (params: ICellRendererParams<InputBindingRowData>) => {
         return params.data?.defaultValue != null ? (
           <div className="w-full cursor-pointer">
-            <DialTooltip tooltip={`Default value: ${params.data.defaultValue}`}>
+            <Tooltip tooltip={`Default value: ${params.data.defaultValue}`}>
               <IconInfoCircle size={20} />
-            </DialTooltip>
+            </Tooltip>
           </div>
         ) : null;
       },

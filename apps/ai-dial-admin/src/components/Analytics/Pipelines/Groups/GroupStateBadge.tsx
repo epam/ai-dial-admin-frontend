@@ -3,8 +3,8 @@
 import { FC } from 'react';
 
 import { Tooltip } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 
+import StatusPill from '@/src/components/Analytics/Common/StatusPill';
 import { GROUP_STATE_LABEL_KEY } from '@/src/components/Analytics/Pipelines/Groups/constants';
 import GroupStateExplanation from '@/src/components/Analytics/Pipelines/Groups/GroupStateExplanation';
 import { GroupState } from '@/src/components/Analytics/Pipelines/Groups/models';
@@ -39,17 +39,13 @@ const GroupStateBadge: FC<Props> = ({ group, state, readyWhen, isPaused, now }) 
       tooltip={<GroupStateExplanation group={group} readyWhen={readyWhen} isPaused={isPaused} now={now} />}
       asChild
     >
-      <span
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- focus is how the explanation is reached
+      <StatusPill
+        // Focusable: focus is how the explanation is reached from the keyboard.
         tabIndex={0}
-        className={classNames(
-          'inline-flex items-center rounded-full px-2 py-0.5 uppercase dial-caption-text font-semibold',
-          'focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary',
-          TONE[state],
-        )}
-      >
-        {t(GROUP_STATE_LABEL_KEY[state])}
-      </span>
+        label={t(GROUP_STATE_LABEL_KEY[state])}
+        toneClassName={TONE[state]}
+        className="focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+      />
     </Tooltip>
   );
 };

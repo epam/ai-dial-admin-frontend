@@ -3,7 +3,7 @@
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
 
@@ -15,7 +15,7 @@ const HeatMapLabelCellRenderer: FC<ICellRendererParams<HeatMapGridRow>> = ({ dat
 
   return (
     <div className="flex items-center h-full min-w-0 px-3 text-primary dial-small-text">
-      <DialEllipsisTooltip text={data.label} contentClassName="truncate" className="min-w-0 flex-1" />
+      <EllipsisTooltip text={data.label} contentClassName="truncate" className="min-w-0 flex-1" />
     </div>
   );
 };

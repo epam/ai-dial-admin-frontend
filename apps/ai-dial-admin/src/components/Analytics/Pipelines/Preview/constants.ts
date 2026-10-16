@@ -43,7 +43,7 @@ export const REQUEST_TEMPLATE_MEMBER = 'request_template';
 export const PREVIEW_GRID_MAX_HEIGHT_PX = 480;
 
 /** Tighter than the listing grids: the sample is a handful of rows read once, not a page to scan. */
-export const PREVIEW_HEADER_HEIGHT_PX = 56;
+export const PREVIEW_HEADER_HEIGHT_PX = 60;
 export const PREVIEW_ROW_HEIGHT_PX = 40;
 
 /** The longest a group key or a previous key may run before it is cut, with the full key in a tooltip. */

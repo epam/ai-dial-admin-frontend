@@ -615,7 +615,7 @@ describe('Runs Compare :: getCompareColumnsCompare run order', () => {
     }),
   ];
   const runs = getCompareRuns({ id: 'run-1', name: 'Run #1' }, { id: 'run-2', name: 'Run #2' });
-  const flippedRuns = getCompareRuns({ id: 'run-1', name: 'Run #1' }, { id: 'run-2', name: 'Run #2' }, true);
+  const reversedRuns = getCompareRuns({ id: 'run-1', name: 'Run #1' }, { id: 'run-2', name: 'Run #2' }).reverse();
   const PAIRED_COL_IDS = ['status', 'http', 'duration', 'runIndex', 'Accuracy_precision', 'extracted_answer'];
   // The index columns are paired but carry no diff highlight.
   const HIGHLIGHTED_COL_IDS = PAIRED_COL_IDS.filter((colId) => colId !== 'runIndex');
@@ -644,23 +644,23 @@ describe('Runs Compare :: getCompareColumnsCompare run order', () => {
     });
   });
 
-  test('lists the compared column ahead of the primary one in every pair when flipped', () => {
-    const colIds = getColIds({ runs: flippedRuns });
+  test('lists the compared column ahead of the primary one in every pair when displayed in reverse', () => {
+    const colIds = getColIds({ runs: reversedRuns });
 
     PAIRED_COL_IDS.forEach((colId) => {
       expect(colIds.indexOf(`cmp_${colId}`)).toBeLessThan(colIds.indexOf(colId));
     });
   });
 
-  test('keeps the same columns and the delta column right after the pair when flipped', () => {
-    const flippedIds = getColIds({ runs: flippedRuns });
+  test('keeps the same columns and the delta column right after the pair when displayed in reverse', () => {
+    const reversedIds = getColIds({ runs: reversedRuns });
 
-    expect(flippedIds.indexOf('delta_Accuracy_precision')).toBe(flippedIds.indexOf('Accuracy_precision') + 1);
-    expect([...flippedIds].sort()).toEqual([...getColIds()].sort());
+    expect(reversedIds.indexOf('delta_Accuracy_precision')).toBe(reversedIds.indexOf('Accuracy_precision') + 1);
+    expect([...reversedIds].sort()).toEqual([...getColIds()].sort());
   });
 
   test('keeps run index badges with their run', () => {
-    const headers = collectLeaves(getCompareColumnsCompare(rows, undefined, undefined, { runs: flippedRuns }))
+    const headers = collectLeaves(getCompareColumnsCompare(rows, undefined, undefined, { runs: reversedRuns }))
       .filter((col) => col.colId === 'status' || col.colId === 'cmp_status')
       .map((col) => col.headerName);
 
@@ -676,8 +676,8 @@ describe('Runs Compare :: getCompareColumnsCompare run order', () => {
       expect(getRuleKeys({ runs }, colId).every((key) => key.endsWith('-start'))).toBe(true);
       expect(getRuleKeys({ runs }, `cmp_${colId}`).every((key) => key.endsWith('-end'))).toBe(true);
 
-      expect(getRuleKeys({ runs: flippedRuns }, colId).every((key) => key.endsWith('-end'))).toBe(true);
-      expect(getRuleKeys({ runs: flippedRuns }, `cmp_${colId}`).every((key) => key.endsWith('-start'))).toBe(true);
+      expect(getRuleKeys({ runs: reversedRuns }, colId).every((key) => key.endsWith('-end'))).toBe(true);
+      expect(getRuleKeys({ runs: reversedRuns }, `cmp_${colId}`).every((key) => key.endsWith('-start'))).toBe(true);
     });
   });
 
@@ -686,7 +686,7 @@ describe('Runs Compare :: getCompareColumnsCompare run order', () => {
       metricValues: { Accuracy: { precision: 0.5 } },
       _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } } }),
     });
-    const leaves = collectLeaves(getCompareColumnsCompare([changedRow], undefined, undefined, { runs: flippedRuns }));
+    const leaves = collectLeaves(getCompareColumnsCompare([changedRow], undefined, undefined, { runs: reversedRuns }));
     type RuleCol = { cellClassRules: Record<string, (p: { data?: CompareAnalyticsRow }) => boolean> };
     const primaryCol = leaves.find((col) => col.colId === 'Accuracy_precision') as unknown as RuleCol;
     const comparedCol = leaves.find((col) => col.colId === 'cmp_Accuracy_precision') as unknown as RuleCol;

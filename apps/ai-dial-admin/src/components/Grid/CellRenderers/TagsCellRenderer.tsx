@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { mergeClasses } from '@/src/utils/merge-classes';
 
@@ -93,13 +93,13 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
       ))}
 
       {!!hiddenItems.length && (
-        <DialTooltip tooltip={hiddenItemsLabel}>
+        <Tooltip tooltip={hiddenItemsLabel}>
           {/* A button, not a div: the hidden names have to be reachable by keyboard, not hover alone. */}
           <button type="button" className={mergeClasses(itemClassName, 'cursor-default')}>
             +{hiddenItems.length}
             <span className="sr-only">{hiddenItemsLabel}</span>
           </button>
-        </DialTooltip>
+        </Tooltip>
       )}
 
       <div className="absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap">

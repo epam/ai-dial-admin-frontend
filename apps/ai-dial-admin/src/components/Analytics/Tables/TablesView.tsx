@@ -18,6 +18,7 @@ import { IconPlus } from '@tabler/icons-react';
 
 import { deleteTable, getTable, getTables, listTableBackfillRuns, updateTable } from '@/src/app/[lang]/tables/actions';
 import BackfillDrawer from '@/src/components/Analytics/Common/BackfillSidebar/BackfillDrawer';
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import TableBackfillBanner from '@/src/components/Analytics/Tables/Backfill/TableBackfillBanner';
 import TableBackfillSidebar from '@/src/components/Analytics/Tables/Backfill/TableBackfillSidebar';
 import { findRunningTableBackfill } from '@/src/components/Analytics/Tables/Backfill/use-table-backfill-runs';
@@ -25,6 +26,7 @@ import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup
 import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
 import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
+import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -203,7 +205,15 @@ const TablesView: FC<Props> = ({ initialTables }) => {
             </span>
           ),
       },
-      { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', flex: 1 },
+      {
+        headerName: t(AnalyticsTablesI18nKey.Type),
+        field: 'type',
+        flex: 1,
+        cellRenderer: ({ data }: ICellRendererParams<AnalyticsTable>) =>
+          data?.type ? <IdentityTag label={t(TABLE_TYPE_LABEL[data.type])} /> : null,
+        // The tag already says it; the default tooltip would repeat the raw value over it.
+        tooltipValueGetter: () => undefined,
+      },
       // Populated for an enrichment only; a source table enriches nothing, so its cell stays blank.
       { headerName: t(AnalyticsTablesI18nKey.SourceTable), field: 'source_table', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
@@ -226,6 +236,9 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         flex: 1,
         valueGetter: (params) =>
           (params.data as AnalyticsTable | undefined)?.system ? t(AnalyticsTablesI18nKey.System) : '',
+        cellRenderer: ({ value }: ICellRendererParams<AnalyticsTable, string>) =>
+          value ? <IdentityTag label={value} /> : null,
+        tooltipValueGetter: () => undefined,
       },
       ACTION_COLUMN(rowActions),
     ],

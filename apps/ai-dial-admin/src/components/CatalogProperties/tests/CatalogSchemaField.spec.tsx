@@ -71,20 +71,29 @@ describe('CatalogSchemaField', () => {
     expect(screen.getByText(fileDeclared.$id)).toBeTruthy();
   });
 
-  /**
-   * Display names are not unique, and under the entity-kind filter they tend to repeat the kind —
-   * three interceptor schemas all reading "Interceptor". The `$id` is what distinguishes them.
-   */
-  test('identifies an option by its id rather than its display name', async () => {
+  test('labels an option with its display name and describes it by its id', async () => {
+    const user = userEvent.setup();
+    renderField();
+
+    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+
+    expect(screen.getByText(apiWritten['dial:catalogDisplayName'] as string)).toBeTruthy();
+    expect(screen.getByText(apiWritten.$id)).toBeTruthy();
+    expect(screen.getByText(fileDeclared['dial:catalogDisplayName'] as string)).toBeTruthy();
+    expect(screen.getByText(fileDeclared.$id)).toBeTruthy();
+  });
+
+  /** Display names are not unique, so the `$id` under each is what tells a same-named pair apart. */
+  test('keeps two schemas sharing a display name distinguishable by id', async () => {
     const user = userEvent.setup();
     const namesake: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': 'Model card' };
     renderField({ options: [apiWritten, namesake] });
 
     await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
 
-    expect(screen.queryAllByText('Model card')).toHaveLength(0);
-    expect(screen.getByText(apiWritten.$id)).toBeTruthy();
-    expect(screen.getByText(namesake.$id)).toBeTruthy();
+    expect(screen.getAllByText('Model card')).toHaveLength(2);
+    expect(screen.getAllByText(apiWritten.$id)).toHaveLength(1);
+    expect(screen.getAllByText(namesake.$id)).toHaveLength(1);
   });
 
   test('shows the id once for a schema that has no display name', async () => {
@@ -125,7 +134,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: apiWritten.$id }));
+    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
     await user.click(screen.getAllByText(apiWritten.$id).at(-1)!);
 
     expect(onChange).not.toHaveBeenCalled();
@@ -147,7 +156,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: apiWritten.$id }));
+    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
     await user.click(screen.getByText(BasicI18nKey.None));
 
     expect(onChange).toHaveBeenCalledWith(undefined);
@@ -211,7 +220,7 @@ describe('CatalogSchemaField — filtered to an entity kind', () => {
     const user = userEvent.setup();
     renderField({ schemaId: fileDeclared.$id });
 
-    await user.click(screen.getByRole('button', { name: fileDeclared.$id }));
+    await user.click(screen.getByRole('button', { name: `Agent card ${fileDeclared.$id}` }));
 
     expect(screen.getAllByText(fileDeclared.$id).length).toBeGreaterThan(0);
   });

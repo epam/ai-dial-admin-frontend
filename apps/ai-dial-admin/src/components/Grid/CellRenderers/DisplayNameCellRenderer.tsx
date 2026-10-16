@@ -1,4 +1,4 @@
-import { Avatar, AvatarShape, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { Avatar, AvatarShape, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
 import { DisplayNameCellRendererParams } from '@/src/components/Grid/CellRenderers/models';
@@ -39,8 +39,8 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
     <div className="flex h-full items-center gap-2 overflow-hidden">
       {renderIcon()}
       <div className="flex flex-col justify-center overflow-hidden">
-        <DialEllipsisTooltip className="small text-primary" text={displayName ?? ''} />
-        {showId && <DialEllipsisTooltip className="tiny text-secondary" text={id ?? ''} />}
+        <EllipsisTooltip className="small text-primary" text={displayName ?? ''} />
+        {showId && <EllipsisTooltip className="tiny text-secondary" text={id ?? ''} />}
       </div>
     </div>
   );

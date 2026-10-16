@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, ButtonAppearance, ButtonVariant, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
+import { Button, ButtonAppearance, ButtonVariant, Tooltip, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight, IconInfoCircle, IconRefresh } from '@tabler/icons-react';
 import {
   BodyScrollEvent,
@@ -296,7 +296,7 @@ const FailuresGrid: FC<Props> = ({
               <span className="font-mono">{name}</span>
               {/* The description sits on the icon rather than on the whole cell, so the name stays plain
                   text. The same words are in the row detail, which a keyboard reader can reach. */}
-              <DialTooltip tooltip={t(DLQ_STAGE_DESCRIPTION[name])}>
+              <Tooltip tooltip={t(DLQ_STAGE_DESCRIPTION[name])}>
                 <IconInfoCircle
                   {...BASE_BUTTON_ICON_PROPS}
                   size={16}
@@ -304,7 +304,7 @@ const FailuresGrid: FC<Props> = ({
                   role="img"
                   aria-label={t(DLQ_STAGE_DESCRIPTION[name])}
                 />
-              </DialTooltip>
+              </Tooltip>
             </span>
           );
         },
