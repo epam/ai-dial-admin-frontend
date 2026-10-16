@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Extends the test suite create wizard to support MCP_TOOL suites via a symmetric 3-step structure. Both suite types use the same steps (Properties → Target → Method/Tool); only the content of step 3 differs. The Target step gains an "Applications" | "MCP" tab toggle. Tool selection moves to a dedicated third step (`McpTool`), parallel to the existing Methods step for DEPLOYMENT suites.
+Defines target and method selection in the test suite create wizard for DEPLOYMENT, MCP_TOOL, and ROUTE suites. All suite types use the same 3-step structure (Properties → Target → Method/Tool); the selected target type determines the content of step 3. The Target step offers Applications, Models, MCP, and Routes tabs.
 
 ## Requirements
 
-### Requirement: Target step has Applications and MCP tabs
+### Requirement: Target step has Applications, Models, MCP, and Routes tabs
 
-The Target step SHALL display two tabs: "Applications" and "MCP". The Applications tab is active by default and shows the existing application grid (behavior unchanged). The MCP tab shows a grid of all MCP-capable deployments — both toolsets (`$type: 'dial-toolset'`) and applications with MCP interface (`$type: 'dial-application'`) — fetched from `GET /api/v1/deployments?interface=mcp`.
+The Target step SHALL display four tabs: "Applications", "Models", "MCP", and "Routes". The Applications tab is active by default and shows the existing application grid (behavior unchanged). The Models tab shows model deployments. The MCP tab shows a grid of all MCP-capable deployments — both toolsets (`$type: 'dial-toolset'`) and applications with MCP interface (`$type: 'dial-application'`) — fetched from `GET /api/v1/deployments?interface=mcp`. The Routes tab shows platform route assets.
 
 #### Scenario: Default tab is Applications
 - **WHEN** user reaches the Target step
@@ -27,9 +27,20 @@ The Target step SHALL display two tabs: "Applications" and "MCP". The Applicatio
 - **WHEN** the API returns no MCP-capable deployments
 - **THEN** the system SHALL display the standard "No data" empty state
 
+#### Scenario: Routes tab loads platform routes
+- **WHEN** user clicks the "Routes" tab
+- **THEN** the system SHALL load route assets from the `platform/` routes folder
+- **AND** display results in a grid with Name and Author columns
+
+#### Scenario: Routes tab shows loading and empty states
+- **WHEN** the platform routes request is in-flight
+- **THEN** the system SHALL display the standard grid loading state
+- **AND WHEN** the request returns no routes or fails
+- **THEN** the system SHALL display the standard "No Routes" empty state
+
 ### Requirement: Suite type derived from tab selection in Target step
 
-The system SHALL derive `suiteType` from the tab the user selects a deployment from. Selecting a deployment is sufficient to determine suite type — tool selection happens in the next step.
+The system SHALL derive `suiteType` from the tab in which the user selects a target. Selecting a target is sufficient to determine suite type — method or tool selection happens in the next step.
 
 #### Scenario: Application selection sets DEPLOYMENT type
 - **WHEN** user selects a deployment in the Applications tab
@@ -45,14 +56,26 @@ The system SHALL derive `suiteType` from the tab the user selects a deployment f
 - **AND** `testSuite.deploymentRef`, `endpointRef`, `requestTemplate`, `toolRef` SHALL be cleared
 - **AND** the Target step SHALL become valid
 
+#### Scenario: Route selection sets ROUTE type
+- **WHEN** user selects a route named `search-route` in the Routes tab
+- **THEN** `testSuite.suiteType` SHALL be set to `'ROUTE'`
+- **AND** `testSuite.routesRef` SHALL be set to `{ name: 'routes/platform/search-route' }`
+- **AND** `testSuite.deploymentRef`, `mcpDeploymentRef`, `toolRef`, `argumentTemplate`, `endpointRef`, and `requestTemplate` SHALL be cleared
+- **AND** the Target step SHALL become valid
+
 #### Scenario: Switching tabs clears the previous selection
 - **WHEN** user selects a deployment in the MCP tab and then switches to Applications and selects a deployment there
 - **THEN** `suiteType` SHALL become `'DEPLOYMENT'`
 - **AND** all MCP fields SHALL be cleared
 
+#### Scenario: Selecting a non-route target clears the route reference
+- **WHEN** user selects a route and then selects a target in the Applications, Models, or MCP tab
+- **THEN** `routesRef` SHALL be cleared
+- **AND** `suiteType` SHALL reflect the newly selected target
+
 ### Requirement: Create wizard uses symmetric 3-step structure
 
-Both DEPLOYMENT and MCP_TOOL suites SHALL use the same 3-step wizard (Properties → Target → Method/Tool). Step 3 always exists; its label and content adapt to `suiteType`.
+DEPLOYMENT, MCP_TOOL, and ROUTE suites SHALL use the same 3-step wizard (Properties → Target → Method/Tool). Step 3 always exists; its label and content adapt to `suiteType`.
 
 #### Scenario: DEPLOYMENT suite step 3 shows Method content
 - **WHEN** user has selected a DEPLOYMENT suite target and advances to step 3
@@ -64,10 +87,20 @@ Both DEPLOYMENT and MCP_TOOL suites SHALL use the same 3-step wizard (Properties
 - **THEN** the step SHALL be labelled "Tool"
 - **AND** SHALL render the new `McpTool` content (tool picker for the selected MCP deployment)
 
-#### Scenario: Target step validity is deployment selection only
-- **WHEN** user has selected any deployment (Applications or MCP tab)
+#### Scenario: ROUTE suite step 3 shows route methods
+- **WHEN** user has selected a ROUTE suite target and advances to step 3
+- **THEN** the step SHALL be labelled "Method"
+- **AND** the system SHALL load the selected route by its unprefixed name
+- **AND** SHALL render method choices derived from the route's configured paths and methods
+
+#### Scenario: Route details cannot be loaded
+- **WHEN** the selected route cannot be loaded on step 3
+- **THEN** the system SHALL display the "No Routes" empty state in place of the method picker
+
+#### Scenario: Target step validity is target selection only
+- **WHEN** user has selected a target in the Applications, Models, MCP, or Routes tab
 - **THEN** the Target step SHALL be valid and the "Next" button SHALL be enabled
-- **AND** no tool selection is required at this step
+- **AND** no method or tool selection is required at this step
 
 ### Requirement: Tool step lets user pick a tool from the selected MCP deployment
 
