@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -32,6 +32,7 @@ import { DUAL_BUCKET_VIEWS, isPlatformBucketPath } from '@/src/utils/files/root-
 import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreateEntityBase extends BaseEntity {
+  $id?: string;
   version?: string;
   displayVersion?: string;
   folderId?: string;
@@ -46,6 +47,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
+  getEntityById?: (id: string) => Promise<ServerActionResponse>;
   context?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   initialValues?: Partial<T>;
@@ -63,6 +65,7 @@ const CreateEntity = <T extends CreateEntityBase>({
   initialValues,
   context,
   isModal,
+  getEntityById,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -113,6 +116,18 @@ const CreateEntity = <T extends CreateEntityBase>({
     return { name: '', description: '', ...initialValues } as T;
   });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
+  const [idExistsError, setIdExistsError] = useState<string>();
+
+  const onChangeEntity = useCallback(
+    (entity: object) => {
+      const updatedEntity = entity as T;
+      if (updatedEntity.$id !== currentEntity.$id) {
+        setIdExistsError(void 0);
+      }
+      setEntity(updatedEntity);
+    },
+    [currentEntity.$id],
+  );
 
   const onCreate = useCallback(
     async (updatedEntity: T) => {
@@ -129,12 +144,24 @@ const CreateEntity = <T extends CreateEntityBase>({
 
       if (!isUnique) return;
 
+      const entityId = entity.$id;
+      if (getEntityById && entityId) {
+        try {
+          const result = await getEntityById(entityId);
+          if (result.success && result.response) {
+            setIdExistsError(t(ErrorI18nKey.NameExists));
+            return;
+          }
+        } catch {
+          // The Core write remains the authoritative collision check when resolution is unavailable.
+        }
+      }
+
       if (isAssetView(route)) {
         entity.folderId = folderContext?.filePath;
       }
       // An app runner is identified by `$id`, not `name`, so both the toast and the navigation target
       // fall back to it — otherwise they carry an empty identity.
-      const entityId = (entity as { $id?: string }).$id;
       const entityLabel = entity.name || entityId;
 
       getReqRef.current(createEntity, entity).then((res) => {
@@ -175,7 +202,7 @@ const CreateEntity = <T extends CreateEntityBase>({
         }
       });
     },
-    [route, createEntity, folderContext, showNotification, t, router, onClose],
+    [route, createEntity, getEntityById, folderContext, showNotification, t, router, onClose],
   );
 
   useEffect(() => {
@@ -235,7 +262,8 @@ const CreateEntity = <T extends CreateEntityBase>({
           entity={currentEntity}
           names={names}
           isUniqueNameError={isUniqueNameError}
-          onChangeEntity={(entity) => setEntity(entity as T)}
+          externalIdError={idExistsError}
+          onChangeEntity={onChangeEntity}
           initialValues={initialValues}
           isModal={isModal}
           hideVersionField={isPlatformDualBucketCreate}

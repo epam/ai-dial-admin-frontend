@@ -21,6 +21,7 @@ interface Props<T> {
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   isUniqueNameError?: boolean;
+  externalIdError?: string;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: object) => void;
   initialValues?: Partial<T>;
@@ -46,6 +47,7 @@ const Properties = <T extends object>({
       <AppRunnerCreateProperties
         entity={entity as DialAppRunnerResource}
         names={props.names}
+        externalIdError={props.externalIdError}
         isModal={props.isModal}
         onChangeEntity={props.onChangeEntity}
       />
@@ -61,6 +63,7 @@ const Properties = <T extends object>({
         entity={entity as DialCatalogSchemaResource}
         names={props.names}
         isUniqueNameError={isUniqueNameError}
+        externalIdError={props.externalIdError}
         isModal={props.isModal}
         onChangeEntity={props.onChangeEntity}
       />

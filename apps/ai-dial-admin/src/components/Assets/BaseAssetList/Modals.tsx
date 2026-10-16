@@ -1,6 +1,8 @@
 'use client';
 import { FC } from 'react';
 
+import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import CreateApplication from '@/src/components/Assets/Apps/CreateApplication';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
@@ -81,6 +83,14 @@ const Modals: FC<Props> = ({
   onRemove,
   onCreateFolder,
 }) => {
+  let getEntityById: ((id: string) => Promise<ServerActionResponse>) | undefined;
+
+  if (view === ApplicationRoute.PlatformAppRunners) {
+    getEntityById = getResolvedRunnerSchema;
+  } else if (view === ApplicationRoute.PlatformCatalogSchemas) {
+    getEntityById = getCatalogSchemaById;
+  }
+
   return (
     <>
       {isModalOpen && modalType === ModalType.import && (
@@ -118,6 +128,7 @@ const Modals: FC<Props> = ({
             isModalOpen={isModalOpen}
             onClose={onClose}
             createEntity={onCreate}
+            getEntityById={getEntityById}
             names={names || []}
             versionsMap={versionsMap}
             runners={runners}
