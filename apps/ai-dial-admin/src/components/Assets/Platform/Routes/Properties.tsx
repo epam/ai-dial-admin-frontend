@@ -215,6 +215,8 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
             entity={asset}
             onChangeEntity={onChange}
             required={isUpstreamsRequired}
+            isAuthTypeSupported
+            originalUpstreams={originalAsset.upstreams}
             collapsible={false}
           />
         </div>

@@ -66,7 +66,8 @@ const DAY_LABEL_COL_WIDTH = 88;
 
 const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOfferedOverride }) => {
   const t = useI18n();
-  const [metric, setMetric] = useState<HeatmapMetric>(HeatmapMetric.Calls);
+  // Cost first wherever it is offered; where it is not, `activeMetric` below reads calls.
+  const [metric, setMetric] = useState<HeatmapMetric>(HeatmapMetric.Cost);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [bodyWidth, setBodyWidth] = useState(0);
 
@@ -99,8 +100,8 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
 
   const metricTabs = useMemo(
     () => [
-      { id: HeatmapMetric.Calls, label: t(AnalyticsUsageI18nKey.HeatmapMetricCalls) },
       { id: HeatmapMetric.Cost, label: t(AnalyticsUsageI18nKey.HeatmapMetricCost) },
+      { id: HeatmapMetric.Calls, label: t(AnalyticsUsageI18nKey.HeatmapMetricCalls) },
     ],
     [t],
   );

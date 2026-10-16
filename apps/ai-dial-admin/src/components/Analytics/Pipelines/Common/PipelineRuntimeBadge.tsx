@@ -1,7 +1,6 @@
 import { FC } from 'react';
 
-import classNames from 'classnames';
-
+import StatusPill from '@/src/components/Analytics/Common/StatusPill';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineRuntimeStatus } from '@/src/models/analytics/pipeline-runtime';
@@ -51,17 +50,7 @@ const PipelineRuntimeBadge: FC<Props> = ({ status, className }) => {
   const label = LABEL[status];
   if (!label) return null;
 
-  return (
-    <div
-      className={classNames(
-        'flex items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
-        TONE[status],
-        className,
-      )}
-    >
-      <span>{t(label)}</span>
-    </div>
-  );
+  return <StatusPill label={t(label)} toneClassName={TONE[status]} className={className} />;
 };
 
 export default PipelineRuntimeBadge;

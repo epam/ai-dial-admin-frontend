@@ -8,18 +8,25 @@ import { FunctionParameterSource, FunctionParameterSourceType, OverallScoreFunct
 import SpecificFunction from '../SpecificFunction';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialSelectField: ({ id, label, value, options, onChange }: any) => (
-    <div>
-      <label htmlFor={id}>{label}</label>
-      <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option: any) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  ),
+  DialSelectField: ({ id, label, value, options, onChange }: any) => {
+    const selected = options.find((option: any) => option.value === value);
+
+    return (
+      <div>
+        <label htmlFor={id}>{label}</label>
+        <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+          {options.map((option: any) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {selected?.labelNode}
+      </div>
+    );
+  },
+  DialNotification: ({ message }: any) => <div>{message}</div>,
+  NotificationVariant: { Info: 'info' },
 }));
 
 vi.mock('../FunctionParameterRow', () => ({
@@ -61,10 +68,12 @@ describe('SpecificFunction', () => {
     render(<SpecificFunction expression={expression} onChange={vi.fn()} />);
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreFunction)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.OverallScoreSuiteLevelOnly)).toBeInTheDocument();
     expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreFunctionLabel)).toHaveValue(
       OverallScoreFunctionName.RocAuc,
     );
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreFunctionParameters)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.OverallScoreFunctionSuiteOnlyAlertSuffix)).toBeInTheDocument();
     expect(
       screen.getByText(
         `row-${TestSuitesI18nKey.OverallScoreDatasetColumn}-${FunctionParameterSourceType.TestCase}-y_true_float`,

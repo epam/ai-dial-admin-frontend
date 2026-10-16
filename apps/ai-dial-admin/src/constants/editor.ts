@@ -96,6 +96,17 @@ export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig 
   return { ...template, colors: { ...template.colors, 'editor.background': background } };
 };
 
+/** Read-only schema / JSON viewers (Figma layer-4 surface, distinct from editable editors). */
+export const getReadOnlyEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
+  const themeId = theme || EDITOR_THEMES.dark;
+  const template = EDITOR_THEMES_CONFIG[themeId];
+  const background = getThemePalette(themeId)['bg-layer-4'];
+
+  return { ...template, colors: { ...template.colors, 'editor.background': background } };
+};
+
+export const readOnlySchemaThemeId = (theme: string): string => `${theme}-readonly-schema`;
+
 const defaultOptions: EditorOptions = {
   minimap: { enabled: false },
   selectOnLineNumbers: false,
@@ -104,6 +115,7 @@ const defaultOptions: EditorOptions = {
   wordWrap: 'on',
   diffWordWrap: 'on',
   smoothScrolling: true,
+  stickyScroll: { enabled: false },
   overviewRulerLanes: 0,
   scrollbar: {
     verticalScrollbarSize: 6,

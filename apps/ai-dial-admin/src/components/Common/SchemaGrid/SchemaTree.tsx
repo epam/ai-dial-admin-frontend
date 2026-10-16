@@ -5,15 +5,11 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
+import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import SchemaTreeItem from './SchemaTreeItem';
 import { schemaToTreeNodes } from './utils';
-
-export interface SchemaTreeSelectResult {
-  expression: string;
-  type: string;
-}
 
 interface SchemaTreeProps {
   responseSchema: JSONSchema7;
@@ -23,6 +19,7 @@ interface SchemaTreeProps {
 const SchemaTree: FC<SchemaTreeProps> = ({ responseSchema, onSelect }) => {
   const t = useI18n();
   const [expandedSet, setExpandedSet] = useState<Set<string>>(() => new Set());
+  const [selectedPath, setSelectedPath] = useState<string>();
 
   const toggleExpand = useCallback((path: string) => {
     setExpandedSet((prev) => {
@@ -35,6 +32,14 @@ const SchemaTree: FC<SchemaTreeProps> = ({ responseSchema, onSelect }) => {
       return next;
     });
   }, []);
+
+  const onSelectNode = useCallback(
+    (result: SchemaTreeSelectResult) => {
+      setSelectedPath(result.expression);
+      onSelect(result);
+    },
+    [onSelect],
+  );
 
   const nodes = useMemo(() => {
     if (!responseSchema || responseSchema.type !== 'object') return [];
@@ -53,8 +58,9 @@ const SchemaTree: FC<SchemaTreeProps> = ({ responseSchema, onSelect }) => {
           node={node}
           depth={0}
           expandedSet={expandedSet}
+          selectedPath={selectedPath}
           onToggleExpand={toggleExpand}
-          onSelect={onSelect}
+          onSelect={onSelectNode}
         />
       ))}
     </div>

@@ -6,7 +6,6 @@ import { DialIconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
 import DeploymentExternalLink from '@/src/components/Runs/Summary/DeploymentExternalLink';
 import {
   getSuiteApplicationName,
@@ -66,12 +65,6 @@ const Header: FC<Props> = ({ run, testSuite }) => {
 
       {additionalRequestsCount > 0 && (
         <LabelledText label={t(RunsI18nKey.RequestsInChain)} text={String(additionalRequestsCount + 1)} />
-      )}
-
-      {!!run?.status && (
-        <LabelledText label={t(EntityFieldsI18nKey.status)}>
-          <RunStatusComponent status={run.status} />
-        </LabelledText>
       )}
     </div>
   );

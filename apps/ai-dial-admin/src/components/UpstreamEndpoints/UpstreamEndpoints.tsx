@@ -8,7 +8,7 @@ import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModelEndpoint } from '@/src/models/dial/model';
+import { DialModelEndpoint, UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import Endpoint from './Endpoint/Endpoint';
 
@@ -21,6 +21,8 @@ interface Props<T> {
   view?: ApplicationRoute;
   withResponses?: boolean;
   collapsible?: boolean;
+  isAuthTypeSupported?: boolean;
+  originalUpstreams?: DialModelEndpoint[];
 }
 
 const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
@@ -32,6 +34,8 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
   view,
   withResponses,
   collapsible = true,
+  isAuthTypeSupported,
+  originalUpstreams,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -87,6 +91,12 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
           index={index}
           isKeyOptional={isKeyOptional}
           required={required}
+          isAuthTypeSupported={isAuthTypeSupported}
+          isBearerKeyRequired={
+            isAuthTypeSupported &&
+            endpoint.authType === UpstreamAuthType.BEARER &&
+            originalUpstreams?.[index]?.authType !== endpoint.authType
+          }
           updateEndpoint={(point) => onUpdateEndPoint(point, index)}
           removeEndpoint={onRemoveEndpoint}
           view={view}

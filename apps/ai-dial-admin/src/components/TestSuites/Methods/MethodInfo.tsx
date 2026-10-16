@@ -139,7 +139,6 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
             <JsonEditor
               entity={testSuite?.endpointRef as Partial<TestSuiteEndpointRef>}
               setSelectedEntity={onChangeEndpointRef as Dispatch<SetStateAction<Partial<TestSuiteEndpointRef>>>}
-              options={{ stickyScroll: { enabled: false } }}
             />
           </div>
         )}

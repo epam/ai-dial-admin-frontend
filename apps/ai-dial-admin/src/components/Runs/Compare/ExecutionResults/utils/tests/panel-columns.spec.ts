@@ -23,7 +23,7 @@ const runNames = { primary: 'Run #316', secondary: 'Run #315' };
 const primaryRun = { id: 'run-316', name: runNames.primary };
 const comparedRun = { id: 'run-315', name: runNames.secondary };
 const runs = getCompareRuns(primaryRun, comparedRun);
-const flippedRuns = getCompareRuns(primaryRun, comparedRun, true);
+const reversedRuns = getCompareRuns(primaryRun, comparedRun).reverse();
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   responseStatusCode: 200,
@@ -236,7 +236,7 @@ describe('Runs Compare :: buildComparePanelColumnTree run order', () => {
     ((node as ColGroupDef).children as ColDef[]).map((leaf) => (leaf.context as CompareColumnPanelContext)?.panelName);
 
   test('lists the compared run before the primary run in every pair, keeping delta last', () => {
-    const tree = buildComparePanelColumnTree(getFlatDefs(), flippedRuns);
+    const tree = buildComparePanelColumnTree(getFlatDefs(), reversedRuns);
     const metricGroup = tree.find((node) =>
       ((node as ColGroupDef).children as ColGroupDef[])?.some((child) => child.headerName === 'Precision'),
     ) as ColGroupDef;
@@ -249,8 +249,8 @@ describe('Runs Compare :: buildComparePanelColumnTree run order', () => {
     expect(getLeafPanelNames(status)).toEqual([runNames.secondary, runNames.primary]);
   });
 
-  test('flattening a flipped tree keeps the compared column first in the grid defs', () => {
-    const tree = buildComparePanelColumnTree(getFlatDefs(), flippedRuns);
+  test('flattening a reversed tree keeps the compared column first in the grid defs', () => {
+    const tree = buildComparePanelColumnTree(getFlatDefs(), reversedRuns);
     const flat = flattenComparePanelColumnTree(tree);
     const status = flat.find((node) => (node as ColGroupDef).children?.some((c) => (c as ColDef).colId === 'status'));
 

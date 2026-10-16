@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { getDiffEditorTheme, EDITOR_THEMES_CONFIG } from '../editor';
+import { editorOptions, getDiffEditorTheme, getReadOnlyEditorTheme, EDITOR_THEMES_CONFIG } from '../editor';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { fallbackDarkTheme, fallbackLightTheme } from '@/src/utils/themes/constant';
 import { JSONATA_MONARCH_TOKENS } from '@/src/components/Common/JsonataEditor/constants';
@@ -23,6 +23,12 @@ const collectJsonataTokenNames = (): string[] => {
   return [...names];
 };
 
+describe('editorOptions', () => {
+  test('disables sticky scrolling by default', () => {
+    expect(editorOptions.stickyScroll).toEqual({ enabled: false });
+  });
+});
+
 describe('getDiffEditorTheme', () => {
   test('returns dark theme config with overridden background', () => {
     const theme = getDiffEditorTheme(EDITOR_THEMES.dark);
@@ -34,6 +40,20 @@ describe('getDiffEditorTheme', () => {
     const theme = getDiffEditorTheme(EDITOR_THEMES.light);
     expect(theme.base).toBe('vs');
     expect(theme.colors['editor.background']).toBe(fallbackLightTheme['bg-layer-2']);
+  });
+});
+
+describe('getReadOnlyEditorTheme', () => {
+  test('returns dark theme config with layer-4 background', () => {
+    const theme = getReadOnlyEditorTheme(EDITOR_THEMES.dark);
+    expect(theme.base).toBe('vs-dark');
+    expect(theme.colors['editor.background']).toBe(fallbackDarkTheme['bg-layer-4']);
+  });
+
+  test('returns light theme config with layer-4 background', () => {
+    const theme = getReadOnlyEditorTheme(EDITOR_THEMES.light);
+    expect(theme.base).toBe('vs');
+    expect(theme.colors['editor.background']).toBe(fallbackLightTheme['bg-layer-4']);
   });
 });
 

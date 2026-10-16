@@ -10,88 +10,106 @@ variants. Created by archiving change `add-entity-overall-status-badge`.
 ## Requirements
 
 ### Requirement: Overall status badge in the entity header
-The system SHALL render an overall status badge in the entity header, above the entity id, for every
-entity whose `_metadata.status` is `valid` or `invalid`. The badge SHALL be rendered by the same header
-block in `SimpleEntityHeader` and `AssetHeader`, with a `gap-2` between the badge and the id. An entity
-with no `_metadata.status`, or with a value other than `valid` / `invalid`, SHALL render no badge and no
-placeholder, so the header layout is unchanged.
+The system SHALL render a validity badge in the entity header status row, above the entity id, for every
+entity that reports a validity, from whichever source the entity carries:
+
+- `_metadata.status` of `valid` or `invalid` (Core entities);
+- `validityState.valid` (Applications and Keys);
+- `valid` (test suites only; datasets carry the same field but SHALL NOT show a badge).
+
+`valid` SHALL render a success-toned "Valid" badge and `invalid` an error-toned "Invalid" badge, each with a
+dot. The badge SHALL be rendered by the same header status row in `SimpleEntityHeader` and `AssetHeader`.
+An entity that reports no validity, or a `_metadata.status` other than `valid` / `invalid`, SHALL render no
+badge and no placeholder, so the header layout is unchanged.
 
 #### Scenario: Platform entity with a valid status
 - **WHEN** a platform entity's detail view opens and `_metadata.status` is `valid`
-- **THEN** a badge labelled "Valid" is shown directly above the id
+- **THEN** a "Valid" badge is shown in the status row above the id
 - **THEN** no info icon is shown
 
 #### Scenario: Platform entity with an invalid status
 - **WHEN** a platform entity's detail view opens and `_metadata.status` is `invalid`
-- **THEN** a badge labelled "Invalid" is shown directly above the id
+- **THEN** an "Invalid" badge is shown in the status row above the id
+
+#### Scenario: Application or key
+- **WHEN** an Application or Key detail view opens and `validityState.valid` is `true` or `false`
+- **THEN** a "Valid" or "Invalid" badge is shown above the id
+
+#### Scenario: Test suite
+- **WHEN** a test suite detail view opens and `valid` is `true` or `false`
+- **THEN** a "Valid" or "Invalid" badge is shown above the id
+
+#### Scenario: Dataset
+- **WHEN** a dataset detail view opens, even though the dataset carries a `valid` flag
+- **THEN** no validity badge is rendered
 
 #### Scenario: Entity without a status
-- **WHEN** a detail view opens for an entity with no `_metadata.status` (for example a public
+- **WHEN** a detail view opens for an entity that reports none of the sources above (for example a public
   application, a public toolset or a prompt)
-- **THEN** no status badge is rendered and the id sits where it did before this change
+- **THEN** no validity badge is rendered and the id sits where it did before this change
 
 #### Scenario: Unrecognised status value
-- **WHEN** `_metadata.status` holds a value other than `valid` or `invalid`
-- **THEN** no status badge is rendered
+- **WHEN** `_metadata.status` holds a value other than `valid` or `invalid` and no other source applies
+- **THEN** no validity badge is rendered
 
 #### Scenario: Both header types
-- **WHEN** an entity with `_metadata.status` is shown under `SimpleEntityHeader` and under `AssetHeader`
+- **WHEN** an entity that reports a validity is shown under `SimpleEntityHeader` and under `AssetHeader`
 - **THEN** the badge renders identically in both
 
-### Requirement: Status badge visual contract
-The system SHALL provide a generic status badge whose pill uses `px-2 py-0.5` padding and a 120px border
-radius, with a 6px × 6px filled circle before the label and a `gap-1` between circle and label and
-4px of horizontal margin (`mx-1`) on each side of the circle. The
-badge's colours SHALL come from Tailwind theme tokens only; no hex values SHALL be hard-coded. The
-`valid` variant SHALL use `bg-success` / `text-success`. The `invalid` variant SHALL use `bg-error` /
-`text-error`. The circle SHALL be filled with the current text color (`bg-[currentColor]`), so it always
-matches the variant's text token, and SHALL be decorative and hidden from assistive
-technology; the label text SHALL be the badge's accessible name.
-Variants SHALL be defined in a single lookup so further variants (completed, failed, running, stopped)
-can be added as entries without changing the component's structure.
+### Requirement: Validity badge hint
+The validity badge SHALL carry a hint only for the invalid state, only when the entity's source yields
+non-empty text, and the hint SHALL be shown through the generic badge hint. The hint text SHALL be:
 
-#### Scenario: Valid variant styling
-- **WHEN** the badge renders the `valid` variant
-- **THEN** the pill carries `bg-success` and `text-success`, and a circle filled with the current text color (`text-success`)
-  precedes the label with `gap-1`
+- for `_metadata.validationWarnings`: each warning as `field: message` (or the single non-empty part when
+  one is missing), joined with `; `;
+- for `validityState`: its `message`;
+- for a test suite's `validationWarnings`: each warning as `code: message` (or the single non-empty part),
+  joined with `; `.
 
-#### Scenario: Invalid variant styling
-- **WHEN** the badge renders the `invalid` variant
-- **THEN** the pill carries `bg-error` and `text-error`, and a circle filled with the current text color (`text-error`) precedes the
-  label with `gap-1`
+A valid badge SHALL never carry a hint, even if the source holds warnings.
 
-#### Scenario: Decorative circle
-- **WHEN** a screen reader reads the badge
-- **THEN** only the label text is announced, not the circle
-
-### Requirement: Status badge hint
-The status badge SHALL show an info icon (16px) after the label only when a hint is provided, and SHALL
-reveal the hint text when the icon is hovered or keyboard-focused. The icon SHALL have an accessible
-name. A badge without a hint SHALL render no icon. The overall status mapping SHALL provide a hint only
-for the `invalid` status, and only when `_metadata.validationWarnings` yields non-empty text; the hint
-SHALL list each warning as `field: message` (or the single non-empty part when one is missing), joined
-with `; `.
-
-#### Scenario: Invalid with validation warnings
-- **WHEN** `_metadata.status` is `invalid` and `_metadata.validationWarnings` contains
-  `{ field: "endpoint", message: "must not be empty" }`
-- **THEN** an info icon follows the "Invalid" label
-- **WHEN** the user hovers or focuses the icon
-- **THEN** a tooltip shows `endpoint: must not be empty`
+#### Scenario: Invalid with warnings
+- **WHEN** `_metadata.status` is `invalid` and `validationWarnings` holds `{ field: "endpoint", message: "must not be empty" }`
+- **THEN** an info icon follows the "Invalid" badge and its tooltip reads `endpoint: must not be empty`
 
 #### Scenario: Multiple warnings
-- **WHEN** `_metadata.validationWarnings` contains two warnings
+- **WHEN** the source holds two warnings
 - **THEN** the tooltip lists both, separated by `; `
 
-#### Scenario: Invalid without warnings
-- **WHEN** `_metadata.status` is `invalid` and `_metadata.validationWarnings` is absent or empty (for
-  example for a non-admin user, for whom Core omits warnings)
+#### Scenario: Application or key message
+- **WHEN** an Application's `validityState` is invalid with message "Missing deployment"
+- **THEN** the tooltip reads "Missing deployment"
+
+#### Scenario: Test suite warnings
+- **WHEN** a test suite is invalid with a warning whose code is `MISSING_DATASET` and message is `Dataset is required`
+- **THEN** the tooltip reads `MISSING_DATASET: Dataset is required`
+
+#### Scenario: Invalid without text
+- **WHEN** the entity is invalid and its source yields no hint text (for example a non-admin user, for whom Core omits warnings)
 - **THEN** the "Invalid" badge is shown with no info icon
 
 #### Scenario: Valid never has a hint
-- **WHEN** `_metadata.status` is `valid`
+- **WHEN** the entity is valid
 - **THEN** no info icon is shown, even if warnings are present
 
-#### Scenario: Keyboard access to the hint
-- **WHEN** the user tabs to the info icon
-- **THEN** the icon receives focus and the hint is shown without a mouse
+### Requirement: Validity is shown once, in the header
+For Applications, Keys and test suites, the validity SHALL be shown only by the header badge. The
+Properties tab SHALL NOT repeat it as a labelled status. This requirement does not apply to validity
+shown for individual rows of a grid (test cases, datasets, import preview), which keep their existing
+presentation.
+
+#### Scenario: Application properties
+- **WHEN** an Application's Properties tab is open
+- **THEN** the header shows the validity badge and the Properties tab shows no separate Status label
+
+#### Scenario: Key properties
+- **WHEN** a Key's Properties tab is open
+- **THEN** the header shows the validity badge and the Properties tab shows no separate Status label
+
+#### Scenario: Test suite properties
+- **WHEN** a test suite's Properties tab is open
+- **THEN** the header shows the validity badge and the Properties tab shows no separate Status label
+
+#### Scenario: Test case rows are unchanged
+- **WHEN** a test suite's test cases are listed
+- **THEN** each row keeps its existing validity indicator

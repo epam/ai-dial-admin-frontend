@@ -11,6 +11,8 @@ import VariablesEditor from '@/src/components/Analytics/Pipelines/Enrich/Variabl
 import { EnrichFormState } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
+import { PREVIEW_SECTION_ANCHORS } from '@/src/components/Analytics/Pipelines/Preview/constants';
+import { PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
@@ -138,7 +140,12 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
             />
           </section>
 
-          <section aria-label={t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)} className="flex flex-col gap-2">
+          <section
+            id={PREVIEW_SECTION_ANCHORS[PreviewSection.RequestTemplate]}
+            tabIndex={-1}
+            aria-label={t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)}
+            className="flex flex-col gap-2 outline-none"
+          >
             <Label
               htmlFor="transform-request-template"
               label={
@@ -195,7 +202,10 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
           outputs — one block in the order the service reads it. A sql transform renders no request, and
           the service refuses one declaring inputs, so the section is absent rather than empty. */}
       {!isSql && (
-        <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionInputs)}>
+        <PipelineSection
+          id={PREVIEW_SECTION_ANCHORS[PreviewSection.Inputs]}
+          title={t(AnalyticsPipelinesI18nKey.SectionInputs)}
+        >
           <div className="flex flex-col gap-3">
             <VariablesEditor
               vars={transform?.inputs}

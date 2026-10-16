@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialSwitch, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialSwitch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -658,12 +658,12 @@ const TestCasesList: FC<Props> = ({
       : lastIncludedCountRef.current;
 
   const datasetTag = isPrivate && (
-    <DialTooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
+    <Tooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
       <DialTag
         label={t(DatasetsI18nKey.VisibilityPrivate)}
         className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
       />
-    </DialTooltip>
+    </Tooltip>
   );
 
   const isPublicDatasetAttached = !isPrivate && !!dataset?.visibility;

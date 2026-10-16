@@ -18,8 +18,9 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialRemoveButton: ({ onClick }: any) => (
     <button type="button" data-testid="dial-remove-button" aria-label="remove-row" onClick={onClick} />
   ),
-  DialInput: ({ labelProps, placeholder, value, onChange }: any) => (
-    <input
+  DialLabel: ({ label }: any) => <span>{label}</span>,
+  DialTextarea: ({ labelProps, placeholder, value, onChange }: any) => (
+    <textarea
       role="textbox"
       aria-label={labelProps?.label ?? 'text-input'}
       placeholder={placeholder}
@@ -35,6 +36,27 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
     />
+  ),
+  DialSelect: ({ options, value, onChange, multiple }: any) => (
+    <select
+      role="combobox"
+      aria-label="enum-array-select"
+      multiple={multiple}
+      value={value ?? (multiple ? [] : '')}
+      onChange={(e) => {
+        if (multiple) {
+          onChange(Array.from(e.target.selectedOptions).map((option) => option.value));
+        } else {
+          onChange(e.target.value);
+        }
+      }}
+    >
+      {options.map((option: any) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   ),
   DialSelectField: ({ label, value, options, onChange }: any) => (
     <label>
@@ -62,6 +84,17 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
+  default: ({ value, onChange }: { value?: string; onChange: (v: string | undefined) => void }) => (
+    <textarea
+      data-testid="json-editor"
+      aria-label="json-editor"
+      value={value ?? ''}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
+}));
+
 const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
   id: 'field-id',
   name: 'field-name',
@@ -77,7 +110,7 @@ const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
 });
 
 describe('MetricControl', () => {
-  test('renders string input and calls onChangeValue', () => {
+  test('renders string textarea and calls onChangeValue', () => {
     const onChangeValue = vi.fn();
     const field = makeField({ id: 'f1', name: 'prompt', type: 'string', required: true, description: 'Prompt text' });
     const binding: MetricBinding = {
@@ -88,11 +121,12 @@ describe('MetricControl', () => {
     render(<MetricControl field={field} binding={binding} onChangeValue={onChangeValue} />);
 
     const input = screen.getByRole('textbox', { name: 'prompt' });
+    expect(input.tagName).toBe('TEXTAREA');
     expect(input).toHaveAttribute('placeholder', EntityPlaceholdersI18nKey.Value);
 
-    fireEvent.change(input, { target: { value: 'updated' } });
+    fireEvent.change(input, { target: { value: 'updated\ncriteria line' } });
 
-    expect(onChangeValue).toHaveBeenCalledWith('prompt', 'updated');
+    expect(onChangeValue).toHaveBeenCalledWith('prompt', 'updated\ncriteria line');
   });
 
   test('renders enum select and calls onChangeValue', () => {
@@ -177,5 +211,109 @@ describe('MetricControl', () => {
 
     fireEvent.click(screen.getByTestId('dial-primary-button'));
     expect(onChangeValue).toHaveBeenCalledWith('actual', ['one', 'two', '']);
+  });
+
+  test('renders JSON editor for plain object and calls onChangeValue with parsed object', () => {
+    const onChangeValue = vi.fn();
+    const field = makeField({ id: 'f7', name: 'payload', type: 'object' });
+    const binding: MetricBinding = {
+      property: 'payload',
+      source: { $type: MetricBindingType.Constant, value: { a: 1 } },
+    };
+
+    render(<MetricControl field={field} binding={binding} label={false} onChangeValue={onChangeValue} />);
+
+    const editor = screen.getByTestId('json-editor');
+    expect(editor).toHaveValue(JSON.stringify({ a: 1 }, null, 2));
+
+    fireEvent.change(editor, { target: { value: '{"b":2}' } });
+    expect(onChangeValue).toHaveBeenCalledWith('payload', { b: 2 });
+  });
+
+  test('renders JSON editor for additionalProperties object maps (Figma Object Constant)', () => {
+    const onChangeValue = vi.fn();
+    const field = makeField({
+      id: 'f7b',
+      name: 'actual',
+      type: 'object',
+      additionalPropertiesArrayItemType: 'string',
+    });
+    const binding: MetricBinding = {
+      property: 'actual',
+      source: { $type: MetricBindingType.Constant, value: { key: ['v1'] } },
+    };
+
+    render(<MetricControl field={field} binding={binding} label={false} onChangeValue={onChangeValue} />);
+
+    expect(screen.getByTestId('json-editor')).toBeInTheDocument();
+    expect(screen.queryByTestId('dial-primary-button')).not.toBeInTheDocument();
+  });
+
+  test('does not render JSON editor for nested object fields inside array items', () => {
+    const onChangeValue = vi.fn();
+    const field = makeField({
+      id: 'f-array',
+      name: 'tools_called',
+      type: 'array',
+      itemsType: 'object',
+      children: [
+        makeField({ id: 'f-name', name: 'name', type: 'string', depth: 1 }),
+        makeField({ id: 'f-args', name: 'args', type: 'object', depth: 1 }),
+      ],
+    });
+    const binding: MetricBinding = {
+      property: 'tools_called',
+      source: { $type: MetricBindingType.Constant, value: [{ name: 'search', args: {} }] },
+    };
+
+    render(<MetricControl field={field} binding={binding} label={false} onChangeValue={onChangeValue} />);
+
+    expect(screen.queryByTestId('json-editor')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'name' })).toHaveValue('search');
+  });
+
+  test('does not call onChangeValue when plain object JSON is invalid', () => {
+    const onChangeValue = vi.fn();
+    const field = makeField({ id: 'f8', name: 'payload', type: 'object' });
+    const binding: MetricBinding = {
+      property: 'payload',
+      source: { $type: MetricBindingType.Constant, value: {} },
+    };
+
+    render(<MetricControl field={field} binding={binding} label={false} onChangeValue={onChangeValue} />);
+
+    fireEvent.change(screen.getByTestId('json-editor'), { target: { value: '{invalid' } });
+    expect(onChangeValue).not.toHaveBeenCalled();
+  });
+
+  test('renders multi DialSelect for array fields with enum', () => {
+    const onChangeValue = vi.fn();
+    const field = makeField({
+      id: 'f9',
+      name: 'labels',
+      type: 'array',
+      enum: ['Value 1', 'Value 2', 'Value 3'],
+      children: [],
+    });
+    const binding: MetricBinding = {
+      property: 'labels',
+      source: { $type: MetricBindingType.Constant, value: ['Value 1'] },
+    };
+
+    render(<MetricControl field={field} binding={binding} label={false} onChangeValue={onChangeValue} />);
+
+    const select = screen.getByRole('combobox', { name: 'enum-array-select' });
+    expect(select).toHaveAttribute('multiple');
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Value 1',
+      'Value 2',
+      'Value 3',
+    ]);
+
+    const options = screen.getAllByRole('option') as HTMLOptionElement[];
+    options[0].selected = true;
+    options[1].selected = true;
+    fireEvent.change(select);
+    expect(onChangeValue).toHaveBeenCalledWith('labels', ['Value 1', 'Value 2']);
   });
 });

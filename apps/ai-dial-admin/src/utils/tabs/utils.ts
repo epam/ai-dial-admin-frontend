@@ -21,6 +21,7 @@ export enum EntityViewTab {
   Entities = 'Entities',
   Applications = 'Applications',
   Models = 'Models',
+  Preview = 'Preview',
   Runtime = 'Runtime',
   Groups = 'Groups',
   Audit = 'Audit',
@@ -50,6 +51,7 @@ export enum EntityViewTab {
   Events = 'Events',
   Firewall = 'Firewall',
   TestCases = 'TestCases',
+  TestSuites = 'TestSuites',
   Runs = 'Runs',
   Summary = 'Summary',
   ExtractionResult = 'ExtractionResult',
@@ -121,6 +123,11 @@ export const accessTab = (t: (key: string) => string) => ({
 export const auditTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Audit,
   label: t(TabsI18nKey.Audit),
+});
+
+export const previewTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Preview,
+  label: t(TabsI18nKey.Preview),
 });
 
 export const runtimeTab = (t: (key: string) => string) => ({
@@ -283,6 +290,11 @@ export const testSuiteMethodTab = (t: (key: string) => string) => ({
 export const testCasesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.TestCases,
   label: t(TabsI18nKey.TestCases),
+});
+
+export const testSuitesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.TestSuites,
+  label: t(TabsI18nKey.TestSuites),
 });
 
 export const trendsTab = (t: (key: string) => string) => ({
@@ -639,7 +651,7 @@ export const getRunTabs = (t: (key: string) => string): TabModel[] => {
 };
 
 export const getDatasetTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), schemaTab(t), testCasesTab(t)];
+  return [propertiesTab(t), schemaTab(t), testCasesTab(t), testSuitesTab(t)];
 };
 
 export const getMcpToolSchemaTabs = (t: (key: string) => string): TabModel[] => {

@@ -36,7 +36,8 @@ const SummaryOverviewTab: FC<Props> = ({
   const {
     primaryRun,
     comparedRun,
-    testSuite,
+    primaryTestSuite,
+    comparedTestSuite,
     enrichedPrimaryScores,
     enrichedComparedScores,
     metricOptions,
@@ -74,7 +75,13 @@ const SummaryOverviewTab: FC<Props> = ({
   return (
     <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
       <div className="flex shrink-0 flex-col gap-8">
-        <Header primaryRun={primaryRun} comparedRun={comparedRun} runs={runs} testSuite={testSuite} />
+        <Header
+          primaryRun={primaryRun}
+          comparedRun={comparedRun}
+          runs={runs}
+          primaryTestSuite={primaryTestSuite}
+          comparedTestSuite={comparedTestSuite}
+        />
         {!hasNoMatchingTestCases && (
           <Analytics
             primaryRunId={primaryRunId}

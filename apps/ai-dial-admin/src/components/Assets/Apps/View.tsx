@@ -13,6 +13,7 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useIframeSaveFeedback } from '@/src/components/EntityView/hooks/use-iframe-save-feedback';
 import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -206,15 +207,73 @@ const AppView: FC<Props> = ({
     [selectedApp, originalApp, etag, showNotification, t, router, fetchFiles],
   );
 
-  const { isModalOpen, modalType, onModalClose, onModalCancel, onModalConfirm, onChangeActiveTab } =
-    useParametersTabGuard({
-      activeTab,
-      isChanged,
-      visualizerConnector,
-      onSaveEntity: () => onSave(),
-      onDiscardEntity: onDiscard,
-      onSetActiveTab: setActiveTab,
-    });
+  const onIframeSaved = useCallback(() => {
+    fetchFiles(selectedApp.folderId || selectedApp._metadata?.folderId || '');
+  }, [fetchFiles, selectedApp.folderId, selectedApp._metadata?.folderId]);
+
+  const { onIframeSaveSuccess, onIframeSaveError } = useIframeSaveFeedback({
+    view: ApplicationRoute.AssetsApplications,
+    entityName: selectedApp.name || selectedApp._metadata?.name,
+    onSaved: onIframeSaved,
+  });
+
+  const {
+    frameRef,
+    isIframeDirty,
+    isIframeSaving,
+    isIframeValid,
+    onFrameDirtyChange,
+    onFrameValidityChange,
+    onFrameSaveSuccess,
+    onFrameSaveError,
+    onSaveIframe,
+    onDiscardIframe,
+    isModalOpen,
+    modalType,
+    onModalClose,
+    onModalCancel,
+    onModalConfirm,
+    onChangeActiveTab,
+  } = useParametersTabGuard({
+    activeTab,
+    isChanged,
+    visualizerConnector,
+    onSaveEntity: () => onSave(),
+    onDiscardEntity: onDiscard,
+    onSetActiveTab: setActiveTab,
+    onIframeSaveSuccess,
+    onIframeSaveError,
+  });
+
+  const frameCallbacks = useMemo(
+    () => ({
+      onDirtyChange: onFrameDirtyChange,
+      onValidityChange: onFrameValidityChange,
+      onSaveSuccess: onFrameSaveSuccess,
+      onSaveError: onFrameSaveError,
+    }),
+    [onFrameDirtyChange, onFrameValidityChange, onFrameSaveSuccess, onFrameSaveError],
+  );
+
+  // A save-as-new-version names an explicit entity action, so it keeps the entity path.
+  const onSaveChanges = useCallback(
+    (newVersion?: string) => {
+      if (isIframeDirty && !newVersion) {
+        onSaveIframe();
+      } else {
+        onSave(newVersion);
+      }
+    },
+    [isIframeDirty, onSave, onSaveIframe],
+  );
+
+  const onDiscardChanges = useCallback(() => {
+    if (isIframeDirty) {
+      onDiscardIframe();
+    } else {
+      onDiscard();
+    }
+  }, [isIframeDirty, onDiscard, onDiscardIframe]);
 
   const onChangeEntity = useCallback(
     (entity: AssetApp, skipRefresh?: boolean) => {
@@ -230,9 +289,11 @@ const AppView: FC<Props> = ({
         etag={etag}
         view={ApplicationRoute.AssetsApplications}
         entity={selectedApp}
-        isChanged={isChanged}
-        onDiscard={onDiscard}
-        onSave={onSave}
+        isChanged={isChanged || isIframeDirty}
+        isSaving={isIframeSaving}
+        isSaveDisabled={!isIframeValid}
+        onDiscard={onDiscardChanges}
+        onSave={onSaveChanges}
         tabs={tabs}
         assets={assets}
         jsonConfiguration={jsonConfiguration}
@@ -271,7 +332,9 @@ const AppView: FC<Props> = ({
             isSkipRefresh={isSkipRefresh}
             discardKey={discardKey}
             isChanged={isChanged}
-            onSave={onSave}
+            frameRef={frameRef}
+            frameCallbacks={frameCallbacks}
+            onSave={onSaveChanges}
             onChangeApplication={onChangeEntity as (application: DialApplication) => void}
             setIsChanged={setIsChanged}
             setSelectedApplication={setSelectedApp as Dispatch<SetStateAction<DialApplication>>}

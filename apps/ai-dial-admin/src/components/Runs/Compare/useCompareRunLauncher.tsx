@@ -5,8 +5,9 @@ import { createPortal } from 'react-dom';
 
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import {
-  fetchSuiteCompletedRuns,
+  fetchCompareCandidateRuns,
   getCompareRunsUrn,
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
@@ -14,7 +15,7 @@ import { Run } from '@/src/models/evaluation/run';
 
 export const useCompareRunLauncher = () => {
   const [primaryRun, setPrimaryRun] = useState<Run | null>(null);
-  const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
+  const [suiteRuns, setSuiteRuns] = useState<CompareCandidateRun[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const selectableRuns = useMemo(() => {
@@ -29,7 +30,7 @@ export const useCompareRunLauncher = () => {
     setIsModalOpen(true);
     setSuiteRuns([]);
 
-    fetchSuiteCompletedRuns(run.testSuiteId).then((runs) => {
+    fetchCompareCandidateRuns(run.testSuiteId).then((runs) => {
       setSuiteRuns(runs);
     });
   }, []);

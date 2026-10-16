@@ -181,8 +181,8 @@ const ShareBreakdown: FC<Props> = ({
 
   const metricTabs = useMemo(
     () => [
-      { id: DonutMetric.Calls, label: t(AnalyticsUsageI18nKey.DonutMetricCalls) },
       { id: DonutMetric.Cost, label: t(AnalyticsUsageI18nKey.DonutMetricCost) },
+      { id: DonutMetric.Calls, label: t(AnalyticsUsageI18nKey.DonutMetricCalls) },
     ],
     [t],
   );

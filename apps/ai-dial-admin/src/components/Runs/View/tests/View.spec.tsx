@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
@@ -28,10 +28,13 @@ vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ entity, onRemove, children, adaptiveActions, tabs, onChangeActiveTab }: any) => (
+  default: ({ entity, onRemove, children, adaptiveActions, tabs, onChangeActiveTab, statusBadges }: any) => (
     <div role="region" aria-label="simple-header">
       <div>entity-id:{entity?.id}</div>
       <div>entity-status:{entity?.status}</div>
+      <div role="group" aria-label="status-badges">
+        {statusBadges}
+      </div>
       <button type="button" onClick={() => onRemove(entity?.id)}>
         Remove Run
       </button>
@@ -100,6 +103,20 @@ describe('Runs View :: View', () => {
 
     expect(screen.getByRole('region', { name: 'summary-tab' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'extraction-result-tab' })).not.toBeInTheDocument();
+  });
+
+  test('shows the run status badge in the header status row', () => {
+    render(<RunView run={{ id: 'run-1', status: RunStatus.COMPLETED } as any} onRemove={vi.fn()} />);
+
+    expect(
+      within(screen.getByRole('group', { name: 'status-badges' })).getByText('Runs.Status.Completed'),
+    ).toBeVisible();
+  });
+
+  test('shows no status badge for a run without a status', () => {
+    render(<RunView run={{ id: 'run-1' } as any} onRemove={vi.fn()} />);
+
+    expect(screen.getByRole('group', { name: 'status-badges' })).toBeEmptyDOMElement();
   });
 
   test('switches to extraction result tab on tab click', () => {

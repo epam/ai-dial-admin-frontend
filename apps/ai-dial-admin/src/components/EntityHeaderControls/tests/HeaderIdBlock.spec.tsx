@@ -1,44 +1,31 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { StatusBadgeI18nKey } from '@/src/constants/i18n';
-import { DialModelResourceStatus } from '@/src/models/dial/resource';
 import HeaderIdBlock from '../HeaderIdBlock';
 
 describe('EntityHeaderControls :: HeaderIdBlock', () => {
-  test('Should render the status badge before the id with an 8px gap', () => {
-    const { container } = render(<HeaderIdBlock id="my-model" metadata={{ status: DialModelResourceStatus.Valid }} />);
+  test('Should render the badges in a row before the id, 20px apart', () => {
+    render(<HeaderIdBlock id="my-model" statusBadges={[<span key="a">first</span>, <span key="b">second</span>]} />);
 
-    const badge = screen.getByText(StatusBadgeI18nKey.Valid);
-    const id = screen.getByText('my-model');
-    expect(badge.compareDocumentPosition(id) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(container.firstChild).toHaveClass('gap-2');
+    const first = screen.getByText('first');
+    const row = first.parentElement as HTMLElement;
+    expect(row).toHaveClass('gap-5', 'py-1');
+    expect(row).toContainElement(screen.getByText('second'));
+    expect(row.compareDocumentPosition(screen.getByText('my-model')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  test('Should render the invalid badge for an invalid status', () => {
-    render(<HeaderIdBlock id="my-model" metadata={{ status: DialModelResourceStatus.Invalid }} />);
-
-    expect(screen.getByText(StatusBadgeI18nKey.Invalid)).toBeInTheDocument();
-  });
-
-  test('Should render only the id, with no placeholder, when there is no status', () => {
-    const { container } = render(<HeaderIdBlock id="my-app" metadata={{}} />);
+  test('Should keep the row collapsible so it takes no space when no badge renders', () => {
+    const { container } = render(<HeaderIdBlock id="my-app" statusBadges={null} />);
 
     expect(screen.getByText('my-app')).toBeInTheDocument();
-    expect(screen.queryByText(StatusBadgeI18nKey.Valid)).not.toBeInTheDocument();
-    expect(screen.queryByText(StatusBadgeI18nKey.Invalid)).not.toBeInTheDocument();
-    expect(container.firstChild).toHaveClass('gap-0.5');
+    const row = container.firstElementChild?.firstElementChild;
+    expect(row).toBeEmptyDOMElement();
+    expect(row).toHaveClass('empty:hidden');
   });
 
-  test('Should render the sync slot before the id', () => {
-    render(
-      <HeaderIdBlock id="my-model" metadata={undefined}>
-        <span>sync-slot</span>
-      </HeaderIdBlock>,
-    );
+  test('Should render the id with no row content when no badges are passed', () => {
+    const { container } = render(<HeaderIdBlock id="my-app" />);
 
-    const slot = screen.getByText('sync-slot');
-    const id = screen.getByText('my-model');
-    expect(slot.compareDocumentPosition(id) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.firstElementChild?.firstElementChild).toBeEmptyDOMElement();
   });
 });

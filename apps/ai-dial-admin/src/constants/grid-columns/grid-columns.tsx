@@ -150,6 +150,7 @@ import {
   getRunDurationMs,
   resolveRunTarget,
 } from '@/src/components/Runs/utils/run-list-values';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import { Metric } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
 import { getMetricOutputTags } from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
@@ -179,7 +180,7 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
 
 // A pricing rate is flat-or-tree: a flat rate keeps its stored string as before, while a tree renders
 // as the readable conditional with per-million leaves under the token unit.
-const getPricingRateTooltip = (
+const getPricingRate = (
   rate: PricingRate | undefined,
   unit: string | undefined,
   t: (str: string) => string,
@@ -201,42 +202,30 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'limits.maxTotalTokens',
     headerName: 'Interaction limit',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.limits?.maxTotalTokens,
   },
   {
     field: 'pricing.prompt',
     headerName: 'Prompt price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) => getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.prompt, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.completion',
     headerName: 'Completion price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.completion, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.cacheRead',
     headerName: 'Cache read price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.cacheWrite',
     headerName: 'Cache write price',
     hide: true,
-    valueFormatter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t) ?? '',
-    tooltipValueGetter: (params) =>
-      getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t),
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t) ?? '',
   },
 ];
 
@@ -363,7 +352,6 @@ export const ACTIVITY_AUDIT_COLUMNS = (
           field: RESOURCE_TYPE_COLUMN,
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
-          tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
           ...getEnumFilter(
             view,
             ANALYTICS_AUDIT_RESOURCE_TYPES.map((type) => ({ value: type, label: getFormattedResourceType(type, t) })),
@@ -1341,7 +1329,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     field: 'createdBy',
     headerName: 'Created By',
     hide: false,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     field: 'method',
@@ -1360,6 +1348,13 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     valueGetter: (params) => params.data?.endpointRef?.relativeUrlPattern || '',
   },
 ];
+
+const DATASET_TEST_SUITES_HIDDEN_COL_IDS = ['method', 'url'];
+
+/** The test suites list's columns minus the two it hides by default; the dataset's tab shows only the rest. */
+export const DATASET_TEST_SUITES_COLUMN: ColDef[] = TEST_SUITES_COLUMN.filter(
+  (col) => !DATASET_TEST_SUITES_HIDDEN_COL_IDS.includes(col.field ?? ''),
+);
 
 export const DATASETS_COLUMN: ColDef[] = [
   {
@@ -1526,18 +1521,28 @@ export const SUITE_RUNS_COLUMN: ColDef[] = RUNS_COLUMN.filter(
 ).map((col) => (SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS.includes(col.colId ?? '') ? { ...col, hide: true } : col));
 
 const COMPARE_RUN_PICKER_COL_IDS = [
-  'status',
   'testRunName',
-  'runConfig.numberOfRuns',
   'numberOfTestCases',
+  'testSuiteId',
+  'metrics',
   'startedAt',
   'completedAt',
+  'duration',
+  'cost',
 ];
 
-/** The compare picker exists to identify a run, so it carries only the identifying columns. */
-export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = RUNS_COLUMN.filter((col) =>
-  COMPARE_RUN_PICKER_COL_IDS.includes(col.colId ?? ''),
-);
+/** The compare picker may span sibling suites, so it leads with the suite's name before the run's own columns. */
+export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = [
+  {
+    colId: 'testSuiteName',
+    headerName: 'Test Suite',
+    valueGetter: ({ data }) => (data as CompareCandidateRun).testSuiteName || (data as CompareCandidateRun).testSuiteId,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
+  },
+  ...COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) => RUNS_COLUMN.filter((col) => col.colId === colId)),
+];
 
 export const METRICS_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID', hide: false },

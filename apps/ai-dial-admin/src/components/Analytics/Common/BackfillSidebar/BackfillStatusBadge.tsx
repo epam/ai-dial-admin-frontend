@@ -1,7 +1,6 @@
 import { FC } from 'react';
 
-import classNames from 'classnames';
-
+import StatusPill from '@/src/components/Analytics/Common/StatusPill';
 import { BackfillI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BackfillStatus } from '@/src/models/analytics/backfill-ui';
@@ -34,17 +33,7 @@ const TONE: Record<BackfillStatus, string> = {
 const BackfillStatusBadge: FC<Props> = ({ status, className }) => {
   const t = useI18n();
 
-  return (
-    <span
-      className={classNames(
-        'inline-flex items-center py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
-        TONE[status],
-        className,
-      )}
-    >
-      {t(LABEL[status])}
-    </span>
-  );
+  return <StatusPill label={t(LABEL[status])} toneClassName={TONE[status]} className={className} />;
 };
 
 export default BackfillStatusBadge;

@@ -5,14 +5,14 @@ import {
   RUN_COMPARE_PRIMARY_INDEX,
   RUN_COMPARE_SECONDARY_INDEX,
 } from '@/src/components/Runs/Compare/constants';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 
 export type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
 
 /**
- * One compared run, as the views see it. Views receive these already in display order and render by
- * iterating, so reordering the list is all a flip does. The slot is the run's identity (which data
- * it owns); the baseline is the run deltas are measured against, wherever it is displayed.
+ * One compared run, as the views see it. Views receive these in display order and render by iterating.
+ * The slot says which data the run owns; the primary slot is the baseline every delta is measured against,
+ * and it is always displayed first. Flipping swaps the runs between the slots.
  */
 export interface CompareRun {
   slot: CompareRunSlot;
@@ -20,6 +20,11 @@ export interface CompareRun {
   id: string;
   name: string;
   isBaseline: boolean;
+}
+
+/** A run offered in the compare picker, with the name of the suite it belongs to (suites differ across a dataset). */
+export interface CompareCandidateRun extends Run {
+  testSuiteName?: string;
 }
 
 export interface CompareRunSource {

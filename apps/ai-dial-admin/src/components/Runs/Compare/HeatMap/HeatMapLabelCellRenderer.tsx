@@ -4,7 +4,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
@@ -35,7 +35,7 @@ const HeatMapLabelCellRenderer: FC<HeatMapLabelCellRendererParams> = ({ data, ex
         ) : (
           <IconChevronRight size={16} className="shrink-0" />
         )}
-        <DialEllipsisTooltip text={data.label} contentClassName="truncate" className="min-w-0 flex-1" />
+        <EllipsisTooltip text={data.label} contentClassName="truncate" className="min-w-0 flex-1" />
       </button>
     );
   }
@@ -46,7 +46,7 @@ const HeatMapLabelCellRenderer: FC<HeatMapLabelCellRendererParams> = ({ data, ex
   return (
     <div className="flex items-center gap-2 pl-9 h-full min-w-0 text-primary dial-small-text font-light">
       {data.runIndex != null && <CompareRunIndexBadge runIndex={runIndex} />}
-      <DialEllipsisTooltip text={data.label} contentClassName="truncate" className="min-w-0 flex-1" />
+      <EllipsisTooltip text={data.label} contentClassName="truncate" className="min-w-0 flex-1" />
     </div>
   );
 };

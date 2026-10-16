@@ -60,7 +60,7 @@ describe('UsageDashboard', () => {
     expect(screen.getByRole('heading', { name: MenuI18nKey.Dashboard })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.DonutTitle })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.HeatmapTitle })).toBeTruthy();
-    expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.BreakdownTitle })).toBeTruthy();
+    expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.BreakdownTitleTop })).toBeTruthy();
 
     await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
   });

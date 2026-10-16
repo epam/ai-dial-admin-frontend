@@ -52,6 +52,8 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   jsonConfiguration,
   children,
   isChanged,
+  isSaving,
+  isSaveDisabled,
   onDiscard,
   onSave,
   onRemove,
@@ -133,6 +135,8 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
             isEditorEnabled={isEditorEnabled}
             isAddedVersion={isVersionlessView ? undefined : isAddedVersion}
             isVersionlessView={isVersionlessView}
+            isSaving={isSaving}
+            isSaveDisabled={isSaveDisabled}
             onSave={onTryToSave}
             entityName={entity.name}
           />

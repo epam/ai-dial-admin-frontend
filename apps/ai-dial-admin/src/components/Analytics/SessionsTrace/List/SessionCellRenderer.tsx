@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
@@ -21,10 +21,10 @@ const SessionCellRenderer: FC<ICellRendererParams<SessionRow>> = ({ data }) => {
   return (
     <div className="flex flex-col justify-center h-full min-w-0">
       <span className="text-primary dial-small-semi-text">
-        {title ? <DialEllipsisTooltip text={title} /> : UNAVAILABLE_VALUE}
+        {title ? <EllipsisTooltip text={title} /> : UNAVAILABLE_VALUE}
       </span>
       <span className="text-secondary dial-tiny-text">
-        <DialEllipsisTooltip text={data.client_session_id} />
+        <EllipsisTooltip text={data.client_session_id} />
       </span>
     </div>
   );

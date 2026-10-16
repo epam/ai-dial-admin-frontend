@@ -144,8 +144,6 @@ const CompareRowDetailPanel: FC<Props> = ({
     return buildRowDetailSections(primaryDetail, comparedDetail, metricGroupOrder, fieldSchema);
   }, [primaryDetail, comparedDetail, metricGroupOrder, fieldSchema]);
 
-  const counts = useMemo(() => countRowDetailDiffs(sections), [sections]);
-
   useEffect(() => {
     if (sections.length === 0) {
       return;
@@ -161,6 +159,7 @@ const CompareRowDetailPanel: FC<Props> = ({
   }, [displayTree, onDisplayTreeChange]);
 
   const displaySections = useMemo(() => applyRowDetailDisplayTree(sections, displayTree), [sections, displayTree]);
+  const counts = useMemo(() => countRowDetailDiffs(displaySections), [displaySections]);
 
   const onToggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
   const onCloseDisplayPanel = useCallback(() => setShowDisplayPanel(false), []);

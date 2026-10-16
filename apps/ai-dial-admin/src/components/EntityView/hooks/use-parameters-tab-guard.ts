@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   VisualizerConnectorEvents,
@@ -10,6 +10,8 @@ import {
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import { PENDING_SAVE_TIMEOUT_MS } from '@/src/components/FrameRenderer/constants';
+import { FrameRendererHandle } from '@/src/components/FrameRenderer/models';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -21,6 +23,8 @@ interface Props {
   onSaveEntity: () => void;
   onDiscardEntity: () => void;
   onSetActiveTab: (tab: EntityViewTab) => void;
+  onIframeSaveSuccess?: () => void;
+  onIframeSaveError?: (message?: string) => void;
 }
 
 export const useParametersTabGuard = ({
@@ -30,11 +34,21 @@ export const useParametersTabGuard = ({
   onSaveEntity,
   onDiscardEntity,
   onSetActiveTab,
+  onIframeSaveSuccess,
+  onIframeSaveError,
 }: Props) => {
   const [nextTab, setNextTab] = useState<EntityViewTab>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
   const [isIframeChanged, setIsIframeChanged] = useState(false);
+  const [isIframeDirty, setIsIframeDirty] = useState(false);
+  const [isIframeValid, setIsIframeValid] = useState(true);
+  const [isIframeSaving, setIsIframeSaving] = useState(false);
+
+  const frameRef = useRef<FrameRendererHandle>(null);
+  const isIframeSavingRef = useRef(false);
+  const isSwitchAfterSaveRef = useRef(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const onModalOpen = useCallback((type: ModalType) => {
     setModalType(type);
@@ -53,6 +67,36 @@ export const useParametersTabGuard = ({
     }
   }, [nextTab, onSetActiveTab]);
 
+  const onFinishIframeSave = useCallback(() => {
+    clearTimeout(saveTimeoutRef.current);
+    isIframeSavingRef.current = false;
+    setIsIframeSaving(false);
+  }, []);
+
+  const onIframeSaveFailed = useCallback(
+    (message?: string) => {
+      if (!isIframeSavingRef.current) return;
+
+      onFinishIframeSave();
+      isSwitchAfterSaveRef.current = false;
+      onIframeSaveError?.(message);
+    },
+    [onFinishIframeSave, onIframeSaveError],
+  );
+
+  const onSaveIframe = useCallback(() => {
+    if (!isIframeValid) return;
+
+    isIframeSavingRef.current = true;
+    setIsIframeSaving(true);
+    frameRef.current?.triggerSave();
+    saveTimeoutRef.current = setTimeout(() => onIframeSaveFailed(), PENDING_SAVE_TIMEOUT_MS);
+  }, [isIframeValid, onIframeSaveFailed]);
+
+  const onDiscardIframe = useCallback(() => {
+    frameRef.current?.reset();
+  }, []);
+
   const onSendSaveParametersMessage = useCallback(() => {
     const messagePayload: DialAttachmentData = {
       mimeType: APPLICATION_JSON_TYPE,
@@ -64,6 +108,19 @@ export const useParametersTabGuard = ({
 
     visualizerConnector?.send(VisualizerConnectorRequests.sendVisualizeData, messagePayload);
   }, [visualizerConnector]);
+
+  const onIframeSaved = useCallback(() => {
+    if (!isIframeSavingRef.current) return;
+
+    onFinishIframeSave();
+    setIsIframeDirty(false);
+    onIframeSaveSuccess?.();
+
+    if (isSwitchAfterSaveRef.current) {
+      isSwitchAfterSaveRef.current = false;
+      onChangeTab();
+    }
+  }, [onChangeTab, onFinishIframeSave, onIframeSaveSuccess]);
 
   const onModalCancel = useCallback(
     (type: ModalType) => {
@@ -87,7 +144,15 @@ export const useParametersTabGuard = ({
         onModalClose();
         onChangeTab();
       }
-      if (type === ModalType.parameters) {
+      if (type === ModalType.parameters && isIframeDirty) {
+        onModalClose();
+        if (isIframeValid) {
+          isSwitchAfterSaveRef.current = true;
+          onSaveIframe();
+        } else {
+          onIframeSaveError?.();
+        }
+      } else if (type === ModalType.parameters) {
         onSendSaveParametersMessage();
         onModalClose();
         // wait for iframe save before switching tabs
@@ -96,7 +161,16 @@ export const useParametersTabGuard = ({
         }, 2000);
       }
     },
-    [onChangeTab, onModalClose, onSaveEntity, onSendSaveParametersMessage],
+    [
+      isIframeDirty,
+      isIframeValid,
+      onChangeTab,
+      onIframeSaveError,
+      onModalClose,
+      onSaveEntity,
+      onSaveIframe,
+      onSendSaveParametersMessage,
+    ],
   );
 
   const onChangeActiveTab = useCallback(
@@ -104,14 +178,14 @@ export const useParametersTabGuard = ({
       if (tab === EntityViewTab.Parameters && isChanged) {
         setNextTab(tab);
         onModalOpen(ModalType.entity);
-      } else if (activeTab === EntityViewTab.Parameters && (isIframeChanged || isChanged)) {
+      } else if (activeTab === EntityViewTab.Parameters && (isIframeChanged || isIframeDirty || isChanged)) {
         setNextTab(tab);
         onModalOpen(ModalType.parameters);
       } else {
         onSetActiveTab(tab);
       }
     },
-    [activeTab, isChanged, isIframeChanged, onModalOpen, onSetActiveTab],
+    [activeTab, isChanged, isIframeChanged, isIframeDirty, onModalOpen, onSetActiveTab],
   );
 
   const onMessage = useCallback((event: MessageEvent<VisualizerConnectorRequest>) => {
@@ -125,7 +199,19 @@ export const useParametersTabGuard = ({
     return () => window.removeEventListener('message', onMessage);
   }, [onMessage]);
 
+  useEffect(() => () => clearTimeout(saveTimeoutRef.current), []);
+
   return {
+    frameRef,
+    isIframeDirty,
+    isIframeSaving,
+    isIframeValid,
+    onFrameDirtyChange: setIsIframeDirty,
+    onFrameValidityChange: setIsIframeValid,
+    onFrameSaveSuccess: onIframeSaved,
+    onFrameSaveError: onIframeSaveFailed,
+    onSaveIframe,
+    onDiscardIframe,
     isModalOpen,
     modalType,
     onModalOpen,

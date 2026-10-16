@@ -54,3 +54,8 @@ export interface SchemaConstraintViolation {
   /** The length for the length rules, the pattern source for `pattern`. */
   limit: number | string;
 }
+
+export interface SchemaTreeSelectResult {
+  expression: string;
+  type: string;
+}

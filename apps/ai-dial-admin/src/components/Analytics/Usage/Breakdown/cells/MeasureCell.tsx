@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 
 import DeltaValue from '@/src/components/Analytics/Usage/Delta/DeltaValue';
 import { BreakdownDeltas, BreakdownRowModel, KpiMetric } from '@/src/components/Analytics/Usage/models';
@@ -73,7 +73,7 @@ const MeasureCell: FC<ICellRendererParams<BreakdownRowModel> & MeasureCellParams
           <span className="dial-tiny-text text-secondary">{t(AnalyticsUsageI18nKey.RowIsNew)}</span>
         )}
       </span>
-      {exact && value ? <DialTooltip tooltip={exact}>{figure}</DialTooltip> : figure}
+      {exact && value ? <Tooltip tooltip={exact}>{figure}</Tooltip> : figure}
     </span>
   );
 };

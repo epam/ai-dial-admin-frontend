@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, Ref, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -18,6 +18,7 @@ import {
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
+import { FrameCallbacks, FrameRendererHandle } from '@/src/components/FrameRenderer/models';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -41,6 +42,8 @@ interface Props {
   view?: ApplicationRoute;
   isChanged?: boolean;
   discardKey?: number;
+  frameRef?: Ref<FrameRendererHandle>;
+  frameCallbacks?: FrameCallbacks;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   onSave?: () => void;
@@ -55,6 +58,8 @@ const ParametersTab: FC<Props> = ({
   view,
   isChanged,
   discardKey,
+  frameRef,
+  frameCallbacks,
   onSave,
   setIsChanged,
   setSelectedApplication,
@@ -241,6 +246,8 @@ const ParametersTab: FC<Props> = ({
             )}
             {paramsView === ParamsView.UI && (
               <FrameRenderer
+                {...frameCallbacks}
+                ref={frameRef}
                 iframeUrl={targetUrl?.href ?? ''}
                 name={frameConfig?.name}
                 isJsonEditorEnabled={isEditorEnabled}

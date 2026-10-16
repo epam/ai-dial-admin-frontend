@@ -67,8 +67,9 @@ const COMPARED_SCORES: MetricScoresData = {
   },
 };
 
-const Controlled: FC<{ isFlipped?: boolean }> = ({ isFlipped = false }) => {
-  const runs = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }, isFlipped);
+const Controlled: FC<{ isReversed?: boolean }> = ({ isReversed = false }) => {
+  const orderedRuns = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
+  const runs = isReversed ? orderedRuns.reverse() : orderedRuns;
   const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
   return (
     <DistributionSection
@@ -118,8 +119,8 @@ describe('Compare Summary :: DistributionSection', () => {
     expect(avgCard).toHaveTextContent('delta:-0.5');
   });
 
-  test('lists the compared run first when flipped, keeping the delta measured against the baseline', async () => {
-    render(<Controlled isFlipped />);
+  test('lists the compared run first when displayed in reverse, keeping the delta measured against the baseline', async () => {
+    render(<Controlled isReversed />);
 
     fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
       target: { value: 'ragas.context_recall' },

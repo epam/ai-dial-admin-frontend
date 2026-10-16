@@ -71,11 +71,7 @@ const TryOutResponseBody: FC<{
         <DialLoader />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
-          <JsonEditor
-            entity={response?.body as object}
-            options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
-            readonly={true}
-          />
+          <JsonEditor entity={response?.body as object} options={{ wordWrap: 'off' }} readonly={true} />
         </div>
       )}
     </CollapsibleSection>

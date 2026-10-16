@@ -14,12 +14,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialEllipsisTooltip: ({ text, className }: { text: ReactNode; className?: string }) => (
+    EllipsisTooltip: ({ text, className }: { text: ReactNode; className?: string }) => (
       <span data-testid="ellipsis-tooltip" className={className}>
         {text}
       </span>
     ),
-    DialTooltip: ({
+    Tooltip: ({
       children,
       tooltip,
       hideTooltip,
@@ -56,7 +56,7 @@ const createHeaderParams = (width: number, overrides: HeaderParamOverrides = {})
   }) as unknown as HeatMapAxisHeaderProps;
 
 describe('HeatMapAxisHeader', () => {
-  test('renders horizontal header label via DialEllipsisTooltip when column is wide enough', () => {
+  test('renders horizontal header label via EllipsisTooltip when column is wide enough', () => {
     const { container } = render(<HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH)} />);
 
     expect(screen.getByTestId('ellipsis-tooltip')).toHaveTextContent('Row 001');
@@ -64,7 +64,7 @@ describe('HeatMapAxisHeader', () => {
     expect(container.firstChild).not.toHaveStyle({ paddingBottom: '4px' });
   });
 
-  test('renders vertical header label wrapped in DialTooltip when column is too narrow', () => {
+  test('renders vertical header label wrapped in Tooltip when column is too narrow', () => {
     const { container } = render(
       <HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH - 1)} />,
     );
@@ -80,7 +80,7 @@ describe('HeatMapAxisHeader', () => {
     expect(container.firstChild).toHaveStyle({ paddingTop: '4px', paddingBottom: '4px' });
   });
 
-  test('hides vertical DialTooltip when label fits the header height', () => {
+  test('hides vertical Tooltip when label fits the header height', () => {
     const label = 'Row 001';
     const headerHeight = measureVerticalHeatMapHeaderLabelHeight(label) + HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING;
 

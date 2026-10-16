@@ -193,12 +193,12 @@ describe('Tables server actions', () => {
   });
 
   describe('table backfill', () => {
-    test('startTableBackfill passes the dates and the token to the client', async () => {
+    test('startTableBackfill passes the dates, the re-ingest choice and the token to the client', async () => {
       (analyticsDataApi.startTableBackfill as any).mockResolvedValue({ success: true });
 
-      await startTableBackfill('2026-09-01', '2026-09-30');
+      await startTableBackfill('2026-09-01', '2026-09-30', true);
 
-      expect(analyticsDataApi.startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30', TOKEN_MOCK);
+      expect(analyticsDataApi.startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30', true, TOKEN_MOCK);
     });
 
     test('startTableBackfill carries a refusal through untouched', async () => {
@@ -208,7 +208,7 @@ describe('Tables server actions', () => {
         errorMessage: 'A run is in progress',
       });
 
-      const res = await startTableBackfill('2026-09-01', '2026-09-30');
+      const res = await startTableBackfill('2026-09-01', '2026-09-30', false);
 
       expect(res).toEqual({ success: false, errorHeader: 'backfill_conflict', errorMessage: 'A run is in progress' });
     });

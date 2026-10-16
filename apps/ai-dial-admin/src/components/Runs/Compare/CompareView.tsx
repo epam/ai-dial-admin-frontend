@@ -19,11 +19,11 @@ import { CompareRunSlot, CompareViewTab } from '@/src/components/Runs/Compare/co
 import HeatMapToolbar from '@/src/components/Runs/Compare/HeatMap/HeatMapToolbar';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { resolveMetricGroupsSelection } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-metric-selection';
-import { swapComparePairColumnState } from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-state';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
 import { useCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
 import {
-  fetchSuiteCompletedRuns,
+  fetchCompareCandidateRuns,
   getCompareRunsUrn,
   getCompareViewTabs,
   getCompareRuns,
@@ -62,10 +62,10 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
-  const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
+  const [suiteRuns, setSuiteRuns] = useState<CompareCandidateRun[]>([]);
+  const [runNames, setRunNames] = useState<Record<string, string>>({});
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
-  const [isFlipped, setIsFlipped] = useState(false);
   const [activeTab, setActiveTab] = useState(CompareViewTab.SummaryOverview);
   const [onlyMatchingTestCases, setOnlyMatchingTestCases] = useState(false);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
@@ -114,19 +114,19 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     if (!selectRunSlot) return null;
 
     return {
-      runs: getSelectableCompareRuns(suiteRuns, selectRunSlot, run?.id, comparedRunId),
-      selectedRunId: selectRunSlot === CompareRunSlot.Primary ? run?.id : comparedRunId,
+      runs: getSelectableCompareRuns(suiteRuns, selectRunSlot, primaryRunId, comparedRunId),
+      selectedRunId: selectRunSlot === CompareRunSlot.Primary ? primaryRunId : comparedRunId,
     };
-  }, [selectRunSlot, suiteRuns, run?.id, comparedRunId]);
+  }, [selectRunSlot, suiteRuns, primaryRunId, comparedRunId]);
 
   const isPrimaryEditDisabled = useMemo(
-    () => getSelectableCompareRuns(suiteRuns, CompareRunSlot.Primary, run?.id, comparedRunId).length <= 1,
-    [suiteRuns, run?.id, comparedRunId],
+    () => getSelectableCompareRuns(suiteRuns, CompareRunSlot.Primary, primaryRunId, comparedRunId).length <= 1,
+    [suiteRuns, primaryRunId, comparedRunId],
   );
 
   const isSecondaryEditDisabled = useMemo(
-    () => getSelectableCompareRuns(suiteRuns, CompareRunSlot.Secondary, run?.id, comparedRunId).length <= 1,
-    [suiteRuns, run?.id, comparedRunId],
+    () => getSelectableCompareRuns(suiteRuns, CompareRunSlot.Secondary, primaryRunId, comparedRunId).length <= 1,
+    [suiteRuns, primaryRunId, comparedRunId],
   );
 
   useEffect(() => {
@@ -160,22 +160,28 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   useEffect(() => {
     if (!run?.testSuiteId) return;
 
-    fetchSuiteCompletedRuns(run.testSuiteId).then((runs) => {
+    fetchCompareCandidateRuns(run.testSuiteId).then((runs) => {
       setSuiteRuns(runs);
     });
   }, [run?.testSuiteId]);
 
-  const primaryRunName = run?.testRunName || primaryRunId;
-  const comparedRun = suiteRuns.find((suiteRun) => suiteRun.id === comparedRunId);
-  const comparedRunName = comparedRun?.testRunName || comparedRunId;
+  // Names learned from either source are kept by id, so a run keeps its name when it changes slot
+  // (flip) while the run being loaded for its slot is still pending. Until a name is known the id shows.
+  useEffect(() => {
+    const namedRuns = [...(run ? [run] : []), ...suiteRuns].filter((item) => item.testRunName);
+    if (namedRuns.length === 0) return;
+
+    setRunNames((current) => ({
+      ...current,
+      ...Object.fromEntries(namedRuns.map((item) => [item.id, item.testRunName])),
+    }));
+  }, [run, suiteRuns]);
+
+  const primaryRunName = runNames[primaryRunId] || primaryRunId;
+  const comparedRunName = runNames[comparedRunId] || comparedRunId;
   const runs = useMemo(
-    () =>
-      getCompareRuns(
-        { id: primaryRunId, name: primaryRunName },
-        { id: comparedRunId, name: comparedRunName },
-        isFlipped,
-      ),
-    [primaryRunId, primaryRunName, comparedRunId, comparedRunName, isFlipped],
+    () => getCompareRuns({ id: primaryRunId, name: primaryRunName }, { id: comparedRunId, name: comparedRunName }),
+    [primaryRunId, primaryRunName, comparedRunId, comparedRunName],
   );
   const isEditDisabledBySlot: Record<CompareRunSlot, boolean> = {
     [CompareRunSlot.Primary]: isPrimaryEditDisabled,
@@ -185,39 +191,34 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const openSelectRun = (slot: CompareRunSlot) => setSelectRunSlot(slot);
   const closeSelectRun = () => setSelectRunSlot(null);
 
+  const applyRunPair = useCallback(
+    (newPrimary: string, newSecondary: string) => {
+      setPrimaryRunId(newPrimary);
+      setComparedRunId(newSecondary);
+      router.replace(getCompareRunsUrn(newPrimary, newSecondary), { scroll: false });
+    },
+    [router],
+  );
+
   const onApplySelectRun = useCallback(
     (selectedRunId: string) => {
       if (!selectRunSlot) return;
 
-      let newPrimary = primaryRunId;
-      let newSecondary = comparedRunId;
-
       if (selectRunSlot === CompareRunSlot.Primary) {
-        newPrimary = selectedRunId;
-        if (selectedRunId === comparedRunId) {
-          newSecondary = primaryRunId;
-          setComparedRunId(newSecondary);
-        }
-        setPrimaryRunId(newPrimary);
+        const isSwap = selectedRunId === comparedRunId;
+        applyRunPair(selectedRunId, isSwap ? primaryRunId : comparedRunId);
       } else {
-        newSecondary = selectedRunId;
-        setComparedRunId(newSecondary);
+        applyRunPair(primaryRunId, selectedRunId);
       }
 
-      router.replace(getCompareRunsUrn(newPrimary, newSecondary), { scroll: false });
       setSelectRunSlot(null);
     },
-    [selectRunSlot, comparedRunId, primaryRunId, router],
+    [selectRunSlot, comparedRunId, primaryRunId, applyRunPair],
   );
 
   const onFlipRuns = useCallback(() => {
-    setIsFlipped((prev) => !prev);
-
-    const { columnState } = tabState.executionResults;
-    if (columnState) {
-      setExecutionResultsState({ columnState: swapComparePairColumnState(columnState) });
-    }
-  }, [tabState.executionResults, setExecutionResultsState]);
+    applyRunPair(comparedRunId, primaryRunId);
+  }, [applyRunPair, comparedRunId, primaryRunId]);
 
   const onChangeActiveTab = useCallback((tab: string) => {
     setActiveTab(tab as CompareViewTab);
@@ -411,13 +412,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
                   onClick={onFlipRuns}
                 />
               )}
-              {(compareRun.slot !== CompareRunSlot.Primary || run) && (
-                <CompareRunTag
-                  run={compareRun}
-                  onEdit={() => openSelectRun(compareRun.slot)}
-                  isEditDisabled={isEditDisabledBySlot[compareRun.slot]}
-                />
-              )}
+              <CompareRunTag
+                run={compareRun}
+                onEdit={() => openSelectRun(compareRun.slot)}
+                isEditDisabled={isEditDisabledBySlot[compareRun.slot]}
+              />
             </Fragment>
           ))}
         </div>

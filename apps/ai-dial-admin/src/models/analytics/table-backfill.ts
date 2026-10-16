@@ -11,8 +11,8 @@ export enum TableBackfillState {
 }
 
 /**
- * Two inclusive UTC dates, `yyyy-MM-dd`. `includeIngested` is always sent as `false`: the console never
- * re-ingests what the service already holds.
+ * Two inclusive UTC dates, `yyyy-MM-dd`. `includeIngested: true` re-ingests every log in the range, recorded or
+ * not, and the re-written rows re-trigger whatever reads the source tables; `false` writes only what is missing.
  */
 export interface TableBackfillRequest {
   from: string;
@@ -29,7 +29,7 @@ export interface TableBackfillStart {
 
 /**
  * Members the service has nothing for are left out of the body, not sent as null; `failedDates` is absent,
- * not empty, when no day failed.
+ * not empty, when no day failed. It does not say whether the run re-ingested, so a re-run cannot inherit that.
  */
 export interface TableBackfillRun {
   runId: string;

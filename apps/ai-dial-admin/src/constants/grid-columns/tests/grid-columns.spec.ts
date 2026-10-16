@@ -10,6 +10,9 @@ import {
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
   APPLICATIONS_COLUMNS,
+  TOOLSETS_COLUMNS,
+  INTERCEPTORS_COLUMNS,
+  ROUTES_COLUMNS,
   ACTIVITY_AUDIT_COLUMNS,
   IMAGE_DEPENDENCIES_COLUMNS,
   IMAGES_LIST_COLUMNS,
@@ -55,7 +58,7 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
   });
 
-  test('MODELS_COLUMNS format pricing rate cells and tooltips consistently', () => {
+  test('MODELS_COLUMNS format pricing rate cells and leave the tooltip to the cell renderer', () => {
     const t = (s: string) => s;
     const cols = MODELS_COLUMNS(t);
     const promptColumn = cols.find((c) => c.field === 'pricing.prompt')!;
@@ -69,12 +72,8 @@ describe('Constants :: grid columns', () => {
       }
       return valueFormatter({ data: { pricing } } as never);
     };
-    const tooltip = (column: ColDef, pricing: Record<string, unknown>) =>
-      column.tooltipValueGetter!({ data: { pricing } } as never);
-
     const flatCacheRead = { unit: 'token', cacheRead: '0.0000002' };
     expect(value(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
-    expect(tooltip(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
 
     const tree = {
       test: { field: 'ttl', operator: '==', value: '1h' },
@@ -91,10 +90,24 @@ describe('Constants :: grid columns', () => {
     expect(value(cacheReadColumn, cacheReadPricing)).toBe('ttl == 1h ? 6 : 3.75');
     expect(value(cacheWriteColumn, cacheWritePricing)).toBe('ttl == 1h ? 6 : 3.75');
 
-    expect(tooltip(promptColumn, promptPricing)).toBe(value(promptColumn, promptPricing));
-    expect(tooltip(completionColumn, completionPricing)).toBe(value(completionColumn, completionPricing));
-    expect(tooltip(cacheReadColumn, cacheReadPricing)).toBe(value(cacheReadColumn, cacheReadPricing));
-    expect(tooltip(cacheWriteColumn, cacheWritePricing)).toBe(value(cacheWriteColumn, cacheWritePricing));
+    [promptColumn, completionColumn, cacheReadColumn, cacheWriteColumn].forEach((column) => {
+      expect(column.tooltipValueGetter).toBeUndefined();
+    });
+  });
+
+  test('entity list columns never repeat their cell text in an AG Grid tooltip', () => {
+    const t = (s: string) => s;
+    const entityColumns = [
+      ...MODELS_COLUMNS(t),
+      ...APPLICATIONS_COLUMNS(t),
+      ...TOOLSETS_COLUMNS(t),
+      ...INTERCEPTORS_COLUMNS(t),
+      ...ROUTES_COLUMNS,
+    ];
+
+    entityColumns.forEach((column) => {
+      expect(column.tooltipValueGetter).toBeUndefined();
+    });
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {
@@ -548,6 +561,16 @@ describe('Constants :: grid columns', () => {
     expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
   });
 
+  test('Created By offers Equals, Does not equal, and Contains', () => {
+    const createdBy = TEST_SUITES_COLUMN.find((c) => c.field === 'createdBy');
+
+    expect((createdBy?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
     expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
@@ -726,14 +749,25 @@ describe('SUITE_RUNS_COLUMN', () => {
 });
 
 describe('COMPARE_RUN_PICKER_COLUMN', () => {
-  test('carries only the columns that identify a run, leaving out the mock-backed ones', () => {
+  test('carries exactly the requested columns, in the requested order', () => {
     expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
-      'status',
+      'testSuiteName',
       'testRunName',
-      'runConfig.numberOfRuns',
       'numberOfTestCases',
+      'testSuiteId',
+      'metrics',
       'startedAt',
       'completedAt',
+      'duration',
+      'cost',
     ]);
+  });
+
+  test('names the suite of each run, falling back to its id', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'testSuiteName');
+    const getValue = (data: object) => (column?.valueGetter as (params: { data: object }) => unknown)({ data });
+
+    expect(getValue({ testSuiteId: 'suite-1', testSuiteName: 'Suite One' })).toBe('Suite One');
+    expect(getValue({ testSuiteId: 'suite-1' })).toBe('suite-1');
   });
 });

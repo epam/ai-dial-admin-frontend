@@ -1,6 +1,6 @@
 'use client';
 
-import { DialTooltipContainer, DialTooltipContent, DialTooltipTrigger } from '@epam/ai-dial-ui-kit';
+import { TooltipContainer, TooltipContent, TooltipTrigger } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 
 export interface ClampedTextCellRendererParams extends ICellRendererParams {
@@ -16,8 +16,8 @@ const ClampedTextCellRenderer = ({ value, lines = 2 }: ClampedTextCellRendererPa
 
   return (
     <div className="flex size-full items-center overflow-hidden">
-      <DialTooltipContainer>
-        <DialTooltipTrigger asChild>
+      <TooltipContainer>
+        <TooltipTrigger asChild>
           <span
             className="w-full break-words leading-5"
             style={{
@@ -31,9 +31,9 @@ const ClampedTextCellRenderer = ({ value, lines = 2 }: ClampedTextCellRendererPa
           >
             {text}
           </span>
-        </DialTooltipTrigger>
-        <DialTooltipContent className="text-primary">{text}</DialTooltipContent>
-      </DialTooltipContainer>
+        </TooltipTrigger>
+        <TooltipContent className="text-primary">{text}</TooltipContent>
+      </TooltipContainer>
     </div>
   );
 };

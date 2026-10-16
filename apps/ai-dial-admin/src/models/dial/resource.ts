@@ -466,6 +466,8 @@ export interface DialToolsetResourceAuthSettings {
   api_key_header?: string;
   client_id?: string;
   client_secret?: string;
+  /** Read-only: Core returns the stored secret's trailing characters here and never `client_secret`. */
+  client_secret_hint?: string;
   redirect_uri?: string;
   authorization_endpoint?: string;
   code_challenge?: string;

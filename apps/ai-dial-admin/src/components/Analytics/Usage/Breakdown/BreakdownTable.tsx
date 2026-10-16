@@ -51,6 +51,7 @@ import {
   isFallbackRowPinnedLast,
   ROUTE_KIND_LABEL_KEY,
 } from '@/src/components/Analytics/Usage/utils/labels';
+import { SORTABLE_DIALOG_COLUMNS } from '@/src/components/Analytics/Usage/utils/dialog-sort';
 import { getRouteKind, getRowRouteOwner } from '@/src/components/Analytics/Usage/utils/routes';
 import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
@@ -341,6 +342,21 @@ const BreakdownTable: FC<Props> = ({
     return columns;
   }, [tab, isCostOffered, t]);
 
+  // The dialog reads the whole dimension, so its order can be the reader's: the backend takes it. The
+  // card stays the ranked head it is cut from. The dialog opens on cost where the rows carry it, and
+  // on calls where they do not, as an `initialSort` rather than a `sort`: AG Grid re-applies `sort`
+  // whenever the definitions change, which put the opening column back beside the reader's pick.
+  const dialogOpeningColumn = columnDefs.some((column) => column.colId === 'cost') ? 'cost' : 'calls';
+  const dialogColumnDefs = useMemo<ColDef<BreakdownRowModel>[]>(
+    () =>
+      columnDefs.map(({ sort: _cardSort, ...column }) => ({
+        ...column,
+        sortable: SORTABLE_DIALOG_COLUMNS.includes(column.colId ?? ''),
+        ...(column.colId === dialogOpeningColumn ? { initialSort: 'desc' as const } : {}),
+      })),
+    [columnDefs, dialogOpeningColumn],
+  );
+
   const columnLabel = t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]);
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, { dimension: columnLabel });
 
@@ -365,7 +381,9 @@ const BreakdownTable: FC<Props> = ({
 
   return (
     <DashboardCard
-      title={t(AnalyticsUsageI18nKey.BreakdownTitle)}
+      // The card holds the ranked head, cut at the same limit its request is; saying so keeps the
+      // head from being read as the whole dimension.
+      title={t(AnalyticsUsageI18nKey.BreakdownTitleTop, { count: String(rowLimit) })}
       subtitle={t(BREAKDOWN_TAB_DESCRIPTION_KEY[tab])}
       headerActions={
         /* Both controls act on the same table, so they sit together at the header's right edge,
@@ -399,7 +417,7 @@ const BreakdownTable: FC<Props> = ({
       >
         <BreakdownGrid
           rows={[]}
-          columnDefs={columnDefs}
+          columnDefs={dialogColumnDefs}
           isLoading={false}
           hasFailed={false}
           className="h-[70vh] px-6 pb-4"

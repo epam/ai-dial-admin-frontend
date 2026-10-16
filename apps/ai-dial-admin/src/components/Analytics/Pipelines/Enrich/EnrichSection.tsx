@@ -6,6 +6,8 @@ import { Input, RadioGroup, RadioGroupItem, RadioGroupOrientation } from '@epam/
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
+import { PREVIEW_SECTION_ANCHORS } from '@/src/components/Analytics/Pipelines/Preview/constants';
+import { PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import PipelineSharedFields from '@/src/components/Analytics/Pipelines/Common/PipelineSharedFields';
 import GroupByField from '@/src/components/Analytics/Pipelines/Enrich/GroupByField';
@@ -76,7 +78,10 @@ const EnrichSection: FC<Props> = ({ form }) => {
             onChange={(ready_when) => onTriggerChange({ ready_when })}
           />
 
-          <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionMemberSelect)}>
+          <PipelineSection
+            id={PREVIEW_SECTION_ANCHORS[PreviewSection.MemberSelection]}
+            title={t(AnalyticsPipelinesI18nKey.SectionMemberSelect)}
+          >
             <MemberSelectEditor
               memberSelect={trigger.member_select}
               fields={form.sourceFields}

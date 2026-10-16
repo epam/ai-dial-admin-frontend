@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import classNames from 'classnames';
-
+import StatusPill from '@/src/components/Analytics/Common/StatusPill';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TableStatus } from '@/src/models/analytics/table';
@@ -11,8 +10,7 @@ interface Props {
   className?: string;
 }
 
-// Modeled on Common/SyncCoreStatus/CoreSyncStatusBadge, minus its polling/etag/diff-modal machinery —
-// table status only changes on the user's own schema submission, so there's nothing to poll for.
+// Table status only changes on the user's own schema submission, so there's nothing to poll for.
 const TableStatusBadge: FC<Props> = ({ status, className }) => {
   const t = useI18n();
 
@@ -38,17 +36,7 @@ const TableStatusBadge: FC<Props> = ({ status, className }) => {
     return null;
   }
 
-  return (
-    <div
-      className={classNames(
-        'flex items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
-        badgeClassMapping[status],
-        className,
-      )}
-    >
-      <span>{textMapping[status]}</span>
-    </div>
-  );
+  return <StatusPill label={textMapping[status]} toneClassName={badgeClassMapping[status]} className={className} />;
 };
 
 export default TableStatusBadge;

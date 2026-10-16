@@ -63,6 +63,12 @@ describe('numericColumn alignment', () => {
   });
 });
 
+describe('dateTimeColumn tooltip', () => {
+  test('leaves the tooltip to the cell renderer so a cell shows only one', () => {
+    expect(dateTimeColumn.tooltipValueGetter).toBeUndefined();
+  });
+});
+
 describe('dateTimeColumn.filterValueGetter', () => {
   test('coerces millisecond timestamps to Date objects for agDateColumnFilter', () => {
     const result = callFilterValueGetter(dateTimeColumn, { startedAt: 1784186472371 }, 'startedAt');

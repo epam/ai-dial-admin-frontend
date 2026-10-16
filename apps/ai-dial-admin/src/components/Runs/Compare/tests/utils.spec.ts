@@ -1,7 +1,8 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CompareRunEdge, CompareRunSlot, CompareViewTab } from '../constants';
 import {
+  fetchCompareCandidateRuns,
   getCompareRunsPath,
   getCompareRunsUrn,
   getCompareViewTabs,
@@ -12,6 +13,22 @@ import {
   getCompareRuns,
 } from '../utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
+
+const getRunsQueryMock = vi.fn();
+const getTestSuiteMock = vi.fn();
+const getDatasetTestSuitesMock = vi.fn();
+
+vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  getRunsQuery: (...args: unknown[]) => getRunsQueryMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+  getTestSuite: (...args: unknown[]) => getTestSuiteMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
+  getDatasetTestSuites: (...args: unknown[]) => getDatasetTestSuitesMock(...args),
+}));
 
 describe('Runs Compare :: getSelectableCompareRuns', () => {
   const suiteRuns = [
@@ -67,14 +84,6 @@ describe('Runs Compare :: getCompareRuns', () => {
       { ...compared, slot: CompareRunSlot.Secondary, index: '2', isBaseline: false },
     ]);
   });
-
-  test('flipping only reverses the order: the primary run stays the baseline and keeps its index', () => {
-    const runs = getCompareRuns(primary, compared, true);
-
-    expect(runs.map((run) => run.id)).toEqual(['run-2', 'run-1']);
-    expect(runs.map((run) => run.isBaseline)).toEqual([false, true]);
-    expect(runs.map((run) => run.index)).toEqual(['2', '1']);
-  });
 });
 
 describe('Runs Compare :: getCompareRowResult / getCompareRunColId / getCompareRunEdge', () => {
@@ -94,5 +103,65 @@ describe('Runs Compare :: getCompareRowResult / getCompareRunColId / getCompareR
   test('the first position is the start of the pair, later ones the end', () => {
     expect(getCompareRunEdge(0)).toBe(CompareRunEdge.Start);
     expect(getCompareRunEdge(1)).toBe(CompareRunEdge.End);
+  });
+});
+
+describe('Runs Compare :: fetchCompareCandidateRuns', () => {
+  beforeEach(() => {
+    getRunsQueryMock.mockReset();
+    getTestSuiteMock.mockReset();
+    getDatasetTestSuitesMock.mockReset();
+    getRunsQueryMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
+      const suiteId = filters.find((filter) => filter.column === 'testSuiteId')?.value;
+      return Promise.resolve({ content: [{ id: `run-of-${suiteId}`, testSuiteId: suiteId }] });
+    });
+  });
+
+  test('lists the own suite first, then the other suites of the same dataset, each tagged with its suite name', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockResolvedValue({
+      response: [{ id: 'suite-2', name: 'Two' }, { id: 'suite-1', name: 'One' }, { name: 'no id' }],
+    });
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(runs.map(({ id, testSuiteName }) => [id, testSuiteName])).toEqual([
+      ['run-of-suite-1', 'One'],
+      ['run-of-suite-2', 'Two'],
+    ]);
+  });
+
+  test('only requests completed runs of each suite', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One' } });
+
+    await fetchCompareCandidateRuns('suite-1');
+
+    expect(getRunsQueryMock).toHaveBeenCalledWith(
+      0,
+      100,
+      [],
+      expect.arrayContaining([
+        expect.objectContaining({ column: 'testSuiteId', value: 'suite-1' }),
+        expect.objectContaining({ column: 'status', value: 'COMPLETED' }),
+      ]),
+    );
+  });
+
+  test('stays within the own suite when it has no dataset', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One' } });
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(getDatasetTestSuitesMock).not.toHaveBeenCalled();
+    expect(runs.map((run) => run.id)).toEqual(['run-of-suite-1']);
+  });
+
+  test('falls back to the own suite when the dataset lookup fails', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockRejectedValue(new Error('boom'));
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(runs.map(({ id, testSuiteName }) => [id, testSuiteName])).toEqual([['run-of-suite-1', 'One']]);
   });
 });
