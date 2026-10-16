@@ -16,10 +16,6 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuiteByName: (...args: unknown[]) => getTestSuiteByNameMock(...args),
 }));
 
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ isValid: true }),
-}));
-
 vi.mock('@/src/components/TestSuites/Properties/Properties', () => ({
   default: () => <div>Properties content</div>,
 }));
