@@ -5,6 +5,7 @@ import { FC } from 'react';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IHeaderParams } from 'ag-grid-community';
 
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import { getRoleLabelKey, getTypeLine } from '@/src/components/Analytics/Pipelines/Preview/utils/preview-columns';
 import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +28,7 @@ const PreviewColumnHeader: FC<Props> = ({ previewColumn }) => {
         contentClassName="truncate"
       />
       <div className="flex min-w-0 items-center gap-1.5 text-secondary dial-tiny-text">
-        {roleKey && <span className="shrink-0 rounded bg-layer-4 px-1.5 uppercase">{t(roleKey)}</span>}
+        {roleKey && <IdentityTag label={t(roleKey)} />}
         <span className="truncate">{getTypeLine(previewColumn)}</span>
         {previewColumn.max_bytes != null && (
           <span className="shrink-0">

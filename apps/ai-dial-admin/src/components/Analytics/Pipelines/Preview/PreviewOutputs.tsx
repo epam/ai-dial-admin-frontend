@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -50,11 +51,7 @@ const PreviewOutputs: FC<Props> = ({ pipeline, notes }) => {
             <li key={name} className="flex flex-col gap-0.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono dial-small-semi text-primary">{name}</span>
-                {undescribed.has(name) && (
-                  <span className="rounded bg-layer-4 px-1.5 uppercase text-secondary dial-tiny-text">
-                    {t(PipelinePreviewI18nKey.OutputNoDescription)}
-                  </span>
-                )}
+                {undescribed.has(name) && <IdentityTag label={t(PipelinePreviewI18nKey.OutputNoDescription)} />}
               </div>
               {prose && <span className="text-secondary dial-small-text">{prose}</span>}
             </li>

@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import classNames from 'classnames';
 
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 const TYPE_COLOR: Partial<Record<AnalyticsFieldType, string>> = {
@@ -25,16 +25,7 @@ interface Props {
 
 const TypeBadge: FC<Props> = ({ type }) => {
   if (!type) return null;
-  return (
-    <span
-      className={classNames(
-        'inline-block rounded bg-layer-4 px-2 py-0.5 font-semibold uppercase dial-tiny-text',
-        TYPE_COLOR[type as AnalyticsFieldType] ?? 'text-secondary',
-      )}
-    >
-      {type}
-    </span>
-  );
+  return <IdentityTag label={type} colorClassName={TYPE_COLOR[type as AnalyticsFieldType]} />;
 };
 
 export const TypeCellRenderer: FC<ICellRendererParams> = ({ value }) => <TypeBadge type={value as string} />;

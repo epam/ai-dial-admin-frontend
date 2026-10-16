@@ -71,6 +71,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
           params.data?.enum_values?.length ? params.data.enum_values.join(', ') : '',
         flex: 1,
       },
+      // Text, not a tag: it is free text an admin types, whose case and length a chip would not keep.
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
       // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
       { headerName: t(AnalyticsTablesI18nKey.DisplayName), field: 'display_name', flex: 2 },
