@@ -21,13 +21,21 @@ interface Props {
   entity: DialCatalogSchemaResource;
   names: string[];
   isUniqueNameError?: boolean;
+  externalIdError?: string;
   onChangeEntity: (entity: object) => void;
   /** False on the details view, where the `$id` is Core's resource name: shown, but read-only. */
   isModal?: boolean;
 }
 
 /** Shared by the create modal and the details-view Properties tab. */
-const CatalogSchemaCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, onChangeEntity, isModal }) => {
+const CatalogSchemaCreateProperties: FC<Props> = ({
+  entity,
+  names,
+  isUniqueNameError,
+  externalIdError,
+  onChangeEntity,
+  isModal,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
@@ -110,6 +118,7 @@ const CatalogSchemaCreateProperties: FC<Props> = ({ entity, names, isUniqueNameE
         isUrlId
         forbiddenChars={CORE_UNENCODABLE_ID_CHARS}
         isUniqueNameError={isUniqueNameError}
+        externalError={externalIdError}
         entity={{ name: entity.$id }}
         disabled={!isModal}
         isFullWidth={isModal}

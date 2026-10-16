@@ -121,13 +121,9 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
-    // A duplicate would reuse the `$id`, which Core rejects with a conflict.
-    case ApplicationRoute.PlatformCatalogSchemas:
-      return isReadOnlyAdmin
-        ? []
-        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     case ApplicationRoute.PlatformModels:
     case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
