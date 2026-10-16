@@ -363,6 +363,15 @@ describe('buildRouteMethodGroups', () => {
       { method: 'POST', relativeUrlPattern: '/search' },
     ]);
   });
+
+  test.each([undefined, null])('returns an empty options group when the route is %s', (route) => {
+    expect(buildRouteMethodGroups(route)).toEqual([
+      {
+        titleKey: TestSuitesI18nKey.Other,
+        options: [],
+      },
+    ]);
+  });
 });
 
 describe('getDefaultRequestTemplateFor', () => {
@@ -453,5 +462,12 @@ describe('getDefaultRouteRequestTemplateFor', () => {
 
   test('returns undefined for an incomplete route endpoint', () => {
     expect(getDefaultRouteRequestTemplateFor({ name: 'search' }, undefined)).toBeUndefined();
+  });
+
+  test('falls back to the endpoint template when route metadata is unavailable', () => {
+    expect(getDefaultRouteRequestTemplateFor(undefined, { method: 'POST', relativeUrlPattern: '/search' })).toEqual({
+      urlTemplate: '/search',
+      body: { contentType: 'application/json', content: {} },
+    });
   });
 });

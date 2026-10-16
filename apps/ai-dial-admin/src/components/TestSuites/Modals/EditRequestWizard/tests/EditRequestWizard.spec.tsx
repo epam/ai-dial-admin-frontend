@@ -4,14 +4,16 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
+import { DialRoute } from '@/src/models/dial/route';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import EditRequestWizard from '../EditRequestWizard';
 
 vi.mock('@/src/components/TestSuites/Methods/Methods', () => ({
-  default: ({ testSuite, onChange, children }: any) => (
+  default: ({ testSuite, selectedRoute, onChange, children }: any) => (
     <div>
       <span>Methods:{testSuite.endpointRef?.relativeUrlPattern ?? 'none'}</span>
+      <span>Route:{selectedRoute?.name ?? 'none'}</span>
       <button
         type="button"
         onClick={() => onChange({ ...testSuite, endpointRef: { method: 'GET', relativeUrlPattern: '/v1/picked' } })}
@@ -267,6 +269,33 @@ describe('EditRequestWizard', () => {
     expect(
       screen.getByText(`Body:${JSON.stringify({ model: 'glm-5.2', input: '${{user_message}}' })}`),
     ).toBeInTheDocument();
+  });
+
+  test('uses the selected route for method choices and route-specific reset defaults', async () => {
+    const user = userEvent.setup();
+    const selectedRoute: DialRoute = {
+      name: 'search-route',
+      methods: ['POST'],
+      paths: ['/search'],
+    };
+    const routeSuite: TestSuite = {
+      id: 'suite-1',
+      endpointRef: { method: 'POST', relativeUrlPattern: '/search' },
+      requestTemplate: { urlTemplate: '/search', body: { contentType: 'application/json', content: {} } },
+    };
+
+    renderWizard({ testSuite: routeSuite, selectedRoute });
+
+    expect(screen.getByText('Route:search-route')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ResetToDefault })).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'edit-body' }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.ResetToDefault }));
+
+    expect(screen.getByText('RequestTemplate:/search')).toBeTruthy();
+    expect(screen.getByText('Body:{}')).toBeTruthy();
   });
 
   test('shows Configuration as incomplete for a new request until the user visits it', async () => {

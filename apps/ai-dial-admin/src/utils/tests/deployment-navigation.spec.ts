@@ -235,5 +235,7 @@ describe('resolveRouteNavigationTarget', () => {
 
   test('returns null when the route reference is missing', () => {
     expect(resolveRouteNavigationTarget(undefined)).toBeNull();
+    expect(resolveRouteNavigationTarget(null)).toBeNull();
+    expect(resolveRouteNavigationTarget({ name: '' })).toBeNull();
   });
 });

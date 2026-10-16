@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { fromCanonicalRouteName, toCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
-describe('route-reference', () => {
+describe('toCanonicalRouteName', () => {
   test('builds a canonical Core route identity from a bare name', () => {
     expect(toCanonicalRouteName('search-route')).toBe('routes/platform/search-route');
   });
@@ -10,7 +10,9 @@ describe('route-reference', () => {
   test('does not duplicate an existing canonical prefix', () => {
     expect(toCanonicalRouteName('routes/platform/search-route')).toBe('routes/platform/search-route');
   });
+});
 
+describe('fromCanonicalRouteName', () => {
   test('extracts the bare route name for Core resource reads and display', () => {
     expect(fromCanonicalRouteName('routes/platform/search-route')).toBe('search-route');
     expect(fromCanonicalRouteName('search-route')).toBe('search-route');

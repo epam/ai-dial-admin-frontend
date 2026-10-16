@@ -15,7 +15,7 @@ import {
 
 describe('Target utils', () => {
   describe('buildDeploymentUpdate', () => {
-    test('should build deployment update with correct fields', () => {
+    test('builds a deployment update and clears the previous route target', () => {
       const deployment: Deployment = {
         $type: 'dial-application',
         deploymentId: 'app-1',
@@ -34,9 +34,11 @@ describe('Target utils', () => {
           type: 'dial-application',
         },
         mcpDeploymentRef: void 0,
+        routesRef: void 0,
         toolRef: void 0,
         argumentTemplate: void 0,
       });
+      expect(result).toHaveProperty('routesRef', undefined);
     });
 
     test('does not clear endpointRef or requestTemplate', () => {
@@ -54,7 +56,7 @@ describe('Target utils', () => {
   });
 
   describe('buildMcpDeploymentUpdate', () => {
-    test('should build MCP deployment update with correct fields', () => {
+    test('builds an MCP deployment update and clears the previous route target', () => {
       const deployment: Deployment = {
         $type: 'dial-toolset',
         deploymentId: 'mcp-1',
@@ -71,10 +73,12 @@ describe('Target utils', () => {
           name: 'My Toolset',
         },
         deploymentRef: void 0,
+        routesRef: void 0,
         endpointRef: void 0,
         requestTemplate: void 0,
         toolRef: void 0,
       });
+      expect(result).toHaveProperty('routesRef', undefined);
     });
 
     test('should fallback to deploymentId when displayName is missing', () => {
@@ -167,6 +171,21 @@ describe('Target utils', () => {
       });
       expect(result.additionalRequests).toBe(suite.additionalRequests);
     });
+
+    test.each([TargetTab.Applications, TargetTab.Models, TargetTab.Mcp])(
+      'clears the route reference when a target is selected from %s',
+      (targetTab) => {
+        const suite = {
+          suiteType: SuiteType.Route,
+          routesRef: { name: 'routes/platform/search-route' },
+        } as TestSuite;
+
+        const result = applyTargetSelection(suite, deployment, targetTab);
+
+        expect(result.routesRef).toBeUndefined();
+        expect(result.suiteType).toBe(targetTab === TargetTab.Mcp ? SuiteType.McpTool : SuiteType.Deployment);
+      },
+    );
   });
 
   describe('buildRouteUpdate', () => {
@@ -197,7 +216,7 @@ describe('Target utils', () => {
       expect(getInitialTab(undefined)).toBe(TargetTab.Applications);
     });
 
-    test('should return Routes tab for ROUTE suite type', () => {
+    test('returns the Routes tab for a ROUTE suite type', () => {
       expect(getInitialTab(SuiteType.Route)).toBe(TargetTab.Routes);
     });
   });

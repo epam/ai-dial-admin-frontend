@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import { datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -36,11 +36,8 @@ import {
   duplicateTestSuite,
   getDeploymentTools,
   createDatasetForSuite,
-  getRoute,
-  getRoutes,
 } from './actions';
 import { FilterOperatorDto } from '@/src/types/request';
-import { ResourceType } from '@/src/types/resource-type';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -193,24 +190,6 @@ describe('TestSuites :: server actions', () => {
     const result = await getDeploymentById('gpt-4');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getDeploymentById).toHaveBeenCalledWith('gpt-4', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should list platform routes directly from Core', async () => {
-    (assetApi.list as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await getRoutes();
-
-    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROUTE, 'platform/');
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should load a selected platform route directly from Core', async () => {
-    (assetApi.getMerged as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await getRoute('search-route');
-
-    expect(assetApi.getMerged).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROUTE, 'search-route');
     expect(result).toBe(RESPONSE_MOCK);
   });
 

@@ -548,6 +548,18 @@ describe('Constants :: grid columns', () => {
     expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
   });
 
+  test('TEST_SUITES_COLUMN displays an unprefixed platform route in the Application column', () => {
+    const application = TEST_SUITES_COLUMN.find((column) => column.field === 'application');
+    const valueGetter = application?.valueGetter;
+
+    expect(typeof valueGetter).toBe('function');
+    expect(
+      (valueGetter as (params: never) => unknown)({
+        data: { routesRef: { name: 'routes/platform/search-route' } },
+      } as never),
+    ).toBe('search-route');
+  });
+
   test('Created By offers Equals, Does not equal, and Contains', () => {
     const createdBy = TEST_SUITES_COLUMN.find((c) => c.field === 'createdBy');
 
