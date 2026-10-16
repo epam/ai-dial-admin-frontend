@@ -115,6 +115,7 @@ const defaultOptions: EditorOptions = {
   wordWrap: 'on',
   diffWordWrap: 'on',
   smoothScrolling: true,
+  stickyScroll: { enabled: false },
   overviewRulerLanes: 0,
   scrollbar: {
     verticalScrollbarSize: 6,

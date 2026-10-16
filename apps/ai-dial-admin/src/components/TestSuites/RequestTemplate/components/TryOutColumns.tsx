@@ -131,7 +131,7 @@ const TurnColumnSection: FC<{ turn: TryOutColumnTurnResult; showTurnLabel: boole
         <div className="h-64">
           <JsonEditor
             entity={(turn.responseBody ?? null) as object | null}
-            options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
+            options={{ wordWrap: 'off' }}
             readonly={true}
           />
         </div>

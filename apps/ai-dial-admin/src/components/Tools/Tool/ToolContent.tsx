@@ -63,7 +63,7 @@ const ToolContent: FC<Props> = ({ tool, view }) => {
         </>
       ) : (
         <div className="flex h-[400px]">
-          <JsonEditor entity={tool} options={{ stickyScroll: { enabled: false } }} readonly={true} />
+          <JsonEditor entity={tool} readonly={true} />
         </div>
       )}
     </div>
