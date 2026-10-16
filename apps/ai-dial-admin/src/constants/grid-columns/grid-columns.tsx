@@ -103,6 +103,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import { isAssetWithVersion } from '@/src/utils/is-view';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import {
   ASSET_NAME_COLUMN,
@@ -285,6 +286,8 @@ export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
   { field: 'deploymentId', headerName: 'ID', hide: false },
   { field: 'transport', headerName: 'Transport', hide: false },
 ];
+
+export const EVALUATION_ROUTES_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
 
 export const MCP_TOOLS_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Tool Name', hide: false },
@@ -1321,7 +1324,10 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     hide: false,
     sortable: false,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
-    valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
+    valueGetter: (params) =>
+      params.data?.deploymentRef?.name ||
+      params.data?.mcpDeploymentRef?.name ||
+      fromCanonicalRouteName(params.data?.routesRef?.name),
   },
   { ...CREATED_AT_COLUMN, ...dateFilter, sort: 'desc' },
   { ...UPDATED_AT_COLUMN, ...dateFilter },

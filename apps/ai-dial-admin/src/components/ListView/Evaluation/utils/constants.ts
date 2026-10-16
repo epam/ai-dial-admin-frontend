@@ -21,11 +21,12 @@ export const OPERATOR_TO_COMPARISON: Record<FilterOperatorDto, ComparisonOp | un
 
 export const APPLICATION_FILTER_COLUMN = 'application';
 
-/** The runs-list Target column: same OR-across-both-refs shape as `APPLICATION_FILTER_COLUMN`. */
+/** The runs-list Target column: same OR-across-all-target-refs shape as `APPLICATION_FILTER_COLUMN`. */
 export const RUN_TARGET_FILTER_COLUMN = 'target';
 
 export const DEPLOYMENT_REF_NAME_FIELD = 'deployment_ref::name';
 export const MCP_DEPLOYMENT_REF_NAME_FIELD = 'mcp_deployment_ref::name';
+export const ROUTES_REF_NAME_FIELD = 'routes_ref::name';
 
 /** AG Grid column id/field → Query DSL field name. */
 export const TEST_SUITE_COLUMN_TO_DSL_FIELD: Record<string, string> = {
@@ -57,6 +58,7 @@ export const TEST_SUITE_SELECT_FIELDS = [
   'dataset_id',
   'deployment_ref',
   'mcp_deployment_ref',
+  'routes_ref',
   'endpoint_ref',
   'test_case_filter',
 ] as const;
@@ -109,6 +111,7 @@ export const RUN_SELECT_FIELDS = [
   'mcp_deployment_ref::name',
   'mcp_deployment_ref::type',
   'mcp_deployment_ref::transport',
+  'routes_ref::name',
   'metric_names',
 ] as const;
 

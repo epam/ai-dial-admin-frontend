@@ -28,6 +28,12 @@ describe('getSuiteApplicationName', () => {
     ).toBe('MCP Server');
   });
 
+  test('returns route name for Route suites', () => {
+    expect(
+      getSuiteApplicationName({ suiteType: SuiteType.Route, routesRef: { name: 'routes/platform/search-route' } }),
+    ).toBe('search-route');
+  });
+
   test('returns empty string when no deployment', () => {
     expect(getSuiteApplicationName(null)).toBe('');
     expect(getSuiteApplicationName(undefined)).toBe('');
@@ -35,6 +41,19 @@ describe('getSuiteApplicationName', () => {
 });
 
 describe('resolveRunDeployment', () => {
+  test('resolves a platform route link for Route suites', () => {
+    expect(
+      resolveRunDeployment(
+        { suiteType: SuiteType.Route, routesRef: { name: 'routes/platform/search-route' } },
+        undefined,
+      ),
+    ).toEqual({
+      name: 'search-route',
+      route: ApplicationRoute.PlatformRoutes,
+      entity: { name: 'search-route' },
+    });
+  });
+
   test('resolves MCP container link for McpTool suites with a flat id', () => {
     expect(
       resolveRunDeployment(

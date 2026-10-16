@@ -1,8 +1,9 @@
 import { APPLICATIONS_PREFIX, MODELS_PREFIX, TOOLSETS_PREFIX } from '@/src/constants/publications-core';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
-import { McpDeploymentRef, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
+import { McpDeploymentRef, RoutesRef, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelNavigationName } from '@/src/utils/resolve-model-deployment-route';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 export interface CatalogDeploymentRecord {
   model?: string;
@@ -73,6 +74,19 @@ export function resolveMcpDeploymentNavigationTarget(
   return {
     route: ApplicationRoute.McpContainers,
     entity: { name: id || displayName },
+  };
+}
+
+export function resolveRouteNavigationTarget(
+  routesRef: RoutesRef | null | undefined,
+): DeploymentNavigationTarget | null {
+  if (!routesRef?.name) {
+    return null;
+  }
+
+  return {
+    route: ApplicationRoute.PlatformRoutes,
+    entity: { name: fromCanonicalRouteName(routesRef.name) },
   };
 }
 

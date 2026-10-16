@@ -7,7 +7,7 @@ import {
   StructuredQueryResult,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { McpDeploymentRef, SuiteType, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
+import { McpDeploymentRef, RoutesRef, SuiteType, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto, SortDirectionDto } from '@/src/types/request';
 import {
@@ -25,6 +25,7 @@ import {
 import {
   DEPLOYMENT_REF_NAME_FIELD,
   MCP_DEPLOYMENT_REF_NAME_FIELD,
+  ROUTES_REF_NAME_FIELD,
   OPERATOR_TO_COMPARISON,
   RUN_COLUMN_TO_DSL_FIELD,
   RUN_DATE_DSL_FIELDS,
@@ -61,7 +62,7 @@ const buildFieldFilter = (dslField: string, filter: FilterDto): FilterNode | nul
   return compare(op, dslField, valueTypeForField(dslField), String(filter.value));
 };
 
-/** Same OR-across-both-refs shape as `buildApplicationFilter` in `test-suites-query.ts`. */
+/** Same OR-across-all-target-refs shape as `buildApplicationFilter` in `test-suites-query.ts`. */
 const buildRunTargetFilter = (filter: FilterDto): FilterNode | null => {
   const op: ComparisonOp | undefined = OPERATOR_TO_COMPARISON[filter.operator];
   if (!op) {
@@ -71,6 +72,7 @@ const buildRunTargetFilter = (filter: FilterDto): FilterNode | null => {
   return or([
     compare(op, DEPLOYMENT_REF_NAME_FIELD, ValueType.String, val),
     compare(op, MCP_DEPLOYMENT_REF_NAME_FIELD, ValueType.String, val),
+    compare(op, ROUTES_REF_NAME_FIELD, ValueType.String, val),
   ]);
 };
 
@@ -95,7 +97,7 @@ export const buildRunsSort = (sorts: SortDto[]) =>
   sorts
     .map((sort) => {
       // Target has no single DSL field (see `buildRunTargetFilter`'s OR), so sorting approximates it by
-      // the deployment name alone: MCP_TOOL rows, which carry no value there, sort together rather than
+      // the deployment name alone: MCP_TOOL/ROUTE rows, which carry no value there, sort together rather than
       // interleaving by their own name.
       const dslField =
         sort.column === RUN_TARGET_FILTER_COLUMN ? DEPLOYMENT_REF_NAME_FIELD : RUN_COLUMN_TO_DSL_FIELD[sort.column];
@@ -174,9 +176,15 @@ const asMcpDeploymentRef = (row: Record<string, unknown>): McpDeploymentRef | un
   };
 };
 
+const asRoutesRef = (row: Record<string, unknown>): RoutesRef | undefined => {
+  const name = asString(row['routes_ref::name']);
+  return name == null ? undefined : { name };
+};
+
 export const mapRunRow = (row: Record<string, unknown>): Run => {
   const deploymentRef = asDeploymentRef(row);
   const mcpDeploymentRef = asMcpDeploymentRef(row);
+  const routesRef = asRoutesRef(row);
   const suiteType = asString(row.suite_type) as SuiteType | undefined;
   const numberOfRuns = asNumber(row.number_of_runs);
 
@@ -194,8 +202,8 @@ export const mapRunRow = (row: Record<string, unknown>): Run => {
     metricNames: asStringArray(row.metric_names),
     overallScoreValue: asNumber(row.overall_score_value),
     totalCost: asNumber(row.total_cost),
-    ...((suiteType || deploymentRef || mcpDeploymentRef) && {
-      suiteSnapshot: { suiteType, deploymentRef, mcpDeploymentRef },
+    ...((suiteType || deploymentRef || mcpDeploymentRef || routesRef) && {
+      suiteSnapshot: { suiteType, deploymentRef, mcpDeploymentRef, routesRef },
     }),
     ...(numberOfRuns != null && {
       runConfig: { numberOfRuns },

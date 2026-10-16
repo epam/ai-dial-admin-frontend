@@ -237,4 +237,27 @@ describe('TestSuiteProperties', () => {
     expect(getDeploymentsMock).not.toHaveBeenCalled();
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
+
+  test('displays and opens a platform route without a deployment lookup', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestSuiteProperties
+        testSuite={{
+          suiteType: SuiteType.Route,
+          routesRef: { name: 'routes/platform/search-route' },
+        }}
+        onChange={onChangeMock}
+      />,
+    );
+
+    expect(screen.getByText('search-route')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
+
+    expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.PlatformRoutes, { name: 'search-route' });
+    expect(getDeploymentByIdMock).not.toHaveBeenCalled();
+    expect(getDeploymentsMock).not.toHaveBeenCalled();
+    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
+  });
 });

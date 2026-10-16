@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { SetStateAction } from 'react';
 import Methods from '../Methods';
+import { DialRoute } from '@/src/models/dial/route';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 const mockGetDeploymentById = vi.fn();
 const mockGenerateMethodPathCombinations = vi.fn();
@@ -133,6 +136,34 @@ describe('Methods component', () => {
     rerender(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     expect(mockGetDeploymentById).toHaveBeenCalledOnce();
+  });
+
+  test('renders only route endpoints for a selected platform route', async () => {
+    const user = userEvent.setup();
+    const selectedRoute: DialRoute = { name: 'search-route', methods: ['GET'], paths: ['/search'] };
+    let suiteUpdate: SetStateAction<TestSuite> | undefined;
+    const onRouteChange = vi.fn((update: SetStateAction<TestSuite>) => {
+      suiteUpdate = update;
+    });
+    mockGenerateMethodPathCombinations.mockReturnValue([{ method: 'GET', relativeUrlPattern: '/search' }]);
+
+    render(<Methods testSuite={{}} selectedRoute={selectedRoute} onChange={onRouteChange} />);
+
+    const routeMethod = await screen.findByRole('button', { name: 'GET /search' });
+    expect(routeMethod).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'POST /chat/completions' })).toBeNull();
+    expect(mockGetDeploymentById).not.toHaveBeenCalled();
+    expect(mockGenerateMethodPathCombinations).toHaveBeenCalledWith({ route: selectedRoute });
+
+    await user.click(routeMethod);
+
+    expect(onRouteChange).toHaveBeenCalledOnce();
+    expect(suiteUpdate).toBeDefined();
+    const result = typeof suiteUpdate === 'function' ? suiteUpdate({}) : suiteUpdate;
+    expect(result).toMatchObject({
+      endpointRef: { method: 'GET', relativeUrlPattern: '/search' },
+      requestTemplate: { urlTemplate: '/search' },
+    });
   });
 
   test('keeps the default chat-completion column name when it is not taken', async () => {

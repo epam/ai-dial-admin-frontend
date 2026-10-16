@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   NotificationVariant,
@@ -12,6 +12,7 @@ import {
 import { getTestSuiteByName } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
+import RouteMethods from '@/src/components/TestSuites/Methods/RouteMethods';
 import McpTool from '@/src/components/TestSuites/Modals/Create/McpTool';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import { ButtonsI18nKey, ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -19,6 +20,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { OverallScoreType, SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import Target from './Target';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
@@ -41,6 +43,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   const [isCheckingName, setIsCheckingName] = useState(false);
 
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
+  const isRoute = testSuite.suiteType === SuiteType.Route;
 
   const currentStep = useMemo(() => steps.find((step) => step.id === currentStepId), [steps, currentStepId]);
 
@@ -98,7 +101,10 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
     setSteps(
       baseSteps.map((step) => {
         if (step.id === TestSuitTab.Target) {
-          return { ...step, status: selectedTarget || !!currentEntity ? StepStatus.VALID : void 0 };
+          return {
+            ...step,
+            status: selectedTarget || testSuite.routesRef?.name || !!currentEntity ? StepStatus.VALID : void 0,
+          };
         }
         if (step.id === TestSuitTab.Methods) {
           const methodValid = isMcp ? !!testSuite.toolRef : !!testSuite.endpointRef?.method;
@@ -118,7 +124,40 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
     t,
     currentEntity,
     isMcp,
+    testSuite.routesRef?.name,
   ]);
+
+  const methodChangeWarning = currentEntity ? (
+    <DialNotification message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={NotificationVariant.Warning} />
+  ) : null;
+
+  let methodsContent: ReactNode;
+  if (isMcp && testSuite.mcpDeploymentRef) {
+    methodsContent = (
+      <McpTool
+        deploymentId={testSuite.mcpDeploymentRef.id}
+        selectedToolName={testSuite.toolRef?.name}
+        onSelect={onToolSelect}
+      />
+    );
+  } else if (isRoute && testSuite.routesRef?.name) {
+    methodsContent = (
+      <RouteMethods
+        routeName={fromCanonicalRouteName(testSuite.routesRef.name)}
+        testSuite={testSuite}
+        onChange={setTestSuite}
+        isCreate={!currentEntity}
+      >
+        {methodChangeWarning}
+      </RouteMethods>
+    );
+  } else {
+    methodsContent = (
+      <Methods selectedTarget={selectedTarget} testSuite={testSuite} onChange={setTestSuite} isCreate={!currentEntity}>
+        {methodChangeWarning}
+      </Methods>
+    );
+  }
 
   return (
     <DialPopup
@@ -143,7 +182,10 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
           {currentStepId === TestSuitTab.Target && (
             <Target
               selectedTargetId={
-                selectedTarget?.deploymentId ?? currentEntity?.deploymentRef?.id ?? currentEntity?.mcpDeploymentRef?.id
+                selectedTarget?.deploymentId ??
+                testSuite.deploymentRef?.id ??
+                testSuite.mcpDeploymentRef?.id ??
+                fromCanonicalRouteName(testSuite.routesRef?.name)
               }
               suiteType={testSuite.suiteType}
               onChangeTarget={setSelectedTarget}
@@ -151,28 +193,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
             />
           )}
 
-          {currentStepId === TestSuitTab.Methods &&
-            (isMcp && testSuite.mcpDeploymentRef ? (
-              <McpTool
-                deploymentId={testSuite.mcpDeploymentRef.id}
-                selectedToolName={testSuite.toolRef?.name}
-                onSelect={onToolSelect}
-              />
-            ) : (
-              <Methods
-                selectedTarget={selectedTarget}
-                testSuite={testSuite}
-                onChange={setTestSuite}
-                isCreate={!currentEntity}
-              >
-                {!!currentEntity && (
-                  <DialNotification
-                    message={t(TestSuitesI18nKey.MethodChangeWarning)}
-                    variant={NotificationVariant.Warning}
-                  />
-                )}
-              </Methods>
-            ))}
+          {currentStepId === TestSuitTab.Methods && methodsContent}
         </div>
       </div>
 
