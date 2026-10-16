@@ -60,11 +60,17 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, entity
     () => [
       { value: NO_SCHEMA, label: t(BasicI18nKey.None) },
       /**
-       * The `$id` alone, as in the browse grid. Display names are not unique, and once the list is
-       * filtered to one entity kind they tend to repeat the kind itself — three interceptor schemas
-       * all reading "Interceptor" in a list that holds nothing else.
+       * The display name is what a reader scans for; the `$id` rides beneath it because display names
+       * are not unique and the `$id` is the stored reference. Without a name the `$id` is the label
+       * and is not printed a second time.
        */
-      ...offeredOptions.map((option) => ({ value: option.$id, label: option.$id })),
+      ...offeredOptions.map((option) => {
+        const displayName = option['dial:catalogDisplayName'];
+
+        return displayName
+          ? { value: option.$id, label: displayName, description: option.$id }
+          : { value: option.$id, label: option.$id };
+      }),
     ],
     [offeredOptions, t],
   );

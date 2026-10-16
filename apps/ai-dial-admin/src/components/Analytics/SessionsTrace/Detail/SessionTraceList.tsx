@@ -12,6 +12,7 @@ import { IconAlertTriangle, IconChevronRight, IconSubtask } from '@tabler/icons-
 import classNames from 'classnames';
 import { FC, ReactNode, useEffect, useRef } from 'react';
 
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import SessionTraceChips from '@/src/components/Analytics/SessionsTrace/Detail/SessionTraceChips';
 import RatingCounts from '@/src/components/Analytics/SessionsTrace/RatingCounts';
 import { COST_TEXT_CLASS, EMPTY_ICON_SIZE, UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
@@ -118,9 +119,7 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
           <DialEllipsisTooltip text={title} />
         </span>
         {card.isCoreInternal && (
-          <span className="shrink-0 rounded bg-warning px-1.5 text-warning dial-tiny-text">
-            {t(SessionsTraceI18nKey.TraceCardCoreInternal)}
-          </span>
+          <IdentityTag label={t(SessionsTraceI18nKey.TraceCardCoreInternal)} colorClassName="text-warning" />
         )}
         <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
           <DialEllipsisTooltip text={card.traceId} />

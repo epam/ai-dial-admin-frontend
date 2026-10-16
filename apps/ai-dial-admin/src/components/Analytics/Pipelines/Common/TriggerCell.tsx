@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import classNames from 'classnames';
 
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -32,18 +32,7 @@ const TriggerCell: FC<Props> = ({ pipeline }) => {
     return <span className="text-secondary">{UNAVAILABLE_VALUE}</span>;
   }
 
-  return (
-    <span className="flex flex-col justify-center leading-tight">
-      <span
-        className={classNames(
-          'inline-block w-fit rounded bg-layer-4 px-2 py-0.5 font-semibold uppercase dial-tiny-text',
-          TRIGGER_COLOR[trigger.kind],
-        )}
-      >
-        {t(TRIGGER_LABEL[trigger.kind])}
-      </span>
-    </span>
-  );
+  return <IdentityTag label={t(TRIGGER_LABEL[trigger.kind])} colorClassName={TRIGGER_COLOR[trigger.kind]} />;
 };
 
 export const TriggerCellRenderer: FC<ICellRendererParams<PipelineListItem>> = ({ data }) => (

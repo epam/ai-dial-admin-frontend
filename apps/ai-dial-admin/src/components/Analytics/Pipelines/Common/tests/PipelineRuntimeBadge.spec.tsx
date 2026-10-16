@@ -28,7 +28,7 @@ describe('PipelineRuntimeBadge', () => {
   test('sizes to its label rather than to its container', () => {
     render(<PipelineRuntimeBadge status={PipelineRuntimeStatus.Running} />);
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeRunning).parentElement?.className).toContain('w-fit');
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeRunning).className).toContain('w-fit');
   });
 
   // A disabled pipeline, an unread runner and a caller without the rights to ask are all cases where

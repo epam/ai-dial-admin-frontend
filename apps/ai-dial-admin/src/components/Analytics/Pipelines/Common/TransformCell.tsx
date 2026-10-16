@@ -9,7 +9,7 @@ import { PipelineListItem } from '@/src/models/analytics/pipeline';
 /** An aggregate row has no transform, which is an ordinary state rather than a failed read. */
 export const TransformCellRenderer: FC<ICellRendererParams<PipelineListItem>> = ({ data }) =>
   data?.transform_type ? (
-    <TransformTypeBadge type={data.transform_type} className="inline-block w-fit" />
+    <TransformTypeBadge type={data.transform_type} />
   ) : (
     <span className="text-secondary">{UNAVAILABLE_VALUE}</span>
   );

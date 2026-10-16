@@ -343,6 +343,39 @@ This requirement does NOT apply where:
 - **THEN** the surface states that in place, as it did before
 - **AND** dismissing any notification leaves that statement on screen
 
+### Requirement: Analytics chips come in two kinds of one size
+
+Every Analytics page SHALL draw a short categorical value as one of two chips. A **status pill** — round, on a
+tinted background — states something that changes: a table's lifecycle status, a pipeline's enabled flag or
+runtime state, a group's state, a backfill run's status. An **identity tag** — square, on the neutral layer,
+with a coloured or secondary label — states what something is: a field type, a table's kind or system flag, a
+pipeline's kind, trigger or transform type, a preview column's role, a trace that is Core internal. Both SHALL share one height,
+padding and typography, and SHALL size to their label rather than to their container. A value of either kind
+SHALL be drawn as a chip wherever it is shown outside a control that edits it, not as a chip on one page and
+plain text on another.
+
+This requirement does NOT apply where:
+
+- the value is free text an admin types, such as a column's tag, whose case and length a chip would not keep;
+- the value is a metric — a count with its caption, a KPI or a delta — rather than a category;
+- the chip is the kit's own `Tag`: a removable filter, or the rows-restricted marker with its icon;
+- the Usage breakdown names a route's kind, which it states as text.
+
+#### Scenario: A chip in a grid cell keeps to its label
+
+- **WHEN** a grid column renders a status pill or an identity tag
+- **THEN** the chip is as wide as its label, not as wide as the cell
+
+#### Scenario: A pill and a tag side by side line up
+
+- **WHEN** a header shows a status pill beside an identity tag
+- **THEN** both are the same height and use the same typography
+
+#### Scenario: A table's kind and system flag read the same in the listing and on the table
+
+- **WHEN** the Tables listing shows a table's type and system flag
+- **THEN** each is an identity tag, as it is in the table's own header
+
 ### Requirement: Analytics structured-query builder primitives
 
 The system SHALL provide pure builder primitives for the analytics structured-query DSL in

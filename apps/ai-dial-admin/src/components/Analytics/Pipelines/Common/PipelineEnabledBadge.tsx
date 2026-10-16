@@ -1,7 +1,6 @@
 import { FC } from 'react';
 
-import classNames from 'classnames';
-
+import StatusPill from '@/src/components/Analytics/Common/StatusPill';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -18,15 +17,11 @@ const PipelineEnabledBadge: FC<Props> = ({ enabled, className }) => {
   }
 
   return (
-    <div
-      className={classNames(
-        'flex w-fit items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
-        enabled ? 'text-success bg-success' : 'text-secondary bg-layer-4',
-        className,
-      )}
-    >
-      <span>{t(enabled ? AnalyticsPipelinesI18nKey.StatusEnabled : AnalyticsPipelinesI18nKey.StatusDisabled)}</span>
-    </div>
+    <StatusPill
+      label={t(enabled ? AnalyticsPipelinesI18nKey.StatusEnabled : AnalyticsPipelinesI18nKey.StatusDisabled)}
+      toneClassName={enabled ? 'text-success bg-success' : 'text-secondary bg-layer-4'}
+      className={className}
+    />
   );
 };
 

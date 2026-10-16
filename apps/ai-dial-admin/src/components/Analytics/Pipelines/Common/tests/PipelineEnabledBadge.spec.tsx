@@ -23,6 +23,6 @@ describe('PipelineEnabledBadge', () => {
   test('sizes to its label rather than to its container', () => {
     render(<PipelineEnabledBadge enabled />);
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusEnabled).parentElement?.className).toContain('w-fit');
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusEnabled).className).toContain('w-fit');
   });
 });
