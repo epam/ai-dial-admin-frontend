@@ -84,14 +84,6 @@ describe('Runs Compare :: getCompareRuns', () => {
       { ...compared, slot: CompareRunSlot.Secondary, index: '2', isBaseline: false },
     ]);
   });
-
-  test('flipping only reverses the order: the primary run stays the baseline and keeps its index', () => {
-    const runs = getCompareRuns(primary, compared, true);
-
-    expect(runs.map((run) => run.id)).toEqual(['run-2', 'run-1']);
-    expect(runs.map((run) => run.isBaseline)).toEqual([false, true]);
-    expect(runs.map((run) => run.index)).toEqual(['2', '1']);
-  });
 });
 
 describe('Runs Compare :: getCompareRowResult / getCompareRunColId / getCompareRunEdge', () => {

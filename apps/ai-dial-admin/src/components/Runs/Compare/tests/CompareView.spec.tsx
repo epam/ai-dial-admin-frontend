@@ -67,8 +67,18 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     DialLoader: ({ size }: { size: number }) => <div aria-label={`loading-${size}`} />,
-    DialTag: ({ label, onClick, ...props }: { label: React.ReactNode; onClick?: () => void }) => (
+    DialTag: ({
+      label,
+      icon,
+      onClick,
+      ...props
+    }: {
+      label: React.ReactNode;
+      icon?: React.ReactNode;
+      onClick?: () => void;
+    }) => (
       <button type="button" disabled={!onClick} onClick={onClick} {...props}>
+        {icon}
         {label}
       </button>
     ),
@@ -177,23 +187,69 @@ describe('CompareView', () => {
     expect(getRunMock).toHaveBeenCalledWith('run-1');
   });
 
-  test('flip button swaps tag order without changing the baseline or the url', async () => {
+  test('flip makes the compared run the baseline and rewrites the url with the swapped ids', async () => {
     const user = userEvent.setup();
     renderCompareView();
+
+    await screen.findByRole('button', { name: 'Runs.RunComparePrimaryTagAria' });
+
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+
+    expect(routerReplaceMock).toHaveBeenCalledWith('/runs/compare?runs=run-sibling,run-1', { scroll: false });
 
     const primaryTag = await screen.findByRole('button', { name: 'Runs.RunComparePrimaryTagAria' });
     const comparedTag = screen.getByRole('button', { name: 'Runs.RunCompareTagAria' });
     expect(primaryTag.compareDocumentPosition(comparedTag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await vi.waitFor(() => expect(getRunMock).toHaveBeenCalledWith('run-sibling'));
+  });
 
-    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+  test('shows both run tags with ids before any run name has loaded', () => {
+    getRunMock.mockImplementation(() => new Promise(() => {}));
+    getRunsQueryMock.mockImplementation(() => new Promise(() => {}));
+    renderCompareView();
 
-    expect(comparedTag.compareDocumentPosition(primaryTag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Runs.RunComparePrimaryTagAria' })).toBeInTheDocument();
-    expect(routerReplaceMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Runs.RunCompareTagAria' })).toHaveTextContent('run-sibling');
+  });
+
+  test('keeps the known run names on flip while the new baseline is still loading', async () => {
+    const user = userEvent.setup();
+    renderCompareView();
+
+    await screen.findByText('Run #317');
+    getRunMock.mockImplementation(() => new Promise(() => {}));
 
     await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
 
-    expect(primaryTag.compareDocumentPosition(comparedTag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Runs.RunCompareTagAria' })).toHaveTextContent('Run #316');
+  });
+
+  test('flipping twice restores the original order in the url', async () => {
+    const user = userEvent.setup();
+    renderCompareView();
+
+    await screen.findByRole('button', { name: 'Runs.RunComparePrimaryTagAria' });
+
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+
+    expect(routerReplaceMock).toHaveBeenNthCalledWith(1, '/runs/compare?runs=run-sibling,run-1', { scroll: false });
+    expect(routerReplaceMock).toHaveBeenNthCalledWith(2, '/runs/compare?runs=run-1,run-sibling', { scroll: false });
+  });
+
+  test('flip closes an open row detail panel', async () => {
+    const user = userEvent.setup();
+    renderCompareView();
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
+    await user.click(await screen.findByRole('button', { name: 'Test Case 1' }));
+    expect(await screen.findByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+
+    // The grid reloads for the new baseline; once its rows are back the panel is known to be gone.
+    expect(await screen.findByRole('button', { name: 'Test Case 1' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: 'Test Case 1' })).not.toBeInTheDocument();
   });
 
   test('opens modal from secondary run tag click and updates url on confirm', async () => {
