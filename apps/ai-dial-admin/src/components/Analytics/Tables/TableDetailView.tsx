@@ -27,6 +27,7 @@ import {
   updateTable,
   updateTableSchema,
 } from '@/src/app/[lang]/tables/actions';
+import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import ClampedDescription from '@/src/components/Analytics/Tables/ClampedDescription';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
@@ -43,6 +44,7 @@ import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestricte
 import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
 import TableProperties from '@/src/components/Analytics/Tables/TableProperties';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
+import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
   buildRowsTemplate,
@@ -482,16 +484,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
             <h1 className="truncate">{name}</h1>
             <TableStatusBadge status={table.status} />
             {isRowsRestricted && <RowsRestrictedBadge hasTooltip />}
-            {/* Neutral chip, not a second colored pill: the kind is a fixed identity fact, unlike the
-                status beside it, and the catalog grid is the only other place that states it. */}
-            <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
-              {t(isEnrichment ? AnalyticsTablesI18nKey.TypeEnrichment : AnalyticsTablesI18nKey.TypeSource)}
-            </span>
-            {isSystem && (
-              <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
-                {t(AnalyticsTablesI18nKey.SystemReadOnly)}
-              </span>
-            )}
+            <IdentityTag label={t(TABLE_TYPE_LABEL[table.type])} />
+            {isSystem && <IdentityTag label={t(AnalyticsTablesI18nKey.SystemReadOnly)} />}
           </div>
           {/* shrink-0 keeps the actions at their natural width, so no description length can squeeze a
               button label onto a second line; the title next to them truncates instead. */}

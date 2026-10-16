@@ -36,7 +36,8 @@ interface MockActionItem {
 interface MockColDef {
   colId?: string;
   field?: string;
-  cellRenderer?: (params: { data: AnalyticsTable }) => React.ReactNode;
+  cellRenderer?: (params: { data: AnalyticsTable; value?: unknown }) => React.ReactNode;
+  valueGetter?: (params: { data: AnalyticsTable }) => unknown;
   cellRendererParams?: { items?: MockActionItem[] };
 }
 
@@ -94,6 +95,34 @@ beforeEach(() => {
     canManageRoles: true,
     canWrite: true,
     canModify: true,
+  });
+});
+
+describe('TablesView — type and system tags', () => {
+  const renderCell = (field: string, data: AnalyticsTable) => {
+    render(<TablesView initialTables={TABLES} />);
+    const column = lastColumnDefs.find((c) => c.field === field || c.colId === field);
+    const value = column?.valueGetter?.({ data });
+
+    return render(<>{column?.cellRenderer?.({ data, value })}</>);
+  };
+
+  test('names a table’s kind with a tag, as its own header does', () => {
+    renderCell('type', { ...TABLES[0], type: AnalyticsTableType.Enrichment });
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.TypeEnrichment).className).toContain('bg-layer-4');
+  });
+
+  test('marks a system table with a tag', () => {
+    renderCell('system', { ...TABLES[0], system: true });
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.System).className).toContain('bg-layer-4');
+  });
+
+  test('leaves the system cell empty for a table that is not one', () => {
+    const { container } = renderCell('system', { ...TABLES[0], system: false });
+
+    expect(container).toBeEmptyDOMElement();
   });
 });
 
