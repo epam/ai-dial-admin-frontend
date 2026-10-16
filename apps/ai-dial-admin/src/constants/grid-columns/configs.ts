@@ -10,7 +10,6 @@ import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderW
 
 export const dateTimeColumn: Partial<ColDef> = {
   valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-  tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
   filterValueGetter: (params) => toDateOrNull(params.data?.[params.colDef.field || '']),
 };
 

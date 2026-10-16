@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
@@ -16,7 +16,7 @@ const UserCellRenderer: FC<ICellRendererParams<SessionRow>> = ({ data }) => {
     <div className="flex flex-col justify-center h-full min-w-0">
       {data.user_hash ? (
         <span className="text-primary dial-small-text">
-          <DialEllipsisTooltip text={data.user_hash} />
+          <EllipsisTooltip text={data.user_hash} />
         </span>
       ) : (
         <span className="text-secondary dial-small-text">{UNAVAILABLE_VALUE}</span>

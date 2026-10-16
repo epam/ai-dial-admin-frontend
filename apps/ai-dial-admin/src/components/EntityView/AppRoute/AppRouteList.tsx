@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -54,7 +54,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
                 )}
               >
                 <span className="flex-1 min-w-0 mr-0 text-left truncate" onClick={() => onClick(index)}>
-                  <DialEllipsisTooltip text={route.name} />
+                  <EllipsisTooltip text={route.name} />
                 </span>
                 {!disabled && (
                   <div className="invisible group-hover:visible focus-within:visible text-primary mx-2 flex flex-row gap-2">

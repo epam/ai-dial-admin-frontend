@@ -5,6 +5,7 @@ import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result
 import { dateTimeColumn, numericColumn } from '@/src/constants/grid-columns/configs';
 import { baseNumberFilter, dateFilter } from '@/src/constants/grid-columns/filters';
 import { ResultValueClass } from '@/src/models/analytics/query-builder';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import {
   formatNumberByDelimiter,
   formatNumberWithExponent,
@@ -46,8 +47,13 @@ export const getValueClassColumn = (valueClass?: ResultValueClass): Partial<ColD
     // `dateFilter` travels with `dateTimeColumn` as one unit: its `filterValueGetter` returns a Date,
     // and `agDateColumnFilter` without `dateFilter`'s `floatingFilter: false` throws on the `contains`
     // model a text floating filter sends (see `constants/grid-columns/filters.ts`).
+    // `ResultValueCell` renders plain text with no kit tooltip, so this grid keeps the AG tooltip.
     case ResultValueClass.DateTime:
-      return { ...dateTimeColumn, ...dateFilter };
+      return {
+        ...dateTimeColumn,
+        tooltipValueGetter: ({ value }: ITooltipParams) => formatDateTimeToLocalString(value),
+        ...dateFilter,
+      };
     default:
       return {};
   }
