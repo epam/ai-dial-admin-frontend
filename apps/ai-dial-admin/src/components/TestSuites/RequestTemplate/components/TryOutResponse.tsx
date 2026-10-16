@@ -57,11 +57,7 @@ const JsonCollapsible: FC<{
         <DialLoader />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
-          <JsonEditor
-            entity={entity ?? null}
-            options={{ stickyScroll: { enabled: false }, wordWrap }}
-            readonly={true}
-          />
+          <JsonEditor entity={entity ?? null} options={{ wordWrap }} readonly={true} />
         </div>
       )}
     </CollapsibleSection>

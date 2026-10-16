@@ -84,19 +84,13 @@ const BodyTab = forwardRef<BodyTabRef, Props>(
     return (
       <div className="w-full h-[350px]">
         {isJsonataContent ? (
-          <JsonataEditor
-            value={bodyText}
-            onChange={onChangeJsonata}
-            options={{ stickyScroll: { enabled: false } }}
-            variables={jsonataVariables}
-          />
+          <JsonataEditor value={bodyText} onChange={onChangeJsonata} variables={jsonataVariables} />
         ) : isJsonContent ? (
           <JsonEditor
             entity={(template.body?.content || {}) as Record<string, unknown>}
             setSelectedEntity={onChangeJson as Dispatch<SetStateAction<Record<string, unknown>>>}
             text={bodyText}
             onChangeText={onChangeBodyText}
-            options={{ stickyScroll: { enabled: false } }}
           />
         ) : (
           <FormDataGrid

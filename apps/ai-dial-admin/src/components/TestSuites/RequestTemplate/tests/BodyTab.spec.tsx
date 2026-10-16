@@ -137,12 +137,6 @@ describe('BodyTab', () => {
       expect(screen.getByText('{}')).toBeInTheDocument();
     });
 
-    test('passes stickyScroll disabled option to JsonEditor', () => {
-      renderBodyTab({ template: createTemplate({ body: { contentType: ContentType.JSON, content: {} } }) });
-
-      expect(screen.getByText('{"stickyScroll":{"enabled":false}}')).toBeInTheDocument();
-    });
-
     test('drives the JsonEditor from bodyText rather than from body.content', () => {
       renderBodyTab({
         template: createTemplate({ body: { contentType: ContentType.JSON, content: {} } }),
@@ -366,12 +360,6 @@ describe('BodyTab', () => {
 
       expect(screen.getByRole('textbox', { name: 'JSONata editor' })).toBeInTheDocument();
       expect(screen.queryByRole('region', { name: 'Form data grid' })).not.toBeInTheDocument();
-    });
-
-    test('passes stickyScroll disabled option to JsonataEditor', () => {
-      renderBodyTab({ template: createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: '' } }) });
-
-      expect(screen.getByText('{"stickyScroll":{"enabled":false}}')).toBeInTheDocument();
     });
 
     test('typing writes jsonataContent, bubbles the text up and leaves content absent', () => {

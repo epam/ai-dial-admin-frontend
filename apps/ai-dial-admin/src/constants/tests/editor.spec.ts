@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { getDiffEditorTheme, getReadOnlyEditorTheme, EDITOR_THEMES_CONFIG } from '../editor';
+import { editorOptions, getDiffEditorTheme, getReadOnlyEditorTheme, EDITOR_THEMES_CONFIG } from '../editor';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { fallbackDarkTheme, fallbackLightTheme } from '@/src/utils/themes/constant';
 import { JSONATA_MONARCH_TOKENS } from '@/src/components/Common/JsonataEditor/constants';
@@ -22,6 +22,12 @@ const collectJsonataTokenNames = (): string[] => {
   });
   return [...names];
 };
+
+describe('editorOptions', () => {
+  test('disables sticky scrolling by default', () => {
+    expect(editorOptions.stickyScroll).toEqual({ enabled: false });
+  });
+});
 
 describe('getDiffEditorTheme', () => {
   test('returns dark theme config with overridden background', () => {

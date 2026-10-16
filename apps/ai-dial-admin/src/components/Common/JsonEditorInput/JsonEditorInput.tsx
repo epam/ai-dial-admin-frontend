@@ -122,12 +122,7 @@ const JsonEditorInput: FC<Props> = ({
         >
           <div className="px-6 py-4 flex flex-col gap-1">
             <div className="h-[540px] max-h-[35vh]">
-              <JsonEditorBase
-                value={jsonValue}
-                onChange={onChangeJsonValue}
-                onValidateJSON={onValidateJSON}
-                options={{ stickyScroll: { enabled: false } }}
-              />
+              <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
             </div>
             {disableValidation && parseError && <DialErrorText text={parseError} />}
           </div>

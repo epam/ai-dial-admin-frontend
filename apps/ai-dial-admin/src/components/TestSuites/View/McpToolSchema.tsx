@@ -124,11 +124,7 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
       {isSchemaTab ? (
         isJsonView ? (
           <div className="w-full h-[350px]">
-            <JsonEditor
-              entity={(currentSchema as object) || {}}
-              options={{ stickyScroll: { enabled: false } }}
-              readonly={true}
-            />
+            <JsonEditor entity={(currentSchema as object) || {}} readonly={true} />
           </div>
         ) : (
           !!schemaRows.length && <TableView title="" columnDefs={SCHEMA_COLUMNS} rowData={schemaRows} />
