@@ -223,6 +223,7 @@ export enum EntitiesI18nKey {
   NoInputs = 'Entities.NoInputs',
   NoDependencies = 'Entities.NoDependencies',
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
+  IframeSaveFailed = 'Entities.IframeSaveFailed',
   InvalidAppRunner = 'Entities.InvalidAppRunner',
   InvalidCatalogSchema = 'Entities.InvalidCatalogSchema',
   ImmutableSchemaId = 'Entities.ImmutableSchemaId',

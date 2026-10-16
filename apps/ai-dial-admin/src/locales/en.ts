@@ -235,6 +235,7 @@ export default {
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
     NoConfigurationSchema: 'No Configuration Scheme',
+    IframeSaveFailed: 'Parameters could not be saved',
     InvalidAppRunner: 'App runner is not valid',
     InvalidCatalogSchema: 'Catalog schema is not valid',
     ImmutableSchemaId: 'The declared schema id cannot be changed after creation.',

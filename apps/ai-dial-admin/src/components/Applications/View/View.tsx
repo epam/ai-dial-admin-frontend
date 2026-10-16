@@ -14,6 +14,7 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import { useIframeSaveFeedback } from '@/src/components/EntityView/hooks/use-iframe-save-feedback';
 import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
@@ -156,23 +157,73 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     });
   }, [selectedFormat, selectedApplication, originalApplication.name, etag, dispatch, showNotification, t, router]);
 
-  const { isModalOpen, modalType, onModalOpen, onModalClose, onModalCancel, onModalConfirm, onChangeActiveTab } =
-    useParametersTabGuard({
-      activeTab,
-      isChanged,
-      visualizerConnector,
-      onSaveEntity: onSave,
-      onDiscardEntity: onDiscard,
-      onSetActiveTab: setActiveTab,
-    });
+  const onIframeSaved = useCallback(() => {
+    dispatch({ type: ValidationActionType.Reset });
+    setCoreApplication(null);
+  }, [dispatch]);
+
+  const { onIframeSaveSuccess, onIframeSaveError } = useIframeSaveFeedback({
+    view: ApplicationRoute.Applications,
+    entityName: selectedApplication.name,
+    onSaved: onIframeSaved,
+  });
+
+  const {
+    frameRef,
+    isIframeDirty,
+    isIframeSaving,
+    isIframeValid,
+    onFrameDirtyChange,
+    onFrameValidityChange,
+    onFrameSaveSuccess,
+    onFrameSaveError,
+    onSaveIframe,
+    onDiscardIframe,
+    isModalOpen,
+    modalType,
+    onModalOpen,
+    onModalClose,
+    onModalCancel,
+    onModalConfirm,
+    onChangeActiveTab,
+  } = useParametersTabGuard({
+    activeTab,
+    isChanged,
+    visualizerConnector,
+    onSaveEntity: onSave,
+    onDiscardEntity: onDiscard,
+    onSetActiveTab: setActiveTab,
+    onIframeSaveSuccess,
+    onIframeSaveError,
+  });
+
+  const frameCallbacks = useMemo(
+    () => ({
+      onDirtyChange: onFrameDirtyChange,
+      onValidityChange: onFrameValidityChange,
+      onSaveSuccess: onFrameSaveSuccess,
+      onSaveError: onFrameSaveError,
+    }),
+    [onFrameDirtyChange, onFrameValidityChange, onFrameSaveSuccess, onFrameSaveError],
+  );
 
   const onTryToSave = useCallback(() => {
-    if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedApplication as EntityRoleLimits)) {
+    if (isIframeDirty) {
+      onSaveIframe();
+    } else if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedApplication as EntityRoleLimits)) {
       onModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
     }
-  }, [onModalOpen, selectedFormat, onSave, selectedApplication]);
+  }, [isIframeDirty, onModalOpen, onSaveIframe, selectedFormat, onSave, selectedApplication]);
+
+  const onDiscardChanges = useCallback(() => {
+    if (isIframeDirty) {
+      onDiscardIframe();
+    } else {
+      onDiscard();
+    }
+  }, [isIframeDirty, onDiscard, onDiscardIframe]);
 
   const onCancelModal = useCallback(
     (type: ModalType) => {
@@ -202,8 +253,10 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       <SimpleEntityHeader
         view={ApplicationRoute.Applications}
         entity={selectedApplication}
-        isChanged={isChanged}
-        onDiscard={onDiscard}
+        isChanged={isChanged || isIframeDirty}
+        isSaving={isIframeSaving}
+        isSaveDisabled={!isIframeValid}
+        onDiscard={onDiscardChanges}
         onSave={onTryToSave}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
@@ -231,6 +284,8 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
             discardKey={discardKey}
             isEditorEnabled={isEditorEnabled}
             isChanged={isChanged}
+            frameRef={frameRef}
+            frameCallbacks={frameCallbacks}
             onSave={onTryToSave}
             setIsChanged={setIsChanged}
             setSelectedApplication={setSelectedApplication}

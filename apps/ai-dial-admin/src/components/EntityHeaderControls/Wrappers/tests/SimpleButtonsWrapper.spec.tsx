@@ -79,3 +79,20 @@ describe('SimpleButtonsWrapper :: isSaving', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
   });
 });
+
+describe('SimpleButtonsWrapper :: isSaveDisabled', () => {
+  test('disables Save but not Discard while isSaveDisabled is true', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged isSaveDisabled />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Discard })).toBeEnabled();
+  });
+
+  test('leaves Save enabled when isSaveDisabled is false or omitted', () => {
+    const { rerender } = render(<SimpleButtonsWrapper {...baseProps} isChanged isSaveDisabled={false} />);
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+
+    rerender(<SimpleButtonsWrapper {...baseProps} isChanged />);
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+});

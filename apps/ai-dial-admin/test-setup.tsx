@@ -267,5 +267,22 @@ vi.mock('react-dom', () => ({
   createPortal: (node: any) => node,
 }));
 
+// ------------------ Visualizer connector ------------------
+// The real connector builds its own loader markup around the iframe, and jsdom has no `iframe.sandbox`. The stub
+// mounts only a titled iframe, so a spec reaches the frame's window with `getByTitle('visualizer-frame')`.
+vi.mock('@epam/ai-dial-visualizer-connector', () => ({
+  VisualizerConnector: class {
+    constructor(root: HTMLElement) {
+      const iframe = document.createElement('iframe');
+      iframe.title = 'visualizer-frame';
+      Object.defineProperty(iframe, 'sandbox', { value: { add: vi.fn() } });
+      root.appendChild(iframe);
+    }
+    ready = vi.fn().mockResolvedValue(undefined);
+    send = vi.fn();
+    destroy = vi.fn();
+  },
+}));
+
 // ------------------ Cleanup after each test ------------------
 afterEach(() => cleanup());

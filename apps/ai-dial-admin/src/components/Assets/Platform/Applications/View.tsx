@@ -11,6 +11,7 @@ import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useIframeSaveFeedback } from '@/src/components/EntityView/hooks/use-iframe-save-feedback';
 import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
@@ -198,15 +199,69 @@ const PlatformApplicationView: FC<Props> = ({
       });
   }, [selectedApp, etag, showNotification, t, router, fetchFiles]);
 
-  const { isModalOpen, modalType, onModalClose, onModalCancel, onModalConfirm, onChangeActiveTab } =
-    useParametersTabGuard({
-      activeTab,
-      isChanged,
-      visualizerConnector,
-      onSaveEntity: onSave,
-      onDiscardEntity: onDiscard,
-      onSetActiveTab: setActiveTab,
-    });
+  const onIframeSaved = useCallback(() => {
+    fetchFiles(selectedApp.folderId || selectedApp._metadata?.folderId || '');
+  }, [fetchFiles, selectedApp.folderId, selectedApp._metadata?.folderId]);
+
+  const { onIframeSaveSuccess, onIframeSaveError } = useIframeSaveFeedback({
+    view: ApplicationRoute.AssetsApplications,
+    entityName: selectedApp.name,
+    onSaved: onIframeSaved,
+  });
+
+  const {
+    frameRef,
+    isIframeDirty,
+    isIframeSaving,
+    isIframeValid,
+    onFrameDirtyChange,
+    onFrameValidityChange,
+    onFrameSaveSuccess,
+    onFrameSaveError,
+    onSaveIframe,
+    onDiscardIframe,
+    isModalOpen,
+    modalType,
+    onModalClose,
+    onModalCancel,
+    onModalConfirm,
+    onChangeActiveTab,
+  } = useParametersTabGuard({
+    activeTab,
+    isChanged,
+    visualizerConnector,
+    onSaveEntity: onSave,
+    onDiscardEntity: onDiscard,
+    onSetActiveTab: setActiveTab,
+    onIframeSaveSuccess,
+    onIframeSaveError,
+  });
+
+  const frameCallbacks = useMemo(
+    () => ({
+      onDirtyChange: onFrameDirtyChange,
+      onValidityChange: onFrameValidityChange,
+      onSaveSuccess: onFrameSaveSuccess,
+      onSaveError: onFrameSaveError,
+    }),
+    [onFrameDirtyChange, onFrameValidityChange, onFrameSaveSuccess, onFrameSaveError],
+  );
+
+  const onSaveChanges = useCallback(() => {
+    if (isIframeDirty) {
+      onSaveIframe();
+    } else {
+      onSave();
+    }
+  }, [isIframeDirty, onSave, onSaveIframe]);
+
+  const onDiscardChanges = useCallback(() => {
+    if (isIframeDirty) {
+      onDiscardIframe();
+    } else {
+      onDiscard();
+    }
+  }, [isIframeDirty, onDiscard, onDiscardIframe]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -214,9 +269,11 @@ const PlatformApplicationView: FC<Props> = ({
         view={ApplicationRoute.AssetsApplications}
         entity={selectedApp}
         etag={etag}
-        isChanged={isChanged}
-        onDiscard={onDiscard}
-        onSave={onSave}
+        isChanged={isChanged || isIframeDirty}
+        isSaving={isIframeSaving}
+        isSaveDisabled={!isIframeValid}
+        onDiscard={onDiscardChanges}
+        onSave={onSaveChanges}
         tabs={tabs}
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
@@ -252,7 +309,9 @@ const PlatformApplicationView: FC<Props> = ({
             isSkipRefresh
             discardKey={discardKey}
             isChanged={isChanged}
-            onSave={onSave}
+            frameRef={frameRef}
+            frameCallbacks={frameCallbacks}
+            onSave={onSaveChanges}
             onChangeApplication={setSelectedApp as (application: DialApplication) => void}
             setIsChanged={setIsChanged}
             setSelectedApplication={setSelectedApp as Dispatch<SetStateAction<DialApplication>>}

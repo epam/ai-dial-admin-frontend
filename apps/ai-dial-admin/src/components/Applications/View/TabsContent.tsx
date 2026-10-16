@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react';
+import { Dispatch, FC, Fragment, Ref, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
@@ -8,6 +8,7 @@ import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties'
 import ResourceFeatures from '@/src/components/Assets/Resources/ResourceFeatures';
 import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
 import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';
+import { FrameCallbacks, FrameRendererHandle } from '@/src/components/FrameRenderer/models';
 import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
@@ -57,6 +58,8 @@ interface Props {
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   isChanged?: boolean;
+  frameRef?: Ref<FrameRendererHandle>;
+  frameCallbacks?: FrameCallbacks;
   onSave?: () => void;
   onChangeApplication: (application: DialApplication) => void;
 }
@@ -80,6 +83,8 @@ const TabsContent: FC<Props> = ({
   discardKey,
   isEditorEnabled,
   isChanged,
+  frameRef,
+  frameCallbacks,
   onSave,
   setIsChanged,
   setSelectedApplication,
@@ -190,6 +195,8 @@ const TabsContent: FC<Props> = ({
           applicationSchemes={applicationSchemes}
           isEditorEnabled={isEditorEnabled}
           discardKey={discardKey}
+          frameRef={frameRef}
+          frameCallbacks={frameCallbacks}
           onChange={onChangeApplication}
           setIsChanged={setIsChanged}
           setSelectedApplication={setSelectedApplication}
