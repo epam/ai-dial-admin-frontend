@@ -225,11 +225,7 @@ const TryOutRequestPreview: FC<Props> = ({
           <p className="dial-small-text mb-2">{previewLabel}</p>
           <p className="text-secondary mb-2 dial-small-text">{previewDescription}</p>
           <div className="flex-1 min-h-0">
-            <JsonEditor
-              entity={resolvedRequest}
-              options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
-              readonly={true}
-            />
+            <JsonEditor entity={resolvedRequest} options={{ wordWrap: 'bounded' }} readonly={true} />
           </div>
         </div>
       )}

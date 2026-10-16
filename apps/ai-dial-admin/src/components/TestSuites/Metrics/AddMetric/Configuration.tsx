@@ -155,7 +155,6 @@ const MetricConfiguration: FC<Props> = ({
           <div className="flex-1 min-h-0">
             <JsonEditor
               entity={metricConfigData as object}
-              options={{ stickyScroll: { enabled: false } }}
               setSelectedEntity={onChangeMetricConfigData as Dispatch<SetStateAction<MetricConfigurationData>>}
             />
           </div>

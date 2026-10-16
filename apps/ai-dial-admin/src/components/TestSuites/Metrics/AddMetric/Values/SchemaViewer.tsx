@@ -34,7 +34,6 @@ const SchemaViewer: FC<Props> = ({ schema }) => {
         options={{
           ...editorOptions,
           readOnly: true,
-          stickyScroll: { enabled: false },
           renderLineHighlight: 'none',
           hideCursorInOverviewRuler: true,
         }}

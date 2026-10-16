@@ -42,10 +42,7 @@ const JsonAtaInput: FC<Props> = ({
   const [expression, setExpression] = useState(value);
   const [type, setType] = useState<string | undefined>(undefined);
 
-  const editorOptions = useMemo(
-    () => ({ stickyScroll: { enabled: false }, ...EDITOR_HINTS_OFF_OPTIONS, ariaLabel: header }),
-    [header],
-  );
+  const editorOptions = useMemo(() => ({ ...EDITOR_HINTS_OFF_OPTIONS, ariaLabel: header }), [header]);
 
   const resetDraftFromValue = useCallback(() => {
     setExpression(value);
