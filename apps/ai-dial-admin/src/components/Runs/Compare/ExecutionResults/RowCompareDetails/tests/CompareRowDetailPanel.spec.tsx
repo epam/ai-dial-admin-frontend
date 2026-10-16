@@ -1,11 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import type { ColDef } from 'ag-grid-community';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+
+const R1_METRICS = { Exact: { score: 1, recall: 1 }, Fuzzy: { score: 0.5 } };
+const R2_METRICS = { Exact: { score: 0, recall: 0 }, Fuzzy: { score: 0.9 } };
+const METRIC_GROUP_ORDER = ['Exact', 'Fuzzy'];
+const detailState = { hasMetrics: false };
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getTestCaseRunResultDetails: vi.fn((id: string) =>
@@ -14,6 +20,7 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
       executionStatus: 'SUCCESS',
       execDurationMs: 100,
       testCaseName: 'Case 1',
+      metricValues: detailState.hasMetrics ? (id === 'r1' ? R1_METRICS : R2_METRICS) : undefined,
     }),
   ),
 }));
@@ -29,14 +36,47 @@ vi.mock('@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/Compar
 }));
 
 vi.mock('@/src/components/Runs/Compare/ExecutionResults/DiffLegend', () => ({
-  default: () => null,
+  default: ({ counts }: { counts: { changed: number } }) => <div>{`diff:${counts.changed}`}</div>,
 }));
 
 vi.mock('@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailDisplayPanel', () => ({
-  default: ({ hideHighlights, viewDifferencesOnly }: { hideHighlights: boolean; viewDifferencesOnly: boolean }) => (
+  default: ({
+    columns,
+    onColumnsChange,
+    hideHighlights,
+    viewDifferencesOnly,
+  }: {
+    columns: ColDef[];
+    onColumnsChange: (columns: ColDef[]) => void;
+    hideHighlights: boolean;
+    viewDifferencesOnly: boolean;
+  }) => (
     <div>
       <span>{hideHighlights ? 'highlights-hidden' : 'highlights-shown'}</span>
       <span>{viewDifferencesOnly ? 'diffs-only' : 'all-rows'}</span>
+      {columns.map((group) => (
+        <button
+          key={group.headerName}
+          type="button"
+          onClick={() =>
+            onColumnsChange(
+              columns.map((node) =>
+                node === group
+                  ? {
+                      ...node,
+                      children: (node as { children: ColDef[] }).children.map((leaf) => ({
+                        ...leaf,
+                        hide: !leaf.hide,
+                      })),
+                    }
+                  : node,
+              ),
+            )
+          }
+        >
+          {`toggle ${group.headerName}`}
+        </button>
+      ))}
     </div>
   ),
 }));
@@ -100,5 +140,57 @@ describe('CompareRowDetailPanel', () => {
     );
 
     expect(await screen.findByText('table:answer')).toBeInTheDocument();
+  });
+
+  describe('Diff counter', () => {
+    beforeEach(() => {
+      detailState.hasMetrics = true;
+    });
+
+    afterEach(() => {
+      detailState.hasMetrics = false;
+    });
+
+    const renderPanel = (position = SidebarPosition.Bottom) =>
+      render(
+        <CompareRowDetailPanel
+          row={row}
+          runs={runs}
+          onClose={vi.fn()}
+          position={position}
+          onSwitchDisplayMode={vi.fn()}
+          metricGroupOrder={METRIC_GROUP_ORDER}
+        />,
+      );
+
+    test('counts every differing field while all groups are shown', async () => {
+      renderPanel();
+
+      expect(await screen.findByText('diff:3')).toBeInTheDocument();
+    });
+
+    test('counts only the groups left enabled in Display > Rows and recounts when one is re-enabled', async () => {
+      renderPanel();
+      await screen.findByText('diff:3');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Runs.RunCompareDisplay' }));
+      fireEvent.click(screen.getByRole('button', { name: 'toggle Fuzzy' }));
+
+      expect(await screen.findByText('diff:2')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'toggle Fuzzy' }));
+
+      expect(await screen.findByText('diff:3')).toBeInTheDocument();
+    });
+
+    test('shows the same count in the side panel', async () => {
+      renderPanel(SidebarPosition.Right);
+      await screen.findByText('diff:3');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Runs.RunCompareDisplay' }));
+      fireEvent.click(screen.getByRole('button', { name: 'toggle Fuzzy' }));
+
+      expect(await screen.findByText('diff:2')).toBeInTheDocument();
+    });
   });
 });

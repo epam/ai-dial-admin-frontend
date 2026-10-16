@@ -86,7 +86,7 @@ const mockQueries = () => {
 };
 
 const RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
-const FLIPPED_RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }, true);
+const REVERSED_RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }).reverse();
 
 const renderAnalytics = (overrides: Partial<ComponentProps<typeof Analytics>> = {}) =>
   render(
@@ -120,6 +120,13 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.getByText('0.812')).toBeInTheDocument();
     expect(screen.getByText('0.265')).toBeInTheDocument();
     expect(screen.getByText('delta:-0.547')).toBeInTheDocument();
+  });
+
+  test('measures the overall score delta from the baseline, so swapping the runs negates it', async () => {
+    mockQueries();
+    renderAnalytics({ primaryOverallScore: 0.265, comparedOverallScore: 0.812 });
+
+    expect(await screen.findByText('delta:0.547')).toBeInTheDocument();
   });
 
   test('hides overall score when both sides are null', async () => {
@@ -181,9 +188,9 @@ describe('Compare Summary :: Analytics', () => {
     expect(passedCard).not.toHaveTextContent('delta:-3');
   });
 
-  test('lists the compared run first when flipped, keeping the delta measured against the baseline', async () => {
+  test('lists the compared run first when displayed in reverse, keeping the delta measured against the baseline', async () => {
     mockQueries();
-    renderAnalytics({ runs: FLIPPED_RUNS, primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
+    renderAnalytics({ runs: REVERSED_RUNS, primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
 
     const overallCard = await screen.findByRole('region', { name: 'Runs.OverallScore' });
     const text = overallCard.textContent ?? '';

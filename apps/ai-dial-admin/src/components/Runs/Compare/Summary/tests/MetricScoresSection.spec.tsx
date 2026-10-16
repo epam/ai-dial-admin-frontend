@@ -92,18 +92,20 @@ const COMPARED: MetricScoresData = {
   },
 };
 
+const RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
+
 const Controlled: FC<{
   primary?: MetricScoresData | null;
   compared?: MetricScoresData | null;
   onSelectMetric?: (name: string) => void;
-  isFlipped?: boolean;
-}> = ({ primary = PRIMARY, compared = COMPARED, onSelectMetric = vi.fn(), isFlipped = false }) => {
+  isReversed?: boolean;
+}> = ({ primary = PRIMARY, compared = COMPARED, onSelectMetric = vi.fn(), isReversed = false }) => {
   const [selectedStatistic, setSelectedStatistic] = useState<string | null>('AVG');
   return (
     <MetricScoresSection
       primaryData={primary}
       comparedData={compared}
-      runs={getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }, isFlipped)}
+      runs={isReversed ? RUNS.slice().reverse() : RUNS}
       selectedStatistic={selectedStatistic}
       onSelectStatistic={setSelectedStatistic}
       onSelectMetric={onSelectMetric}
@@ -174,8 +176,8 @@ describe('Compare Summary :: MetricScoresSection', () => {
     expect(screen.queryByText('Runs.NoMetricScores')).not.toBeInTheDocument();
   });
 
-  test('puts the compared run first when flipped', () => {
-    render(<Controlled isFlipped />);
+  test('puts the compared run first when displayed in reverse', () => {
+    render(<Controlled isReversed />);
 
     const group = screen.getByRole('group', { name: 'ragas' });
     const labels = Array.from(group.querySelectorAll('span')).map((span) => span.textContent);

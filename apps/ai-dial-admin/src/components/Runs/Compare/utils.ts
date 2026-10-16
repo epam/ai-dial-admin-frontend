@@ -31,22 +31,11 @@ export const getSelectableCompareRuns = (
   return suiteRuns.filter((run) => run.id !== excludedRunId);
 };
 
-/**
- * Builds the runs in display order. The primary run is always the baseline; `isFlipped` only changes
- * where it is shown.
- */
-export const getCompareRuns = (
-  primary: CompareRunSource,
-  compared: CompareRunSource,
-  isFlipped = false,
-): CompareRun[] => {
-  const runs: CompareRun[] = [
-    { ...primary, slot: CompareRunSlot.Primary, index: RUN_COMPARE_PRIMARY_INDEX, isBaseline: true },
-    { ...compared, slot: CompareRunSlot.Secondary, index: RUN_COMPARE_SECONDARY_INDEX, isBaseline: false },
-  ];
-
-  return isFlipped ? runs.reverse() : runs;
-};
+/** Builds the compared runs in display order. The primary run is the baseline and is always shown first. */
+export const getCompareRuns = (primary: CompareRunSource, compared: CompareRunSource): CompareRun[] => [
+  { ...primary, slot: CompareRunSlot.Primary, index: RUN_COMPARE_PRIMARY_INDEX, isBaseline: true },
+  { ...compared, slot: CompareRunSlot.Secondary, index: RUN_COMPARE_SECONDARY_INDEX, isBaseline: false },
+];
 
 /** The result a merged row holds for a run: the row itself for the primary slot, `_compared` otherwise. */
 export const getCompareRowResult = (
