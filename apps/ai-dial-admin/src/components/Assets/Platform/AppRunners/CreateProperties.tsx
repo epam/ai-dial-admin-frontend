@@ -11,6 +11,7 @@ import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
 interface Props {
   entity: DialAppRunnerResource;
   names: string[];
+  externalIdError?: string;
   isModal?: boolean;
   onChangeEntity: (entity: object) => void;
 }
@@ -20,7 +21,7 @@ interface Props {
  * URL validation and the required display name behave identically on both surfaces; `AssetProperties`
  * is bypassed because it renders a version field, which this flat unversioned type has no use for.
  */
-const AppRunnerCreateProperties: FC<Props> = ({ entity, names, isModal, onChangeEntity }) => {
+const AppRunnerCreateProperties: FC<Props> = ({ entity, names, externalIdError, isModal, onChangeEntity }) => {
   const t = useI18n();
   return (
     <div className="flex flex-col gap-y-8">
@@ -39,6 +40,7 @@ const AppRunnerCreateProperties: FC<Props> = ({ entity, names, isModal, onChange
         runner={entity as unknown as DialApplicationScheme}
         isModal={isModal}
         idForbiddenChars={CORE_UNENCODABLE_ID_CHARS}
+        externalIdError={externalIdError}
         onChangeRunner={(scheme: DialApplicationScheme) => onChangeEntity({ ...entity, ...scheme })}
       />
     </div>

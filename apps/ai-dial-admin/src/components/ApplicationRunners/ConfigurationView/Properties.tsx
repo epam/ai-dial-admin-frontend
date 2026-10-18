@@ -17,6 +17,7 @@ interface Props {
   isModal?: boolean;
   /** Characters the `$id` may not contain. Only the asset surface constrains this — see `CORE_UNENCODABLE_ID_CHARS`. */
   idForbiddenChars?: readonly string[];
+  externalIdError?: string;
   onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
@@ -25,6 +26,7 @@ const SchemeProperties: FC<Props> = ({
   runner,
   isImmutable,
   idForbiddenChars,
+  externalIdError,
   onChangeRunner,
   isModal,
   view = ApplicationRoute.ApplicationRunners,
@@ -45,8 +47,11 @@ const SchemeProperties: FC<Props> = ({
       {!isImmutable && (
         <IdControl
           names={names}
+          inputId="id"
+          validationField="id"
           isUrlId
           forbiddenChars={idForbiddenChars}
+          externalError={externalIdError}
           entity={{ name: runner.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />

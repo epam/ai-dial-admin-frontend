@@ -1,5 +1,6 @@
-import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { Mock, describe, expect, test, vi } from 'vitest';
 import CreateEntity from '../CreateEntity';
@@ -346,5 +347,182 @@ describe('CreateEntity', () => {
     // the folder and the skill name is itself percent-encoded (`%2F`) — the separator this test
     // guards against being dropped entirely.
     expect(push.mock.calls[0][0]).toContain(encodeURIComponent('public/New folder 1/folder-s2'));
+  });
+
+  test('shows an inline error and permits creation after correcting an existing Catalog Schema ID', async () => {
+    const user = userEvent.setup();
+    const existingId = 'https://dial.epam.com/catalog_schemas/existing';
+    const correctedId = 'https://dial.epam.com/catalog_schemas/corrected';
+    const createCatalogSchema = vi.fn().mockResolvedValue({ success: false });
+    const getCatalogSchemaById = vi.fn().mockImplementation(async (id: string) => ({
+      success: id === existingId,
+      response: id === existingId ? {} : undefined,
+    }));
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformCatalogSchemas}
+        isModalOpen={true}
+        isModal
+        onClose={vi.fn()}
+        names={[]}
+        createEntity={createCatalogSchema}
+        getEntityById={getCatalogSchemaById}
+        initialValues={{
+          name: 'catalog-schema',
+          $id: existingId,
+          'dial:catalogEntityType': 'agent',
+          'dial:catalogDisplayName': 'Catalog schema',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
+    expect(getCatalogSchemaById).toHaveBeenCalledWith(existingId);
+    expect(createCatalogSchema).not.toHaveBeenCalled();
+
+    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
+    await user.clear(idInput);
+    await user.type(idInput, correctedId);
+
+    expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() =>
+      expect(createCatalogSchema).toHaveBeenCalledWith(expect.objectContaining({ $id: correctedId })),
+    );
+  });
+
+  test('uses the normal Catalog Schema create callback when the ID does not resolve', async () => {
+    const user = userEvent.setup();
+    const id = 'https://dial.epam.com/catalog_schemas/new';
+    const createCatalogSchema = vi.fn().mockResolvedValue({ success: false });
+    const getCatalogSchemaById = vi.fn().mockResolvedValue({ success: false });
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformCatalogSchemas}
+        isModalOpen={true}
+        isModal
+        onClose={vi.fn()}
+        names={[]}
+        createEntity={createCatalogSchema}
+        getEntityById={getCatalogSchemaById}
+        initialValues={{
+          name: 'catalog-schema',
+          $id: id,
+          'dial:catalogEntityType': 'agent',
+          'dial:catalogDisplayName': 'Catalog schema',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() => expect(createCatalogSchema).toHaveBeenCalledWith(expect.objectContaining({ $id: id })));
+  });
+
+  test('uses the normal Catalog Schema create callback when ID resolution fails', async () => {
+    const user = userEvent.setup();
+    const id = 'https://dial.epam.com/catalog_schemas/unavailable';
+    const createCatalogSchema = vi.fn().mockResolvedValue({ success: false });
+    const getCatalogSchemaById = vi.fn().mockRejectedValue(new Error('Core is unavailable'));
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformCatalogSchemas}
+        isModalOpen={true}
+        isModal
+        onClose={vi.fn()}
+        names={[]}
+        createEntity={createCatalogSchema}
+        getEntityById={getCatalogSchemaById}
+        initialValues={{
+          name: 'catalog-schema',
+          $id: id,
+          'dial:catalogEntityType': 'agent',
+          'dial:catalogDisplayName': 'Catalog schema',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() => expect(createCatalogSchema).toHaveBeenCalledWith(expect.objectContaining({ $id: id })));
+  });
+
+  test('shows an inline error and permits creation after correcting an existing Platform App Runner ID', async () => {
+    const user = userEvent.setup();
+    const existingId = 'https://dial.epam.com/application_type_schemas/existing';
+    const correctedId = 'https://dial.epam.com/application_type_schemas/corrected';
+    const createRunner = vi.fn().mockResolvedValue({ success: false });
+    const getResolvedRunnerSchema = vi.fn().mockImplementation(async (id: string) => ({
+      success: id === existingId,
+      response: id === existingId ? {} : undefined,
+    }));
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformAppRunners}
+        isModalOpen={true}
+        isModal
+        onClose={vi.fn()}
+        names={[]}
+        createEntity={createRunner}
+        getEntityById={getResolvedRunnerSchema}
+        initialValues={{
+          name: 'app-runner',
+          $id: existingId,
+          'dial:applicationTypeDisplayName': 'App Runner',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith(existingId);
+    expect(createRunner).not.toHaveBeenCalled();
+
+    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
+    await user.clear(idInput);
+    await user.type(idInput, correctedId);
+
+    expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() => expect(createRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: correctedId })));
+  });
+
+  test('uses the normal Platform App Runner create callback when ID resolution fails', async () => {
+    const user = userEvent.setup();
+    const id = 'https://dial.epam.com/application_type_schemas/unavailable';
+    const createRunner = vi.fn().mockResolvedValue({ success: false });
+    const getResolvedRunnerSchema = vi.fn().mockRejectedValue(new Error('Core is unavailable'));
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformAppRunners}
+        isModalOpen={true}
+        isModal
+        onClose={vi.fn()}
+        names={[]}
+        createEntity={createRunner}
+        getEntityById={getResolvedRunnerSchema}
+        initialValues={{
+          name: 'app-runner',
+          $id: id,
+          'dial:applicationTypeDisplayName': 'App Runner',
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() => expect(createRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: id })));
   });
 });
