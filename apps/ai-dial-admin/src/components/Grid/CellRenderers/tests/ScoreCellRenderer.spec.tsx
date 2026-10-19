@@ -14,6 +14,7 @@ interface RenderParamsOverrides {
   mode?: ScoreColorMode;
   theme?: string;
   columnWidth?: number;
+  context?: unknown;
 }
 
 const [DEFAULT_TIER, MEDIUM_TIER, SMALL_TIER] = HEAT_MAP_VALUE_TIERS;
@@ -158,5 +159,23 @@ describe('ScoreCellRenderer', () => {
   test('applies the tier text size to the missing-value dash', () => {
     renderCell({ value: null, columnWidth: MEDIUM_TIER.minWidthAbsolute });
     expect(screen.getByText('—')).toHaveClass(MEDIUM_TIER.textClassName);
+  });
+});
+
+describe('ScoreCellRenderer — heat map layout width', () => {
+  test('sizes the value from the grid layout width rather than the column own width', () => {
+    renderCell({
+      value: 0.5,
+      columnWidth: DEFAULT_TIER.minWidthAbsolute,
+      context: { valueColumnLayoutWidth: MEDIUM_TIER.minWidthAbsolute },
+    });
+
+    expect(screen.getByText('0.500')).toHaveClass(MEDIUM_TIER.textClassName);
+  });
+
+  test('falls back to the column width when the context carries no layout width', () => {
+    renderCell({ value: 0.5, columnWidth: SMALL_TIER.minWidthAbsolute - 1, context: {} });
+
+    expect(screen.queryByText('0.500')).not.toBeInTheDocument();
   });
 });

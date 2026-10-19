@@ -13,6 +13,7 @@ import {
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE,
 } from '@/src/components/Common/HeatMap/constants';
+import { HeatMapGridContext } from '@/src/components/Common/HeatMap/models';
 
 export const shouldUseHeatMapHorizontalLayout = (columnWidth: number): boolean =>
   columnWidth >= HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH;
@@ -25,13 +26,22 @@ export const getHeatMapValueColumns = (
   valueColumnIdPrefix: string = HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE,
 ): Column[] => (api.getColumns() ?? []).filter((col) => col.getColId().startsWith(valueColumnIdPrefix));
 
+/**
+ * The width every value column is laid out for: the narrowest one. Equal widths still differ by 1px
+ * where the remainder pixels land, and a header or cell choosing its layout from its own width would
+ * flip orientation or font size across a threshold for those columns alone.
+ */
 export const getHeatMapValueColumnWidth = (
   api: GridApi,
   valueColumnIdPrefix: string = HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE,
 ): number => {
-  const valueColumn = getHeatMapValueColumns(api, valueColumnIdPrefix)[0];
-  return valueColumn?.getActualWidth() ?? 0;
+  const widths = getHeatMapValueColumns(api, valueColumnIdPrefix).map((col) => col.getActualWidth());
+  return widths.length ? Math.min(...widths) : 0;
 };
+
+/** The layout width a heat map grid published on its context; any other grid falls back to the column's own. */
+export const resolveHeatMapLayoutWidth = (context: unknown, column?: Column | null): number | undefined =>
+  (context as HeatMapGridContext | undefined)?.valueColumnLayoutWidth ?? column?.getActualWidth();
 
 /** @deprecated Prefer getHeatMapValueColumns — kept for Compare call-site clarity. */
 export const getHeatMapTestCaseColumns = (api: GridApi): Column[] =>

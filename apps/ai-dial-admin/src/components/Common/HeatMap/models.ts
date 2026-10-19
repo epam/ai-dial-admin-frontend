@@ -20,6 +20,11 @@ export interface HeatMapCellTooltipContent {
   valueText?: string;
 }
 
+/** Published on the grid `context` by `HeatMapGrid`; read by the axis header and score cell renderers. */
+export interface HeatMapGridContext {
+  valueColumnLayoutWidth?: number;
+}
+
 export interface HeatMapValueTier {
   textClassName: string;
   paddingClassName: string;

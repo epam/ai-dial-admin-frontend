@@ -42,7 +42,7 @@ const createColumnMock = (width: number) => ({ getActualWidth: () => width });
 
 type HeatMapAxisHeaderProps = IHeaderParams & { label?: string };
 
-type HeaderParamOverrides = Partial<Pick<HeatMapAxisHeaderProps, 'label' | 'displayName'>> & {
+type HeaderParamOverrides = Partial<Pick<HeatMapAxisHeaderProps, 'label' | 'displayName' | 'context'>> & {
   api?: { getGridOption: (key: string) => number };
 };
 
@@ -78,6 +78,19 @@ describe('HeatMapAxisHeader', () => {
       lineHeight: '12px',
     });
     expect(container.firstChild).toHaveStyle({ paddingTop: '4px', paddingBottom: '4px' });
+  });
+
+  test('follows the layout width from the grid context over the column own width', () => {
+    render(
+      <HeatMapAxisHeader
+        {...createHeaderParams(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH, {
+          context: { valueColumnLayoutWidth: HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH - 1 },
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('dial-tooltip')).toBeInTheDocument();
+    expect(screen.queryByTestId('ellipsis-tooltip')).not.toBeInTheDocument();
   });
 
   test('hides vertical Tooltip when label fits the header height', () => {

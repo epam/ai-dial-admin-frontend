@@ -14,6 +14,7 @@ import {
 } from '@/src/components/Common/HeatMap/constants';
 import {
   measureVerticalHeatMapHeaderLabelHeight,
+  resolveHeatMapLayoutWidth,
   shouldUseHeatMapHorizontalLayout,
 } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
 
@@ -21,10 +22,9 @@ interface Props extends IHeaderParams {
   label?: string;
 }
 
-const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
+const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api, context }) => {
   const headerLabel = label ?? displayName;
-  const columnWidth = column?.getActualWidth() ?? 0;
-  const isHorizontal = shouldUseHeatMapHorizontalLayout(columnWidth);
+  const isHorizontal = shouldUseHeatMapHorizontalLayout(resolveHeatMapLayoutWidth(context, column) ?? 0);
 
   if (isHorizontal) {
     return (
@@ -50,7 +50,12 @@ const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
         paddingBottom: HEAT_MAP_HEADER_LABEL_BOTTOM_PADDING,
       }}
     >
-      <Tooltip tooltip={headerLabel} hideTooltip={hideTooltip} triggerClassName="min-w-0 max-h-full">
+      {/* A definite trigger height is what `maxHeight: 100%` on the label clamps to; without it a long label overflows the header. */}
+      <Tooltip
+        tooltip={headerLabel}
+        hideTooltip={hideTooltip}
+        triggerClassName="flex h-full min-h-0 min-w-0 items-end justify-center"
+      >
         <span
           className="font-semibold text-secondary whitespace-nowrap truncate"
           style={{

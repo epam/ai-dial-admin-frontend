@@ -8,6 +8,7 @@ import {
   formatHeatMapCellValueForMode,
   resolveHeatMapValueTier,
 } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+import { resolveHeatMapLayoutWidth } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
 import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 
@@ -41,8 +42,8 @@ const isScoreValue = (value: unknown, mode: ScoreColorMode): value is number =>
  * - Value hidden (see `isHidden` below): a right+bottom border in the bucket's visible accent color,
  *   so the grid structure stays legible once the numbers themselves are gone.
  */
-const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: ScoreCellRendererParams) => {
-  const columnWidth = column?.getActualWidth();
+const ScoreCellRenderer = ({ value, column, context, mode = ScoreColorMode.Absolute }: ScoreCellRendererParams) => {
+  const columnWidth = resolveHeatMapLayoutWidth(context, column);
   const tier =
     columnWidth == null ? DEFAULT_VALUE_TIER : resolveHeatMapValueTier(columnWidth, mode === ScoreColorMode.Delta);
   const isHidden = tier == null;
