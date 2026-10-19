@@ -17,6 +17,8 @@ export interface CompareRowDiffVisibility {
 }
 
 export interface CompareColumnPanelContext {
+  /** Drag id for a panel row whose label repeats, e.g. a metric group split around another block. */
+  panelKey?: string;
   panelName?: string;
   panelRunIndex?: CompareRunIndex;
 }

@@ -14,7 +14,9 @@ import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import {
   buildComparePanelColumnTree,
+  columnStateFromComparePanelTree,
   flattenComparePanelColumnTree,
+  orderComparePanelTree,
   preserveFlatColDefHideState,
   preservePanelHideState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
@@ -256,4 +258,103 @@ describe('Runs Compare :: buildComparePanelColumnTree run order', () => {
 
     expect(((status as ColGroupDef).children as ColDef[]).map((leaf) => leaf.colId)).toEqual(['cmp_status', 'status']);
   });
+
+  test('orderComparePanelTree keeps one metric group while its fields are adjacent', () => {
+    const tree = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+
+    const rows = orderComparePanelTree(tree, toState(leafIds(tree)));
+
+    expect(rows.map(rowSummary)).toContain('Set Comparison[precision|recall]');
+  });
+
+  test('orderComparePanelTree splits a metric group around a block placed between its fields', () => {
+    const tree = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+
+    const rows = orderComparePanelTree(tree, toState(recallAfterExtracted(tree)));
+    const summaries = rows.map(rowSummary);
+    const precisionIndex = summaries.indexOf('Set Comparison[precision]');
+    const extractedIndex = summaries.indexOf('Extracted[intents_array]');
+    const recallIndex = summaries.indexOf('Set Comparison[recall]');
+
+    expect(precisionIndex).toBeGreaterThan(-1);
+    expect(precisionIndex).toBeLessThan(extractedIndex);
+    expect(extractedIndex).toBeLessThan(recallIndex);
+    expect(rows[precisionIndex].headerName).toBe('Set Comparison');
+    expect(panelKey(rows[precisionIndex])).not.toBe(panelKey(rows[recallIndex]));
+  });
+
+  test('a panel move that puts the split pieces side by side joins them back', () => {
+    const initial = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const split = orderComparePanelTree(initial, toState(recallAfterExtracted(initial)));
+    const recallIndex = split.findIndex((row) => rowSummary(row) === 'Set Comparison[recall]');
+    const extractedIndex = split.findIndex((row) => rowSummary(row) === 'Extracted[intents_array]');
+    const moved = [...split];
+    const [recall] = moved.splice(recallIndex, 1);
+    moved.splice(extractedIndex, 0, recall);
+
+    const nextState = columnStateFromComparePanelTree(
+      moved,
+      leafIds(split).map((colId) => ({ colId, hide: false })),
+    );
+    const rows = orderComparePanelTree(moved, nextState);
+
+    expect(rows.map(rowSummary)).toContain('Set Comparison[precision|recall]');
+    expect(panelKey(rows.find((row) => row.headerName === 'Set Comparison') as ColDef)).toBeUndefined();
+  });
+
+  test('flattening a split panel tree keeps separate metric groups for the grid', () => {
+    const initial = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const split = orderComparePanelTree(initial, toState(recallAfterExtracted(initial)));
+
+    const flat = flattenComparePanelColumnTree(split);
+    const headers = flat.map((node) => node.headerName);
+
+    expect(headers.filter((name) => name === 'Set Comparison')).toHaveLength(2);
+    expect(headers.indexOf('Set Comparison')).toBeLessThan(headers.indexOf(EXTRACTED_GROUP_HEADER));
+    expect(headers.lastIndexOf('Set Comparison')).toBeGreaterThan(headers.indexOf(EXTRACTED_GROUP_HEADER));
+  });
 });
+
+const getSetComparisonDefs = () =>
+  getCompareColumnsCompare([
+    makeRow({
+      metricValues: { 'Set Comparison': { precision: 0.8, recall: 0.4 } },
+      extractedColumns: { intents_array: 'a' },
+      _compared: makeResult({
+        metricValues: { 'Set Comparison': { precision: 0.5, recall: 0.2 } },
+        extractedColumns: { intents_array: 'b' },
+      }),
+    }),
+  ]) as ColDef[];
+
+const toState = (colIds: string[]) => colIds.map((colId) => ({ colId }));
+
+const recallAfterExtracted = (tree: ColDef[]): string[] => {
+  const recallIds = leafIdsUnder(tree, 'recall');
+  const extractedIds = leafIdsUnder(tree, 'intents_array');
+  const withoutRecall = leafIds(tree).filter((colId) => !recallIds.includes(colId));
+  const extractedEnd = withoutRecall.findLastIndex((colId) => extractedIds.includes(colId));
+
+  return [...withoutRecall.slice(0, extractedEnd + 1), ...recallIds, ...withoutRecall.slice(extractedEnd + 1)];
+};
+
+const rowSummary = (row: ColDef): string =>
+  `${row.headerName}[${getChildren(row)
+    .map((child) => child.headerName)
+    .join('|')}]`;
+
+const panelKey = (row: ColDef): string | undefined => (row.context as CompareColumnPanelContext | undefined)?.panelKey;
+
+const leafIds = (nodes: ColDef[]): string[] =>
+  nodes.flatMap((node) => {
+    const children = getChildren(node);
+    return children.length === 0 ? [getColId(node) ?? ''] : leafIds(children);
+  });
+
+const leafIdsUnder = (nodes: ColDef[], headerName: string): string[] =>
+  nodes.flatMap((node) => {
+    if (node.headerName === headerName) {
+      return leafIds([node]);
+    }
+    return leafIdsUnder(getChildren(node), headerName);
+  });

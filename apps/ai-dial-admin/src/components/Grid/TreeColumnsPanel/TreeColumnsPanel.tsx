@@ -32,8 +32,8 @@ const DEFAULT_SKIP_LEAF_NAMES: string[] = [];
 const DRAG_TYPE = 'tree-column';
 
 const getColId = (col: ColDef, i: number): string => {
-  const ctx = col.context as { panelName?: string } | undefined;
-  return ctx?.panelName || col.headerName?.trim() || String(i);
+  const ctx = col.context as { panelKey?: string; panelName?: string } | undefined;
+  return ctx?.panelKey || ctx?.panelName || col.headerName?.trim() || String(i);
 };
 
 interface DraggableTreeItemProps {
