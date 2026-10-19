@@ -4,9 +4,9 @@ import { CSSProperties, FC } from 'react';
 
 import classNames from 'classnames';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Badge, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import DeltaValue from '@/src/components/Analytics/Usage/Delta/DeltaValue';
+import DeltaBadge from '@/src/components/Analytics/Usage/Delta/DeltaBadge';
 import Sparkline from '@/src/components/Analytics/Usage/Kpi/Sparkline';
 import { KpiCardModel } from '@/src/components/Analytics/Usage/models';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
@@ -64,18 +64,8 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed }) =>
     >
       <div className="flex items-center justify-between gap-2">
         <span className="dial-tiny-text text-secondary">{t(card.titleKey)}</span>
-        {card.deltaRatio == null && card.isNew && (
-          <span className="dial-tiny-semi-text rounded bg-layer-4 px-1.5 py-0.5 text-secondary">
-            {t(AnalyticsUsageI18nKey.RowIsNew)}
-          </span>
-        )}
-        {card.deltaRatio != null && (
-          <DeltaValue
-            ratio={card.deltaRatio}
-            metric={card.metric}
-            className="dial-tiny-semi-text rounded bg-layer-4 px-1.5 py-0.5"
-          />
-        )}
+        {card.deltaRatio == null && card.isNew && <Badge label={t(AnalyticsUsageI18nKey.RowIsNew)} />}
+        {card.deltaRatio != null && <DeltaBadge ratio={card.deltaRatio} metric={card.metric} />}
       </div>
 
       {renderFigure()}
