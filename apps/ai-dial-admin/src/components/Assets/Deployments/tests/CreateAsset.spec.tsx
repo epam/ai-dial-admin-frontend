@@ -1,8 +1,11 @@
 import { createToolset, createPlatformToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { createApp, createPlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
+import { FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { render, screen } from '@testing-library/react';
@@ -41,6 +44,7 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
 interface CapturedAssetPropertiesProps {
   entity: { version?: string };
   hideVersionField?: boolean;
+  names?: string[];
 }
 
 const assetPropertiesCalls: CapturedAssetPropertiesProps[] = [];
@@ -61,7 +65,9 @@ vi.mock('@/src/components/Common/FolderList/FolderList', () => ({
 
 // A mutable `filePath` behind a getter, so a test can flip the destination bucket between renders
 // exactly the way selecting another folder in the sidebar does.
-const makeContext = (data: AssetsFolderContextReader['data'] = []) => {
+// `items` are the cached listing of whichever folder is selected; `null` means that folder has not been
+// fetched, and `hasFetchError` is the context's signal that the fetch failed.
+const makeContext = (items: AssetListItem[] | null = [], hasFetchError = false) => {
   let currentPath = '';
   const ctx = {
     files: [],
@@ -74,12 +80,14 @@ const makeContext = (data: AssetsFolderContextReader['data'] = []) => {
       currentPath = path;
     },
     setFilePath: vi.fn(),
-    fetchedFoldersData: {},
+    get fetchedFoldersData() {
+      return items == null ? {} : { [currentPath]: items };
+    },
     fetchFiles: vi.fn(),
     toggleFolder: vi.fn(),
     isFetchingFiles: false,
-    data,
-  } as AssetsFolderContextReader;
+    hasFetchError,
+  } as unknown as AssetsFolderContextReader;
 
   return { ctx, setFilePath: (path: string) => (currentPath = path) };
 };
@@ -102,24 +110,40 @@ describe('CreateAsset', () => {
     folderListCalls.length = 0;
   });
 
-  test('renders loader and hides AssetProperties while folder data is null', () => {
+  test('renders loader and hides AssetProperties while the selected folder has not loaded', () => {
     renderCreateAsset(makeContext(null).ctx);
 
     expect(screen.queryByText('AssetPropertiesStub')).not.toBeInTheDocument();
+    expect(useNotification().showNotification).not.toHaveBeenCalled();
   });
 
-  test('renders AssetProperties once folder data has loaded (empty folder)', () => {
+  test('renders AssetProperties once the selected folder has loaded (empty folder)', () => {
     renderCreateAsset(makeContext([]).ctx);
 
     expect(screen.getByText('AssetPropertiesStub')).toBeInTheDocument();
   });
 
-  test('renders AssetProperties once folder data has loaded (populated folder)', () => {
-    renderCreateAsset(
-      makeContext([{ name: 'existing', version: '1.0.0' }] as unknown as AssetsFolderContextReader['data']).ctx,
-    );
+  test('renders AssetProperties with the names of the selected folder (populated folder)', () => {
+    renderCreateAsset(makeContext([{ name: 'existing', version: '1.0.0' }] as unknown as AssetListItem[]).ctx);
 
     expect(screen.getByText('AssetPropertiesStub')).toBeInTheDocument();
+    expect(lastAssetProperties().names).toEqual(['existing']);
+  });
+
+  test('stays usable and reports the failure when the selected folder could not be loaded', () => {
+    renderCreateAsset(makeContext(null, true).ctx);
+
+    expect(screen.getByText('AssetPropertiesStub')).toBeInTheDocument();
+    expect(lastAssetProperties().names).toEqual([]);
+    expect(useNotification().showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: FoldersI18nKey.LoadFolderError }),
+    );
+  });
+
+  test('does not report a failure for a folder that loaded', () => {
+    renderCreateAsset(makeContext([]).ctx);
+
+    expect(useNotification().showNotification).not.toHaveBeenCalled();
   });
 
   test('requests file, platform, and public roots for the folder sidebar on a multi-root view', () => {

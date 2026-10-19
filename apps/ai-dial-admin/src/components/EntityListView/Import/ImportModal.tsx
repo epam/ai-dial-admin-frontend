@@ -6,6 +6,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
   determineFilesType,
+  getExistingFolderItems,
   getModalTitle,
   getMultipleImportStatus,
   isInvalidJson,
@@ -36,19 +37,6 @@ interface Props {
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
   preselectedItems?: File[];
 }
-
-const getExistingFolderItems = (folderContext?: AssetsFolderContextReader<AssetListItem>) => {
-  if (!folderContext) {
-    return [];
-  }
-
-  const { filePath, fetchedFoldersData, data } = folderContext;
-  if (filePath != null && Object.hasOwn(fetchedFoldersData, filePath)) {
-    return fetchedFoldersData[filePath];
-  }
-
-  return data ?? [];
-};
 
 const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply, preselectedItems }) => {
   const folderContext = getAssetContext?.();

@@ -16,6 +16,16 @@ export const getFolderName = (path: string): string | undefined => {
 };
 
 /**
+ * Keep only the leaf entries of a folder listing, dropping its sub-folders
+ *
+ * @template T - any listing row
+ * @param {T[]} list - folder listing
+ * @returns {T[]} - the rows whose node type is an item
+ */
+export const getFolderItems = <T extends { nodeType?: DialFileNodeType }>(list: T[]): T[] =>
+  list.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+
+/**
  * Modify files array by adding name as current folder name from file path
  *
  * @param {DialFile[]} files - array of DialFile

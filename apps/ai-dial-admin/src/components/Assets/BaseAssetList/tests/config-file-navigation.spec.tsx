@@ -7,10 +7,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import BaseAssetList from '../BaseAssetList';
 
-const { push, windowOpen, data, fetchedFoldersData } = vi.hoisted(() => ({
+const { push, windowOpen, fetchedFoldersData } = vi.hoisted(() => ({
   push: vi.fn(),
   windowOpen: vi.fn(),
-  data: [] as unknown[],
   fetchedFoldersData: {} as Record<string, unknown[]>,
 }));
 
@@ -26,7 +25,6 @@ vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: () => ({
     fetchFiles: vi.fn(),
     filePath: 'file/',
-    data,
     fetchedFoldersData,
     setFilePath: vi.fn(),
   }),

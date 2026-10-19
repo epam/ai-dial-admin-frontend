@@ -12,8 +12,7 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', async (importOriginal) =
 }));
 
 // Stable references across renders — see the identical note in platform-applications-bucket.spec.tsx.
-const { mockData, mockFetchedFoldersData } = vi.hoisted(() => ({
-  mockData: [] as unknown[],
+const { mockFetchedFoldersData } = vi.hoisted(() => ({
   mockFetchedFoldersData: {} as Record<string, unknown[]>,
 }));
 
@@ -21,7 +20,6 @@ vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: () => ({
     fetchFiles: vi.fn(),
     filePath: 'public/folder/',
-    data: mockData,
     fetchedFoldersData: mockFetchedFoldersData,
     setFilePath: vi.fn(),
   }),

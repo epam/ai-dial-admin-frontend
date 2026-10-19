@@ -57,7 +57,9 @@ context: |
 
   ### Provider stack ([lang]/layout.tsx)
   I18nProvider → NextAuthProvider → AppContextProvider → ThemeProvider →
-  RuleFolderProvider → PromptFolderProvider → NotificationProvider
+  RuleFolderProvider → AssetFolderProviders → NotificationProvider → HelpTopicProvider
+  (`AssetFolderProviders` composes the 14 `createFolderContext` providers via `composeProviders`;
+  add a new asset entity to its list in `context/assets/AssetFolderProviders.tsx`, not to the layout)
 
   ### Entity pattern
   Each domain entity (adapters, models, applications, test-suites, etc.) follows:

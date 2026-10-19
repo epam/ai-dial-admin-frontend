@@ -1,4 +1,6 @@
 import { AssetImportGridData, ParsedAssets } from '@/src/models/import-asset';
+import type { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -10,6 +12,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   changeFilesMap,
   generateAssetRowDataForImportGrid,
+  getExistingFolderItems,
   getImportResults,
   getModalTitle,
   getMultipleImportStatus,
@@ -449,5 +452,29 @@ describe('getModalTitle', () => {
 
   test('returns empty string for unknown route', () => {
     expect(getModalTitle(undefined, t)).toBe('');
+  });
+});
+
+describe('getExistingFolderItems', () => {
+  const cached = [{ name: 'existing', path: 'public/folder/existing' }] as AssetListItem[];
+  const createContext = (filePath: string | undefined, fetchedFoldersData: Record<string, AssetListItem[]>) =>
+    ({ filePath, fetchedFoldersData }) as unknown as AssetsFolderContextReader<AssetListItem>;
+
+  test('returns the items cached for the selected folder', () => {
+    const context = createContext('public/folder/', { 'public/folder/': cached, 'public/other/': [] });
+
+    expect(getExistingFolderItems(context)).toBe(cached);
+  });
+
+  test('returns an empty list when the selected folder has not been fetched', () => {
+    expect(getExistingFolderItems(createContext('public/folder/', { 'public/other/': cached }))).toEqual([]);
+  });
+
+  test('returns an empty list when no folder is selected', () => {
+    expect(getExistingFolderItems(createContext(undefined, { 'public/folder/': cached }))).toEqual([]);
+  });
+
+  test('returns an empty list without a context', () => {
+    expect(getExistingFolderItems(undefined)).toEqual([]);
   });
 });

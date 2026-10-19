@@ -109,23 +109,20 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
     return AssetFolderContextMap[view as BaseAssetRoute]();
   }, [view]);
 
-  const { data, fetchFiles, fetchedFoldersData, setFilePath, filePath } = getContext();
+  const { fetchFiles, fetchedFoldersData, setFilePath, filePath } = getContext();
 
   const emptyStateContent = useMemo(() => {
     return getEmptyStateContent(view, t);
   }, [view, t]);
 
   useEffect(() => {
-    let folderData = data;
-    if (filePath && fetchedFoldersData[filePath]) {
-      folderData = fetchedFoldersData[filePath];
-    }
+    const folderData = fetchedFoldersData[filePath];
 
     setNames(filterNames(folderData));
     // The versionless group has no versions to map — an empty map keeps every consumer
     // (DuplicateAsset, modals) on its versionless branch.
     setVersionsMap(isVersionlessAssetView(view) ? {} : getVersionsPerName((folderData || []) as AssetWithVersion[]));
-  }, [filePath, fetchedFoldersData, data, view]);
+  }, [filePath, fetchedFoldersData, view]);
 
   const handleCreateModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
     setIsModalOpen(true);

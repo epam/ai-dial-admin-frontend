@@ -23,7 +23,7 @@ const fakeContext = (files: Asset[] = []) =>
     fetchedFoldersData: {},
     fetchFiles: vi.fn(),
     toggleFolder: () => void 0,
-    data: [],
+    hasFetchError: false,
   }) as unknown as AssetsFolderContextReader<AssetListItem>;
 
 describe('FolderList', () => {

@@ -1,11 +1,23 @@
 'use client';
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useRef, useState } from 'react';
+import {
+  createContext,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
-import { DEFAULT_ROOT_FOLDER_PERMISSIONS } from '@/src/constants/file';
-import { AssetListItem, BucketType, EntitySource } from '@/src/models/dial/asset-list-item';
-import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
-import { fillChildren, getFolderName, mergeFiles } from '@/src/utils/files/folder';
-import { isFolder } from '@/src/utils/files/path';
+import { createInitialFolderState, folderReducer, toggleFolderState } from '@/src/context/assets/folder-reducer';
+import { FolderActionType } from '@/src/context/assets/models';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { getFolderItems } from '@/src/utils/files/folder';
+import { loadFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
+import { buildRootNodes, toConfigFileItems } from '@/src/utils/files/folder-nodes';
 import { isFileRootPath } from '@/src/utils/files/root-folder';
 
 export interface AssetsFolderContext<T extends AssetListItem> {
@@ -13,9 +25,9 @@ export interface AssetsFolderContext<T extends AssetListItem> {
   /**
    * `path` is a single folder for every view but Applications (see `getRootFolders`), which fetches
    * both the `platform` and `public` roots on mount. An array bypasses the single-root `mergeFiles`
-   * wrapping below and constructs both top-level nodes directly, in the given order, in one
-   * `setFiles` call — `mergeFiles`'s empty-existing-files branch only ever produces one root, and two
-   * fetches racing independently into it would have the later one silently overwrite the earlier.
+   * wrapping and constructs both top-level nodes directly, in the given order, in one state update —
+   * `mergeFiles`'s empty-existing-files branch only ever produces one root, and two fetches racing
+   * independently into it would have the later one silently overwrite the earlier.
    */
   fetchFiles: (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => void;
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
@@ -25,7 +37,8 @@ export interface AssetsFolderContext<T extends AssetListItem> {
   filePath: string;
   setFilePath: Dispatch<SetStateAction<string>>;
   toggleFolder: (folder: T, skipFetch?: boolean, collapseAll?: boolean) => void;
-  data: T[] | null;
+  /** The most recent fetch for the selected folder failed. */
+  hasFetchError: boolean;
   fetchedFoldersData: Record<string, T[]>;
 }
 
@@ -49,16 +62,37 @@ export function createFolderContext<T extends AssetListItem>(
   const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
 
   const Provider = ({ children }: { children: ReactNode }) => {
-    const [files, setFiles] = useState<T[]>([]);
-    const [filePath, setFilePath] = useState('');
-    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-    const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, T[]>>({});
-    const [isFetchingFiles, setIsFetchingFiles] = useState(false);
+    const [state, dispatch] = useReducer(folderReducer<T>, undefined, createInitialFolderState<T>);
+    const { files, filePath, expandedFolders, fetchedFoldersData, hasFetchError } = state;
+    const [inFlightCount, setInFlightCount] = useState(0);
     const failedFilePathsRef = useRef<Set<string>>(new Set());
+    const latestRequestIdRef = useRef(0);
+    // Handlers outlive the render that created them, so they read the committed state from here.
+    const stateRef = useRef(state);
+    stateRef.current = state;
+    const isFetchingFiles = inFlightCount > 0;
 
-    const [data, setData] = useState<T[] | null>(null);
+    const startRequest = useCallback(() => {
+      setInFlightCount((count) => count + 1);
+      latestRequestIdRef.current += 1;
+      const requestId = latestRequestIdRef.current;
 
-    const fetchByPath = async (path: string): Promise<T[] | null | undefined> => {
+      return {
+        isLatest: () => requestId === latestRequestIdRef.current,
+        finish: () => setInFlightCount((count) => count - 1),
+      };
+    }, []);
+
+    const setFilePath = useCallback<Dispatch<SetStateAction<string>>>(
+      (value) => dispatch({ type: FolderActionType.FilePathSet, value }),
+      [],
+    );
+    const setExpandedFolders = useCallback<Dispatch<SetStateAction<Set<string>>>>(
+      (value) => dispatch({ type: FolderActionType.ExpandedFoldersSet, value }),
+      [],
+    );
+
+    const fetchByPath = useCallback(async (path: string): Promise<T[] | null | undefined> => {
       if (!isFileRootPath(path)) {
         return getFilesFunc(path);
       }
@@ -68,93 +102,48 @@ export function createFolderContext<T extends AssetListItem>(
       }
 
       const names = await getConfigFileNames();
-      return names?.map(
-        (name) =>
-          ({
-            name,
-            path: name,
-            nodeType: DialFileNodeType.ITEM,
-            bucket: BucketType.Platform,
-            entitySource: EntitySource.File,
-          }) as T,
-      );
-    };
+      return names ? (toConfigFileItems(names) as T[]) : undefined;
+    }, []);
 
-    const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
-      if (!fullPath?.includes('/')) return;
+    const fetchFolderHierarchy = useCallback(
+      (fullPath?: string, fullTree?: boolean) => {
+        if (!fullPath?.includes('/')) return;
 
-      const pathParts = fullPath.split('/').filter(Boolean);
-      const tempFetchedFoldersData: Record<string, T[]> = {};
-      const tempExpandedFolders = new Set<string>();
-      let tempFiles: T[] = [];
-      let currentPath = '';
+        const request = startRequest();
 
-      const setTempFolder = (name: string, childPath?: string) => {
-        const newFile = {
-          items: [],
-          name,
-          path: childPath,
-          nodeType: DialFileNodeType.FOLDER,
-        } as unknown as T;
-        tempFiles = mergeFiles<T>(tempFiles as DialFile[], [newFile] as DialFile[], currentPath);
-      };
+        (async () => {
+          try {
+            const hierarchy = await loadFolderHierarchy<T>({ fullPath, fullTree, fetchByPath });
 
-      setIsFetchingFiles(true);
-
-      (async () => {
-        try {
-          for (let index = 0; index < pathParts.length; index++) {
-            currentPath += pathParts[index] + '/';
-            tempExpandedFolders.add(currentPath);
-
-            const nextFolderPath = pathParts[index + 1] ? currentPath + pathParts[index + 1] + '/' : undefined;
-            const fetched = await fetchByPath(currentPath);
-
-            if (fetched === undefined) {
-              setData(null);
+            if (!request.isLatest()) {
               return;
             }
 
-            const list = fetched ?? [];
-
-            const folderItems = list.filter((f) => f.nodeType === DialFileNodeType.ITEM);
-            tempFetchedFoldersData[currentPath] = folderItems;
-
-            if (list.length) {
-              const nextFolder = list.find((f) => f.path === nextFolderPath && isFolder(f.nodeType));
-              if (nextFolder && !fullTree) {
-                const newFile = { ...nextFolder, nodeType: DialFileNodeType.FOLDER } as T;
-                tempFiles = mergeFiles<T>(tempFiles as DialFile[], [newFile] as DialFile[], currentPath);
-              } else if (fullTree) {
-                tempFiles = mergeFiles<T>(tempFiles as DialFile[], list as DialFile[], currentPath);
-              } else if (nextFolderPath) {
-                setTempFolder(pathParts[index], nextFolderPath);
-              }
-            } else if (nextFolderPath) {
-              setTempFolder(pathParts[index + 1], nextFolderPath);
-            }
+            dispatch(
+              hierarchy
+                ? { type: FolderActionType.HierarchyLoaded, hierarchy }
+                : { type: FolderActionType.FetchFailed },
+            );
+          } finally {
+            request.finish();
           }
+        })();
+      },
+      [fetchByPath, startRequest],
+    );
 
-          setFiles(tempFiles);
-          setFetchedFoldersData(tempFetchedFoldersData);
-          setExpandedFolders(tempExpandedFolders);
-          setFilePath(currentPath);
-          setData(tempFetchedFoldersData[currentPath] ?? []);
-        } finally {
-          setIsFetchingFiles(false);
-        }
-      })();
-    };
-
-    const fetchRoots = (paths: string[], refreshData?: boolean, resetFolder?: boolean) => {
-      setIsFetchingFiles(true);
-      Promise.all(paths.map((rootPath) => fetchByPath(rootPath)))
-        .then((results) => {
+    const fetchRoots = useCallback(
+      async (paths: string[], refreshData?: boolean, resetFolder?: boolean) => {
+        const request = startRequest();
+        try {
+          const results = await Promise.all(paths.map((rootPath) => fetchByPath(rootPath)));
           const hasPhysicalRootFailure = results.some(
             (result, index) => !isFileRootPath(paths[index]) && result === undefined,
           );
           if (hasPhysicalRootFailure) {
-            setData(null);
+            if (request.isLatest()) {
+              dispatch({ type: FolderActionType.FetchFailed });
+            }
             return;
           }
 
@@ -169,111 +158,112 @@ export function createFolderContext<T extends AssetListItem>(
 
           const newFetchedFoldersData: Record<string, T[]> = {};
           paths.forEach((rootPath, index) => {
-            newFetchedFoldersData[rootPath] = results[index]?.filter((f) => f.nodeType === DialFileNodeType.ITEM) ?? [];
+            newFetchedFoldersData[rootPath] = getFolderItems(results[index] ?? []);
           });
-          const rootNodes = paths.map(
-            (rootPath, index) =>
-              ({
-                name: getFolderName(rootPath),
-                path: rootPath,
-                nodeType: DialFileNodeType.FOLDER,
-                // Root-level nodes are synthesized client-side (Core never returns a permissions-bearing
-                // node for a bucket root), so the placeholder permission set has one named source rather
-                // than a bare array repeated at each call site — see `DEFAULT_ROOT_FOLDER_PERMISSIONS`'s
-                // own comment for why it's not yet read from a real backend permission.
-                permissions: DEFAULT_ROOT_FOLDER_PERMISSIONS,
-                entitySource: isFileRootPath(rootPath) ? EntitySource.File : EntitySource.Resource,
-                items: fillChildren((results[index] ?? []) as DialFile[]),
-              }) as unknown as T,
-          );
-
-          setFiles(rootNodes);
-          setFetchedFoldersData((prev) =>
-            refreshData ? newFetchedFoldersData : { ...prev, ...newFetchedFoldersData },
-          );
 
           // The last physical root keeps the pre-existing initial view. A synthetic file root is
           // already populated but remains collapsed until the user explicitly opens it.
           const openPath = paths.findLast((rootPath) => !isFileRootPath(rootPath)) ?? paths[0];
-          setData(newFetchedFoldersData[openPath] ?? []);
-          setExpandedFolders((prev) => new Set(refreshData ? [openPath] : [...prev, openPath]));
-          if (!filePath || resetFolder) {
-            setFilePath(openPath);
-          }
-        })
-        .finally(() => setIsFetchingFiles(false));
-    };
+          dispatch({
+            type: FolderActionType.RootsLoaded,
+            files: buildRootNodes<T>(paths, results),
+            fetchedFoldersData: newFetchedFoldersData,
+            openPath,
+            refreshData,
+            resetFolder,
+            isLatestRequest: request.isLatest(),
+          });
+        } finally {
+          request.finish();
+        }
+      },
+      [fetchByPath, startRequest],
+    );
 
-    const fetchFiles = (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => {
-      if (Array.isArray(path)) {
-        fetchRoots(path, refreshData, resetFolder);
-        return;
-      }
+    const fetchFolder = useCallback(
+      async (path: string, refreshData?: boolean, resetFolder?: boolean) => {
+        const request = startRequest();
+        try {
+          const fetched = await fetchByPath(path);
 
-      setIsFetchingFiles(true);
-      fetchByPath(path)
-        .then((fetched) => {
           if (fetched === undefined) {
-            setData(null);
+            if (request.isLatest()) {
+              dispatch({ type: FolderActionType.FetchFailed });
+            }
             return;
           }
 
-          setFiles((prevFiles) => {
-            const newFiles = mergeFiles<T>(prevFiles as DialFile[], (fetched ?? []) as DialFile[], path);
-            if (prevFiles.length === 0 || refreshData) {
-              toggleFolder(newFiles[0], true, refreshData);
-            }
-
-            return newFiles;
+          const list = fetched ?? [];
+          dispatch({
+            type: FolderActionType.FolderLoaded,
+            path,
+            fetched: list,
+            folderItems: getFolderItems(list),
+            refreshData,
+            resetFolder,
+            isLatestRequest: request.isLatest(),
           });
-
-          const folderItems = (fetched ?? []).filter((f) => f.nodeType === DialFileNodeType.ITEM);
-          setData(folderItems);
-          setFetchedFoldersData((prev) => (refreshData ? { [path]: folderItems } : { ...prev, [path]: folderItems }));
-
-          if (!filePath || resetFolder) {
-            setFilePath(path);
-          }
-        })
-        .finally(() => setIsFetchingFiles(false));
-    };
-
-    const toggleFolder = (folder: T, skipFetch?: boolean, collapseAll?: boolean) => {
-      const folderPath = folder.path;
-      const newExpanded = new Set(collapseAll ? [] : expandedFolders);
-
-      setFilePath(folderPath);
-
-      if (newExpanded.has(folderPath)) {
-        newExpanded.delete(folderPath);
-        setData(fetchedFoldersData[folderPath]);
-      } else {
-        newExpanded.add(folderPath);
-        if (failedFilePathsRef.current.has(folderPath)) {
-          setData(null);
-        } else if (!fetchedFoldersData[folderPath] && !skipFetch) {
-          fetchFiles(folderPath);
-        } else if (fetchedFoldersData[folderPath]) {
-          setData(fetchedFoldersData[folderPath]);
+        } finally {
+          request.finish();
         }
-      }
+      },
+      [fetchByPath, startRequest],
+    );
 
-      setExpandedFolders(newExpanded);
-    };
+    const fetchFiles = useCallback(
+      (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => {
+        if (Array.isArray(path)) {
+          void fetchRoots(path, refreshData, resetFolder);
+          return;
+        }
 
-    const value: AssetsFolderContext<T> = {
-      isFetchingFiles,
-      fetchFiles,
-      fetchFolderHierarchy,
-      files,
-      expandedFolders,
-      setExpandedFolders,
-      filePath,
-      setFilePath,
-      toggleFolder,
-      data,
-      fetchedFoldersData,
-    };
+        void fetchFolder(path, refreshData, resetFolder);
+      },
+      [fetchRoots, fetchFolder],
+    );
+
+    const toggleFolder = useCallback(
+      (folder: T, skipFetch?: boolean, collapseAll?: boolean) => {
+        const options = { skipFetch, collapseAll, failedPaths: new Set(failedFilePathsRef.current) };
+        const { shouldFetch } = toggleFolderState(stateRef.current, folder.path, options);
+
+        dispatch({ type: FolderActionType.FolderToggled, folderPath: folder.path, options });
+
+        if (shouldFetch) {
+          fetchFiles(folder.path);
+        }
+      },
+      [fetchFiles],
+    );
+
+    const value = useMemo<AssetsFolderContext<T>>(
+      () => ({
+        isFetchingFiles,
+        fetchFiles,
+        fetchFolderHierarchy,
+        files,
+        expandedFolders,
+        setExpandedFolders,
+        filePath,
+        setFilePath,
+        toggleFolder,
+        hasFetchError,
+        fetchedFoldersData,
+      }),
+      [
+        isFetchingFiles,
+        fetchFiles,
+        fetchFolderHierarchy,
+        files,
+        expandedFolders,
+        setExpandedFolders,
+        filePath,
+        setFilePath,
+        toggleFolder,
+        hasFetchError,
+        fetchedFoldersData,
+      ],
+    );
 
     return <Context.Provider value={value}>{children}</Context.Provider>;
   };

@@ -26,11 +26,10 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', async (importOriginal) =
   bulkDeletePlatformApplications: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-// Stable references across renders: BaseAssetList's mount effect depends on `data`/
+// Stable references across renders: BaseAssetList's mount effect depends on
 // `fetchedFoldersData` referentially, so a mock returning fresh `{}`/`[]` literals per call would
 // retrigger that effect (and its state updates) forever — `vi.hoisted` keeps one shared instance.
-const { mockData, mockFetchedFoldersData } = vi.hoisted(() => ({
-  mockData: [] as unknown[],
+const { mockFetchedFoldersData } = vi.hoisted(() => ({
   mockFetchedFoldersData: {} as Record<string, unknown[]>,
 }));
 
@@ -38,7 +37,6 @@ vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: () => ({
     fetchFiles: vi.fn(),
     filePath: '',
-    data: mockData,
     fetchedFoldersData: mockFetchedFoldersData,
     setFilePath: vi.fn(),
   }),

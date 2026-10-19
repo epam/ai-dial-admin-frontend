@@ -9,6 +9,8 @@ import {
   PromptsI18nKey,
   ToolsetI18nKey,
 } from '@/src/constants/i18n';
+import type { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
@@ -24,6 +26,18 @@ import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
+
+/**
+ * The items already cached for the folder the import will land in; empty until that folder is fetched.
+ */
+export const getExistingFolderItems = (folderContext?: AssetsFolderContextReader<AssetListItem>): AssetListItem[] => {
+  if (!folderContext) {
+    return [];
+  }
+
+  const { filePath, fetchedFoldersData } = folderContext;
+  return filePath != null && Object.hasOwn(fetchedFoldersData, filePath) ? fetchedFoldersData[filePath] : [];
+};
 
 /**
  * Generate notifications with results of JSON prompt results
