@@ -65,6 +65,12 @@ describe('FileManager', () => {
 
       expect(options.folderCreationValidationMessages).toEqual(getValidationMessages(translate));
     });
+
+    test('should hide the sort control in the move popup', () => {
+      const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
+
+      expect(options.sortOptions).toEqual({ sortable: false });
+    });
   });
 
   describe('validateCreateFolder', () => {
