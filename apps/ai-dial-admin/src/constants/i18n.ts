@@ -1121,6 +1121,7 @@ export enum FoldersI18nKey {
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',
   MoveFolderError = 'Folder.MoveFolderError',
+  LoadFolderError = 'Folder.LoadFolderError',
   DeleteFolder = 'Folder.DeleteFolder',
   DeleteFolderDescription = 'Folder.DeleteFolderDescription',
   CollapseAll = 'Folder.CollapseAll',

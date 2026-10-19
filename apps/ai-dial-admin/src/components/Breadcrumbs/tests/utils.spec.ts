@@ -1,7 +1,10 @@
 import {
+  enrichDetailsWithFolderBreadcrumbs,
   enrichWithFolderBreadcrumbs,
   getBreadcrumbs,
+  getEntityFolderPath,
   getFolderContext,
+  shouldEnrichDetailsWithFolderBreadcrumbs,
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { MenuI18nKey, RunsI18nKey } from '@/src/constants/i18n';
@@ -199,5 +202,76 @@ describe('Breadcrumbs :: enrichWithFolderBreadcrumbs', () => {
 
     expect(result.length).toBe(3);
     expect(result.map((b) => b.name)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('Breadcrumbs :: getEntityFolderPath', () => {
+  test('Should return the folder part of an entity path', () => {
+    expect(getEntityFolderPath('public/team/sub/MyApp__1.0')).toBe('public/team/sub/');
+  });
+
+  test('Should return undefined for a path without a folder part', () => {
+    expect(getEntityFolderPath('MyApp')).toBeUndefined();
+  });
+
+  test('Should return undefined when there is no path', () => {
+    expect(getEntityFolderPath(null)).toBeUndefined();
+    expect(getEntityFolderPath(undefined)).toBeUndefined();
+    expect(getEntityFolderPath('')).toBeUndefined();
+  });
+});
+
+describe('Breadcrumbs :: enrichDetailsWithFolderBreadcrumbs', () => {
+  const section: Breadcrumb = {
+    key: MenuI18nKey.Applications,
+    name: 'assets-applications',
+    href: '/assets-applications',
+  };
+  const entity: Breadcrumb = { name: 'MyApp', href: '' };
+
+  test('Should put the folders between the section and the entity', () => {
+    const result = enrichDetailsWithFolderBreadcrumbs([section, entity], 'public/team/');
+
+    expect(result.map((crumb) => crumb.name)).toEqual(['assets-applications', 'public', 'team', 'MyApp']);
+    expect(result.map((crumb) => crumb.href)).toEqual(['/assets-applications', 'public/', 'public/team/', '']);
+  });
+
+  test('Should report the folder path of the crumb that is clicked', () => {
+    const onFolderClick = vi.fn();
+
+    const result = enrichDetailsWithFolderBreadcrumbs([section, entity], 'public/team/', onFolderClick);
+    result[2].callback?.(result[2].href);
+
+    expect(onFolderClick).toHaveBeenCalledWith('public/team/');
+  });
+
+  test('Should collapse a deep folder trail the same way the list page does', () => {
+    const result = enrichDetailsWithFolderBreadcrumbs([section, entity], 'public/a/b/c/d/');
+
+    expect(result.map((crumb) => crumb.name)).toEqual(['assets-applications', 'public', '...', 'c', 'd', 'MyApp']);
+    expect(result[2].hiddenBreadcrumbs?.map((crumb) => crumb.name)).toEqual(['a', 'b']);
+  });
+
+  test('Should leave the breadcrumbs as they are without a folder', () => {
+    expect(enrichDetailsWithFolderBreadcrumbs([section, entity], undefined)).toEqual([section, entity]);
+  });
+
+  test('Should leave a single breadcrumb as it is', () => {
+    expect(enrichDetailsWithFolderBreadcrumbs([section], 'public/')).toEqual([section]);
+  });
+});
+
+describe('Breadcrumbs :: shouldEnrichDetailsWithFolderBreadcrumbs', () => {
+  test('Should be true on the details page of a folder-based view', () => {
+    expect(shouldEnrichDetailsWithFolderBreadcrumbs('/assets-applications/MyApp', 'en')).toBe(true);
+    expect(shouldEnrichDetailsWithFolderBreadcrumbs('/en/prompts/MyPrompt', 'en')).toBe(true);
+  });
+
+  test('Should be false on the list page of that view', () => {
+    expect(shouldEnrichDetailsWithFolderBreadcrumbs('/assets-applications', 'en')).toBe(false);
+  });
+
+  test('Should be false for a view that is not folder-based', () => {
+    expect(shouldEnrichDetailsWithFolderBreadcrumbs('/models/1', 'en')).toBe(false);
   });
 });

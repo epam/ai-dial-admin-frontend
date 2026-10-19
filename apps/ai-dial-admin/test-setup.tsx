@@ -105,10 +105,15 @@ vi.mock('@/src/context/assets/KeysFolderContext', () => ({
   KeysFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
-vi.mock('@/src/context/assets/SkillFolderContext', () => ({
-  useSkillFolder: () => ({ fetchFiles: vi.fn() }),
-  SkillFolderProvider: ({ children }: any) => <div>{children}</div>,
-}));
+// One instance for the whole file: `BaseAssetList` has an effect that depends on `fetchedFoldersData` by
+// reference, so a fresh `{}` per call would re-run it on every render.
+vi.mock('@/src/context/assets/SkillFolderContext', () => {
+  const skillFolder = { fetchFiles: vi.fn(), fetchedFoldersData: {}, filePath: '' };
+  return {
+    useSkillFolder: () => skillFolder,
+    SkillFolderProvider: ({ children }: any) => <div>{children}</div>,
+  };
+});
 
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: vi.fn(() => ({ currentTheme: 'dark' })) }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));

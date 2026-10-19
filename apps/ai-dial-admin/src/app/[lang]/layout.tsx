@@ -15,20 +15,7 @@ import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppContextProvider } from '@/src/context/AppContext';
-import { AppRunnersFolderProvider } from '@/src/context/assets/AppRunnersFolderContext';
-import { CatalogSchemasFolderProvider } from '@/src/context/assets/CatalogSchemasFolderContext';
-import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
-import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
-import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
-import { InterceptorsFolderProvider } from '@/src/context/assets/InterceptorsFolderContext';
-import { KeysFolderProvider } from '@/src/context/assets/KeysFolderContext';
-import { ModelsFolderProvider } from '@/src/context/assets/ModelsFolderContext';
-import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
-import { RolesFolderProvider } from '@/src/context/assets/RolesFolderContext';
-import { RoutesFolderProvider } from '@/src/context/assets/RoutesFolderContext';
-import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
-import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
-import { TranslatorsFolderProvider } from '@/src/context/assets/TranslatorsFolderContext';
+import { AssetFolderProviders } from '@/src/context/assets/AssetFolderProviders';
 import { HelpTopicProvider } from '@/src/context/HelpTopicContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
@@ -94,52 +81,24 @@ export default async function Layout({ children, params }: { children: ReactNode
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
-              <AppsFolderProvider>
-                <ModelsFolderProvider>
-                  <AppRunnersFolderProvider>
-                    <CatalogSchemasFolderProvider>
-                      <InterceptorsFolderProvider>
-                        <TranslatorsFolderProvider>
-                          <RoutesFolderProvider>
-                            <RolesFolderProvider>
-                              <KeysFolderProvider>
-                                <PromptFolderProvider>
-                                  <ToolsetFolderProvider>
-                                    <FileFolderProvider>
-                                      <ConversationFolderProvider>
-                                        <SkillFolderProvider>
-                                          <NotificationProvider>
-                                            <HelpTopicProvider>
-                                              <div className="flex flex-col size-full">
-                                                <Header
-                                                  isEnableAuth={isEnableAuth}
-                                                  docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
-                                                />
-                                                <div className="flex-1 min-h-0">
-                                                  <div className="flex flex-row h-full relative">
-                                                    <Menu
-                                                      disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)}
-                                                    />
-                                                    <Content isEnableAuth={isEnableAuth}>{children}</Content>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </HelpTopicProvider>
-                                          </NotificationProvider>
-                                        </SkillFolderProvider>
-                                      </ConversationFolderProvider>
-                                    </FileFolderProvider>
-                                  </ToolsetFolderProvider>
-                                </PromptFolderProvider>
-                              </KeysFolderProvider>
-                            </RolesFolderProvider>
-                          </RoutesFolderProvider>
-                        </TranslatorsFolderProvider>
-                      </InterceptorsFolderProvider>
-                    </CatalogSchemasFolderProvider>
-                  </AppRunnersFolderProvider>
-                </ModelsFolderProvider>
-              </AppsFolderProvider>
+              <AssetFolderProviders>
+                <NotificationProvider>
+                  <HelpTopicProvider>
+                    <div className="flex flex-col size-full">
+                      <Header
+                        isEnableAuth={isEnableAuth}
+                        docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                      />
+                      <div className="flex-1 min-h-0">
+                        <div className="flex flex-row h-full relative">
+                          <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                          <Content isEnableAuth={isEnableAuth}>{children}</Content>
+                        </div>
+                      </div>
+                    </div>
+                  </HelpTopicProvider>
+                </NotificationProvider>
+              </AssetFolderProviders>
             </RuleFolderProvider>
           </ThemeProvider>
         </AppContextProvider>

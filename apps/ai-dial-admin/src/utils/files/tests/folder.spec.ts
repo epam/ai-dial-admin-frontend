@@ -7,6 +7,7 @@ import {
   fillFolderRules,
   findFolderChildren,
   findFolderSiblings,
+  getFolderItems,
   getFolderName,
   mergeFiles,
 } from '../folder';
@@ -503,5 +504,22 @@ describe('Folder Utils :: findFolderChildren', () => {
   test('returns nested items correctly from deeper nodes', () => {
     const result = findFolderChildren('/root', mockTree);
     expect(result).toEqual(['/root/folder1', '/root/folder2']);
+  });
+});
+
+describe('Folder Utils :: getFolderItems', () => {
+  test('Should keep only the entries whose node type is item', () => {
+    const folder = { path: 'a/folder/', nodeType: DialFileNodeType.FOLDER };
+    const item = { path: 'a/item', nodeType: DialFileNodeType.ITEM };
+
+    expect(getFolderItems([folder, item])).toEqual([item]);
+  });
+
+  test('Should drop entries without a node type', () => {
+    expect(getFolderItems([{ path: 'a/unknown', nodeType: undefined }])).toEqual([]);
+  });
+
+  test('Should return an empty array for an empty listing', () => {
+    expect(getFolderItems([])).toEqual([]);
   });
 });

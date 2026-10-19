@@ -46,9 +46,10 @@ describe('useModelsFolder', () => {
     // A flat platform view fetches exactly the single root it was given — there is no folder
     // hierarchy to expand beyond it. `fetchFiles` auto-expands the synthesized root on its first
     // call (see `AssetsFolderContext.tsx`), so `expandedFolders` holds only that root path, and
-    // `data` is the root's items directly (see `design.md`'s platform-flavored contract, task 3.3).
+    // the root's items are cached under it directly (see `design.md`'s platform-flavored contract,
+    // task 3.3).
     expect(getModels).toHaveBeenCalledWith('platform/');
-    expect(get().data).toEqual([item]);
+    expect(get().fetchedFoldersData['platform/']).toEqual([item]);
     expect(get().expandedFolders.size).toBe(1);
     expect(get().expandedFolders.has('platform/')).toBe(true);
   });

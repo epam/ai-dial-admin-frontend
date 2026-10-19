@@ -42,7 +42,7 @@ describe('useConversationFolder', () => {
     });
 
     expect(getConversations).toHaveBeenCalledWith('/conversations/');
-    expect(get().data).toEqual([item]);
+    expect(get().fetchedFoldersData['/conversations/']).toEqual([item]);
   });
 
   test('toggleFolder expands a tree folder row without a move-eligible folderId change', async () => {

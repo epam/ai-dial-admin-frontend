@@ -53,9 +53,11 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   const router = useRouter();
   const folderContext = context?.();
   const filePath = folderContext?.filePath as string;
-  const data = folderContext?.data || [];
-  const names = filterNames(data);
-  const versionsMap = getVersionsPerName(data as AssetWithVersion[]);
+  const folderItems = folderContext?.fetchedFoldersData[filePath];
+  const hasFetchError = folderContext?.hasFetchError;
+  const names = filterNames(folderItems);
+  const versionsMap = getVersionsPerName((folderItems ?? []) as AssetWithVersion[]);
+  const isLoadingFolder = folderItems == null && !hasFetchError;
 
   // Applications and Toolsets are the dual-bucket views — the selected destination folder is what
   // decides the create's shape, not just the view (see `getRootFolders`/`isPlatformBucketPath`).
@@ -131,6 +133,12 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filePath]);
 
+  useEffect(() => {
+    if (hasFetchError) {
+      showNotification(getErrorNotification(t(FoldersI18nKey.LoadFolderError)));
+    }
+  }, [hasFetchError, showNotification, t]);
+
   // The bucket can be switched mid-modal via the folder sidebar, so the form follows it (design
   // D3): a platform destination has no version concept and starts with no granted roles; switching
   // back to the public bucket restores the default version. A public→public folder move never
@@ -183,7 +191,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
             <div className="py-6">
               <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />
             </div>
-            {folderContext?.data == null ? (
+            {isLoadingFolder ? (
               <DialLoader size={40} />
             ) : (
               <AssetProperties

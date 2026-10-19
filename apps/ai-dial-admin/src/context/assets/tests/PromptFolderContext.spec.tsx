@@ -48,7 +48,7 @@ describe('usePromptFolder', () => {
     });
 
     expect(getPrompts).toHaveBeenCalledWith('/prompts/');
-    expect(get().data).toEqual([item]);
+    expect(get().fetchedFoldersData['/prompts/']).toEqual([item]);
   });
 
   test('toggleFolder expands a folder row and fetches its children on first expand', async () => {
