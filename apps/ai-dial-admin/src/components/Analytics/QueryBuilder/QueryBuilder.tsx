@@ -34,6 +34,11 @@ import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery, hasDroppedCondition } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
+import {
+  countCsvRecords,
+  getPartialExportNotice,
+  toExportQuery,
+} from '@/src/components/Analytics/QueryBuilder/utils/csv-export';
 import { buildExecutedMeta } from '@/src/components/Analytics/QueryBuilder/utils/executed-meta';
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
@@ -68,7 +73,8 @@ import {
 } from '@/src/models/analytics/query-builder';
 import { TimeRange } from '@/src/models/time-range';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import { getErrorNotification } from '@/src/utils/notification';
+import { downloadFile } from '@/src/utils/download';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
@@ -94,7 +100,7 @@ const QueryBuilder: FC<Props> = ({
   const t = useI18n();
   const { showNotification } = useNotification();
   // A run the operator walks away from is cancelled with the view rather than left to finish unseen.
-  const { runQuery, runSql } = useAnalyticsQuery();
+  const { runQuery, runSql, exportCsv } = useAnalyticsQuery();
   const { featureFlags } = useAppContext();
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
@@ -123,6 +129,10 @@ const QueryBuilder: FC<Props> = ({
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  // The request behind the shown result, set and cleared with it: an export re-runs this, not the editor, so
+  // the file matches the grid even after an edit. A failed run leaves it, as it leaves the result.
+  const [lastRequest, setLastRequest] = useState<QueryRunRequest | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   // Owned here rather than in ResultArea because both are members of a saved query's payload: they
   // have to be readable when a save captures the page, and settable when a stored query opens.
   const [resultView, setResultView] = useState<QueryResultView>(QueryResultView.Table);
@@ -171,6 +181,7 @@ const QueryBuilder: FC<Props> = ({
   const clearResult = useCallback(() => {
     setResult(null);
     setResultMeta(null);
+    setLastRequest(null);
   }, []);
 
   const refresh = useCallback(() => setState((prev) => ({ ...prev })), []);
@@ -505,6 +516,7 @@ const QueryBuilder: FC<Props> = ({
       const response = runRes.result ?? { rows: [] };
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
+      setLastRequest(request);
     } else {
       showNotification(
         getErrorNotification(runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId),
@@ -544,6 +556,7 @@ const QueryBuilder: FC<Props> = ({
       const response = res.result ?? { rows: [] };
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, state.fields, state.entityName, translated));
+      setLastRequest(request);
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
@@ -551,6 +564,36 @@ const QueryBuilder: FC<Props> = ({
       );
     }
     setIsRunning(false);
+  };
+
+  const onExportCsv = async () => {
+    if (!lastRequest || isExporting) return;
+
+    setIsExporting(true);
+    const res = await exportCsv(
+      lastRequest.kind === QueryRequestKind.Structured
+        ? { kind: QueryRequestKind.Structured, query: toExportQuery(lastRequest.query) }
+        : lastRequest,
+    );
+    setIsExporting(false);
+    if (res.isCancelled) return;
+
+    if (!res.isSuccess || !res.file) {
+      showNotification(
+        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.ExportCsvFailed), res.error, res.requestId),
+      );
+      return;
+    }
+
+    const { blob, fileName, totalCount } = res.file;
+    downloadFile(blob, fileName);
+
+    const partialNotice = getPartialExportNotice(countCsvRecords(await blob.text()), totalCount);
+    if (partialNotice) {
+      showNotification(
+        getSuccessNotification(t(QueryBuilderI18nKey.ExportCsvDone), t(partialNotice.key, partialNotice.params)),
+      );
+    }
   };
 
   const runDisabled = !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim());
@@ -611,6 +654,8 @@ const QueryBuilder: FC<Props> = ({
               onChangeView={setResultView}
               chartConfig={chartConfig}
               onChangeChartConfig={setChartConfig}
+              isExporting={isExporting}
+              onExportCsv={onExportCsv}
             />
             {railCollapsed ? (
               <CollapsedRail onExpand={() => onToggleRail(false)} />

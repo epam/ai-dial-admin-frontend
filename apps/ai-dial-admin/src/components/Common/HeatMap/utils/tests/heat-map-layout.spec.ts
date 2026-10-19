@@ -1,3 +1,4 @@
+import { Column, GridApi } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -14,11 +15,60 @@ import {
 import {
   canFitHeatMapColumnsToContainer,
   buildEqualHeatMapColumnWidths,
+  getHeatMapValueColumnWidth,
   measureVerticalHeatMapHeaderLabelHeight,
   resolveHeatMapHeaderHeight,
+  resolveHeatMapLayoutWidth,
   resolveHeatMapRowHeight,
   shouldUseHeatMapHorizontalLayout,
 } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
+
+const createApiMock = (columns: { colId: string; width: number }[]) =>
+  ({
+    getColumns: () => columns.map(({ colId, width }) => ({ getColId: () => colId, getActualWidth: () => width })),
+  }) as unknown as GridApi;
+
+describe('getHeatMapValueColumnWidth', () => {
+  test('returns the narrowest value column so remainder-widened columns do not change the layout', () => {
+    const api = createApiMock([
+      { colId: 'heatMapLabel', width: 191 },
+      { colId: 'tc_a', width: HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH },
+      { colId: 'tc_b', width: HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH - 1 },
+    ]);
+
+    expect(getHeatMapValueColumnWidth(api)).toBe(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH - 1);
+  });
+
+  test('honors a custom column id prefix', () => {
+    const api = createApiMock([
+      { colId: 'tc_a', width: 10 },
+      { colId: 'run_a', width: 30 },
+    ]);
+
+    expect(getHeatMapValueColumnWidth(api, 'run_')).toBe(30);
+  });
+
+  test('returns 0 when there are no value columns', () => {
+    expect(getHeatMapValueColumnWidth(createApiMock([{ colId: 'heatMapLabel', width: 191 }]))).toBe(0);
+  });
+});
+
+describe('resolveHeatMapLayoutWidth', () => {
+  const column = { getActualWidth: () => 40 } as unknown as Column;
+
+  test('prefers the layout width published on the grid context', () => {
+    expect(resolveHeatMapLayoutWidth({ valueColumnLayoutWidth: 25 }, column)).toBe(25);
+  });
+
+  test('falls back to the column width without a published layout width', () => {
+    expect(resolveHeatMapLayoutWidth({}, column)).toBe(40);
+    expect(resolveHeatMapLayoutWidth(undefined, column)).toBe(40);
+  });
+
+  test('is undefined when neither a layout width nor a column is available', () => {
+    expect(resolveHeatMapLayoutWidth(undefined, undefined)).toBeUndefined();
+  });
+});
 
 describe('shouldUseHeatMapHorizontalLayout', () => {
   test('is true once the column is wide enough', () => {

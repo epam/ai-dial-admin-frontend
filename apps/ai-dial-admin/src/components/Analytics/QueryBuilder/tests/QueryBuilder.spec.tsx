@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -7,9 +7,11 @@ import { generateQuery, getEntitySchema, translateQuery, translateSqlToQuery } f
 import { useAppContext } from '@/src/context/AppContext';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryExprType, QueryMode, StructuredQuery } from '@/src/models/analytics/query';
+import { QueryExprType, QueryMode, QueryPageType, StructuredQuery } from '@/src/models/analytics/query';
+import { QueryRequestKind } from '@/src/models/analytics/query-builder';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
-import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
+import { CsvOutcome, QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
+import { downloadFile } from '@/src/utils/download';
 
 const runQueryMock = vi.fn(
   async (_query?: unknown): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }),
@@ -18,12 +20,19 @@ const runSqlMock = vi.fn(async (_sql?: string): Promise<QueryOutcome> => ({ isSu
 
 // One object for the life of the file: a fresh one per render would change the identity the effects
 // depend on and re-issue every read forever.
-const RUNNER = { runQuery: runQueryMock, runSql: runSqlMock };
+const exportCsvMock = vi.fn(
+  async (_request?: unknown): Promise<CsvOutcome> => ({
+    isSuccess: true,
+    file: { blob: new Blob(['id\r\n1\r\n']), fileName: 'result.csv' },
+  }),
+);
+const RUNNER = { runQuery: runQueryMock, runSql: runSqlMock, exportCsv: exportCsvMock };
 vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
   useAnalyticsQuery: () => RUNNER,
 }));
 
 vi.mock('@/src/app/[lang]/queries/actions');
+vi.mock('@/src/utils/download');
 
 const { showNotificationMock } = vi.hoisted(() => ({ showNotificationMock: vi.fn() }));
 
@@ -1069,5 +1078,156 @@ describe('QueryBuilder :: SQL view Run', () => {
     await user.click(screen.getByRole('button', { name: /Last 30m/i }));
 
     expect(editor.value).toBe(DEEP_JSON);
+  });
+});
+
+describe('QueryBuilder — Export CSV', () => {
+  const EXPORT = { name: 'QueryBuilder.ExportCsv' };
+  const ROW_RESULT = { isSuccess: true, result: { columns: ['event_id'], rows: [{ event_id: '1' }] } };
+  const csvOf = (records: number, totalCount?: number): CsvOutcome => ({
+    isSuccess: true,
+    file: {
+      blob: new Blob([`id\r\n${'1\r\n'.repeat(records)}`]),
+      fileName: 'result.csv',
+      ...(totalCount != null && { totalCount }),
+    },
+  });
+
+  const runSqlView = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    fireEvent.change(editor, { target: { value: sql } });
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    await screen.findByRole('button', EXPORT);
+  };
+
+  beforeEach(() => {
+    runQueryMock.mockResolvedValue(ROW_RESULT as never);
+    runSqlMock.mockResolvedValue(ROW_RESULT as never);
+    exportCsvMock.mockResolvedValue(csvOf(1));
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: '' } });
+  });
+
+  test('offers no export before a run', () => {
+    renderBuilder();
+
+    expect(screen.queryByRole('button', EXPORT)).toBeNull();
+  });
+
+  test('exports a structured run as the first 1000 rows of the same query', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    await user.click(await screen.findByRole('button', EXPORT));
+
+    const ran = runQueryMock.mock.calls[0][0] as StructuredQuery;
+    const exported = exportCsvMock.mock.calls[0][0] as { kind: QueryRequestKind; query: StructuredQuery };
+    expect(exported.kind).toBe(QueryRequestKind.Structured);
+    expect(exported.query).toEqual({
+      ...ran,
+      page: { type: QueryPageType.Offset, offset: 0, limit: 1000, include_total: expect.any(Boolean) },
+    });
+  });
+
+  test('exports the statement that ran, not the one edited since', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    fireEvent.change(screen.getByLabelText('sql-editor'), { target: { value: 'SELECT 2' } });
+    await user.click(screen.getByRole('button', EXPORT));
+
+    expect(exportCsvMock).toHaveBeenCalledWith({ kind: QueryRequestKind.Sql, sql: 'SELECT 1' });
+  });
+
+  test('keeps the export bound to the shown result after a failed run', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    runSqlMock.mockResolvedValueOnce({ isSuccess: false, result: null, error: 'boom' });
+    fireEvent.change(screen.getByLabelText('sql-editor'), { target: { value: 'SELECT 2' } });
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalledOnce());
+    await user.click(screen.getByRole('button', EXPORT));
+
+    expect(exportCsvMock).toHaveBeenLastCalledWith({ kind: QueryRequestKind.Sql, sql: 'SELECT 1' });
+  });
+
+  test('shows the export as busy until the file arrives', async () => {
+    const user = userEvent.setup();
+    let finish: (outcome: CsvOutcome) => void = () => undefined;
+    exportCsvMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    expect(screen.getByRole('button', EXPORT)).toHaveAttribute('aria-busy', 'true');
+    finish(csvOf(1));
+    await waitFor(() => expect(screen.getByRole('button', EXPORT)).toHaveAttribute('aria-busy', 'false'));
+    expect(downloadFile).toHaveBeenCalledOnce();
+  });
+
+  test('downloads the file and shows no notice for a complete file', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() => expect(downloadFile).toHaveBeenCalledWith(expect.any(Blob), 'result.csv'));
+    expect(showNotificationMock).not.toHaveBeenCalled();
+  });
+
+  test('tells the user a file at the maximum may be partial', async () => {
+    const user = userEvent.setup();
+    exportCsvMock.mockResolvedValue(csvOf(1000));
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() =>
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'QueryBuilder.ExportCsvDone',
+          description: 'QueryBuilder.ExportCsvPartialAtLimit',
+        }),
+      ),
+    );
+  });
+
+  test('names the reported total when it exceeds the file', async () => {
+    const user = userEvent.setup();
+    exportCsvMock.mockResolvedValue(csvOf(1000, 4200));
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() =>
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({ description: 'QueryBuilder.ExportCsvPartialOfTotal' }),
+      ),
+    );
+  });
+
+  test('shows the service error and downloads nothing when the export fails', async () => {
+    const user = userEvent.setup();
+    exportCsvMock.mockResolvedValue({ isSuccess: false, file: null, errorHeader: 'bad_request', error: 'limit' });
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() =>
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'bad_request', description: 'limit' }),
+      ),
+    );
+    expect(downloadFile).not.toHaveBeenCalled();
+    expect(screen.getByText('grid rows: 1')).toBeTruthy();
   });
 });

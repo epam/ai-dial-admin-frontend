@@ -296,6 +296,38 @@ describe('Grid :: applyColumnStateOrderToTreeColDefs', () => {
     expect(result.map((c) => c.field)).toEqual(['name', 'missing']);
   });
 
+  test('should reorder nested blocks by the grid leaf order', () => {
+    const recall = {
+      headerName: 'recall',
+      children: [{ colId: 'recall' }, { colId: 'cmp_recall' }, { colId: 'delta_recall' }],
+    };
+    const precision = {
+      headerName: 'precision',
+      children: [{ colId: 'precision' }, { colId: 'cmp_precision' }, { colId: 'delta_precision' }],
+    };
+    const metrics = { headerName: 'Set Comparison', children: [recall, precision] };
+    const testCase = { colId: 'testCaseName', headerName: 'Test Case name' };
+
+    const result = applyColumnStateOrderToTreeColDefs(
+      [testCase, metrics],
+      [
+        { colId: 'precision' },
+        { colId: 'cmp_precision' },
+        { colId: 'delta_precision' },
+        { colId: 'testCaseName' },
+        { colId: 'recall' },
+        { colId: 'cmp_recall' },
+        { colId: 'delta_recall' },
+      ],
+    );
+
+    expect(result.map((col) => col.headerName)).toEqual(['Set Comparison', 'Test Case name']);
+    expect((result[0] as { children: { headerName: string }[] }).children.map((child) => child.headerName)).toEqual([
+      'precision',
+      'recall',
+    ]);
+  });
+
   test('should not mutate the original array', () => {
     const colDefs = [
       { field: 'b', headerName: 'B' },

@@ -1,3 +1,5 @@
+import { BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
+
 import { QueryFilterNode } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 
@@ -234,4 +236,15 @@ export interface BreakdownRowModel {
   spend: number | null;
   /** Set only on the Routes view's tabs that state a row's kind. */
   routeKind?: RouteKind;
+}
+
+export interface WidestFigures {
+  formats?: Record<string, (row: BreakdownRowModel) => string | null>;
+  key?: string;
+  widest: Record<string, string>;
+}
+
+export interface DeltaBadgeAppearance {
+  variant: BadgeVariant;
+  color?: BadgeColor;
 }

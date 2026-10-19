@@ -12,7 +12,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
 import { HEAT_MAP_ROW_HEIGHT, HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE } from '@/src/components/Common/HeatMap/constants';
-import { HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
+import { HeatMapGridContext, HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
 import { centerHeatMapTooltipPopup } from '@/src/components/Common/HeatMap/utils/center-heat-map-tooltip-popup';
 import {
   applyHeatMapColumnWidths,
@@ -50,6 +50,17 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
 }: Props<T>) => {
   const gridApiRef = useRef<GridApi | null>(null);
 
+  // AgGridWrapper calls sizeColumnsToFit whenever the displayed columns change. It hands the rounding
+  // remainder (and, once columns clamp to their min width, a large share) to the first column it
+  // spreads, so the first value column ends up much wider than the rest. Our own fit owns these widths.
+  const fixedWidthColumnDefs = useMemo(
+    () =>
+      columnDefs.map((colDef) =>
+        colDef.colId?.startsWith(valueColumnIdPrefix) ? { ...colDef, suppressSizeToFit: true } : colDef,
+      ),
+    [columnDefs, valueColumnIdPrefix],
+  );
+
   const fitHeatMapColumns = useCallback(
     (api: GridApi) => {
       const centerViewport = document.querySelector('.heat-map-grid .ag-center-cols-viewport') as HTMLElement | null;
@@ -57,6 +68,8 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
       applyHeatMapColumnWidths(api, availableForValueColumns, valueColumnIdPrefix);
 
       const valueColumnWidth = getHeatMapValueColumnWidth(api, valueColumnIdPrefix);
+      const context: HeatMapGridContext = { ...api.getGridOption('context'), valueColumnLayoutWidth: valueColumnWidth };
+      api.setGridOption('context', context);
       const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth, headerLabels);
       api.setGridOption('headerHeight', headerHeight);
       api.resetRowHeights();
@@ -132,7 +145,7 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
       <div className="flex-1 min-h-0 overflow-hidden heat-map-grid">
         <GridView
           key={gridKey}
-          columnDefs={columnDefs}
+          columnDefs={fixedWidthColumnDefs}
           rowData={rowData}
           additionalGridOptions={gridOptions}
           emptyDataProps={{ title: emptyTitle }}

@@ -55,17 +55,24 @@ describe('MeasureCell', () => {
     expect(screen.getByText('25.0%')).toBeTruthy();
   });
 
-  test('reads a cost rise as unwelcome and a call rise as welcome', () => {
-    const { container: calls } = renderCell({ data: rowModel({ deltas: { ...NO_DELTAS, calls: 0.25 } }) });
-    const { container: cost } = renderCell({
-      data: rowModel({ deltas: { ...NO_DELTAS, spend: 0.25 } }),
-      metric: KpiMetric.TotalSpend,
-      deltaKey: 'spend',
-      format: (row) => String(row.spend),
-    });
+  test('states no change where the row carries none', () => {
+    renderCell();
 
-    expect(calls.querySelector('.text-success')).toBeTruthy();
-    expect(cost.querySelector('.text-error')).toBeTruthy();
+    expect(screen.queryByText(/%$/)).toBeNull();
+  });
+
+  test('sizes the figure by the ruler its column publishes', () => {
+    const { container } = renderCell({ column: { getColId: () => 'calls' } as Params['column'] });
+
+    const ruler = container.querySelector('[aria-hidden="true"][style]') as HTMLElement;
+
+    expect(ruler.style.getPropertyValue('--breakdown-figure-ruler')).toBe('var(--breakdown-figure-ruler-calls, "")');
+  });
+
+  test('renders no ruler where the cell has no column to read one from', () => {
+    const { container } = renderCell();
+
+    expect(container.querySelector('[style]')).toBeNull();
   });
 
   test('says a row is new on the ranked column, where there is nothing to divide by', () => {

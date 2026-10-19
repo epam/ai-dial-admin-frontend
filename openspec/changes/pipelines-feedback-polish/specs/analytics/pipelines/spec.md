@@ -123,14 +123,25 @@ group answers:
 - **Schedule** — when it last ran and when it next runs. The last run SHALL be labelled **Last run**
   whichever service reports it. Where the runner and the registry both report one, the runner's SHALL be
   presented and the other SHALL NOT be drawn under the same label.
-- **Progress** — where the pipeline stands against its input, and whether it is up to date or catching up.
-  For an `aggregate` pipeline and for an `enrich` pipeline whose transform is SQL, the first is stated as
-  **Data up to** — the moment up to which the output has been computed, converted from the epoch-millisecond
-  version the registry records (the cursor version for an aggregate, the materialized-through version for
-  a SQL enrichment) to the reader's local time. It SHALL NOT be derived from `lag_seconds`, which is a
-  difference against the moment of the read and says nothing about which data the output covers. For any
-  other pipeline the first is stated as **Behind its input**, from the lag. The second is stated as
-  **Status**, reading **Up to date** or **Catching up**, for every kind of pipeline.
+- **Progress** — in this order, each row only for the kinds named:
+  - **Status**, for every kind, reading **Up to date** or **Catching up** from whether the last run left
+    input behind. While catching up it SHALL carry the last moment the pipeline was up to date —
+    **Catching up (last up to date …)** — where one is known: the runner's caught-up time for an
+    enrichment, falling back to the registry's drained-at probe for a SQL enrichment. An aggregate states a
+    bare Catching up. Up to date carries no date: it would repeat the status.
+  - **Data up to**, for an `aggregate` pipeline and an `enrich` pipeline whose transform is SQL — the moment
+    up to which the output has been computed, converted from the epoch-millisecond version the registry
+    records (the cursor version for an aggregate, the materialized-through version for a SQL enrichment) to
+    the reader's local time. It SHALL NOT be derived from `lag_seconds`, which is a difference against the
+    moment of the read and says nothing about which data the output covers.
+  - **Last write**, for an `enrich` pipeline — when it last wrote rows, from the runner. The runner holds it
+    in memory, so where its view omits it beside other progress the row SHALL read **Not recorded since
+    restart** rather than be left out. An aggregate SHALL NOT present it: its writes are its runs, which
+    Last run already dates.
+
+  The lag (`lag_seconds`) SHALL NOT be presented for any kind of pipeline. A model-calling enrichment's
+  reader acts on the status and the queue, and a seconds figure measured against the moment of the read
+  reads as a fact about the data when it is a fact about the read.
 - **State** — for an `enrich` pipeline that calls a model only: the cursor position (version and
   identity), the materialized-through position (version and identity), and when it was last drained.
   Named for what it is: a pipeline is a standing process rather than a job with an end, so none of these
@@ -262,12 +273,38 @@ State SHALL NOT be sent when the pipeline is saved.
 - **AND** it is not derived from the lag the runner reports
 - **AND** no state card is presented
 
-#### Scenario: A model-calling enrichment keeps its lag and its position
+#### Scenario: A model-calling enrichment keeps its position and states no lag
 
-- **GIVEN** an `enrich` pipeline whose transform calls a model
+- **GIVEN** an `enrich` pipeline whose transform calls a model, reported with a lag
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** a row labelled Behind its input states the lag
+- **THEN** no row labelled Behind its input, and no row labelled Data up to, is presented
 - **AND** the state card presents its cursor and materialized-through positions
+
+#### Scenario: Catching up is dated by the last time it was up to date
+
+- **GIVEN** an enrichment the runner reports as catching up, with a caught-up time
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the status reads Catching up, followed by that time in the reader's local time
+- **AND** no separate caught-up row is presented
+
+#### Scenario: A SQL enrichment falls back to its drained-at probe
+
+- **GIVEN** a SQL enrichment that is catching up, whose runner reports no caught-up time and whose registry
+  state carries a drained-at
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the status reads Catching up, followed by the drained-at time
+
+#### Scenario: A last write the runner lost on restart is said in words
+
+- **GIVEN** an enrichment whose runner view reports progress but no last write
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** a row labelled Last write reads Not recorded since restart
+
+#### Scenario: An aggregate presents no last write
+
+- **GIVEN** an `aggregate` pipeline
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no row labelled Last write is presented
 
 #### Scenario: Catching up and up to date are stated for every kind
 
@@ -427,16 +464,16 @@ Each group the service reports SHALL be presented as a card, in the tab's existi
 
 - **Schedule** — when a live fire last committed (labelled **Last run**), when the next fire is due or that one is running now, how
   many consecutive fires have failed, and the last failure with its time.
-- **Progress** — how far behind its input the scan is (for a SQL enrichment, the moment its output has been
-  computed up to instead, as the registry's state states it), whether the last fire left input behind
-  (stated as Up to date or Catching up), when a fire last ended with nothing more to read, and when the
-  pipeline last wrote rows.
+- **Progress** — whether the last fire left input behind (stated as Up to date or Catching up, the latter
+  dated by when a fire last ended with nothing more to read), for a SQL enrichment the moment its output has
+  been computed up to, as the registry's state states it, and when the pipeline last wrote rows. The lag the
+  view carries SHALL NOT be presented.
 - **Queue** — the work items computing and the computed items awaiting a write.
 - **Groups** — the dirty groups, split into ready, waiting on their idle window, and blocked by the daily
   cost ceiling.
 - **Spend today** — the successful calls, the tokens, and the failed calls, for the current UTC day.
 
-Where both services describe one fact — the lag, the backlog, the next fire — the runner's answer SHALL be
+Where both services describe one fact — the backlog, the next fire — the runner's answer SHALL be
 presented and the registry's SHALL NOT be drawn beside it: two rows stating one pipeline's schedule from two
 services sampled moments apart invite a reader to treat the difference as a fact about the pipeline. Where
 only one of them has an answer, that answer SHALL be presented whichever service it came from. The choice
@@ -453,9 +490,10 @@ present group SHALL likewise be left out rather than stated as zero or as an em 
 `running_now` SHALL be presented in place of the next fire rather than beside it: the service omits the next
 fire while a fire is running, and the two never both apply.
 
-Lag SHALL NOT be presented as a measure of whether the pipeline's rows are written. The scan advances when
-work is enqueued, not when it is written, so a lag of zero with items still computing is an ordinary state.
-Where the service reports a queue, the console SHALL present it in the tab so that the two are read together.
+Up to date SHALL NOT be presented as a measure of whether the pipeline's rows are written. The scan advances
+when work is enqueued, not when it is written, so an up-to-date scan with items still computing is an
+ordinary state. Where the service reports a queue, the console SHALL present it in the tab so that the two are
+read together, and the status SHALL carry a hint saying so.
 
 The console SHALL NOT present a health verdict derived from these values, and SHALL NOT present a stall
 flag: the service computes one for its own log and deliberately does not serve it, calling it a heuristic.
@@ -502,9 +540,9 @@ box with no explanation in it.
 
 #### Scenario: A caught-up scan with queued work does not read as finished
 
-- **GIVEN** a pipeline the service reports with a lag of zero and work still computing
+- **GIVEN** a pipeline the service reports as up to date with work still computing
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** the progress card states the lag
+- **THEN** the progress card states Up to date, with a hint that the queue is read beside it
 - **AND** the queue card states the computing items
 - **AND** neither is presented as evidence that the pipeline's rows are written
 
@@ -515,7 +553,7 @@ box with no explanation in it.
 - **WHEN** a full admin opens that pipeline's `Runtime` tab
 - **THEN** none of the three is presented
 - **AND** neither a zero nor an em dash is presented in their place
-- **AND** the lag and the consecutive-failure count the service did report are presented
+- **AND** the last write and the consecutive-failure count the service did report are presented
 
 #### Scenario: No stall verdict is presented
 
@@ -540,17 +578,17 @@ box with no explanation in it.
 
 #### Scenario: A fact only the registry still knows is presented
 
-- **GIVEN** a runner restarted since the pipeline last fired, so its view carries no lag and no schedule,
-  while the registry still records both
+- **GIVEN** a runner restarted since the pipeline last fired, so its view carries no backlog flag and no
+  schedule, while the registry still records both
 - **WHEN** a full admin opens that pipeline's `Runtime` tab
-- **THEN** the lag and the schedule the registry recorded are presented
+- **THEN** the status and the schedule the registry recorded are presented
 - **AND** neither is presented twice
 
 #### Scenario: A fact both services report is presented once
 
-- **GIVEN** a pipeline for which the runner and the registry both report a lag
+- **GIVEN** a pipeline for which the runner and the registry both report whether input was left behind
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** one lag is presented, the runner's
+- **THEN** one status is presented, the runner's
 - **AND** the registry's is not presented beside it
 
 #### Scenario: A runner holding a pipeline it has not fired says so

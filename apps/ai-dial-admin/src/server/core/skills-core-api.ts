@@ -35,29 +35,26 @@ interface CoreSkillFilesMetadata {
 
 export class SkillsCoreApi extends CoreApi {
   /**
-   * Reads a skill's path/folderId, etag, author/created/updated, and files. Confirmed against
-   * Core's actual implementation (not just the `skills.md` design doc): `GET
-   * /v2/metadata/skills/{bucket}/{path}` always calls Core's `listChildren`, whose `nodeMetadata()`
-   * mapper only ever sets `nodeType`/`createdAt`/`updatedAt`/`author`/`etag` — no `name`/
-   * `description`/`version` are exposed through *any* metadata endpoint; those live only in
-   * `SKILL.md`'s YAML frontmatter, deliberately not parsed here yet (planned alongside in-browser
-   * `SKILL.md` editing). So `author`/`createdAt`/`updatedAt`/`etag` all come from a single read of
-   * the skill's *parent* folder listing, matching this skill's own row — there is no "get one
-   * resource's own listing metadata" call, and no separate manifest fetch is needed since the
-   * listing row already carries the same aggregate etag a `SKILL.md` content read would. The
-   * listing-sourced trio nests under `_metadata` (epoch milliseconds stringified, matching the
-   * asset merge formatters' convention and the skill list rows' `ResourceInfo` shape); `etag`
-   * stays a separate value, outside `_metadata`. The only fetch beyond that single listing read is
-   * {@link getSkillFiles}, since a skill's own path resolves to an item node Core never populates
-   * with file contents.
+   * Reads a skill's path/folderId, etag, author/created/updated, and files. `GET
+   * /v2/metadata/skills/{bucket}/{path}` on a skill's own path (no trailing slash) answers with that
+   * skill as a single `ITEM` carrying `nodeType`/`createdAt`/`updatedAt`/`author`/`etag` (Core ≥
+   * 0.48.0); no `name`/`description`/`version` are exposed through *any* metadata endpoint — those
+   * live only in `SKILL.md`'s YAML frontmatter, deliberately not parsed here yet (planned alongside
+   * in-browser `SKILL.md` editing). The parent folder's listing is deliberately not scanned for
+   * this: Core pages it over raw blobs (every file and version of every skill), so a skill's row can
+   * sit on any page. A `null` response or a non-`ITEM` node (Core's answer for a path that is not a
+   * skill) means the skill doesn't exist. The trio nests under `_metadata` (epoch milliseconds
+   * stringified, matching the asset merge formatters' convention and the skill list rows'
+   * `ResourceInfo` shape); `etag` stays a separate value, outside `_metadata`. The only fetch beyond
+   * that read is {@link getSkillFiles}, since the `ITEM` node carries no file contents.
    */
   async getSkillMetadata(token: Token, path: string): Promise<DialSkillResource | null> {
-    const [files, listingEntry] = await Promise.all([
+    const [files, node] = await Promise.all([
       this.getSkillFiles(token, path),
-      this.findSkillListingEntry(token, path),
+      this.get<CoreResourceMetadataNode>(`${CORE_SKILLS_METADATA_URL}/${encodeCorePath(path)}`, token),
     ]);
 
-    if (!listingEntry) {
+    if (node?.nodeType !== 'ITEM') {
       return null;
     }
 
@@ -69,33 +66,14 @@ export class SkillsCoreApi extends CoreApi {
       name,
       path,
       folderId,
-      etag: listingEntry.etag,
+      etag: node.etag,
       _metadata: {
-        author: listingEntry.author,
-        createdAt: listingEntry.createdAt !== undefined ? String(listingEntry.createdAt) : undefined,
-        updatedAt: listingEntry.updatedAt !== undefined ? String(listingEntry.updatedAt) : undefined,
+        author: node.author,
+        createdAt: node.createdAt !== undefined ? String(node.createdAt) : undefined,
+        updatedAt: node.updatedAt !== undefined ? String(node.updatedAt) : undefined,
       },
       files,
     };
-  }
-
-  /**
-   * Finds a skill's own row in a single read of its parent folder's listing — the only place Core
-   * reports a skill's `author`/`createdAt`/`updatedAt`/`etag` (see {@link getSkillMetadata}'s doc
-   * comment). Deliberately reads only the first page rather than paginating through the whole
-   * folder: a per-skill read shouldn't cost an unbounded number of Core requests, and a skill
-   * missing from the first page is treated the same as a skill that doesn't exist.
-   */
-  private async findSkillListingEntry(token: Token, path: string): Promise<CoreSkillMetadataItem | undefined> {
-    const separatorIndex = path.lastIndexOf('/');
-    const parentPath = separatorIndex === -1 ? '' : path.slice(0, separatorIndex + 1);
-    const expectedUrl = `${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}${path}/`;
-
-    const node = await this.listSkillMetadata(token, parentPath);
-
-    return (node?.items as CoreSkillMetadataItem[] | undefined)?.find(
-      (item) => item.url != null && decodeCorePath(item.url) === expectedUrl,
-    );
   }
 
   /**

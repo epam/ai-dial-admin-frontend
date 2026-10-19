@@ -12,7 +12,6 @@ import {
   getCompareFieldDelta,
   getCompareRowDurationMs,
   getExecutionStatusDelta,
-  getCompareRowFullDiffKind,
   getMetricDelta,
   hasCompareRowDiff,
   roundMetricValue,
@@ -415,82 +414,6 @@ describe('Runs Compare :: hasCompareRowDiff', () => {
     });
 
     expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(true);
-  });
-});
-
-describe('Runs Compare :: getCompareRowFullDiffKind', () => {
-  // HTTP and duration ship hidden, so the pairs on screen are status, extracted fields and metrics.
-  const visibility = { hiddenColIds: new Set(['http', 'cmp_http', 'duration', 'cmp_duration']) };
-
-  const makePair = (primary: Partial<CompareAnalyticsRow>, compared: Partial<CompareAnalyticsRow> | null) =>
-    makeRow({ ...primary, _compared: compared === null ? null : makeRow(compared) });
-
-  test('returns the shared kind when every visible pair changed', () => {
-    const row = makePair(
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: { precision: 0.8 } } },
-      { executionStatus: ExtractionResultStatus.FAILED, metricValues: { Accuracy: { precision: 0.5 } } },
-    );
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBe(MetricDeltaKind.Changed);
-  });
-
-  test('returns null when one visible pair still matches', () => {
-    const row = makePair(
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: { precision: 0.8 } } },
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: { precision: 0.5 } } },
-    );
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBeNull();
-  });
-
-  test('returns Removed for an unmatched row where every visible pair lost its value', () => {
-    const row = makePair(
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: { precision: 0.8 } } },
-      null,
-    );
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBe(MetricDeltaKind.Removed);
-  });
-
-  test('returns Changed when the pairs differ in different ways', () => {
-    const row = makePair(
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: {} } },
-      { executionStatus: ExtractionResultStatus.FAILED, metricValues: { Accuracy: { precision: 0.5 } } },
-    );
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBe(MetricDeltaKind.Changed);
-  });
-
-  test('returns the shared kind when every visible pair gained a value', () => {
-    const row = makePair(
-      { executionStatus: undefined, metricValues: { Accuracy: {} } },
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: { precision: 0.5 } } },
-    );
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBe(MetricDeltaKind.Added);
-  });
-
-  test('ignores a matching pair once its columns are hidden', () => {
-    const row = makePair(
-      { executionStatus: ExtractionResultStatus.SUCCESS, metricValues: { Accuracy: { precision: 0.8, recall: 0.7 } } },
-      {
-        executionStatus: ExtractionResultStatus.SUCCESS,
-        metricValues: { Accuracy: { precision: 0.5, recall: 0.4 } },
-      },
-    );
-    const withoutStatus = { hiddenColIds: new Set([...visibility.hiddenColIds, 'status', 'cmp_status']) };
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBeNull();
-    expect(getCompareRowFullDiffKind(row, withoutStatus)).toBe(MetricDeltaKind.Changed);
-  });
-
-  test('returns null when fewer than two pairs are visible', () => {
-    const row = makePair(
-      { executionStatus: ExtractionResultStatus.SUCCESS },
-      { executionStatus: ExtractionResultStatus.FAILED },
-    );
-
-    expect(getCompareRowFullDiffKind(row, visibility)).toBeNull();
   });
 });
 

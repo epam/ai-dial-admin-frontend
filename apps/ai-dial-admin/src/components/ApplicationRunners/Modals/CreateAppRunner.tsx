@@ -64,7 +64,6 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentScheme.$id });
     dispatch({
       type: ValidationActionType.SetField,
       field: 'displayName',
