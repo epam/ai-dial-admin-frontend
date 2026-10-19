@@ -143,6 +143,9 @@ export const PAGE_TYPE_OPTIONS: SelectOption[] = [
 
 export const DEFAULT_PAGE_LIMIT = 25;
 export const DEFAULT_CURSOR_LIMIT = 100;
+// The CSV endpoints' per-request maximum: a higher limit is rejected, never clamped.
+export const EXPORT_ROW_LIMIT = 1000;
+export const DEFAULT_CSV_EXPORT_FILE_NAME = 'result.csv';
 
 export const UNTAGGED_KEY = 'untagged';
 

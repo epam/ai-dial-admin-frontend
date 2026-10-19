@@ -197,8 +197,8 @@ describe('BaseApi putActionWithEtag', () => {
 
 describe('BaseApi postDownloadAction', () => {
   class TestApi extends BaseApi {
-    public testPostDownloadAction(url: string) {
-      return this.postDownloadAction(url, {}, TOKEN_MOCK);
+    public testPostDownloadAction(url: string, signal?: AbortSignal) {
+      return this.postDownloadAction(url, {}, TOKEN_MOCK, signal);
     }
   }
 
@@ -221,6 +221,47 @@ describe('BaseApi postDownloadAction', () => {
     expect(res.success).toBe(true);
     expect(res.response?.fileName).toBe('bundle.json');
     expect(await res.response?.blob.text()).toBe('{"a":1}');
+  });
+
+  test('reads the total count when the service sends one', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('id\r\n', { status: 200, headers: { 'content-type': 'text/csv', 'x-total-count': '4200' } }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.response?.totalCount).toBe(4200);
+  });
+
+  test('leaves the total out when the service sends none', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('id\r\n', { status: 200, headers: { 'content-type': 'text/csv' } }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.response).not.toHaveProperty('totalCount');
+  });
+
+  test('leaves the total out when the header is not a number', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('id\r\n', { status: 200, headers: { 'content-type': 'text/csv', 'x-total-count': 'n/a' } }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.response).not.toHaveProperty('totalCount');
+  });
+
+  // The caller's signal is combined with the registry's, so either one cancels the request.
+  test("aborts the request when the caller's signal aborts", async () => {
+    const spy = vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(new Response('', { status: 200 }));
+    const caller = new AbortController();
+
+    await api.testPostDownloadAction('/download', caller.signal);
+    caller.abort();
+
+    expect((spy.mock.calls[0][4] as AbortSignal).aborted).toBe(true);
   });
 
   test('returns the error envelope for a 403 instead of an empty success', async () => {
