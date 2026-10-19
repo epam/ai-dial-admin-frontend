@@ -7,6 +7,7 @@ import {
 } from '@/src/models/evaluation/structured-query';
 import {
   McpDeploymentRef,
+  RoutesRef,
   SuiteType,
   TestSuite,
   TestSuiteDeploymentRef,
@@ -21,6 +22,7 @@ import {
   DATE_DSL_FIELDS,
   DEPLOYMENT_REF_NAME_FIELD,
   MCP_DEPLOYMENT_REF_NAME_FIELD,
+  ROUTES_REF_NAME_FIELD,
   OPERATOR_TO_COMPARISON,
   TEST_SUITE_COLUMN_TO_DSL_FIELD,
   TEST_SUITE_SELECT_FIELDS,
@@ -57,6 +59,7 @@ const buildApplicationFilter = (filter: FilterDto): FilterNode | null => {
   return or([
     compare(op, DEPLOYMENT_REF_NAME_FIELD, valueType, val),
     compare(op, MCP_DEPLOYMENT_REF_NAME_FIELD, valueType, val),
+    compare(op, ROUTES_REF_NAME_FIELD, valueType, val),
   ]);
 };
 
@@ -140,6 +143,7 @@ export const mapTestSuiteRow = (row: Record<string, unknown>): TestSuite => ({
   datasetId: row.dataset_id != null ? String(row.dataset_id) : undefined,
   deploymentRef: asObject<TestSuiteDeploymentRef>(row.deployment_ref),
   mcpDeploymentRef: asObject<McpDeploymentRef>(row.mcp_deployment_ref),
+  routesRef: asObject<RoutesRef>(row.routes_ref),
   endpointRef: asObject<TestSuiteEndpointRef>(row.endpoint_ref),
   testCaseFilter: asObject<FilterNode>(row.test_case_filter) ?? null,
 });

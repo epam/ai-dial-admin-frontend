@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { ButtonAppearance, DialNotification, DialPrimaryButton, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
 
-import { getDeployment, getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
+import { getDeployment, getDeploymentById, getRoute } from '@/src/app/[lang]/test-suites/actions';
 import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
 import EditRequestWizard from '@/src/components/TestSuites/Modals/EditRequestWizard/EditRequestWizard';
 import MethodEndpoint from '@/src/components/TestSuites/Methods/Endpoint';
@@ -20,7 +20,9 @@ import McpMethodContent from '@/src/components/TestSuites/View/McpMethodContent'
 import RequestDynamicConfiguration from '@/src/components/TestSuites/View/RequestDynamicConfiguration';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import { Deployment } from '@/src/models/evaluation/deployment';
+import { DialRouteResource } from '@/src/models/dial/resource';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import {
   addRequest,
   fromRequestView,
@@ -60,6 +62,7 @@ const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh, datas
 const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh, dataset }) => {
   const t = useI18n();
   const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<DialRouteResource | null>(null);
   const [isEditRequestWizardOpen, setIsEditRequestWizardOpen] = useState(false);
   const [isNewRequest, setIsNewRequest] = useState(false);
   const [rawSelectedRequestIndex, setSelectedRequestIndex] = useState(0);
@@ -69,6 +72,8 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
   const selectedRequestIndex = Math.min(rawSelectedRequestIndex, Math.max(getRequestCount(testSuite) - 1, 0));
   const deploymentId = testSuite.deploymentRef?.id;
   const deploymentType = testSuite.deploymentRef?.type;
+  const routeName = fromCanonicalRouteName(testSuite.routesRef?.name);
+  const isRoute = testSuite.suiteType === SuiteType.Route;
 
   useEffect(() => {
     if (selectedRequestIndex !== rawSelectedRequestIndex) {
@@ -85,6 +90,10 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
   );
 
   useEffect(() => {
+    if (isRoute) {
+      setSelectedApplication(null);
+      return;
+    }
     if (!deploymentId) {
       setSelectedApplication(null);
       return;
@@ -102,7 +111,27 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     return () => {
       cancelled = true;
     };
-  }, [deploymentId, deploymentType]);
+  }, [deploymentId, deploymentType, isRoute]);
+
+  useEffect(() => {
+    if (!isRoute || !routeName) {
+      setSelectedRoute(null);
+      return;
+    }
+
+    let isCancelled = false;
+    const loadRoute = async () => {
+      const route = await getRoute(routeName);
+      if (!isCancelled) {
+        setSelectedRoute(route);
+      }
+    };
+
+    void loadRoute();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isRoute, routeName]);
 
   const onAddRequest = useCallback(() => {
     const updatedSuite = addRequest(testSuite);
@@ -222,6 +251,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
                 testSuite={requestView}
                 onChangeTestSuite={onChangeRequestView}
                 selectedApplication={selectedApplication}
+                selectedRoute={selectedRoute}
                 isOpen={isEditRequestWizardOpen}
                 isNewRequest={isNewRequest}
                 onClose={onCloseEditRequestWizard}

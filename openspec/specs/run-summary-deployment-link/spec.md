@@ -2,9 +2,9 @@
 
 ## Purpose
 Defines how Run Summary / Compare Summary, Test Suite Properties, the Method tab’s selected
-application, and Conversations agent links resolve a single deployment — using a stored
-`deploymentRef.type` when present and a single deployment lookup (typed or type-less by-id) instead
-of unfiltered / catalog lists.
+application, and Conversations agent links resolve a suite target — using a stored
+`deploymentRef.type` when present, a single deployment lookup (typed or type-less by-id) instead
+of unfiltered / catalog lists, or the stored route reference for ROUTE suites.
 ## Requirements
 ### Requirement: Missing deployment type uses a single by-id lookup
 
@@ -80,6 +80,20 @@ id/name.
   deployment
 - **AND** SHALL NOT issue a deployment by-id request for the link
 
+### Requirement: Route suites link to Platform Routes without a deployment lookup
+
+For `ROUTE` suites with a `routesRef.name`, the system SHALL display the route name without the
+canonical `routes/platform/` prefix and resolve the external-link target directly to the Platform
+Routes entity. It SHALL NOT issue a deployment by-id request for this link.
+
+#### Scenario: Route suite external link
+
+- **WHEN** the Run Summary page renders a ROUTE suite whose `routesRef.name` is
+  `routes/platform/search-route`
+- **THEN** the Application field SHALL display `search-route`
+- **AND** its external-link control SHALL target the `search-route` Platform Routes entity
+- **AND** SHALL NOT issue a deployment by-id request for the link
+
 ### Requirement: Compare Summary reuses the same link behavior
 
 Compare Summary SHALL use the same deployment external-link behavior as single-run Summary for each
@@ -90,7 +104,7 @@ run's suite context SHALL come from that run's own suite, never from the other r
 
 - **WHEN** Compare Summary shows Application names for both primary and compared runs
 - **THEN** each run’s Application postfix SHALL resolve its external link independently using the
-  same rules as single-run Summary (by-id only when that run’s `deploymentRef.type` is missing)
+  same rules as single-run Summary (by-id only for a deployment reference whose `type` is missing)
 
 #### Scenario: Runs of different suites resolve links against their own suite
 
@@ -128,6 +142,20 @@ without a Properties-level deployments list (CreateTestSuite loads its own data)
 - **WHEN** the user views Test Suite Properties (non-modal)
 - **THEN** the Application picker SHALL be enabled without waiting for an unfiltered deployments
   list on Properties
+
+### Requirement: Route Test Suite Properties opens the Platform Route
+
+On the Test Suite view Properties tab, a ROUTE suite's Application field SHALL display the
+unprefixed route name and its Open control SHALL navigate directly from `routesRef`, without a
+deployment lookup.
+
+#### Scenario: Properties Open for a route suite
+
+- **WHEN** the user views Test Suite Properties for a ROUTE suite whose `routesRef.name` is
+  `routes/platform/search-route`
+- **THEN** the Application field SHALL display `search-route`
+- **AND** the Open control SHALL navigate to the `search-route` Platform Routes entity
+- **AND** the system SHALL NOT issue `GET /api/v1/deployments/all/{id}` for the control
 
 ### Requirement: Method tab loads a single deployment for Change Method
 

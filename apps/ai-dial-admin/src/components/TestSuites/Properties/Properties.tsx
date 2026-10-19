@@ -19,8 +19,10 @@ import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import {
   resolveDeploymentNavigationTarget,
   resolveMcpDeploymentNavigationTarget,
+  resolveRouteNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 interface Props {
   isModal?: boolean;
@@ -41,10 +43,15 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
 
   const isMcpSuite =
     testSuite.suiteType === SuiteType.McpTool || (!!testSuite.mcpDeploymentRef?.id && !testSuite.deploymentRef?.id);
+  const isRouteSuite = testSuite.suiteType === SuiteType.Route;
 
   const navigationTarget = useMemo(() => {
     if (isMcpSuite) {
       return resolveMcpDeploymentNavigationTarget(testSuite.mcpDeploymentRef);
+    }
+
+    if (isRouteSuite) {
+      return resolveRouteNavigationTarget(testSuite.routesRef);
     }
 
     if (!testSuite.deploymentRef) {
@@ -52,7 +59,15 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
     }
 
     return resolveDeploymentNavigationTarget(testSuite.deploymentRef, deploymentType, [], { modelRoute });
-  }, [deploymentType, isMcpSuite, modelRoute, testSuite.deploymentRef, testSuite.mcpDeploymentRef]);
+  }, [
+    deploymentType,
+    isMcpSuite,
+    isRouteSuite,
+    modelRoute,
+    testSuite.deploymentRef,
+    testSuite.mcpDeploymentRef,
+    testSuite.routesRef,
+  ]);
 
   const openInNewTab = useCallback(() => {
     if (!navigationTarget) {
@@ -69,7 +84,10 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
     [onChange],
   );
 
-  const applicationName = testSuite.deploymentRef?.name || testSuite.mcpDeploymentRef?.name || '';
+  const applicationName =
+    testSuite.deploymentRef?.name ||
+    testSuite.mcpDeploymentRef?.name ||
+    fromCanonicalRouteName(testSuite.routesRef?.name);
   const versionSuffix = testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : '';
   const selectedApplicationValue = `${applicationName}${versionSuffix}`;
   const isResolvingLink = !isModal && (isTypeLoading || isModelRouteLoading);

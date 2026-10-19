@@ -2,15 +2,20 @@ import { FC, useState } from 'react';
 
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ActionMenuOperationI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import MethodTabContent from '../MethodTabContent';
 
+const getDeploymentMock = vi.fn().mockResolvedValue(null);
+const getDeploymentByIdMock = vi.fn().mockResolvedValue(null);
+const getRouteMock = vi.fn().mockResolvedValue(null);
+
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getDeployment: vi.fn().mockResolvedValue(null),
-  getDeploymentById: vi.fn().mockResolvedValue(null),
+  getDeployment: (...args: unknown[]) => getDeploymentMock(...args),
+  getDeploymentById: (...args: unknown[]) => getDeploymentByIdMock(...args),
+  getRoute: (...args: unknown[]) => getRouteMock(...args),
 }));
 
 vi.mock('@/src/components/TestSuites/View/RequestDynamicConfiguration', () => ({
@@ -38,7 +43,11 @@ vi.mock('@/src/components/TestSuites/EndpointSchema/EndpointSchema', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/Modals/EditRequestWizard/EditRequestWizard', () => ({
-  default: ({ isNewRequest }: any) => <div>EditRequestWizard:{isNewRequest ? 'new' : 'edit'}</div>,
+  default: ({ isNewRequest, selectedRoute }: any) => (
+    <div>
+      EditRequestWizard:{isNewRequest ? 'new' : 'edit'}:{selectedRoute?.name ?? 'no-route'}
+    </div>
+  ),
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/components/TryOutButton', () => ({
@@ -72,6 +81,13 @@ const Harness: FC<{ initialSuite: TestSuite; onChange?: (suite: TestSuite, isSki
 };
 
 describe('MethodTabContent - request chain', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getDeploymentMock.mockResolvedValue(null);
+    getDeploymentByIdMock.mockResolvedValue(null);
+    getRouteMock.mockResolvedValue(null);
+  });
+
   test('renders request chips for the suite and its additional requests', () => {
     render(<Harness initialSuite={baseSuite} />);
 
@@ -155,7 +171,7 @@ describe('MethodTabContent - request chain', () => {
 
     expect(screen.getByText(`${TestSuitesI18nKey.Request} 3`)).toBeInTheDocument();
     expect(screen.getByText('RequestDynamicConfiguration:none')).toBeInTheDocument();
-    expect(screen.getByText('EditRequestWizard:new')).toBeInTheDocument();
+    expect(screen.getByText('EditRequestWizard:new:no-route')).toBeTruthy();
   });
 
   test('opens the wizard for editing (not as a new request) via the Edit request button', async () => {
@@ -166,7 +182,7 @@ describe('MethodTabContent - request chain', () => {
 
     await user.click(screen.getByRole('button', { name: TestSuitesI18nKey.EditRequest }));
 
-    expect(screen.getByText('EditRequestWizard:edit')).toBeInTheDocument();
+    expect(screen.getByText('EditRequestWizard:edit:no-route')).toBeTruthy();
   });
 
   test('removing a request drops the chip and reselects the previous one', async () => {
@@ -222,5 +238,25 @@ describe('MethodTabContent - request chain', () => {
     await user.click(screen.getByText('Change Dynamic Configuration'));
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ id: 'suite-1' }), true);
+  });
+
+  test('loads and forwards the selected platform route without loading a deployment', async () => {
+    const user = userEvent.setup();
+    getRouteMock.mockResolvedValue({ name: 'search-route', methods: ['GET'], paths: ['/search'] });
+    const routeSuite: TestSuite = {
+      ...baseSuite,
+      suiteType: SuiteType.Route,
+      deploymentRef: undefined,
+      routesRef: { name: 'routes/platform/search-route' },
+    };
+
+    render(<Harness initialSuite={routeSuite} />);
+
+    await user.click(screen.getByRole('button', { name: TestSuitesI18nKey.EditRequest }));
+
+    expect(await screen.findByText('EditRequestWizard:edit:search-route')).toBeTruthy();
+    expect(getRouteMock).toHaveBeenCalledWith('search-route');
+    expect(getDeploymentMock).not.toHaveBeenCalled();
+    expect(getDeploymentByIdMock).not.toHaveBeenCalled();
   });
 });

@@ -35,3 +35,7 @@ export interface ToolDefinition {
   inputSchema: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
 }
+
+export interface RouteTarget {
+  name: string;
+}

@@ -6,6 +6,7 @@ import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 export enum SuiteType {
   Deployment = 'DEPLOYMENT',
   McpTool = 'MCP_TOOL',
+  Route = 'ROUTE',
 }
 
 export enum OverallScoreType {
@@ -74,6 +75,7 @@ export interface TestSuite {
   additionalRequests?: TestSuiteAdditionalRequest[];
 
   mcpDeploymentRef?: McpDeploymentRef;
+  routesRef?: RoutesRef;
   toolRef?: ToolRef;
   argumentTemplate?: ArgumentTemplate;
 }
@@ -92,6 +94,7 @@ export interface SuiteSnapshot {
   suiteType?: SuiteType;
   deploymentRef?: TestSuiteDeploymentRef;
   mcpDeploymentRef?: McpDeploymentRef;
+  routesRef?: RoutesRef;
   requestName?: string;
   additionalRequests?: TestSuiteAdditionalRequest[];
   /** Score threshold captured at run start; used for per-row `passed` on eval summaries. */
@@ -103,6 +106,10 @@ export interface SuiteSnapshot {
 export interface McpDeploymentRef {
   id: string;
   type: string;
+  name: string;
+}
+
+export interface RoutesRef {
   name: string;
 }
 
