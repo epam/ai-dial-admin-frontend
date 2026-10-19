@@ -1,13 +1,15 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useCallback, useMemo, useRef } from 'react';
 
-import { ColDef, IDatasource } from 'ag-grid-community';
+import { ColDef, IDatasource, ModelUpdatedEvent } from 'ag-grid-community';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
+import { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
-import { BreakdownRowModel } from '@/src/components/Analytics/Usage/models';
+import { BreakdownRowModel, WidestFigures } from '@/src/components/Analytics/Usage/models';
+import { getFigureRulerVar, pickWidestFigures } from '@/src/components/Analytics/Usage/utils/figure-width';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -31,23 +33,10 @@ interface Props {
   isAutoHeight?: boolean;
 }
 
-/** Roughly the grid's own header row, so the message sits in the body rather than across it. */
 const HEADER_OFFSET_CLASS = 'top-[42px]';
-
 const LOADER_SIZE = 24;
+const BREAKDOWN_ROW_HEIGHT = 40;
 
-/**
- * The table itself, so the card and the full-list dialog show one grid rather than two that drift.
- *
- * A pending request renders the loader instead of the grid: switching dimension empties the rows
- * for a moment, and the grid's own empty state reads as "nothing matched". An empty result keeps
- * the grid — its header names what the table would have held — and states the emptiness over the
- * body.
- *
- * The paged grid states none of that. An empty result there is a filter that matched nothing, not
- * an idle window, so the card's message would be wrong — and it was drawn over the grid's own
- * "no rows" overlay, leaving two answers on top of each other. The grid speaks for itself instead.
- */
 const BreakdownGrid: FC<Props> = ({
   rows,
   columnDefs,
@@ -61,6 +50,58 @@ const BreakdownGrid: FC<Props> = ({
   isAutoHeight,
 }) => {
   const t = useI18n();
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const figureFormats = useMemo(() => {
+    const formats: Record<string, MeasureCellParams['format']> = {};
+
+    for (const { colId, cellRendererParams } of columnDefs) {
+      if (colId && cellRendererParams?.format) {
+        formats[colId] = cellRendererParams.format;
+      }
+    }
+
+    return formats;
+  }, [columnDefs]);
+
+  const widestRef = useRef<WidestFigures>({ widest: {} });
+
+  const onModelUpdated = useCallback(
+    (event: ModelUpdatedEvent<BreakdownRowModel>) => {
+      const grid = gridRef.current;
+
+      if (!grid) {
+        return;
+      }
+
+      const previous = widestRef.current;
+      const isSameList = Boolean(datasource) && previous.formats === figureFormats && previous.key === datasourceKey;
+      const loadedRows: BreakdownRowModel[] = [];
+
+      event.api.forEachNode((node) => {
+        if (node.data) {
+          loadedRows.push(node.data);
+        }
+      });
+
+      const widest = pickWidestFigures(loadedRows, figureFormats, isSameList ? previous.widest : {});
+
+      for (const colId of Object.keys(previous.widest)) {
+        if (!(colId in widest)) {
+          grid.style.removeProperty(getFigureRulerVar(colId));
+        }
+      }
+
+      for (const [colId, text] of Object.entries(widest)) {
+        grid.style.setProperty(getFigureRulerVar(colId), JSON.stringify(text));
+      }
+
+      widestRef.current = { formats: figureFormats, key: datasourceKey, widest };
+    },
+    [datasource, datasourceKey, figureFormats],
+  );
+
+  const sharedOptions = { rowHeight: BREAKDOWN_ROW_HEIGHT, onModelUpdated };
 
   if (isLoading) {
     return (
@@ -73,7 +114,7 @@ const BreakdownGrid: FC<Props> = ({
   const isEmpty = !datasource && (hasFailed || rows.length === 0);
 
   return (
-    <div className={classNames('relative', className)}>
+    <div ref={gridRef} className={classNames('relative', className)}>
       <GridView<BreakdownRowModel>
         key={datasourceKey}
         rowData={datasource ? void 0 : rows}
@@ -83,22 +124,20 @@ const BreakdownGrid: FC<Props> = ({
           datasource
             ? {
                 ...infiniteGridOptions,
+                ...sharedOptions,
                 cacheBlockSize: blockSize,
-                // The shared options size the cache for their own 100-row blocks; at 25 the same
-                // block count holds a quarter of the rows, and scrolling back re-read every one of
-                // them — twice over, since a block also re-asks the previous window.
                 maxBlocksInCache: blockSize ? Math.floor(QUERY_ROW_LIMIT / blockSize) : void 0,
-                // One column at a time, Shift held or not: the backend ranks on one key, so a second
-                // sort would show an order the rows do not have.
                 suppressMultiSort: true,
                 datasource,
               }
-            : { suppressNoRowsOverlay: true, ...(isAutoHeight ? { domLayout: 'autoHeight' as const } : {}) }
+            : {
+                ...sharedOptions,
+                suppressNoRowsOverlay: true,
+                ...(isAutoHeight ? { domLayout: 'autoHeight' as const } : {}),
+              }
         }
         getIsEmptyData={() => false}
       />
-      {/* Over the rows rather than instead of them: a block read on scroll leaves the rows above it
-          on screen, and replacing the grid would drop the reader back to the top of the list. */}
       {isLoadingBlock && (
         <div
           className={classNames(
