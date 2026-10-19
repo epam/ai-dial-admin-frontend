@@ -802,7 +802,7 @@ const BASE_SESSIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
     headerName: t(SessionsTraceI18nKey.Cost),
     ...numericColumn,
     valueFormatter: ({ value }) => formatFixedCost(value),
-    cellClass: 'align-right text-accent-secondary',
+    cellClass: 'align-right text-success',
     flex: 0.8,
     minWidth: 100,
   },

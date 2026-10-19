@@ -121,7 +121,7 @@ const SessionsSummary: FC<Props> = ({ period, periodLabel, isPending = false }) 
       <SummaryPill
         value={cost === null ? UNAVAILABLE_VALUE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
         label={t(SessionsTraceI18nKey.SummaryCost)}
-        valueClassName="text-accent-secondary"
+        valueClassName="text-success"
         hint={cost === null ? absentHint : periodHint}
         scope={periodLabel}
       />
