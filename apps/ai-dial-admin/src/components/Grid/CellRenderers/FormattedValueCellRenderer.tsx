@@ -14,7 +14,7 @@ const FormattedValueCellRenderer = ({ data, value, valueFormatted }: ICellRender
 
   const text = valueFormatted ?? (value == null ? '' : String(value));
 
-  return <EllipsisTooltip className="max-w-full dial-small-text text-primary" text={text} />;
+  return <EllipsisTooltip className="max-w-full dial-small-text" text={text} />;
 };
 
 export default FormattedValueCellRenderer;
