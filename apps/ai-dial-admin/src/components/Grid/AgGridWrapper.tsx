@@ -219,6 +219,9 @@ const AgGridWrapper = <T extends object>({
 
   const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
   const { defaultColDef: additionalDefaultColDef, ...gridOptionOverrides } = additionalGridOptions ?? {};
+  // A new object on every render is a defaultColDef change, and ag-Grid rebuilds the
+  // columns from the definitions, which puts a drag back where it started.
+  const defaultColDef = useMemo(() => ({ ...DEFAULT_COL_DEF, ...additionalDefaultColDef }), [additionalDefaultColDef]);
 
   const gridOptions: GridOptions = {
     headerHeight: HEADER_HEIGHT,
@@ -239,7 +242,7 @@ const AgGridWrapper = <T extends object>({
     },
     ...persistedWidthOptions,
     ...gridOptionOverrides,
-    defaultColDef: { ...DEFAULT_COL_DEF, ...additionalDefaultColDef },
+    defaultColDef,
   };
 
   return (

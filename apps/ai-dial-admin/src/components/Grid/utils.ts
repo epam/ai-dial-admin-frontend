@@ -60,20 +60,65 @@ const getFirstLeafColId = (col: ColDef): string | undefined => {
   return (col.colId ?? col.field) as string | undefined;
 };
 
+const groupChildren = (col: ColDef): ColDef[] | null => {
+  const children = (col as ColGroupDef).children;
+  return Array.isArray(children) ? (children as ColDef[]) : null;
+};
+
 export const applyColumnStateOrderToTreeColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
   const colIdToIndex = new Map(columnState.map((state, i) => [state.colId, i]));
 
-  const getPosition = (col: ColDef): number => {
-    const leafId = getFirstLeafColId(col);
-    return leafId !== undefined ? (colIdToIndex.get(leafId) ?? Infinity) : Infinity;
+  const leafPosition = (col: ColDef): number => {
+    const id = (col.colId ?? col.field) as string | undefined;
+    return id !== undefined ? (colIdToIndex.get(id) ?? Infinity) : Infinity;
   };
 
-  return [...columnDefs].sort((a, b) => getPosition(a) - getPosition(b));
+  const position = (col: ColDef): number => {
+    const children = groupChildren(col);
+    if (!children?.length) {
+      return leafPosition(col);
+    }
+
+    return Math.min(...children.map(position));
+  };
+
+  const sortLevel = (nodes: ColDef[]): ColDef[] => {
+    const withSortedChildren = nodes.map((node) => {
+      const children = groupChildren(node);
+      if (!children?.length) {
+        return node;
+      }
+
+      const sortedChildren = sortLevel(children);
+      const unchanged = sortedChildren.every((child, index) => child === children[index]);
+      return unchanged ? node : { ...node, children: sortedChildren };
+    });
+
+    return [...withSortedChildren].sort((a, b) => position(a) - position(b));
+  };
+
+  return sortLevel(columnDefs);
 };
 
-export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+const sameTreeOrder = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
   columnDefs.length === nextColumnDefs.length &&
-  columnDefs.every((col, index) => getFirstLeafColId(col) === getFirstLeafColId(nextColumnDefs[index]));
+  columnDefs.every((col, index) => {
+    const next = nextColumnDefs[index];
+    if (getFirstLeafColId(col) !== getFirstLeafColId(next)) {
+      return false;
+    }
+
+    const children = groupChildren(col);
+    const nextChildren = groupChildren(next);
+    if (!children?.length && !nextChildren?.length) {
+      return true;
+    }
+
+    return !!children?.length && !!nextChildren?.length && sameTreeOrder(children, nextChildren);
+  });
+
+export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+  sameTreeOrder(columnDefs, nextColumnDefs);
 
 export interface ColumnLeaf {
   field: string;
@@ -84,11 +129,6 @@ export interface ColumnLeaf {
   groupName?: ColDef['headerName'];
   suppressColumnsToolPanel?: ColDef['suppressColumnsToolPanel'];
 }
-
-const groupChildren = (col: ColDef): ColDef[] | null => {
-  const children = (col as ColGroupDef).children;
-  return Array.isArray(children) ? (children as ColDef[]) : null;
-};
 
 const toLeaf = (col: ColDef, group?: ColGroupDef): ColumnLeaf => ({
   field: (col.field ?? col.colId ?? '') as string,

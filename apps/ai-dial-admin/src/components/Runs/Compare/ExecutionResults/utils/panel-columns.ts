@@ -1,5 +1,6 @@
-import { ColDef, ColGroupDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ColumnState } from 'ag-grid-community';
 
+import { applyColumnStateOrderToTreeColDefs } from '@/src/components/Grid/utils';
 import {
   DEFAULT_COMPARE_DELTA_HEADER,
   EXECUTION_GROUP_HEADER,
@@ -281,3 +282,96 @@ export const buildComparePanelColumnTree = (
 
 export const flattenComparePanelColumnTree = (panelTree: ColDef[]): (ColDef | ColGroupDef)[] =>
   panelTree.map((node) => flattenGroupedNode(node));
+
+const panelNodePosition = (node: ColDef, indexByColId: Map<string, number>): number => {
+  const children = getChildren(node);
+  if (children.length === 0) {
+    const colId = getColId(node);
+    return colId ? (indexByColId.get(colId) ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+  }
+
+  return Math.min(...children.map((child) => panelNodePosition(child, indexByColId)));
+};
+
+const isSplittablePanelGroup = (node: ColDef): boolean =>
+  isMetricGroup(node) || node.headerName === EXTRACTED_GROUP_HEADER;
+
+const withChildren = (node: ColDef, children: ColDef[]): ColDef => ({ ...node, children }) as ColGroupDef as ColDef;
+
+const withPanelKey = (node: ColDef, panelKey: string | undefined): ColDef => {
+  const { panelKey: __panelKey, ...context } = (node.context ?? {}) as CompareColumnPanelContext;
+  const nextContext = panelKey ? { ...context, panelKey } : context;
+  return { ...node, context: Object.keys(nextContext).length > 0 ? nextContext : undefined };
+};
+
+const isSameSplittableGroup = (left: ColDef | undefined, right: ColDef): boolean =>
+  !!left && isSplittablePanelGroup(left) && isSplittablePanelGroup(right) && left.headerName === right.headerName;
+
+/**
+ * Lists metric and extracted groups the way the grid draws them: one row while their fields are
+ * side by side, one row per run of adjacent fields once another block sits between them.
+ */
+export const orderComparePanelTree = (tree: ColDef[], columnState: ColumnState[]): ColDef[] => {
+  const indexByColId = new Map(columnState.map((column, index) => [column.colId, index]));
+  const byPosition = (left: ColDef, right: ColDef) =>
+    panelNodePosition(left, indexByColId) - panelNodePosition(right, indexByColId);
+
+  const sortedTree = applyColumnStateOrderToTreeColDefs(tree, columnState);
+  const blocks = sortedTree
+    .flatMap((node) =>
+      isSplittablePanelGroup(node) ? getChildren(node).map((child) => withChildren(node, [child])) : [node],
+    )
+    .sort(byPosition);
+
+  const rows: ColDef[] = [];
+  for (const block of blocks) {
+    const previous = rows[rows.length - 1];
+    if (isSameSplittableGroup(previous, block)) {
+      rows[rows.length - 1] = withChildren(previous, [...getChildren(previous), ...getChildren(block)]);
+    } else {
+      rows.push(block);
+    }
+  }
+
+  return rows.map((row) => {
+    if (!isSplittablePanelGroup(row)) {
+      return row;
+    }
+
+    const isSplit = rows.some((other) => other !== row && isSameSplittableGroup(other, row));
+    return withPanelKey(row, isSplit ? `${row.headerName ?? ''}#${getColId(getLeaves(row)[0]) ?? ''}` : undefined);
+  });
+};
+
+export const columnStateFromComparePanelTree = (tree: ColDef[], columnState: ColumnState[]): ColumnState[] => {
+  const leafOrder: string[] = [];
+  const visit = (nodes: ColDef[]) => {
+    for (const node of nodes) {
+      const children = getChildren(node);
+      if (children.length === 0) {
+        const colId = getColId(node);
+        if (colId) {
+          leafOrder.push(colId);
+        }
+        continue;
+      }
+      visit(children);
+    }
+  };
+  visit(tree);
+
+  const hideByColId = collectHideByColId(tree);
+  const byId = new Map(columnState.map((column) => [column.colId, column]));
+  const seen = new Set(leafOrder);
+
+  return [
+    ...leafOrder.flatMap((colId) => {
+      const column = byId.get(colId);
+      if (!column) {
+        return [];
+      }
+      return hideByColId.has(colId) ? [{ ...column, hide: hideByColId.get(colId) }] : [column];
+    }),
+    ...columnState.filter((column) => !seen.has(column.colId)),
+  ];
+};
