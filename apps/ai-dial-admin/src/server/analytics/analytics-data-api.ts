@@ -55,6 +55,8 @@ export const QUERIES_ENTITIES_URL = `${QUERIES_URL}/entities`;
 export const QUERIES_FUNCTIONS_URL = `${QUERIES_URL}/functions`;
 export const QUERIES_EXECUTE_URL = `${QUERIES_URL}/execute`;
 export const QUERIES_EXECUTE_SQL_URL = `${QUERIES_URL}/execute-sql`;
+export const QUERIES_EXECUTE_CSV_URL = `${QUERIES_URL}/execute-csv`;
+export const QUERIES_EXECUTE_SQL_CSV_URL = `${QUERIES_URL}/execute-sql-csv`;
 export const QUERIES_TRANSLATE_URL = `${QUERIES_URL}/translate`;
 export const QUERIES_TRANSLATE_SQL_URL = `${QUERIES_URL}/translate-sql`;
 export const QUERIES_ENTITY_SCHEMA_URL = (name: string): string =>
@@ -174,6 +176,20 @@ export class AnalyticsDataApi extends BaseApi {
     signal?: AbortSignal,
   ): Promise<ServerActionResponse<StructuredQueryResult>> {
     return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token, undefined, signal);
+  }
+
+  // CSV twins of `executeAction` / `executeSqlAction`: the same body through the same pipeline and limits,
+  // answered as a `text/csv` attachment; a failure is the usual `ErrorView`.
+  executeCsvAction(
+    query: StructuredQuery,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<DownloadedFile>> {
+    return this.postDownloadAction(QUERIES_EXECUTE_CSV_URL, query, token, signal);
+  }
+
+  executeSqlCsvAction(sql: string, token: Token, signal?: AbortSignal): Promise<ServerActionResponse<DownloadedFile>> {
+    return this.postDownloadAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_CSV_URL, { sql }, token, signal);
   }
 
   // Validation-only translation (never contacts ClickHouse): renders a structured query as the

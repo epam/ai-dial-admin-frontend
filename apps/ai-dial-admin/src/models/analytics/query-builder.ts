@@ -220,6 +220,13 @@ export enum QueryRequestKind {
   Sql = 'sql',
 }
 
+// What to tell the user about an exported file that may not hold every matching row: the key and the
+// numbers its text interpolates.
+export interface PartialExportNotice {
+  key: QueryBuilderI18nKey;
+  params: Record<string, number>;
+}
+
 export type QueryRunRequest =
   | { kind: QueryRequestKind.Structured; query: StructuredQuery }
   | { kind: QueryRequestKind.Sql; sql: string };

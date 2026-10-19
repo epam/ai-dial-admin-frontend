@@ -1,10 +1,11 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useId, useMemo } from 'react';
 
 import { ColDef } from 'ag-grid-community';
-import { DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent, DialSegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { IconDownload } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
@@ -12,10 +13,17 @@ import { getValueClassColumn } from '@/src/components/Analytics/QueryBuilder/Res
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
+import { EXPORT_ROW_LIMIT } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
-import { ChartConfig, ExecutedQueryMeta, QueryResultView } from '@/src/models/analytics/query-builder';
+import {
+  ChartConfig,
+  ExecutedQueryMeta,
+  QueryRequestKind,
+  QueryResultView,
+} from '@/src/models/analytics/query-builder';
 
 interface Props {
   result: StructuredQueryResult | null;
@@ -27,10 +35,23 @@ interface Props {
   onChangeView: (view: QueryResultView) => void;
   chartConfig: ChartConfig;
   onChangeChartConfig: (config: ChartConfig) => void;
+  isExporting?: boolean;
+  onExportCsv?: () => void;
 }
 
-const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, chartConfig, onChangeChartConfig }) => {
+const ResultArea: FC<Props> = ({
+  result,
+  meta,
+  isRunning,
+  view,
+  onChangeView,
+  chartConfig,
+  onChangeChartConfig,
+  isExporting = false,
+  onExportCsv,
+}) => {
   const t = useI18n();
+  const exportHintId = useId();
 
   // Attached here rather than in the column builder, which stays a pure description of the columns.
   const columns = useMemo(
@@ -60,6 +81,10 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, ch
   ];
 
   const hasResult = !!result;
+  const exportHint = t(
+    meta?.kind === QueryRequestKind.Sql ? QueryBuilderI18nKey.ExportCsvSqlHint : QueryBuilderI18nKey.ExportCsvHint,
+    { limit: EXPORT_ROW_LIMIT.toLocaleString() },
+  );
   const isChartView = view === QueryResultView.Chart;
 
   return (
@@ -77,6 +102,32 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, ch
             <StatChip value={columns.length} label={t(QueryBuilderI18nKey.Fields)} />
             {total != null && <StatChip value={total.toLocaleString()} label={t(QueryBuilderI18nKey.Total)} />}
           </div>
+        )}
+        {hasResult && onExportCsv && (
+          <>
+            <GhostButton
+              className="ml-auto"
+              label={t(QueryBuilderI18nKey.ExportCsv)}
+              iconBefore={
+                isExporting ? (
+                  <span aria-hidden>
+                    <DialLoader fullWidth={false} size={BASE_BUTTON_ICON_PROPS.size} className="text-secondary" />
+                  </span>
+                ) : (
+                  <IconDownload {...BASE_BUTTON_ICON_PROPS} aria-hidden />
+                )
+              }
+              aria-busy={isExporting}
+              tooltipProps={{ tooltip: exportHint }}
+              aria-describedby={exportHintId}
+              disabled={isRunning || isExporting}
+              onClick={onExportCsv}
+            />
+            {/* The kit's tooltip names the button only while it is open; this keeps the ceiling announced. */}
+            <span id={exportHintId} className="sr-only">
+              {exportHint}
+            </span>
+          </>
         )}
       </div>
 

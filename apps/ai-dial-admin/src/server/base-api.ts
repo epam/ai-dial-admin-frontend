@@ -6,6 +6,7 @@ import { streamRequest } from '@/src/utils/api/create-stream-request';
 import { ErrorObject, getError, getErrorMessage, getParsedError } from '@/src/utils/api/error';
 import { fileRequest } from '@/src/utils/api/file-request';
 import { getFileName } from '@/src/utils/api/get-file-name';
+import { getTotalCount } from '@/src/utils/api/get-total-count';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { requestRegistry } from '@/src/utils/api/request-registry';
@@ -147,8 +148,9 @@ export class BaseApi {
     url: string,
     dto: T,
     token?: Token,
+    signal?: AbortSignal,
   ): Promise<ServerActionResponse<DownloadedFile>> {
-    const res = await this.fetchRegistered(url, 'POST', token, dto);
+    const res = await this.fetchRegistered(url, 'POST', token, dto, undefined, signal);
 
     if (isEnvelope(res)) {
       return res;
@@ -158,7 +160,16 @@ export class BaseApi {
       return this.handleResponse(res, 'POST');
     }
 
-    return { success: true, response: { blob: await res.blob(), fileName: getFileName(res) || '' } };
+    const totalCount = getTotalCount(res);
+
+    return {
+      success: true,
+      response: {
+        blob: await res.blob(),
+        fileName: getFileName(res) || '',
+        ...(totalCount != null && { totalCount }),
+      },
+    };
   }
 
   /**
