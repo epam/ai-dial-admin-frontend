@@ -1,12 +1,13 @@
 'use client';
 
-import { FC } from 'react';
+import { CSSProperties, FC } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
 import { Tooltip } from '@epam/ai-dial-ui-kit';
 
-import DeltaValue from '@/src/components/Analytics/Usage/Delta/DeltaValue';
+import DeltaBadge from '@/src/components/Analytics/Usage/Delta/DeltaBadge';
 import { BreakdownDeltas, BreakdownRowModel, KpiMetric } from '@/src/components/Analytics/Usage/models';
+import { getFigureRulerVar } from '@/src/components/Analytics/Usage/utils/figure-width';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -24,24 +25,18 @@ export interface MeasureCellParams {
   formatExact?: (row: BreakdownRowModel) => string | null;
 }
 
-/** The pill the KPI cards put their own change in, so one change reads the same way page-wide. */
-const DELTA_PILL_CLASS = 'dial-tiny-semi-text rounded bg-layer-4 px-1.5 py-0.5';
+const RULER_VAR = '--breakdown-figure-ruler';
 
-/**
- * A measure and how it moved.
- *
- * The change sits beside the figure it belongs to rather than in a column of its own: one `Δ`
- * column could only ever compare one measure, and next to `Cost` it read as a change in money
- * while it was counting calls.
- */
 const MeasureCell: FC<ICellRendererParams<BreakdownRowModel> & MeasureCellParams> = ({
   data,
+  column,
   metric,
   deltaKey,
   format,
   formatExact,
 }) => {
   const t = useI18n();
+  const colId = column?.getColId();
 
   if (!data) {
     return null;
@@ -60,20 +55,25 @@ const MeasureCell: FC<ICellRendererParams<BreakdownRowModel> & MeasureCellParams
   );
 
   return (
-    /* The figure ends on the cell's right edge, like every other number in the table, and the change
-       sits in a track of its own — right-aligned, so the pills end on one line too and each still
-       reads as belonging to the figure it touches. Letting the pill's width push the number around
-       left both columns ragged. */
-    <span className="flex w-full items-center justify-end gap-1.5">
-      <span className="flex w-[86px] shrink-0 justify-end">
-        {delta != null && <DeltaValue ratio={delta} metric={metric} className={DELTA_PILL_CLASS} />}
-        {/* A row the previous window never held has nothing to divide by, so it says that instead
-            of a change — once, on the column the ranking is built from. */}
+    <span className="flex w-full items-center justify-end gap-2.5">
+      <span className="flex items-center justify-end">
+        {delta != null && <DeltaBadge ratio={delta} metric={metric} />}
         {delta == null && data.isNewRow && deltaKey === 'calls' && (
           <span className="dial-tiny-text text-secondary">{t(AnalyticsUsageI18nKey.RowIsNew)}</span>
         )}
       </span>
-      {exact && value ? <Tooltip tooltip={exact}>{figure}</Tooltip> : figure}
+      <span className="grid shrink-0 items-center justify-items-end">
+        {colId && (
+          <span
+            aria-hidden
+            className="invisible col-start-1 row-start-1 h-0 overflow-hidden tabular-nums after:content-[var(--breakdown-figure-ruler)]"
+            style={{ [RULER_VAR]: `var(${getFigureRulerVar(colId)}, "")` } as CSSProperties}
+          />
+        )}
+        <span className="col-start-1 row-start-1">
+          {exact && value ? <Tooltip tooltip={exact}>{figure}</Tooltip> : figure}
+        </span>
+      </span>
     </span>
   );
 };
