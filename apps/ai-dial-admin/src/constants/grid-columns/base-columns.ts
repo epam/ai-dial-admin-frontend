@@ -14,7 +14,7 @@ import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRender
 import TelemetryFallbackCellRenderer from '@/src/components/Grid/CellRenderers/TelemetryFallbackCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { dateTimeColumn } from './configs';
+import { dateTimeColumn, nameColumnSizing } from './configs';
 import { getValidityStatus } from '@/src/components/Common/ValidityStatus/utils';
 
 export const CREATED_AT_COLUMN: ColDef = {
@@ -69,11 +69,12 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   cellRenderer: DisplayNameCellRenderer,
   filterValueGetter: ({ data }) => displayNameFilterValue(data),
   hide: false,
+  ...nameColumnSizing,
 };
 
 export const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
 
-export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
+export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false, ...nameColumnSizing };
 
 export const ASSET_NAME_COLUMN: ColDef = {
   field: 'name',
@@ -81,6 +82,7 @@ export const ASSET_NAME_COLUMN: ColDef = {
   headerName: 'Display Name',
   cellRenderer: DisplayNameCellRenderer,
   filterValueGetter: ({ data }) => displayNameFilterValue(data),
+  ...nameColumnSizing,
 };
 
 export const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };

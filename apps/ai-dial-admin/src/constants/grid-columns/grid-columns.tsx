@@ -131,7 +131,7 @@ import {
 } from './base-columns';
 import { CONTAINER_TYPE_LABELS } from '@/src/constants/deployments/container-types';
 import { Container } from '@/src/models/deployments/containers';
-import { dateTimeColumn, numericColumn, priceColumn, rightAlignedColumn } from './configs';
+import { dateTimeColumn, nameColumnSizing, numericColumn, priceColumn, rightAlignedColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter, exactMatchFilter } from './filters';
 import SessionCellRenderer from '@/src/components/Analytics/SessionsTrace/List/SessionCellRenderer';
 import TopicsCellRenderer from '@/src/components/Analytics/SessionsTrace/List/TopicsCellRenderer';
@@ -1306,10 +1306,18 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     colId: 'name',
     headerName: 'Display Name',
     hide: false,
+    ...nameColumnSizing,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...evalStringFilter([GridFilterType.EQUALS]) },
+  {
+    field: 'id',
+    colId: 'id',
+    headerName: 'ID',
+    hide: false,
+    ...nameColumnSizing,
+    ...evalStringFilter([GridFilterType.EQUALS]),
+  },
   {
     field: 'suiteType',
     colId: 'suiteType',
@@ -1368,6 +1376,7 @@ export const DATASETS_COLUMN: ColDef[] = [
     colId: 'name',
     headerName: 'Display Name',
     hide: false,
+    ...nameColumnSizing,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
@@ -1559,8 +1568,8 @@ export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = [
 ];
 
 export const METRICS_COLUMN: ColDef[] = [
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false },
-  { field: 'name', colId: 'name', headerName: 'Name', hide: false },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...nameColumnSizing },
+  { field: 'name', colId: 'name', headerName: 'Name', hide: false, ...nameColumnSizing },
   DESCRIPTION_COLUMN,
   CREATED_AT_COLUMN,
 ];

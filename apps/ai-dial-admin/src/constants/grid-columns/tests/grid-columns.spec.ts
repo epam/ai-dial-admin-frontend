@@ -29,7 +29,16 @@ import {
   RUNS_COLUMN,
   SUITE_RUNS_COLUMN,
   COMPARE_RUN_PICKER_COLUMN,
+  DATASETS_COLUMN,
+  METRICS_COLUMN,
 } from '../grid-columns';
+import {
+  ASSET_NAME_COLUMN,
+  DISPLAY_NAME_COLUMN,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  NAME_COLUMN,
+  NAME_COLUMN_WITH_SORT,
+} from '../base-columns';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -627,6 +636,44 @@ const RUNS_COLUMN_ORDER = [
 const DERIVED_COL_IDS = ['duration', 'cost', 'overallScore'];
 
 /** Columns capped narrower than `defaultColDef`'s `minWidth` in `AgGridWrapper`. */
+describe('name column sizing', () => {
+  const SIZING = { width: 400, minWidth: 260 };
+  const colById = (columns: ColDef[], colId: string) => columns.find((col) => col.colId === colId)!;
+
+  test('the shared ID and Display Name columns open wide, without flex', () => {
+    [NAME_COLUMN, NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, ASSET_NAME_COLUMN].forEach(
+      (col) => {
+        expect(col).toMatchObject(SIZING);
+        expect(col.flex).toBeUndefined();
+      },
+    );
+  });
+
+  test('lists built from the shared columns inherit the sizing', () => {
+    expect(MODELS_COLUMNS((s) => s)[0]).toMatchObject(SIZING);
+    expect(INTERCEPTORS_COLUMNS((s) => s)[0]).toMatchObject(SIZING);
+    expect(DEPLOYMENT_ASSETS_COLUMNS[0]).toMatchObject(SIZING);
+    expect(NON_DEPLOYMENT_ASSETS_COLUMNS[0]).toMatchObject(SIZING);
+  });
+
+  test('the test suite, dataset and metric name columns open wide, without flex', () => {
+    [
+      colById(TEST_SUITES_COLUMN, 'name'),
+      colById(TEST_SUITES_COLUMN, 'id'),
+      colById(DATASETS_COLUMN, 'name'),
+      colById(METRICS_COLUMN, 'id'),
+      colById(METRICS_COLUMN, 'name'),
+    ].forEach((col) => {
+      expect(col).toMatchObject(SIZING);
+      expect(col.flex).toBeUndefined();
+    });
+  });
+
+  test('leaves the Runs columns unsized', () => {
+    expect(RUNS_COLUMN.some((col) => col.width === SIZING.width && col.minWidth === SIZING.minWidth)).toBe(false);
+  });
+});
+
 const GRID_DEFAULT_MIN_WIDTH = 150;
 const CAPPED_COL_IDS = ['runConfig.numberOfRuns', 'numberOfTestCases', 'duration', 'cost', 'overallScore'];
 
