@@ -18,8 +18,12 @@ registry now reports a position for.
 - The failures grid describes each dead-letter stage — on hover and focus, and in the row's detail.
 - Runtime tab, aggregate and SQL pipelines: "Behind its input" becomes "Data up to", read from the
   registry's cursor version (aggregate) or materialized-through version (SQL) as a local timestamp, and the
-  State card is withdrawn. Model-calling enrichments keep the lag and the State card.
+  State card is withdrawn. Model-calling enrichments keep the State card.
 - Runtime tab, every kind: "Backlog" / "Caught up" becomes "Status" / "Up to date" or "Catching up".
+- Runtime tab, Progress card: rows ordered Status, Data up to, Last write. "Catching up" carries the last
+  up-to-date time (the runner's caught-up time, a SQL enrichment's drained-at as fallback) in place of a
+  separate Caught up at row; an enrichment's missing last write reads "Not recorded since restart"; an
+  aggregate shows no last write; the lag is shown for no kind.
 - "Last scan" becomes "Last run", and the tab shows one such row rather than two.
 - A cursor identity that is still shown (model-calling enrichments) is readable in full and copyable.
 

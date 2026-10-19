@@ -155,6 +155,10 @@
       @apply border-0;
     }
 
+    &.column-divider:not(:last-child) {
+      @apply border-0 border-r border-solid border-tertiary;
+    }
+
     &.align-right {
       @apply justify-end;
 

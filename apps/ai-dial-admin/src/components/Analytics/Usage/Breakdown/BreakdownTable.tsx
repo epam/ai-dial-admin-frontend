@@ -58,34 +58,21 @@ import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-/**
- * Neither surface offers column sorting or per-column filters. The card holds one ranked page, so
- * both would reorder or sift that page while hiding that the rest of the dimension was never
- * fetched. The dialog reads the whole dimension, but block by block — a filter there has to reach
- * the rows it has not read yet, which is what its search field does, once, over the dimension.
- */
 const BREAKDOWN_COLUMN_BASE: ColDef<BreakdownRowModel> = {
   sortable: false,
   filter: false,
   floatingFilter: false,
   suppressHeaderMenuButton: true,
+  cellClass: 'column-divider',
 };
 
-/** Decimals an exact reading states: enough for a rate or a price the column rounded to nothing. */
 const EXACT_FRACTION_DIGITS = 4;
 
-/**
- * Every column takes an equal share of the table. A measure now carries its own change beside it,
- * so the figures are of one kind and one width: the old fixed widths left the numeric columns
- * crowded against each other while the share bar took a third of the row.
- */
 const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
   ...BREAKDOWN_COLUMN_BASE,
   flex: 1,
-  minWidth: 150,
-  // The pair the repo's own column configs use: a right-aligned figure needs its header on the same
-  // edge, or the column reads as a label on the left with numbers under someone else's heading.
-  cellClass: 'align-right',
+  minWidth: 170,
+  cellClass: ['align-right', 'column-divider'],
   headerClass: 'align-right',
 };
 
@@ -238,11 +225,9 @@ const BreakdownTable: FC<Props> = ({
         colId: 'dimension',
         field: 'displayLabel',
         headerName: t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]),
-        // The one column of text: it reads from the left, header included.
-        cellClass: void 0,
+        cellClass: BREAKDOWN_COLUMN_BASE.cellClass,
         headerClass: void 0,
         cellRenderer: DimensionCell,
-        // The grid's tooltip covers the whole cell, info icon included; the cell shows the name itself.
         tooltipValueGetter: () => null,
       },
       ...(ROUTE_KIND_TABS.includes(tab)
@@ -364,8 +349,7 @@ const BreakdownTable: FC<Props> = ({
     onHideAll();
     setSearchTerm('');
   }, [onHideAll]);
-  // Only with rows to size to: an empty card keeps the full box, so its message has somewhere to
-  // sit rather than being squeezed under the header.
+
   const isCardAutoHeight = rowModels.length > 0 && rowModels.length <= BREAKDOWN_CARD_SCROLL_AFTER_ROWS;
 
   const grid = (
@@ -381,16 +365,11 @@ const BreakdownTable: FC<Props> = ({
 
   return (
     <DashboardCard
-      // The card holds the ranked head, cut at the same limit its request is; saying so keeps the
-      // head from being read as the whole dimension.
       title={t(AnalyticsUsageI18nKey.BreakdownTitleTop, { count: String(rowLimit) })}
       subtitle={t(BREAKDOWN_TAB_DESCRIPTION_KEY[tab])}
       headerActions={
-        /* Both controls act on the same table, so they sit together at the header's right edge,
-           centred against the title block rather than pinned to the title's own line. */
         <div className="flex shrink-0 items-center gap-4">
           <TabSelector tabs={tabs} activeTab={tab} onChange={(next) => onTabChange(next as BreakdownTab)} />
-          {/* The card shows one page, the dialog the full list — a count here would name the page. */}
           {rowModels.length > 0 && <DialLinkButton label={t(AnalyticsUsageI18nKey.ViewAll)} onClick={onShowAll} />}
         </div>
       }

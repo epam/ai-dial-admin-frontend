@@ -26,7 +26,12 @@ import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Pipeline } from '@/src/models/analytics/pipeline';
 import { RuntimeReadOutcome } from '@/src/models/analytics/pipeline-runtime';
-import { getDataUpTo, getPipelineRuntimeKind, PipelineRuntimeKind } from '@/src/utils/analytics/pipeline-runtime-kind';
+import {
+  getDataUpTo,
+  getLastUpToDate,
+  getPipelineRuntimeKind,
+  PipelineRuntimeKind,
+} from '@/src/utils/analytics/pipeline-runtime-kind';
 
 interface Props {
   pipeline: Pipeline;
@@ -193,27 +198,27 @@ const PipelineRuntime: FC<Props> = ({
   // the registry still knew whenever the runner answered without knowing it — the ordinary shape of
   // its answer after a restart, since it holds these in memory.
   const nextRunAt = schedule?.next_run_at ?? state?.next_run_at;
-  const lagSeconds = progress?.lag_seconds ?? state?.lag_seconds;
   // The vocabulary follows the declaration, so it does not change with which upstream happened to answer.
   const runtimeKind = getPipelineRuntimeKind(pipeline);
   const isModelCalling = runtimeKind === PipelineRuntimeKind.Model;
+  const isAggregate = runtimeKind === PipelineRuntimeKind.Aggregate;
   const dataUpTo = getDataUpTo(runtimeKind, state);
   // The runner's own time of the last committed fire wins; the registry's is drawn only where it has none.
   const lastRunAt = schedule?.last_scan_at ?? state?.last_run_at;
   const hasMore = progress?.has_more ?? state?.has_more;
+  // Stated only inside the status, and only while catching up: beside "Up to date" it says nothing new.
+  const lastUpToDate = useLocalDateTimeString(hasMore ? getLastUpToDate(runtimeKind, progress, state) : undefined);
 
   // The registry's own run-level failure. Judged on the raw member: the formatted timestamp lands
   // after the first render, so a gate read from it would drop the row and then pop it back in.
   const hasRunFailure = Boolean(state?.last_error);
 
   const hasSchedule = Boolean(lastRunAt || nextRunAt || schedule?.running_now);
-  const hasProgress = Boolean(
-    dataUpTo != null ||
-    (isModelCalling && lagSeconds != null) ||
-    hasMore != null ||
-    progress?.caught_up_at ||
-    progress?.last_write_at,
-  );
+  const hasProgress = Boolean(dataUpTo != null || hasMore != null || (!isAggregate && progress?.last_write_at));
+  // An aggregate's writes are its runs, which the schedule already dates. For an enrichment the runner keeps
+  // the last write in memory, so a view without one is a runner that has restarted since — said in words
+  // rather than by a missing row, but only beside other progress, so it never makes a card of its own.
+  const isLastWriteShown = !isAggregate && (Boolean(progress?.last_write_at) || (Boolean(view) && hasProgress));
   // Judged on what the registry recorded, not on what this kind of pipeline draws: a SQL enrichment or an
   // aggregate withdraws the position card, and a state that carries only a position is still a pipeline
   // that ran — telling its reader otherwise sends them looking for one that never started.
@@ -246,6 +251,13 @@ const PipelineRuntime: FC<Props> = ({
   // is never among them: it ran, and saying otherwise sends an operator looking for one that never
   // started.
   const isNeverRun = !isPending && !view && !isRunnerUnread && !isRegistryUnread && Boolean(state) && !hasAnyFact;
+
+  // The date lands a tick after the status, once the hook's effect has formatted it; until then the status
+  // reads plain "Catching up" rather than carrying an empty pair of brackets.
+  const statusText =
+    hasMore && lastUpToDate
+      ? t(AnalyticsPipelinesI18nKey.StatusCatchingUpSince, { at: lastUpToDate })
+      : t(hasMore ? AnalyticsPipelinesI18nKey.StatusCatchingUp : AnalyticsPipelinesI18nKey.StatusUpToDate);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-y-4">
@@ -356,27 +368,21 @@ const PipelineRuntime: FC<Props> = ({
             the runner measures it, and the cursor pair below is a different service's answer to a
             different question. */}
         <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionProgress)}>
-          {dataUpTo != null && <LabelledDate label={t(AnalyticsPipelinesI18nKey.DataUpTo)} at={dataUpTo} />}
-          {isModelCalling && lagSeconds != null && (
-            <LabelledText
-              className={UNCAPPED}
-              label={t(AnalyticsPipelinesI18nKey.Lag)}
-              text={t(AnalyticsPipelinesI18nKey.LagSeconds, { count: lagSeconds })}
-              tooltip={queue ? t(AnalyticsPipelinesI18nKey.LagHint) : undefined}
-            />
-          )}
           {hasMore != null && (
             <LabelledText
               className={UNCAPPED}
               label={t(AnalyticsPipelinesI18nKey.ProgressStatus)}
-              text={t(hasMore ? AnalyticsPipelinesI18nKey.StatusCatchingUp : AnalyticsPipelinesI18nKey.StatusUpToDate)}
+              text={statusText}
+              tooltip={queue ? t(AnalyticsPipelinesI18nKey.ProgressStatusHint) : undefined}
             />
           )}
-          {progress?.caught_up_at && (
-            <LabelledDate label={t(AnalyticsPipelinesI18nKey.CaughtUpAt)} at={progress.caught_up_at} />
-          )}
-          {progress?.last_write_at && (
-            <LabelledDate label={t(AnalyticsPipelinesI18nKey.LastWriteAt)} at={progress.last_write_at} />
+          {dataUpTo != null && <LabelledDate label={t(AnalyticsPipelinesI18nKey.DataUpTo)} at={dataUpTo} />}
+          {isLastWriteShown && (
+            <LabelledDate
+              label={t(AnalyticsPipelinesI18nKey.LastWriteAt)}
+              at={progress?.last_write_at}
+              fallback={t(AnalyticsPipelinesI18nKey.LastWriteNotRecorded)}
+            />
           )}
         </RuntimeSection>
 

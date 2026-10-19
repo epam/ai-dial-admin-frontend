@@ -903,8 +903,8 @@ When comparison is on, a card's delta SHALL show the signed percentage change fr
 window's value to the current one, and the card SHALL make the compared figure available — either in
 its caption or on hover — so a percentage is never the only thing a reader can see.
 
-Direction SHALL be conveyed by more than colour: the sign SHALL be rendered as text, and the colour
-SHALL only reinforce it.
+Direction SHALL be conveyed by more than colour: an arrow SHALL show it and a screen reader SHALL
+hear it as a word, and the colour SHALL only reinforce it.
 
 A delta SHALL be coloured by whether the change is the welcome one **for that metric**, which the
 page declares per metric rather than inferring from the sign: spend, cost per token, error rate and
@@ -915,10 +915,11 @@ never the only carrier of meaning, and a rise is not uniformly green.
 A previous window whose value is zero while the current one is not SHALL render as a new-activity
 marker rather than an infinite or 100% change. Both windows at zero SHALL render no delta.
 
-#### Scenario: Delta shows sign as text
+#### Scenario: Delta shows direction as a shape
 
 - **WHEN** a card's current value exceeds its previous value
-- **THEN** the delta reads with an explicit `+` sign
+- **THEN** the delta shows an upward arrow
+- **AND** a screen reader hears the change as an increase
 - **AND** the direction is legible without relying on colour
 
 #### Scenario: Colour follows the metric, not the sign
@@ -1400,13 +1401,14 @@ matched to the row by its dimension value.
 There SHALL be no delta column of its own. One column can compare only one measure, and standing
 beside `Cost` it read as a change in money while it was counting calls. Each change SHALL carry the
 direction its own measure gives it — more calls read as growth, more spend, more errors and more
-latency do not — in the same pill the KPI cards state their change in, so one change reads the same
-way page-wide.
+latency do not — in the design system's badge, the same one the KPI cards state their change in, so
+one change reads the same way page-wide. Every change badge SHALL be one width, whatever it holds.
 
-The figure SHALL end on the cell's right edge, like every other number in the table, and the change
-SHALL sit in a track of its own beside it, right-aligned — so the figures read down as one set and
-the changes as another, while each change still touches the figure it belongs to. Letting the
-change's own width place the figure left both columns ragged.
+The figure SHALL end on the cell's right edge, like every other number in the table, and SHALL take
+the width of the widest figure its column holds, so the change sits right beside the longest figure
+and every other change lines up under it. The figures SHALL read down as one set and the changes as
+another. In the full-list dialog that width SHALL only grow as blocks load, so the figures never move
+while the reader scrolls.
 
 A row absent from the previous window's response SHALL be called new only when that response was
 the whole dimension — non-empty, and shorter than the page size it was asked for. When the previous

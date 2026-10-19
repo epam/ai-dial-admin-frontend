@@ -145,6 +145,7 @@ const FilePath: FC<Props> = ({
           }}
           showCreateFolderButton={shouldAbleToCreateNewFolder}
           excludedPaths={MOVE_EXCLUDED_PATHS}
+          sortOptions={{ sortable: false }}
         />
       </div>
     </div>

@@ -1,4 +1,6 @@
-import { KpiMetric } from '@/src/components/Analytics/Usage/models';
+import { BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
+
+import { DeltaBadgeAppearance, KpiMetric } from '@/src/components/Analytics/Usage/models';
 
 export enum DeltaTone {
   Good = 'good',
@@ -31,9 +33,11 @@ export const getDeltaTone = (metric: KpiMetric, deltaRatio: number | null): Delt
   return deltaRatio > 0 === riseIsGood ? DeltaTone.Good : DeltaTone.Bad;
 };
 
-/** Colour never carries the direction alone — the sign stays in the text beside it. */
-export const DELTA_TONE_CLASS: Record<DeltaTone, string> = {
-  [DeltaTone.Good]: 'text-success',
-  [DeltaTone.Bad]: 'text-error',
-  [DeltaTone.Neutral]: 'text-primary',
+const DELTA_TONE_BADGE: Record<DeltaTone, DeltaBadgeAppearance> = {
+  [DeltaTone.Good]: { variant: BadgeVariant.Filled, color: BadgeColor.Green },
+  [DeltaTone.Bad]: { variant: BadgeVariant.Filled, color: BadgeColor.Red },
+  [DeltaTone.Neutral]: { variant: BadgeVariant.Outlined },
 };
+
+export const getDeltaBadgeAppearance = (metric: KpiMetric, deltaRatio: number | null): DeltaBadgeAppearance =>
+  DELTA_TONE_BADGE[getDeltaTone(metric, deltaRatio)];

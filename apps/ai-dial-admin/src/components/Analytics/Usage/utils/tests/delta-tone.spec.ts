@@ -1,7 +1,8 @@
+import { BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test } from 'vitest';
 
 import { KpiMetric } from '@/src/components/Analytics/Usage/models';
-import { DELTA_TONE_CLASS, DeltaTone, getDeltaTone } from '@/src/components/Analytics/Usage/utils/delta-tone';
+import { DeltaTone, getDeltaBadgeAppearance, getDeltaTone } from '@/src/components/Analytics/Usage/utils/delta-tone';
 
 describe('getDeltaTone', () => {
   test.each([KpiMetric.Requests, KpiMetric.Tokens, KpiMetric.UniqueCallers])(
@@ -29,8 +30,22 @@ describe('getDeltaTone', () => {
   });
 });
 
-describe('DELTA_TONE_CLASS', () => {
-  test('maps every tone to a theme token rather than a literal colour', () => {
-    expect(Object.values(DELTA_TONE_CLASS).every((className) => className.startsWith('text-'))).toBe(true);
+describe('getDeltaBadgeAppearance', () => {
+  test('fills a welcome change green', () => {
+    expect(getDeltaBadgeAppearance(KpiMetric.Requests, 0.2)).toEqual({
+      variant: BadgeVariant.Filled,
+      color: BadgeColor.Green,
+    });
+  });
+
+  test('fills an unwelcome change red', () => {
+    expect(getDeltaBadgeAppearance(KpiMetric.TotalSpend, 0.2)).toEqual({
+      variant: BadgeVariant.Filled,
+      color: BadgeColor.Red,
+    });
+  });
+
+  test('outlines a change it passes no judgement on', () => {
+    expect(getDeltaBadgeAppearance(KpiMetric.Requests, 0)).toEqual({ variant: BadgeVariant.Outlined });
   });
 });
