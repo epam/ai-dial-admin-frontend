@@ -145,8 +145,10 @@ const labelledWrapped = (label: string, text: string): ReactNode => (
  * function it contributes a literal `null`, which that test sees. It holds no state and calls no hook,
  * so nothing is lost by not being a component.
  */
-const labelledCount = (label: string, count?: number): ReactNode =>
-  count == null ? null : <LabelledText key={label} className={UNCAPPED} label={label} text={count.toLocaleString()} />;
+const labelledCount = (label: string, count?: number, tooltip?: string): ReactNode =>
+  count == null ? null : (
+    <LabelledText key={label} className={UNCAPPED} label={label} text={count.toLocaleString()} tooltip={tooltip} />
+  );
 
 /**
  * The runtime the two services report, in the groups an operator reads it by.
@@ -416,10 +418,26 @@ const PipelineRuntime: FC<Props> = ({
 
         {groups && (
           <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionGroups)}>
-            {labelledCount(t(AnalyticsPipelinesI18nKey.GroupsPending), groups.pending)}
-            {labelledCount(t(AnalyticsPipelinesI18nKey.GroupsReady), groups.ready)}
-            {labelledCount(t(AnalyticsPipelinesI18nKey.GroupsWaitingIdle), groups.waiting_idle)}
-            {labelledCount(t(AnalyticsPipelinesI18nKey.GroupsCeilingBlocked), groups.ceiling_blocked)}
+            {labelledCount(
+              t(AnalyticsPipelinesI18nKey.GroupsPending),
+              groups.pending,
+              t(AnalyticsPipelinesI18nKey.GroupsPendingHint),
+            )}
+            {labelledCount(
+              t(AnalyticsPipelinesI18nKey.GroupsWaitingIdle),
+              groups.waiting_idle,
+              t(AnalyticsPipelinesI18nKey.GroupsWaitingIdleHint),
+            )}
+            {labelledCount(
+              t(AnalyticsPipelinesI18nKey.GroupsReady),
+              groups.ready,
+              t(AnalyticsPipelinesI18nKey.GroupsReadyHint),
+            )}
+            {labelledCount(
+              t(AnalyticsPipelinesI18nKey.GroupsCeilingBlocked),
+              groups.ceiling_blocked,
+              t(AnalyticsPipelinesI18nKey.GroupsCeilingBlockedHint),
+            )}
           </RuntimeSection>
         )}
 

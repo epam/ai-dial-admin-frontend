@@ -1,6 +1,7 @@
 import { DialFormPopup, DialPasswordInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
+import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/actions';
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
@@ -15,6 +16,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import {
   DialAppRunnerResource,
+  DialCatalogSchemaResource,
   DialModelResource,
   DialPlatformApplicationResource,
   DialPlatformToolsetResource,
@@ -41,23 +43,26 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
   const isRunner = view === ApplicationRoute.PlatformAppRunners;
+  const isCatalogSchema = view === ApplicationRoute.PlatformCatalogSchemas;
+  const isSchemaResource = isRunner || isCatalogSchema;
   // Applications/Toolsets carry their display name as `display_name` (snake_case, inherited from
   // `DialResource`), unlike Models/Interceptors' camelCase `displayName` — Core reuses the same
   // entity class for both buckets, so the field name doesn't change for a platform-bucket row.
   const isDualBucketAsset = DUAL_BUCKET_VIEWS.includes(view);
   const hasDisplayName =
-    isRunner ||
+    isSchemaResource ||
     view === ApplicationRoute.PlatformModels ||
     view === ApplicationRoute.PlatformInterceptors ||
     isDualBucketAsset;
 
   const [clonedAsset, setClonedAsset] = useState<PlatformAsset>(() => {
-    if (isRunner) {
+    if (isSchemaResource) {
+      const schema = entity as DialAppRunnerResource | DialCatalogSchemaResource;
       return {
         ...entity,
-        name: getClonedEntityName((entity as DialAppRunnerResource).name, true),
-        $id: getClonedEntityName((entity as DialAppRunnerResource).$id, true),
-      } as DialAppRunnerResource;
+        name: getClonedEntityName(schema.name, true),
+        $id: getClonedEntityName(schema.$id, true),
+      } as PlatformAsset;
     }
 
     const clone = { ...entity, name: getClonedEntityName(entity.name, true) } as PlatformAsset;
@@ -100,10 +105,10 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
 
   const onChangeId = useCallback(
     ({ name }: { name?: string }) => {
-      setClonedAsset((asset) => (isRunner ? { ...asset, $id: name } : { ...asset, name: name as string }));
+      setClonedAsset((asset) => (isSchemaResource ? { ...asset, $id: name } : { ...asset, name: name as string }));
       setIdExistsError(void 0);
     },
-    [isRunner],
+    [isSchemaResource],
   );
 
   const onChangeStorageName = useCallback(({ name }: { name?: string }) => {
@@ -116,19 +121,31 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
         if (isRunner) {
           return { ...asset, 'dial:applicationTypeDisplayName': displayName };
         }
+        if (isCatalogSchema) {
+          return { ...asset, 'dial:catalogDisplayName': displayName };
+        }
         return isDualBucketAsset ? { ...asset, display_name: displayName } : { ...asset, displayName };
       });
     },
-    [isRunner, isDualBucketAsset],
+    [isRunner, isCatalogSchema, isDualBucketAsset],
   );
 
-  const id = isRunner ? (clonedAsset as DialAppRunnerResource).$id : clonedAsset.name;
-  const idNames = isRunner ? [] : names;
-  const displayName = isRunner
-    ? (clonedAsset as DialAppRunnerResource)['dial:applicationTypeDisplayName']
-    : isDualBucketAsset
-      ? (clonedAsset as DialPlatformApplicationResource | DialPlatformToolsetResource).display_name
-      : (clonedAsset as DialModelResource).displayName;
+  const id = isSchemaResource
+    ? (clonedAsset as DialAppRunnerResource | DialCatalogSchemaResource).$id
+    : clonedAsset.name;
+  const idNames = isSchemaResource ? [] : names;
+  const displayName = (() => {
+    if (isRunner) {
+      return (clonedAsset as DialAppRunnerResource)['dial:applicationTypeDisplayName'];
+    }
+    if (isCatalogSchema) {
+      return (clonedAsset as DialCatalogSchemaResource)['dial:catalogDisplayName'];
+    }
+    if (isDualBucketAsset) {
+      return (clonedAsset as DialPlatformApplicationResource | DialPlatformToolsetResource).display_name;
+    }
+    return (clonedAsset as DialModelResource).displayName;
+  })();
 
   const onChangeBearerKey = useCallback((index: number, key?: string) => {
     setBearerKeys((keys) => ({ ...keys, [index]: key ?? '' }));
@@ -145,16 +162,16 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
           }
         : clonedAsset;
 
-    if (!isRunner) {
+    if (!isSchemaResource) {
       onDuplicate(duplicate);
       return;
     }
 
-    const runner = clonedAsset as DialAppRunnerResource;
-    if (!runner.$id) return;
+    const schema = clonedAsset as DialAppRunnerResource | DialCatalogSchemaResource;
+    if (!schema.$id) return;
 
     try {
-      const result = await getResolvedRunnerSchema(runner.$id);
+      const result = isRunner ? await getResolvedRunnerSchema(schema.$id) : await getCatalogSchemaById(schema.$id);
       if (result.success && result.response) {
         setIdExistsError(t(ErrorI18nKey.NameExists));
         return;
@@ -164,7 +181,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     }
 
     onDuplicate(clonedAsset);
-  }, [bearerKeys, clonedAsset, isRunner, onDuplicate, t, view]);
+  }, [bearerKeys, clonedAsset, isRunner, isSchemaResource, onDuplicate, t, view]);
 
   return (
     <DialFormPopup
@@ -179,7 +196,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
       <div className="flex flex-col px-6 py-4 gap-y-8">
-        {isRunner && (
+        {isSchemaResource && (
           <IdControl
             label={t(EntityFieldsI18nKey.name)}
             inputId="name"
@@ -191,11 +208,11 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
         <IdControl
           entity={{ name: id }}
           names={idNames}
-          inputId={isRunner ? 'id' : void 0}
-          validationField={isRunner ? 'id' : void 0}
-          isUrlId={isRunner}
-          forbiddenChars={isRunner ? CORE_UNENCODABLE_ID_CHARS : void 0}
-          externalError={isRunner ? idExistsError : void 0}
+          inputId={isSchemaResource ? 'id' : void 0}
+          validationField={isSchemaResource ? 'id' : void 0}
+          isUrlId={isSchemaResource}
+          forbiddenChars={isSchemaResource ? CORE_UNENCODABLE_ID_CHARS : void 0}
+          externalError={isSchemaResource ? idExistsError : void 0}
           onChangeEntity={onChangeId}
         />
         {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}

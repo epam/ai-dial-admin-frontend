@@ -172,11 +172,18 @@ describe('getGridActionLabels', () => {
     expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
   });
 
-  test('PlatformCatalogSchemas exposes delete and openInNewTab but never duplicate, since a copy would reuse the $id', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false).map((item) => item.key);
+  test('PlatformCatalogSchemas exposes duplicate, delete, and openInNewTab for a writable API row', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'platform/').map(
+      (item) => item.key,
+    );
 
-    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
-    expect(keys).not.toContain('duplicate');
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+  });
+
+  test('PlatformCatalogSchemas exposes only openInNewTab for a file-root row', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'file/').map((item) => item.key);
+
+    expect(keys).toEqual(['openInNewTab']);
   });
 
   test('PlatformCatalogSchemas returns no options for a read-only admin', () => {
