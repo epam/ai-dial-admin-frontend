@@ -13,6 +13,10 @@ export const dateTimeColumn: Partial<ColDef> = {
   filterValueGetter: (params) => toDateOrNull(params.data?.[params.colDef.field || '']),
 };
 
+/** Wider default for a name/ID column. Deliberately `width` and not `flex`: AG Grid lets `flex` win over `width`,
+ * which would stop `AgGridWrapper` restoring a width the operator dragged. */
+export const nameColumnSizing: Partial<ColDef> = { width: 400, minWidth: 260 };
+
 /** Right-aligns cell and header content. Split out of `numericColumn` so a column with its own
  * `valueGetter`/comparator/filter can opt into alignment alone. */
 export const rightAlignedColumn: Partial<ColDef> = {

@@ -21,7 +21,8 @@ vi.mock('@/src/components/Grid/utils', async (importOriginal) => ({
 }));
 
 import { useTheme } from '@/src/context/ThemeContext';
-import { saveColumnsStateToStorage } from '@/src/components/Grid/utils';
+import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
+import { type GridModel, saveColumnsStateToStorage } from '@/src/components/Grid/utils';
 import AgGridWrapper from '../AgGridWrapper';
 import DisplayNameCellRenderer from '../CellRenderers/DisplayNameCellRenderer';
 import RadioNameCellRenderer from '../CellRenderers/RadioNameCellRenderer';
@@ -317,6 +318,44 @@ describe('AgGridWrapper — column state persistence', () => {
       filters: {},
       sizedColIds: ['id'],
     });
+  });
+});
+
+describe('AgGridWrapper — default and stored width of a sized column', () => {
+  const STORAGE_KEY = 'name-width';
+  const NAME_COL = { field: 'name', colId: 'name', width: 400, minWidth: 260 };
+
+  const storeModel = (model: GridModel) => {
+    localStorage.setItem(`${GRID_COLUMNS_KEY}${STORAGE_KEY}`, JSON.stringify(model));
+  };
+
+  const renderedNameColumn = () =>
+    (mockState.lastProps?.columnDefs as ColDef[]).find((col) => col.colId === 'name') as ColDef;
+
+  beforeEach(() => {
+    mockState.lastProps = null;
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  test('keeps the default width when the operator never resized the column', () => {
+    storeModel({ columns: [{ colId: 'name', width: 180 }], filters: {}, sizedColIds: [] });
+
+    render(<AgGridWrapper columnDefs={[NAME_COL]} rowData={[]} storageKey={STORAGE_KEY} />);
+
+    expect(renderedNameColumn()).toMatchObject({ width: 400, minWidth: 260 });
+    expect(renderedNameColumn().suppressSizeToFit).toBeUndefined();
+  });
+
+  test('restores the width the operator dragged over the default', () => {
+    storeModel({ columns: [{ colId: 'name', width: 520 }], filters: {}, sizedColIds: ['name'] });
+
+    render(<AgGridWrapper columnDefs={[NAME_COL]} rowData={[]} storageKey={STORAGE_KEY} />);
+
+    expect(renderedNameColumn()).toMatchObject({ width: 520, suppressSizeToFit: true });
   });
 });
 
