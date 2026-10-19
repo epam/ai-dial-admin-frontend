@@ -1404,6 +1404,7 @@ export const RUNS_COLUMN: ColDef[] = [
     field: 'testRunName',
     colId: 'testRunName',
     headerName: 'Test suite run name',
+    headerTooltip: 'Test suite run name',
     cellRenderer: TitleSubtitleCellRenderer,
     cellRendererParams: { getSubtitle: (data?: Run) => data?.id },
     tooltipValueGetter: () => undefined,
@@ -1535,7 +1536,11 @@ const COMPARE_RUN_PICKER_COL_IDS = [
   'completedAt',
   'duration',
   'cost',
+  'overallScore',
 ];
+
+/** The kit's default column minWidth (150) outweighs this column's own maxWidth, which stops the picker from fitting its width. */
+const COMPARE_RUN_PICKER_NARROW_COLUMN_MIN_WIDTHS: Record<string, number> = { numberOfTestCases: 60 };
 
 /** The compare picker may span sibling suites, so it leads with the suite's name before the run's own columns. */
 export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = [
@@ -1547,7 +1552,10 @@ export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = [
     hide: false,
     minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
   },
-  ...COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) => RUNS_COLUMN.filter((col) => col.colId === colId)),
+  ...COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) => RUNS_COLUMN.filter((col) => col.colId === colId)).map((col) => {
+    const minWidth = COMPARE_RUN_PICKER_NARROW_COLUMN_MIN_WIDTHS[col.colId ?? ''];
+    return minWidth == null ? col : { ...col, minWidth };
+  }),
 ];
 
 export const METRICS_COLUMN: ColDef[] = [
