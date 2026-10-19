@@ -22,7 +22,14 @@ schedule control with one place to type; messages that are readable whole.
 - **"Data up to" reads the registry's version, never the lag.** Aggregate → `cursor_version`; SQL →
   `materialized_through_version`; both epoch milliseconds, formatted through the existing
   `useLocalDateTimeString` path, which takes milliseconds as well as ISO strings. The lag is a difference against the moment of the read and
-  stays for model-calling enrichments only.
+  is shown for no kind; a model-calling enrichment's reader acts on the status and the queue.
+- **Catching up carries its own date.** The last up-to-date time rides inside the status rather than as a
+  separate row, and only while catching up: the runner's `caught_up_at`, with a SQL enrichment falling back to
+  the registry's `drained_at`. Resolved in `getLastUpToDate` beside `getDataUpTo`, so the kind rule lives in one
+  place.
+- **A lost last write is said in words.** The runner keeps `last_write_at` in memory, so an enrichment's view
+  without it, beside other progress, reads "Not recorded since restart". Not counted as a progress fact, so it
+  never makes a Progress card on its own; an aggregate never shows the row, its Last run dates its writes.
 - **The State card is gated by the same util**, so the two changes (Data up to, no State) cannot disagree.
 - **One Last run row.** The runner's `last_scan_at` wins; the registry's `last_run_at` is drawn only where the
   runner has none. Same per-field rule the tab already follows for every other fact.
