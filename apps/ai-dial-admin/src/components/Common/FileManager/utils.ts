@@ -87,6 +87,7 @@ export const getDestinationFolderPopupOptions = (
   navigationPanelOptions: {
     searchable: false,
   },
+  sortOptions: { sortable: false },
   maxNewFolderDepth: MAX_FOLDER_NESTING_DEPTH + 1,
   onNewFolderDepthExceeded: handleFolderNestingDepthExceeded,
   getMoveHeader: (itemsCount: number, itemName?: string) =>
