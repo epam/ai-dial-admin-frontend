@@ -59,7 +59,7 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
     <div className="flex flex-col size-full bg-layer-2 rounded py-5 px-6 gap-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-primary">{t(SessionsTraceI18nKey.Title)}</h1>
+          <h1 className="dial-h1-text text-primary">{t(SessionsTraceI18nKey.Title)}</h1>
           <SessionsProvenanceLine schemaFields={schemaFields} />
         </div>
         <SessionsSummary period={period} periodLabel={periodLabel} isPending={isPeriodPending} />

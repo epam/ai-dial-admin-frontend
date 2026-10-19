@@ -94,7 +94,8 @@ const ListEntities = <T extends object>({
               (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (
                 <DialGhostButton
                   label={t(ButtonsI18nKey.Columns)}
-                  iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
+                  iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                  aria-pressed={showColumnsPanel}
                   onClick={onToggleColumnsPanel}
                 />
               )}

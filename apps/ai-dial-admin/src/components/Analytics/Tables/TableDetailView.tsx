@@ -481,7 +481,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       <div className="flex flex-col mb-8 gap-2">
         <div className="flex flex-row justify-between items-center gap-4">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate">{name}</h1>
+            <h1 className="dial-h1-text truncate">{name}</h1>
             <TableStatusBadge status={table.status} />
             {isRowsRestricted && <RowsRestrictedBadge hasTooltip />}
             <IdentityTag label={t(TABLE_TYPE_LABEL[table.type])} />

@@ -86,7 +86,7 @@ const SessionDetailHeader: FC<Props> = ({ session, nowMs }) => {
     <div className="flex min-w-0 flex-col gap-2">
       {/* The heading names the session and the id identifies it. An untitled session still needs
           an accessible heading, so the dash carries the label rather than standing alone as the name. */}
-      <h1 className="min-w-0 text-primary">
+      <h1 className="dial-h1-text min-w-0 text-primary">
         {title ? (
           <DialEllipsisTooltip text={title} />
         ) : (

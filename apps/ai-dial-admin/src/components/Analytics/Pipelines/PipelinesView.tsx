@@ -5,8 +5,8 @@ import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import { GhostButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconPlus } from '@tabler/icons-react';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
@@ -19,14 +19,14 @@ import { TriggerCellRenderer } from '@/src/components/Analytics/Pipelines/Common
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
-import GridView from '@/src/components/Grid/GridView/GridView';
+import ListEntities from '@/src/components/ListView/List';
 import { useAppContext } from '@/src/context/AppContext';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { PIPELINES_NO_RUNTIME_STORAGE_KEY, PIPELINES_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
-import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { AnalyticsPipelinesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -53,10 +53,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const [pipelines, setPipelines] = useState<PipelineListItem[]>(initialPipelines);
   const [deleteTarget, setDeleteTarget] = useState<PipelineListItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
-
-  const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
-
   useReadFailureNotification(loadFailure, AnalyticsPipelinesI18nKey.PipelinesLoadFailed);
 
   // Responses can land out of order — a slow filter answering after a faster later one would put rows
@@ -82,10 +78,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
       if (requestId !== requestIdRef.current) return;
 
       if (result.success) {
-        const next = result.response ?? [];
-        setPipelines(next);
-        // The button goes with the last row; a panel left open would reappear on its own with the next one.
-        if (!next.length) setIsColumnsPanelOpen(false);
+        setPipelines(result.response ?? []);
         return;
       }
       reportFailure(result);
@@ -234,46 +227,31 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   }, [t, rowActions, runtime]);
 
   return (
-    <div className="relative flex w-full flex-1 flex-col min-h-0 rounded bg-layer-2 p-4">
-      <div className="mb-8 flex h-[40px] flex-row items-center justify-between gap-4">
-        <h1>{t(MenuI18nKey.Pipelines)}</h1>
-        <div className="flex items-center gap-4">
-          {/* The grid does not mount the panel over its empty state, so there is nothing to configure. */}
-          {pipelines.length > 0 && (
-            <GhostButton
-              label={t(ButtonsI18nKey.Columns)}
-              iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-              aria-pressed={isColumnsPanelOpen}
-              onClick={onToggleColumnsPanel}
-            />
-          )}
-          {isFullAdmin && (
-            <PrimaryButton
-              label={t(AnalyticsPipelinesI18nKey.CreatePipeline)}
-              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={() => setIsCreateOpen(true)}
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <GridView
-          columnDefs={columns}
-          rowData={pipelines}
-          getRowId={(params) => params.data.name}
-          additionalGridOptions={{
-            onCellClicked: (e) => {
-              if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
-              navigateEntityUrl(pipelineDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
-            },
-          }}
-          emptyDataProps={{ title: t(AnalyticsPipelinesI18nKey.NoPipelines) }}
-          storageKey={runtime.isRead ? PIPELINES_STORAGE_KEY : PIPELINES_NO_RUNTIME_STORAGE_KEY}
-          showColumnsPanel={isColumnsPanelOpen}
-          toggleColumnsPanel={onToggleColumnsPanel}
-        />
-      </div>
+    <>
+      <ListEntities<PipelineListItem>
+        isMainListView
+        isEnableColumnPanel
+        listLabel={t(MenuI18nKey.Pipelines)}
+        columnDefs={columns}
+        rowData={pipelines}
+        getRowId={(params) => params.data.name}
+        additionalGridOptions={{
+          onCellClicked: (e) => {
+            if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
+            navigateEntityUrl(pipelineDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
+          },
+        }}
+        emptyDataProps={{ title: t(AnalyticsPipelinesI18nKey.NoPipelines) }}
+        storageKey={runtime.isRead ? PIPELINES_STORAGE_KEY : PIPELINES_NO_RUNTIME_STORAGE_KEY}
+      >
+        {isFullAdmin && (
+          <PrimaryButton
+            label={t(AnalyticsPipelinesI18nKey.CreatePipeline)}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            onClick={() => setIsCreateOpen(true)}
+          />
+        )}
+      </ListEntities>
 
       {deleteTarget && (
         <DeletePipelinePopup
@@ -291,7 +269,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
           onCreated={() => void reload()}
         />
       )}
-    </div>
+    </>
   );
 };
 

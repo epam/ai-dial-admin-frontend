@@ -29,7 +29,7 @@ import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
-import GridView from '@/src/components/Grid/GridView/GridView';
+import ListEntities from '@/src/components/ListView/List';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { usePolledRead } from '@/src/hooks/use-polled-read';
@@ -246,44 +246,36 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
-      <div className="flex flex-row mb-8 justify-between items-center gap-4 h-[40px]">
-        <h1>{t(MenuI18nKey.Tables)}</h1>
-        <div className="flex items-center gap-4">
-          {isFullAdmin && !runningBackfill && (
-            <Button variant={ButtonVariant.Neutral} label={t(BackfillI18nKey.TableTitle)} onClick={onOpenBackfill} />
-          )}
-          {canCreate && (
-            <ButtonDropdown
-              variant={ButtonVariant.Primary}
-              label={t(ButtonsI18nKey.Create)}
-              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-              items={createItems}
-            />
-          )}
-        </div>
-      </div>
-
-      {isFullAdmin && runningBackfill && (
-        <div className="mb-4">
-          <TableBackfillBanner run={runningBackfill} onOpen={onOpenBackfill} />
-        </div>
-      )}
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <GridView
-          columnDefs={columns}
-          rowData={tables}
-          getRowId={(params) => params.data.name}
-          additionalGridOptions={{
-            onCellClicked: (e) => {
-              if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
-              navigateEntityUrl(tableDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
-            },
-          }}
-          emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoTables) }}
-        />
-      </div>
+    <>
+      <ListEntities<AnalyticsTable>
+        isMainListView
+        listLabel={t(MenuI18nKey.Tables)}
+        description={
+          isFullAdmin && runningBackfill && <TableBackfillBanner run={runningBackfill} onOpen={onOpenBackfill} />
+        }
+        columnDefs={columns}
+        rowData={tables}
+        getRowId={(params) => params.data.name}
+        additionalGridOptions={{
+          onCellClicked: (e) => {
+            if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
+            navigateEntityUrl(tableDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
+          },
+        }}
+        emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoTables) }}
+      >
+        {isFullAdmin && !runningBackfill && (
+          <Button variant={ButtonVariant.Neutral} label={t(BackfillI18nKey.TableTitle)} onClick={onOpenBackfill} />
+        )}
+        {canCreate && (
+          <ButtonDropdown
+            variant={ButtonVariant.Primary}
+            label={t(ButtonsI18nKey.Create)}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            items={createItems}
+          />
+        )}
+      </ListEntities>
 
       {deleteTarget && (
         <DialConfirmationPopup
@@ -325,7 +317,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
           onSubmit={(dto) => void onSubmitEditMetadata(dto)}
         />
       )}
-    </div>
+    </>
   );
 };
 
