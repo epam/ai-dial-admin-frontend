@@ -242,33 +242,6 @@
   .ag-cell.ag-grid-no-border.compare-metric-new-end {
     @apply border-solid border-t border-b border-r border-accent-primary border-l-0;
   }
-  // Every visible pair differs: one box around the row replaces the per-pair boxes. The `:is()` keeps this
-  // above the pair rules above, whatever order the build emits them in.
-  .ag-row.compare-row-diff {
-    .ag-cell:is(
-      .compare-metric-improved-start,
-      .compare-metric-improved-end,
-      .compare-metric-regressed-start,
-      .compare-metric-regressed-end,
-      .compare-metric-new-start,
-      .compare-metric-new-end
-    ) {
-      @apply border-0;
-    }
-    &::after {
-      content: '';
-      @apply absolute inset-0 z-[1] border border-solid pointer-events-none;
-    }
-  }
-  .ag-row.compare-row-diff-improved::after {
-    @apply border-accent-secondary;
-  }
-  .ag-row.compare-row-diff-regressed::after {
-    @apply border-error;
-  }
-  .ag-row.compare-row-diff-new::after {
-    @apply border-accent-primary;
-  }
   .ag-active-detail-row {
     @apply bg-controls-accent-alpha;
     &.ag-row-hover:not(.ag-full-width-row):before {

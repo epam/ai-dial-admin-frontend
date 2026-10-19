@@ -112,8 +112,10 @@ describe('Runs Compare :: fetchCompareCandidateRuns', () => {
     getTestSuiteMock.mockReset();
     getDatasetTestSuitesMock.mockReset();
     getRunsQueryMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
-      const suiteId = filters.find((filter) => filter.column === 'testSuiteId')?.value;
-      return Promise.resolve({ content: [{ id: `run-of-${suiteId}`, testSuiteId: suiteId }] });
+      const suiteIds = filters.find((filter) => filter.column === 'testSuiteId')?.value.split(',') ?? [];
+      return Promise.resolve({
+        content: suiteIds.map((suiteId) => ({ id: `run-of-${suiteId}`, testSuiteId: suiteId })),
+      });
     });
   });
 
@@ -131,17 +133,39 @@ describe('Runs Compare :: fetchCompareCandidateRuns', () => {
     ]);
   });
 
-  test('only requests completed runs of each suite', async () => {
-    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One' } });
+  test('keeps the own suite first even when the query returns a sibling run first', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockResolvedValue({ response: [{ id: 'suite-2', name: 'Two' }] });
+    getRunsQueryMock.mockResolvedValue({
+      content: [
+        { id: 'run-b', testSuiteId: 'suite-2' },
+        { id: 'run-a', testSuiteId: 'suite-1' },
+      ],
+    });
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(runs.map((run) => run.id)).toEqual(['run-a', 'run-b']);
+  });
+
+  test('requests the completed runs of every suite in a single query', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockResolvedValue({
+      response: [
+        { id: 'suite-2', name: 'Two' },
+        { id: 'suite-3', name: 'Three' },
+      ],
+    });
 
     await fetchCompareCandidateRuns('suite-1');
 
+    expect(getRunsQueryMock).toHaveBeenCalledOnce();
     expect(getRunsQueryMock).toHaveBeenCalledWith(
       0,
-      100,
+      300,
       [],
       expect.arrayContaining([
-        expect.objectContaining({ column: 'testSuiteId', value: 'suite-1' }),
+        expect.objectContaining({ column: 'testSuiteId', operator: 'in', value: 'suite-1,suite-2,suite-3' }),
         expect.objectContaining({ column: 'status', value: 'COMPLETED' }),
       ]),
     );

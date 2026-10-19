@@ -11,6 +11,7 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterOperatorDto } from '@/src/types/request';
 
 import {
+  COMPARE_RUNS_PAGE_SIZE_PER_SUITE,
   CompareRunEdge,
   CompareRunSlot,
   CompareViewTab,
@@ -60,13 +61,14 @@ export const getCompareRunsUrn = (primaryRunId: string, secondaryRunId: string):
   return `/runs/${getCompareRunsPath(primaryRunId, secondaryRunId)}`;
 };
 
-export const fetchSuiteCompletedRuns = async (testSuiteId: string): Promise<Run[]> => {
+/** One query for every suite rather than one per suite, so opening the picker costs a fixed number of requests. */
+export const fetchSuitesCompletedRuns = async (testSuiteIds: string[]): Promise<Run[]> => {
   const res = await getRunsQuery(
     0,
-    100,
+    COMPARE_RUNS_PAGE_SIZE_PER_SUITE * testSuiteIds.length,
     [],
     [
-      { column: 'testSuiteId', operator: FilterOperatorDto.EQUALS, value: testSuiteId },
+      { column: 'testSuiteId', operator: FilterOperatorDto.INCLUDES, value: testSuiteIds.join(',') },
       { column: 'status', operator: FilterOperatorDto.EQUALS, value: RunStatus.COMPLETED },
     ],
   );
@@ -95,13 +97,12 @@ const getDatasetSuites = async (testSuiteId: string): Promise<TestSuite[]> => {
 
 export const fetchCompareCandidateRuns = async (testSuiteId: string): Promise<CompareCandidateRun[]> => {
   const suites = await getDatasetSuites(testSuiteId);
-  const runsBySuite = await Promise.all(
-    suites.map(async (suite) => {
-      const runs = await fetchSuiteCompletedRuns(suite.id as string);
-      return runs.map((run) => ({ ...run, testSuiteName: suite.name }));
-    }),
+  const runs = await fetchSuitesCompletedRuns(suites.map((suite) => suite.id as string));
+
+  // The own suite's runs first, then each sibling's, as the picker has always listed them.
+  return suites.flatMap((suite) =>
+    runs.filter((run) => run.testSuiteId === suite.id).map((run) => ({ ...run, testSuiteName: suite.name })),
   );
-  return runsBySuite.flat();
 };
 
 export const getCompareViewTabs = (t: (key: string) => string): TabModel[] => [

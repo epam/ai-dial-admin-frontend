@@ -14,11 +14,12 @@ interface Props {
   isModalOpen: boolean;
   runs: CompareCandidateRun[];
   selectedRunId?: string;
+  isLoading?: boolean;
   onClose: () => void;
   onApply: (runId: string) => void;
 }
 
-const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, onClose, onApply }) => {
+const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, isLoading, onClose, onApply }) => {
   const t = useI18n();
   const [selectedRunIdState, setSelectedRunIdState] = useState<string | undefined>();
 
@@ -56,6 +57,7 @@ const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, on
           selectedId={selectedRunIdState}
           onSelect={(run) => setSelectedRunIdState(run.id)}
           emptyTitle={t(EntitiesI18nKey.NoRuns)}
+          isLoading={isLoading}
         />
       </div>
     </DialFormPopup>

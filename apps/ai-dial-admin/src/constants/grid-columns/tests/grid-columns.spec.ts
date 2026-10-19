@@ -662,6 +662,12 @@ describe('RUNS_COLUMN', () => {
     expect(testCases?.filter).toBe(false);
   });
 
+  test('gives the run name column a header tooltip, so the header stays readable once it is truncated', () => {
+    const runName = RUNS_COLUMN.find((col) => col.colId === 'testRunName');
+
+    expect(runName?.headerTooltip).toBe(runName?.headerName);
+  });
+
   test('gives the flexible columns a floor below the grid default, so a full suite Runs row fits the page', () => {
     const flexible = ['testRunName', 'testSuiteId', 'metrics'].map((colId) =>
       RUNS_COLUMN.find((col) => col.colId === colId),
@@ -772,7 +778,14 @@ describe('COMPARE_RUN_PICKER_COLUMN', () => {
       'completedAt',
       'duration',
       'cost',
+      'overallScore',
     ]);
+  });
+
+  test('lets the test cases column shrink below the kit default so the picker fits without horizontal scroll', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'numberOfTestCases');
+
+    expect(column?.minWidth).toBeLessThan(column?.maxWidth ?? 0);
   });
 
   test('names the suite of each run, falling back to its id', () => {

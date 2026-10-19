@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -23,14 +23,17 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
 vi.mock('../SelectCompareRunModal', () => ({
   default: ({
     runs,
+    isLoading,
     onApply,
     onClose,
   }: {
     runs: { id: string; testSuiteName?: string }[];
+    isLoading?: boolean;
     onApply: (id: string) => void;
     onClose: () => void;
   }) => (
     <div>
+      {isLoading && <span>loading-runs</span>}
       <ul>
         {runs.map((run) => (
           <li key={run.id}>{`${run.id}:${run.testSuiteName ?? ''}`}</li>
@@ -92,6 +95,33 @@ describe('useCompareRunLauncher', () => {
     expect(await screen.findByRole('button', { name: 'apply-compare' })).toBeInTheDocument();
   });
 
+  test('shows the loader until the runs are loaded', async () => {
+    const user = userEvent.setup();
+    let resolveRuns: (value: unknown) => void = () => {};
+    getRunsQueryMock.mockReturnValue(new Promise((resolve) => (resolveRuns = resolve)));
+
+    render(<TestHarness />);
+    await user.click(screen.getByRole('button', { name: 'Compare' }));
+
+    expect(await screen.findByText('loading-runs')).toBeInTheDocument();
+
+    resolveRuns({ content: [{ id: 'run-sibling', testSuiteId: 'suite-1' }] });
+
+    expect(await screen.findByText('run-sibling:Suite One')).toBeInTheDocument();
+    expect(screen.queryByText('loading-runs')).not.toBeInTheDocument();
+  });
+
+  test('stops the loader when the runs fail to load', async () => {
+    const user = userEvent.setup();
+    getRunsQueryMock.mockRejectedValue(new Error('boom'));
+
+    render(<TestHarness />);
+    await user.click(screen.getByRole('button', { name: 'Compare' }));
+
+    await waitFor(() => expect(screen.queryByText('loading-runs')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'apply-compare' })).toBeInTheDocument();
+  });
+
   test('opens compare page in new tab on confirm', async () => {
     const user = userEvent.setup();
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
@@ -116,17 +146,12 @@ describe('useCompareRunLauncher', () => {
         { id: 'suite-2', name: 'Suite Two' },
       ],
     });
-    getRunsQueryMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
-      const suiteId = filters.find((filter) => filter.column === 'testSuiteId')?.value;
-      return Promise.resolve({
-        content:
-          suiteId === 'suite-1'
-            ? [
-                { id: 'run-1', testSuiteId: 'suite-1' },
-                { id: 'run-sibling', testSuiteId: 'suite-1' },
-              ]
-            : [{ id: 'run-other', testSuiteId: 'suite-2' }],
-      });
+    getRunsQueryMock.mockResolvedValue({
+      content: [
+        { id: 'run-1', testSuiteId: 'suite-1' },
+        { id: 'run-sibling', testSuiteId: 'suite-1' },
+        { id: 'run-other', testSuiteId: 'suite-2' },
+      ],
     });
 
     render(<TestHarness />);
@@ -136,6 +161,7 @@ describe('useCompareRunLauncher', () => {
     expect(screen.getByText('run-sibling:Suite One')).toBeTruthy();
     expect(screen.queryByText('run-1:Suite One')).toBeNull();
     expect(getDatasetTestSuitesMock).toHaveBeenCalledWith('dataset-1');
+    expect(getRunsQueryMock).toHaveBeenCalledOnce();
   });
 
   test('offers only the own suite runs when the suite has no dataset', async () => {

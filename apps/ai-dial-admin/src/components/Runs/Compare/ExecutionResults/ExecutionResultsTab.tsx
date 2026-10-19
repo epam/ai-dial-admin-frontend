@@ -7,7 +7,6 @@ import {
   FilterChangedEvent,
   GridApi,
   GridReadyEvent,
-  RowClassParams,
   RowClassRules,
   RowClickedEvent,
 } from 'ag-grid-community';
@@ -21,11 +20,7 @@ import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } fro
 import GridView from '@/src/components/Grid/GridView/GridView';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
-import {
-  COMPARE_ROW_DIFF_CLASS,
-  COMPARE_ROW_DIFF_KIND_CLASS,
-  compareGridOptions,
-} from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import {
   buildComparePanelColumnTree,
   collectHiddenColIds,
@@ -34,7 +29,6 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 import {
   countCompareDiffs,
-  getCompareRowFullDiffKind,
   hasCompareRowDiff,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
@@ -255,24 +249,15 @@ const ExecutionResultsTab: FC<Props> = ({
     [mergedRowData, hiddenColIds],
   );
 
-  const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(() => {
-    const getFullDiffKind = (row?: CompareAnalyticsRow) =>
-      row && !hideHighlights ? getCompareRowFullDiffKind(row, { hiddenColIds }) : null;
-
-    return {
+  const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(
+    () => ({
       'ag-active-detail-row': (params) => {
         if (!params.data || !selectedRow) return false;
         return getCompareRowSelectionId(params.data) === getCompareRowSelectionId(selectedRow);
       },
-      [COMPARE_ROW_DIFF_CLASS]: (params) => getFullDiffKind(params.data) != null,
-      ...Object.fromEntries(
-        Object.entries(COMPARE_ROW_DIFF_KIND_CLASS).map(([kind, className]) => [
-          className,
-          (params: RowClassParams<CompareAnalyticsRow>) => getFullDiffKind(params.data) === kind,
-        ]),
-      ),
-    };
-  }, [selectedRow, hideHighlights, hiddenColIds]);
+    }),
+    [selectedRow],
+  );
 
   const syncGridUiState = useCallback(
     (api: GridApi) => {
