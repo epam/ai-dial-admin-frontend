@@ -1,4 +1,5 @@
 import { Pipeline, PipelineKind, PipelineState, TransformType } from '@/src/models/analytics/pipeline';
+import { RuntimeProgress } from '@/src/models/analytics/pipeline-runtime';
 
 /**
  * Which vocabulary the Runtime tab speaks for a pipeline. Fixed by the declaration rather than by the
@@ -35,6 +36,26 @@ export const getDataUpTo = (kind: PipelineRuntimeKind, state?: PipelineState): n
       return toEpochMillis(state?.cursor_version);
     case PipelineRuntimeKind.Sql:
       return toEpochMillis(state?.materialized_through_version);
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * When a pipeline last stood up to date, stated beside a status of catching up. The runner's own time wins; a SQL
+ * enrichment falls back to the registry's drained-at probe, which records the same moment from the other side. An
+ * aggregate has no runner and states its position as Data up to instead, so it has none.
+ */
+export const getLastUpToDate = (
+  kind: PipelineRuntimeKind,
+  progress?: RuntimeProgress,
+  state?: PipelineState,
+): string | undefined => {
+  switch (kind) {
+    case PipelineRuntimeKind.Sql:
+      return progress?.caught_up_at ?? state?.drained_at;
+    case PipelineRuntimeKind.Model:
+      return progress?.caught_up_at;
     default:
       return undefined;
   }
