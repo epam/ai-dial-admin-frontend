@@ -104,6 +104,53 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('executeCsvAction POSTs the structured query to /v1/queries/execute-csv and returns the file', async () => {
+    const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
+    fetch.mockResponseOnce('id\r\n1\r\n', {
+      headers: {
+        'content-type': 'text/csv; charset=UTF-8',
+        'content-disposition': 'attachment; filename="result.csv"',
+        'x-total-count': '12',
+      },
+    });
+
+    const res = await instance.executeCsvAction(query, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(res.response?.fileName).toBe('result.csv');
+    expect(res.response?.totalCount).toBe(12);
+    expect(await res.response?.blob.text()).toBe('id\r\n1\r\n');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/queries\/execute-csv$/),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(query) }),
+    );
+  });
+
+  test('executeSqlCsvAction POSTs { sql } to /v1/queries/execute-sql-csv', async () => {
+    const sql = 'SELECT id FROM conversation';
+    fetch.mockResponseOnce('id\r\n', { headers: { 'content-type': 'text/csv' } });
+
+    const res = await instance.executeSqlCsvAction(sql, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/queries\/execute-sql-csv$/),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
+    );
+  });
+
+  test.each([400, 422])('executeCsvAction maps a %s ErrorView to the failure envelope', async (status) => {
+    fetch.mockResponseOnce(JSON.stringify({ error: 'bad_request', message: 'limit above 1000' }), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.executeCsvAction({ entity: 'conversation', mode: QueryMode.Row }, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status }));
+    expect(res.response).toBeUndefined();
+  });
+
   test('translateAction POSTs the structured query to /v1/queries/translate', async () => {
     const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
     fetch.mockResponseOnce(JSON.stringify({ sql: 'SELECT *\nFROM conversation' }));
