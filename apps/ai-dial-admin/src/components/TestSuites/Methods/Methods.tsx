@@ -16,10 +16,15 @@ import {
 import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
-import { buildMethodGroups, flattenMethodGroups } from '@/src/components/TestSuites/utils/method-groups';
+import {
+  buildMethodGroups,
+  buildRouteMethodGroups,
+  flattenMethodGroups,
+} from '@/src/components/TestSuites/utils/method-groups';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
+import { DialRoute } from '@/src/models/dial/route';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import MethodInfo from './MethodInfo';
 import MethodItem from './MethodItem';
@@ -28,25 +33,36 @@ interface Props {
   testSuite: TestSuite;
   onChange: Dispatch<SetStateAction<TestSuite>>;
   selectedTarget?: Deployment | null;
+  selectedRoute?: DialRoute | null;
   isCreate?: boolean;
   takenColumnNames?: string[];
   children?: ReactNode;
 }
 
-const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, takenColumnNames = [], children }) => {
+const Methods: FC<Props> = ({
+  testSuite,
+  selectedTarget,
+  selectedRoute,
+  onChange,
+  isCreate,
+  takenColumnNames = [],
+  children,
+}) => {
   const t = useI18n();
   const groupHeadingId = useId();
 
   const [activeMethodIndex, setActiveMethodIndex] = useState<number | null>();
   const [fullApplication, setFullApplication] = useState<Deployment | null>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!selectedRoute);
 
   const buildGroupsFor = useCallback(
     (deployment?: Deployment | null) =>
-      buildMethodGroups({ deployment, endpointRef: testSuite.endpointRef, takenColumnNames }),
+      selectedRoute
+        ? buildRouteMethodGroups(selectedRoute)
+        : buildMethodGroups({ deployment, endpointRef: testSuite.endpointRef, takenColumnNames }),
     // `takenColumnNames` is a fresh array each render; its contents are what matter here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [testSuite.endpointRef, takenColumnNames.join(',')],
+    [selectedRoute, testSuite.endpointRef, takenColumnNames.join(',')],
   );
 
   const groups = useMemo(() => buildGroupsFor(fullApplication), [buildGroupsFor, fullApplication]);
@@ -87,6 +103,21 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
   );
 
   useEffect(() => {
+    if (selectedRoute) {
+      const selectedIndex = options.findIndex(
+        ({ ref }) =>
+          ref.method === testSuite.endpointRef?.method &&
+          ref.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
+      );
+      if (selectedIndex !== -1) {
+        setActiveMethodIndex(selectedIndex);
+      } else if (isCreate) {
+        onMethodClick(0);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     if (!fullApplication && selectedTarget) {
       const { deploymentId } = selectedTarget;
       getDeploymentById(deploymentId)
@@ -109,8 +140,16 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
           setIsLoading(false);
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullApplication, selectedTarget]);
+  }, [
+    fullApplication,
+    selectedTarget,
+    selectedRoute,
+    options,
+    testSuite.endpointRef,
+    isCreate,
+    onMethodClick,
+    buildGroupsFor,
+  ]);
 
   const [sidebarCurrentWidth, setSidebarCurrentWidth] = useState(400);
   const [isSidebarOpened, setIsSidebarOpened] = useState(true);

@@ -20,12 +20,16 @@ import { isEqual } from 'lodash';
 
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
-import { getDefaultRequestTemplateFor } from '@/src/components/TestSuites/utils/method-groups';
+import {
+  getDefaultRequestTemplateFor,
+  getDefaultRouteRequestTemplateFor,
+} from '@/src/components/TestSuites/utils/method-groups';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
+import { DialRoute } from '@/src/models/dial/route';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { JsonataVariable } from '@/src/models/jsonata';
 import { EDIT_REQUEST_STEPS, EditRequestStep } from './constants';
@@ -35,6 +39,7 @@ export interface EditRequestWizardProps {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite) => void;
   selectedApplication: Deployment | null;
+  selectedRoute?: DialRoute | null;
   isOpen?: boolean;
   /** True when opened from "Add" for a brand new request, rather than "Edit request" on an existing
    *  one — the Configuration step starts without a completed checkmark until the user visits it. */
@@ -48,6 +53,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
   testSuite,
   onChangeTestSuite,
   selectedApplication,
+  selectedRoute,
   isOpen = false,
   isNewRequest = false,
   onClose,
@@ -96,10 +102,12 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
     [t, isMethodValid, isConfigurationComplete],
   );
 
-  const defaultRequestTemplate = useMemo(
-    () => getDefaultRequestTemplateFor(selectedApplication, currentSuite.endpointRef),
-    [selectedApplication, currentSuite.endpointRef],
-  );
+  const defaultRequestTemplate = useMemo(() => {
+    if (selectedRoute) {
+      return getDefaultRouteRequestTemplateFor(selectedRoute, currentSuite.endpointRef);
+    }
+    return getDefaultRequestTemplateFor(selectedApplication, currentSuite.endpointRef);
+  }, [selectedApplication, selectedRoute, currentSuite.endpointRef]);
   const isBodyEdited = !!defaultRequestTemplate && !isEqual(currentSuite.requestTemplate, defaultRequestTemplate);
 
   const onResetToDefault = useCallback(() => {
@@ -184,6 +192,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
           {currentStepId === EditRequestStep.Methods && (
             <Methods
               selectedTarget={selectedApplication}
+              selectedRoute={selectedRoute}
               testSuite={currentSuite}
               onChange={setCurrentSuite}
               takenColumnNames={takenColumnNames}
