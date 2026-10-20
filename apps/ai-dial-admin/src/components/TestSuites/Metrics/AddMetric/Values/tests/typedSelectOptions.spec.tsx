@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { formatDataTypeLabel, getDataTypeIcon, isTypeCompatible, toTypedSelectOption } from '../typedSelectOptions';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
+  TooltipPlacement: { Left: 'left' },
   DialTag: ({ label }: { label: string }) => <span data-testid="type-tag">{label}</span>,
 }));
 
@@ -36,7 +37,7 @@ describe('typedSelectOptions', () => {
     expect(option.value).toBe('col1');
     expect(option.label).toBe('Column 1');
     expect(option.icon).toBeUndefined();
-    expect(option.interactiveTooltip).toBeTruthy();
+    expect(option.interactiveTooltip?.placement).toBe('left');
 
     render(<>{option.rightControl}</>);
     expect(screen.getByTestId('type-tag')).toHaveTextContent('String');

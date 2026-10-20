@@ -11,15 +11,18 @@ import { MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import MetricInputs from '../Inputs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
+  TooltipPlacement: { Left: 'left' },
+  ErrorText: ({ text }: any) => (text ? <span role="alert">{text}</span> : null),
   DialLabel: ({ label }: any) => <span>{label}</span>,
   DialTag: ({ label }: any) => <span data-testid="type-tag">{label}</span>,
-  Select: ({ id, options, value, onChange, placeholder, fieldClassName }: any) => (
+  Select: ({ id, options, value, onChange, placeholder, fieldClassName, invalid }: any) => (
     <select
       id={id}
       role="combobox"
       value={value ?? ''}
       data-placeholder={placeholder}
       data-field-class={fieldClassName}
+      aria-invalid={invalid}
       onChange={(e) => onChange(e.target.value)}
     >
       {options.map((option: any) => (
@@ -70,6 +73,7 @@ vi.mock('../MetricSectionTabs', () => ({
 }));
 
 const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
+  itemsType: overrides.itemsType,
   id: overrides.id ?? 'field-id',
   name: overrides.name ?? 'field-name',
   type: overrides.type ?? 'string',
@@ -96,6 +100,24 @@ describe('MetricInputs (Values)', () => {
 
     expect(screen.getByText('Inputs')).toBeInTheDocument();
     expect(screen.getByText('prompt')).toBeInTheDocument();
+  });
+
+  test('shows the hint describing the expected input format', () => {
+    render(<MetricInputs title="Inputs" fields={[makeField({ id: 'f1', name: 'prompt' })]} bindings={[]} />);
+
+    expect(screen.getByText(TestSuitesI18nKey.InputsHint)).toBeInTheDocument();
+  });
+
+  test('shows the expected type next to each input', () => {
+    const fields: SchemaFieldRow[] = [
+      makeField({ id: 'f1', name: 'actual', type: 'array', itemsType: 'string' }),
+      makeField({ id: 'f2', name: 'prompt', type: 'number' }),
+    ];
+
+    render(<MetricInputs title="Inputs" fields={fields} bindings={[]} />);
+
+    expect(screen.getByText('Array<String>')).toBeInTheDocument();
+    expect(screen.getByText('Number')).toBeInTheDocument();
   });
 
   test('updates binding type when switching tab', async () => {
@@ -186,7 +208,7 @@ describe('MetricInputs (Values)', () => {
     const options = screen.getAllByRole('option');
     expect(options.map((option) => option.getAttribute('value'))).toEqual(['answer', 'follow_up']);
     expect(options.every((option) => option.getAttribute('data-has-tag') === 'true')).toBe(true);
-    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'String']);
+    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'String', 'String']);
     expect(screen.getByRole('combobox')).toHaveAttribute('data-placeholder', EntityPlaceholdersI18nKey.Select);
   });
 
@@ -221,7 +243,7 @@ describe('MetricInputs (Values)', () => {
 
     const options = screen.getAllByRole('option');
     expect(options.map((option) => option.getAttribute('value'))).toEqual(['question', 'score']);
-    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'Number']);
+    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['Array', 'String', 'Number']);
   });
 
   test('test case options include sample tooltip when samples are provided', () => {
@@ -253,5 +275,82 @@ describe('MetricInputs (Values)', () => {
     );
 
     expect(screen.getByRole('option')).toHaveAttribute('data-has-tooltip', 'true');
+  });
+});
+
+describe('MetricInputs type matching', () => {
+  const testCaseColumn = (name: string, type: TestCaseItemType) => ({ name, type, required: false, description: '' });
+  const testCaseBinding = (columnName: string): MetricBinding[] => [
+    { property: 'actual', source: { $type: MetricBindingType.TestCase, columnName } },
+  ];
+
+  test('flags a test case column whose type differs from the expected one', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'array' })]}
+        bindings={testCaseBinding('question')}
+        testCaseSchema={[testCaseColumn('question', TestCaseItemType.STRING)]}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(TestSuitesI18nKey.InputTypeMismatch);
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('does not flag a test case column with a matching type', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'array' })]}
+        bindings={testCaseBinding('items')}
+        testCaseSchema={[testCaseColumn('items', TestCaseItemType.ARRAY)]}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('treats number and integer as compatible', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'number' })]}
+        bindings={testCaseBinding('count')}
+        testCaseSchema={[testCaseColumn('count', TestCaseItemType.INTEGER)]}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('flags a response column whose type differs from the expected one', () => {
+    const selectedTestSuite: TestSuite = {
+      responseColumns: [{ name: 'answer', displayName: 'Answer', expression: '', type: 'string' }],
+    };
+
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'array' })]}
+        bindings={[{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }]}
+        selectedTestSuite={selectedTestSuite}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  test('shows no error while no column is selected', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'array' })]}
+        bindings={[{ property: 'actual', source: { $type: MetricBindingType.TestCase } }]}
+        testCaseSchema={[testCaseColumn('question', TestCaseItemType.STRING)]}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

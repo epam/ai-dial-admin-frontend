@@ -176,17 +176,6 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       testCasesActionsRef.current?.clearDirtyAndRefresh();
       setHasTestCaseChanges(false);
 
-      if (dataset && datasetId) {
-        const datasetRes = await updateDataset(dataset, datasetEtag);
-        if (!datasetRes.success) {
-          handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
-          return;
-        }
-        if (datasetRes.etag) {
-          setDatasetEtag(datasetRes.etag);
-        }
-      }
-
       showSuccessAndRefresh();
     } finally {
       if (!awaitingRefreshRef.current) {
@@ -194,7 +183,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
         setIsSaving(false);
       }
     }
-  }, [selectedTestSuite, etag, showNotification, t, router, dataset, datasetEtag]);
+  }, [selectedTestSuite, etag, showNotification, t, router]);
 
   const onStartRunTestSuite = useCallback(() => {
     setIsModalOpen(true);

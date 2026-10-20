@@ -2032,6 +2032,8 @@ export enum TestSuitesI18nKey {
 
   Parameters = 'TestSuites.Parameters',
   Inputs = 'TestSuites.Inputs',
+  InputsHint = 'TestSuites.InputsHint',
+  InputTypeMismatch = 'TestSuites.InputTypeMismatch',
   Outputs = 'TestSuites.Outputs',
   Bindings = 'TestSuites.Bindings',
   Results = 'TestSuites.Results',

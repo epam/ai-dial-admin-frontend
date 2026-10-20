@@ -254,7 +254,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       <div className="size-full flex flex-col">
         <div className="flex flex-row justify-between items-center mb-2">
           <span className="text-sm text-secondary">
-            {t(TabsI18nKey.Runs)}: {runs?.length ?? 0}
+            {t(TabsI18nKey.Runs)}: {totalElements}
           </span>
           <DialGhostButton
             label={t(ButtonsI18nKey.Columns)}

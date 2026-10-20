@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { cancelRun, getRun, getRunsQuery } from '@/src/app/[lang]/runs/actions';
-import { ActionMenuOperationI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
 import { RunStatus } from '@/src/models/evaluation/run';
@@ -113,6 +113,17 @@ describe('Runs', () => {
     expect(
       screen.queryByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-cancelled` }),
     ).not.toBeInTheDocument();
+  });
+
+  test('shows the total number of runs rather than the number of rows loaded on the first page', async () => {
+    vi.mocked(getRunsQuery).mockResolvedValueOnce({
+      content: MOCK_ROWS,
+      totalElements: 250,
+    } as Awaited<ReturnType<typeof getRunsQuery>>);
+
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+
+    expect(await screen.findByText(`${TabsI18nKey.Runs}: 250`)).toBeInTheDocument();
   });
 
   test('toggles the columns panel when the Columns button is clicked', () => {

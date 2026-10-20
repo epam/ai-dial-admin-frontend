@@ -25,8 +25,9 @@ import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } fro
 import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
-import { isReservedSystemFunctionCondition, validateMetricBindings } from './utils';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { hasInputTypeMismatch, isReservedSystemFunctionCondition, validateMetricBindings } from './utils';
+import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
+import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
 
 interface Props {
   isModalOpen: boolean;
@@ -119,6 +120,11 @@ const AddMetricModal: FC<Props> = ({
   const newMetricSelected =
     currentStepId === MetricStep.AddMetric && prevSelectedMetricIdRef.current !== selectedMetricId;
 
+  const responseColumns = useMemo<ResponseColumn[]>(
+    () => (selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : []),
+    [selectedTestSuite],
+  );
+
   const isStep1Valid = !!selectedMetricId;
   const isStep2Valid =
     !conditionError &&
@@ -131,6 +137,12 @@ const AddMetricModal: FC<Props> = ({
           inputBindings,
           selectedMetricDetails?.configSchema,
           selectedMetricDetails?.inputSchema,
+        ) &&
+        !hasInputTypeMismatch(
+          inputBindings,
+          selectedMetricDetails?.inputSchema,
+          dataset?.testCaseSchema,
+          responseColumns,
         ));
 
   const steps: Step[] = useMemo(
