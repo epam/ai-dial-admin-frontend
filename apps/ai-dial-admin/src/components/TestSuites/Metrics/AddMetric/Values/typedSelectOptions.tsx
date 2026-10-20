@@ -1,4 +1,4 @@
-import { DialTag, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialTag, SelectOption, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import { IconAlphabetLatin, IconBraces, IconBrackets, IconFile, IconNumber, IconToggleLeft } from '@tabler/icons-react';
 import { capitalize } from 'lodash';
 import { ReactNode } from 'react';
@@ -54,5 +54,5 @@ export const toTypedSelectOption = ({
   value,
   label,
   rightControl: <DialTag label={formatDataTypeLabel(type)} />,
-  ...(interactiveTooltip && { interactiveTooltip }),
+  ...(interactiveTooltip && { interactiveTooltip: { placement: TooltipPlacement.Left, ...interactiveTooltip } }),
 });

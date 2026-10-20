@@ -2096,6 +2096,9 @@ export default {
     Bindings: 'Bindings',
     Parameters: 'Parameters',
     Inputs: 'Inputs',
+    InputsHint:
+      'Bind each input to a test case column, a response column or a constant. The source must have the data type shown next to the input, e.g. an Array input needs an Array column.',
+    InputTypeMismatch: 'This input expects type {expected}, but the selected column is of type {actual}.',
     Outputs: 'Outputs',
     Results: 'Results',
     TestCaseSchema: 'Configure schema',

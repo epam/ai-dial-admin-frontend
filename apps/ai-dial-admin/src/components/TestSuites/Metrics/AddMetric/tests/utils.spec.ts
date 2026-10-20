@@ -2,8 +2,9 @@ import { JSONSchema7 } from 'json-schema';
 import { describe, expect, test } from 'vitest';
 
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import { validateMetricBindings, isReservedSystemFunctionCondition } from '../utils';
-import { MetricBindingType } from '@/src/types/evaluation';
+import { hasInputTypeMismatch, isReservedSystemFunctionCondition, validateMetricBindings } from '../utils';
+import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 describe('validateMetricBindings', () => {
   const configSchema: JSONSchema7 = {
@@ -217,5 +218,50 @@ describe('isReservedSystemFunctionCondition', () => {
     expect(isReservedSystemFunctionCondition('turn.last')).toBe(false);
     expect(isReservedSystemFunctionCondition('')).toBe(false);
     expect(isReservedSystemFunctionCondition(undefined)).toBe(false);
+  });
+});
+
+describe('hasInputTypeMismatch', () => {
+  const inputSchema: JSONSchema7 = {
+    type: 'object',
+    properties: { actual: { type: 'array' }, count: { type: 'number' } },
+  };
+  const testCaseSchema: TestCaseSchema[] = [
+    { name: 'items', type: TestCaseItemType.ARRAY, required: false, description: '' },
+    { name: 'question', type: TestCaseItemType.STRING, required: false, description: '' },
+    { name: 'total', type: TestCaseItemType.INTEGER, required: false, description: '' },
+  ];
+  const testCaseBinding = (property: string, columnName: string): MetricBinding => ({
+    property,
+    source: { $type: MetricBindingType.TestCase, columnName },
+  });
+
+  test('returns false when every bound column has the expected type', () => {
+    const bindings = [testCaseBinding('actual', 'items'), testCaseBinding('count', 'total')];
+
+    expect(hasInputTypeMismatch(bindings, inputSchema, testCaseSchema)).toBe(false);
+  });
+
+  test('returns true when a test case column has a different type', () => {
+    expect(hasInputTypeMismatch([testCaseBinding('actual', 'question')], inputSchema, testCaseSchema)).toBe(true);
+  });
+
+  test('returns true when a response column has a different type', () => {
+    const bindings: MetricBinding[] = [
+      { property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } },
+    ];
+    const responseColumns = [{ name: 'answer', displayName: 'Answer', expression: '', type: 'string' }];
+
+    expect(hasInputTypeMismatch(bindings, inputSchema, testCaseSchema, responseColumns)).toBe(true);
+  });
+
+  test('ignores constants, unselected columns and unknown columns', () => {
+    const bindings: MetricBinding[] = [
+      { property: 'actual', source: { $type: MetricBindingType.Constant, value: 'x' } },
+      { property: 'count', source: { $type: MetricBindingType.TestCase } },
+      testCaseBinding('actual', 'missing'),
+    ];
+
+    expect(hasInputTypeMismatch(bindings, inputSchema, testCaseSchema)).toBe(false);
   });
 });

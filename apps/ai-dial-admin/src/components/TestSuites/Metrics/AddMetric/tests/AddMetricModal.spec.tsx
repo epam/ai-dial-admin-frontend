@@ -10,6 +10,7 @@ import { MetricStep } from '../constants';
 const mockGetMetricLatestVersion = vi.fn();
 const mockGetTestSuiteMetricDetailsWithSchema = vi.fn();
 const mockGenerateMetricDefaultBindings = vi.fn();
+const mockHasInputTypeMismatch = vi.fn(() => false);
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getMetricLatestVersion: (...args: unknown[]) => mockGetMetricLatestVersion(...args),
@@ -23,6 +24,7 @@ vi.mock('../../utils/metric-bindings', () => ({
 
 vi.mock('../utils', () => ({
   validateMetricBindings: () => true,
+  hasInputTypeMismatch: () => mockHasInputTypeMismatch(),
   isReservedSystemFunctionCondition: (condition?: string) => condition?.trim() === 'name()',
 }));
 
@@ -103,6 +105,7 @@ const metricDeclarations: Metric[] = [{ id: 'metric-1', name: 'Metric One' }];
 describe('AddMetricModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHasInputTypeMismatch.mockReturnValue(false);
 
     mockGetMetricLatestVersion.mockResolvedValue({
       id: 'ver-1',
@@ -251,6 +254,31 @@ describe('AddMetricModal', () => {
 
     await screen.findByRole('region', { name: 'metric-configuration' });
     expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
+
+    const confirmButton = screen.getByRole('button', { name: ButtonsI18nKey.Confirm });
+    expect(confirmButton).toBeDisabled();
+
+    await user.click(confirmButton);
+
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  test('disables confirm and blocks saving when an input is bound to a column of a mismatching type', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    mockHasInputTypeMismatch.mockReturnValue(true);
+
+    render(
+      <AddMetricModal
+        isModalOpen
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+        editingMetric={{ id: 'suite-metric-1', name: 'Edited metric', metricDeclarationId: 'decl-1' }}
+        selectedTestSuite={{ id: 'suite-1' }}
+      />,
+    );
+
+    await screen.findByRole('region', { name: 'metric-configuration' });
 
     const confirmButton = screen.getByRole('button', { name: ButtonsI18nKey.Confirm });
     expect(confirmButton).toBeDisabled();
