@@ -207,6 +207,22 @@ describe('DuplicateQuery', () => {
     );
   });
 
+  test('reports a transport failure and re-enables submit instead of staying stuck', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createSavedQuery).mockRejectedValue(new Error('network down'));
+    renderModal();
+
+    await submit(user);
+
+    await vi.waitFor(() =>
+      expect(mockShowNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Error.Error', description: 'Queries.ErrorGeneric' }),
+      ),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Buttons.Duplicate' })).toBeEnabled();
+  });
+
   test('surfaces the service message when the stored body is no longer accepted', async () => {
     const user = userEvent.setup();
     vi.mocked(createSavedQuery).mockResolvedValue({
@@ -260,5 +276,46 @@ describe('DuplicateQuery', () => {
 
     await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().scope).toBe(SavedQueryScope.Personal);
+  });
+  describe('as the query page Save as', () => {
+    const LIVE: SavedQueryRequest = {
+      name: 'ignored',
+      scope: SavedQueryScope.Personal,
+      sql: 'SELECT 1',
+      result_view: QueryResultView.Table,
+    };
+
+    test('sends what the injected builder returns for the entered metadata', async () => {
+      const user = userEvent.setup();
+      const buildRequest = vi.fn(() => LIVE);
+      render(<DuplicateQuery query={STRUCTURED} onClose={onClose} buildRequest={buildRequest} submitLabel="Save" />);
+
+      setName('Edited variant');
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+      expect(buildRequest).toHaveBeenCalledWith(expect.objectContaining({ name: 'Edited variant', tag: 'Adoption' }));
+      expect(sentRequest()).toBe(LIVE);
+    });
+
+    test('hands the created query to onCreated instead of notifying, closing, and navigating', async () => {
+      const user = userEvent.setup();
+      const onCreated = vi.fn();
+      render(<DuplicateQuery query={STRUCTURED} onClose={onClose} onCreated={onCreated} />);
+
+      await submit(user);
+
+      await vi.waitFor(() => expect(onCreated).toHaveBeenCalledWith(CREATED));
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(mockShowNotification).not.toHaveBeenCalled();
+    });
+
+    test('renders the header and submit label overrides', () => {
+      render(<DuplicateQuery query={STRUCTURED} onClose={onClose} header="Save query as" submitLabel="Save" />);
+
+      expect(screen.getByText('Save query as')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    });
   });
 });

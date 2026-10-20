@@ -2,7 +2,13 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialGhostButton, DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
+import {
+  DialGhostButton,
+  DialLoader,
+  DialNeutralButton,
+  DialNoDataContent,
+  DialSegmentedControl,
+} from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
@@ -29,6 +35,7 @@ import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
 import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar/QueryBuilderToolbar';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import { useSavedQueryPage } from '@/src/components/Analytics/QueryBuilder/use-saved-query-page';
+import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
@@ -51,6 +58,8 @@ import {
   WARNING_I18N,
 } from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -241,6 +250,15 @@ const QueryBuilder: FC<Props> = ({
 
   // Binds the page to its stored query: seeds the builder on open, tracks unsaved changes, and owns
   // save, discard, and metadata editing. Inert when no stored query was passed.
+  // Matches the width `ChangedEntityButtons` gives Discard and Save on narrow screens. Set after mount, as
+  // that component does, so the server render and the first client render agree.
+  const isTablet = useIsOnlyTabletScreen();
+  const isMobile = useIsMobileScreen();
+  const [saveAsClassName, setSaveAsClassName] = useState('');
+  useEffect(() => {
+    setSaveAsClassName(isTablet || isMobile ? 'w-1/2 flex justify-center' : '');
+  }, [isTablet, isMobile]);
+
   const savedQueryPage = useSavedQueryPage({
     savedQuery,
     state,
@@ -629,7 +647,14 @@ const QueryBuilder: FC<Props> = ({
                   disableSave={runDisabled || savedQueryPage.isSaving}
                   onDiscard={savedQueryPage.onDiscard}
                   onSave={savedQueryPage.onSave}
-                />
+                >
+                  <DialNeutralButton
+                    className={saveAsClassName}
+                    label={t(ButtonsI18nKey.SaveAs)}
+                    onClick={savedQueryPage.onOpenSaveAs}
+                    disabled={runDisabled || savedQueryPage.isSaving}
+                  />
+                </ChangedEntityButtons>
               )}
               {fieldsLoaded && !isAiView && (
                 <CopyButton
@@ -809,6 +834,17 @@ const QueryBuilder: FC<Props> = ({
           query={savedQueryPage.savedQuery}
           onClose={savedQueryPage.onCloseEdit}
           onSaved={savedQueryPage.onEdited}
+        />
+      )}
+
+      {savedQueryPage.isSaveAsOpen && savedQueryPage.savedQuery && (
+        <DuplicateQuery
+          query={savedQueryPage.savedQuery}
+          header={t(QueriesI18nKey.SaveQueryAs)}
+          submitLabel={t(ButtonsI18nKey.Save)}
+          buildRequest={savedQueryPage.buildSaveAsRequest}
+          onCreated={savedQueryPage.onSaveAsCreated}
+          onClose={savedQueryPage.onCloseSaveAs}
         />
       )}
 
