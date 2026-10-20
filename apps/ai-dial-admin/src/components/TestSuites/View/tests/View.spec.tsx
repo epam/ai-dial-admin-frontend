@@ -187,6 +187,26 @@ describe('TestSuiteView', () => {
     });
   });
 
+  describe('Save with a bound dataset', () => {
+    test('saves only the suite and leaves the shared dataset untouched', async () => {
+      const user = userEvent.setup();
+      const { updateTestSuite } = await import('@/src/app/[lang]/test-suites/actions');
+      const { getDataset, updateDataset } = await import('@/src/app/[lang]/datasets/actions');
+      (updateTestSuite as Mock).mockResolvedValue({ success: true });
+      (updateDataset as Mock).mockResolvedValue({ success: true });
+
+      render(<TestSuiteView originalTestSuite={{ ...mockTestSuite, datasetId: 'dataset-1' }} etag="etag" />);
+      await vi.waitFor(() => expect(getDataset).toHaveBeenCalledOnce());
+
+      await user.click(screen.getByRole('button', { name: 'Modify Suite' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalledOnce());
+      expect(updateTestSuite).toHaveBeenCalledOnce();
+      expect(updateDataset).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Save double-click guard', () => {
     test('ignores a second Save click while the first request is in flight', async () => {
       const user = userEvent.setup();
