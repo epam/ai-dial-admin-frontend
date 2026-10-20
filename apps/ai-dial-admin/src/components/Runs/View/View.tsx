@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import Grafana from '@/public/images/icons/grafana.svg';
 import IconCompare from '@/public/images/icons/difference.svg';
 import { IconColumns2, IconFileExport, IconPlayerStop } from '@tabler/icons-react';
-import { GhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Switch } from '@epam/ai-dial-ui-kit';
 
 import { cancelRun, getRun } from '@/src/app/[lang]/runs/actions';
 import RunStatusBadge from '@/src/components/Common/RunStatus/RunStatusBadge';
@@ -25,6 +25,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRunTabs } from '@/src/utils/tabs/utils';
+import { hasVaryingExecutionIndices } from '@/src/utils/evaluation/column-variation';
 import TabsContent from './TabsContent';
 import { useRunViewTabState } from './use-run-view-tab-state';
 
@@ -47,6 +48,8 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
   const tabState = useRunViewTabState(selectedRun.id);
   const { setExtractionResultState } = tabState;
   const showTreePanel = tabState.state.extractionResult.showTreePanel;
+  const isGroupedByTestCase = tabState.state.extractionResult.isGroupedByTestCase;
+  const canGroupByTestCase = hasVaryingExecutionIndices(tabState.state.extractionResult.results ?? []);
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const onOpenExportModal = useCallback(() => setIsExportModalOpen(true), []);
@@ -106,6 +109,11 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
   const toggleTreePanel = useCallback(
     () => setExtractionResultState({ showTreePanel: !showTreePanel }),
     [setExtractionResultState, showTreePanel],
+  );
+
+  const onGroupingChange = useCallback(
+    (isGrouped: boolean) => setExtractionResultState({ isGroupedByTestCase: isGrouped }),
+    [setExtractionResultState],
   );
 
   const isCompareDisabled = selectedRun.status !== RunStatus.COMPLETED || !selectedRun.testSuiteId;
@@ -169,11 +177,21 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
 
   const columnsTabsTrailing =
     activeTab === EntityViewTab.ExtractionResult ? (
-      <GhostButton
-        label={t(ButtonsI18nKey.Columns)}
-        iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-        onClick={toggleTreePanel}
-      />
+      <div className="flex items-center gap-3">
+        {canGroupByTestCase && (
+          <Switch
+            id="groupRunResultsByTestCase"
+            isOn={isGroupedByTestCase}
+            labelProps={{ label: t(RunsI18nKey.GroupByTestCase) }}
+            onChange={onGroupingChange}
+          />
+        )}
+        <GhostButton
+          label={t(ButtonsI18nKey.Columns)}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+          onClick={toggleTreePanel}
+        />
+      </div>
     ) : null;
 
   return (

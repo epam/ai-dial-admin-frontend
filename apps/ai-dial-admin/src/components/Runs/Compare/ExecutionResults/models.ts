@@ -1,4 +1,5 @@
 import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
+import { ExecutionResultColumnLabels } from '@/src/components/Runs/ExecutionResults/models';
 
 export interface CompareDiffCounts {
   improved: number;
@@ -10,6 +11,12 @@ export interface CompareColumnsCompareOptions {
   hideHighlights?: boolean;
   metricsSchema?: Record<string, Record<string, unknown>>;
   runs?: CompareRun[];
+  isGrouped?: boolean;
+  showTestCaseSummary?: boolean;
+  primaryThreshold?: number | null;
+  comparedThreshold?: number | null;
+  groupingLabels?: ExecutionResultColumnLabels;
+  onToggleGroup?: (groupKey: string) => void;
 }
 
 export interface CompareRowDiffVisibility {

@@ -2,6 +2,7 @@ import { ColDef } from 'ag-grid-community';
 
 import { ColumnWidths } from '@/src/components/Grid/models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { TestCaseScoreSummary } from '@/src/components/Runs/ExecutionResults/models';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export interface SummaryTabUiState {
@@ -10,11 +11,13 @@ export interface SummaryTabUiState {
 }
 
 export interface ExtractionResultTabUiState {
+  isGroupedByTestCase: boolean;
   showTreePanel: boolean;
   colDefs: ColDef[];
   panelColDefs: ColDef[];
   columnWidths: ColumnWidths;
   results: AnalyticsResult[] | null;
+  testCaseScores: TestCaseScoreSummary[] | null;
 }
 
 export interface RunViewTabUiState {
