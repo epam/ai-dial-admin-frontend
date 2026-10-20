@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -350,5 +350,51 @@ describe('FilterCondition function operands', () => {
     renderWithCatalog(node);
 
     expect(screen.getByRole('button', { name: /date_sub\(minute, 30, now\(\)\)/ })).toBeInTheDocument();
+  });
+});
+
+describe('FilterCondition map fields', () => {
+  const MAP_FIELD_OPTIONS: FieldOption[] = [...FIELD_OPTIONS, { name: 'attributes', type: AnalyticsFieldType.Map }];
+
+  const renderWithMapField = (node: FilterPredicateNode) => {
+    const parent = createGroup();
+    parent.children.push(node);
+    const state: QueryBuilderState = { ...createInitialState(TEST_FUNCTIONS), fields: [] };
+    render(
+      <QueryBuilderContext.Provider value={{ state, refresh: vi.fn(), patch: vi.fn() }}>
+        <FilterCondition
+          node={node}
+          parent={parent}
+          fieldOptions={MAP_FIELD_OPTIONS}
+          operatorOptions={operatorOptions}
+        />
+      </QueryBuilderContext.Provider>,
+    );
+    return userEvent.setup();
+  };
+
+  // A map column cannot be compared, so the left operand withholds it; a function argument is how one
+  // of its keys is read, so the same condition's argument dropdown still lists it.
+  test('the left operand withholds a map field that a function argument still lists', async () => {
+    const user = renderWithMapField({ ...createPredicate(), fn: 'lower', args: [{}] });
+
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.Field }));
+    const operand = screen.getByRole('listbox', { name: QueryBuilderI18nKey.Field });
+    expect(within(operand).getByText('chat_id')).toBeInTheDocument();
+    expect(within(operand).queryByText('attributes')).not.toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', { name: 'text' }));
+    const argument = screen.getByRole('listbox', { name: 'text' });
+    await user.click(within(argument).getByRole('button', { name: /QueryBuilder.Untagged/ }));
+    expect(within(argument).getByText('attributes')).toBeInTheDocument();
+  });
+
+  test('the left operand keeps a map field the condition already names', async () => {
+    const user = renderWithMapField(predicateOn('attributes'));
+
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.Field }));
+
+    expect(screen.getByRole('listbox', { name: QueryBuilderI18nKey.Field })).toHaveTextContent('attributes');
   });
 });

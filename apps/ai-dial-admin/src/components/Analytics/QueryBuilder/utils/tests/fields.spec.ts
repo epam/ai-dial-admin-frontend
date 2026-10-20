@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  comparableFieldOptions,
   computedColumnNames,
   defaultValueType,
   deriveAlias,
@@ -22,9 +23,17 @@ import {
   createColumnRow,
   createFnRow,
   createInitialState,
+  createSort,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
+import { FieldOption } from '@/src/models/analytics/query-builder';
+import {
+  QueryFunction,
+  QueryFunctionArgKind,
+  QueryFunctionGroup,
+  QueryFunctionReturnType,
+} from '@/src/models/analytics/query-function';
 import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 const field = (name: string, type: AnalyticsFieldType, tag?: string): AnalyticsEntityField => ({
@@ -518,5 +527,70 @@ describe('sortFieldOptions — row mode', () => {
     s.groupBy = [{ ...createFnRow(fnFixture('lower'), [{ field: 'project_id' }]), alias: 'lowered' }];
 
     expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
+  });
+});
+
+describe('comparableFieldOptions', () => {
+  const OPTIONS: FieldOption[] = [
+    { name: 'attributes', type: AnalyticsFieldType.Map },
+    { name: 'project_id', type: AnalyticsFieldType.String },
+    { name: 'labels', type: AnalyticsFieldType.Map },
+    { name: 'tags', type: AnalyticsFieldType.Array },
+  ];
+
+  test('withholds map fields and keeps every other type', () => {
+    expect(comparableFieldOptions(OPTIONS).map((o) => o.name)).toEqual(['project_id', 'tags']);
+  });
+
+  test('keeps a map field whose name is in kept, in its original position', () => {
+    expect(comparableFieldOptions(OPTIONS, ['labels']).map((o) => o.name)).toEqual(['project_id', 'labels', 'tags']);
+  });
+
+  test('a kept name that is not a map changes nothing', () => {
+    expect(comparableFieldOptions(OPTIONS, ['project_id']).map((o) => o.name)).toEqual(['project_id', 'tags']);
+  });
+
+  test('an empty option list stays empty', () => {
+    expect(comparableFieldOptions([], ['attributes'])).toEqual([]);
+  });
+});
+
+describe('sortFieldOptions — map fields in row mode', () => {
+  const rowState = () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = [field('project_id', AnalyticsFieldType.String), field('attributes', AnalyticsFieldType.Map)];
+    return s;
+  };
+
+  test('omits a map field', () => {
+    expect(sortFieldOptions(rowState()).map((o) => o.name)).toEqual(['project_id']);
+  });
+
+  test('keeps a map field only for the sort row that already names it', () => {
+    const s = rowState();
+    s.sort = [{ ...createSort(), field: 'attributes' }];
+
+    expect(sortFieldOptions(s, ['attributes']).map((o) => o.name)).toEqual(['attributes', 'project_id']);
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
+  });
+
+  test('still offers a function column computed over a map field', () => {
+    const s = rowState();
+    const mapValue: QueryFunction = {
+      name: 'map_value',
+      group: QueryFunctionGroup.Scalar,
+      signature: 'map_value(map, key)',
+      returns: QueryFunctionReturnType.String,
+      distinct_supported: false,
+      description: 'Text value stored in a map expression under key',
+      args: [
+        { name: 'map', kind: QueryFunctionArgKind.Expression },
+        { name: 'key', kind: QueryFunctionArgKind.StringLiteral },
+      ],
+    };
+    s.functions = [...s.functions, mapValue];
+    s.select = [{ ...createFnRow(mapValue, [{ field: 'attributes' }, { literal: 'env' }]), alias: 'env' }];
+
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['env', 'project_id']);
   });
 });

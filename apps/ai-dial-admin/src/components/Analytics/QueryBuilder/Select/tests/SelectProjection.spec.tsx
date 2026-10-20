@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -116,6 +116,18 @@ describe('QueryBuilder :: SelectProjection', () => {
     renderLive(stateWith({ select: [row] }), <SelectProjection />);
 
     expect(screen.queryByRole('img', { name: 'QueryBuilder.WarningDroppedProjectionColumn' })).not.toBeInTheDocument();
+  });
+
+  // Select is how a map column is read, so unlike filter, group-by and sort it keeps the field.
+  test('the add dropdown lists a map field', async () => {
+    const fields = [...FIELDS, { name: 'attributes', type: AnalyticsFieldType.Map, source: 'attributes' }];
+    const user = renderLive(stateWith({ fields }), <SelectProjection />);
+
+    await user.click(screen.getByRole('button', { name: ADD_LABEL }));
+    const listbox = screen.getByRole('listbox', { name: ADD_LABEL });
+    await user.click(within(listbox).getByRole('button', { name: /QueryBuilder.Untagged/ }));
+
+    expect(within(listbox).getByRole('option', { name: /attributes/ })).toBeInTheDocument();
   });
 
   // No local fallback catalog: with nothing served, the projection still builds from columns alone.

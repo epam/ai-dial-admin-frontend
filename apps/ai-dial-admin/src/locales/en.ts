@@ -3321,7 +3321,7 @@ export default {
     KeysNote: 'Define how the table is stored and read. Set once, when the table is created, and fixed afterwards.',
     OrderingKey: 'Ordering key',
     OrderingKeyHint:
-      'Rows are stored in this order, and that order is what makes reads fast: a query filtering or sorting by the key’s leading columns narrows to a few blocks of rows instead of scanning the table. The columns used most often in filters belong at the front, starting with the one that rules out the most rows. Eligible columns are those never empty and not of Object type.',
+      'Rows are stored in this order, and that order is what makes reads fast: a query filtering or sorting by the key’s leading columns narrows to a few blocks of rows instead of scanning the table. The columns used most often in filters belong at the front, starting with the one that rules out the most rows. Eligible columns are those never empty and not of Object or Map type.',
     PartitionColumn: 'Partition column',
     PartitionColumnHint:
       'Groups rows into time chunks — one per month, for example. A query filtered on this column reads only the chunks it covers and skips the rest. Most tables need no partition at all: row order already handles filtering, and a partition pays off mainly on a large table that is always queried by time. Only Date and Timestamp columns that are never empty are eligible.',
@@ -3332,7 +3332,7 @@ export default {
     IdentityColumn: 'Identity column',
     VersionColumn: 'Version column',
     IdentityColumnHint:
-      'Marks what makes a row different from every other row. Together with Version column, it lets pipelines walk the table in batches without handling a row twice. The value must differ in every row — uniqueness is not validated, and repeated values cause rows to be skipped. Eligible columns are those never empty and not marked sensitive.',
+      'Marks what makes a row different from every other row. Together with Version column, it lets pipelines walk the table in batches without handling a row twice. The value must differ in every row — uniqueness is not validated, and repeated values cause rows to be skipped. Eligible columns are those never empty, not marked sensitive and not of Array, Object or Map type.',
     VersionColumnHint:
       'Records when a row was written or last changed, so a pipeline can tell which rows are new since its last pass. The value is expected at write time and must never move backwards — this is not validated, and a backdated value causes rows to be missed. Eligible columns are Timestamp columns that are never empty and not marked sensitive.',
     ScanPairIncomplete: 'Identity column and Version column must be set together, or both left empty.',
@@ -3344,7 +3344,7 @@ export default {
     ColumnNullableFixed: 'Whether a column accepts empty values is fixed when the column is created.',
     GrainKey: 'Grain key',
     GrainKeyHint:
-      'Links this table to its source table. A row here attaches to every source row carrying the same value, so its fields can be read side by side with the source’s. Only one row is kept per value — a repeated key replaces the previous row rather than adding a second one. Object columns are not eligible.',
+      'Links this table to its source table. A row here attaches to every source row carrying the same value, so its fields can be read side by side with the source’s. Only one row is kept per value — a repeated key replaces the previous row rather than adding a second one. Object and Map columns are not eligible.',
     ColumnName: 'Name',
     Tag: 'Tag',
     ElementType: 'Element type',
@@ -3424,6 +3424,8 @@ export default {
       '{columns} — quoted, so the digits arrive exactly. A plain number is accepted too, but passes through a float and loses precision beyond what a double carries.',
     ConnectFormatArray:
       '{columns} — a JSON array of the element type. Array columns are never null; send [] for empty.',
+    ConnectFormatMap:
+      '{columns} — a JSON object whose keys and values are all strings. Map columns are never null; send an empty object for none, and omit a key rather than sending it as null.',
     ConnectBatchLimit: 'One request carries up to 10000 rows; send more than that in batches.',
     ConnectRejected: 'If a row is rejected',
     ConnectUnknownColumn:

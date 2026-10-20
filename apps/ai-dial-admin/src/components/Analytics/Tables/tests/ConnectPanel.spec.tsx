@@ -202,6 +202,34 @@ describe('ConnectPanel :: snippets', () => {
     expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectFormatDecimal)).toBeInTheDocument();
     // No timestamp column declared, so no timestamp rule is shown.
     expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectFormatTimestamp)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectFormatMap)).not.toBeInTheDocument();
+  });
+
+  test('states the map format and writes a sample entry for a map column, while an object stays {}', async () => {
+    render(
+      <ConnectPanel
+        table={{
+          ...table,
+          columns: [
+            ...(table.columns ?? []),
+            { source_name: 'attrs', name: 'attrs', type: AnalyticsFieldType.Map },
+            { source_name: 'payload', name: 'payload', type: AnalyticsFieldType.Object },
+          ],
+        }}
+        apiBaseUrl="https://analytics.example.com"
+        flightUri=""
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectFormatMap)).toBeInTheDocument();
+    const blocks = Array.from(document.querySelectorAll('pre')).map((pre) => pre.textContent ?? '');
+    const writeBlocks = blocks.filter((block) => block.includes('/rows'));
+    expect(writeBlocks).toHaveLength(2);
+    writeBlocks.forEach((block) => {
+      expect(block).toContain('"attrs": {"key": "value"}');
+      expect(block).toContain('"payload": {}');
+    });
   });
 });
 

@@ -2857,6 +2857,7 @@ export enum AnalyticsTablesI18nKey {
   ConnectFormatDate = 'AnalyticsTables.ConnectFormatDate',
   ConnectFormatDecimal = 'AnalyticsTables.ConnectFormatDecimal',
   ConnectFormatArray = 'AnalyticsTables.ConnectFormatArray',
+  ConnectFormatMap = 'AnalyticsTables.ConnectFormatMap',
   ConnectBatchLimit = 'AnalyticsTables.ConnectBatchLimit',
   ConnectRejected = 'AnalyticsTables.ConnectRejected',
   ConnectUnknownColumn = 'AnalyticsTables.ConnectUnknownColumn',

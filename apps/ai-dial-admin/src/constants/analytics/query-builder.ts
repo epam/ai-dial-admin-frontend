@@ -200,7 +200,7 @@ export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate, Qu
 export const AGGREGATE_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
 
 // The schema's own statement about a column's value class. A type absent from this map is a type the
-// result grid does not format — Uuid, Enum, Boolean, String, Object, Array.
+// result grid does not format — Uuid, Enum, Boolean, String, Object, Array, Map.
 export const FIELD_TYPE_VALUE_CLASS: Partial<Record<AnalyticsFieldType, ResultValueClass>> = {
   [AnalyticsFieldType.Integer]: ResultValueClass.Compact,
   [AnalyticsFieldType.Long]: ResultValueClass.Compact,

@@ -58,11 +58,17 @@ export const buildSampleRow = (table: AnalyticsTable): SnippetRow => {
 
 const indentLines = (lines: string[], indent: string): string => lines.map((line) => `${indent}${line}`).join('\n');
 
+// Python and JSON spell a string-keyed object the same way; only the values' own syntax differs.
+const toObjectLiteral = (value: Record<string, string>, toValue: (value: SnippetValue) => string): string => {
+  const entries = Object.entries(value).map(([key, entry]) => `"${key}": ${toValue(entry)}`);
+  return `{${entries.join(', ')}}`;
+};
+
 const toPythonValue = (value: SnippetValue): string => {
   if (typeof value === 'string') return `"${value}"`;
   if (typeof value === 'boolean') return value ? 'True' : 'False';
   if (Array.isArray(value)) return `[${value.map(toPythonValue).join(', ')}]`;
-  if (typeof value === 'object') return '{}';
+  if (typeof value === 'object') return toObjectLiteral(value, toPythonValue);
   return String(value);
 };
 
@@ -75,7 +81,7 @@ const toJsonValue = (value: SnippetValue): string => {
   if (typeof value === 'string') return `"${value}"`;
   if (typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) return `[${value.map(toJsonValue).join(', ')}]`;
-  if (typeof value === 'object') return '{}';
+  if (typeof value === 'object') return toObjectLiteral(value, toJsonValue);
   return String(value);
 };
 

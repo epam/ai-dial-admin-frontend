@@ -361,7 +361,11 @@ export const CURATED_COMPOSED_FIELDS: string[] = [SessionsField.FirstRequestTime
 // A grid cell is not a structured-value viewer, so a field of one of these types is never derived into a
 // column: rendering it as text would assert a shape this view does not know. A curated column may still read
 // one, having a presentation of its own.
-export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Object, AnalyticsFieldType.Array];
+export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [
+  AnalyticsFieldType.Object,
+  AnalyticsFieldType.Array,
+  AnalyticsFieldType.Map,
+];
 
 export const DATE_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp];
 

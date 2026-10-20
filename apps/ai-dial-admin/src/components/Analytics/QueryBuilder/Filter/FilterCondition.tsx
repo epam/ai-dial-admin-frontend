@@ -9,7 +9,11 @@ import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/Compact
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Common/FnArgEditor';
 import { useFilterTree } from '@/src/components/Analytics/QueryBuilder/filter-tree-context';
-import { defaultValueType, fieldDisplayName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import {
+  comparableFieldOptions,
+  defaultValueType,
+  fieldDisplayName,
+} from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   emptyArgs,
   functionArgSummary,
@@ -227,13 +231,14 @@ const FilterCondition: FC<Props> = ({
   };
 
   const isBoolean = node.valueType === QueryValueType.Boolean && node.op !== QueryOperator.In;
+  const operandOptions = comparableFieldOptions(fieldOptions, node.field ? [node.field] : []);
 
   return (
     <ChipRow summary={summaryOf(node, fieldOptions, operatorOptions, fn, rightFn)} onRemove={remove} color={color}>
       <CategorizedFieldDropdown
         id={`qb-cond-field-${node.id}`}
         mode={FieldDropdownMode.Picker}
-        options={fieldOptions}
+        options={operandOptions}
         value={node.fn ?? node.field}
         functions={functionOptions}
         placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
