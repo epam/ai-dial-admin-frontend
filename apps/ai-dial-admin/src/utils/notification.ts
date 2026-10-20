@@ -34,7 +34,7 @@ export const getCopyToClipboardNotification = (customTitle: ReactNode): Notifica
 export const getNotification = (
   type: NotificationType,
   title?: string,
-  description?: string,
+  description?: ReactNode,
   duration?: number | null,
   requestId?: string,
   customTitle?: ReactNode,

@@ -383,6 +383,105 @@ Discard SHALL ask for confirmation and, on confirmation, SHALL restore the page 
 - **WHEN** the user discards and cancels the confirmation
 - **THEN** the unsaved edits are still present
 
+### Requirement: Save as a new query from a query page
+
+While a query page holds unsaved changes, the builder toolbar's actions area SHALL offer **Save as**
+alongside Discard and Save. Save as SHALL NOT be offered when the page holds no unsaved changes. Save as
+SHALL be offered whether or not the caller may write the source query, because it writes only a new
+query the caller owns; on a common query the caller may not write it SHALL be offered while Save is not.
+Save as SHALL be unavailable under the same conditions that make Save unavailable for an unrunnable
+query, and while a save is in flight.
+
+Activating Save as SHALL open a modal that reuses the field set of the create, duplicate, and edit
+modals — a **required** name and an optional description and tag. A blank name SHALL block submission;
+a name already in use SHALL NOT. The modal SHALL be seeded from the source query: its description and
+tag SHALL be carried over and its name SHALL be pre-filled with the source's name plus a copy suffix.
+The scope SHALL be the source's scope for a full administrator and the personal scope for anyone else.
+
+Submission SHALL create a **new** saved query whose body, time intent, result view, and chart
+configuration are the page's current, unsaved values — the payload Save would have written — and whose
+name, description, tag, and scope come from the modal. The source query SHALL NOT be modified.
+
+On success the modal SHALL close and the browser SHALL stay on the source query's page. The page SHALL
+keep its edits and SHALL still indicate unsaved changes against the source, so the user can go on
+editing, save again as another query, save over the source, or discard. A success notification SHALL be
+shown that carries a link to the new query's page; activating the link SHALL navigate there. The
+notification SHALL dismiss itself after the standard success duration, like any other success
+notification. On failure an error notification SHALL be shown following the
+machine-error-code rules, and the modal SHALL stay open with the entered values intact. Cancelling the
+modal SHALL leave the page and its unsaved edits as they were.
+
+#### Scenario: Save as appears with unsaved changes
+
+- **WHEN** the user edits a stored query on its page
+- **THEN** Save as is offered alongside Discard and Save
+
+#### Scenario: Save as is absent without unsaved changes
+
+- **WHEN** the query page holds no unsaved changes
+- **THEN** Save as is not offered
+
+#### Scenario: Save as is offered on a common query the caller cannot write
+
+- **WHEN** a caller who is not a full administrator edits a common-scope query on its page
+- **THEN** Save as is offered
+- **AND** Save is not
+
+#### Scenario: Save as is unavailable for an unrunnable query
+
+- **WHEN** the page's edits leave the query in a state that makes Save unavailable
+- **THEN** Save as is unavailable too
+
+#### Scenario: The modal is seeded from the source
+
+- **WHEN** the user activates Save as
+- **THEN** a modal opens with the source's description and tag
+- **AND** the name field holds the source's name with a copy suffix
+
+#### Scenario: A non-administrator's copy lands in the personal scope
+
+- **WHEN** a caller who is not a full administrator submits Save as on a common-scope query
+- **THEN** the create request carries the personal scope
+
+#### Scenario: Name is required
+
+- **WHEN** the Save as modal is open and the name field is blank
+- **THEN** the submit action is disabled
+
+#### Scenario: The new query carries the unsaved edits
+
+- **WHEN** the user submits the Save as modal
+- **THEN** the create request carries the page's current body, time intent, result view, and chart configuration
+- **AND** the metadata entered in the modal
+- **AND** the source query is left unchanged
+
+#### Scenario: Success stays on the source page
+
+- **WHEN** a Save as succeeds
+- **THEN** the modal closes and the browser stays on the source query's page
+- **AND** the page still holds the edits and indicates unsaved changes
+
+#### Scenario: The success notification links to the new query
+
+- **WHEN** a Save as succeeds
+- **THEN** a success notification is shown with a link to the new query
+
+#### Scenario: The link opens the new query
+
+- **WHEN** the user activates the link in the success notification
+- **THEN** the browser navigates to the new query's page
+
+#### Scenario: Failure keeps the modal open
+
+- **WHEN** a Save as fails
+- **THEN** an error notification is shown following the machine-error-code rules
+- **AND** the modal remains open with the entered values
+
+#### Scenario: Cancel keeps the edits
+
+- **WHEN** the user cancels the Save as modal
+- **THEN** the page still holds its unsaved edits
+
 ### Requirement: Result view and chart configuration round-trip
 
 The result view a query was last rendered in, and its chart configuration, SHALL be part of what a saved query stores and restores. Reopening a saved query SHALL show it in its stored result view, and a stored chart configuration SHALL survive the page's first run rather than being reset by it. A stored chart configuration whose axis columns are not set SHALL be re-derived from the result. The chart configuration SHALL be stored without interpretation — it names result columns, not schema fields.
