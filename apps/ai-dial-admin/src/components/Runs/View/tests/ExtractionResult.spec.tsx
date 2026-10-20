@@ -46,6 +46,7 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  executeStructuredQuery: vi.fn().mockResolvedValue({ rows: [] }),
   getMetricSnapshots: vi.fn().mockResolvedValue([]),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
   getTestCaseRunResultDetails: vi.fn().mockResolvedValue({

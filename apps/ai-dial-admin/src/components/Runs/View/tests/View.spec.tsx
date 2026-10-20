@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
@@ -28,7 +29,16 @@ vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ entity, onRemove, children, adaptiveActions, tabs, onChangeActiveTab, statusBadges }: any) => (
+  default: ({
+    entity,
+    onRemove,
+    children,
+    adaptiveActions,
+    tabs,
+    onChangeActiveTab,
+    statusBadges,
+    tabsTrailing,
+  }: any) => (
     <div role="region" aria-label="simple-header">
       <div>entity-id:{entity?.id}</div>
       <div>entity-status:{entity?.status}</div>
@@ -44,6 +54,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
         </button>
       ))}
       {children}
+      {tabsTrailing}
       {(adaptiveActions?.trailing ?? []).map((action: any) => (
         <button key={action.id} type="button" disabled={action.disabled} onClick={action.onClick}>
           {action.label}
@@ -62,9 +73,23 @@ vi.mock('../../Summary/SummaryTab', () => ({
 }));
 
 vi.mock('../ExtractionResult', () => ({
-  default: ({ run }: any) => (
+  default: ({ run, extractionResultState, setExtractionResultState }: any) => (
     <div role="region" aria-label="extraction-result-tab">
       <div>run-id:{run?.id}</div>
+      <div>grouped:{String(extractionResultState.isGroupedByTestCase)}</div>
+      <button
+        type="button"
+        onClick={() =>
+          setExtractionResultState({
+            results: [
+              { responseStatusCode: 200, runIndex: 0 },
+              { responseStatusCode: 200, runIndex: 1 },
+            ],
+          })
+        }
+      >
+        Load multi-run results
+      </button>
     </div>
   ),
 }));
@@ -128,6 +153,20 @@ describe('Runs View :: View', () => {
 
     expect(screen.getByRole('region', { name: 'extraction-result-tab' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'summary-tab' })).not.toBeInTheDocument();
+  });
+
+  test('groups extraction results by default and allows switching to flat rows', async () => {
+    const user = userEvent.setup();
+    render(<RunView run={{ id: 'run-1' } as any} onRemove={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: 'Tabs.ExtractionResult' }));
+
+    expect(screen.getByText('grouped:true')).toBeInTheDocument();
+    expect(screen.queryByText(RunsI18nKey.GroupByTestCase)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Load multi-run results' }));
+    expect(screen.getByText(RunsI18nKey.GroupByTestCase)).toBeInTheDocument();
+    await user.click(screen.getByRole('switch', { name: RunsI18nKey.GroupByTestCase }));
+    expect(screen.getByText('grouped:false')).toBeInTheDocument();
   });
 
   test('calls onRemove with run id from header action', () => {
