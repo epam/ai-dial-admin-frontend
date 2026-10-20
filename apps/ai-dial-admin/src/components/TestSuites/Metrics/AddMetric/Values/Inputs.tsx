@@ -1,4 +1,4 @@
-import { DialLabel, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialSegmentedControl, DialTag, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import AttributeSamplesPreview from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSamplesPreview';
@@ -10,6 +10,7 @@ import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metri
 import { ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
+import { getBindingColumnType, isBindingTypeMismatched } from '../utils';
 import MetricControl from './MetricControl';
 import MetricSectionTabs from './MetricSectionTabs';
 import TypedBindingSelect from './TypedBindingSelect';
@@ -42,6 +43,7 @@ const MetricInputs: FC<Props> = ({
 
   const controlsContent = (
     <div className="flex flex-col gap-4">
+      <InputsHint />
       {fields.map((field) => (
         <MetricInput
           key={field.id}
@@ -60,6 +62,16 @@ const MetricInputs: FC<Props> = ({
   );
 
   return <MetricSectionTabs title={title} schema={schema} controlsContent={controlsContent} />;
+};
+
+const InputsHint: FC = () => {
+  const t = useI18n();
+  return <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.InputsHint)}</p>;
+};
+
+const getExpectedTypeLabel = ({ type, itemsType }: SchemaFieldRow): string => {
+  const label = formatDataTypeLabel(type);
+  return type === 'array' && itemsType ? `${label}<${formatDataTypeLabel(itemsType)}>` : label;
 };
 
 const MetricInput: FC<{
@@ -137,9 +149,13 @@ const MetricInput: FC<{
     });
   }, [testCaseSchema, samples]);
 
+  const responseColumns = useMemo<ResponseColumn[]>(
+    () => (selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : []),
+    [selectedTestSuite],
+  );
+
   const responseOptions = useMemo(() => {
-    const columns: ResponseColumn[] = selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : [];
-    return columns.map((item) =>
+    return responseColumns.map((item) =>
       toTypedSelectOption({
         value: item.name,
         label: item.displayName,
@@ -157,11 +173,31 @@ const MetricInput: FC<{
         },
       }),
     );
-  }, [selectedTestSuite]);
+  }, [responseColumns]);
+
+  const selectedColumnType = getBindingColumnType(binding, testCaseSchema, responseColumns);
+  const hasTypeMismatch = isBindingTypeMismatched(field, binding, testCaseSchema, responseColumns);
+  const expectedTypeLabel = getExpectedTypeLabel(field);
+  const typeMismatchError =
+    hasTypeMismatch && selectedColumnType != null
+      ? t(TestSuitesI18nKey.InputTypeMismatch, {
+          expected: expectedTypeLabel,
+          actual: formatDataTypeLabel(selectedColumnType),
+        })
+      : undefined;
 
   return (
     <div className="flex flex-col gap-1">
-      <DialLabel label={field.name} caption={field.description} required={field.required} />
+      <DialLabel
+        label={
+          <span className="flex items-center gap-2">
+            <span>{field.name}</span>
+            <DialTag label={expectedTypeLabel} className="shrink-0" />
+          </span>
+        }
+        caption={field.description}
+        required={field.required}
+      />
       <div className="w-fit mb-2">
         <DialSegmentedControl
           ariaLabel={field.name}
@@ -186,6 +222,8 @@ const MetricInput: FC<{
           options={responseOptions}
           value={binding?.source.columnName as string | undefined}
           placeholder={selectPlaceholder}
+          invalid={hasTypeMismatch}
+          error={typeMismatchError}
           onChange={onChangeColumn}
         />
       )}
@@ -196,6 +234,8 @@ const MetricInput: FC<{
           options={testCaseOptions}
           value={binding?.source.columnName as string | undefined}
           placeholder={selectPlaceholder}
+          invalid={hasTypeMismatch}
+          error={typeMismatchError}
           onChange={onChangeTestCase}
         />
       )}

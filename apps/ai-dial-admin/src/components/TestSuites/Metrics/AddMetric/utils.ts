@@ -1,11 +1,13 @@
 import { JSONSchema7 } from 'json-schema';
 
-import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
+import { jsonSchemaToFields, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
 import { MetricBinding } from '@/src/models/evaluation/metric';
+import { ResponseColumn, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 import { SYSTEM_FUNCTION_CONDITION_REGEX } from './constants';
+import { isTypeCompatible } from './Values/typedSelectOptions';
 
 export const validateMetricBindings = (
   metricName: string | undefined,
@@ -60,3 +62,47 @@ export const isReservedSystemFunctionCondition = (condition?: string): boolean =
   const trimmed = condition?.trim();
   return !!trimmed && SYSTEM_FUNCTION_CONDITION_REGEX.test(trimmed);
 };
+
+export const getBindingColumnType = (
+  binding: MetricBinding | undefined,
+  testCaseSchema: TestCaseSchema[] = [],
+  responseColumns: ResponseColumn[] = [],
+): string | undefined => {
+  const columnName = binding?.source.columnName;
+  if (columnName == null) {
+    return undefined;
+  }
+  if (binding?.source.$type === MetricBindingType.TestCase) {
+    return testCaseSchema.find((item) => item.name === columnName)?.type;
+  }
+  if (binding?.source.$type === MetricBindingType.Response) {
+    return responseColumns.find((item) => item.name === columnName)?.type;
+  }
+  return undefined;
+};
+
+/** True when the column bound to an input has a type the input does not accept. */
+export const isBindingTypeMismatched = (
+  field: SchemaFieldRow,
+  binding: MetricBinding | undefined,
+  testCaseSchema?: TestCaseSchema[],
+  responseColumns?: ResponseColumn[],
+): boolean => {
+  const columnType = getBindingColumnType(binding, testCaseSchema, responseColumns);
+  return columnType != null && !isTypeCompatible(field.type, columnType);
+};
+
+export const hasInputTypeMismatch = (
+  inputBindings: MetricBinding[],
+  inputSchema?: JSONSchema7,
+  testCaseSchema?: TestCaseSchema[],
+  responseColumns?: ResponseColumn[],
+): boolean =>
+  jsonSchemaToFields(inputSchema, inputSchema).some((field) =>
+    isBindingTypeMismatched(
+      field,
+      inputBindings.find((binding) => binding.property === field.name),
+      testCaseSchema,
+      responseColumns,
+    ),
+  );
