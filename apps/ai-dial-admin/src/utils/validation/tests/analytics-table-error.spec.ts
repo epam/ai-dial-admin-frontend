@@ -4,6 +4,7 @@ import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import {
+  getAnalyticsEnumValueError,
   getAnalyticsEnumValuesError,
   getAnalyticsIdentifierError,
   getAnalyticsLengthError,
@@ -119,5 +120,28 @@ describe('getAnalyticsEnumValuesError', () => {
       text: AnalyticsTablesI18nKey.EnumValueDuplicate,
     });
     expect(getAnalyticsEnumValuesError(['failed', 'Failed'], t)).toBeNull();
+  });
+});
+
+describe('getAnalyticsEnumValueError', () => {
+  test('accepts a value of up to 64 characters, one character included', () => {
+    expect(getAnalyticsEnumValueError('a', t)).toBeNull();
+    expect(getAnalyticsEnumValueError('a'.repeat(64), t)).toBeNull();
+  });
+
+  test('rejects a longer value with the length message', () => {
+    expect(getAnalyticsEnumValueError('a'.repeat(65), t)).toEqual({
+      type: ErrorType.LENGTH,
+      text: ErrorI18nKey.Length,
+    });
+  });
+
+  test('measures the trimmed value, as the service stores it', () => {
+    expect(getAnalyticsEnumValueError(`  ${'a'.repeat(64)}  `, t)).toBeNull();
+  });
+
+  test('accepts an empty or missing value, which the row reports as blank', () => {
+    expect(getAnalyticsEnumValueError('', t)).toBeNull();
+    expect(getAnalyticsEnumValueError(undefined, t)).toBeNull();
   });
 });

@@ -4,6 +4,7 @@ import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { GetItemError } from '@/src/models/error';
 
 interface Props {
   items: string[];
@@ -11,6 +12,7 @@ interface Props {
   filter?: string;
   addTitle?: string;
   addPlaceholder?: string;
+  getItemError?: GetItemError;
 }
 
 // One rendered row: its text plus its position in the authored list, which is what every mutation addresses
@@ -21,7 +23,7 @@ interface VisibleRow {
   index: number;
 }
 
-const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceholder }) => {
+const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceholder, getItemError }) => {
   const newItemsContainer = useRef<HTMLUListElement | null>(null);
 
   // The authored list, and the only thing published upward. The search narrows what renders
@@ -124,6 +126,7 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
             onRemoveItem={onRemoveNewItem}
             index={row.index}
             placeholder={addPlaceholder}
+            getItemError={getItemError}
             onFindItem={findItem}
             onMoveItem={moveItem}
           />

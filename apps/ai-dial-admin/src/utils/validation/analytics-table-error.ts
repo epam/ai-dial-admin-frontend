@@ -6,10 +6,8 @@ import {
   ANALYTICS_IDENTIFIER_PATTERN,
 } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
+import { FieldError, Translate } from '@/src/models/error';
 import { ErrorType } from '@/src/types/error-type';
-
-type Translate = (key: string, args?: Record<string, string | number>) => string;
 
 /**
  * Validates a user-declared analytics identifier (a table or column name) against the backend grammar
@@ -48,6 +46,10 @@ export const getAnalyticsLengthError = (value: string, max: number, t: Translate
   return null;
 };
 
+/** The per-value length rule, shared by the column row and the value-list popup. */
+export const getAnalyticsEnumValueError = (value: string | undefined, t: Translate): FieldError | null =>
+  getAnalyticsLengthError(value ?? '', ANALYTICS_ENUM_VALUE_MAX_LENGTH, t);
+
 /**
  * Validates an Enum column's declared value set against the backend rules (ADAS `TableColumnRules`):
  * {@link ANALYTICS_ENUM_VALUES_MIN}-{@link ANALYTICS_ENUM_VALUES_MAX} values, each non-blank and at most
@@ -74,8 +76,9 @@ export const getAnalyticsEnumValuesError = (values: string[], t: Translate): Fie
     if (!trimmed) {
       return { type: ErrorType.EMPTY, text: t(AnalyticsTablesI18nKey.EnumValueBlank) };
     }
-    if (trimmed.length > ANALYTICS_ENUM_VALUE_MAX_LENGTH) {
-      return { type: ErrorType.LENGTH, text: t(ErrorI18nKey.Length, { number: ANALYTICS_ENUM_VALUE_MAX_LENGTH }) };
+    const lengthError = getAnalyticsEnumValueError(value, t);
+    if (lengthError) {
+      return lengthError;
     }
     if (seen.has(trimmed)) {
       return { type: ErrorType.EXISTING, text: t(AnalyticsTablesI18nKey.EnumValueDuplicate, { value: trimmed }) };

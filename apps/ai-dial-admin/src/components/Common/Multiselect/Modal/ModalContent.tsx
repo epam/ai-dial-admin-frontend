@@ -3,10 +3,12 @@ import { FC, useCallback, useState } from 'react';
 import Search from '@/src/components/Common/Search/Search';
 import DraggableList from '@/src/components/Common/Lists/DraggableList';
 import CheckboxList from '@/src/components/Common/Lists/CheckboxList';
+import { GetItemError } from '@/src/models/error';
 
 interface Props {
   addTitle?: string;
   addPlaceholder?: string;
+  getItemError?: GetItemError;
   items: string[];
   selectedItems: string[];
   draggable?: boolean;
@@ -19,6 +21,7 @@ const MultiselectContentModal: FC<Props> = ({
   selectedItems,
   draggable,
   addPlaceholder,
+  getItemError,
   items,
   setSelectedItems,
   setItems,
@@ -41,6 +44,7 @@ const MultiselectContentModal: FC<Props> = ({
           filter={filter}
           addTitle={addTitle}
           addPlaceholder={addPlaceholder}
+          getItemError={getItemError}
         />
       ) : (
         <CheckboxList
@@ -51,6 +55,7 @@ const MultiselectContentModal: FC<Props> = ({
           filter={filter}
           addTitle={addTitle}
           addPlaceholder={addPlaceholder}
+          getItemError={getItemError}
         />
       )}
     </div>

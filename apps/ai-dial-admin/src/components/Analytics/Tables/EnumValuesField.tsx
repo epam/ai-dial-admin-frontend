@@ -8,6 +8,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { getAnalyticsEnumValueError } from '@/src/utils/validation/analytics-table-error';
 
 interface Props {
   rowId: string;
@@ -19,14 +20,11 @@ interface Props {
 }
 
 /**
- * An Enum column's declared value set, authored in the shared list popup Topics uses, as it is. `draggable`
- * is the point: the declared order becomes each value's id in the physical type, so reordering is a real edit.
+ * An Enum column's declared value set, authored in the shared list popup Topics uses. `draggable` is the point:
+ * the declared order becomes each value's id in the physical type, so reordering is a real edit.
  *
- * - The popup validates each value with the topic rule (2-255 characters). The authoritative check is the row's
- *   `getAnalyticsEnumValuesError` (1-64, distinct), so a value of 65-255 characters passes the popup and is
- *   rejected on the row after Apply.
- * - Its rows register under a shared `topic_` key in `SaveValidationContext`, so the private provider keeps a
- *   stale entry from another list from disabling Apply here.
+ * The popup's rows register under a shared `topic_` key in `SaveValidationContext`, so the private provider keeps a
+ * stale entry from another list from disabling Apply here.
  */
 const EnumValuesField: FC<Props> = ({ rowId, values, errorText, isLabelHidden, disabled, onChange }) => {
   const t = useI18n();
@@ -47,6 +45,7 @@ const EnumValuesField: FC<Props> = ({ rowId, values, errorText, isLabelHidden, d
           allItems={values}
           selectedItems={values}
           errorText={errorText}
+          getItemError={getAnalyticsEnumValueError}
           onChangeItems={onChange}
         />
         {!disabled && <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesOrderHint)}</p>}

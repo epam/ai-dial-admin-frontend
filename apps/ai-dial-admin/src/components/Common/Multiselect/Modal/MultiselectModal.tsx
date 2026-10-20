@@ -7,6 +7,7 @@ import { baseColumnComparator } from '@/src/components/Grid/comparators/base-col
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { GetItemError } from '@/src/models/error';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqual, uniq } from 'lodash';
@@ -20,6 +21,7 @@ interface Props {
   heading?: string;
   addTitle?: string;
   addPlaceholder?: string;
+  getItemError?: GetItemError;
   allItems?: string[];
   draggable?: boolean;
   applyButtonText?: string;
