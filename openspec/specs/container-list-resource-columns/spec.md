@@ -3,23 +3,21 @@
 ## Purpose
 
 Expose CPU, memory, and GPU resource columns on container listing pages so that operators can see and compare per-container resource requests and limits without opening each container's detail view.
-
 ## Requirements
-
 ### Requirement: Resource columns available on container listings
 
-The container listing pages for model-servings, mcp-containers, adapter-containers, application-containers, and interceptor-containers SHALL expose CPU request, CPU limit, memory request, and memory limit columns. The model-servings listing SHALL additionally expose a GPU column. These columns SHALL read from the `Container.resources` sub-object: CPU columns from `resources.requests.cpu` and `resources.limits.cpu`, memory columns from `resources.requests.memory` and `resources.limits.memory`, and the GPU column from `resources.requests['nvidia.com/gpu']`.
+The container listing pages for model-servings and containers (`/containers`) SHALL expose CPU request, CPU limit, memory request, and memory limit columns. The model-servings listing SHALL additionally expose a GPU column. These columns SHALL read from the `Container.resources` sub-object: CPU columns from `resources.requests.cpu` and `resources.limits.cpu`, memory columns from `resources.requests.memory` and `resources.limits.memory`, and the GPU column from `resources.requests['nvidia.com/gpu']`.
 
 #### Scenario: CPU and memory columns appear on every container listing route
 
-- **WHEN** a user navigates to `/model-servings`, `/mcp-containers`, `/adapter-containers`, `/application-containers`, or `/interceptor-containers` and opens the column panel
+- **WHEN** a user navigates to `/model-servings` or `/containers` and opens the column panel
 - **THEN** the panel SHALL list options for "CPU request", "CPU limit", "Memory request", and "Memory limit"
 
 #### Scenario: GPU column appears only on model-servings
 
 - **WHEN** a user opens the column panel on `/model-servings`
 - **THEN** the panel SHALL list a "GPU" option in addition to the CPU and memory options
-- **WHEN** a user opens the column panel on `/mcp-containers`, `/adapter-containers`, `/application-containers`, or `/interceptor-containers`
+- **WHEN** a user opens the column panel on `/containers`
 - **THEN** the panel SHALL NOT list a "GPU" option
 
 #### Scenario: Resource columns are absent from deployment-images
@@ -46,7 +44,7 @@ All five resource columns SHALL be hidden by default. A user SHALL be able to to
 #### Scenario: Per-route persistence
 
 - **WHEN** a user enables "Memory request" on `/model-servings`
-- **THEN** the column visibility on `/mcp-containers`, `/adapter-containers`, `/application-containers`, and `/interceptor-containers` SHALL be unchanged
+- **THEN** the column visibility on `/containers` SHALL be unchanged
 
 ### Requirement: Resource values displayed in fixed millicore and megabyte units
 
@@ -99,3 +97,4 @@ Each resource column SHALL be sortable by AG Grid's default numeric sort, operat
 
 - **WHEN** the user opens the "GPU" filter and enters `1`
 - **THEN** the grid SHALL show rows whose `resources.requests['nvidia.com/gpu']` formatted value contains `1`, e.g. `"1"`, `"10"`, `"21"`
+

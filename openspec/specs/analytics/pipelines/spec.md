@@ -703,9 +703,10 @@ SHALL present it in two places according to what the reader does with it.
 
 For an `enrich` pipeline the registry records almost none of the execution position, because the runner owns
 it. The **runtime view** is the authority there, and this requirement's sibling governs how it is presented.
-The registry's own state SHALL still be presented for such a pipeline in the members the runner does not
-report — the materialized-through position, the drained-at probe and the cursor position — so that no member
-the service does report is dropped on the way.
+The registry's own state SHALL still be presented for an `enrich` pipeline that calls a model in the members
+the runner does not report — the materialized-through position, the drained-at probe and the cursor
+position — so that no member the service does report is dropped on the way. A SQL enrichment and an
+`aggregate` pipeline present their position as Data up to instead, and no state group.
 
 The **three states an operator acts on** — the last failure, a window held short by an enrichment the
 pipeline reads, and an output a re-derived input has left behind — SHALL be presented as **alerts**, above
@@ -719,11 +720,34 @@ raising them while it is read.
 Everything the state reports SHALL be presented in the **Runtime** tab, grouped by the question each
 group answers:
 
-- **Schedule** — when it last ran and when it next runs.
-- **State** — how far behind its input it is, whether it is working through a backlog, the cursor
-  position (version and identity), the materialized-through position (version and identity), and when it
-  was last drained. Named for what it is: a pipeline is a standing process rather than a job with an
-  end, so none of these counts towards a finish and "progress" would promise one.
+- **Schedule** — when it last ran and when it next runs. The last run SHALL be labelled **Last run**
+  whichever service reports it. Where the runner and the registry both report one, the runner's SHALL be
+  presented and the other SHALL NOT be drawn under the same label.
+- **Progress** — in this order, each row only for the kinds named:
+  - **Status**, for every kind, reading **Up to date** or **Catching up** from whether the last run left
+    input behind. While catching up it SHALL carry the last moment the pipeline was up to date —
+    **Catching up (last up to date …)** — where one is known: the runner's caught-up time for an
+    enrichment, falling back to the registry's drained-at probe for a SQL enrichment. An aggregate states a
+    bare Catching up. Up to date carries no date: it would repeat the status.
+  - **Data up to**, for an `aggregate` pipeline and an `enrich` pipeline whose transform is SQL — the moment
+    up to which the output has been computed, converted from the epoch-millisecond version the registry
+    records (the cursor version for an aggregate, the materialized-through version for a SQL enrichment) to
+    the reader's local time. It SHALL NOT be derived from `lag_seconds`, which is a difference against the
+    moment of the read and says nothing about which data the output covers.
+  - **Last write**, for an `enrich` pipeline — when it last wrote rows, from the runner. The runner holds it
+    in memory, so where its view omits it beside other progress the row SHALL read **Not recorded since
+    restart** rather than be left out. An aggregate SHALL NOT present it: its writes are its runs, which
+    Last run already dates.
+
+  The lag (`lag_seconds`) SHALL NOT be presented for any kind of pipeline. A model-calling enrichment's
+  reader acts on the status and the queue, and a seconds figure measured against the moment of the read
+  reads as a fact about the data when it is a fact about the read.
+- **State** — for an `enrich` pipeline that calls a model only: the cursor position (version and
+  identity), the materialized-through position (version and identity), and when it was last drained.
+  Named for what it is: a pipeline is a standing process rather than a job with an end, so none of these
+  counts towards a finish and "progress" would promise one. An `aggregate` pipeline and a SQL enrichment
+  SHALL NOT present this group: the position that matters to their reader is the one Data up to states,
+  and the identity beside it is an internal key that answers no question they ask.
 
 Where the runtime view reports the same question for an `enrich` pipeline, the view SHALL be the one
 presented and the registry's group SHALL NOT be drawn a second time beside it. Two cards stating the
@@ -738,7 +762,6 @@ card's worth of empty space, while the failures card beneath them was full width
 
 A card SHALL carry no rim. It is a raised layer against the panel behind it, and that fill is already
 its boundary; a border on top of it draws the same box twice.
-
 
 - **Failures and notices** — when the last run failed. This is the registry's own verdict on a whole
   run, which is a different kind of fact from the per-row dead letters the failures card lists: the
@@ -829,9 +852,71 @@ State SHALL NOT be sent when the pipeline is saved.
 
 - **WHEN** a full admin opens the `Runtime` tab of an `aggregate` pipeline that has run
 - **THEN** its last run and next run are presented in the schedule card
-- **AND** its lag, backlog, cursor position, materialized-through position and drained-at are presented
-  in the state card
-- **AND** the two cards are stacked, each the full width
+- **AND** its Data up to and its status are presented in the progress card
+- **AND** no state card is presented
+- **AND** the cards are stacked, each the full width
+
+#### Scenario: An aggregate states the time its output covers
+
+- **GIVEN** an `aggregate` pipeline whose cursor version is an epoch-millisecond value
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** a row labelled Data up to states that moment in the reader's local time
+- **AND** no row labelled Behind its input is presented
+
+#### Scenario: A SQL enrichment states the time its output covers
+
+- **GIVEN** an `enrich` pipeline whose transform is SQL and whose registry state carries a
+  materialized-through version
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** a row labelled Data up to states that moment in the reader's local time
+- **AND** it is not derived from the lag the runner reports
+- **AND** no state card is presented
+
+#### Scenario: A model-calling enrichment keeps its position and states no lag
+
+- **GIVEN** an `enrich` pipeline whose transform calls a model, reported with a lag
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no row labelled Behind its input, and no row labelled Data up to, is presented
+- **AND** the state card presents its cursor and materialized-through positions
+
+#### Scenario: Catching up is dated by the last time it was up to date
+
+- **GIVEN** an enrichment the runner reports as catching up, with a caught-up time
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the status reads Catching up, followed by that time in the reader's local time
+- **AND** no separate caught-up row is presented
+
+#### Scenario: A SQL enrichment falls back to its drained-at probe
+
+- **GIVEN** a SQL enrichment that is catching up, whose runner reports no caught-up time and whose registry
+  state carries a drained-at
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the status reads Catching up, followed by the drained-at time
+
+#### Scenario: A last write the runner lost on restart is said in words
+
+- **GIVEN** an enrichment whose runner view reports progress but no last write
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** a row labelled Last write reads Not recorded since restart
+
+#### Scenario: An aggregate presents no last write
+
+- **GIVEN** an `aggregate` pipeline
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no row labelled Last write is presented
+
+#### Scenario: Catching up and up to date are stated for every kind
+
+- **GIVEN** a pipeline of any kind that reports whether the last run left input behind
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** a row labelled Status reads Catching up where input was left behind and Up to date where none was
+- **AND** no row labelled Backlog is presented
+
+#### Scenario: One last run is presented
+
+- **GIVEN** an `enrich` pipeline for which the runner and the registry both report a last run
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** one row labelled Last run is presented, carrying the runner's value
 
 #### Scenario: The registry's schedule is not drawn beside the runner's
 
@@ -842,8 +927,8 @@ State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: Registry members the runner does not report are still presented
 
-- **GIVEN** an `enrich` pipeline whose registry state carries a materialized-through position and a
-  drained-at probe
+- **GIVEN** an `enrich` pipeline that calls a model, whose registry state carries a materialized-through
+  position and a drained-at probe
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** both are presented
 - **AND** the runtime service's own groups are presented beside them
@@ -851,7 +936,7 @@ State SHALL NOT be sent when the pipeline is saved.
 #### Scenario: The measured values are no longer among the read-only facts
 
 - **WHEN** a pipeline that has run is opened on `Properties`
-- **THEN** its last run, next run, lag, backlog and drained-at are not presented among the read-only facts
+- **THEN** its last run, next run, lag, status and drained-at are not presented among the read-only facts
 - **AND** its grain key, version column, generation, created and updated still are
 
 #### Scenario: Drained-at is not presented as a sign of life
@@ -904,10 +989,19 @@ State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: A running enrichment pipeline is not called never-run
 
-- **GIVEN** a pipeline the service reports with a materialized-through position and no `last_run_at`
+- **GIVEN** an `enrich` pipeline that calls a model, which the service reports with a materialized-through
+  position and no `last_run_at`
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** the tab does not state that the pipeline has not run yet
 - **AND** its state card is presented
+
+#### Scenario: A pipeline whose state records only a position is not called never-run
+
+- **GIVEN** an `aggregate` pipeline or a SQL enrichment whose state carries a position or a drained-at
+  probe and nothing else
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab does not state that the pipeline has not run yet
+- **AND** no state card is presented
 
 #### Scenario: A group with nothing to report is not drawn
 
@@ -1199,19 +1293,22 @@ matching every expression the service configures. A five-field expression SHALL 
 it parses as a *different* schedule under a six-field reader, so accepting one silently shifts the schedule
 rather than failing.
 
-The control SHALL offer named presets alongside a custom expression. A custom expression SHALL be validated
-for its field count before submission, and an invalid expression SHALL block submission with a message naming
-the six-field requirement.
+The control SHALL be **one field**: a text input that always holds the expression, with a **Presets** menu
+beside it. Choosing a preset SHALL write its expression into the input, and any expression the author types
+SHALL be accepted there directly — there is no separate Custom mode and no second input that appears on
+demand, and no caption under the input. The menu SHALL be a button that carries the word **Presets** as its
+label, not an icon alone. The expression SHALL be validated for its field count before submission, and an
+invalid expression SHALL block submission with a message naming the six-field requirement. The field SHALL
+be labelled **Schedule**.
 
-For an **enrichment** pipeline the control SHALL also offer an **Every minute** preset, listed first. It
-SHALL be the selection whenever the cron is absent or fires once a minute at a fixed second — `N * * * * *`
-with `N` from 0 to 59 — because that is the shape of the default the service stores, at a second it
-derives from the pipeline name. Presenting such a cron as a raw custom expression would make the
-service's own default read as something the author typed. Choosing Every minute SHALL keep a cron that
-already has that shape and SHALL otherwise clear the cron, so the request omits it and the service derives
-the second. The control SHALL NOT mark the cron as required for an enrichment pipeline.
+For an **enrichment** pipeline the Presets menu SHALL also offer an **Every minute** preset, listed first.
+An absent cron SHALL leave the input empty, with Every minute as its placeholder. A cron that fires once a
+minute at a fixed second — `N * * * * *` with `N` from 0 to 59 — is the shape of the default the service
+stores, at a second it derives from the pipeline name, and SHALL be shown as the expression it is. Choosing Every minute SHALL keep a cron that already has that shape and
+SHALL otherwise clear the cron, so the request omits it and the service derives the second. The control
+SHALL NOT mark the cron as required for an enrichment pipeline.
 
-For an **aggregate** pipeline the control SHALL NOT offer Every minute and SHALL mark the cron as required:
+For an **aggregate** pipeline the Presets menu SHALL NOT offer Every minute and SHALL mark the cron as required:
 the service never defaults an aggregate's cron, so a preset that sends none would leave the pipeline
 unarmable, and an aggregate's refresh cost scales with its cadence.
 
@@ -1220,20 +1317,33 @@ This control SHALL be used for an aggregate pipeline's schedule as well, whose t
 
 #### Scenario: A preset yields a six-field expression
 
-- **WHEN** the user selects a named schedule preset other than Every minute
-- **THEN** the value submitted as the trigger's cron has six fields
+- **WHEN** the user chooses a preset other than Every minute from the Presets menu
+- **THEN** the input holds that preset's six-field expression
+- **AND** the value submitted as the trigger's cron has six fields
+
+#### Scenario: Any expression is typed into the one input
+
+- **GIVEN** a pipeline whose cron equals none of the presets
+- **WHEN** its page is opened
+- **THEN** the input holds the expression
+- **AND** no second input, no mode selection and no caption is presented
+
+#### Scenario: The presets menu is labelled
+
+- **WHEN** a schedule is edited
+- **THEN** the control beside the input is a button labelled Presets
 
 #### Scenario: A service-defaulted cron reads as Every minute
 
 - **GIVEN** an enrichment pipeline whose stored cron fires once a minute at a fixed second
 - **WHEN** its page is opened
-- **THEN** the cron control presents Every minute as the selection
-- **AND** no custom expression input is presented
+- **THEN** the input holds the stored expression, not a caption
+- **AND** choosing Every minute from the Presets menu leaves that cron unchanged
 
 #### Scenario: An enrichment schedule with no cron reads as Every minute
 
 - **WHEN** an enrichment pipeline's trigger kind is switched to `schedule` and it has no cron
-- **THEN** the cron control presents Every minute as the selection
+- **THEN** the input is empty and its placeholder reads Every minute
 - **AND** the cron is not marked as required
 
 #### Scenario: Choosing Every minute leaves the second to the service
@@ -1245,17 +1355,17 @@ This control SHALL be used for an aggregate pipeline's schedule as well, whose t
 #### Scenario: Every minute is not offered for an aggregate
 
 - **WHEN** an aggregate pipeline's schedule is edited
-- **THEN** Every minute is not among the presets
+- **THEN** Every minute is not among the presets in the Presets menu
 - **AND** the cron is marked as required
 
 #### Scenario: A five-field custom expression is rejected
 
-- **WHEN** the user enters a five-field expression
+- **WHEN** the user types a five-field expression into the input
 - **THEN** the control reports it as invalid and submission is blocked
 
 #### Scenario: A valid custom expression is accepted
 
-- **WHEN** the user enters a well-formed six-field expression
+- **WHEN** the user types a well-formed six-field expression into the input
 - **THEN** the control accepts it and submission proceeds
 
 #### Scenario: An aggregate pipeline uses the same control
@@ -1853,173 +1963,6 @@ controls SHALL withdraw again once the document parses.
 - **THEN** the page continues to present the document and the controls
 - **AND** saving reports the service's refusal rather than failing in the console
 
-### Requirement: Pipeline detail view is organized into Properties, Runtime, Groups and Audit tabs
-
-The pipeline detail view (`/pipelines/{name}`) SHALL present its content under a horizontal tab strip whose
-tabs are **Properties**, **Runtime**, **Groups** and **Audit**, in that order. `Properties` SHALL be the selected
-tab when the view is first opened.
-
-The **Runtime** tab SHALL be present only for a caller who is a full admin. The runtime it reports is
-controlled through a service that authorizes every one of its endpoints, reads included, on full-admin
-rights and offers no consumer-facing read — so for anyone else there is nothing to present read-only and
-the tab is withheld in full rather than shown empty.
-
-The **Groups** tab SHALL be present only under the conditions "The Groups tab is offered only for a group
-pipeline the runner holds groups for" states. Where it is absent the remaining tabs keep their order.
-
-The **Runtime tab SHALL carry an error mark** once the dead-lettered failures have been read and there
-is at least one, with their number stated in text beside the strip for a reader who cannot see it. A
-reader who opens the view on `Properties` would otherwise have to open the tab to discover there is
-anything to act on. No other tab carries one: the state the Runtime tab reports is a position rather
-than a fault, the Groups tab's states are positions as well, and the Audit tab's activity list is unbounded
-and grows with every edit.
-
-The identity row — the enabled-state badge, the runtime status chip, the pipeline name, its copy control,
-the `Discard` / `Save` change bar, the enable/disable control, the delete control and the JSON editor
-toggle — SHALL render **above** the tab strip, presented whichever tab is
-selected, under the permission and pending-edit conditions the "The pipeline detail header states the
-pipeline's status before its name" and "Runtime status is stated beside configuration status"
-requirements state.
-
-The **runtime alerts** — the last failure, the clamp and the required rebuild, as "A pipeline's runtime
-state is presented read-only" states them — SHALL render between the identity row and the tab strip, and
-SHALL therefore be presented whichever tab is selected. They are true of the pipeline rather than of the
-tab in view: filed under one tab they vanished the moment the reader opened another, which is exactly
-where a reader goes to find out what a failing pipeline has been doing. The Runtime tab restates the same
-three conditions as dated facts beside the values they qualify; the alert is the signal, the fact is the
-record, and the tab is not a substitute for the alert.
-
-The **pause banner** — the pipeline's own pause, as "A paused pipeline states its pause above the tab
-strip" states it — SHALL render in the same place, between the identity row and the tab strip, above the
-runtime alerts. A pipeline that is not consuming its input is the first thing a reader needs to know,
-including a reader of the alerts: a failure reported by a run that no longer happens is read differently
-from one reported by a pipeline still trying.
-
-Everything else the frame presents below the identity row — the read-only facts, the scope, the trigger and
-the kind's transform section — SHALL render inside the **Properties** tab where a tab strip is rendered,
-and directly beneath the identity row where it is not.
-
-Selecting another tab SHALL NOT discard a pending edit. The draft the fields and the document share SHALL
-survive a tab switch, and the change bar SHALL stay offered from any tab, so a caller who reads the history,
-the runtime or the groups mid-edit does not lose the edit by reading it.
-
-The JSON editor and the tab strip SHALL NOT be presented together. Enabling the editor withdraws the tab
-strip along with everything else below the identity row — the runtime alerts and the pause banner
-included, since the document on screen is a draft the alerts may already contradict and which says nothing
-about the runner — as "The pipeline JSON editor takes the whole view, and an unsaved change closes the way
-out" already requires, and leaving the editor SHALL restore the strip with `Properties` selected. The
-toggle itself is unchanged and stays offered to every caller.
-
-The tab strip SHALL be rendered only when `featureFlags.analyticsEnabled` is true. With analytics disabled
-the detail view SHALL render the Properties content directly, with no tab strip, no Runtime tab, no Groups
-tab and no Audit tab, and SHALL issue no request to the analytics activity feed and none to the runtime
-service. The route itself is not guarded on that flag — `/pipelines/{name}` guards only on
-`isAnalyticsForbidden()`, which is an authorization check against the analytics service and not the client
-feature flag, so a bookmarked or pasted link still opens this view on an analytics-disabled installation and
-the tab condition is what keeps it from issuing either request.
-
-There SHALL be **no** pipeline-status condition on the Audit tab, unlike the table detail view's, which
-additionally requires an `ACTIVE` table. A pipeline has no registration lifecycle to mirror one: the service
-creates it whole in a single `POST /v1/pipelines`, so every registered pipeline already carries at least a
-`Create` activity. `enabled` is a pipeline's runtime toggle and not a registration state — a disabled
-pipeline is fully registered, and disabling or enabling it is itself an audited `Update` — so the Audit tab
-SHALL be offered on a disabled pipeline exactly as on an enabled one.
-
-The Audit tab SHALL require no permission beyond the one that already allows reading the pipeline. It SHALL
-NOT be gated on full-admin rights, which the save, the enable/disable control, the Runtime tab and the Groups
-tab are.
-
-#### Scenario: Properties is the selected tab when the pipeline detail view opens
-
-- **WHEN** a full admin opens the detail view of a registered pipeline
-- **THEN** a tab strip showing `Properties`, `Runtime` and `Audit` is rendered
-- **AND** `Properties` is the selected tab
-- **AND** the read-only facts, the trigger and the kind's transform section are shown beneath it
-
-#### Scenario: The Groups tab sits between Runtime and Audit
-
-- **GIVEN** a group pipeline the runner holds at least one group for
-- **WHEN** a full admin opens its detail view
-- **THEN** the tab strip shows `Properties`, `Runtime`, `Groups` and `Audit`, in that order
-
-#### Scenario: The Runtime tab is withheld from a caller who is not a full admin
-
-- **GIVEN** a caller who is not a full admin
-- **WHEN** the user opens the pipeline detail view
-- **THEN** the tab strip carries `Properties` and `Audit` only
-- **AND** no runtime state is presented anywhere on the page
-
-#### Scenario: The Runtime tab marks that something has failed
-
-- **GIVEN** a model-calling enrichment the runtime service reports dead-lettered failures for
-- **WHEN** a full admin opens the detail view on `Properties`
-- **THEN** the `Runtime` tab carries an error mark and the count is stated beside the strip
-- **AND** neither the `Properties`, the `Groups` nor the `Audit` tab carries one
-
-#### Scenario: The identity row and its actions stay above the tab strip
-
-- **GIVEN** the detail view of a registered pipeline
-- **WHEN** the user switches from `Properties` to `Audit`
-- **THEN** the enabled-state badge, the pipeline name, its copy control and the enable/disable control
-  remain rendered above the tab strip, unchanged
-
-#### Scenario: A runtime alert is presented on either tab
-
-- **GIVEN** the detail view of a pipeline whose read enrichment has been re-derived beneath it
-- **WHEN** the user switches from `Properties` to `Audit`
-- **THEN** the alert stays presented, above the tab strip
-
-#### Scenario: A pause banner is presented on every tab
-
-- **GIVEN** the detail view of a paused pipeline
-- **WHEN** the user switches from `Properties` to `Audit`
-- **THEN** the pause banner stays presented, above the tab strip
-- **AND** it is presented above the runtime alerts
-
-#### Scenario: The Audit tab is offered on a disabled pipeline
-
-- **GIVEN** a pipeline whose `enabled` is false
-- **WHEN** the user opens its detail view
-- **THEN** the tab strip is rendered and the `Audit` tab is present and selectable
-
-#### Scenario: The Audit tab needs no permission beyond reading the pipeline
-
-- **GIVEN** a caller who is not a full admin, and who is therefore offered no save and no
-  enable/disable control
-- **WHEN** the user opens the pipeline detail view
-- **THEN** the `Audit` tab is present and selectable
-
-#### Scenario: A pending field edit survives a switch to the Audit tab
-
-- **GIVEN** the detail view of a pipeline with one field edited and the `Discard` / `Save` bar offered
-- **WHEN** the user selects `Audit` and then `Properties` again
-- **THEN** the edited value is still presented
-- **AND** the `Discard` / `Save` bar is still offered
-
-#### Scenario: A pending field edit survives a switch to the Runtime tab
-
-- **GIVEN** the detail view of a pipeline with one field edited and the `Discard` / `Save` bar offered
-- **WHEN** a full admin selects `Runtime` and then `Properties` again
-- **THEN** the edited value is still presented
-- **AND** the `Discard` / `Save` bar is still offered
-
-#### Scenario: The JSON editor and the tab strip are not presented together
-
-- **GIVEN** the detail view of a registered pipeline
-- **WHEN** the caller enables the JSON editor
-- **THEN** the pipeline is presented as one JSON document
-- **AND** no tab strip is rendered
-- **AND** no runtime alert and no pause banner are presented
-- **AND** turning the editor off again renders the tab strip with `Properties` selected
-
-#### Scenario: Audit tab absent when analytics is disabled
-
-- **GIVEN** `featureFlags.analyticsEnabled` is false
-- **WHEN** the user reaches `/pipelines/{name}` by a direct link
-- **THEN** no tab strip, no `Runtime` tab, no `Groups` tab and no `Audit` tab are rendered
-- **AND** the read-only facts, the trigger and the transform section are shown directly
-- **AND** no request is issued to the analytics activity feed or to the runtime service
-
 ### Requirement: Pipeline Audit tab lists the pipeline's own activities
 
 The global Activity Audit page's own `Analytics` view — the third option in its `View` selector, its
@@ -2269,12 +2212,14 @@ These members belong to the enrichment kind and SHALL NOT be presented for an ag
 
 ### Requirement: The aggregate section presents group keys and measures
 
-An aggregate pipeline's transform is a pair: what its rows are grouped by, and what is computed for each
-group. The console SHALL present both, and SHALL present no freshness control — the service accepts no
-such member.
+An aggregate pipeline's declaration is a pair in Form mode: what its rows are grouped by, and what is computed
+for each group. In Form mode the console SHALL present both, and SHALL present no freshness control — the
+service accepts no such member. In SQL mode the declaration is one statement and the pair is not presented; see
+"An aggregate pipeline is declared in Form mode or SQL mode".
 
-At least one measure SHALL be required before an aggregate pipeline can be submitted: a rollup that
-computes nothing has no meaning to fall back on.
+In Form mode at least one measure SHALL be required before an aggregate pipeline can be submitted: a rollup that
+computes nothing has no meaning to fall back on. In SQL mode no measure is required of the console, and the
+statement is the service's to judge.
 
 Group keys SHALL NOT be required. When none is declared the service derives them from the target's
 ordering key, provided each key is a column of the input under the same name, and echoes the derived
@@ -2283,7 +2228,7 @@ than presenting the emptiness as an omission.
 
 #### Scenario: The two parts are presented together
 
-- **WHEN** an aggregate pipeline is opened
+- **WHEN** an aggregate pipeline in Form mode is opened
 - **THEN** its group keys and measures are presented
 
 #### Scenario: No freshness control is presented
@@ -2293,14 +2238,19 @@ than presenting the emptiness as an omission.
 
 #### Scenario: Group keys may be left empty
 
-- **WHEN** an aggregate pipeline is submitted with no group key and at least one measure
+- **WHEN** an aggregate pipeline in Form mode is submitted with no group key and at least one measure
 - **THEN** submission is offered
 - **AND** the section states that the keys are derived from the target
 
 #### Scenario: A measure is still required
 
-- **WHEN** an aggregate pipeline is submitted with no measure
+- **WHEN** an aggregate pipeline in Form mode is submitted with no measure
 - **THEN** submission is blocked and the missing part is named
+
+#### Scenario: No measure is required in SQL mode
+
+- **WHEN** an aggregate pipeline in SQL mode is submitted
+- **THEN** submission is not blocked for want of a measure
 
 ### Requirement: The create modal registers a pipeline and leaves the declaration to its page
 
@@ -3373,8 +3323,12 @@ moving through it at this moment. Neither service reports that, and the console 
 The state the registry cannot show is an enabled pipeline the runner has not taken on: it is presented by
 the registry exactly like a healthy one, while nothing is driving it — the runner either refused the
 declaration as one it cannot execute, or has not synced since it started. The console SHALL state it as a
-**warning above the tab strip**, not as a chip alone, and SHALL say both possible causes, since it cannot
-tell them apart from outside. It SHALL NOT offer to pause such a pipeline: there is no work to withhold.
+**warning inside the `Runtime` tab**, in the warning treatment rather than the error one, and SHALL say
+both possible causes, since it cannot tell them apart from outside. It SHALL NOT sit above the tab strip:
+right after a pipeline is enabled or saved the runner has ordinarily not picked it up yet, so a page-level
+alert raised a fault on every enable. The chip beside the name SHALL still state that the pipeline is not
+running, and the copy SHALL say that a minute's delay after enabling is normal and that its persisting
+means the service cannot execute the declaration. It SHALL NOT offer to pause such a pipeline: there is no work to withhold.
 
 On the listing the two reads SHALL fail **independently**. The pauses are load-bearing: without them the
 console states no runtime at all. The cache listing only adds `not running`, so where it is missing — an
@@ -3445,7 +3399,8 @@ never disabled.
 
 - **GIVEN** an enabled `enrich` pipeline the runtime service answers as one it does not hold
 - **WHEN** a full admin opens its detail view
-- **THEN** a warning states that nothing is running the pipeline
+- **THEN** a warning on the `Runtime` tab states that nothing is running the pipeline
+- **AND** nothing above the tab strip states it
 - **AND** it states that the service either cannot execute the declaration or has not picked it up yet
 - **AND** no pause control is offered
 
@@ -3610,7 +3565,9 @@ that run, and the request SHALL carry the run rather than a path: the service re
 names both the live path and a run, and a run's items are backfill items by definition.
 
 The grid SHALL present, for each failure: when it failed, as an age with the exact time reachable; the
-stage, marked by a colour and named; the failure message on one line; and, for a retryable item, a
+stage, marked by a colour and named, with an info icon beside the name that carries a plain-language
+description of what that stage does, and the same description in full in the row's detail — the icon is a
+mouse affordance and the detail is what a keyboard reader reaches; the failure message on one line; and, for a retryable item, a
 re-run control. A not-retryable row SHALL offer no control in its place rather than a disabled one.
 
 Rows SHALL be ordered newest first, as the service returns them.
@@ -3626,6 +3583,13 @@ Activating a row anywhere but on its **two control cells** SHALL open or close t
 chevron and the re-run control are excluded, each because the cell carries its own action: the service
 that draws the grid listens for a click on the row itself, below the point where the console's own
 handlers run, so a chevron left in both toggles twice and cancels itself out.
+
+#### Scenario: A stage is described
+
+- **GIVEN** a failure at any stage the service reports
+- **WHEN** the reader hovers the info icon beside the stage, or opens the row's detail
+- **THEN** a description of what that stage does and what a failure there means is presented
+- **AND** the description is the same wherever the stage is named
 
 #### Scenario: The failures grid opens inside the card
 
@@ -3934,16 +3898,18 @@ view request for one and SHALL present the registry's state for it as this requi
 
 Each group the service reports SHALL be presented as a card, in the tab's existing card treatment:
 
-- **Schedule** — when a live fire last committed, when the next fire is due or that one is running now, how
+- **Schedule** — when a live fire last committed (labelled **Last run**), when the next fire is due or that one is running now, how
   many consecutive fires have failed, and the last failure with its time.
-- **Progress** — how far behind its input the scan is, whether the last fire left input behind, when a fire
-  last ended with nothing more to read, and when the pipeline last wrote rows.
+- **Progress** — whether the last fire left input behind (stated as Up to date or Catching up, the latter
+  dated by when a fire last ended with nothing more to read), for a SQL enrichment the moment its output has
+  been computed up to, as the registry's state states it, and when the pipeline last wrote rows. The lag the
+  view carries SHALL NOT be presented.
 - **Queue** — the work items computing and the computed items awaiting a write.
 - **Groups** — the dirty groups, split into ready, waiting on their idle window, and blocked by the daily
   cost ceiling.
 - **Spend today** — the successful calls, the tokens, and the failed calls, for the current UTC day.
 
-Where both services describe one fact — the lag, the backlog, the next fire — the runner's answer SHALL be
+Where both services describe one fact — the backlog, the next fire — the runner's answer SHALL be
 presented and the registry's SHALL NOT be drawn beside it: two rows stating one pipeline's schedule from two
 services sampled moments apart invite a reader to treat the difference as a fact about the pipeline. Where
 only one of them has an answer, that answer SHALL be presented whichever service it came from. The choice
@@ -3960,9 +3926,10 @@ present group SHALL likewise be left out rather than stated as zero or as an em 
 `running_now` SHALL be presented in place of the next fire rather than beside it: the service omits the next
 fire while a fire is running, and the two never both apply.
 
-Lag SHALL NOT be presented as a measure of whether the pipeline's rows are written. The scan advances when
-work is enqueued, not when it is written, so a lag of zero with items still computing is an ordinary state.
-Where the service reports a queue, the console SHALL present it in the tab so that the two are read together.
+Up to date SHALL NOT be presented as a measure of whether the pipeline's rows are written. The scan advances
+when work is enqueued, not when it is written, so an up-to-date scan with items still computing is an
+ordinary state. Where the service reports a queue, the console SHALL present it in the tab so that the two are
+read together, and the status SHALL carry a hint saying so.
 
 The console SHALL NOT present a health verdict derived from these values, and SHALL NOT present a stall
 flag: the service computes one for its own log and deliberately does not serve it, calling it a heuristic.
@@ -3990,7 +3957,8 @@ box with no explanation in it.
   failures
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** the schedule and progress cards are presented
-- **AND** no queue, spend-today, groups or failures card is presented
+- **AND** the progress card states Data up to rather than the lag
+- **AND** no queue, spend-today, groups, state or failures card is presented
 - **AND** none of them is presented as a zero
 
 #### Scenario: A group pipeline presents its readiness counts
@@ -4008,9 +3976,9 @@ box with no explanation in it.
 
 #### Scenario: A caught-up scan with queued work does not read as finished
 
-- **GIVEN** a pipeline the service reports with a lag of zero and work still computing
+- **GIVEN** a pipeline the service reports as up to date with work still computing
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** the progress card states the lag
+- **THEN** the progress card states Up to date, with a hint that the queue is read beside it
 - **AND** the queue card states the computing items
 - **AND** neither is presented as evidence that the pipeline's rows are written
 
@@ -4021,7 +3989,7 @@ box with no explanation in it.
 - **WHEN** a full admin opens that pipeline's `Runtime` tab
 - **THEN** none of the three is presented
 - **AND** neither a zero nor an em dash is presented in their place
-- **AND** the lag and the consecutive-failure count the service did report are presented
+- **AND** the last write and the consecutive-failure count the service did report are presented
 
 #### Scenario: No stall verdict is presented
 
@@ -4046,17 +4014,17 @@ box with no explanation in it.
 
 #### Scenario: A fact only the registry still knows is presented
 
-- **GIVEN** a runner restarted since the pipeline last fired, so its view carries no lag and no schedule,
-  while the registry still records both
+- **GIVEN** a runner restarted since the pipeline last fired, so its view carries no backlog flag and no
+  schedule, while the registry still records both
 - **WHEN** a full admin opens that pipeline's `Runtime` tab
-- **THEN** the lag and the schedule the registry recorded are presented
+- **THEN** the status and the schedule the registry recorded are presented
 - **AND** neither is presented twice
 
 #### Scenario: A fact both services report is presented once
 
-- **GIVEN** a pipeline for which the runner and the registry both report a lag
+- **GIVEN** a pipeline for which the runner and the registry both report whether input was left behind
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** one lag is presented, the runner's
+- **THEN** one status is presented, the runner's
 - **AND** the registry's is not presented beside it
 
 #### Scenario: A runner holding a pipeline it has not fired says so
@@ -4111,7 +4079,8 @@ there is no work to withhold only where the runner holds nothing.
 
 - **GIVEN** an enabled `enrich` pipeline the runtime service answers as not found
 - **WHEN** a full admin opens its detail view
-- **THEN** a warning states that nothing is running the pipeline
+- **THEN** a warning on the `Runtime` tab states that nothing is running the pipeline
+- **AND** nothing above the tab strip states it
 - **AND** it states that the service either cannot execute the declaration or has not picked it up yet
 - **AND** no pause control is offered
 - **AND** no error notification is raised
@@ -4664,3 +4633,1112 @@ longer tracked.
 - **WHEN** it answers
 - **THEN** an error notification carries the service's message and request id
 - **AND** the groups are read again
+
+### Requirement: An aggregate pipeline is declared in Form mode or SQL mode
+
+An aggregate pipeline's declaration SHALL be authored in one of two modes: **Form**, the group keys and measures
+editors, or **SQL**, one `INSERT INTO <target> (<columns>) SELECT …` statement. The service accepts exactly one
+of the two for a pipeline, so the console SHALL present the choice as a group of radio buttons in the aggregate section and
+SHALL present only the active mode's editor.
+
+The mode of an opened pipeline SHALL follow its declaration: a pipeline served with `sql` opens in SQL mode, every
+other aggregate opens in Form mode. A new aggregate with nothing declared SHALL open in Form mode.
+
+Switching mode SHALL discard the other mode's authored content from the draft, because carrying both would be a
+declaration the service refuses. When the mode being left holds authored content, the switch SHALL be confirmed
+before it discards that content. The console SHALL NOT convert one mode's content into the other.
+
+The scope of the mode choice is the aggregate section. The source, the target and the schedule remain presented
+in both modes. The **filter** belongs to Form mode: a SQL declaration carries its own `WHERE`, and the service
+refuses a `filter` beside `sql`, so the filter field SHALL NOT be presented in SQL mode.
+
+#### Scenario: A form-mode pipeline opens in Form mode
+
+- **WHEN** an aggregate pipeline served with group keys and measures and no `sql` is opened
+- **THEN** the Form mode is active
+- **AND** the group keys and measures editors are presented
+- **AND** no SQL editor is presented
+
+#### Scenario: A SQL-mode pipeline opens in SQL mode
+
+- **WHEN** an aggregate pipeline served with `sql` is opened
+- **THEN** the SQL mode is active
+- **AND** the SQL editor holds the statement exactly as served
+- **AND** the group keys and measures editors are not presented
+
+#### Scenario: A pipeline with no declaration opens in Form mode
+
+- **WHEN** an aggregate pipeline served with no `sql`, no group keys and no measures is opened
+- **THEN** the Form mode is active
+
+#### Scenario: Switching to SQL discards the form members
+
+- **WHEN** the caller switches an aggregate pipeline from Form to SQL mode
+- **THEN** the draft carries no group keys, no measures and no filter
+- **AND** the SQL editor is presented
+
+#### Scenario: The filter is presented in Form mode only
+
+- **WHEN** an aggregate pipeline is opened in Form mode
+- **THEN** the filter field is presented
+- **AND** when the caller switches to SQL mode the filter field is no longer presented
+
+#### Scenario: Switching to Form discards the statement
+
+- **WHEN** the caller switches an aggregate pipeline from SQL to Form mode
+- **THEN** the draft carries no `sql`
+- **AND** the group keys and measures editors are presented empty
+
+#### Scenario: Leaving a mode with authored content is confirmed
+
+- **WHEN** the caller switches mode while the mode being left holds authored content
+- **THEN** the caller is asked to confirm before that content is discarded
+- **AND** declining leaves the mode and the content unchanged
+
+#### Scenario: Leaving an empty mode is not confirmed
+
+- **WHEN** the caller switches mode while the mode being left holds no authored content
+- **THEN** the mode changes without a confirmation
+
+### Requirement: The SQL declaration is authored as a statement the service judges
+
+In SQL mode the aggregate section SHALL present one editor for the statement. The editor SHALL state the shape
+the service accepts: one `INSERT INTO <target> (<columns>) SELECT …` statement whose `INSERT` target is the
+pipeline's target.
+
+The console SHALL NOT parse or validate the statement, and SHALL NOT reject any statement before the service
+has seen it: the grammar and the eligibility rules (no HAVING, DISTINCT, ORDER BY, LIMIT, windows, joins,
+set operations or subqueries; non-nullable group keys; a time bucket of step one) are the service's, and a
+client-side approximation would refuse statements the service accepts. A refusal SHALL surface as the service's
+own message through the same path as any other refused save.
+
+An empty statement SHALL be a draft rather than a declaration: it SHALL NOT be sent as `sql: ""`, so a pipeline
+the author has not yet written is the same pipeline the service already stores without a declaration.
+
+The statement SHALL be sent exactly as typed: the console SHALL NOT trim inner whitespace, re-indent, or
+otherwise rewrite it, because the service stores it verbatim and serves it back verbatim.
+
+#### Scenario: The editor states the accepted shape
+
+- **WHEN** the SQL mode is active
+- **THEN** the editor's caption states that it takes one INSERT … SELECT statement into the pipeline's target
+
+#### Scenario: A statement the service refuses is reported as refused
+
+- **WHEN** the caller saves an aggregate pipeline whose statement the service refuses with a validation error
+- **THEN** the service's message is presented
+- **AND** the draft, including the statement, is unchanged
+
+#### Scenario: The console does not pre-judge a statement
+
+- **WHEN** the caller types a statement the console cannot itself classify as valid
+- **THEN** saving is still offered
+
+#### Scenario: An empty statement is not sent
+
+- **WHEN** the caller saves an aggregate pipeline in SQL mode whose editor is empty or only whitespace
+- **THEN** the request carries no `sql`
+
+#### Scenario: The statement is not rewritten
+
+- **WHEN** the caller saves a statement containing multiple lines and indentation
+- **THEN** the request carries the statement's lines and indentation as typed
+
+### Requirement: An aggregate request states one declaration mode
+
+The request for an aggregate pipeline SHALL carry the active mode's declaration and none of the other mode's.
+In SQL mode it SHALL carry `sql` and SHALL carry no `group_by`, no `measures` and no `filter`. In Form mode it
+SHALL carry no `sql`. The service refuses a request that carries `sql` beside any form-mode member, and clears
+the other mode's stored members when a patch states a mode; the console SHALL therefore never send a mixed
+body, and SHALL send the active mode's member on every save of a pipeline whose mode it knows, so that a
+switch of mode is always stated rather than implied.
+
+A pipeline opened as JSON SHALL be governed by the same rule: the document SHALL carry `sql` for a SQL-mode
+pipeline and SHALL NOT carry the form-mode members beside it. A document the caller edits into a mixed
+declaration is the caller's, and the service's refusal SHALL surface as for any other.
+
+#### Scenario: A SQL-mode request carries no form member
+
+- **WHEN** an aggregate pipeline in SQL mode is saved
+- **THEN** the request carries `sql`
+- **AND** the request carries no `group_by`, no `measures` and no `filter`
+
+#### Scenario: A form-mode request carries no statement
+
+- **WHEN** an aggregate pipeline in Form mode is saved
+- **THEN** the request carries no `sql`
+
+#### Scenario: A switch of mode is stated on save
+
+- **WHEN** a pipeline stored in Form mode is switched to SQL mode and saved
+- **THEN** the request carries `sql` and no form-mode member
+
+#### Scenario: A SQL-mode pipeline round-trips through the JSON document
+
+- **WHEN** a pipeline served with `sql` is opened as JSON
+- **THEN** the document carries `sql`
+- **AND** the document carries no `group_by` and no `measures`
+
+### Requirement: A pipeline's backfill is reached from a header button on every tab
+
+The pipeline detail page SHALL offer a **Backfill** button in its header row, beside the controls that delete
+and disable the pipeline, on every tab. It SHALL open the backfill drawer and SHALL NOT start anything
+itself. It SHALL be withheld in full from a caller who is not a full admin and when no runner host is
+configured, as every other runtime affordance is.
+
+#### Scenario: A full admin sees the button on any tab
+
+- **GIVEN** a full admin on any tab of a pipeline the runner is configured for
+- **THEN** the header offers Backfill
+
+#### Scenario: A caller who is not a full admin sees nothing
+
+- **GIVEN** a caller who is not a full admin
+- **THEN** the header offers no Backfill control and no backfill banner is shown
+
+#### Scenario: No runner is configured
+
+- **GIVEN** no runner host is configured
+- **THEN** the header offers no Backfill control
+
+### Requirement: A running or paused backfill is stated above the tab strip
+
+While a backfill of the pipeline is running or paused, a banner SHALL render beside the pipeline's pause
+banner, above the tab strip, stating the run's state and offering a control that opens the backfill drawer.
+For a paused run the banner SHALL state the reason the run reports.
+
+The banner SHALL NOT be shown for a run paused because its pipeline is paused, whether by an operator or by
+the circuit breaker: the pipeline's own banner already states that pause. In every other state of the run the
+banner SHALL be shown.
+
+The banner SHALL be read from the runner's list of runs narrowed to the pipeline, so it is present after a
+reload. It SHALL NOT be shown for a run that is done or cancelled.
+
+#### Scenario: A running run
+
+- **GIVEN** a running backfill of the pipeline
+- **THEN** the banner states that it is running and opens the drawer
+
+#### Scenario: A run paused for its own reason
+
+- **GIVEN** a backfill paused because the pipeline's spend budget is used up
+- **THEN** the banner states that it is paused and gives that reason
+
+#### Scenario: A run paused with its pipeline
+
+- **GIVEN** a backfill paused because its pipeline is paused by an operator or by the breaker
+- **THEN** no backfill banner is shown and the pipeline's pause banner is
+
+#### Scenario: A finished run
+
+- **GIVEN** the latest backfill is done or cancelled
+- **THEN** no backfill banner is shown
+
+### Requirement: The pipeline backfill drawer is three blocks: the run, the start form and the latest runs
+
+The drawer SHALL be divided into up to three labelled blocks, each on a background a step lighter than the
+drawer panel's own rather than behind a border.
+
+The **start form** block SHALL come first, and SHALL be present only when the pipeline has no run that is running
+or paused. A paused run is ended by cancelling it, so cancelling is the way to a new start. The **run** block SHALL
+follow it and present one run: the run the reader has chosen from the list, or else the run that is running or
+paused, or else the most recent run. The **latest runs** block SHALL come last and list the pipeline's ten most recent runs, newest first, each by status,
+window and rows done; choosing one SHALL present it in the run block. It is absent when the pipeline has no run,
+and so is the run block. The list has no total and no further page: when the service returns as many runs as were
+asked for, the block SHALL say that only the latest are shown and SHALL NOT claim the list is the pipeline's whole
+history.
+
+The run's facts SHALL come in one fixed order, the same on the ingest drawer and named alike: the id (copyable), the
+window as dates, how the run went in one row — rows done and dead letters, the dead letters coloured as a failure
+when above zero — then start and finish when finished. A run started without a window — by a caller other than the console — SHALL
+read "Everything". It SHALL NOT state a percentage or a total, because the runner reports none. The window SHALL
+be kept on one line. While the run's last batch has failed and no page has committed since, the run SHALL state
+the classified error and when it occurred and that the run is retrying. A paused run SHALL state its reason and
+the instant it paused. The run SHALL state the number of its dead letters, read from the dead-letter listing
+narrowed to the run when the run is presented.
+
+#### Scenario: A running run hides the form
+
+- **GIVEN** a running backfill
+- **THEN** the run block presents it and there is no start form block
+
+#### Scenario: A paused run hides the form
+
+- **GIVEN** a paused backfill
+- **THEN** the run block presents it, there is no start form block, and the run offers Cancel
+
+#### Scenario: The latest run when none is active
+
+- **GIVEN** no running or paused run and one done run
+- **THEN** the start form block comes first and the run block presenting the done run follows it
+
+#### Scenario: The blocks come in a fixed order
+
+- **GIVEN** a finished run
+- **THEN** the blocks are, from the top, the start form, the run, the latest runs
+
+#### Scenario: No runs
+
+- **GIVEN** the pipeline has no run
+- **THEN** the drawer holds only the start form block, with no run block and no latest runs block
+
+#### Scenario: The three blocks are told apart without borders
+
+- **GIVEN** a finished run
+- **THEN** the run, the start form and the latest runs are three separate labelled blocks, each on a lighter background than the drawer's
+
+#### Scenario: Choosing a run from the list
+
+- **GIVEN** several runs of the pipeline
+- **WHEN** the reader chooses an earlier one
+- **THEN** the run block presents that run
+
+#### Scenario: The list is the latest, not the whole history
+
+- **GIVEN** the service returns as many runs as the drawer asked for
+- **THEN** the latest runs block states that only the latest runs are shown
+
+#### Scenario: A window set outside the console, with no bounds
+
+- **GIVEN** a run the runner reports without a window
+- **THEN** its window reads Everything
+
+#### Scenario: A run that is retrying
+
+- **GIVEN** a running run whose last batch failed
+- **THEN** the run block states the classified error, its time, and that the run is retrying
+
+#### Scenario: No percentage
+
+- **GIVEN** a running run
+- **THEN** the run block states rows done and no percentage or total
+
+### Requirement: A pipeline backfill window is whole UTC days, sent as moments
+
+The start form SHALL take a first and a last date, both inclusive and both UTC. The service's window excludes its
+lower bound and includes its upper, so the console SHALL send the first day's start less one millisecond as the
+lower bound and the last day's final millisecond as the upper bound. It SHALL disable the start control for a
+missing date or a first date after the last, and SHALL NOT allow a last date after today in UTC.
+
+The form SHALL offer no way to start a replay of the pipeline's whole history. Such a run costs a model call for
+every row the pipeline has ever read, and cannot be repeated or abandoned cheaply; the console starts bounded
+runs only.
+
+When the last date is today in UTC the run's window caption SHALL read "up to now" rather than the end of the
+day: the service stops short of the most recent data until it has settled, and a later run covers the rest.
+The console SHALL present the window the run reports and SHALL NOT claim the run covered the whole of the last
+day. A run whose window does not fall on whole days SHALL be shown as the exact moments.
+
+#### Scenario: Whole days become moments
+
+- **WHEN** a range from the fourteenth to the twenty-first is started
+- **THEN** the lower bound is one millisecond before the fourteenth begins and the upper bound is the last millisecond of the twenty-first, both in UTC
+
+#### Scenario: No way to replay everything
+
+- **GIVEN** the start form
+- **THEN** it offers only the two dates, and no control that starts a run without a window
+
+#### Scenario: Today as the last day
+
+- **GIVEN** a last date equal to today in UTC
+- **THEN** the window's caption reads up to now
+
+#### Scenario: A window set outside the console
+
+- **GIVEN** a run whose window is not whole days
+- **THEN** the run block shows its exact moments
+
+### Requirement: A run's controls follow its state
+
+The controls SHALL be the first thing in the run block, drawn large, above the run's figures. A running run SHALL
+offer Pause and Cancel. A paused run SHALL offer Resume and Cancel, except that **Resume SHALL be withheld while
+the pipeline is paused**: the runner repeats the start checks on a resume and refuses one while its pipeline is
+paused, so the control could only fail. In its place the block SHALL say that the pipeline is paused and must be
+resumed first, and Cancel SHALL remain, because the runner cancels a paused run whatever state its pipeline is in.
+The pipeline's pause SHALL be read as it stands while the drawer is open, so resuming the pipeline offers Resume
+without closing and reopening the drawer. A done or cancelled run SHALL offer no control.
+
+Cancelling SHALL be confirmed, because it cannot be undone and abandons the run's cursor. Pausing and resuming
+SHALL NOT be confirmed. The console SHALL NOT warn before resuming a run on account of its pause reason. When the
+service refuses a verb the console SHALL show the service's own message and read the run again — including a
+resume the console had no way to foresee being refused, such as one over a spent daily budget.
+
+#### Scenario: Controls by state
+
+- **GIVEN** a running run
+- **THEN** it offers Pause and Cancel
+- **AND GIVEN** a paused run on a pipeline that is not paused
+- **THEN** it offers Resume and Cancel
+
+#### Scenario: The controls come first
+
+- **GIVEN** a running run
+- **THEN** Pause and Cancel are the first controls in the run block
+
+#### Scenario: A finished run has no controls
+
+- **GIVEN** a done or cancelled run
+- **THEN** it offers no control
+
+#### Scenario: Resume is withheld while the pipeline is paused
+
+- **GIVEN** a paused run and a paused pipeline, whatever the run's pause reason
+- **THEN** the block offers no Resume, says the pipeline is paused and must be resumed first, and still offers Cancel
+
+#### Scenario: Resume returns when the pipeline is resumed
+
+- **GIVEN** the drawer open on a paused run while its pipeline is paused
+- **WHEN** the pipeline is resumed
+- **THEN** the run offers Resume without the drawer being reopened
+
+#### Scenario: Cancel is confirmed
+
+- **WHEN** the reader chooses Cancel
+- **THEN** the console asks for confirmation before it cancels
+
+#### Scenario: A refused resume the console could not foresee
+
+- **GIVEN** a paused run on a pipeline that is not paused, whose resume the service refuses with a conflict
+- **THEN** the console shows the service's message
+
+#### Scenario: A run that has changed state
+
+- **GIVEN** a run that finished while the drawer was open
+- **WHEN** the reader pauses it and the service refuses
+- **THEN** the console shows the service's message and reads the run again
+
+### Requirement: A refused start reports the service's message
+
+When the runner refuses to start a backfill the console SHALL show the runner's own message and leave the
+form as it was. This covers a pipeline the runner does not hold, a pipeline that is paused or over its daily
+spend budget, a run already running, an invalid window, and a runner whose pipeline list has not loaded yet.
+The console SHALL NOT present a start on a paused pipeline as accepted.
+
+#### Scenario: A paused pipeline
+
+- **GIVEN** the runner refuses a start because the pipeline is paused
+- **THEN** the console shows its message
+
+#### Scenario: A pipeline the runner does not hold
+
+- **GIVEN** the runner answers that the pipeline is not found or not enabled
+- **THEN** the console shows its message
+
+### Requirement: A group pipeline's finished run reads Queued
+
+For a pipeline whose trigger is a group, a finished backfill SHALL be presented as **Queued** where it would be
+presented as Done: its completion means the window has been marked, and the evaluation of the marked groups
+follows on the pipeline's own schedule and gates. The drawer SHALL carry a one-line explanation. The kind of
+pipeline SHALL be taken from its declaration, not from the run. For every other pipeline a finished run
+reads Done.
+
+#### Scenario: A group pipeline
+
+- **GIVEN** a finished backfill of a pipeline with a group trigger
+- **THEN** its status reads Queued with the explanation
+
+#### Scenario: Any other pipeline
+
+- **GIVEN** a finished backfill of a pipeline that is not group-triggered
+- **THEN** its status reads Done
+
+### Requirement: A backfill's failures can be requeued by run
+
+A run that has dead letters SHALL offer **Requeue failed rows** with their count, which re-runs only that
+run's dead letters through the existing requeue by run, and reports how many the service re-ran. The console
+SHALL NOT offer to start a new run over the same window as a way to repeat a run, because a run does not skip
+what an earlier one processed and repeating one repeats the whole window at full cost.
+
+The drawer SHALL NOT link to the failed rows tab. The run's id SHALL be copyable so the reader can filter the
+failed rows by it there.
+
+#### Scenario: A run with failures
+
+- **GIVEN** a run with dead letters
+- **THEN** the drawer offers Requeue failed rows with their count
+
+#### Scenario: The count the service re-ran
+
+- **WHEN** the reader requeues and the service re-ran fewer rows than counted
+- **THEN** the console reports the number the service re-ran
+
+#### Scenario: A run with no failures
+
+- **GIVEN** a run with no dead letters
+- **THEN** the drawer offers no requeue
+
+### Requirement: The pipeline backfill drawer closes when the reader moves away from it
+
+The drawer SHALL be a modal panel at the right edge of the page, 600px wide. It SHALL close through its close control,
+on Escape, and when the scrim around the panel is pressed; a press on something outside the panel that was opened
+from inside it — a calendar's popup, the cancel confirmation — SHALL NOT close it, and neither SHALL a press that began
+inside and ended on the scrim. While it is closed it SHALL not be mounted, so each opening reads the runner afresh.
+The pipeline's pause SHALL be read live by its content, so a pause or a resume of the pipeline while the drawer is
+open changes what its run offers without reopening it.
+
+#### Scenario: A press on the scrim closes it
+
+- **GIVEN** the drawer open
+- **WHEN** the reader presses the page around the panel
+- **THEN** the drawer closes
+
+#### Scenario: The close control closes it
+
+- **GIVEN** the drawer open
+- **WHEN** the reader presses its close control
+- **THEN** the drawer closes
+
+#### Scenario: The cancel confirmation is not a click away
+
+- **GIVEN** the drawer open and the cancel confirmation showing
+- **WHEN** the reader presses a control in the confirmation
+- **THEN** the drawer stays open unless the run was cancelled
+
+### Requirement: Pipeline detail view is organized into Properties, Preview, Runtime, Groups and Audit tabs
+
+The pipeline detail view (`/pipelines/{name}`) SHALL present its content under a horizontal tab strip whose
+tabs are **Properties**, **Preview**, **Runtime**, **Groups** and **Audit**, in that order. `Properties` SHALL be the selected
+tab when the view is first opened.
+
+The **Preview** tab SHALL be present only for a caller who is a full admin, as "The Preview tab runs the
+pipeline's declared read on request" states. The dry-run it reports requires full-admin rights, so for anyone
+else the tab is withheld in full rather than shown with nothing it may run.
+
+The **Runtime** tab SHALL be present only for a caller who is a full admin. The runtime it reports is
+controlled through a service that authorizes every one of its endpoints, reads included, on full-admin
+rights and offers no consumer-facing read — so for anyone else there is nothing to present read-only and
+the tab is withheld in full rather than shown empty.
+
+The **Groups** tab SHALL be present only under the conditions "The Groups tab is offered only for a group
+pipeline the runner holds groups for" states. Where it is absent the remaining tabs keep their order.
+
+The **Runtime tab SHALL carry an error mark** once the dead-lettered failures have been read and there
+is at least one, with their number stated in text beside the strip for a reader who cannot see it. A
+reader who opens the view on `Properties` would otherwise have to open the tab to discover there is
+anything to act on. No other tab carries one, the Preview tab included: the state the Runtime tab reports is a position rather
+than a fault, the Groups tab's states are positions as well, and the Audit tab's activity list is unbounded
+and grows with every edit.
+
+The identity row — the enabled-state badge, the runtime status chip, the pipeline name, its copy control,
+the `Discard` / `Save` change bar, the enable/disable control, the delete control and the JSON editor
+toggle — SHALL render **above** the tab strip, presented whichever tab is
+selected, under the permission and pending-edit conditions the "The pipeline detail header states the
+pipeline's status before its name" and "Runtime status is stated beside configuration status"
+requirements state.
+
+The **runtime alerts** — the last failure, the clamp and the required rebuild, as "A pipeline's runtime
+state is presented read-only" states them — SHALL render between the identity row and the tab strip, and
+SHALL therefore be presented whichever tab is selected. They are true of the pipeline rather than of the
+tab in view: filed under one tab they vanished the moment the reader opened another, which is exactly
+where a reader goes to find out what a failing pipeline has been doing. The Runtime tab restates the same
+three conditions as dated facts beside the values they qualify; the alert is the signal, the fact is the
+record, and the tab is not a substitute for the alert.
+
+The **pause banner** — the pipeline's own pause, as "A paused pipeline states its pause above the tab
+strip" states it — SHALL render in the same place, between the identity row and the tab strip, above the
+runtime alerts. A pipeline that is not consuming its input is the first thing a reader needs to know,
+including a reader of the alerts: a failure reported by a run that no longer happens is read differently
+from one reported by a pipeline still trying.
+
+Everything else the frame presents below the identity row — the read-only facts, the scope, the trigger and
+the kind's transform section — SHALL render inside the **Properties** tab where a tab strip is rendered,
+and directly beneath the identity row where it is not.
+
+Selecting another tab SHALL NOT discard a pending edit. The draft the fields and the document share SHALL
+survive a tab switch, and the change bar SHALL stay offered from any tab, so a caller who reads the history,
+the runtime or the groups mid-edit does not lose the edit by reading it.
+
+The JSON editor and the tab strip SHALL NOT be presented together. Enabling the editor withdraws the tab
+strip along with everything else below the identity row — the runtime alerts and the pause banner
+included, since the document on screen is a draft the alerts may already contradict and which says nothing
+about the runner — as "The pipeline JSON editor takes the whole view, and an unsaved change closes the way
+out" already requires, and leaving the editor SHALL restore the strip with `Properties` selected. The
+toggle itself is unchanged and stays offered to every caller.
+
+The tab strip SHALL be rendered only when `featureFlags.analyticsEnabled` is true. With analytics disabled
+the detail view SHALL render the Properties content directly, with no tab strip, no Runtime tab, no Groups
+tab and no Audit tab, and SHALL issue no request to the analytics activity feed and none to the runtime
+service. The route itself is not guarded on that flag — `/pipelines/{name}` guards only on
+`isAnalyticsForbidden()`, which is an authorization check against the analytics service and not the client
+feature flag, so a bookmarked or pasted link still opens this view on an analytics-disabled installation and
+the tab condition is what keeps it from issuing either request.
+
+There SHALL be **no** pipeline-status condition on the Audit tab, unlike the table detail view's, which
+additionally requires an `ACTIVE` table. A pipeline has no registration lifecycle to mirror one: the service
+creates it whole in a single `POST /v1/pipelines`, so every registered pipeline already carries at least a
+`Create` activity. `enabled` is a pipeline's runtime toggle and not a registration state — a disabled
+pipeline is fully registered, and disabling or enabling it is itself an audited `Update` — so the Audit tab
+SHALL be offered on a disabled pipeline exactly as on an enabled one.
+
+The Audit tab SHALL require no permission beyond the one that already allows reading the pipeline. It SHALL
+NOT be gated on full-admin rights, which the save, the enable/disable control, the Runtime tab and the Groups
+tab are.
+
+#### Scenario: Properties is the selected tab when the pipeline detail view opens
+
+- **WHEN** a full admin opens the detail view of a registered pipeline
+- **THEN** a tab strip showing `Properties`, `Preview`, `Runtime` and `Audit` is rendered
+- **AND** `Properties` is the selected tab
+- **AND** the read-only facts, the trigger and the kind's transform section are shown beneath it
+
+#### Scenario: The Groups tab sits between Runtime and Audit
+
+- **GIVEN** a group pipeline the runner holds at least one group for
+- **WHEN** a full admin opens its detail view
+- **THEN** the tab strip shows `Properties`, `Preview`, `Runtime`, `Groups` and `Audit`, in that order
+
+#### Scenario: The Runtime tab is withheld from a caller who is not a full admin
+
+- **GIVEN** a caller who is not a full admin
+- **WHEN** the user opens the pipeline detail view
+- **THEN** the tab strip carries `Properties` and `Audit` only, with no `Preview` tab
+- **AND** no runtime state is presented anywhere on the page
+
+#### Scenario: A pending field edit survives a switch to the Preview tab
+
+- **GIVEN** the detail view of a pipeline with one field edited and the `Discard` / `Save` bar offered
+- **WHEN** a full admin selects `Preview` and then `Properties` again
+- **THEN** the edited value is still presented
+- **AND** the `Discard` / `Save` bar is still offered
+
+#### Scenario: The Runtime tab marks that something has failed
+
+- **GIVEN** a model-calling enrichment the runtime service reports dead-lettered failures for
+- **WHEN** a full admin opens the detail view on `Properties`
+- **THEN** the `Runtime` tab carries an error mark and the count is stated beside the strip
+- **AND** neither the `Properties`, the `Preview`, the `Groups` nor the `Audit` tab carries one
+
+#### Scenario: The identity row and its actions stay above the tab strip
+
+- **GIVEN** the detail view of a registered pipeline
+- **WHEN** the user switches from `Properties` to `Audit`
+- **THEN** the enabled-state badge, the pipeline name, its copy control and the enable/disable control
+  remain rendered above the tab strip, unchanged
+
+#### Scenario: A runtime alert is presented on either tab
+
+- **GIVEN** the detail view of a pipeline whose read enrichment has been re-derived beneath it
+- **WHEN** the user switches from `Properties` to `Audit`
+- **THEN** the alert stays presented, above the tab strip
+
+#### Scenario: A pause banner is presented on every tab
+
+- **GIVEN** the detail view of a paused pipeline
+- **WHEN** the user switches from `Properties` to `Audit`
+- **THEN** the pause banner stays presented, above the tab strip
+- **AND** it is presented above the runtime alerts
+
+#### Scenario: The Audit tab is offered on a disabled pipeline
+
+- **GIVEN** a pipeline whose `enabled` is false
+- **WHEN** the user opens its detail view
+- **THEN** the tab strip is rendered and the `Audit` tab is present and selectable
+
+#### Scenario: The Audit tab needs no permission beyond reading the pipeline
+
+- **GIVEN** a caller who is not a full admin, and who is therefore offered no save and no
+  enable/disable control
+- **WHEN** the user opens the pipeline detail view
+- **THEN** the `Audit` tab is present and selectable
+
+#### Scenario: A pending field edit survives a switch to the Audit tab
+
+- **GIVEN** the detail view of a pipeline with one field edited and the `Discard` / `Save` bar offered
+- **WHEN** the user selects `Audit` and then `Properties` again
+- **THEN** the edited value is still presented
+- **AND** the `Discard` / `Save` bar is still offered
+
+#### Scenario: A pending field edit survives a switch to the Runtime tab
+
+- **GIVEN** the detail view of a pipeline with one field edited and the `Discard` / `Save` bar offered
+- **WHEN** a full admin selects `Runtime` and then `Properties` again
+- **THEN** the edited value is still presented
+- **AND** the `Discard` / `Save` bar is still offered
+
+#### Scenario: The JSON editor and the tab strip are not presented together
+
+- **GIVEN** the detail view of a registered pipeline
+- **WHEN** the caller enables the JSON editor
+- **THEN** the pipeline is presented as one JSON document
+- **AND** no tab strip is rendered
+- **AND** no runtime alert and no pause banner are presented
+- **AND** turning the editor off again renders the tab strip with `Properties` selected
+
+#### Scenario: Audit tab absent when analytics is disabled
+
+- **GIVEN** `featureFlags.analyticsEnabled` is false
+- **WHEN** the user reaches `/pipelines/{name}` by a direct link
+- **THEN** no tab strip, no `Preview` tab, no `Runtime` tab, no `Groups` tab and no `Audit` tab are rendered
+- **AND** the read-only facts, the trigger and the transform section are shown directly
+- **AND** no request is issued to the analytics activity feed, to the runtime service or to the preview endpoint
+
+### Requirement: The Preview tab runs the pipeline's declared read on request
+
+The **Preview** tab SHALL be the console's dry-run of a pipeline: it asks the analytics service to run the
+declared read over real rows and presents what the pipeline would write, without writing anything. It SHALL
+be offered for every pipeline kind — aggregate, and SQL or LLM enrichment — and for an enabled pipeline as
+well as a disabled one, because the service dry-runs both. It SHALL be present only for a full admin and only
+while `featureFlags.analyticsEnabled` is true.
+
+The tab SHALL NOT run on its own. Opening it SHALL issue no request. Until a run has been made it SHALL
+present what a preview does and a `Run preview` control; once a result is held it SHALL present that result
+with `Run again`. While a run is in flight the control SHALL be disabled and labelled as running, and the
+previous result, if any, SHALL stay presented until the run returns.
+
+The run SHALL send no body: the sample is always the newest rows of the whole input, and the console offers no
+window, cursor or group-key control. The tab SHALL hold the last result for as long as the detail view is
+open, across tab switches, and SHALL replace it only with a later success. A run that fails SHALL leave the
+previous result in place, dimmed, under the failure's own message, so that a failed run never wipes a good
+result.
+
+#### Scenario: Opening the tab issues no request
+
+- **GIVEN** a full admin on the detail view of a pipeline, analytics enabled
+- **WHEN** the user selects `Preview` for the first time
+- **THEN** a description of the preview and a `Run preview` control are presented
+- **AND** no request is issued to the preview endpoint
+
+#### Scenario: Running presents the sample
+
+- **GIVEN** the Preview tab with nothing run yet
+- **WHEN** the user activates `Run preview`
+- **THEN** one request is issued with no body
+- **AND** the control is disabled and labelled as running until it returns
+- **AND** the sample is presented with `Run again` in place of `Run preview`
+
+#### Scenario: A disabled pipeline can be previewed
+
+- **GIVEN** a pipeline whose `enabled` is false
+- **WHEN** a full admin runs the preview
+- **THEN** the run is issued as for an enabled pipeline
+
+#### Scenario: The result survives a tab switch
+
+- **GIVEN** a Preview tab holding a result
+- **WHEN** the user selects `Properties` and then `Preview` again
+- **THEN** the same result is presented
+- **AND** no request is issued
+
+#### Scenario: A run in flight leaves the previous result in place
+
+- **GIVEN** a Preview tab holding a result
+- **WHEN** the user activates `Run again`
+- **THEN** the previous result stays presented until the run returns
+
+#### Scenario: A failed run keeps the earlier result
+
+- **GIVEN** a Preview tab holding a result
+- **WHEN** a later run fails
+- **THEN** the failure is presented above the earlier result
+- **AND** the earlier result stays presented, dimmed
+- **AND** `Run again` stays offered
+
+### Requirement: The preview sample is a typed grid under a run bar
+
+A successful preview SHALL present a **run bar** above a **grid** of the sampled rows. The grid SHALL follow the
+console's grid conventions, one column per entry the service returns in its column list, in the order given.
+
+Each column header SHALL state the column's name, its role, and its type. The role SHALL be presented in words:
+`Key` and `Measure` for an aggregate; `Grain key` and `Output` for an SQL enrichment; `Grain key` and `Input`
+for a row-by-row LLM enrichment; and `Input` alone for a group-trigger LLM enrichment. Where the service names
+a target type, the header SHALL state it after the sampled type, as `string → string`. Where the service
+reports the largest size of a column's values, the header SHALL state it in bytes, as `max 18 B`. A column the
+service reports no role for SHALL still be presented, without a role mark.
+
+The run bar SHALL carry count chips, followed by a caption that states how the sample was taken. An aggregate
+SHALL present its group count: `N groups` when the sample holds every group, and `N of M groups` when the
+service reports a larger total. Every other kind SHALL present `N sample rows`. The notes count SHALL be
+presented for every kind, as `N notes`, and counts the notes drawn as banners — not the two codes the empty
+state presents instead — so that it is the number of banners the reader can find. A chip that counts exactly one
+SHALL read in the singular. An SQL enrichment SHALL also present its output count.
+
+The caption SHALL say that rows are the newest matching ones, up to the sample size, and that values are
+capped at 2 KB. A value the service has cut SHALL end in the ellipsis it carries and SHALL NOT be
+re-expanded. An empty cell for a value the service returned as null SHALL be presented as `NULL`, not blank.
+
+A sample of up to the service's row limit SHALL be presented whole, with no paging control.
+
+#### Scenario: An aggregate states its total
+
+- **GIVEN** an aggregate preview of 5 rows with a total of 1,284
+- **WHEN** the result is presented
+- **THEN** the run bar shows `5 of 1,284 groups`
+- **AND** the key columns are marked `Key` and the others `Measure`
+
+#### Scenario: A sample that holds every group states no total
+
+- **GIVEN** an aggregate preview of 3 rows with a total of 3
+- **WHEN** the result is presented
+- **THEN** the run bar shows `3 groups`
+
+#### Scenario: An enrichment states its sample size
+
+- **GIVEN** an SQL enrichment preview of 5 rows
+- **WHEN** the result is presented
+- **THEN** the run bar shows `5 sample rows` and the number of outputs
+- **AND** the grain key is marked `Grain key` and the derived columns `Output`
+
+#### Scenario: A header states the target type and the size
+
+- **GIVEN** a column sampled as `string` that is written to a `string` column, with a largest value of 18 bytes
+- **WHEN** the result is presented
+- **THEN** its header shows the name, `Output`, `string → string` and `max 18 B`
+
+#### Scenario: A group pipeline's columns are all inputs
+
+- **GIVEN** a preview of a group-trigger LLM enrichment
+- **WHEN** the result is presented
+- **THEN** every column is marked `Input` and none is marked `Grain key`
+
+#### Scenario: A null value is presented as NULL
+
+- **GIVEN** a row whose value for a column is null
+- **WHEN** the result is presented
+- **THEN** the cell shows `NULL`
+
+### Requirement: Notes from the service are presented by severity and code
+
+The service's notes SHALL be presented between the run bar and the grid, one block per note, ordered with
+warnings before informational notes and otherwise in the order received. A warning SHALL be presented as a
+warning banner and an informational note as a neutral one. A note that names a column, output or enrichment
+SHALL present that name as a subject mark beside its title. The console SHALL pick a note's title by its code
+and SHALL present the note's own message as its body; a code the console does not know SHALL be presented
+with a generic title and the message, and SHALL NOT be dropped.
+
+The codes the console knows, and what each means to the reader, SHALL be:
+
+- `target_type_narrowing` and `value_out_of_target_range` — a value would be coerced or would wrap when
+  written; warnings.
+- `held_by_enrichment` and `enrichment_behind` — an enrichment the pipeline reads has not caught up, so an
+  enabled run would write less than the sample shows; the first a warning, the second informational. The
+  rows are late, not absent.
+- `group_cut_by_fetch_limit` — the group was cut by the service's fetch limit, so its member count is a lower
+  bound; a warning.
+- `output_without_description` and `unconstrained_response` — an LLM output carries no description, or the
+  response schema constrains nothing; the first informational, the second a warning.
+- `values_truncated` — at least one value was capped at 2 KB for the preview only, and the runner writes the
+  full value; informational.
+- `no_matching_rows` and `no_group_found` — the sample is empty, as "An empty sample states its cause" states.
+
+When the service returns no notes, the tab SHALL present a success line in place of them. For a disabled
+pipeline the line SHALL read `Validation passed. Ready to enable.`. For an enabled aggregate it SHALL read
+`Validation passed.`. For an enabled enrichment it SHALL read `No issues found.`, because an enabled enrichment
+is held to lighter checks than arming applies and the line claims no more than was checked. The success line
+SHALL NOT be presented while any note is, and SHALL NOT be presented beside a result that is not current — one
+held under a failure, beside an unsaved edit, or older than the declaration — because a line that says the declaration is
+valid cannot sit under the failure that says it is not.
+
+#### Scenario: A narrowing warning names the output
+
+- **GIVEN** a preview whose notes include `target_type_narrowing` for the output `cost_tier`
+- **WHEN** the result is presented
+- **THEN** a warning banner is presented with `cost_tier` as its subject and the service's message as its body
+
+#### Scenario: Warnings are presented before informational notes
+
+- **GIVEN** a preview whose notes are `values_truncated` followed by `target_type_narrowing`
+- **WHEN** the result is presented
+- **THEN** the `target_type_narrowing` warning is presented above the `values_truncated` note
+
+#### Scenario: A held pipeline still shows its rows
+
+- **GIVEN** a preview whose notes include `held_by_enrichment` naming an enrichment, and whose rows are not empty
+- **WHEN** the result is presented
+- **THEN** the warning names the enrichment
+- **AND** the grid is presented beneath it with its rows
+
+#### Scenario: An unknown code is not dropped
+
+- **GIVEN** a preview whose notes include a code the console does not know
+- **WHEN** the result is presented
+- **THEN** the note is presented with a generic title and the service's message
+
+#### Scenario: The success line for a disabled pipeline
+
+- **GIVEN** a disabled pipeline whose preview returns no notes
+- **WHEN** the result is presented
+- **THEN** the line `Validation passed. Ready to enable.` is presented
+
+#### Scenario: The success line for an enabled aggregate
+
+- **GIVEN** an enabled aggregate whose preview returns no notes
+- **WHEN** the result is presented
+- **THEN** the line `Validation passed.` is presented
+
+#### Scenario: The success line for an enabled enrichment claims less
+
+- **GIVEN** an enabled enrichment whose preview returns no notes
+- **WHEN** the result is presented
+- **THEN** the line `No issues found.` is presented
+
+#### Scenario: No success line beside a result that is not current
+
+- **GIVEN** a Preview tab holding a result whose last run was refused
+- **WHEN** the failure is presented above the held result
+- **THEN** no success line is presented
+
+#### Scenario: No success line beside a note
+
+- **GIVEN** a preview that returns one informational note
+- **WHEN** the result is presented
+- **THEN** the note is presented and no success line is
+
+### Requirement: An empty sample states its cause
+
+A preview that returns no rows SHALL present the column headers it was given and, in place of the rows, an
+empty state that names the cause and offers the action that addresses it. The cause SHALL come from the
+service's note, never from guessing.
+
+For `no_matching_rows` the console SHALL tell an input that holds no rows from an input the filter excludes
+by whether the saved declaration carries a filter. With no filter the title SHALL read `No data yet` and the
+body SHALL say the input holds no rows yet; with a filter the title SHALL read `No matching rows` and the body
+SHALL state the filter expression. The second SHALL offer `Open Properties`. For an aggregate the body SHALL
+add that the pipeline produces no group.
+
+For `no_group_found` on a group-trigger pipeline the title SHALL read `No group found` and the body SHALL say
+no input row matching the filter carries a non-empty group key, naming the grouping column; it SHALL offer
+`Open Properties`.
+
+When every matching row is held back by an enrichment, the empty state SHALL name the enrichment, state that
+the sample leaves out rows it has not reached, and offer to open that enrichment.
+
+#### Scenario: An input with no rows
+
+- **GIVEN** an aggregate with no filter whose preview returns no rows and `no_matching_rows`
+- **WHEN** the result is presented
+- **THEN** the empty state reads `No data yet` and names the input table
+- **AND** the column headers are presented above it
+
+#### Scenario: A filter that excludes everything
+
+- **GIVEN** a pipeline with a filter whose preview returns no rows and `no_matching_rows`
+- **WHEN** the result is presented
+- **THEN** the empty state reads `No matching rows` and states the filter expression
+- **AND** `Open Properties` is offered
+
+#### Scenario: A group pipeline with no group
+
+- **GIVEN** a group-trigger pipeline whose preview returns `no_group_found`
+- **WHEN** the result is presented
+- **THEN** the empty state reads `No group found` and names the grouping column
+- **AND** `Open Properties` is offered
+
+#### Scenario: Every row is held by an enrichment
+
+- **GIVEN** an LLM enrichment whose preview returns no rows and `held_by_enrichment` naming an enrichment
+- **WHEN** the result is presented
+- **THEN** the empty state names that enrichment and offers to open it
+
+### Requirement: The Preview tab shows the statement or the outputs
+
+For an aggregate and for an SQL enrichment the tab SHALL present a collapsible **Statement** section beneath
+the grid, expanded when first shown, carrying the statement the service returned. The statement SHALL be shown formatted for reading and SHALL be copied verbatim by a `Copy SQL`
+control, so that a statement run by hand reads the same rows. The section SHALL be drawn as the collapsible
+sections of the Properties tab are.
+
+For an LLM enrichment the service returns no statement. In its place the tab SHALL present an **Outputs**
+section, built from the saved declaration, that lists each output with its target column and flags every
+output that carries no description. The section SHALL NOT claim anything about what a model would return: the
+model is not called and no prompt is rendered.
+
+#### Scenario: The statement is copied verbatim
+
+- **GIVEN** a Preview tab for an aggregate holding a result with a statement
+- **WHEN** the user activates `Copy SQL`
+- **THEN** the statement exactly as the service returned it is copied
+- **AND** the copy is announced
+
+#### Scenario: The statement is formatted for reading
+
+- **GIVEN** a returned statement on a single line
+- **WHEN** the Statement section is expanded
+- **THEN** it is presented broken across lines
+
+#### Scenario: An LLM enrichment has outputs instead of a statement
+
+- **GIVEN** a Preview tab for an LLM enrichment holding a result
+- **WHEN** the result is presented
+- **THEN** no Statement section is presented
+- **AND** an Outputs section lists the declared outputs
+- **AND** an output without a description is flagged
+
+### Requirement: A group pipeline's preview names the group it sampled
+
+For a group-trigger pipeline the run bar SHALL carry a read-only **group chip** with the key the service
+returned. The service chooses the group with the newest matching row on every run, so new data can move a
+rerun to another group; when the key differs from the previous run's, the chip SHALL also state the previous
+key, so that the switch does not pass unnoticed. The console SHALL offer no control that chooses or enters a
+group key.
+
+The sample SHALL be presented as the group's members in the order the service returned them, which is the
+order the model would receive them, and the run bar SHALL state `N members shown` rather than a row count.
+
+#### Scenario: The chip names the sampled group
+
+- **GIVEN** a group-trigger pipeline whose preview returns the group key `A`
+- **WHEN** the result is presented
+- **THEN** the group chip reads `A`
+- **AND** no control for choosing a group is presented
+
+#### Scenario: A rerun that moves to another group says so
+
+- **GIVEN** a Preview tab holding a result for group `A`
+- **WHEN** a rerun returns group `B`
+- **THEN** the chip reads `B` and states that it was `A`
+
+#### Scenario: A rerun on the same group states no previous key
+
+- **GIVEN** a Preview tab holding a result for group `A`
+- **WHEN** a rerun returns group `A`
+- **THEN** the chip reads `A` and states no previous key
+
+### Requirement: A failed preview states its cause and the fix within reach
+
+Each failure the preview endpoint documents SHALL be presented in the tab with its own state. The service's
+message SHALL be shown as the service sent it, in a monospace block; the console SHALL NOT rewrite it.
+
+- A **validation failure** — the declaration would not arm — SHALL read `Fix the declaration before previewing`,
+  carry the message, and offer `Open Properties`. The service reports one problem at a time, so the state
+  SHALL say that the next one, if any, appears after the fix. Where the message names a part of the
+  declaration the console can open — the request template of an LLM enrichment, for instance — the state SHALL
+  offer to open that part in place of `Open Properties`.
+- A **budget refusal** SHALL read `The preview read exceeded its budget`, carry the message, and offer the
+  actions that reach the fix: `Open group keys` for an aggregate, `Open inputs` for a row-by-row LLM
+  enrichment, `Open member selection` for a group-trigger one, and `Open Properties` for each. It SHALL state
+  that running again gives the same result, and the console SHALL NOT retry on its own.
+- **Any other failure** — an unknown pipeline, a conflict, an unrecognised code — SHALL read `Preview failed`,
+  carry the message and the code, and keep `Run again`.
+- **No access** — a column the caller may not read, a row-confined caller, or a missing grant — SHALL replace
+  the tab's content with an explanation of why the pipeline cannot be previewed, naming the column where the
+  service does, and SHALL offer no `Run` control, because nothing on the page can fix it. The tab SHALL stay
+  in place rather than disappear.
+- **Storage unavailable** SHALL read `ClickHouse is currently unavailable`, state that no data could be read,
+  and offer `Try again`.
+
+An action that opens a part of the declaration SHALL switch to `Properties` and bring that section into view
+without discarding a pending edit.
+
+#### Scenario: A validation failure points at the declaration
+
+- **GIVEN** a preview refused with `pipeline_validation_failed`
+- **WHEN** the failure is presented
+- **THEN** it reads `Fix the declaration before previewing` and shows the service's message
+- **AND** `Open Properties` is offered
+
+#### Scenario: A budget refusal offers the remedy for its kind
+
+- **GIVEN** an aggregate preview refused with `pipeline_preview_budget_exceeded`
+- **WHEN** the failure is presented
+- **THEN** it reads `The preview read exceeded its budget` and shows the service's message
+- **AND** `Open group keys` and `Open Properties` are offered
+- **AND** no automatic retry is made
+
+#### Scenario: A budget refusal on a group pipeline offers member selection
+
+- **GIVEN** a group-trigger LLM preview refused with `pipeline_preview_budget_exceeded`
+- **WHEN** the failure is presented
+- **THEN** `Open member selection` is offered
+
+#### Scenario: An unrecognised failure shows its code
+
+- **GIVEN** a preview refused with a code the console has no state for
+- **WHEN** the failure is presented
+- **THEN** it reads `Preview failed` and shows the message and the code
+- **AND** `Run again` is offered
+
+#### Scenario: No access offers no run control
+
+- **GIVEN** a preview refused with `sensitive_column_not_entitled`
+- **WHEN** the failure is presented
+- **THEN** the tab explains that the pipeline reads a column the caller may not see, and names it
+- **AND** no `Run` control is offered
+
+#### Scenario: Storage down offers a retry
+
+- **GIVEN** a preview refused with `clickhouse_unavailable`
+- **WHEN** the failure is presented
+- **THEN** it reads `ClickHouse is currently unavailable` and offers `Try again`
+
+#### Scenario: Opening the declaration keeps a pending edit
+
+- **GIVEN** a pending field edit and a budget refusal on the Preview tab
+- **WHEN** the user activates `Open group keys`
+- **THEN** `Properties` is selected and the group-keys section is brought into view
+- **AND** the edited value is still presented
+
+### Requirement: The preview states what it ran on
+
+The preview runs the **saved** declaration. While the detail view holds an unsaved edit, the Preview tab SHALL
+present a banner saying that the preview uses the saved version and that the edit is not included; the run control
+SHALL be labelled `Run on saved version`, and a held result SHALL stay presented, dimmed, until a run returns. The
+tab SHALL offer no control that saves or discards the edit: that belongs to the page's own `Save` and `Discard`,
+which stay offered above the tab strip whichever tab is selected, and the tab SHALL NOT save anything itself.
+
+The console SHALL record the pipeline's generation when a run is issued. When the pipeline's generation later
+differs — it was saved after the run — the held result SHALL be presented dimmed under a banner that states
+which generation the sample reflects and which the pipeline is at, with `Run again`.
+
+#### Scenario: An unsaved edit is called out
+
+- **GIVEN** a pending field edit
+- **WHEN** the user opens the Preview tab
+- **THEN** a banner states that the preview uses the saved version and that the edit is not included
+- **AND** the run control reads `Run on saved version`
+
+#### Scenario: The tab offers no way to save or discard
+
+- **GIVEN** a pending field edit
+- **WHEN** the user opens the Preview tab
+- **THEN** the banner carries no `Save` or `Discard` control
+- **AND** the page's own `Save` and `Discard` are still offered above the tab strip
+
+#### Scenario: A result older than the declaration says so
+
+- **GIVEN** a Preview tab holding a result sampled at generation 6
+- **WHEN** the pipeline is saved and is now at generation 7
+- **THEN** the result is presented dimmed under a banner naming generations 6 and 7
+- **AND** `Run again` is offered in the banner
+
+### Requirement: The Preview tab is accessible without sight of its colour
+
+The Preview tab SHALL state every state it signals in text and through the matching ARIA attribute as well as
+by colour. A banner for a failure SHALL be an alert and one for a note or an unsaved edit SHALL be a status.
+The count chips SHALL be readable as text. A dimmed result SHALL be removed from the tab order and from the
+reading order, so that its stale cells are not read as current. The completion of a run, with its outcome, SHALL be
+announced through a live region separate from the run control's own label.
+
+#### Scenario: A failure is announced
+
+- **GIVEN** a run that fails
+- **WHEN** the failure is presented
+- **THEN** it is exposed as an alert
+
+#### Scenario: A finished run is announced
+
+- **GIVEN** a run in flight
+- **WHEN** it returns with a result
+- **THEN** a live region announces that the preview finished and states the row count
+- **AND** the run control's own label is unchanged by the announcement
+
+### Requirement: A service message wraps instead of being cut off
+
+A message the services return — an I/O error naming a host and a route, a run's last error, a refused read —
+is a long unbroken string by nature. Wherever the Runtime tab or the alerts above the tab strip present
+one, it SHALL wrap onto further lines so that the whole of it is readable, and SHALL NOT be cut off at the
+edge of its container, ellipsised, or left to scroll sideways.
+
+#### Scenario: A long error is read in full
+
+- **GIVEN** a pipeline whose last error is a single long string with no spaces, such as a request URL
+  followed by a connection failure
+- **WHEN** a full admin opens the pipeline
+- **THEN** the whole message is visible, wrapped across lines
+- **AND** the page does not scroll sideways
+
+#### Scenario: A refused runtime read wraps the service's message
+
+- **GIVEN** a runtime read refused with a long message
+- **WHEN** a full admin opens the `Runtime` tab
+- **THEN** the whole message is visible, wrapped across lines
+

@@ -5,9 +5,7 @@
 Defines how the run Extraction Result grid presents request and turn positions for single-request,
 chained-request, and multi-turn test cases — which of those columns it opens with, and how each renders
 once shown — while preserving flat-row navigation and sorting behavior.
-
 ## Requirements
-
 ### Requirement: Run results show the turn number and total turn count
 
 The run results grid SHALL provide two columns in the `EXECUTION` column group, positioned immediately
@@ -175,3 +173,20 @@ rows while the Test Case name filter is active.
 
 - **WHEN** a user filters results by Test Case name and then sorts the Request or Turn column
 - **THEN** the visible matching rows are ordered numerically by the selected column in the selected direction
+
+### Requirement: Execution metadata columns are right-aligned
+
+On the run Extraction Result grid, the `EXECUTION` group's `# Run number`, `Request`,
+`Total requests`, `Turn`, `Total turns`, `HTTP`, and `Duration` columns SHALL render their cell
+content right-aligned, matching how the rest of the app aligns numeric columns.
+
+#### Scenario: Execution index columns are right-aligned
+
+- **WHEN** the `# Run number`, `Request`, or `Turn` column is shown
+- **THEN** its cell values are right-aligned
+
+#### Scenario: HTTP and Duration keep their status coloring and gain right alignment
+
+- **WHEN** a result's `HTTP` or `Duration` cell is colored for its response status
+- **THEN** the cell is both colored and right-aligned
+

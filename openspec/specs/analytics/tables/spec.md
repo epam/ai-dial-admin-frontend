@@ -274,16 +274,16 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL gate its mutating affordances independently:
 
-- **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
 - **Connect** SHALL be shown regardless of permission, as the header's primary action, for every `ACTIVE` **source** table and for every `ACTIVE` **enrichment** table whose payload names a source table (see "Table detail Connect panel").
 - The **JSON-editor toggle** SHALL be shown on every `ACTIVE` table regardless of permission, because there it opens a read-only view of the stored definition and writes nothing (see "An ACTIVE table's definition is readable as JSON"); on a `PENDING`/`FAILED` table it SHALL be shown only when `canModify`, because there it authors the schema (see "JSON editor for a table draft"). It follows that an `ACTIVE` table always presents at least one header action, whatever the viewer's permissions are and whether or not Connect can be offered for it.
 - **Add rows** SHALL NOT be offered for an **enrichment** table whatever its `write` permission reports: those rows come from the enrichment process, so a hand-written insert is not a path this UI offers.
 - For an `ACTIVE` table, **Add columns** (schema evolution) and **Add rows** (inserting rows) SHALL each be offered as its own standalone header button — **not** as items of a shared dropdown. **Add columns** SHALL be shown only when `canModify` and **Add rows** only when `canWrite`; when neither permission is held, neither button renders. Both SHALL render as neutral actions, never primary and never dependent on whether the other is present, so each keeps the same appearance whatever the viewer's other permissions are. **Add rows** is deliberately not the emphasized way to put data in the table — see "Table detail row writes".
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
-- Header controls SHALL be ordered **Manage access, Delete table, Add columns, Add rows, Connect, copy JSON definition, JSON-editor toggle** — the **JSON-editor toggle last**, after the primary **Connect**, with the copy-definition control immediately before the toggle and present only while the JSON view is on (see "The displayed definition is copyable in one action"). **Connect** remains the header's only primary action, and it remains the last **action**; it is no longer the last control, because the two controls that follow it act on the view rather than on the table. The rule that replaces "primary action last" is therefore: **actions on the table come before Connect, view controls after it**, so a later header addition has a rule to follow rather than a precedent to guess at. A not-yet-`ACTIVE` table shows neither Connect nor the two Add buttons, and shows **Save** in their place — see "Define and materialize a table schema"; its own JSON-editor toggle is likewise the last control of its row, where no primary action precedes it.
+- Managing who can do what on the table is **not** a header action: it lives in the **Access** tab, whose offer is decided by `canManageRoles` (see "Access tab lists a table's roles").
+- Header controls SHALL be ordered **Delete table, Add columns, Add rows, Connect, copy JSON definition, JSON-editor toggle** — the **JSON-editor toggle last**, after the primary **Connect**, with the copy-definition control immediately before the toggle and present only while the JSON view is on (see "The displayed definition is copyable in one action"). **Connect** remains the header's only primary action, and it remains the last **action**; it is no longer the last control, because the two controls that follow it act on the view rather than on the table. The rule that replaces "primary action last" is therefore: **actions on the table come before Connect, view controls after it**, so a later header addition has a rule to follow rather than a precedent to guess at. While the JSON view of an `ACTIVE` table is on, only the copy-definition control and the toggle are rendered. A not-yet-`ACTIVE` table shows neither Connect nor the two Add buttons, and shows **Save** in their place — see "Define and materialize a table schema"; its own JSON-editor toggle is likewise the last control of its row, where no primary action precedes it.
 
-Because the backend reports `permissions {false,false}` for system tables, the write/modify-gated affordances (Add rows, Add columns, per-column edit/drop, inline rename, description edits) hide for system tables without a separate check. **Manage access** and **Delete table** are gated on `FULL_ADMIN`, which the backend does not scope per-table, so each carries its own explicit `!table.system` check. The JSON-editor toggle is deliberately outside that set on an `ACTIVE` table: it mutates nothing, and a system table is exactly the table whose definition an operator most often needs to read as a document.
+Because the backend reports `permissions {write:false, modify:false}` for system tables, the write/modify-gated affordances (Add rows, Add columns, per-column edit/drop, inline rename, description edits) hide for system tables without a separate check. **Delete table** is gated on `FULL_ADMIN`, which the backend does not scope per-table, so it carries its own explicit `!table.system` check. The JSON-editor toggle is deliberately outside that set on an `ACTIVE` table: it mutates nothing, and a system table is exactly the table whose definition an operator most often needs to read as a document.
 
 #### Scenario: Write-capable, not modify-capable
 
@@ -311,15 +311,20 @@ Because the backend reports `permissions {false,false}` for system tables, the w
 - **WHEN** a non-system table reports edit permissions but the user is not `FULL_ADMIN`
 - **THEN** the "Delete table" button is absent
 
+#### Scenario: No header action manages access
+
+- **WHEN** a `FULL_ADMIN` opens a non-system `ACTIVE` table's detail page
+- **THEN** the header has no Manage access button, and access is managed from the Access tab
+
 #### Scenario: Manage access is hidden for a system table even for a full admin
 
 - **WHEN** a `FULL_ADMIN` opens a system table's detail page
-- **THEN** the "Manage access" button is absent
+- **THEN** the header has no Manage access button, as on any table, while the Access tab remains offered for its read-side grants
 
 #### Scenario: A system table still offers Connect
 
 - **WHEN** a user opens an `ACTIVE` system table's detail page
-- **THEN** **Connect** is present while **Add rows**, **Add columns**, **Manage access**, and **Delete table** are all absent
+- **THEN** **Connect** is present while **Add rows**, **Add columns**, and **Delete table** are all absent
 - **AND** the JSON-editor toggle is present, since it writes nothing
 
 #### Scenario: An enrichment table offers Connect but never Add rows
@@ -331,8 +336,8 @@ Because the backend reports `permissions {false,false}` for system tables, the w
 #### Scenario: Header actions follow the fixed order
 
 - **WHEN** the detail header renders for a user with every permission on an `ACTIVE` table
-- **THEN** the controls appear in the order Manage access, Delete table, Add columns, Add rows, Connect, JSON-editor toggle — the toggle last, after the primary Connect
-- **AND** with the JSON view on, the copy-definition control appears between Connect and the toggle, leaving the toggle last
+- **THEN** the controls appear in the order Delete table, Add columns, Add rows, Connect, JSON-editor toggle — the toggle last, after the primary Connect
+- **AND** with the JSON view on, only the copy-definition control and the toggle remain, the toggle last
 
 #### Scenario: A not-yet-active table shows Save in their place
 
@@ -400,76 +405,11 @@ Every delete-table confirmation dialog — the catalog list's row delete action 
 - **WHEN** the user activates the detail view's Delete table action
 - **THEN** the confirmation dialog shows a Name row with that table's name, matching the catalog's confirmation content
 
-### Requirement: Full-admin per-table role management panel
-
-The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN` and system tables carry no per-table roles to manage, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system); a save SHALL full-replace the lists via `replaceTableAccess`.
-
-Role names SHALL be picked from a closed option list rather than typed. The catalog behind that list SHALL be DIAL Core's own merged role population — the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested: it is a third copy that is neither population, it can hold a role Core does not, and it is being retired — every other role picker in the application already reads Core. Each option's value SHALL be the role's bare name, which is the raw provider-role string the backend matches against; there is no separate role id, and no resource reference is ever stored.
-
-The options SHALL be presented in alphabetical order, independently of the order the two populations were read in, so a role can be found by name.
-
-The options SHALL additionally include every role name the table already grants, even when the catalog does not offer it. A closed select renders only the values that match an option, so without this a grant naming a role outside the catalog — one declared only in Core's configuration file, or any of them when the catalog read failed — would be invisible and would be dropped by the next unrelated edit, silently revoking access that is still in effect.
-
-A role field whose selected roles do not all fit SHALL show as many role tags as fit, followed by a count of the remaining ones, rather than clipping the tags or letting them overflow the field.
-
-While the initial fetch (the table's current access and the role catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed role-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds. A failed role-catalog fetch SHALL still leave the table's existing grants selected and selectable rather than emptying the lists.
-
-#### Scenario: Full admin edits the role lists
-
-- **WHEN** a `FULL_ADMIN` opens the role panel, checks a role in the `write` list, and saves
-- **THEN** `replaceTableAccess` is called with the full updated `{write, modify}` lists
-
-#### Scenario: Panel hidden for non-admins
-
-- **WHEN** the detail view renders for a user who is not `FULL_ADMIN`
-- **THEN** the role-management panel is not shown
-
-#### Scenario: Panel hidden for system tables even for a full admin
-
-- **WHEN** a `FULL_ADMIN` opens a system table's detail view
-- **THEN** the role-management panel is not shown
-
-#### Scenario: Loading spinner while fetching
-
-- **WHEN** the panel opens
-- **THEN** a loading spinner is shown until both the table's current access and the role catalog have been fetched
-
-#### Scenario: Every catalog role is offered, not just the granted ones
-
-- **WHEN** the role catalog loads
-- **THEN** each write/modify picker offers every catalog role as an option, with already-granted roles selected
-
-#### Scenario: Options are ordered alphabetically
-
-- **WHEN** the catalog resolves in an order other than alphabetical
-- **THEN** each picker presents its options sorted by name
-
-#### Scenario: The admin backend's roles list is not requested
-
-- **WHEN** the panel opens
-- **THEN** no request is made to the admin backend's roles endpoint
-
-#### Scenario: A granted role outside the catalog stays offered and survives a save
-
-- **WHEN** the panel opens for a table whose stored `write` list contains a role the catalog does not offer
-- **THEN** that role is offered as a selected option in the `write` picker
-- **AND** a save made after editing only the `modify` list sends the `write` list back unchanged
-
-#### Scenario: Roles-catalog fetch failure is surfaced independently
-
-- **WHEN** the role catalog fails to load even though the table's current access loads successfully
-- **THEN** an error notification distinct from the access-load-failure notification is shown
-- **AND** the roles the table already grants remain offered and selected
-
-#### Scenario: Many selected roles collapse to a count
-
-- **WHEN** a role field holds more selected roles than fit in its width
-- **THEN** it shows the tags that fit followed by a `+N` count of the rest
-- **AND** the count is not shown when every selected role fits
-
 ### Requirement: System-owned tables are read-only
 
-The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the manage-access / delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
+The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
+
+The **read-side** controls are the exception, because the service accepts read grants and row policies on a system table, which carries the shared data a policy most often narrows: a `FULL_ADMIN` SHALL still be offered the Access tab on an `ACTIVE` system table, where **Get**, **Read**, the sensitive clearance and row limits are editable and **Write** and **Modify** are locked with the reason (see "Role drawer edits one role's access and row limit").
 
 #### Scenario: System table in the catalog
 
@@ -480,28 +420,39 @@ The catalog and detail views SHALL reflect the table's server-provided `system` 
 #### Scenario: System table detail is read-only
 
 - **WHEN** the user opens a system table's detail page
-- **THEN** the manage-access, delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
+- **THEN** the delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
 - **AND** the column grid offers no edit/drop actions and no inline editing
 - **AND** the table, its columns, and their display names and descriptions remain viewable
+
+#### Scenario: A system table's access can still be managed
+
+- **WHEN** a `FULL_ADMIN` opens an `ACTIVE` system table's detail page
+- **THEN** the Access tab is offered
+- **AND** its drawer allows **Read**, the sensitive switch and a row limit and locks **Write** and **Modify**
 
 ### Requirement: Analytics table role capability model
 
 The system SHALL expose, on `AppContext`, the capability inputs for Analytics tables: `isFullAdmin`
 (true when authentication is disabled, or when `userInfo.roles` includes `FULL_ADMIN`), the existing
 `isReadOnlyAdmin`, and `isEnableAuth`. The `AnalyticsTable` model SHALL carry an optional
-`permissions: { write: boolean; modify: boolean }` object supplied by the data-access service. A hook
-`useAnalyticsTablePermissions(table?)` (`src/hooks/`) SHALL derive:
+`permissions` object supplied by the data-access service, with the boolean flags `get`, `read`,
+`sensitive`, `write`, `modify` and `rows_restricted`: the calling identity's effective per-table privileges
+and whether a row policy confines it. A hook `useAnalyticsTablePermissions(table?)` (`src/hooks/`) SHALL
+derive:
 
 - `canCreate` SHALL equal `isFullAdmin`.
-- `canDelete` and `canManageRoles` SHALL equal `isFullAdmin && !table.system`.
+- `canDelete` SHALL equal `isFullAdmin && !table.system`.
+- `canManageRoles` SHALL equal `isFullAdmin`, including on a system table, because the read-side grants and row policies of a system table are manageable.
 - `canWrite` SHALL equal `table.permissions.write` when present, otherwise `!isEnableAuth`.
 - `canModify` SHALL equal `table.permissions.modify` when present, otherwise `!isEnableAuth`.
+- `canChangeSensitive` SHALL equal `canModify && table.permissions.sensitive` when `sensitive` is present, otherwise `!isEnableAuth`.
+- `isRowsRestricted` SHALL equal `table.permissions.rows_restricted` when present, otherwise `false`.
 
 #### Scenario: Full admin can act on a non-system table
 
 - **WHEN** authentication is enabled, the user is `FULL_ADMIN`, and a non-system table reports
-  `permissions {write:true, modify:true}`
-- **THEN** `canCreate`, `canDelete`, `canManageRoles`, `canWrite`, and `canModify` are all `true`
+  `permissions {write:true, modify:true, sensitive:true}`
+- **THEN** `canCreate`, `canDelete`, `canManageRoles`, `canWrite`, `canModify`, and `canChangeSensitive` are all `true`
 
 #### Scenario: Per-table write without modify
 
@@ -513,13 +464,17 @@ The system SHALL expose, on `AppContext`, the capability inputs for Analytics ta
 
 - **WHEN** a system table reports `permissions {write:false, modify:false}` (as the backend does for
   every caller) and the user is `FULL_ADMIN`
-- **THEN** `canWrite`, `canModify`, `canDelete`, and `canManageRoles` are all `false`
+- **THEN** `canWrite`, `canModify`, and `canDelete` are `false`, and `canManageRoles` stays `true` so the read-side grants remain manageable
+
+#### Scenario: Modify without the clearance cannot change sensitivity
+
+- **WHEN** a table reports `permissions {modify:true, sensitive:false}`
+- **THEN** `canModify` is `true` and `canChangeSensitive` is `false`
 
 #### Scenario: Missing permissions default safely
 
 - **WHEN** a table omits `permissions` and authentication is enabled
-- **THEN** `canWrite` and `canModify` are `false`; **AND WHEN** authentication is disabled they are
-  `true`
+- **THEN** `canWrite`, `canModify`, and `canChangeSensitive` are `false` and `isRowsRestricted` is `false`; **AND WHEN** authentication is disabled the first three are `true` and `isRowsRestricted` stays `false`
 
 ### Requirement: Tables catalog gates catalog-level actions to full admins
 
@@ -1425,81 +1380,6 @@ the schema, and caching it would extend one outage over the entry's whole lifeti
 - **WHEN** a schema fetch fails and the page is loaded again
 - **THEN** the schema is fetched from the analytics service again rather than the failure being replayed
 
-### Requirement: Table detail view is organized into Properties and Audit tabs
-
-The table detail view (`/tables/{name}`) SHALL, for a table whose `status` is `ACTIVE`, present its
-content under a horizontal tab strip with exactly two tabs, **Properties** and **Audit**, in that
-order. `Properties` SHALL be the selected tab when the view is first opened.
-
-The view header — the table name, the lifecycle status badge, the kind tag, the system tag, the
-description row, and the whole header action row (Manage access, Delete table, Add columns, Add rows,
-Connect, and the draft **Save** action) — SHALL render **above** the tab strip and SHALL be unchanged
-by this reorganization: the same controls, in the same order, under the same permission and status
-conditions as before, visible whichever tab is selected. Every other element the "Table detail column
-schema management", "Define and materialize a table schema", and "Table detail row writes"
-requirements describe as being on the detail page — the read-only schema-metadata summary, the
-columns grid or the draft schema editor, and the modals those actions open — SHALL render inside the
-**Properties** tab where a tab strip is rendered, and directly beneath the header where it is not
-(see the status and feature-flag conditions below). Whichever of the two applies, that content SHALL
-be the same content, in the same order, as before this change.
-
-The Audit tab SHALL be offered **only** on a table whose `status` is `ACTIVE`. On a table at any other
-status — `PENDING` (Draft), `FAILED`, or a table whose status the backend does not report — the detail
-view SHALL render no tab strip and no Audit tab, SHALL render the Properties content directly, and
-SHALL issue no request to the analytics activity feed. A table that has not been materialized has no
-audit history for the tab to show: it has no columns, and the analytics activity feed returns zero
-activities for its name, so the tab could only ever be empty. On an `ACTIVE` table the Audit tab SHALL
-require no permission beyond the one that already allows reading the table, and SHALL NOT consult the
-per-table `write` / `modify` permissions.
-
-The tab strip SHALL therefore be rendered only when `featureFlags.analyticsEnabled` is true **and**
-the table's status is `ACTIVE`. With analytics disabled the detail view SHALL render the Properties
-content directly, with no tab strip and no Audit tab, and SHALL issue no request to the analytics
-activity feed — the same rendering as the non-`ACTIVE` case above. The route itself is not guarded —
-`/tables/{name}` renders whenever it is reached, today and after this change; hiding the Analytics
-menu group is not a route guard, so a bookmarked or pasted link still opens this view and the tab
-condition is what keeps an analytics-disabled installation from issuing an activity request. Guarding
-the route is a separate concern about the whole tables feature and is out of scope here.
-
-#### Scenario: Properties is the selected tab when the detail view opens
-
-- **WHEN** the user opens the detail view of a table whose `status` is `ACTIVE`
-- **THEN** a tab strip showing `Properties` and `Audit` is rendered
-- **AND** `Properties` is the selected tab
-- **AND** the read-only schema-metadata summary and the columns grid are shown beneath it
-
-#### Scenario: Header and its actions stay above the tab strip
-
-- **GIVEN** the detail view of a table whose `status` is `ACTIVE`
-- **WHEN** the user switches from `Properties` to `Audit`
-- **THEN** the table name, status badge, kind tag, description row, and every header action button
-  the user's permissions allow remain rendered above the tab strip, unchanged
-
-#### Scenario: Audit tab is hidden on a draft table
-
-- **GIVEN** a table whose `status` is `PENDING`
-- **WHEN** the user opens its detail view
-- **THEN** no tab strip and no `Audit` tab are rendered
-- **AND** the schema-metadata summary and the draft schema editor are shown directly, as they are
-  before this change
-- **AND** no request is issued to the analytics activity feed
-
-#### Scenario: Audit tab needs no permission beyond reading the table
-
-- **GIVEN** a table whose `status` is `ACTIVE`
-- **AND** a viewer whose per-table permissions report `write: false` and `modify: false`
-- **WHEN** the user opens the table detail view
-- **THEN** the `Audit` tab is present and selectable
-
-#### Scenario: Audit tab absent when analytics is disabled
-
-- **GIVEN** `featureFlags.analyticsEnabled` is false
-- **AND** a table whose `status` is `ACTIVE` — so the flag alone decides
-- **WHEN** the user reaches `/tables/{name}` by a direct link
-- **THEN** no tab strip and no `Audit` tab are rendered
-- **AND** the schema-metadata summary and the columns grid or draft schema editor are shown directly
-- **AND** no request is issued to the analytics activity feed
-
 ### Requirement: Table Audit tab lists the table's own and its columns' activities
 
 The global Activity Audit page's own `Analytics` view — the third option in its `View` selector, its
@@ -1792,7 +1672,7 @@ The JSON view SHALL offer no way to change the table. Its editor SHALL reject ty
 
 A save that materializes a draft **from its JSON editor** SHALL leave the reader on the live column surface of the now-`ACTIVE` table, not on the read-only JSON view: after a successful `defineTableSchema` the toggle SHALL be off, so that "Define and materialize a table schema" — "the view SHALL refresh showing the table `ACTIVE` with its live column surface" — keeps holding now that the same control has a meaning on an `ACTIVE` table.
 
-Every existing affordance of the `ACTIVE` detail view — Manage access, Delete table, Add columns, Add rows, Connect, the per-column edit/drop and inline-rename actions — SHALL behave exactly as before. The JSON-editor toggle SHALL be the **last** control of the header row, after the primary **Connect** (see "Table detail gates edits by per-table permissions"). It is a view switch rather than an action on the table, and it is the one control that persists across the swap and that the reader returns to, so it sits at the end of the row where the actions stop. **Connect** remains the header's only primary action; it is no longer the header's last control. That is the same slot the toggle occupies on a draft, where it is also the row's last control.
+While the JSON view is on, the header SHALL offer only the **copy control** and the toggle: Delete table, Add columns, Add rows and Connect are not rendered, and they return, each behaving exactly as before, when the view is turned off. The per-column edit/drop and inline-rename actions are unaffected. The JSON-editor toggle SHALL be the **last** control of the header row (see "Table detail gates edits by per-table permissions"). It is a view switch rather than an action on the table, and it is the one control that persists across the swap and that the reader returns to.
 
 #### Scenario: The JSON-editor toggle is offered in an ACTIVE table's header
 
@@ -1859,9 +1739,14 @@ Every existing affordance of the `ACTIVE` detail view — Manage access, Delete 
 
 #### Scenario: The ACTIVE view's own actions are unaffected
 
-- **WHEN** the detail view of an `ACTIVE` table renders for a caller with every permission
-- **THEN** Manage access, Delete table, Add columns, Add rows and Connect are all still offered, each behaving exactly as before, whether the JSON view is on or off
+- **WHEN** the detail view of an `ACTIVE` table renders for a caller with every permission and the JSON view is off
+- **THEN** Delete table, Add columns, Add rows and Connect are all offered, each behaving exactly as before
 - **AND** **Connect** is still the header's only primary action, though it is no longer the header's last control — the JSON-editor toggle follows it
+
+#### Scenario: Turning the JSON view on leaves only copy and the toggle
+
+- **WHEN** the reader turns the JSON view on
+- **THEN** the header shows the copy control and the JSON-editor toggle and no other control, and turning the view off restores Delete table, Add columns, Add rows and Connect
 
 #### Scenario: Materializing a draft from the JSON editor lands on the live column surface
 
@@ -1876,7 +1761,7 @@ Every existing affordance of the `ACTIVE` detail view — Manage access, Delete 
 
 ### Requirement: The displayed definition is copyable in one action
 
-While the read-only JSON view of an `ACTIVE` table is shown, a copy control SHALL be offered **in the header**, immediately before the JSON-editor toggle that opened the view, so it is reachable without scrolling the document and sits beside the control the reader just used. Its accessible name SHALL state that it copies and name the value it copies, and that name SHALL be unchanged by a copy. The control SHALL be shown **only while the document is** — it copies what is displayed, so it has no meaning when nothing is, and a permanent control in the header would offer to copy a document that is not on screen.
+While the read-only JSON view of an `ACTIVE` table is shown, the header SHALL offer a copy control — a button with a copy icon and the text **Copy** — immediately before the JSON-editor toggle that opened the view, and no other table action (see "An ACTIVE table's definition is readable as JSON"), so the document can be taken without scrolling it. Its accessible name SHALL state that it copies, and that name SHALL be unchanged by a copy; the confirmation of the copy names the value. The control SHALL be shown **only while the document is** — it copies what is displayed, so it has no meaning when nothing is, and a permanent control in the header would offer to copy a document that is not on screen.
 
 The read-only view itself SHALL carry no toolbar and no heading of its own: it is reached by a labelled toggle that names the surface, and the copy control travels with that toggle, so the whole body below the header is the document.
 
@@ -1887,7 +1772,7 @@ A successful copy SHALL be confirmed by a notification raised through the consol
 #### Scenario: The copy control is offered with the document
 
 - **WHEN** a reader opens the JSON view of an `ACTIVE` table
-- **THEN** a control whose accessible name states that it copies the table's JSON definition is offered in the header, between **Connect** and the JSON-editor toggle
+- **THEN** a **Copy** button with a copy icon is offered in the header, immediately before the JSON-editor toggle, with no other table action beside it
 - **AND** it is offered to every caller the view is offered to, including one the table reports `permissions {write: false, modify: false}` for
 
 #### Scenario: The copy control is absent while the JSON view is off
@@ -1906,4 +1791,766 @@ A successful copy SHALL be confirmed by a notification raised through the consol
 - **WHEN** the copy succeeds
 - **THEN** a confirmation naming the copied value is announced politely through the console's notification container, a live region distinct from the control's own accessible name
 - **AND** the control's accessible name is unchanged by the copy
+
+### Requirement: Table detail view is organized into Properties, Access and Audit tabs
+
+The table detail view (`/tables/{name}`) SHALL, for a table whose `status` is `ACTIVE`, present its
+content under a horizontal tab strip, built from the design system's 2.0 tabs component, with the tabs
+**Properties**, **Access** and **Audit**, in that order. The **Access** tab SHALL be offered only as
+"Access tab lists a table's roles" states; where it is not offered the strip carries **Properties** and
+**Audit** alone. `Properties` SHALL be the selected tab when the view is first opened. The selected tab is
+held by the view, as the other entity views' tabs are, and is not part of the URL.
+
+The view header — the table name, the lifecycle status badge, the Rows restricted badge, the kind tag, the
+system tag, the description row, and the whole header action row (Delete table, Add columns, Add rows,
+Connect, and the draft **Save** action) — SHALL render **above** the tab strip and SHALL be otherwise unchanged
+by this reorganization: the same controls, in the same order, under the same permission and status
+conditions as before, visible whichever tab is selected. Every other element the "Table detail column
+schema management", "Define and materialize a table schema", and "Table detail row writes"
+requirements describe as being on the detail page — the read-only schema-metadata summary, the
+columns grid or the draft schema editor, and the modals those actions open — SHALL render inside the
+**Properties** tab where a tab strip is rendered, and directly beneath the header where it is not
+(see the status and feature-flag conditions below). Whichever of the two applies, that content SHALL
+be the same content, in the same order, as before this change.
+
+The Audit tab SHALL be offered **only** on a table whose `status` is `ACTIVE`. On a table at any other
+status — `PENDING` (Draft), `FAILED`, or a table whose status the backend does not report — the detail
+view SHALL render no tab strip and no Audit or Access tab, SHALL render the Properties content directly, and
+SHALL issue no request to the analytics activity feed or to the access and row-policy endpoints. A table that
+has not been materialized has no audit history for the tab to show: it has no columns, and the analytics
+activity feed returns zero activities for its name, so the tab could only ever be empty. On an `ACTIVE`
+table the Audit tab SHALL require no permission beyond the one that already allows reading the table, and
+SHALL NOT consult the per-table `write` / `modify` permissions.
+
+The tab strip SHALL therefore be rendered only when `featureFlags.analyticsEnabled` is true **and**
+the table's status is `ACTIVE`. With analytics disabled the detail view SHALL render the Properties
+content directly, with no tab strip and no Audit or Access tab, and SHALL issue no request to the analytics
+activity feed or to the access and row-policy endpoints — the same rendering as the non-`ACTIVE` case above.
+The route itself is not guarded —
+`/tables/{name}` renders whenever it is reached, today and after this change; hiding the Analytics
+menu group is not a route guard, so a bookmarked or pasted link still opens this view and the tab
+condition is what keeps an analytics-disabled installation from issuing an activity request. Guarding
+the route is a separate concern about the whole tables feature and is out of scope here.
+
+#### Scenario: Properties is the selected tab when the detail view opens
+
+- **WHEN** the user opens the detail view of a table whose `status` is `ACTIVE`
+- **THEN** a tab strip showing `Properties`, `Access` (for a viewer who can manage it) and `Audit` is rendered
+- **AND** `Properties` is the selected tab
+- **AND** the read-only schema-metadata summary and the columns grid are shown beneath it
+
+#### Scenario: Header and its actions stay above the tab strip
+
+- **GIVEN** the detail view of a table whose `status` is `ACTIVE`
+- **WHEN** the user switches from `Properties` to `Access` or `Audit`
+- **THEN** the table name, status badge, kind tag, description row, and every header action button
+  the user's permissions allow remain rendered above the tab strip, unchanged
+
+#### Scenario: A viewer who cannot manage access sees two tabs
+
+- **GIVEN** a table whose `status` is `ACTIVE` and a user who is not `FULL_ADMIN`
+- **WHEN** the detail view renders
+- **THEN** the strip shows `Properties` and `Audit` only, and no request is made to the access or row-policy endpoints
+
+#### Scenario: Audit tab is hidden on a draft table
+
+- **GIVEN** a table whose `status` is `PENDING`
+- **WHEN** the user opens its detail view
+- **THEN** no tab strip and no `Audit` or `Access` tab are rendered
+- **AND** the schema-metadata summary and the draft schema editor are shown directly, as they are
+  before this change
+- **AND** no request is issued to the analytics activity feed or to the access and row-policy endpoints
+
+#### Scenario: Audit tab needs no permission beyond reading the table
+
+- **GIVEN** a table whose `status` is `ACTIVE`
+- **AND** a viewer whose per-table permissions report `write: false` and `modify: false`
+- **WHEN** the user opens the table detail view
+- **THEN** the `Audit` tab is present and selectable
+
+#### Scenario: Audit tab absent when analytics is disabled
+
+- **GIVEN** `featureFlags.analyticsEnabled` is false
+- **AND** a table whose `status` is `ACTIVE` — so the flag alone decides
+- **WHEN** the user reaches `/tables/{name}` by a direct link
+- **THEN** no tab strip and no `Audit` or `Access` tab are rendered
+- **AND** the schema-metadata summary and the columns grid or draft schema editor are shown directly
+- **AND** no request is issued to the analytics activity feed or to the access and row-policy endpoints
+
+### Requirement: Access tab lists a table's roles
+
+The table detail view SHALL offer an **Access** tab to a user for whom `canManageRoles` is true, on a table that has an `ACTIVE` status (see "Table detail view is organized into Properties, Access and Audit tabs"). Its content SHALL be backed by `GET /v1/tables/{name}/access` and `GET /v1/tables/{name}/row-policies` of the data-access service, requested together when the detail view of such a table loads, so the tab's presence is known before the tab is opened.
+
+The tab SHALL NOT be offered when the access read answers `403` — the service requires `TABLE_GRANT` for it, which `FULL_ADMIN` normally carries but an operator may configure away — and that answer SHALL produce no notification, because a user who cannot manage grants has nothing to be told. Any other failure of either request SHALL surface an error notification, SHALL leave the tab offered with an empty roles table, and SHALL keep **Add role** and every row action disabled until a reload succeeds.
+
+The tab SHALL render a roles table with one row per such role, sorted by role name, with these columns:
+
+- **Role**: the role name, with a sensitive indicator when the role is in the `sensitive` list.
+- **Get**, **Read**, **Write**, **Modify**: a mark per privilege. A privilege the role holds through its own stored list SHALL show a full mark. A privilege the role holds only by implication — `get` through `read` or `modify` — SHALL show a lighter mark, and a stored list SHALL NOT be reported as expanded by that implication. A privilege the role does not hold SHALL show a neutral placeholder.
+- **Rows**: the role's row limit rendered as a readable condition summary when the role has a row policy; otherwise **All rows** when the role holds `read`; otherwise **Cannot read rows**.
+
+A role that has a row policy and no grant SHALL be listed, with every privilege mark neutral and its row limit shown. The roles table SHALL offer a role-name search and two filters, **Can read** and **Rows limited**, applied on the client to the loaded rows. Selecting a row SHALL open the role drawer on that role (see "Role drawer edits one role's access and row limit"); **Add role** SHALL open it on a new role.
+
+Every row SHALL be operable by keyboard, and a row's mark cells SHALL carry an accessible name stating the privilege and whether it is stored or implied.
+
+#### Scenario: A table's roles are listed with their grants
+
+- **GIVEN** a table whose `read` list names `team-x` and whose `write` list names `ingest-bot`
+- **WHEN** a `FULL_ADMIN` opens its Access tab
+- **THEN** one row is shown for each role, sorted by name
+- **AND** `team-x` shows a lighter **Get** mark and a full **Read** mark, and `ingest-bot` shows a full **Write** mark
+
+#### Scenario: The stored list is not shown as expanded
+
+- **GIVEN** a table whose `read` list names `team-x` and whose `get` list is empty
+- **WHEN** the tab renders
+- **THEN** the **Get** mark of `team-x` is the lighter, implied mark, not the full one
+
+#### Scenario: Rows column states what each role reads
+
+- **GIVEN** `team-x` has a row policy, `pii-analysts` holds `read` and has none, and `ingest-bot` holds only `write`
+- **WHEN** the tab renders
+- **THEN** `team-x` shows its condition summary, `pii-analysts` shows **All rows**, and `ingest-bot` shows **Cannot read rows**
+
+#### Scenario: A role with only a row policy is listed
+
+- **GIVEN** a role that has a row policy and appears in no grant list
+- **WHEN** the tab renders
+- **THEN** the role is listed with every privilege mark neutral and its row limit shown
+
+#### Scenario: The tab is hidden when the access read is forbidden
+
+- **GIVEN** a `FULL_ADMIN` whose `GET /access` answers `403`
+- **WHEN** the detail view of an `ACTIVE` table loads
+- **THEN** no Access tab is offered and no notification is shown
+
+#### Scenario: Another failure is surfaced and keeps the tab
+
+- **WHEN** the access read fails with a status other than `403`
+- **THEN** an error notification is shown, the Access tab is offered with an empty roles table, and **Add role** is disabled
+
+#### Scenario: Filters narrow the loaded rows
+
+- **WHEN** the user selects **Can read**
+- **THEN** only the roles that hold `read` remain listed, without a new request
+
+### Requirement: Role drawer edits one role's access and row limit
+
+The Access tab SHALL edit a role in a **drawer** that opens over the right edge of the page, keeps the roles table visible, and closes with its close control, with Escape, and with **Cancel**. The drawer SHALL hold the following steps in order, each addressable by a numbered heading:
+
+1. **Role**: for a new role, a single-choice picker over the role catalog described in "Role catalog for the drawer", offering only roles that have no entry on the table; for an existing role, the role's name, read-only. A role that already has an entry is edited by selecting its row.
+2. **What it can do**: shown only once a role is chosen (always, for an existing role); four selectable cards — **Get**, **Read**, **Write**, **Modify**. **Get** SHALL show as held, with the note that it comes from **Read** or **Modify**, while either is selected, and SHALL then be neither separately togglable nor stored by this save unless it was already stored.
+3. **Sensitive columns**: a switch that grants the sensitive clearance, naming the table's sensitive columns. A note beneath it SHALL state that the clearance belongs to the role and covers everything it can do on this table. This step SHALL be offered only while **Get**, **Read** or **Modify** is held, stored or implied, because the clearance authorizes nothing by itself.
+4. **Which rows can it read?**: **All rows** or **Only some rows**. This step SHALL be offered only while **Read** is selected. **Only some rows** reveals the row-limit editor (see "Row-limit editor"). A note in this step SHALL state that the limit also applies to SQL, CSV export and Flight SQL.
+
+On a `system` table, **Write** and **Modify** SHALL be locked and unselected, with the reason that the service feeds system tables so they cannot be written to or changed, and that read access and row limits work as on any table. Steps 3 and 4 SHALL work as on any other table.
+
+The footer SHALL offer the actions **Cancel** and **Save role**.
+
+**Save role** SHALL be disabled until the role is chosen and at least one privilege is held or a row limit is set, and while a request is in flight. It SHALL change the role's membership in each of the five grant lists and nothing else: the drawer SHALL read the table's lists again immediately before saving, add or remove only this role in each list whose membership for it changed, and send only the keys that changed through `PUT /v1/tables/{name}/access`, which merges by key. The roles of every other grantee in every list SHALL be preserved. The row policy SHALL then be saved by a second request (see "Row-limit editor").
+
+A successful save SHALL show a success notification, update the roles table from the service's response, and close the drawer, unless the response reports grants that change nothing (see "Drawer reports grants that change nothing"). A save that fails SHALL show an error notification carrying the service's message and request id, SHALL leave the drawer open with the user's input intact, and SHALL change nothing in the roles table.
+
+Turning **Read** off SHALL leave the role's existing row policy untouched: that policy still narrows the role if it reads the table by another path, and removing it would widen the role's access.
+
+#### Scenario: Adding a role grants Read and implies Get
+
+- **WHEN** the user chooses **Add role**, picks `team-z`, selects **Read**, and saves
+- **THEN** `PUT /access` is sent with a `read` list that contains `team-z` and every previous member
+- **AND** the roles table shows `team-z` with a full **Read** mark and an implied **Get** mark
+
+#### Scenario: Other roles' membership is preserved
+
+- **GIVEN** the `read` list contains `team-x` and `pii-analysts`
+- **WHEN** the user grants **Write** to `ingest-bot` and saves
+- **THEN** only the `write` key is sent, and the `read` list is not sent
+
+#### Scenario: The lists are read again before they are changed
+
+- **GIVEN** another admin added `analysts` to the `read` list after this view loaded
+- **WHEN** the user grants `team-z` **Read** and saves
+- **THEN** the `read` list sent contains `analysts` as well as `team-z`
+
+#### Scenario: Nothing below the role is shown until a role is chosen
+
+- **WHEN** the drawer opens on a new role and no role is chosen
+- **THEN** only the **Role** step is shown, with no privilege cards
+- **AND WHEN** a role is chosen
+- **THEN** the **What it can do** step appears
+
+#### Scenario: Sensitive is offered only with a verb
+
+- **WHEN** no privilege is selected
+- **THEN** the **Sensitive columns** step is not offered
+- **AND WHEN** **Modify** is selected
+- **THEN** the step is offered
+
+#### Scenario: The row step is offered only for Read
+
+- **WHEN** only **Write** is selected
+- **THEN** the **Which rows can it read?** step is not offered
+- **AND WHEN** **Read** is selected
+- **THEN** it is offered with **All rows** chosen for a role that has no row policy
+
+#### Scenario: A system table locks Write and Modify
+
+- **WHEN** the drawer is opened on a `system` table
+- **THEN** **Write** and **Modify** are locked with the stated reason, and **Read**, the sensitive switch and the row step behave as on any table
+
+#### Scenario: Turning Read off keeps the row policy
+
+- **GIVEN** a role with a row policy
+- **WHEN** the user deselects **Read** and saves
+- **THEN** no request to the row-policies endpoint is sent
+
+#### Scenario: A failed save keeps the drawer open
+
+- **WHEN** `PUT /access` fails
+- **THEN** an error notification shows the service's message and request id
+- **AND** the drawer stays open with the selections unchanged and the roles table unchanged
+
+#### Scenario: The drawer closes with Escape
+
+- **WHEN** the drawer is open and the user presses Escape
+- **THEN** it closes without sending a request
+
+### Requirement: Role catalog for the drawer
+
+The role picker SHALL be fed from DIAL Core's own merged role population, and the option rules of the earlier per-table role panel SHALL be kept: the catalog is the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested. Each option's value SHALL be the role's bare name, which is the raw provider-role string the service matches against; no resource reference is ever stored.
+
+Options SHALL be presented in alphabetical order, independently of the order the two populations were read in. A role the table already names in any list or policy SHALL always be offered when editing that role, even when the catalog does not contain it, so a grant to a role outside the catalog is never invisible and never silently revoked.
+
+While the catalog is being fetched the picker SHALL show a loading state. A failed catalog fetch SHALL surface its own error notification, distinct from the access-load failure, and SHALL leave the roles already on the table listed and editable.
+
+#### Scenario: Options are ordered alphabetically
+
+- **WHEN** the catalog resolves in an order other than alphabetical
+- **THEN** the picker presents its options sorted by name
+
+#### Scenario: The admin backend's roles list is not requested
+
+- **WHEN** the drawer opens
+- **THEN** no request is made to the admin backend's roles endpoint
+
+#### Scenario: A granted role outside the catalog stays editable
+
+- **GIVEN** the table's `write` list names a role the catalog does not offer
+- **WHEN** the user opens that role's row
+- **THEN** the drawer shows that role and a save made after changing only another step keeps the role in the `write` list
+
+#### Scenario: A catalog failure is surfaced independently
+
+- **WHEN** the role catalog fails to load while the table's access loads
+- **THEN** an error notification distinct from the access-load failure is shown
+- **AND** the roles on the table remain listed
+
+#### Scenario: Roles that already have an entry are not offered for a new role
+
+- **GIVEN** `team-x` already has an entry on the table
+- **WHEN** the user opens **Add role**
+- **THEN** `team-x` is not offered in the picker
+
+### Requirement: Row-limit editor
+
+When the user chooses **Only some rows**, the drawer SHALL show a row-limit editor that builds a predicate over the table's own columns. The editor SHALL be the filter-condition editor of the Query Builder's Filter section, shared rather than duplicated, and SHALL show the same condition and group controls, operators, value inputs and operator rules for the same column types. It SHALL NOT depend on a Query Builder's state: its columns SHALL be the table's stored columns — sensitive columns included, whatever the viewer sees — and it SHALL offer no function operand, no parameter and no aggregate, because the service refuses a row-policy filter that uses them. A column the table does not store, including a dotted enrichment field, SHALL NOT be offered.
+
+The editor SHALL also offer a **JSON** view of the same predicate in the service's stable filter serialization — the one the Query Builder's JSON view uses — and a predicate that nests deeper than the visual editor can hold SHALL open in the JSON view with a note saying why, without changing it. Editing the predicate in either view SHALL keep the other in step when the predicate is representable visually.
+
+Saving a role with **Only some rows** SHALL send `PUT /v1/tables/{name}/row-policies/{role}` with the body `{"filter": …}`. Saving with **All rows** for a role that has a row policy SHALL send `DELETE /v1/tables/{name}/row-policies/{role}`; a `404` answer to that delete SHALL be treated as success, because it means the policy is already gone. Saving with **All rows** for a role that has no row policy SHALL send nothing to that endpoint. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter (an empty or blank document is an empty predicate, not such text) SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
+
+The two requests of **Save role** are independent. When the grants save succeeds and the row-policy request fails, the drawer SHALL stay open, the roles table SHALL show the saved grants, an error notification SHALL carry the service's message — which names the offending field for a `422` — and the footer's action SHALL become **Save row limit**, which repeats only the row-policy request. The note on screen SHALL state exactly what was saved. A predicate the service rejects for a field the user can see in JSON SHALL have that field highlighted there when the service names it.
+
+#### Scenario: A row limit is saved with the grants
+
+- **WHEN** the user selects **Read**, chooses **Only some rows**, builds `project_id is one of Z-PRJ-3, Z-PRJ-4`, and saves
+- **THEN** `PUT /access` is sent, then `PUT /row-policies/{role}` with a `filter` for that predicate
+
+#### Scenario: Switching to All rows removes the limit
+
+- **GIVEN** a role with a row policy
+- **WHEN** the user chooses **All rows** and saves
+- **THEN** `DELETE /row-policies/{role}` is sent
+- **AND** a `404` answer does not produce an error notification
+
+#### Scenario: All rows on a role without a policy sends nothing
+
+- **GIVEN** a role without a row policy
+- **WHEN** the user keeps **All rows** and saves
+- **THEN** no request to the row-policies endpoint is sent
+
+#### Scenario: A rejected row limit keeps the saved grants
+
+- **GIVEN** the grants save succeeds and the row-policy request answers `422` naming `region`
+- **THEN** an error notification shows the service's message
+- **AND** the drawer stays open, the roles table shows the saved grants, and the footer action reads **Save row limit**
+- **AND WHEN** the user fixes the predicate and chooses **Save row limit**
+- **THEN** only the row-policy request is sent again
+
+#### Scenario: A deeply nested predicate opens as JSON
+
+- **GIVEN** a role whose stored predicate nests deeper than the visual editor holds
+- **WHEN** the drawer opens on it
+- **THEN** the row-limit editor shows the JSON view with a note that the predicate is too deep for the visual editor, and the predicate is unchanged
+
+#### Scenario: Only the table's own columns are offered
+
+- **WHEN** the user adds a condition
+- **THEN** the column picker lists the table's stored columns, including a sensitive column, and no dotted enrichment field
+
+#### Scenario: Function operands are not offered
+
+- **WHEN** the user edits a condition in the row-limit editor
+- **THEN** no function operand is offered for either side
+
+#### Scenario: An unfinished condition keeps the limit from being saved
+
+- **GIVEN** one condition on `project_id` is filled and a second condition has no column chosen
+- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
+
+#### Scenario: An empty JSON document returns to the visual view
+
+- **WHEN** no condition was added, the user switches to the JSON view, and then back to the visual view
+- **THEN** the visual view returns with no conditions and no message, and the empty document is not treated as invalid JSON
+
+#### Scenario: Text that is not a filter keeps the JSON view with its own message
+
+- **WHEN** the JSON text is not a filter and the user switches to the visual view
+- **THEN** the JSON view stays, with a message that the JSON is not a valid filter, not the too-deep message
+
+#### Scenario: An empty predicate cannot be saved
+
+- **WHEN** **Only some rows** is chosen and no condition has been added
+- **THEN** **Save role** is disabled
+
+### Requirement: Drawer reports grants that change nothing
+
+When `PUT /access` answers with `ineffective_grants`, the drawer SHALL stay open after the save, SHALL render one in-drawer banner entry per reported grant beside the card or step it concerns, using the entry's `message` verbatim, and SHALL change its primary action from **Save role** to **Done**. A banner is for a grant that was stored and has no effect — it is not an error and SHALL NOT be shown as a notification. An entry whose `key` is `read` SHALL mark the **Read** card; an entry whose `key` is `sensitive` SHALL mark the sensitive step.
+
+The row limit of a role whose grant changed nothing SHALL still be saved and shown, because a row policy applies to its role whatever path the role reads the table by.
+
+An error response to `PUT /access` — a `403`, a `404`, a `409 table_is_system` or a `422`, including `sensitive_grant_widens` — SHALL be an error notification carrying the service's message and request id, and SHALL NOT be shown as a banner.
+
+#### Scenario: A grant the service reports as redundant shows a banner
+
+- **GIVEN** the service answers with `ineffective_grants` of reason `already_global` for the `read` key
+- **THEN** the drawer stays open and the **Read** card carries a banner with the entry's `message`
+- **AND** the primary action reads **Done**
+- **AND** no notification is shown for it
+
+#### Scenario: Done closes the drawer
+
+- **WHEN** the drawer shows **Done** and the user selects it
+- **THEN** the drawer closes without sending a request
+
+#### Scenario: A refusal is a notification
+
+- **WHEN** `PUT /access` answers `422` with the code `sensitive_grant_widens`
+- **THEN** an error notification shows the service's message and request id
+- **AND** the drawer stays open, nothing is saved, and no banner is shown for it
+
+#### Scenario: A row limit is still saved beside a banner
+
+- **GIVEN** the save reports a redundant grant and the role has a row limit
+- **THEN** the row-policy request is sent and the roles table shows the limit
+
+### Requirement: Remove a role from a table
+
+The roles table SHALL offer **Remove role** on each row, which opens a confirmation dialog titled with the role name. The dialog SHALL list what will be removed: the table, the role's privileges (**Read (with Get)** where Get is implied), and its row limit when it has one, and SHALL state that both the access and the row limit are removed and that, if the role also reads every table through its privilege mapping, its users will then see every row of this table.
+
+Confirming SHALL remove the role from every grant list that names it and delete its row policy when it has one: one `PUT /access` sending only the keys that named the role, and one `DELETE /row-policies/{role}`. A `404` answer to that delete SHALL be treated as success. A confirmed removal SHALL show a success notification and drop the role from the roles table. A failure of either request SHALL show an error notification and SHALL leave the roles table reflecting only what was actually removed.
+
+#### Scenario: The dialog names what is removed
+
+- **GIVEN** `team-x` holds `read` and has a row limit
+- **WHEN** the user selects **Remove role** on its row
+- **THEN** the dialog names `team-x`, the table, **Read (with Get)** and the row limit
+- **AND** it warns that the users of the role may then see every row
+
+#### Scenario: Confirming removes grants and policy
+
+- **WHEN** the user confirms
+- **THEN** a `PUT /access` carrying only the changed keys without `team-x` is sent and `DELETE /row-policies/team-x` is sent
+- **AND** the role disappears from the roles table
+
+#### Scenario: Cancelling changes nothing
+
+- **WHEN** the user cancels the dialog
+- **THEN** no request is sent
+
+#### Scenario: A role without a row limit sends no policy delete
+
+- **GIVEN** a role that has no row policy
+- **WHEN** the user confirms its removal
+- **THEN** no request to the row-policies endpoint is sent
+
+### Requirement: Rows restricted badge
+
+A table whose `permissions.rows_restricted` is true SHALL show a **Rows restricted** badge, with a filter icon, on the table detail header beside the status badge, and in the Tables catalog row beside the table name. The detail header badge SHALL carry a tooltip stating that a row policy limits which rows of the table the user reads through every query surface. The limit itself — the policy's predicate — SHALL NOT be shown or requested for this user. A table whose `rows_restricted` is false or missing SHALL show no such badge.
+
+The badge SHALL be shown to every viewer the service reports confined, whether or not the viewer can manage access.
+
+#### Scenario: A confined user sees the badge
+
+- **WHEN** a table reports `permissions.rows_restricted = true`
+- **THEN** the detail header and the catalog row each show **Rows restricted**
+- **AND** hovering the header badge shows the explanation
+
+#### Scenario: An unconfined user sees no badge
+
+- **WHEN** a table reports `rows_restricted = false` or omits it
+- **THEN** no Rows restricted badge is shown
+
+#### Scenario: The policy is not revealed
+
+- **WHEN** a non-admin user views a table that reports `rows_restricted = true`
+- **THEN** no request is made to the row-policies endpoint and no predicate is displayed
+
+### Requirement: Changing a column's sensitivity is locked without the clearance
+
+In the column editor, the **Sensitive** switch SHALL be locked, with a lock icon and a tooltip stating that changing sensitivity needs the sensitive clearance on this table, whenever the viewer's per-table permissions do not report both `modify` and `sensitive`, because the service refuses the change with `403` otherwise. A locked switch SHALL keep its current value visible and SHALL NOT be togglable. The rest of the editor SHALL stay editable.
+
+#### Scenario: The switch is locked without the clearance
+
+- **GIVEN** a viewer with `permissions.modify = true` and `permissions.sensitive = false`
+- **WHEN** the column editor opens
+- **THEN** the Sensitive switch shows the column's value, is not togglable, and shows the lock with its reason
+
+#### Scenario: The switch is togglable with the clearance
+
+- **GIVEN** a viewer with `permissions.modify = true` and `permissions.sensitive = true`
+- **WHEN** the column editor opens
+- **THEN** the Sensitive switch can be toggled
+
+### Requirement: Backfill data is offered to a full admin from the Tables toolbar
+
+The Tables page SHALL offer a **Backfill data** button in its toolbar, beside the controls that create a
+table, to a full admin. It SHALL be withheld from a caller who is not a full admin, and while a backfill run
+is in progress. The button SHALL open the backfill drawer and SHALL NOT start anything itself.
+
+#### Scenario: A full admin sees the button
+
+- **GIVEN** a full admin on the Tables page and no backfill run in progress
+- **THEN** the toolbar offers Backfill data
+
+#### Scenario: A caller who is not a full admin sees no button
+
+- **GIVEN** a caller who is not a full admin
+- **THEN** the toolbar offers no Backfill data control and the page shows no backfill banner
+
+#### Scenario: A run in progress replaces the button
+
+- **GIVEN** a backfill run in progress
+- **THEN** the toolbar offers no Backfill data button and the banner above the listing opens the drawer
+
+### Requirement: A backfill run in progress is stated above the Tables listing
+
+While a backfill run is in progress the Tables page SHALL show a banner above the listing stating that data
+is being backfilled, how far it has got as "day N of M", and when it started, with a control that opens the
+backfill drawer. The banner SHALL be read from the service's list of runs filtered to running, so it is
+present after a reload without the run id being known. It SHALL NOT be shown for a run that has finished.
+
+"Day N of M" SHALL count the days the run has finished, completed or failed, against the range's total; it
+SHALL NOT be presented as a percentage.
+
+The console SHALL read the run again on an interval while it is running and SHALL stop when the run reaches
+a terminal state or the drawer and banner are no longer shown.
+
+#### Scenario: The banner follows a running run
+
+- **GIVEN** a run covering thirty days that has finished eleven
+- **THEN** the banner states day 12 of 30 together with the start time
+
+#### Scenario: A finished run shows no banner
+
+- **GIVEN** the service reports no running run
+- **THEN** the Tables listing shows no backfill banner
+
+#### Scenario: A reload finds the run
+
+- **GIVEN** a run started earlier by this or another session
+- **WHEN** the Tables page loads
+- **THEN** the banner is shown without the console having held the run id
+
+#### Scenario: Polling stops at a terminal state
+
+- **GIVEN** the drawer is open on a running run
+- **WHEN** the service reports the run done or failed
+- **THEN** the console stops reading it again
+
+### Requirement: The backfill drawer is three blocks: the run, the start form and the retained runs
+
+The backfill drawer SHALL be a modal panel at the right edge of the page, 600px wide, and SHALL be divided into
+up to three labelled blocks, each on a background a step lighter than the drawer panel's own rather than behind a border.
+
+The **start form** block SHALL come first, and SHALL be present only while no run is in progress: starting a run
+is what a reader opens the drawer for, and it SHALL NOT sit under the figures of the last one. The **run** block
+SHALL follow it and present one run: the run the reader has chosen from the list, or else the run in progress, or
+else the most recent run. The **retained runs** block SHALL come last and list the runs the service retains, newest first, each by status, range
+and the days it finished against the total; choosing one SHALL present it in the run block. The run block is
+absent when the service retains no run, and so is the retained runs block — an empty list SHALL NOT be drawn as a
+heading over a sentence.
+
+The run's facts SHALL come in one fixed order, the same on the pipeline drawer and named alike: the id (copyable),
+the window, then how the run went in rows of figures — days total, days completed, days failed; then rows inserted,
+rows skipped, rows dropped — then what else it measured (the date being processed while it runs, files processed),
+then start and finish together in one row of their own, finish only once finished. Days completed SHALL be coloured
+as a success when above zero and days failed as a failure when above zero; a zero stays the text colour. The failed
+days SHALL NOT be listed. What skipped and dropped rows mean SHALL be explained behind an info icon beside each of
+those two labels, not in a paragraph. The window SHALL be kept on one line.
+
+The drawer SHALL NOT describe the service's retention under the list.
+
+#### Scenario: A run in progress is the one presented
+
+- **GIVEN** a running run and earlier finished runs
+- **WHEN** the drawer opens
+- **THEN** the run block presents the running run, there is no start form block, and the list shows all retained runs
+
+#### Scenario: The latest run is presented when none is running
+
+- **GIVEN** no running run and one finished run
+- **WHEN** the drawer opens
+- **THEN** the start form block comes first and the run block presenting that run follows it
+
+#### Scenario: The blocks come in a fixed order
+
+- **GIVEN** a retained run and none in progress
+- **THEN** the blocks are, from the top, the start form, the run, the retained runs
+
+#### Scenario: Choosing a run from the list
+
+- **GIVEN** several retained runs
+- **WHEN** the reader chooses an earlier one
+- **THEN** the run block presents that run
+
+#### Scenario: No runs are retained
+
+- **GIVEN** the service retains no run
+- **THEN** the drawer holds only the start form block, with no run block and no retained runs block
+
+#### Scenario: The three blocks are told apart without borders
+
+- **GIVEN** a retained run and none in progress
+- **THEN** the run, the start form and the retained runs are three separate labelled blocks, each on a lighter background than the drawer's
+
+#### Scenario: Skipped and dropped rows are explained beside their labels
+
+- **GIVEN** a presented run
+- **THEN** the labels of rows skipped and rows dropped each carry an info icon with their explanation, and the run block has no paragraph about them
+
+#### Scenario: The facts come in one order
+
+- **GIVEN** a presented run
+- **THEN** its facts are, in order, the id, the window, days total, days completed, days failed, rows inserted, rows skipped, rows dropped, files processed, start and finish
+
+#### Scenario: Days are coloured by outcome
+
+- **GIVEN** a run that completed 28 days and failed 2
+- **THEN** days total, days completed and days failed share one row, days completed reads as a success and days failed as a failure
+
+#### Scenario: Rows share a row too
+
+- **GIVEN** a presented run
+- **THEN** rows inserted, rows skipped and rows dropped share one row
+
+#### Scenario: Start and finish share a row
+
+- **GIVEN** a finished run
+- **THEN** start and finish are in one row of their own, below the other measures
+
+#### Scenario: Nothing is said about retention
+
+- **GIVEN** retained runs
+- **THEN** the retained runs block lists them and carries no sentence about memory or restarts
+
+#### Scenario: The run id can be copied
+
+- **GIVEN** a presented run
+- **THEN** its id is shown with a control that copies it
+
+### Requirement: Run status is presented in one vocabulary and never inferred from counts
+
+The console SHALL present the service's `completed` state as **Done**, and its `running` and `failed` states
+as Running and Failed. A run that ended before working through its range SHALL be presented as Failed on the
+service's state alone: the console SHALL NOT infer an early stop from the counts, because a run that stops
+on its last day has counts that sum to the total and is still failed.
+
+A Done run that has failed days SHALL show that: days failed above zero, coloured as a failure. Done SHALL NOT be
+presented as clean, and nothing is added beside the status for it. The failed days themselves are not listed.
+
+#### Scenario: An early stop is Failed whatever the counts
+
+- **GIVEN** a failed run whose completed and failed days sum to the total
+- **THEN** the console presents it as Failed
+
+#### Scenario: Done with failed days is not clean
+
+- **GIVEN** a run that is done and carries two failed days
+- **THEN** the status is Done and days failed reads as a failure
+
+#### Scenario: Failed days are not listed
+
+- **GIVEN** a run whose failed days the service names
+- **THEN** the run block does not list them
+
+### Requirement: A backfill range is two inclusive UTC dates within the span limit
+
+The start form SHALL take a first and a last date, both inclusive and both UTC, and SHALL state the number of
+days they cover. It SHALL send them to the service as calendar dates, not as moments. It SHALL NOT allow a
+last date after today's UTC date, a first date after the last, a missing date, or a span longer than the
+span limit, and SHALL disable the start control while the range is not valid. "Today" SHALL be today in UTC,
+not in the reader's time zone.
+
+The span limit SHALL be held in one constant, changed together with the service's default. It SHALL be stated
+in one place only: the message for a range that exceeds it, which SHALL give the number of days. When the service
+refuses a range the console SHALL show the service's own message.
+
+#### Scenario: A valid range enables the start control
+
+- **GIVEN** a first date and a last date no later than today in UTC, within the span limit
+- **THEN** the form states the number of days and the start control is enabled
+
+#### Scenario: An invalid range disables the start control
+
+- **GIVEN** a range that is longer than the span limit, ends in the future, or is inverted
+- **THEN** the start control is disabled
+
+#### Scenario: A range that is too long names the limit
+
+- **GIVEN** a range longer than the span limit
+- **THEN** the message says the range is longer than the limit and gives that number of days
+
+#### Scenario: Today is UTC
+
+- **GIVEN** a reader whose local date differs from the UTC date
+- **THEN** the last selectable date is the UTC date
+
+#### Scenario: A refused range reports the service's message
+
+- **GIVEN** the service answers 400 to a range the form accepted
+- **THEN** the console shows the service's message
+
+### Requirement: A backfill skips what is already ingested unless asked to re-ingest
+
+Every backfill the console starts SHALL ask the service to skip what it has already ingested, unless the
+admin chooses **Re-ingest already ingested data**. The choice SHALL be offered on the start form and beside
+**Rerun failed**, SHALL be off by default in both, and SHALL NOT be carried over from the run being re-run,
+which does not report how it was started. Beside it the console SHALL state that re-ingesting writes every log
+in the range again and that the re-written rows re-trigger the pipelines reading the source tables. A run that
+skips ingested data over a range that is already ingested finishes with zero files and zero rows. The service reports the same zero for a range that holds no logs at all, so the
+drawer SHALL say, for a Done run with zero files processed, that nothing new was written because the range was
+already ingested or holds no logs — and SHALL NOT say which of the two it was, which the service does not report.
+
+#### Scenario: The request skips ingested data
+
+- **WHEN** the console starts a backfill or a re-run without choosing to re-ingest
+- **THEN** it sends the range with re-ingest off
+
+#### Scenario: Re-ingest is chosen on the start form
+
+- **WHEN** an admin chooses re-ingest on the start form and starts a backfill
+- **THEN** the console sends the range with re-ingest on
+
+#### Scenario: A re-run re-ingests only when chosen
+
+- **GIVEN** a finished run that offers **Rerun failed**
+- **WHEN** an admin chooses re-ingest beside it and re-runs
+- **THEN** the console sends the re-run range with re-ingest on
+- **AND** the choice starts off for every run presented, whichever way that run was started
+
+#### Scenario: The cost is stated beside the choice
+
+- **WHEN** the re-ingest choice is offered
+- **THEN** it says that every log in the range is written again and that the re-written rows re-trigger the
+  pipelines reading the source tables
+- **AND** beside **Rerun failed** it says that the days of the re-run range that succeeded are written again too
+
+#### Scenario: A run that wrote nothing says why it may have
+
+- **GIVEN** a Done run that processed no files
+- **THEN** the drawer states that nothing new was written, because the range was already ingested or holds no logs
+
+### Requirement: A finished run can be re-run from its first failed day
+
+A run that is Done and carries failed days, or that is Failed, SHALL offer **Rerun failed**, and only when no run
+is in progress. The control starts the re-run from the run's earliest failed day. The re-run SHALL cover the earliest failed day through the last day
+of the original range, because a run that stopped early names only the days it attempted and leaves the rest
+unattempted. A Failed run that named no failed day SHALL re-run its whole original range.
+
+A Done run with no failed day SHALL offer no re-run.
+
+#### Scenario: A Done run with failed days
+
+- **GIVEN** a Done run over a range whose failed days are the fourth and the seventeenth
+- **THEN** Rerun failed is offered, and starts a run from the fourth through the last day of the original range
+
+#### Scenario: A Failed run covers its unattempted days
+
+- **GIVEN** a Failed run that stopped on the seventeenth of a range ending on the thirtieth, and named the fourth and the seventeenth as failed
+- **THEN** the re-run covers the fourth through the thirtieth
+
+#### Scenario: A Failed run that named no failed day
+
+- **GIVEN** a Failed run that stopped before attempting any failing day, over a range from the first through the thirtieth
+- **THEN** Rerun failed is offered, and covers the first through the thirtieth
+
+#### Scenario: No re-run while another run is in progress
+
+- **GIVEN** a run in progress
+- **THEN** no run offers a re-run
+
+#### Scenario: A clean Done run offers no re-run
+
+- **GIVEN** a Done run with no failed day
+- **THEN** no re-run is offered
+
+### Requirement: A refused start reports the service's message
+
+When the service refuses to start a backfill the console SHALL show the service's own message and SHALL leave
+the form as it was. This includes a refusal because a run is already in progress, because the backfill is
+switched off in the service's configuration, and because the range is invalid. The console SHALL NOT hide the
+Backfill data button on the basis of a probe: the service reports that backfill is switched off only when a
+start is attempted.
+
+#### Scenario: A run is already in progress
+
+- **GIVEN** the service answers a start with a conflict
+- **THEN** the console shows its message and the form remains
+
+#### Scenario: Backfill is switched off
+
+- **GIVEN** the service answers a start with its backfill-disabled refusal
+- **THEN** the console shows its message
+
+### Requirement: The backfill drawer closes when the reader moves away from it
+
+The backfill drawer SHALL close through its close control, on Escape, and when the scrim around the panel is pressed.
+A press on something that is outside the panel but opened from inside it — a calendar's popup — SHALL NOT close it,
+and neither SHALL a press that began inside the panel and ended on the scrim, such as dragging a text selection out.
+Closing SHALL discard nothing the reader would miss: the form holds two dates. While it is closed the drawer SHALL
+not be mounted, so each opening reads the service afresh.
+
+#### Scenario: A press on the scrim closes it
+
+- **GIVEN** the drawer open
+- **WHEN** the reader presses the page around the panel
+- **THEN** the drawer closes
+
+#### Scenario: Choosing a date does not close it
+
+- **GIVEN** the drawer open with a calendar's popup showing
+- **WHEN** the reader chooses a day
+- **THEN** the popup closes, the drawer stays open, and the date is in the form
+
+#### Scenario: The close control and Escape close it
+
+- **GIVEN** the drawer open
+- **WHEN** the reader presses its close control, or Escape
+- **THEN** the drawer closes
+
+#### Scenario: A drag out of the panel does not close it
+
+- **GIVEN** a press that began inside the panel
+- **WHEN** it ends on the scrim
+- **THEN** the drawer stays open
 
