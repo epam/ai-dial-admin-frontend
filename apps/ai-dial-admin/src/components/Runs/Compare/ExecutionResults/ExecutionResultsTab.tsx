@@ -16,28 +16,24 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
-import { haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
 import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import {
-  buildComparePanelColumnTree,
   collectHiddenColIds,
   columnStateFromComparePanelTree,
-  flattenComparePanelColumnTree,
-  orderComparePanelTree,
-  preserveFlatColDefHideState,
+  deriveCompareGridColDefs,
+  haveSameComparePanelLayout,
+  reconcileCompareColumns,
+  syncComparePanelFromColumnState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 import {
   countCompareDiffs,
   hasCompareRowDiff,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import {
-  collectCompareColumnBlocks,
-  orderWithCompareBlocksIntact,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-blocks';
+import { applyCompareColumnMove } from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-blocks';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { CompareRun, ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
@@ -68,6 +64,14 @@ interface Props {
 const DISPLAY_PANEL_CLASS_NAME =
   'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
 
+const loadRunResults = async (runId: string) => {
+  const run = await getRun(runId);
+  if (!run) {
+    return null;
+  }
+  return getTestCaseRunResults(RESULT_FILTERS(run));
+};
+
 const ExecutionResultsTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
@@ -87,21 +91,11 @@ const ExecutionResultsTab: FC<Props> = ({
   const [isGridReady, setIsGridReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  const {
-    viewDifferencesOnly,
-    hideHighlights,
-    gridColDefs,
-    panelColDefs,
-    filterModel,
-    columnState,
-    results,
-    comparedResults,
-  } = executionResultsState;
+  const { viewDifferencesOnly, hideHighlights, panelColDefs, filterModel, columnState, results, comparedResults } =
+    executionResultsState;
 
   const panelColDefsRef = useRef(panelColDefs);
   panelColDefsRef.current = panelColDefs;
-  const gridColDefsRef = useRef(gridColDefs);
-  gridColDefsRef.current = gridColDefs;
   const columnStateRef = useRef(columnState);
   columnStateRef.current = columnState;
 
@@ -115,17 +109,13 @@ const ExecutionResultsTab: FC<Props> = ({
     let isCancelled = false;
     setHasLoadError(false);
 
-    getRun(primaryRunId)
-      .then((runData) => {
+    loadRunResults(primaryRunId)
+      .then((resultsResponse) => {
         if (isCancelled) return;
-        if (!runData) {
+        if (resultsResponse === null) {
           setHasLoadError(true);
           return;
         }
-        return getTestCaseRunResults(RESULT_FILTERS(runData));
-      })
-      .then((resultsResponse) => {
-        if (isCancelled || resultsResponse === undefined) return;
         setExecutionResultsState({ results: resultsResponse?.content || [] });
       })
       .catch(() => {
@@ -146,14 +136,14 @@ const ExecutionResultsTab: FC<Props> = ({
 
     let isCancelled = false;
 
-    getRun(comparedRunId)
-      .then((comparedRun) => {
-        if (isCancelled || !comparedRun) return;
-        return getTestCaseRunResults(RESULT_FILTERS(comparedRun));
-      })
-      .then((res) => {
-        if (isCancelled || res === undefined) return;
-        setExecutionResultsState({ comparedResults: res?.content || [] });
+    loadRunResults(comparedRunId)
+      .then((resultsResponse) => {
+        if (isCancelled) return;
+        if (resultsResponse === null) {
+          setHasLoadError(true);
+          return;
+        }
+        setExecutionResultsState({ comparedResults: resultsResponse?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
@@ -222,29 +212,32 @@ const ExecutionResultsTab: FC<Props> = ({
   );
 
   const displayColDefs = useMemo(() => {
-    return gridColDefs.length > 0 ? gridColDefs : computedColDefs;
-  }, [gridColDefs, computedColDefs]);
+    if (!panelColDefs.length) {
+      return computedColDefs;
+    }
+    return deriveCompareGridColDefs(panelColDefs, columnState, computedColDefs as ColDef[]);
+  }, [panelColDefs, columnState, computedColDefs]);
   const displayColDefsRef = useRef(displayColDefs);
   displayColDefsRef.current = displayColDefs;
-
-  useEffect(() => {
-    if (!displayColDefs.length) return;
-    gridApiRef.current?.setGridOption('columnDefs', displayColDefs);
-  }, [displayColDefs]);
 
   useEffect(() => {
     if (!computedColDefs.length) {
       return;
     }
 
-    const flatDefs = computedColDefs as ColDef[];
-    setExecutionResultsState({
-      panelColDefs: buildComparePanelColumnTree(flatDefs, runs, panelColDefsRef.current),
-      gridColDefs: preserveFlatColDefHideState(flatDefs, gridColDefsRef.current),
+    const { panelColDefs: nextPanelColDefs } = reconcileCompareColumns({
+      schemaColDefs: computedColDefs as ColDef[],
+      runs,
+      previousPanelColDefs: panelColDefsRef.current,
+      columnState: columnStateRef.current,
     });
+    if (haveSameComparePanelLayout(panelColDefsRef.current, nextPanelColDefs)) {
+      return;
+    }
+    setExecutionResultsState({ panelColDefs: nextPanelColDefs });
   }, [computedColDefs, runs, setExecutionResultsState]);
 
-  const hiddenColIds = useMemo(() => collectHiddenColIds(gridColDefs), [gridColDefs]);
+  const hiddenColIds = useMemo(() => collectHiddenColIds(displayColDefs), [displayColDefs]);
 
   const displayedRowData = useMemo(() => {
     if (mergedRowData === null) return null;
@@ -303,25 +296,13 @@ const ExecutionResultsTab: FC<Props> = ({
         // applyColumnState or a grid-option refresh emit feeds the restore effect
         // and the two keep swapping the columns.
         if (event.source === 'uiColumnMoved' && event.finished !== false) {
-          const current = event.api.getColumnState();
           const movedIds = new Set((event.columns ?? []).map((column) => column.getColId()));
-          const correctedOrder = orderWithCompareBlocksIntact(
-            current.map((column) => column.colId),
-            collectCompareColumnBlocks(displayColDefsRef.current),
-            movedIds,
-          );
-          const changed = correctedOrder.some((colId, index) => colId !== current[index]?.colId);
-          if (changed) {
-            const byId = new Map(current.map((column) => [column.colId, column]));
-            event.api.applyColumnState({
-              state: correctedOrder.flatMap((colId) => {
-                const column = byId.get(colId);
-                return column ? [column] : [];
-              }),
-              applyOrder: true,
-            });
-          }
-          setExecutionResultsState({ columnState: event.api.getColumnState() });
+          const nextColumnState = applyCompareColumnMove(event.api, displayColDefsRef.current, movedIds);
+          const nextPanelColDefs = syncComparePanelFromColumnState(panelColDefsRef.current, nextColumnState);
+          setExecutionResultsState({
+            columnState: nextColumnState,
+            panelColDefs: nextPanelColDefs,
+          });
         }
       },
       onColumnVisible: (event: { api: GridApi }) => {
@@ -346,8 +327,8 @@ const ExecutionResultsTab: FC<Props> = ({
       return;
     }
 
-    const syncedColDefs = orderComparePanelTree(prevPanelColDefs, gridColumnState);
-    if (haveTreeColDefsSamePanelState(prevPanelColDefs, syncedColDefs)) {
+    const syncedColDefs = syncComparePanelFromColumnState(prevPanelColDefs, gridColumnState);
+    if (haveSameComparePanelLayout(prevPanelColDefs, syncedColDefs)) {
       return;
     }
 
@@ -358,19 +339,21 @@ const ExecutionResultsTab: FC<Props> = ({
     (nestedPanelCols: ColDef[]) => {
       const current = gridApiRef.current?.getColumnState() ?? columnStateRef.current ?? [];
       const nextColumnState = columnStateFromComparePanelTree(nestedPanelCols, current);
-      // orderComparePanelTree joins only adjacent pieces; flatten that tree so the grid
-      // keeps a split Set Comparison around Extracted instead of merging every piece.
       const nextPanelColDefs = nextColumnState.length
-        ? orderComparePanelTree(nestedPanelCols, nextColumnState)
+        ? syncComparePanelFromColumnState(nestedPanelCols, nextColumnState)
         : nestedPanelCols;
-      const flatDefs = flattenComparePanelColumnTree(nextPanelColDefs);
 
       setExecutionResultsState({
         panelColDefs: nextPanelColDefs,
-        gridColDefs: flatDefs as ColDef[],
         ...(nextColumnState.length ? { columnState: nextColumnState } : {}),
       });
-      requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
+      requestAnimationFrame(() => {
+        const api = gridApiRef.current;
+        if (!api || api.isDestroyed()) {
+          return;
+        }
+        api.sizeColumnsToFit();
+      });
     },
     [setExecutionResultsState],
   );
@@ -383,6 +366,14 @@ const ExecutionResultsTab: FC<Props> = ({
   // Restore after AgGridWrapper's setGridColumnsState (child effect runs first).
   useEffect(() => {
     const api = gridApiRef.current;
+    // An empty result replaces the grid, so this ref still points at the destroyed API.
+    if (api?.isDestroyed()) {
+      gridApiRef.current = null;
+      if (isGridReady) {
+        setIsGridReady(false);
+      }
+      return;
+    }
     if (!isGridReady || !api) {
       return;
     }
@@ -399,16 +390,17 @@ const ExecutionResultsTab: FC<Props> = ({
 
     const stateToRestore = columnStateRef.current;
     if (stateToRestore?.length) {
-      const liveOrder = api
-        .getColumnState()
-        .map((column) => column.colId)
-        .join(',');
+      const liveColumns = api.getColumnState();
+      if (!liveColumns) {
+        return;
+      }
+      const liveOrder = liveColumns.map((column) => column.colId).join(',');
       const applyOrder = stateToRestore.map((column) => column.colId).join(',');
       if (liveOrder !== applyOrder) {
         api.applyColumnState({ state: stateToRestore, applyOrder: true });
       }
     }
-  }, [isGridReady, filterModel, displayColDefs, displayedRowData]);
+  }, [isGridReady, filterModel, displayColDefs]);
 
   const isCompareDataReady = results !== null && comparedResults !== null;
 

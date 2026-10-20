@@ -375,3 +375,135 @@ export const columnStateFromComparePanelTree = (tree: ColDef[], columnState: Col
     ...columnState.filter((column) => !seen.has(column.colId)),
   ];
 };
+
+export interface ReconcileCompareColumnsInput {
+  schemaColDefs: ColDef[];
+  runs: CompareRun[];
+  previousPanelColDefs: ColDef[];
+  columnState: ColumnState[] | null | undefined;
+}
+
+export interface ReconcileCompareColumnsResult {
+  panelColDefs: ColDef[];
+}
+
+/**
+ * Turns a fresh compare schema into a panel tree while keeping the operator's layout.
+ * Ordering from flat columnState first is what keeps a split group apart when the grid
+ * later flattens that tree.
+ */
+export const reconcileCompareColumns = ({
+  schemaColDefs,
+  runs,
+  previousPanelColDefs,
+  columnState,
+}: ReconcileCompareColumnsInput): ReconcileCompareColumnsResult => {
+  const builtPanel = buildComparePanelColumnTree(schemaColDefs, runs, previousPanelColDefs);
+
+  if (!columnState?.length) {
+    return { panelColDefs: builtPanel };
+  }
+
+  return { panelColDefs: orderComparePanelTree(builtPanel, columnState) };
+};
+
+const hideMapFromColumnState = (columnState: ColumnState[]): Map<string, boolean> => {
+  const hideMap = new Map<string, boolean>();
+  for (const column of columnState) {
+    if (column.hide !== undefined && column.hide !== null) {
+      hideMap.set(column.colId, column.hide);
+    }
+  }
+  return hideMap;
+};
+
+const indexSchemaLeavesByColId = (nodes: ColDef[], map = new Map<string, ColDef>()): Map<string, ColDef> => {
+  for (const node of nodes) {
+    const children = getChildren(node);
+    if (children.length === 0) {
+      const colId = getColId(node);
+      if (colId) {
+        map.set(colId, node);
+      }
+      continue;
+    }
+    indexSchemaLeavesByColId(children, map);
+  }
+  return map;
+};
+
+/** Keeps layout order/structure; swaps in schema leaf props (renderers, value getters) by colId. */
+const overlaySchemaOntoTree = (nodes: ColDef[], schemaByColId: Map<string, ColDef>): ColDef[] =>
+  nodes.map((node) => {
+    const children = getChildren(node);
+    if (children.length === 0) {
+      const colId = getColId(node);
+      const schemaLeaf = colId ? schemaByColId.get(colId) : undefined;
+      if (!schemaLeaf) {
+        return node;
+      }
+      return { ...schemaLeaf, hide: node.hide };
+    }
+
+    return { ...node, children: overlaySchemaOntoTree(children, schemaByColId) } as ColDef;
+  });
+
+const comparePanelLayoutSignature = (nodes: ColDef[]): string => {
+  const parts: string[] = [];
+  const visit = (tree: ColDef[]) => {
+    for (const node of tree) {
+      const children = getChildren(node);
+      const panelKey = (node.context as CompareColumnPanelContext | undefined)?.panelKey ?? '';
+      if (children.length > 0) {
+        parts.push(`g:${node.headerName ?? ''}:${panelKey}`);
+        visit(children);
+        continue;
+      }
+      parts.push(`l:${getColId(node) ?? ''}:${node.hide === true ? '1' : '0'}`);
+    }
+  };
+  visit(nodes);
+  return parts.join('|');
+};
+
+/** True when leaf order, hide flags, and split panelKeys match — ignores renderers. */
+export const haveSameComparePanelLayout = (left: ColDef[], right: ColDef[]): boolean =>
+  comparePanelLayoutSignature(left) === comparePanelLayoutSignature(right);
+
+/**
+ * Reorders (and splits/joins) the panel tree from flat columnState and applies hide from that state.
+ */
+export const syncComparePanelFromColumnState = (
+  panelColDefs: ColDef[],
+  columnState: ColumnState[] | null | undefined,
+): ColDef[] => {
+  if (!panelColDefs.length || !columnState?.length) {
+    return panelColDefs;
+  }
+
+  return applyHideByColId(orderComparePanelTree(panelColDefs, columnState), hideMapFromColumnState(columnState));
+};
+
+/**
+ * Grid column defs are never stored: flatten the panel tree, apply hide from columnState,
+ * and optionally overlay fresh schema leaf props so Hide highlights updates without rewriting panel.
+ */
+export const deriveCompareGridColDefs = (
+  panelColDefs: ColDef[],
+  columnState?: ColumnState[] | null,
+  schemaColDefs?: ColDef[] | null,
+): ColDef[] => {
+  if (!panelColDefs.length) {
+    return [];
+  }
+
+  let flatDefs = flattenComparePanelColumnTree(panelColDefs) as ColDef[];
+  if (columnState?.length) {
+    flatDefs = applyHideByColId(flatDefs, hideMapFromColumnState(columnState));
+  }
+  if (schemaColDefs?.length) {
+    flatDefs = overlaySchemaOntoTree(flatDefs, indexSchemaLeavesByColId(schemaColDefs));
+  }
+
+  return flatDefs;
+};

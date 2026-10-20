@@ -35,7 +35,6 @@ export interface CompareRunSource {
 export interface ExecutionResultsTabUiState {
   viewDifferencesOnly: boolean;
   hideHighlights: boolean;
-  gridColDefs: ColDef[];
   panelColDefs: ColDef[];
   filterModel: FilterModel | null;
   columnState: ColumnState[] | null;

@@ -13,6 +13,7 @@ import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
 import CompareTabsContent from '@/src/components/Runs/Compare/CompareTabsContent';
 import CompareRowDetailBottomPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailBottomPanel';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
+import { deriveCompareGridColDefs } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 import { ROW_DETAIL_BOTTOM_CLASS, ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { CompareRunSlot, CompareViewTab } from '@/src/components/Runs/Compare/constants';
@@ -106,8 +107,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     return getRowDetailFieldSchema(allResults);
   }, [tabState.executionResults.results, tabState.executionResults.comparedResults]);
   const metricGroupOrder = useMemo(
-    () => getMetricGroupOrder(tabState.executionResults.gridColDefs),
-    [tabState.executionResults.gridColDefs],
+    () =>
+      getMetricGroupOrder(
+        deriveCompareGridColDefs(tabState.executionResults.panelColDefs, tabState.executionResults.columnState),
+      ),
+    [tabState.executionResults.panelColDefs, tabState.executionResults.columnState],
   );
 
   const selectRunModalConfig = useMemo(() => {

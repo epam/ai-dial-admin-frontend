@@ -12,7 +12,6 @@ import {
 const createDefaultExecutionResultsState = (): ExecutionResultsTabUiState => ({
   viewDifferencesOnly: false,
   hideHighlights: false,
-  gridColDefs: [],
   panelColDefs: [],
   filterModel: null,
   columnState: null,
