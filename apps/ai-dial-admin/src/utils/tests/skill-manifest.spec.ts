@@ -19,6 +19,12 @@ describe('parseSkillManifest', () => {
     expect(parseSkillManifest(content)).toEqual({ name: '', description: '', body: 'Body only.' });
   });
 
+  test('treats an unclosed frontmatter block as body content', () => {
+    const content = '---\nname: my-skill\nBody only.';
+
+    expect(parseSkillManifest(content)).toEqual({ name: '', description: '', body: content });
+  });
+
   test('does not misidentify a body containing further --- lines as extra frontmatter', () => {
     const content = '---\nname: my-skill\ndescription: Does a thing\n---\nBefore\n\n---\n\nAfter';
 
