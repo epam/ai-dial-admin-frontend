@@ -416,6 +416,53 @@ describe('getSessionTracePage', () => {
       .mockResolvedValueOnce({ success: true, response: { rows: [] } });
   };
 
+  const pageFilterNames = () =>
+    execute()
+      .mock.calls[0][0].filter.args.map((node: { args?: [{ name?: string }] }) => node.args?.[0]?.name)
+      .filter(Boolean);
+  const rootsSelectNames = () =>
+    execute().mock.calls[1][0].select.map((column: { expr: { name?: string } }) => column.expr.name);
+
+  test('scopes a session of unknown source by chat_id where the log serves no session id', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getSessionTracePage({ id: CHAT_ID }, 'demo-project', NOON, NOON, 0);
+
+    expect(pageFilterNames()).toContain(UsageLogField.ChatId);
+    expect(pageFilterNames()).not.toContain(UsageLogField.ClientSessionId);
+    expect(rootsSelectNames()).toContain(UsageLogField.ChatId);
+    expect(rootsSelectNames()).not.toContain(UsageLogField.ClientSessionId);
+  });
+
+  test('reads a blank source as unknown', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getSessionTracePage({ id: CHAT_ID, source: '' }, 'demo-project', NOON, NOON, 0);
+
+    expect(pageFilterNames()).toContain(UsageLogField.ChatId);
+  });
+
+  test('scopes a session of unknown source by the session id where the log serves it', async () => {
+    getEntitySchema().mockResolvedValue({
+      success: true,
+      response: { fields: [{ name: UsageLogField.ClientSessionId }] },
+    });
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getSessionTracePage({ id: CHAT_ID }, 'demo-project', NOON, NOON, 0);
+
+    expect(pageFilterNames()).toContain(UsageLogField.ClientSessionId);
+    expect(rootsSelectNames()).toContain(UsageLogField.ClientSessionId);
+  });
+
+  test('keeps the session id for a harness session even where the log does not serve it', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getSessionTracePage({ id: CHAT_ID, source: 'claude-code' }, 'demo-project', NOON, NOON, 0);
+
+    expect(pageFilterNames()).toContain(UsageLogField.ClientSessionId);
+  });
+
   test('reads the page, then its roots and figures, with the user token', async () => {
     resolvePage([pageRow('t1', NOON)]);
 

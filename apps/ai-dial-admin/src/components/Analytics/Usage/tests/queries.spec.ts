@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { BUCKET_ROW_LIMIT, USAGE_ENTITY } from '@/src/components/Analytics/Usage/constants';
-import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, CallerSource, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   AVG_LATENCY_ALIAS,
   BUCKET_ALIAS,
@@ -164,11 +164,42 @@ describe('buildTotalsQuery', () => {
   });
 
   test('counts callers by the principal reference, which an API-key call also carries', () => {
-    const entry = (buildTotalsQuery(scope()).select ?? []).find((select) => select.as === CALLERS_ALIAS);
+    const entry = (buildTotalsQuery(scope({ callerSource: CallerSource.Principal })).select ?? []).find(
+      (select) => select.as === CALLERS_ALIAS,
+    );
 
     expect(entry?.expr).toMatchObject({ name: 'count', distinct: true });
     expect(JSON.stringify(entry?.expr)).toContain('usage_client_identity.user_ref');
     expect(JSON.stringify(entry?.expr)).toContain('user_hash');
+  });
+
+  test('counts callers by the hash alone where the schema serves no principal reference', () => {
+    const entry = (buildTotalsQuery(scope({ callerSource: CallerSource.Hash })).select ?? []).find(
+      (select) => select.as === CALLERS_ALIAS,
+    );
+
+    expect(entry?.expr).toMatchObject({
+      name: 'count',
+      args: [{ type: QueryExprType.Field, name: 'user_hash' }],
+      distinct: true,
+    });
+  });
+
+  test('names no hash where the schema serves the principal reference alone', () => {
+    const query = buildTotalsQuery(scope({ callerSource: CallerSource.Reference }));
+    const entry = (query.select ?? []).find((select) => select.as === CALLERS_ALIAS);
+
+    expect(entry?.expr).toMatchObject({
+      args: [{ type: QueryExprType.Field, name: 'usage_client_identity.user_ref' }],
+    });
+    expect(JSON.stringify(query)).not.toContain('user_hash');
+  });
+
+  test('asks for no caller count where the schema serves neither column', () => {
+    const query = buildTotalsQuery(scope({ callerSource: CallerSource.None }));
+
+    expect(aliasesOf(query)).not.toContain(CALLERS_ALIAS);
+    expect(JSON.stringify(query)).not.toContain('user_hash');
   });
 
   test('counts tokens once per call, on the row that carries the price for it', () => {

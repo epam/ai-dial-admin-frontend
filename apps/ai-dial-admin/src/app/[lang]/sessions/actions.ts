@@ -49,6 +49,7 @@ import {
   FeedbackFilter,
   ResponseRatingsField,
   SessionScope,
+  UsageLogField,
 } from '@/src/models/analytics/sessions-trace';
 import { Token } from '@/src/models/auth';
 import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
@@ -139,6 +140,21 @@ const withRatings = async (rows: SessionRow[], range: TimeRange, authToken: Toke
   return attachRatings(rows, ratingRows(result));
 };
 
+const HTTP_NOT_FOUND = 404;
+
+// 404 is the one answer meaning the entity is not provisioned, as opposed to the read having failed.
+async function isFeedbackEntityAbsent(authToken: Token): Promise<boolean> {
+  try {
+    const read = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
+      analyticsDataApi.getEntitySchema(FEEDBACK_ENTITY, authToken),
+    );
+    return !read.success && read.status === HTTP_NOT_FOUND;
+  } catch (error) {
+    errorObjLog(error, 'Failed to fetch the rating source entity schema');
+    return false;
+  }
+}
+
 // Resolved on the first page of a result and returned to the caller, which carries the ids into every
 // later page of it: the narrowing is a property of the filter, not of the page. Not exported — a
 // server-side cache keyed on the filter state alone would serve one caller's candidates to another, and
@@ -147,6 +163,10 @@ async function resolveRatedChatIds(
   filters: SessionFilters,
   authToken: Token,
 ): Promise<ServerActionResponse<SessionCandidateIds>> {
+  if (await isFeedbackEntityAbsent(authToken)) {
+    return { success: true, response: { ids: [], isCapped: false } };
+  }
+
   const query = buildRatedSessionIdsQuery({ range: toRange(filters), feedback: filters.feedback });
   const result = await analyticsDataApi.executeAction(query, authToken);
 
@@ -541,6 +561,19 @@ export async function getSessionFeedback(chatId: string): Promise<ServerActionRe
 const TRACE_ROOTS_LIMIT = SESSION_TRACE_PAGE_SIZE * SESSION_TRACE_ROOT_CAP;
 const TRACE_FIGURES_LIMIT = SESSION_TRACE_PAGE_SIZE * 8;
 
+// An unreadable schema answers yes: the reads that follow then fail and say why, where no would narrow them.
+async function isUsageLogFieldServed(name: string, authToken: Token): Promise<boolean> {
+  try {
+    const read = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+      analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
+    );
+    return read.response ? Boolean(read.response.fields?.some((schemaField) => schemaField.name === name)) : true;
+  } catch (error) {
+    errorObjLog(error, 'Failed to fetch the usage log schema');
+    return true;
+  }
+}
+
 /**
  * One page of the session's trace listing, resolved live over the hop log in three passes.
  *
@@ -566,8 +599,9 @@ export async function getSessionTracePage(
     return { success: true, response: { groups: [], hasMore: false } };
   }
 
+  const hasClientSessionId = await isUsageLogFieldServed(UsageLogField.ClientSessionId, authToken);
   const pageResult = await analyticsDataApi.executeAction(
-    buildSessionTracePageQuery(scope, projectId, sessionWindow, offset, SESSION_TRACE_PAGE_SIZE),
+    buildSessionTracePageQuery(scope, projectId, sessionWindow, offset, SESSION_TRACE_PAGE_SIZE, hasClientSessionId),
     authToken,
   );
 
@@ -593,7 +627,10 @@ export async function getSessionTracePage(
   }
 
   const [rootsResult, figuresResult] = await Promise.all([
-    analyticsDataApi.executeAction(buildSessionTraceRootsQuery(traceIds, pageWindow, TRACE_ROOTS_LIMIT), authToken),
+    analyticsDataApi.executeAction(
+      buildSessionTraceRootsQuery(traceIds, pageWindow, TRACE_ROOTS_LIMIT, hasClientSessionId),
+      authToken,
+    ),
     analyticsDataApi.executeAction(buildSessionTraceFiguresQuery(traceIds, pageWindow, TRACE_FIGURES_LIMIT), authToken),
   ]);
 

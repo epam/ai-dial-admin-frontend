@@ -440,11 +440,20 @@ const traceWindowPredicates = (window: SessionTraceWindow): QueryFilterNode[] =>
 // chat-origin session keeps that index and only a harness session — whose hops carry no `chat_id` at all —
 // pays for the enrichment column. An unknown source takes the enrichment column too: it is correct for both
 // populations, and being slow is the safer way to be wrong here.
-const sessionScopeField = (source?: string | null): UsageLogField =>
-  source === CHAT_ID_SESSION_SOURCE ? UsageLogField.ChatId : UsageLogField.ClientSessionId;
+//
+// Without the enrichment column an unknown source falls back to `chat_id`: a rollup names a harness source only
+// where the enrichment ran. A harness source keeps the column — its hops carry no `chat_id`, so a substitute
+// would show an empty listing instead of failing.
+const sessionScopeField = (source?: string | null, hasClientSessionId = true): UsageLogField => {
+  if (source === CHAT_ID_SESSION_SOURCE) {
+    return UsageLogField.ChatId;
+  }
 
-const sessionScopePredicate = ({ id, source }: SessionScope): QueryFilterNode =>
-  eq(sessionScopeField(source), value(QueryValueType.String, id));
+  return !source && !hasClientSessionId ? UsageLogField.ChatId : UsageLogField.ClientSessionId;
+};
+
+const sessionScopePredicate = ({ id, source }: SessionScope, hasClientSessionId?: boolean): QueryFilterNode =>
+  eq(sessionScopeField(source, hasClientSessionId), value(QueryValueType.String, id));
 
 export const buildSessionTracePageQuery = (
   scope: SessionScope,
@@ -452,6 +461,7 @@ export const buildSessionTracePageQuery = (
   window: SessionTraceWindow,
   offset: number,
   limit: number,
+  hasClientSessionId?: boolean,
 ): StructuredQuery =>
   aggregateQuery({
     entity: USAGE_LOG_ENTITY,
@@ -462,7 +472,7 @@ export const buildSessionTracePageQuery = (
       col(fn('max', [field(UsageLogField.RequestTime)]), SessionTracePageField.LastRequestTime),
     ],
     filter: and([
-      sessionScopePredicate(scope),
+      sessionScopePredicate(scope, hasClientSessionId),
       eq(UsageLogField.ProjectId, value(QueryValueType.String, projectId)),
       ...traceWindowPredicates(window),
     ]),
@@ -480,6 +490,7 @@ export const buildSessionTraceRootsQuery = (
   traceIds: string[],
   window: SessionTraceWindow,
   limit: number,
+  hasClientSessionId = true,
 ): StructuredQuery =>
   rowQuery({
     entity: USAGE_LOG_ENTITY,
@@ -495,7 +506,7 @@ export const buildSessionTraceRootsQuery = (
       col(field(UsageLogField.DeploymentPrice)),
       // The label test's operand, and the reason it is the normalised session id rather than `chat_id`: an
       // agent session's rows carry no chat id at all, so every root would read as Core-internal.
-      col(field(UsageLogField.ClientSessionId)),
+      col(field(hasClientSessionId ? UsageLogField.ClientSessionId : UsageLogField.ChatId)),
       col(field(UsageLogField.RequestUri)),
       col(field(UsageLogField.EventKind)),
       col(field(UsageLogField.NumberRequestMessages)),

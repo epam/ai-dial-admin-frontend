@@ -9,6 +9,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 export const USAGE_ENTITY = 'dial_usage_log';
 
+/** The principal that made the call: the user id on a token call, the project id on an API-key one. */
+export const USAGE_USER_REF_FIELD = 'usage_client_identity.user_ref';
+
+export const USAGE_USER_HASH_FIELD = 'user_hash';
+
 /** The standalone page reads every row of its view. */
 export const PAGE_SCOPE: UsageScope = { own: [] };
 

@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import KpiRow from '@/src/components/Analytics/Usage/Kpi/KpiRow';
 import {
+  CallerSource,
   BucketPoint,
   ComparePeriod,
   RequestState,
@@ -35,6 +36,7 @@ const renderRow = (props?: {
 }) =>
   render(
     <KpiRow
+      callerSource={CallerSource.Principal}
       view={props?.view ?? UsageView.Llm}
       totals={props?.totals ?? loaded<UsageMeasures | null>(FULL)}
       previousTotals={props?.previousTotals ?? loaded<UsageMeasures | null>(null)}
@@ -132,6 +134,7 @@ describe('KpiRow with a separate money source', () => {
   test('shows the money and token cards loading while their own source is, and the rest settled', () => {
     render(
       <KpiRow
+        callerSource={CallerSource.Principal}
         view={UsageView.Llm}
         totals={loaded<UsageMeasures | null>(FULL)}
         previousTotals={loaded<UsageMeasures | null>(null)}

@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { CallerSource } from '@/src/components/Analytics/Usage/models';
 import EntityUsageDashboard from '@/src/components/Analytics/Usage/EntityUsageDashboard';
 import { AnalyticsUsageI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { StructuredQuery } from '@/src/models/analytics/query';
@@ -14,8 +15,10 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 }));
 
 const isForbiddenMock = vi.fn();
+const callerSourceMock = vi.fn();
 vi.mock('@/src/app/[lang]/dashboards/actions', () => ({
   getIsAnalyticsForbidden: () => isForbiddenMock(),
+  getUsageCallerSource: () => callerSourceMock(),
 }));
 
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -42,6 +45,8 @@ beforeEach(() => {
   runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } });
   isForbiddenMock.mockReset();
   isForbiddenMock.mockResolvedValue(false);
+  callerSourceMock.mockReset();
+  callerSourceMock.mockResolvedValue(CallerSource.Principal);
 });
 
 describe('EntityUsageDashboard', () => {
@@ -72,6 +77,41 @@ describe('EntityUsageDashboard', () => {
     expect(queriesSent().length).toBeGreaterThan(0);
     for (const query of queriesSent()) {
       expect(JSON.stringify(query.filter)).toContain('"value":"gpt-4o"');
+    }
+  });
+
+  test('counts callers by the principal reference where the schema serves it', async () => {
+    renderModel();
+
+    await settled();
+
+    expect(queriesSent().some((query) => JSON.stringify(query.select).includes('usage_client_identity.user_ref'))).toBe(
+      true,
+    );
+  });
+
+  test('names no principal reference in any request where the schema lacks it', async () => {
+    callerSourceMock.mockResolvedValue(CallerSource.Hash);
+    renderModel();
+
+    await settled();
+
+    expect(queriesSent().length).toBeGreaterThan(0);
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query)).not.toContain('usage_client_identity.user_ref');
+    }
+  });
+
+  test('asks for no caller count and draws no caller card where the log serves neither column', async () => {
+    callerSourceMock.mockResolvedValue(CallerSource.None);
+    renderModel();
+
+    await settled();
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.KpiRequests)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiUniqueCallers)).toBeNull();
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query)).not.toContain('user_hash');
     }
   });
 

@@ -912,13 +912,36 @@ user id on a call authenticated by a token, and the project the key belongs to o
 authenticated by an API key. Both branches of traffic are therefore counted, which is why the card
 is named for callers rather than users.
 
-It SHALL NOT count the anonymized user hash. That field is populated only on token calls and empty
+Where the principal reference is available it SHALL NOT count the anonymized user hash. That field is populated only on token calls and empty
 on every key call, so a distinct count over it folds all key traffic into one bucket and reports it
 as a single caller — measured on the live dataset, the overwhelming majority of rows counted as
 one.
 
 Two keys of the same project SHALL count once, because the log records no key identifier. The card
 therefore answers "how many distinct principals called" and not "how many keys were used".
+
+The principal reference comes from an enrichment provisioned per environment, and the service
+withholds catalogued-sensitive columns by role, so the column is not always there. The page SHALL
+read the usage log schema before it issues a request and, where the schema does not serve the
+column — or cannot be read — SHALL count the anonymized user hash instead and name no principal
+reference in any request: the service rejects a query that names a column it does not serve as an
+unknown field, which failed every read on the page rather than only the card. Where the column is
+served but empty on a row, that row SHALL fall back to the hash as well. Where the schema serves
+neither column, the page SHALL ask for no caller count and SHALL NOT draw the caller card.
+
+#### Scenario: A schema without the principal reference still loads the dashboard
+
+- **GIVEN** the usage log schema served to the current user has no `usage_client_identity.user_ref`
+- **WHEN** the dashboard loads
+- **THEN** no request names that column
+- **AND** the caller card counts distinct user hashes
+
+#### Scenario: A schema with neither caller column hides the caller card
+
+- **GIVEN** the usage log schema served to the current user has neither `usage_client_identity.user_ref` nor `user_hash`
+- **WHEN** the dashboard loads
+- **THEN** no request names either column
+- **AND** the caller card is not drawn, while the other cards load
 
 #### Scenario: Key traffic is not folded into a single caller
 

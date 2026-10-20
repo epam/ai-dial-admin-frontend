@@ -44,6 +44,13 @@ export enum HeatmapMetric {
   Cost = 'cost',
 }
 
+export enum CallerSource {
+  Principal = 'principal',
+  Reference = 'reference',
+  Hash = 'hash',
+  None = 'none',
+}
+
 export enum KpiMetric {
   TotalSpend = 'total-spend',
   Requests = 'requests',

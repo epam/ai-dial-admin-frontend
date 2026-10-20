@@ -17,6 +17,7 @@ import {
 import {
   BlockReads,
   BreakdownTab,
+  CallerSource,
   ComparePeriod,
   DonutMetric,
   TimeSeriesView,
@@ -43,6 +44,7 @@ interface Props extends UsageWindows {
   refreshToken: number;
   notice: LoadFailureNotice;
   onRefreshingChange: (isRefreshing: boolean) => void;
+  callerSource: CallerSource;
 }
 
 /**
@@ -61,6 +63,7 @@ const UsageBlock: FC<Props> = ({
   refreshToken,
   notice,
   onRefreshingChange,
+  callerSource,
 }) => {
   const leadingTab = tabs[0];
   const madeTabs = reads?.madeTabs ?? NO_MADE_TABS;
@@ -126,13 +129,14 @@ const UsageBlock: FC<Props> = ({
     timeSeriesView,
     refreshToken,
     notice,
+    callerSource,
   });
 
   useEffect(() => {
     onRefreshingChange(isRefreshing);
   }, [isRefreshing, onRefreshingChange]);
 
-  const heatmap = useHeatmapWeek({ view, rows, refreshToken, notice });
+  const heatmap = useHeatmapWeek({ view, rows, refreshToken, notice, callerSource });
 
   // A tab read from the calls the entity made states its shares of those calls: a share of the
   // entity's own requests would read past a hundred per cent wherever one request fanned out.
@@ -164,6 +168,7 @@ const UsageBlock: FC<Props> = ({
     <>
       <KpiRow
         view={view}
+        callerSource={callerSource}
         totals={totals}
         previousTotals={previousTotals}
         buckets={buckets}

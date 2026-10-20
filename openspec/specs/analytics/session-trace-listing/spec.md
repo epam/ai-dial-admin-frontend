@@ -550,6 +550,20 @@ eye. Divergence between these two scopes is the mechanism that produced every ar
 design removes: when the figures cover rows the roots do not, a trace's totals stop reconciling with its cards
 and the gap has to be patched field by field.
 
+The session id is an enrichment column, so the listing SHALL read the hop log schema before it queries. Where
+the schema does not serve the column, a session with **no** recorded source SHALL be paged by `chat_id` and its
+roots SHALL be labelled by `chat_id`: a rollup names a harness source only where the enrichment ran, so such a
+session is a chat session. A session whose source names a coding harness SHALL keep the session id even then —
+its hops carry no `chat_id`, and a substitute would state an empty listing as "no traces" rather than failing.
+A schema that cannot be read SHALL be treated as serving the column.
+
+#### Scenario: A schema without the session id still lists a chat session's traces
+
+- **GIVEN** the hop log schema served to the caller has no `usage_client_identity.client_session_id`
+- **AND** the session records no source
+- **WHEN** the trace listing loads
+- **THEN** the paging query is filtered by `chat_id` and no query names the session id column
+
 **Dropping the chat id from the figures query is what makes the figures correct without correction.** Scoped
 by trace, the span count, tokens and price are simply the trace's own. There SHALL be no compensating
 adjustment — no increment to a span count, no addition of a root's value to a sum — because there is nothing
