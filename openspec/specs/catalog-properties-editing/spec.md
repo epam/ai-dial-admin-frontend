@@ -9,9 +9,7 @@ as a locale map. The catalog meta-schema's presentation metadata is deliberately
 the shared renderer's to support, and this capability states the gap rather than working around it. Shared by the four Core-direct deployment
 surfaces — Catalog Models, Catalog Interceptors, platform-bucket Applications and Toolsets — so each
 of them contributes only its placement, never its own copy of this behavior.
-
 ## Requirements
-
 ### Requirement: A deployment can be pointed at a catalog schema
 
 The system SHALL let an admin select a Catalog Schema for a deployment, store the selected schema's declared raw `$id` as `catalog_schema_id`, and clear it again. A Core resource storage name or path SHALL be used only to retrieve or navigate to the schema, never as the deployment reference. The selection SHALL survive a save and reopen.
@@ -78,13 +76,15 @@ DIAL Core never checks a deployment's own kind against the schema's `dial:catalo
 deliberate cross-kind pairing is legal and the picker SHALL keep it reachable rather than refusing a
 pairing Core accepts. The filter is a default, not a constraint.
 
-Both halves of the picker SHALL identify a schema by its `$id` and nothing else: the grid in its
-filtered view by a single `$id` column, and the inline selection by the `$id` as each option's only
-text. The entity kind is a constant under the filter, and the display name distinguishes nothing —
-display names are not unique, and because a schema is usually named after the kind it describes, a
-list already narrowed to one kind repeats that one word down its length. When the filter is relaxed
-the grid SHALL present the display name and the entity kind alongside the `$id`, both of which carry
-information in that view.
+The two halves of the picker SHALL identify a schema differently, because they answer different
+questions. The browse grid in its filtered view SHALL show a single `$id` column. The inline selection
+SHALL label each option with the schema's display name and describe it with the `$id`, so a reader
+sees what the schema is called and which one it is. A schema with no display name SHALL appear once,
+labelled by its `$id`, with no description repeating it. Display names are not unique, which is why
+the `$id` SHALL accompany every named option: it is the stored reference and the only text that
+separates two schemas sharing a name. The entity kind is a constant under the filter and SHALL NOT be
+added to an option. When the filter is relaxed the grid SHALL present the display name and the entity
+kind alongside the `$id`, both of which carry information in that view.
 
 Author and updated-time columns SHALL NOT be offered in either view: the read that unions the two
 populations carries no resource metadata, and adding them would cost one metadata request per row for
@@ -110,7 +110,20 @@ report only that.
 #### Scenario: The inline selection identifies each option by its id
 
 - **WHEN** an admin opens the inline catalog-schema selection
-- **THEN** each option reads as the schema's `$id`, with no display name beside or above it
+- **THEN** each schema that has a display name is labelled with it and described by its `$id`
+- **AND** every option carries its `$id`, as that description or, with no display name, as the label
+
+#### Scenario: Two schemas sharing a display name stay distinguishable
+
+- **WHEN** two schemas declare the same display name and an admin opens the inline selection
+- **THEN** both options carry that name as their label
+- **AND** each shows its own `$id` as its description
+
+#### Scenario: A schema with no display name is listed once
+
+- **WHEN** a schema declares no display name and an admin opens the inline selection
+- **THEN** its option is labelled by its `$id`
+- **AND** the `$id` is not repeated as a description
 
 #### Scenario: The filtered grid shows the id alone
 
@@ -208,7 +221,6 @@ surface gains it without changing.
 - **WHEN** an admin opens the catalog values of a deployment
 - **THEN** a raw JSON view of `catalog_properties` is reachable, so a value the form renders
   awkwardly can still be entered exactly
-
 
 ### Requirement: Catalog values are validated before the write
 
@@ -308,3 +320,4 @@ plain-string form.
 
 - **WHEN** a deployment whose display fields are plain strings is opened and edited
 - **THEN** the fields behave as they do today, with no change in shape on save
+
