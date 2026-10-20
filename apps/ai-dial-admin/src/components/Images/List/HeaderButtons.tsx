@@ -1,11 +1,10 @@
 'use client';
 
-import { FC, MouseEvent, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { IconColumns2, IconPlus } from '@tabler/icons-react';
+import { IconPlus } from '@tabler/icons-react';
 import Cloud from '@/public/images/icons/cloud.svg';
-import { GridApi } from 'ag-grid-community';
 import { DialButtonDropdown, DialGhostButton, DialPrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,18 +20,15 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { useAppContext } from '@/src/context/AppContext';
 
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import GlobalWhitelist from '@/src/components/Deployments/Modals/GlobalWhitelist';
 import ImageAdd from '@/src/components/Deployments/Modals/ImageAdd';
 
 interface Props {
-  toggleColumnsPanel: () => void;
   route: ApplicationRoute;
-  gridApi?: GridApi | null;
   isReadOnlyAdmin?: boolean;
 }
 
-const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOnlyAdmin }) => {
+const HeaderButtons: FC<Props> = ({ route, isReadOnlyAdmin }) => {
   const t = useI18n();
   const isTabletScreen = useIsTabletScreen();
   const { showNotification } = useNotification();
@@ -65,15 +61,6 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOn
     [route, router, showNotification],
   );
 
-  const onToggleColumnsPanel = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-
-      toggleColumnsPanel();
-    },
-    [toggleColumnsPanel],
-  );
-
   const dropdownItems: DropdownItem[] = useMemo(
     () => [
       {
@@ -97,12 +84,6 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi, isReadOn
           label={t(ButtonsI18nKey.GlobalFirewall)}
           iconBefore={<Cloud {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => handleModalOpen(ModalType.globalFirewall)}
-        />
-        <ResetFiltersButton gridApi={gridApi} />
-        <DialGhostButton
-          label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onToggleColumnsPanel}
         />
 
         {!isReadOnlyAdmin &&

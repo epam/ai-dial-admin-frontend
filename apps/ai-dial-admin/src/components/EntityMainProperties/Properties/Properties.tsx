@@ -9,7 +9,7 @@ import CatalogSchemaCreateProperties from '@/src/components/Assets/Platform/Cata
 import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
-import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
+import SkillCreateProperties from '@/src/components/Assets/Artifacts/Skills/CreateProperties';
 import { DialAppRunnerResource, DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';

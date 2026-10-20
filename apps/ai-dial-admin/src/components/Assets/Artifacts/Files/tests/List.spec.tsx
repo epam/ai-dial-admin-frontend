@@ -28,7 +28,7 @@ vi.mock('@/src/components/Assets/BaseAssetList/Modals', () => ({
     modalType === 'import' ? <button onClick={() => onImport('files', [], 'skip', '')}>confirm-import</button> : null,
 }));
 
-import FilesList from '@/src/components/Assets/Files/List';
+import FilesList from '@/src/components/Assets/Artifacts/Files/List';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { NotificationType } from '@/src/models/notification';

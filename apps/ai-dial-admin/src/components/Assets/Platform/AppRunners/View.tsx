@@ -8,7 +8,7 @@ import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } fro
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
-import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';

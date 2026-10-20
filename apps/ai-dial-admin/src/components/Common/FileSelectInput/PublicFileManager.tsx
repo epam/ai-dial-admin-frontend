@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-react-file-manager';
 
-import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
+import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Artifacts/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';

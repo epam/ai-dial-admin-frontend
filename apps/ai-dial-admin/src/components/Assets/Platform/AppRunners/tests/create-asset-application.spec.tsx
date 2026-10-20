@@ -22,7 +22,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const createAssetProps = vi.fn();
-vi.mock('@/src/components/Assets/Deployments/CreateAsset', () => ({
+vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({
   default: (props: any) => {
     createAssetProps(props);
     return <div>create-asset-modal</div>;

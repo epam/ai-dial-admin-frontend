@@ -1,10 +1,9 @@
 'use client';
 
-import { MouseEvent, useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconPlus } from '@tabler/icons-react';
-import { GridApi } from 'ag-grid-community';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
@@ -13,7 +12,6 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -42,9 +40,6 @@ interface Props<T> {
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
-  showColumnsButton?: boolean;
-  gridApi?: GridApi | null;
-  toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   context?: () => AssetsFolderContextReader<AssetListItem>;
   isReadOnlyAdmin?: boolean;
@@ -56,9 +51,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   versionsMap,
   runners,
   route,
-  showColumnsButton,
-  gridApi,
-  toggleColumnsPanel,
   createEntity,
   context,
   isReadOnlyAdmin,
@@ -135,15 +127,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
     [folderContext, handleModalClose, route, runImport, showNotification, t],
   );
 
-  const onToggleColumnsPanel = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-
-      toggleColumnsPanel();
-    },
-    [toggleColumnsPanel],
-  );
-
   const getCreateModal = () => {
     if (route === ApplicationRoute.ApplicationRunners) {
       return <CreateAppRunner isModalOpen={isModalOpen} names={names || []} onClose={handleModalClose} />;
@@ -183,14 +166,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
   return (
     <div className="flex gap-4">
-      <ResetFiltersButton gridApi={gridApi} />
-      {showColumnsButton && (
-        <DialGhostButton
-          label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onToggleColumnsPanel}
-        />
-      )}
       {!isReadOnlyAdmin && (
         <>
           {!!createEntity && (

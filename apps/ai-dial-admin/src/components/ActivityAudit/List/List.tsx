@@ -15,7 +15,6 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
-import classNames from 'classnames';
 
 import { buildResourceTypeLabelMap, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
@@ -33,7 +32,7 @@ import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import ListView from '@/src/components/ListView/ListView';
+import ListEntities from '@/src/components/ListView/List';
 import { ACTIONS_COLUMN_CEL_ID, EXPANDER_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, CompareI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -646,74 +645,82 @@ const ActivityAuditList: FC<Props> = ({
     return options;
   }, [t, featureFlags.analyticsEnabled]);
 
+  const refreshButton = (
+    <DialGhostButton
+      label={t(ButtonsI18nKey.Refresh)}
+      iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
+      onClick={onRefresh}
+    />
+  );
+
+  const embeddedToolbar = (
+    <div className="flex gap-4 justify-between">
+      <TimeFilter
+        timePeriod={timePeriod}
+        onTimePeriodChange={handleTimePeriodChange}
+        timeRange={timeRange}
+        onTimeRangeChange={handleTimeRangeChange}
+        timePeriodOptions={timeFilterOptions}
+      />
+      <div className="flex gap-4">
+        <ResetFiltersButton gridApi={gridApi} />
+        {refreshButton}
+      </div>
+    </div>
+  );
+
+  const pageToolbar = (
+    <div className="flex flex-row flex-wrap justify-between w-full">
+      {!viewMode && (
+        <div className="flex flex-row gap-x-4 h-[40px] items-center">
+          <DialSelect
+            size={SelectSize.Sm}
+            variant={SelectVariant.Secondary}
+            prefix={`${t(CompareI18nKey.View)}:`}
+            options={activityViewOptions}
+            value={activityViewType}
+            onChange={(val) => onActivityViewChange(val as ActivityAuditView)}
+          />
+          <TimeFilter
+            timePeriod={timePeriod}
+            onTimePeriodChange={handleTimePeriodChange}
+            timeRange={timeRange}
+            onTimeRangeChange={handleTimeRangeChange}
+            timePeriodOptions={timeFilterOptions}
+          />
+        </div>
+      )}
+
+      {/*
+        The page-level system rollback is a Config-view affordance, not a per-view one: the
+        Deployments view declares `hasRollback` (its rows offer a rollback) and has never
+        rendered this button, so the view identity — not the config flag — is the condition.
+      */}
+      {!isReadOnlyAdmin && effectiveViewType === ActivityAuditView.Config && (
+        <DialNeutralButton
+          iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+          label={t(RollbackI18nKey.Rollback)}
+          onClick={systemRollback}
+        />
+      )}
+    </div>
+  );
+
   return (
     <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
-      <ListView
+      <ListEntities
         key={!entity ? effectiveViewType : void 0}
         additionalGridOptions={gridOptions}
         columnDefs={columnDefs}
-        title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
-        emptyDataTitle={t(emptyDataTitleMap[ApplicationRoute.ActivityAudit])}
+        listLabel={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
+        emptyDataProps={{ title: t(emptyDataTitleMap[ApplicationRoute.ActivityAudit]) }}
         onGridReady={onGridReady}
-        view={!entity ? ApplicationRoute.ActivityAudit : void 0}
         storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${effectiveViewType.toLowerCase()}` : void 0}
+        toolbar={entity ? embeddedToolbar : pageToolbar}
+        isMainListView
       >
-        <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
-          {entity && (
-            <TimeFilter
-              timePeriod={timePeriod}
-              onTimePeriodChange={handleTimePeriodChange}
-              timeRange={timeRange}
-              onTimeRangeChange={handleTimeRangeChange}
-              timePeriodOptions={timeFilterOptions}
-            />
-          )}
-
-          <div className="flex gap-4">
-            {entity && <ResetFiltersButton gridApi={gridApi} />}
-            <DialGhostButton
-              label={t(ButtonsI18nKey.Refresh)}
-              iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={onRefresh}
-            />
-          </div>
-        </div>
-        <div className="flex flex-row flex-wrap justify-between mt-4 w-full">
-          {!entity && !viewMode && (
-            <div className="flex flex-row gap-x-4 h-[40px] items-center">
-              <DialSelect
-                size={SelectSize.Sm}
-                variant={SelectVariant.Secondary}
-                prefix={`${t(CompareI18nKey.View)}:`}
-                options={activityViewOptions}
-                value={activityViewType}
-                onChange={(val) => onActivityViewChange(val as ActivityAuditView)}
-              />
-              <TimeFilter
-                timePeriod={timePeriod}
-                onTimePeriodChange={handleTimePeriodChange}
-                timeRange={timeRange}
-                onTimeRangeChange={handleTimeRangeChange}
-                timePeriodOptions={timeFilterOptions}
-              />
-              <ResetFiltersButton gridApi={gridApi} />
-            </div>
-          )}
-
-          {/*
-            The page-level system rollback is a Config-view affordance, not a per-view one: the
-            Deployments view declares `hasRollback` (its rows offer a rollback) and has never
-            rendered this button, so the view identity — not the config flag — is the condition.
-          */}
-          {!entity && !isReadOnlyAdmin && effectiveViewType === ActivityAuditView.Config && (
-            <DialNeutralButton
-              iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-              label={t(RollbackI18nKey.Rollback)}
-              onClick={systemRollback}
-            />
-          )}
-        </div>
-      </ListView>
+        {refreshButton}
+      </ListEntities>
       {isRollbackModalOpen &&
         createPortal(
           <DialConfirmationPopup

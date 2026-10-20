@@ -1,7 +1,7 @@
 # entity-intro-field Specification
 
 ## Purpose
-`intro` field support (type, validation, form control) across Model, Application, Interceptor, and Toolset — both regular (admin-BE-backed) and asset (Core-direct) variants. Added by change `add-intro-vendorwebsite-fields`. `intro` lives on `BaseEntity`, mirroring the `description` field's pattern exactly, and is mounted in `DeploymentProperties.tsx` (Model, regular Application, regular Toolset), `EntityProperties.tsx` gated to `view === ApplicationRoute.Interceptors` (Routes shares this component but has no `intro` on its backend DTO), `Assets/Apps/Properties.tsx` (Asset Application), and `Assets/Toolsets/View/Properties.tsx` (Asset Toolset).
+`intro` field support (type, validation, form control) across Model, Application, Interceptor, and Toolset — both regular (admin-BE-backed) and asset (Core-direct) variants. Added by change `add-intro-vendorwebsite-fields`. `intro` lives on `BaseEntity`, mirroring the `description` field's pattern exactly, and is mounted in `DeploymentProperties.tsx` (Model, regular Application, regular Toolset), `EntityProperties.tsx` gated to `view === ApplicationRoute.Interceptors` (Routes shares this component but has no `intro` on its backend DTO), `Assets/Entities/Apps/Properties.tsx` (Asset Application), and `Assets/Entities/Toolsets/View/Properties.tsx` (Asset Toolset).
 
 ## Requirements
 

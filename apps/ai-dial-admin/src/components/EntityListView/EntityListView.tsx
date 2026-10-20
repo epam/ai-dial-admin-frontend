@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridOptions } from 'ag-grid-community';
 
-import ListView from '@/src/components/ListView/ListView';
+import ListEntities from '@/src/components/ListView/List';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -62,14 +62,6 @@ const BaseEntityList = <T extends object>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | undefined>(void 0);
 
-  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
-
-  const [gridApi, setGridApi] = useState<GridApi | null>(null);
-
-  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
-    setGridApi(api);
-  }, []);
-
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
     setIsModalOpen(true);
@@ -106,13 +98,6 @@ const BaseEntityList = <T extends object>({
     [route],
   );
 
-  const closeColumnsPanel = useCallback(() => setShowColumnsPanel(false), [setShowColumnsPanel]);
-
-  useEffect(() => {
-    window.addEventListener('click', closeColumnsPanel);
-    return () => window.removeEventListener('click', closeColumnsPanel);
-  }, [closeColumnsPanel]);
-
   const getColumns = () => {
     const remove = isReadOnlyAdmin ? undefined : onOpenDeleteModal;
     const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
@@ -127,21 +112,18 @@ const BaseEntityList = <T extends object>({
 
   const columns = getColumns();
 
-  const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
-
   return (
     <>
-      <ListView
-        data={data}
+      <ListEntities
+        rowData={data}
         columnDefs={columns}
-        title={t(listViewTitleMap[route])}
-        emptyDataTitle={t(emptyDataTitleMap[route])}
+        listLabel={t(listViewTitleMap[route])}
+        emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
         additionalGridOptions={gridOptions}
-        showColumnsPanel={showColumnsPanel}
-        toggleColumnsPanel={toggleColumnsPanel}
-        view={route}
-        onGridReady={onGridReady}
+        storageKey={route}
         getHref={(data) => getUrnForEntity(route, data)}
+        isMainListView
+        isEnableColumnPanel={showColumnsButton}
       >
         <EntityListHeaderButtons
           names={names}
@@ -149,14 +131,11 @@ const BaseEntityList = <T extends object>({
           versionsMap={versionsMap}
           runners={runners}
           route={route}
-          showColumnsButton={showColumnsButton && data.length > 0}
-          toggleColumnsPanel={toggleColumnsPanel}
           createEntity={isReadOnlyAdmin ? undefined : onCreateEntity}
           context={getAssetContext}
-          gridApi={gridApi}
           isReadOnlyAdmin={isReadOnlyAdmin}
         />
-      </ListView>
+      </ListEntities>
       <Actions
         names={names}
         keys={keys}

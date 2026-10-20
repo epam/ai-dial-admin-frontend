@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import PlatformToolsetView from '@/src/components/Assets/Platform/Toolsets/View';
-import ToolsetView from '@/src/components/Assets/Toolsets/View/View';
+import ToolsetView from '@/src/components/Assets/Entities/Toolsets/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';

@@ -13,7 +13,7 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
-import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
