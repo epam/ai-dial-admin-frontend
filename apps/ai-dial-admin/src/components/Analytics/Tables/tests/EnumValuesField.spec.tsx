@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 
 const renderField = (props?: Partial<Parameters<typeof EnumValuesField>[0]>) => {
   const onChange = vi.fn();
@@ -117,6 +117,15 @@ describe('EnumValuesField', () => {
       await user.click(apply);
 
       await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(['pending']));
+    });
+
+    test('refuses a value longer than 64 characters with the same message the row shows', async () => {
+      const { user, dialog } = await openPopup();
+
+      await user.click(within(dialog).getByRole('button', { name: AnalyticsTablesI18nKey.EnumValuesAdd }));
+      await user.type(within(dialog).getByRole('textbox'), 'a'.repeat(65));
+
+      expect(within(dialog).getByText(ErrorI18nKey.Length)).toBeInTheDocument();
     });
 
     test('publishes both values in the order they were authored', async () => {

@@ -6,6 +6,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import classNames from 'classnames';
 import MultiselectModal from './Modal/MultiselectModal';
+import { GetItemError } from '@/src/models/error';
 
 interface Props {
   elementId: string;
@@ -20,6 +21,7 @@ interface Props {
   draggable?: boolean;
   errorText?: string;
   className?: string;
+  getItemError?: GetItemError;
   onChangeItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
 }

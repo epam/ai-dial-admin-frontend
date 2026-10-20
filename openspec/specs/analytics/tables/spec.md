@@ -837,10 +837,8 @@ disabled while any is violated:
 - each value at most **64** characters
 - values **distinct after trimming** — two entries differing only in surrounding whitespace collide
 
-The value-list popup is the shared list popup and applies its own per-value length rule, which is not the one
-above. The rules above are checked on the column row, and they decide whether Save is enabled; a value the popup
-accepts but the row rejects (longer than 64 characters) leaves the row showing its validation message after the
-popup is applied.
+The value-list popup SHALL refuse a value longer than 64 characters with the same message as the column row. Its
+list-wide rules (at least one value, distinct values) stay on the column row, which decides whether Save is enabled.
 
 Values SHALL be submitted **trimmed**, which is how the service stores and materializes them. A value MAY
 contain any characters, including commas and quotes, so the control MUST NOT treat any character as a
@@ -894,6 +892,12 @@ enrichment's **grain key**, on the same terms as any other non-nullable, non-sen
 
 - **WHEN** the user reorders a declared enum column's values so that `high` precedes `low`
 - **THEN** the submitted `enum_values` carries the new order
+
+#### Scenario: An over-long value is refused in the popup
+
+- **WHEN** the user enters a value longer than 64 characters in the value-list popup
+- **THEN** the entry shows the same length message as the column row and the popup's Apply is disabled
+- **AND** a value of 64 characters, or a single character, is accepted
 
 #### Scenario: A blank or over-long value blocks Save
 

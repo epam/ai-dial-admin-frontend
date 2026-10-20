@@ -2,12 +2,14 @@ import { FC } from 'react';
 
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import NewItemInput from '@/src/components/Common/Multiselect/Modal/NewItemInput';
+import { GetItemError } from '@/src/models/error';
 
 interface Props {
   value: string;
   index: number;
   draggable?: boolean;
   placeholder?: string;
+  getItemError?: GetItemError;
   onChangeItem: (item: string | undefined, index: number) => void;
   onRemoveItem: (index: number) => void;
   onMoveItem?: (field: string, index: number) => void;
@@ -23,6 +25,7 @@ const NewItem: FC<Props> = ({
   index,
   value,
   placeholder,
+  getItemError,
 }) => {
   return (
     <li key={`item_${index}`}>
@@ -32,6 +35,7 @@ const NewItem: FC<Props> = ({
             value={value}
             index={index}
             placeholder={placeholder}
+            getItemError={getItemError}
             onChangeItem={onChangeItem}
             onRemoveItem={onRemoveItem}
           />
@@ -41,6 +45,7 @@ const NewItem: FC<Props> = ({
           value={value}
           index={index}
           placeholder={placeholder}
+          getItemError={getItemError}
           onChangeItem={onChangeItem}
           onRemoveItem={onRemoveItem}
         />
