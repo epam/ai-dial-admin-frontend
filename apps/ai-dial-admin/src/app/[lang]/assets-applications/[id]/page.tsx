@@ -5,7 +5,7 @@ import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
 import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
-import AppView from '@/src/components/Assets/Apps/View';
+import AppView from '@/src/components/Assets/Entities/Apps/View';
 import PlatformApplicationView from '@/src/components/Assets/Platform/Applications/View';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';

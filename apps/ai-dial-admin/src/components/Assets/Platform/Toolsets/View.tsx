@@ -12,7 +12,7 @@ import {
   updatePlatformToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
-import TabsContent from '@/src/components/Assets/Toolsets/View/TabsContent';
+import TabsContent from '@/src/components/Assets/Entities/Toolsets/View/TabsContent';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -51,7 +51,7 @@ interface Props {
  * encryption and credential-locator scope both derive from the resource's own bucket, not the bucket
  * type) and `ToolsetOpsApi` (discovered-tools/sign-in/sign-out all resolve by the toolset's path,
  * regardless of bucket) — see design.md's Context. So this reuses the exact same
- * `Assets/Toolsets/View/TabsContent`/`ResourceAuthButtons` the public Toolsets view uses, passing
+ * `Assets/Entities/Toolsets/View/TabsContent`/`ResourceAuthButtons` the public Toolsets view uses, passing
  * `view={ApplicationRoute.AssetsToolsets}` through them. Only the header chrome (no version
  * selector, no publish, no move) and which server actions get called differ here — mirrors
  * `Assets/Platform/Applications/View.tsx`.

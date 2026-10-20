@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import PromptView from '@/src/components/Assets/Prompts/View/View';
+import PromptView from '@/src/components/Assets/Artifacts/Prompts/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialPrompt } from '@/src/models/dial/prompt';

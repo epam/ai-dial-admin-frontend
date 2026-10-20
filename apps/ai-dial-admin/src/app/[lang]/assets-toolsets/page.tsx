@@ -1,4 +1,4 @@
-import AssetsToolsetsList from '@/src/components/Assets/Toolsets/List';
+import AssetsToolsetsList from '@/src/components/Assets/Entities/Toolsets/List';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';

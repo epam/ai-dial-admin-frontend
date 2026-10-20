@@ -72,7 +72,7 @@ vi.mock('@/src/components/Publications/Properties/SkillProperties', () => ({
   ),
 }));
 
-vi.mock('@/src/components/Assets/Skills/View/SkillManifestTab', () => ({
+vi.mock('@/src/components/Assets/Artifacts/Skills/View/SkillManifestTab', () => ({
   default: ({ name, description, onChangeDescription }: any) => (
     <div role="region" aria-label="skill-manifest-tab">
       <span>{name}</span>

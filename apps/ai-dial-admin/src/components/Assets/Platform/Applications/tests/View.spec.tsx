@@ -25,7 +25,7 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 /**
- * Matches `Assets/Apps/tests/View.spec.tsx`'s scope: a render smoke test, not deep interaction
+ * Matches `Assets/Entities/Apps/tests/View.spec.tsx`'s scope: a render smoke test, not deep interaction
  * coverage — the component's real dependency surface (`TabsContent`, `SimpleEntityHeader`, tab
  * controls) is exercised at the shared-component level, since this view reuses them unmodified
  * (design.md's Context — core gives platform-bucket applications full field/tab parity).

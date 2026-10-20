@@ -4,7 +4,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { DialConversation } from '@/src/models/dial/conversation';
 import { errorObjLog } from '@/src/server/logger';
 import { getConversation } from '../actions';
-import ConversationView from '@/src/components/Assets/Conversations/View/View';
+import ConversationView from '@/src/components/Assets/Artifacts/Conversations/View/View';
 
 export const dynamic = 'force-dynamic';
 

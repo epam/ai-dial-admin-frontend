@@ -18,7 +18,7 @@ vi.mock('@/src/server/config-entities/read-page-options', () => ({
   readConfigEntities: vi.fn().mockResolvedValue(roles),
 }));
 
-vi.mock('@/src/components/Assets/Toolsets/View/View', () => ({
+vi.mock('@/src/components/Assets/Entities/Toolsets/View/View', () => ({
   default: (props: Record<string, unknown>) => <div data-view="ToolsetView" data-roles={JSON.stringify(props.roles)} />,
 }));
 vi.mock('@/src/components/Assets/Platform/Toolsets/View', () => ({

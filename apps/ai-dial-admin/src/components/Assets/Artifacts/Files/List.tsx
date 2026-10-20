@@ -25,7 +25,7 @@ import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { downloadFile } from '@/src/utils/download';
-import { getDeleteNotificationContent, getExportNotificationContent, getImportNotificationContent } from '../utils';
+import { getDeleteNotificationContent, getExportNotificationContent, getImportNotificationContent } from '@/src/components/Assets/utils';
 import Modals from '@/src/components/Assets/BaseAssetList/Modals';
 import { ModalType } from '@/src/components/Assets/BaseAssetList/types';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';

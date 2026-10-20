@@ -7,7 +7,7 @@ import ToolsetDetails from '../ToolsetDetails';
 
 let capturedPropertiesProps: any = {};
 
-vi.mock('@/src/components/Assets/Toolsets/View/Properties', () => ({
+vi.mock('@/src/components/Assets/Entities/Toolsets/View/Properties', () => ({
   default: (props: any) => {
     capturedPropertiesProps = props;
     return <section aria-label="toolset-properties" />;

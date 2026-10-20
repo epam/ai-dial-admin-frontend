@@ -4,7 +4,7 @@ import { Dispatch, FC, Fragment, Ref, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
-import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties';
+import ApplicationAssetProperties from '@/src/components/Assets/Entities/Apps/Properties';
 import ResourceFeatures from '@/src/components/Assets/Resources/ResourceFeatures';
 import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
 import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';

@@ -6,7 +6,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import PromptDetails from '../PromptDetails';
 import { ButtonsI18nKey } from '../../../../../constants/i18n';
 
-vi.mock('@/src/components/Assets/Prompts/View/Properties', () => ({
+vi.mock('@/src/components/Assets/Artifacts/Prompts/View/Properties', () => ({
   default: ({ prompt, onChangePrompt, isPublication }: any) => (
     <div role="region" aria-label="prompt-properties">
       <div>Prompt Name: {prompt.name}</div>

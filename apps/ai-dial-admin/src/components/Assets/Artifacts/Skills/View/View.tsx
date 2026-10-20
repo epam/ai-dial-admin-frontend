@@ -10,9 +10,9 @@ import {
   removeSkillFile,
   uploadSkillFile,
 } from '@/src/app/[lang]/skills/actions';
-import SkillAssetProperties from '@/src/components/Assets/Skills/View/Properties';
+import SkillAssetProperties from '@/src/components/Assets/Artifacts/Skills/View/Properties';
 import SkillHeader from '@/src/components/EntityHeaderControls/SkillHeader';
-import SkillManifestTab from '@/src/components/Assets/Skills/View/SkillManifestTab';
+import SkillManifestTab from '@/src/components/Assets/Artifacts/Skills/View/SkillManifestTab';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';

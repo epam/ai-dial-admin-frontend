@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import SkillView from '@/src/components/Assets/Skills/View/View';
+import SkillView from '@/src/components/Assets/Artifacts/Skills/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialSkillResource } from '@/src/models/dial/resource';
 import { errorObjLog } from '@/src/server/logger';
