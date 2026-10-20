@@ -1,8 +1,12 @@
-## mcp-registry-source
+# mcp-registry-source Specification
+
+## Purpose
 
 UI flow for creating MCP containers from the MCP Registry, including registry browsing, server selection, and automatic container configuration. Gated behind `MCP_REGISTRY_ENABLED` feature flag.
 
-### Backend API Contract
+## Requirements
+
+### Requirement: Backend API Contract
 
 **List/search servers**: `POST /api/v1/mcp-registry/servers/list`
 - Request body: `McpServersRequestDto` with fields: `search` (string), `cursor` (string), `limit` (number, default 100, max 1000), `filter` (McpServerFilterDto, optional)
@@ -15,28 +19,50 @@ UI flow for creating MCP containers from the MCP Registry, including registry br
 
 The system SHALL use `POST /api/v1/mcp-registry/servers/list` for all MCP registry server requests instead of `GET /api/v1/mcp-registry/servers`.
 
-### Feature Flag
+#### Scenario: Server requests use the list endpoint
+- **WHEN** the console requests MCP registry servers
+- **THEN** it SHALL send `POST /api/v1/mcp-registry/servers/list` with a `McpServersRequestDto` body
+- **AND** it SHALL NOT call `GET /api/v1/mcp-registry/servers`
+
+### Requirement: Feature Flag
 
 - Feature SHALL be gated behind `MCP_REGISTRY_ENABLED` env var (default: false)
 - When disabled, the "From MCP Registry" option SHALL NOT appear in the Create dropdown
 - Feature flag SHALL be passed via `featureFlags.mcpRegistryEnabled` in `AppContext`
 - Env var SHALL be documented in `README.md` and `.env.template`
 
-### Entry Point
+#### Scenario: Flag disabled hides the registry option
+- **WHEN** `MCP_REGISTRY_ENABLED` is unset or false
+- **THEN** the Create dropdown SHALL NOT offer "From MCP Registry"
+
+### Requirement: Entry Point
 
 - The MCP containers list page (`ApplicationRoute.McpContainers`) Create dropdown SHALL have a 3rd option: "From MCP Registry" (when feature flag enabled)
 - Clicking it SHALL open the `ServingCreate` modal with `type=MCP`, `sourceType=IMAGE_REFERENCE`, and `templateOptions={ mcpRegistry: true }`
 - Template SHALL initialize with `externalRegistryRef: { $type: 'mcp-registry', packageName: '' }` so `ContainerSource` renders `McpServerNameField`
 
-### Server Selectability
+#### Scenario: From MCP Registry opens a prefilled create modal
+- **WHEN** the feature flag is enabled and the user picks "From MCP Registry" in the Create dropdown
+- **THEN** `ServingCreate` SHALL open with `type=MCP` and `sourceType=IMAGE_REFERENCE`
+- **AND** the source SHALL render `McpServerNameField`
+
+### Requirement: Server Selectability
 
 With server-side filtering by `packageRegistryTypes` and `packageTransportTypes`, all returned servers are selectable. All rows in the MCP registry grid SHALL be selectable.
 
-### Server-side Container Pre-filter
+#### Scenario: Every returned server can be selected
+- **WHEN** the registry grid renders a page of servers
+- **THEN** every row SHALL be selectable
+
+### Requirement: Server-side Container Pre-filter
 
 All container-related MCP registry server requests (grid pagination, autocomplete search, freeform validation) SHALL include a `filter` with `packageRegistryTypes: ["oci"]` and `packageTransportTypes: ["streamable-http", "sse"]` so that only servers with OCI packages and supported transports are returned.
 
-### Toolset MCP Registry Filter Constant
+#### Scenario: A container request carries the container filter
+- **WHEN** the grid, the autocomplete or freeform validation requests servers for a container
+- **THEN** the request SHALL include `filter: { packageRegistryTypes: ["oci"], packageTransportTypes: ["streamable-http", "sse"] }`
+
+### Requirement: Toolset MCP Registry Filter Constant
 
 `constants/deployments/mcp-registry.ts` SHALL export `TOOLSET_MCP_REGISTRY_FILTER: McpServerFilterDto` with value `{ remoteTransportTypes: ['streamable-http', 'sse'] }`, alongside the existing `CONTAINER_MCP_REGISTRY_FILTER`, `IMAGE_MCP_REGISTRY_REPO_FILTER`, and `IMAGE_MCP_REGISTRY_OCI_FILTER`.
 
@@ -52,21 +78,34 @@ The previous `IMAGE_MCP_REGISTRY_FILTER` constant SHALL be replaced by two separ
 - **WHEN** `getImageMcpServers` is called
 - **THEN** two parallel requests SHALL be made — one with `IMAGE_MCP_REGISTRY_REPO_FILTER` and one with `IMAGE_MCP_REGISTRY_OCI_FILTER`
 
-### Purpose-specific API Methods
+### Requirement: Purpose-specific API Methods
 
 `McpRegistryApi` SHALL expose `getContainerMcpServers()`, `getImageMcpServers()`, and `getToolsetMcpServers()` methods. Each accepts `search`, `cursor`, and `limit` params, constructs a `McpServersRequestDto` with its respective filter internally, and sends a POST request to `/api/v1/mcp-registry/servers/list`.
 
 Callers SHALL NOT provide filter values — the filter is an implementation detail of each API method.
 
-### Purpose-specific Server Action for Containers
+#### Scenario: A caller cannot set the filter
+- **WHEN** `getToolsetMcpServers({ search, cursor, limit })` is called
+- **THEN** the request SHALL carry `TOOLSET_MCP_REGISTRY_FILTER` set by the method itself
+
+### Requirement: Purpose-specific Server Action for Containers
 
 A `getContainerMcpServers()` server action SHALL be created that accepts `{ search?, cursor?, limit }`, authenticates, and delegates to `McpRegistryApi.getContainerMcpServers()`. This replaces the current generic `getMcpServers()` action for container use cases.
 
-### Server Action Makes a Single Registry Fetch
+#### Scenario: The container action delegates to its API method
+- **WHEN** the `getContainerMcpServers` server action is called with `{ search, cursor, limit }`
+- **THEN** it SHALL authenticate and delegate to `McpRegistryApi.getContainerMcpServers()`
+
+### Requirement: Server Action Makes a Single Registry Fetch
 
 The `getContainerMcpServers` server action SHALL make one BE request per call and SHALL NOT accumulate results across BE pages. The grid datasource fills a block: it SHALL request `MCP_REGISTRY_PAGE_SIZE` rows per block, repeat the call with the returned cursor while the block is short and a cursor remains, and remember the starting cursor of each block by its start row so an evicted block refetches from its own cursor.
 
-### Typed Request and Filter DTOs
+#### Scenario: A short block is filled with further calls
+- **WHEN** a call returns fewer rows than `MCP_REGISTRY_PAGE_SIZE` together with a cursor
+- **THEN** the grid datasource SHALL call the action again with that cursor
+- **AND** each call SHALL make exactly one backend request
+
+### Requirement: Typed Request and Filter DTOs
 
 The system SHALL define TypeScript interfaces mirroring the BE contract:
 
@@ -75,7 +114,11 @@ The system SHALL define TypeScript interfaces mirroring the BE contract:
 
 These interfaces SHALL be located in `src/types/deployments/mcp-registry.ts`.
 
-### ExternalRegistryRef includes version field
+#### Scenario: The request body is typed
+- **WHEN** an API method builds a registry request
+- **THEN** its body SHALL be typed as `McpServersRequestDto` from `src/types/deployments/mcp-registry.ts`
+
+### Requirement: ExternalRegistryRef includes version field
 
 The `ExternalRegistryRef` interface SHALL include an optional `version?: string` field, alongside `$type` and `packageName`. The interface SHALL be defined in `src/types/deployments/mcp-registry.ts`. Consumers (container and image types) SHALL import directly from this file — no re-exports.
 
@@ -83,7 +126,7 @@ The `ExternalRegistryRef` interface SHALL include an optional `version?: string`
 - **WHEN** a server is selected from the MCP registry
 - **THEN** `externalRegistryRef.version` SHALL be set to `server.version`
 
-### McpRegistryFetchFn type in shared types
+### Requirement: McpRegistryFetchFn type in shared types
 
 The `McpRegistryFetchFn` type SHALL be defined in `src/types/deployments/mcp-registry.ts` instead of the `McpRegistryGrid` component, to avoid pulling ag-grid dependencies when only the type is needed.
 
@@ -92,11 +135,15 @@ The `McpRegistryFetchFn` type SHALL be defined in `src/types/deployments/mcp-reg
 - **THEN** it SHALL import from `@/src/types/deployments/mcp-registry`
 - **AND** the import SHALL NOT trigger ag-grid module resolution
 
-### Remote Utility Functions
+### Requirement: Remote Utility Functions
 
 `utils/deployments/mcp-registry.ts` SHALL export `getPreferredRemote(server: McpServer)` and `mapRemoteTransportType(type: string)` alongside existing `getPreferredOciPackage()` and `mapTransportType()`.
 
-### MCP Server Name Field
+#### Scenario: A remote's transport is mapped
+- **WHEN** `mapRemoteTransportType` receives `streamable-http` or `sse`
+- **THEN** it SHALL return the matching console transport
+
+### Requirement: MCP Server Name Field
 
 The `McpServerNameField` SHALL be generalized to work with both containers and images. It SHALL accept callback props instead of directly importing container types and actions:
 
@@ -126,7 +173,7 @@ Container-specific logic (OCI package extraction, transport mapping, imageRefere
 - **WHEN** `McpServerNameField` is used in an image context
 - **THEN** `ImageMcpRegistry` SHALL provide `fetchServers=getImageMcpServers` and an `onServerSelect` that populates image source fields based on server capabilities
 
-### Freeform Validation
+### Requirement: Freeform Validation
 
 When user types a server name that is not in the local cache:
 1. `imageReference` SHALL be cleared immediately
@@ -135,7 +182,16 @@ When user types a server name that is not in the local cache:
 4. If exact name match found → `applyServer()` called, field becomes valid
 5. If no exact match → error: "MCP server not found in registry"
 
-### On Server Selection (autocomplete or modal)
+#### Scenario: A typed name that is not in the registry
+- **WHEN** the user types a server name that is not cached and the registry has no exact match
+- **THEN** `imageReference` SHALL be cleared
+- **AND** the field SHALL show "MCP server not found in registry" and block Save
+
+#### Scenario: A typed name that is in the registry
+- **WHEN** the registry returns an exact match for the typed name
+- **THEN** the server SHALL be applied and the field SHALL become valid
+
+### Requirement: On Server Selection (autocomplete or modal)
 
 When a server is selected, the following fields SHALL be populated on the container:
 
@@ -155,7 +211,7 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 - **THEN** `source.externalRegistryRef.packageName` SHALL be `io.github.user/weather`
 - **AND** `source.externalRegistryRef.version` SHALL be `2.1.0`
 
-### Registry Browser Modal
+### Requirement: Registry Browser Modal
 
 - SHALL use `McpRegistryModal` with `DialFormPopup`, header "Select MCP server from registry"
 - Confirm button SHALL be disabled when no server is selected
@@ -181,7 +237,7 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 - **THEN** the sidebar SHALL NOT be visible
 - **AND** the grid SHALL occupy the full modal body width
 
-### Registry Grid
+### Requirement: Registry Grid
 
 - SHALL use ag-grid with infinite scroll and cursor-based pagination
 - SHALL support single-row radio selection
@@ -228,25 +284,44 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 - **THEN** the grid SHALL render normally with the pinned utility column still visible
 - **AND** clicking the details column SHALL be a no-op (no error thrown)
 
-### Validation
+### Requirement: Validation
+
+The MCP server name SHALL be required and SHALL match the server-name pattern; its existence SHALL be checked against the registry on freeform input, and `source.imageReference` SHALL be filled from the OCI identifier.
 
 - MCP server name: required, pattern `^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$`
 - Server existence: validated against registry on freeform input
 - `source.imageReference`: populated automatically from OCI identifier
 
-### Error Handling
+#### Scenario: A malformed server name
+- **WHEN** the MCP server name does not match `^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$`
+- **THEN** the field SHALL be invalid and Save SHALL be blocked
+
+### Requirement: Error Handling
 
 - If MCP registry API call fails, grid SHALL show error state (ag-grid `failCallback`)
 - If autocomplete search fails, no suggestions shown (silent failure, same as HF pattern)
 - Toast notification on container creation failure (existing pattern via `showNotification`)
 
-### Accessibility
+#### Scenario: The registry request fails
+- **WHEN** a registry grid request fails
+- **THEN** the grid SHALL show its error state
+
+#### Scenario: An autocomplete search fails
+- **WHEN** an autocomplete search request fails
+- **THEN** no suggestions SHALL be shown and no error SHALL be raised
+
+### Requirement: Accessibility
 
 - Registry grid SHALL be keyboard navigable (ag-grid default)
 - Modal SHALL trap focus (handled by `DialFormPopup`)
 - "Select from registry" button SHALL have descriptive label for screen readers
 
-### SourceType accepts registryServer prop
+#### Scenario: Keyboard use of the registry modal
+- **WHEN** the registry modal is open
+- **THEN** focus SHALL stay inside the modal
+- **AND** the grid SHALL be navigable with the keyboard
+
+### Requirement: SourceType accepts registryServer prop
 
 The `SourceType` component SHALL accept an optional `registryServer?: McpServer` prop. When provided:
 - `SourceType` SHALL own the source type switch logic internally — building clean source objects with prefilled data from the server
@@ -267,7 +342,7 @@ When `registryServer` is not provided, existing behavior SHALL be unchanged (def
 - **WHEN** `SourceType` does NOT receive `registryServer`
 - **THEN** the default handler SHALL wipe and replace the source (existing behavior unchanged)
 
-### Shared SidePanel chrome component
+### Requirement: Shared SidePanel chrome component
 
 The FE SHALL expose a reusable `SidePanel` component at `src/components/Common/SidePanel/SidePanel.tsx` that provides the titled closable aside chrome. The component SHALL own only the chrome (outer container, header with label and close button, open-gating, children slot) and SHALL NOT own any data-fetching, loading, empty-state, or i18n logic.
 
@@ -308,7 +383,7 @@ Both the HuggingFace `ModelDescription` and the new `McpServerDetails` SHALL com
 - **AND** the existing markdown/loader/empty behavior SHALL appear inside the `SidePanel` children
 - **AND** the close button in `SidePanel` SHALL call `onChangeIsDescriptionShown(false)`
 
-### Single-server fetch endpoint
+### Requirement: Single-server fetch endpoint
 
 The FE SHALL expose a `getMcpServerVersion(serverName: string, version: string)` server action backed by `McpRegistryApi.getMcpServerVersion()`, which hits `POST /api/v1/mcp-registry/servers/versions` with body `{ serverName, version }`.
 
@@ -330,7 +405,7 @@ The BE endpoint returns `ServerListResponseDto` with a single-item `servers` arr
 - **WHEN** the BE call fails
 - **THEN** the server action SHALL propagate the error envelope as-is (`success: false`, `errorHeader`, `errorMessage`) per the standard server-action contract
 
-### Server Details Sidebar
+### Requirement: Server Details Sidebar
 
 The MCP registry modal SHALL render an optional right-hand sidebar (`McpServerDetails`) that composes the shared `SidePanel` chrome. The sidebar SHALL:
 
@@ -390,7 +465,7 @@ Sidebar content SHALL be composed from DIAL primitives, rendered as children of 
 - **AND** a new fetch SHALL be initiated for server B
 - **AND** the server A fetch result, if it arrives after, SHALL NOT overwrite server B's data
 
-### CodeViewer supports hiding the fullscreen control
+### Requirement: CodeViewer supports hiding the fullscreen control
 
 The `CodeViewer` component (`src/components/Common/CodeViewer/CodeViewer.tsx`) SHALL accept an optional `hideFullscreen?: boolean` prop (default `false`).
 
@@ -415,7 +490,7 @@ The sidebar's "View full server.json" block SHALL pass `hideFullscreen` so the f
 - **THEN** the maximize button SHALL NOT be present
 - **AND** the `FullscreenViewer` SHALL NOT be rendered
 
-### External URL Cell Renderer
+### Requirement: External URL Cell Renderer
 
 The FE SHALL expose a reusable AG Grid cell renderer `ExternalUrlCellRenderer` at `src/components/Grid/CellRenderers/ExternalUrlCellRenderer.tsx`.
 
@@ -444,7 +519,7 @@ The renderer SHALL:
 - **WHEN** the cell value is `undefined`, `null`, or `""`
 - **THEN** the renderer SHALL render no content
 
-### MCP Registry Grid utility column and cell click handler
+### Requirement: MCP Registry Grid utility column and cell click handler
 
 `McpRegistryGrid` SHALL compose its `columnDefs` by appending a pinned-right utility column to `MCP_REGISTRY_COLUMNS`:
 

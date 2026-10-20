@@ -1,4 +1,10 @@
-## ADDED Requirements
+# progressive-depth-detail-panel Specification
+
+## Purpose
+
+The progressive-depth layout of run detail panels: the execution status bar, key-value grid, code viewer and metric cards.
+
+## Requirements
 
 ### Requirement: ExecutionStatusBar displays execution metadata as horizontal badges
 The `ExecutionStatusBar` component SHALL render execution metadata (status, HTTP code, duration, timestamp) as a horizontal row of labeled badges instead of a key-value grid. It SHALL display a colored status pill (`SUCCESS` in green, `FAILED`/`ERROR`/`TIMEOUT` in red), an HTTP status badge (color-coded: 2xx green, 4xx warning, 5xx/other red), a formatted duration value, and a timestamp. An optional Grafana trace link SHALL appear below the status bar when a URL is provided.

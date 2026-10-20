@@ -1,10 +1,10 @@
-# Deployment Import Preview
+# deployment-import-preview Specification
 
 ## Purpose
 
 Enables the import configuration step to show deployment entities with their import actions (Create/Update/Skip) before importing, replacing the current "Preview currently unavailable" placeholder. Uses `ConfigurationPreview` with deployment-specific API call and `DeploymentConfigurationGrid` for rendering.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Import preview shows deployment entities with actions in tabbed grid
 
@@ -47,11 +47,15 @@ When the import scope is Deployments, `ConfigurationPreview` SHALL call `POST /c
 
 ### Requirement: Import button enabled when file is uploaded
 
+The Import button SHALL be enabled once a valid deployment config file has been uploaded.
+
 #### Scenario: Import button state
 - **WHEN** a valid deployment config file has been uploaded
 - **THEN** the Import button SHALL be enabled
 
 ### Requirement: Preview error handling
+
+When the import preview request fails, the system SHALL report the failure in an error toast.
 
 #### Scenario: Preview API call fails
 - **WHEN** the `previewDeploymentImportConfig` call fails

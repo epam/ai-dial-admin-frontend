@@ -1,3 +1,11 @@
+# analytics-deployment-price Specification
+
+## Purpose
+
+Deployment price in the analytics money card and in the entity and project consumption tables, and how that price is formatted.
+
+## Requirements
+
 ### Requirement: Money card uses price field
 The Money card on the Analytics dashboard SHALL use `sum(price)` instead of `sum(deployment_price)` so that the total matches the sum of rows in the consumption breakdown tables.
 

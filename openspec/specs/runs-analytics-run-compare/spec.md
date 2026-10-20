@@ -1,4 +1,10 @@
-## ADDED Requirements
+# runs-analytics-run-compare Specification
+
+## Purpose
+
+Comparing a run with a sibling run inside the run's Analytics grid.
+
+## Requirements
 
 ### Requirement: Sibling run dropdown is shown above the Analytics grid
 The Analytics tab SHALL render a "Compare with" dropdown control above the AG Grid, populated with completed (`COMPLETED` status) runs from the same test suite as the current run, excluding the current run itself. Each option SHALL display the run's `testRunName` (or `id` if `testRunName` is absent) together with its formatted `startedAt` date.

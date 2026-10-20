@@ -1,4 +1,10 @@
-## ADDED Requirements
+# analytics-metric-bindings-display Specification
+
+## Purpose
+
+How a run's Analytics tab loads metric bindings and presents them per metric in the run metric detail panel.
+
+## Requirements
 
 ### Requirement: AnalyticsTab fetches results and snapshots in parallel under a single loader
 

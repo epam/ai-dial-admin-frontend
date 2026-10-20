@@ -1,4 +1,10 @@
-## ADDED Requirements
+# audit-row-open-in-new-tab Specification
+
+## Purpose
+
+Opening an audit row's activity detail in a new tab, both from the standalone audit list and from an entity's Audit tab.
+
+## Requirements
 
 ### Requirement: Audit row click opens detail in new tab (standalone)
 When the user clicks a row in the standalone audit activities list (no `entity` prop), the system SHALL open the activity detail page in a new browser tab using `window.open`. The current browser tab SHALL remain on the audit list page.
