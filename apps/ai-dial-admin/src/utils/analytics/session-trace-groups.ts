@@ -37,7 +37,10 @@ export const isCoreInternalRoot = (root: SessionTraceRootRow, sessionProjectId: 
 // Reads the normalised session id, not `chat_id`: the identity enrichment resolves it for chat and harness
 // traffic alike and leaves it empty on a call that entered under neither, which is exactly what "carries the
 // client's label" means here. Testing `chat_id` would mark every root of an agent session as Core-internal.
-const hasSessionLabel = (root: SessionTraceRootRow): boolean => (root[UsageLogField.ClientSessionId] ?? '') !== '';
+const sessionLabelOf = (root: SessionTraceRootRow): string =>
+  root[UsageLogField.ClientSessionId] ?? root[UsageLogField.ChatId] ?? '';
+
+const hasSessionLabel = (root: SessionTraceRootRow): boolean => sessionLabelOf(root) !== '';
 
 // A card is named by the deployment its call reached. A pass-through root records none — it records its
 // endpoint instead — so the endpoint is the fallback rather than a placeholder, and the trace id stands in
@@ -235,7 +238,7 @@ export const traceInvariantViolations = (
 
   for (const [traceId, roots] of groupBy(rootRows, ({ trace_id }) => trace_id)) {
     const labelled = roots.filter(hasSessionLabel);
-    const sessionIds = distinct(roots.map((root) => root[UsageLogField.ClientSessionId]));
+    const sessionIds = distinct(roots.map(sessionLabelOf));
     const coreInternal = roots.filter((root) => isCoreInternalRoot(root, sessionProjectId));
 
     if (sessionIds.length > 1) {

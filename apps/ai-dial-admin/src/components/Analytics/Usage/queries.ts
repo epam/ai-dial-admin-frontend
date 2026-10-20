@@ -12,8 +12,10 @@ import {
   ROW_KEY_SEPARATOR,
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
+  USAGE_USER_HASH_FIELD,
+  USAGE_USER_REF_FIELD,
 } from '@/src/components/Analytics/Usage/constants';
-import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, CallerSource, UsageView } from '@/src/components/Analytics/Usage/models';
 import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import {
   QueryExpr,
@@ -35,6 +37,7 @@ export interface QueryScope {
   window: TimeRange;
   /** The entity's clauses for the rows this request reads. */
   entityClauses?: QueryFilterNode[];
+  callerSource?: CallerSource;
 }
 
 const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
@@ -190,8 +193,17 @@ export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): Q
   return { op: QueryLogicalOperator.And, args: clauses };
 };
 
-/** The principal that made the call: the user id on a token call, the project id on an API-key one. */
-const USER_REF_FIELD = 'usage_client_identity.user_ref';
+const callerExpr = (source: CallerSource): QueryExpr => {
+  if (source === CallerSource.Principal) {
+    return fn('if', [
+      fn('not_empty', [field(USAGE_USER_REF_FIELD)]),
+      field(USAGE_USER_REF_FIELD),
+      field(USAGE_USER_HASH_FIELD),
+    ]);
+  }
+
+  return field(source === CallerSource.Reference ? USAGE_USER_REF_FIELD : USAGE_USER_HASH_FIELD);
+};
 
 export const CALLS_ALIAS = 'calls';
 export const SPEND_ALIAS = 'spend';
@@ -234,7 +246,7 @@ const pricedOnly = (column: string): QueryExpr =>
  * no comparison in expression position, but `success` is already a boolean, so `if` takes it
  * directly.
  */
-const commonMeasures = (view: UsageView) => {
+const commonMeasures = ({ view, callerSource = CallerSource.Hash }: QueryScope) => {
   const measures = [
     { expr: fn('count', []), as: CALLS_ALIAS },
     /*
@@ -242,18 +254,14 @@ const commonMeasures = (view: UsageView) => {
      *
      * `user_hash` alone is set only on token calls and empty on every API-key one, so counting it
      * folds all key traffic into a single bucket. `user_ref` covers both branches — but it comes
-     * from an enrichment that is provisioned per environment rather than shipped with the service,
-     * and where that enrichment is absent the column is null on every row and the card read zero.
+     * from an enrichment that is provisioned per environment rather than shipped with the service.
+     * Where that enrichment is absent the schema has no such column and the query naming it fails,
+     * and where it is present but unpopulated the column is null on every row; the hash covers both.
      * The fallback costs nothing where the enrichment is there: the two agree row by row.
      */
-    {
-      expr: fn(
-        'count',
-        [fn('if', [fn('not_empty', [field(USER_REF_FIELD)]), field(USER_REF_FIELD), field('user_hash')])],
-        true,
-      ),
-      as: CALLERS_ALIAS,
-    },
+    ...(callerSource === CallerSource.None
+      ? []
+      : [{ expr: fn('count', [callerExpr(callerSource)], true), as: CALLERS_ALIAS }]),
     {
       expr: fn('sum', [
         fn('if', [field('success'), value('0', QueryValueType.Integer), value('1', QueryValueType.Integer)]),
@@ -321,7 +329,7 @@ export const buildBucketedQuery = (scope: QueryScope, resolution: ChartResolutio
       ]),
       as: BUCKET_ALIAS,
     },
-    ...commonMeasures(scope.view),
+    ...commonMeasures(scope),
     ...latencyPercentiles(),
   ],
   group_by: [BUCKET_ALIAS],
@@ -337,7 +345,7 @@ export const buildTotalsQuery = (scope: QueryScope): StructuredQuery => ({
   entity: USAGE_ENTITY,
   mode: QueryMode.Aggregate,
   filter: buildFilter(scope),
-  select: commonMeasures(scope.view),
+  select: commonMeasures(scope),
 });
 
 /**
@@ -438,7 +446,7 @@ export const buildTabQuery = (
     filter: buildFilter(scope, shape.rowClauses ?? []),
     select: [
       ...columns.map(selectColumn),
-      ...commonMeasures(scope.view),
+      ...commonMeasures(scope),
       ...(NAMES_GROUPED_DEPLOYMENTS.includes(tab) ? groupNameMeasures() : []),
       ...(shape.orderBy === ERROR_RATE_ALIAS ? [errorRateMeasure()] : []),
     ],
@@ -493,7 +501,7 @@ export const buildTabKeysQuery = (scope: QueryScope, tab: BreakdownTab, keys: st
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
     filter: buildFilter(scope, keyClauses),
-    select: [...columns.map(selectColumn), ...commonMeasures(scope.view)],
+    select: [...columns.map(selectColumn), ...commonMeasures(scope)],
     group_by: columns,
     sort: columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
     page: {

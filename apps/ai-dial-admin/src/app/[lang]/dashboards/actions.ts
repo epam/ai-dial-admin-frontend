@@ -4,6 +4,8 @@ import { cookies, headers } from 'next/headers';
 
 import { telemetryApi } from '@/src/app/api/api';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
+import { getCallerSource } from '@/src/server/analytics/usage-caller-source';
+import { CallerSource } from '@/src/components/Analytics/Usage/models';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TelemetryQuery } from '@/src/models/telemetry';
@@ -11,6 +13,10 @@ import { TelemetryQuery } from '@/src/models/telemetry';
 /** Whether the analytics service refuses the current user, for a surface rendered on the client. */
 export async function getIsAnalyticsForbidden(): Promise<boolean> {
   return isAnalyticsForbidden();
+}
+
+export async function getUsageCallerSource(): Promise<CallerSource> {
+  return getCallerSource();
 }
 
 export async function getDashboardData(query: TelemetryQuery) {

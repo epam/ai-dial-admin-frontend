@@ -1,3 +1,11 @@
+# stopped-container-display Specification
+
+## Purpose
+
+How a stopped container is shown in an entity's edit view and excluded from the container selection modal.
+
+## Requirements
+
 ### Requirement: Display stopped container name in entity edit view
 The `Containers` component in non-modal (edit view) mode SHALL display the linked container's display name in the `DialInputPopup` input regardless of the container's status, as long as the entity has a valid `source.containerId` that matches a container returned by the API.
 

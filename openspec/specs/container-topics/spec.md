@@ -1,4 +1,10 @@
-## ADDED Requirements
+# container-topics Specification
+
+## Purpose
+
+Topics on containers: the properties form field, the list grid column and their persistence through container CRUD.
+
+## Requirements
 
 ### Requirement: Container properties form includes topics field
 

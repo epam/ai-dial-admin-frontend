@@ -2,7 +2,13 @@ import { act, render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
-import { BreakdownTab, ComparePeriod, DonutMetric, UsageView } from '@/src/components/Analytics/Usage/models';
+import {
+  BreakdownTab,
+  CallerSource,
+  ComparePeriod,
+  DonutMetric,
+  UsageView,
+} from '@/src/components/Analytics/Usage/models';
 import { CALLS_ALIAS } from '@/src/components/Analytics/Usage/queries';
 import UsageBlock from '@/src/components/Analytics/Usage/UsageBlock';
 import { getBlockTabs, getEntityBlocks } from '@/src/components/Analytics/Usage/utils/entity-blocks';
@@ -62,6 +68,7 @@ const renderApplicationLlm = () => {
   render(
     <UsageBlock
       view={UsageView.Llm}
+      callerSource={CallerSource.Principal}
       reads={llm}
       scope={buildEntityScope(ApplicationRoute.Applications, 'rag') ?? { own: [] }}
       tabs={getBlockTabs(llm)}
@@ -119,6 +126,7 @@ describe('UsageBlock share chart measure', () => {
   const renderPage = (view: UsageView) => (
     <UsageBlock
       view={view}
+      callerSource={CallerSource.Principal}
       scope={{ own: [] }}
       tabs={VIEW_BREAKDOWN_TABS[view]}
       windows={WINDOWS}

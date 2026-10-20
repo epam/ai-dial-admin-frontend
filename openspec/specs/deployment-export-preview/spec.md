@@ -1,10 +1,10 @@
-# Deployment Export Preview
+# deployment-export-preview Specification
 
 ## Purpose
 
 Enables the export preview modal to show deployment entities before exporting, replacing the current "Preview currently unavailable" placeholder. Uses the same `PreviewModal` component with deployment-specific API call, tab grouping, and grid columns.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Export preview shows deployment entities in tabbed grid
 
@@ -41,6 +41,8 @@ When the export scope is Deployments, the `PreviewModal` SHALL call `POST /confi
 
 ### Requirement: Include secrets checkbox affects exported file only
 
+The "Include secrets" checkbox SHALL affect only the exported file. Toggling it SHALL NOT change the preview grid and SHALL NOT issue another preview request.
+
 #### Scenario: Toggling include secrets does not reload preview
 - **WHEN** user toggles the "Include secrets" checkbox
 - **THEN** the preview grid content SHALL NOT change
@@ -48,17 +50,23 @@ When the export scope is Deployments, the `PreviewModal` SHALL call `POST /confi
 
 ### Requirement: Include global firewall checkbox affects exported file only
 
+The "Include global firewall" checkbox SHALL affect only the exported file. Toggling it SHALL NOT change the preview grid.
+
 #### Scenario: Include global firewall does not affect preview
 - **WHEN** user toggles the "Include global firewall" checkbox
 - **THEN** the preview grid content SHALL NOT change
 
 ### Requirement: Export button labeled "Prepare file"
 
+The submit button of the deployments export preview modal SHALL be labeled "Prepare file".
+
 #### Scenario: Button label
 - **WHEN** the export preview modal is open for deployments
 - **THEN** the submit button SHALL be labeled "Prepare file" (`ButtonsI18nKey.PrepareFile`)
 
 ### Requirement: Preview error handling
+
+When the export preview request fails, the system SHALL report the failure in an error toast.
 
 #### Scenario: Preview API call fails
 - **WHEN** the `previewDeploymentExportConfig` call fails

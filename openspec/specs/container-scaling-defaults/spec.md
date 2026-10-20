@@ -1,10 +1,10 @@
-# Container Scaling Defaults
+# container-scaling-defaults Specification
 
 ## Purpose
 
 Ensures non-serving containers (MCP, Interceptor, Adapter) default to scale-to-zero after 5 minutes of inactivity, while model servings (HF) retain their current always-on defaults. Also refactors `getContainerTemplate` from a fragile if-chain into composed helper functions.
 
-## MODIFIED Requirements
+## Requirements
 
 ### Requirement: Scaling constants reflect container purpose
 

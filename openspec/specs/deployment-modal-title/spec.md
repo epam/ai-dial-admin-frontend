@@ -1,4 +1,10 @@
-## ADDED Requirements
+# deployment-modal-title Specification
+
+## Purpose
+
+Titles of the deployment Add modals: an entity-specific title per tab and the original i18n casing for every Add modal.
+
+## Requirements
 
 ### Requirement: Deployment Add modal SHALL display entity-specific title
 The Add Entities modal for deployment entities SHALL display a title composed of "Add" followed by the entity type name using original i18n casing (e.g., "Add MCP Containers", "Add Images", "Add Model Servings").
@@ -22,8 +28,6 @@ The Add Entities modal for deployment entities SHALL display a title composed of
 #### Scenario: Modal title for Image tab
 - **WHEN** the user opens the Add modal from the Images tab
 - **THEN** the modal title SHALL be "Add Images"
-
-## MODIFIED Requirements
 
 ### Requirement: All Add modal titles SHALL use original i18n casing
 The `getButtonTitle` function SHALL use original i18n casing (no `.toLowerCase()`) for all entity types, ensuring consistent casing between button labels and modal titles.

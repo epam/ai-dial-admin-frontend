@@ -407,6 +407,13 @@ describe('a derived column binds a filter its type can answer', () => {
 });
 
 describe('availableSelectFields', () => {
+  test('drops a required field too where a read schema does not serve it', () => {
+    expect(availableSelectFields(['chat_id', 'user_hash', 'total_price'], [], ['chat_id', 'total_price'])).toEqual([
+      'chat_id',
+      'total_price',
+    ]);
+  });
+
   const ordered = ['chat_id', 'total_price', 'session_insights.title', 'traces'];
   const optional = ['session_insights.title', 'traces'];
 

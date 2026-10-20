@@ -16,7 +16,7 @@ The deployment edit page tab set returned by `getDeploymentsViewTabs` SHALL incl
 
 #### Scenario: MCP / Adapter / Application / Interceptor Containers edit pages expose Audit tab
 
-- **WHEN** a user opens any container edit page (`/mcp-containers/[id]`, `/adapter-containers/[id]`, `/application-containers/[id]`, `/interceptor-containers/[id]`)
+- **WHEN** a user opens any container edit page (`/containers/[id]`) of type MCP, Adapter, Application or Interceptor
 - **THEN** the page's top-level tab bar includes an `Audit` tab as the last tab
 
 #### Scenario: Read-only admin can view Audit tab
@@ -128,7 +128,7 @@ The destination page SHALL be a thin wrapper that loads the activity and revisio
 
 - **GIVEN** the Audit tab on any container deployment shows one or more activities
 - **WHEN** the user clicks an activity row
-- **THEN** the application navigates to `/<container-route>/<container-name>/<activityId>` where `<container-route>` is the path for that container type (`mcp-containers`, `adapter-containers`, `application-containers`, `interceptor-containers`)
+- **THEN** the application navigates to `/containers/<container-name>/<activityId>` for every container type (MCP, Adapter, Application, Interceptor)
 
 #### Scenario: Click on a Deployment Image audit row opens the image-namespaced page
 

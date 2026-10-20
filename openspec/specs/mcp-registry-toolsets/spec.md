@@ -1,6 +1,10 @@
-## mcp-registry-toolsets
+# mcp-registry-toolsets Specification
+
+## Purpose
 
 MCP Registry as a toolset source type — server selection, remote-to-endpoint mapping, SourceField integration, and server-side filtering for servers with compatible remotes.
+
+## Requirements
 
 ### Requirement: MCP Registry source type in SourceField
 

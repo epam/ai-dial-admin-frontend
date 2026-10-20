@@ -1,4 +1,10 @@
-## ADDED Requirements
+# run-csv-export Specification
+
+## Purpose
+
+Exporting a run's results as CSV from the run detail header and the runs list, through the Export Run popup.
+
+## Requirements
 
 ### Requirement: Export button in run detail view header
 The run detail view header SHALL display an Export button positioned between the Delete button and the Grafana traces link (order: Delete → Export → 1px divider → Grafana). The Export button SHALL be visible only when the run is available. Clicking Export SHALL open the Export Run popup.

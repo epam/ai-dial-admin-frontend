@@ -866,11 +866,16 @@ const sessionFilterPreset = (fieldName?: string): Partial<ColDef> => {
 // query cannot name the field, so the cells could never fill, and an operator would read them as missing
 // data. Only the columns added beyond the view's original set are candidates — Rating reads no field of this
 // entity and must survive a schema that has never heard of it.
+//
+// With a schema in hand the original set is held to it too: sorting or filtering by a field the schema does
+// not report fails the whole listing.
+const ENTITY_FIELDS = new Set<string>(Object.values(SessionsField));
+
 const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntityField[]): ColDef[] => {
   const available = new Set(schemaFields.map(({ name }) => name));
-  const optional = new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
+  const candidates = available.size ? ENTITY_FIELDS : new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
 
-  return columns.filter((column) => !optional.has(column.field as string) || available.has(column.field as string));
+  return columns.filter((column) => !candidates.has(column.field as string) || available.has(column.field as string));
 };
 
 const curatedSessionColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>

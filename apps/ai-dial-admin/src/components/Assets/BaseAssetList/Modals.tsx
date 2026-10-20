@@ -3,12 +3,12 @@ import { FC } from 'react';
 
 import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/actions';
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
-import CreateApplication from '@/src/components/Assets/Apps/CreateApplication';
+import CreateApplication from '@/src/components/Assets/Entities/Apps/CreateApplication';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import CreateKeyModal from '@/src/components/Assets/Platform/Keys/CreateKeyModal';
-import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
+import DuplicateAsset from '@/src/components/Assets/Modals/DuplicateAsset';
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
 import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
 import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';

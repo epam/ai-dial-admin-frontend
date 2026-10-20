@@ -18,7 +18,7 @@ precise area. **If the menu changes, update this file** — this file, not the m
 
 Use `Parent/Child` for a single leaf, or just `Parent` when several children change together.
 
-### `Entities`
+### `Entities` (deprecated group)
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `Entities/Models` | `models` | `Models`, `ModelView` |
@@ -27,84 +27,80 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Entities/Interceptors` | `interceptors` | `Interceptors` |
 | `Entities/Routes` | `routes` | `Routes` |
 
-### `Builders`
+### `AiGateway`
+Core-direct items (Models, Translators, Routes, App Runners, Catalog Schemas) are hidden by the `catalog` token of `DISABLE_MENU_ITEMS`.
+
+| Area | Route slug | Component folder |
+|------|-----------|------------------|
+| `AiGateway/Models` | `platform-models` | `Assets/Platform/Models` |
+| `AiGateway/Toolsets` | `assets-toolsets` | `Assets/Entities/Toolsets`, `Assets/Platform/Toolsets` |
+| `AiGateway/Translators` | `platform-translators` | `Assets/Platform/Translators` |
+| `AiGateway/Routes` | `platform-routes` | `Assets/Platform/Routes` |
+| `AiGateway/Applications` | `assets-applications` | `Assets/Entities/Apps`, `Assets/Platform/Applications` |
+| `AiGateway/AppRunners` | `platform-app-runners` | `Assets/Platform/AppRunners` |
+| `AiGateway/CatalogSchemas` | `platform-catalog-schemas` | `Assets/Platform/CatalogSchemas` |
+
+### `Artifacts`
+| Area | Route slug | Component folder |
+|------|-----------|------------------|
+| `Artifacts/Skills` | `skills` | `Assets/Artifacts/Skills` |
+| `Artifacts/Files` | `files` | `Assets/Artifacts/Files`, `Publications/Assets/Files` |
+| `Artifacts/Conversations` | `conversations` | `Assets/Artifacts/Conversations` |
+| `Artifacts/Prompts` | `prompts` | `Assets/Artifacts/Prompts` |
+
+Shared asset plumbing (`Assets/BaseAssetList`, `Assets/Modals`, `Assets/Resources`, `Assets/ExportAssets`,
+`Assets/Header`, `Assets/ObjectAppRoutes`) serves AI Gateway and Artifacts alike — use the parent area
+that dominates the change.
+
+### `Builders` (deprecated group)
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `Builders/ApplicationRunners` | `application-runners` | `ApplicationRunners` |
 | `Builders/InterceptorTemplates` | `interceptor-templates` | `InterceptorTemplates` |
 | `Builders/Adapters` | `adapters` | `Adapter` |
 
-### `Catalog`
-| Area | Route slug | Component folder |
-|------|-----------|------------------|
-| `Catalog/PlatformModels` | `platform-models` | — |
-| `Catalog/PlatformAppRunners` | `platform-app-runners` | — |
-| `Catalog/PlatformInterceptors` | `platform-interceptors` | — |
-| `Catalog/PlatformRoutes` | `platform-routes` | — |
-| `Catalog/PlatformRoles` | `platform-roles` | — |
-| `Catalog/PlatformKeys` | `platform-keys` | — |
-| `Catalog/PlatformTranslators` | `platform-translators` | `Assets/Platform/Translators` |
-| `Catalog/PlatformCatalogSchemas` | `platform-catalog-schemas` | `Assets/Platform/CatalogSchemas` |
-
-### `Assets`
-| Area | Route slug | Component folder |
-|------|-----------|------------------|
-| `Assets/Applications` | `assets-applications` | `Assets` |
-| `Assets/Toolsets` | `assets-toolsets` | `Assets` |
-| `Assets/Prompts` | `prompts` | `Assets` |
-| `Assets/Conversations` | `conversations` | `Assets` |
-| `Assets/Files` | `files` | `Assets`, `Publications/Assets/Files` |
-| `Assets/Models` | `assets-models` | `Assets/Models` |
-| `Assets/AppRunners` | `assets-app-runners` | `Assets/AppRunners` |
-| `Assets/Roles` | `assets-roles` | `Assets/Platform/Roles` |
-
-### `Deployments`
-| Area | Route slug | Component folder |
-|------|-----------|------------------|
-| `Deployments/ModelServings` | `model-servings` | `Deployments`, `Containers` |
-| `Deployments/Containers` | `containers` | `Deployments`, `Containers` |
-| `Deployments/Images` | `deployment-images` | `Images` |
-
-### `AccessManagement`
+### `AccessManagement` (deprecated group)
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `AccessManagement/Roles` | `roles` | `Roles` |
 | `AccessManagement/Keys` | `keys` | `Keys` |
-| `AccessManagement/FoldersStorage` | `folders-storage` | `FoldersStorage` |
-
-### `Approvals`
-| Area | Route slug | Component folder |
-|------|-----------|------------------|
-| `Approvals/ApplicationPublications` | `application-publications` | `Publications` |
-| `Approvals/ToolsetPublications` | `toolset-publications` | `Publications` |
-| `Approvals/PromptPublications` | `prompt-publications` | `Publications` |
-| `Approvals/FilePublications` | `file-publications` | `Publications` |
-| `Approvals/ConversationPublications` | `conversation-publications` | `Publications` |
 
 ### `Evaluation`
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `Evaluation/TestSuites` | `test-suites` | `TestSuites` |
-| `Evaluation/Datasets` | `datasets` | `Datasets` |
 | `Evaluation/Runs` | `runs` | `Runs` |
-| `Evaluation/Playground` | `playground` | `Playground` |
+| `Evaluation/Datasets` | `datasets` | `Datasets` |
 
-### `Audit`
+### `analytics` (Preview)
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
-| `Audit/Dashboard` | `dashboard` | `ActivityAudit` |
+| `analytics/Dashboard` | `dashboards` | `Analytics/Usage` |
+| `analytics/Queries` | `queries` | `Analytics/Queries`, `Analytics/QueryBuilder` |
+| `analytics/Sessions` | `sessions` | `Analytics/SessionsTrace` |
+| `analytics/Tables` | `tables` | `Analytics/Tables` |
+| `analytics/Pipelines` | `pipelines` | `Analytics/Pipelines` |
+
+### `Governance`
+Platform Roles, Keys and Interceptors are Core-direct and hidden by the `catalog` token.
+
+| Area | Route slug | Component folder |
+|------|-----------|------------------|
+| `Governance/Roles` | `platform-roles` | `Assets/Platform/Roles` |
+| `Governance/Keys` | `platform-keys` | `Assets/Platform/Keys` |
+| `Governance/FoldersStorage` | `folders-storage` | `FoldersStorage` |
+| `Governance/Interceptors` | `platform-interceptors` | `Assets/Platform/Interceptors` |
+| `Governance/Approvals` | `publications` (detail tabs: `application-publications`, `toolset-publications`, `prompt-publications`, `file-publications`, `conversation-publications`, `skill-publications`) | `Publications` |
+
+### `Audit` (deprecated group)
+| Area | Route slug | Component folder |
+|------|-----------|------------------|
+| `Audit/Dashboard` | `dashboards` | `ActivityAudit` |
 | `Audit/ActivityAudit` | `activity-audit` | `ActivityAudit` |
 | `Audit/UsageLog` | `usage-log` | `UsageLog` |
 
-### `analytics`
-| Area | Route slug | Component folder |
-|------|-----------|------------------|
-| `analytics/Queries` | `queries` | `Analytics/Queries`, `Analytics/QueryBuilder` |
-| `analytics/Tables` | `tables` | `Analytics` |
-| `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
-| `analytics/Pipelines` | `pipelines` | `Analytics/Pipelines` |
-| `analytics/Evaluators` | `evaluators` | `Analytics/Evaluators` |
-| `analytics/Usage` | `usage` | `Analytics/Usage` |
+The Dashboards item exists in both Analytics and Audit; `/dashboards` belongs to whichever group
+`menu-configuration.tsx` resolves for the active feature flags.
 
 ---
 
@@ -117,7 +113,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Home` | `home` | `WelcomeView` |
 | `AdminApiAvailability` | — (route guards on all Admin-API routes) | `Menu`, `Content`, `WelcomeView` |
 | `ConfigFiles` | — (toggle on the seven entity list views) | `Common/ConfigFilesToggle` |
-| `CatalogAvailability` | — (feature flag on the Catalog menu group + dual-bucket root folders) | `Common/FileManager`, `Common/FilePath`, `Menu` |
+| `CatalogAvailability` | — (`catalog` token of `DISABLE_MENU_ITEMS` hiding the Core-direct items + dual-bucket root folders) | `Common/FileManager`, `Common/FilePath`, `Menu` |
 
 ---
 

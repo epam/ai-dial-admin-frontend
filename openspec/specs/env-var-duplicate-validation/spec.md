@@ -1,4 +1,10 @@
-## ADDED Requirements
+# env-var-duplicate-validation Specification
+
+## Purpose
+
+Detection and reporting of duplicate environment variable names.
+
+## Requirements
 
 ### Requirement: Duplicate env variable name detection
 The system SHALL detect when two or more environment variables within the same container share the same name (case-sensitive) and display a validation error on ALL variables with the duplicate name.

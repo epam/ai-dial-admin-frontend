@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the audit-detail experience for deployment-manager activities at `/activity-audit/{activityId}`: how the detail page resolves activities by falling back from the admin backend to the deployment-manager backend, how image-definition and global-firewall snapshots are fetched and shaped for the diff engine, how the `AuditView` is adapted (rollback hidden, identifier chip omitted when absent, new section headers and synthesized rows for image and firewall activities), the predicates colocated with the resource-type enum, and the i18n keys required to localize the new labels.
-
 ## Requirements
-
 ### Requirement: Audit detail page resolves image and firewall activities from the deployment-manager backend
 
 The audit detail route at `/activity-audit/{activityId}` SHALL first attempt to fetch the activity from the admin backend via `activityAuditApi.getActivityById`. When the admin lookup returns no record, the page SHALL fall back to `deploymentAuditApi.getActivityById`. If both backends fail to return a record, the page SHALL preserve the existing not-found behavior. The page SHALL render `AuditView` once the activity is resolved, regardless of which backend produced it.
@@ -453,15 +451,12 @@ Rationale: the `auditResourceRoute` map has no entry for `IMAGE_BUILD_DOMAIN_WHI
 
 The "Resource identifier" chip in the `AuditView` header SHALL be clickable for container activities and SHALL navigate to the entity's edit page in the appropriate section, using the `auditResourceRoute` map. The five container subtypes route as follows:
 
-- `McpDeployment` → `ApplicationRoute.McpContainers` (`/mcp-containers/{id}`)
-- `AdapterDeployment` → `ApplicationRoute.AdapterContainers` (`/adapter-containers/{id}`)
-- `ApplicationDeployment` → `ApplicationRoute.ApplicationContainers` (`/application-containers/{id}`)
-- `InterceptorDeployment` → `ApplicationRoute.InterceptorContainers` (`/interceptor-containers/{id}`)
+- `McpDeployment`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment` → `ApplicationRoute.Containers` (`/containers/{id}`)
 - `InferenceDeployment` → `ApplicationRoute.ModelServings` (`/model-servings/{id}`)
 
 #### Scenario: MCP container chip navigates to McpContainers route
 - **WHEN** the user clicks the Resource identifier chip on an `McpDeployment` activity
-- **THEN** the browser navigates to `/{lang}/mcp-containers/{resourceId}`
+- **THEN** the browser navigates to `/{lang}/containers/{resourceId}`
 
 #### Scenario: HF inference serving chip navigates to ModelServings route
 - **WHEN** the user clicks the Resource identifier chip on an `InferenceDeployment` activity
@@ -567,3 +562,4 @@ When at least one side has a non-empty value for a key, the row SHALL be emitted
 - **WHEN** the diff body renders
 - **THEN** the `displayName` row is still emitted (existing primitive behavior)
 - **AND** the `nodePoolId` row is not emitted
+

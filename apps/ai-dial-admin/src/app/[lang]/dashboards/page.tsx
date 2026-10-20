@@ -4,6 +4,7 @@ import UsageDashboard from '@/src/components/Analytics/Usage/UsageDashboard';
 import Page403 from '@/src/components/Page403/Page403';
 import DashboardView from '@/src/components/Telemetry/DashboardView';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
+import { getCallerSource } from '@/src/server/analytics/usage-caller-source';
 import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
@@ -13,11 +14,12 @@ export default async function Page() {
   // which dashboard this route serves and in which group its item sits. The usage flag without the
   // analytics flag is a misconfiguration and serves no analytics at all.
   if (isValueTruthy(process.env.ANALYTICS_ENABLED) && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED)) {
-    if (await isAnalyticsForbidden()) {
+    const [isForbidden, callerSource] = await Promise.all([isAnalyticsForbidden(), getCallerSource()]);
+    if (isForbidden) {
       return <Page403 />;
     }
 
-    return <UsageDashboard />;
+    return <UsageDashboard callerSource={callerSource} />;
   }
 
   // The same test the layout builds `dashboardEnabled` from: disabling the dashboard removes the

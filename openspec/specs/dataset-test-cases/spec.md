@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the Test Cases and Properties tabs of the dataset detail view: a grid of dataset-scoped test cases whose columns are generated from the dataset's `testCaseSchema`. Covers adding, inline editing, and deleting cases, the save/discard state their edits participate in, and CSV export and import.
-
 ## Requirements
-
 ### Requirement: Test Cases tab displays dataset-scoped test cases
 The system SHALL display a test cases grid in the Test Cases tab of the dataset detail view. Test cases SHALL be fetched from `GET /api/v1/datasets/{datasetId}/test-cases`. The grid columns SHALL be dynamically generated from the dataset's `testCaseSchema`. There SHALL be NO enabled/disabled toggle column (the `enabled` field does not exist in the dataset test case model).
 
@@ -170,3 +168,23 @@ The system SHALL display a Properties tab on the dataset detail view with editab
 #### Scenario: Discard properties changes
 - **WHEN** user clicks Discard after editing properties
 - **THEN** the name and description fields revert to the last saved values
+
+### Requirement: Numeric schema columns are right-aligned
+
+In the Test Cases grid, a schema-generated column whose field type is `NUMBER` or `INTEGER` SHALL
+render its cell content right-aligned, both in its editable and read-only states. Columns generated
+for other schema types (`STRING`, `BOOLEAN`, `OBJECT`, `ARRAY`, `FILE`) SHALL keep their existing left
+alignment.
+
+#### Scenario: A number or integer column is right-aligned
+
+- **WHEN** the dataset schema declares a field of type `NUMBER` or `INTEGER`
+- **THEN** that field's column renders its values right-aligned, whether the cell is editable or
+  read-only
+
+#### Scenario: Non-numeric columns are unaffected
+
+- **WHEN** the dataset schema declares a field of type `STRING`, `BOOLEAN`, `OBJECT`, `ARRAY`, or
+  `FILE`
+- **THEN** that field's column keeps its existing left alignment
+

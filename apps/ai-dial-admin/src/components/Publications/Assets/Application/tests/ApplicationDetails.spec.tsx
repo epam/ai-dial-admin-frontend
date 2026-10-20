@@ -8,7 +8,7 @@ import ApplicationDetails from '../ApplicationDetails';
 
 let capturedAssetProps: any = {};
 
-vi.mock('@/src/components/Assets/Apps/Properties', () => ({
+vi.mock('@/src/components/Assets/Entities/Apps/Properties', () => ({
   default: (props: any) => {
     capturedAssetProps = props;
     return <section aria-label="application-properties" />;

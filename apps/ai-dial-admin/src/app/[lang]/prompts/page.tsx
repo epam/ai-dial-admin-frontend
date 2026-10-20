@@ -1,4 +1,4 @@
-import PromptsList from '@/src/components/Assets/Prompts/List';
+import PromptsList from '@/src/components/Assets/Artifacts/Prompts/List';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';

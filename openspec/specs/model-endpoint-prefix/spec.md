@@ -1,6 +1,10 @@
-## model-endpoint-prefix
+# model-endpoint-prefix Specification
+
+## Purpose
 
 Rules for composing `source.completionEndpointPath` on Models seeded from a source container. The prefix is always `openai/v1`, regardless of container type or unresolved ids. The rule applies to template creation and explicit source-container selection only, never to opening existing Models for edit.
+
+## Requirements
 
 ### Requirement: Endpoint prefix is always openai/v1
 

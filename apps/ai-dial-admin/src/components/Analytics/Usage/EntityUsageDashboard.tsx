@@ -9,6 +9,7 @@ import { ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/model
 import UsageBlock from '@/src/components/Analytics/Usage/UsageBlock';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import { useAnalyticsAccess } from '@/src/components/Analytics/Usage/use-analytics-access';
+import { useUsageCallerSource } from '@/src/components/Analytics/Usage/use-usage-caller-source';
 import { useLoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
 import { getBlockTabs, getEntityBlocks, hasDeclaredRoutes } from '@/src/components/Analytics/Usage/utils/entity-blocks';
@@ -33,6 +34,7 @@ interface Props {
 const EntityUsageDashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterChange }) => {
   const t = useI18n();
   const isForbidden = useAnalyticsAccess();
+  const callerSource = useUsageCallerSource();
 
   const [compare, setCompare] = useState<ComparePeriod>(ComparePeriod.PreviousPeriod);
   const [refreshToken, setRefreshToken] = useState(0);
@@ -62,7 +64,7 @@ const EntityUsageDashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onT
 
   const onRefresh = useCallback(() => setRefreshToken((token) => token + 1), []);
 
-  if (isForbidden == null) {
+  if (isForbidden == null || callerSource == null) {
     return (
       <div className="flex size-full items-center justify-center">
         <DialLoader />
@@ -119,6 +121,7 @@ const EntityUsageDashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onT
         refreshToken={refreshToken}
         notice={notice}
         onRefreshingChange={setIsRefreshing}
+        callerSource={callerSource}
       />
     </div>
   );

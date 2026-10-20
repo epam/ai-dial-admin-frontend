@@ -483,6 +483,20 @@ describe('getSessions :: the feedback candidates', () => {
     expect(args.some((node) => node.op === QueryOperator.In)).toBe(true);
   });
 
+  test('narrows to nothing without reading ratings where the rating entity is not provisioned', async () => {
+    stub({ candidates: ok([{ chat_id: 'a' }]) });
+    (analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      success: false,
+      status: 404,
+    });
+
+    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
+
+    expect(result.success).toBe(true);
+    expect(issued(QueryKind.Candidates)).toEqual([]);
+    expect(result.response?.rows).toEqual([]);
+  });
+
   test('drops blank and non-string ids', async () => {
     stub({ candidates: ok([{ chat_id: '' }, { chat_id: null }, { chat_id: 'a' }]) });
 

@@ -6,8 +6,9 @@ import KpiCard from '@/src/components/Analytics/Usage/Kpi/KpiCard';
 import { KPI_CARD_MIN_WIDTH } from '@/src/components/Analytics/Usage/constants';
 import {
   BucketPoint,
-  ComparedTotals,
+  CallerSource,
   ComparePeriod,
+  ComparedTotals,
   KpiCardModel,
   KpiFigure,
   KpiMetric,
@@ -29,6 +30,7 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   view: UsageView;
+  callerSource: CallerSource;
   totals: RequestState<UsageMeasures | null>;
   previousTotals: RequestState<UsageMeasures | null>;
   buckets: RequestState<BucketPoint[]>;
@@ -89,7 +91,7 @@ const formatFootnoteValue = (metric: KpiMetric, value: number): string => {
   return `${formatted.value}${formatted.unit ?? ''}`;
 };
 
-const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare, madeTotals }) => {
+const KpiRow: FC<Props> = ({ view, callerSource, totals, previousTotals, buckets, compare, madeTotals }) => {
   const isComparisonOn = compare !== ComparePeriod.Off;
   const t = useI18n();
   const rowRef = useRef<HTMLDivElement>(null);
@@ -112,6 +114,7 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare, mad
     () =>
       buildKpiFigures({
         view,
+        callerSource,
         current: totals.data ?? null,
         previous: isComparisonOn ? (previousTotals.data ?? null) : null,
         buckets: buckets.data ?? [],
@@ -120,7 +123,7 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare, mad
           previous: isComparisonOn ? (madeTotals.previous.data ?? null) : null,
         },
       }),
-    [view, totals.data, previousTotals.data, buckets.data, isComparisonOn, madeTotals],
+    [view, callerSource, totals.data, previousTotals.data, buckets.data, isComparisonOn, madeTotals],
   );
 
   const cardBasis = getCardBasis(getCardsPerRow(figures.length, rowWidth));

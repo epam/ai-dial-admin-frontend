@@ -3,9 +3,7 @@
 ## Purpose
 
 One session's page: route, guard and not-found handling, the header, the side panels and their provenance, and the trace listing that groups by trace and cards by root span. A single span's bodies are `analytics/session-trace-detail`.
-
 ## Requirements
-
 ### Requirement: Session detail route, access guard, and not-found handling
 
 The system SHALL provide a per-session detail view at `/<lang>/sessions/<client_session_id>`, reached
@@ -75,7 +73,7 @@ The query SHALL name **every** column the insight enrichment exposes, discovered
 namespace the schema qualifies those columns with rather than from a field list held in the frontend. An
 enumerated list cannot follow the enrichment: a column the evaluator gains is one the detail view cannot
 render at all, and the reader has no way to tell that from a session the evaluator never reached. The
-failure is worse than absence when a column is *superseded* — the enumerated pair keeps being named and
+failure is worse than absence when a column is _superseded_ — the enumerated pair keeps being named and
 comes back null, while the pair that replaced it is never asked for, so the panel reports the evaluator as
 silent on a session it labelled.
 
@@ -100,9 +98,11 @@ The query MUST NOT carry a time bound. The log's list query bounds `last_request
 period, but a detail view is addressed by id and SHALL resolve regardless of which period the log was
 showing — a deep link or a bookmark MUST NOT fail because a session falls outside the current window.
 
-The query MUST NOT reference any column the analytics service marks sensitive. Sensitive columns are removed
-from the query model for callers without the elevated role, so referencing one would fail as an unknown
-field for those callers rather than being refused cleanly, making the whole view unavailable to them.
+The query SHALL name a column the analytics service marks sensitive only where the fetched schema reports it.
+Sensitive columns are removed from the query model for callers without the elevated role, so naming one the
+caller's schema does not report would fail as an unknown field for those callers rather than being refused
+cleanly, making the whole view unavailable to them; a column the schema does report is one this caller may read.
+With no schema available the query names the required set alone, which holds none.
 
 #### Scenario: The query is narrowed to one session by id
 
@@ -168,8 +168,14 @@ field for those callers rather than being refused cleanly, making the whole view
 
 #### Scenario: No sensitive column is requested
 
-- **WHEN** the single-session query is built
-- **THEN** its selected columns include no column the analytics service marks sensitive
+- **WHEN** the single-session query is built and the schema reports no column the analytics service marks
+  sensitive
+- **THEN** its selected columns include none
+
+#### Scenario: A sensitive column the schema reports is requested
+
+- **WHEN** the single-session query is built and the schema reports a column marked sensitive
+- **THEN** its selected columns include that column
 
 ### Requirement: A session query names only fields the entity's schema reports
 
@@ -544,6 +550,20 @@ eye. Divergence between these two scopes is the mechanism that produced every ar
 design removes: when the figures cover rows the roots do not, a trace's totals stop reconciling with its cards
 and the gap has to be patched field by field.
 
+The session id is an enrichment column, so the listing SHALL read the hop log schema before it queries. Where
+the schema does not serve the column, a session with **no** recorded source SHALL be paged by `chat_id` and its
+roots SHALL be labelled by `chat_id`: a rollup names a harness source only where the enrichment ran, so such a
+session is a chat session. A session whose source names a coding harness SHALL keep the session id even then —
+its hops carry no `chat_id`, and a substitute would state an empty listing as "no traces" rather than failing.
+A schema that cannot be read SHALL be treated as serving the column.
+
+#### Scenario: A schema without the session id still lists a chat session's traces
+
+- **GIVEN** the hop log schema served to the caller has no `usage_client_identity.client_session_id`
+- **AND** the session records no source
+- **WHEN** the trace listing loads
+- **THEN** the paging query is filtered by `chat_id` and no query names the session id column
+
 **Dropping the chat id from the figures query is what makes the figures correct without correction.** Scoped
 by trace, the span count, tokens and price are simply the trace's own. There SHALL be no compensating
 adjustment — no increment to a span count, no addition of a root's value to a sum — because there is nothing
@@ -910,8 +930,8 @@ The insights panel SHALL render **only where the session carries an insight row*
 the view SHALL state in the panel's place, in text, that the session has not been evaluated — and MUST
 NOT render the panel with its fields marked unavailable. The enrichment runs per session and reaches a
 minority of them, so a panel of unavailable markers would be the common case rather than the exception, and
-it would state a shape the record does not have. The statement SHALL distinguish *not yet evaluated* from
-*this instance carries no insight enrichment at all*: the first is a session the evaluator has not
+it would state a shape the record does not have. The statement SHALL distinguish _not yet evaluated_ from
+_this instance carries no insight enrichment at all_: the first is a session the evaluator has not
 reached, the second is a capability the deployment does not have, and a reader cannot act on the two the
 same way.
 
@@ -927,9 +947,21 @@ value, and its fields are discovered rather than enumerated — so styling two o
 closed-vocabulary field, and every one added later, looking like a lesser kind of value for no reason the
 record supports.
 
-The usage panel SHALL state prompt tokens, completion tokens, total tokens, total cost and the recorded
-durations from the rollup, laid out as headline figures rather than a label-and-value list. Monetary values SHALL carry the emphasis
-money carries elsewhere in the app, which is independent of the panel's source colour.
+The usage panel SHALL state prompt tokens, completion tokens, the cache hit, total cost and the recorded
+durations from the rollup, laid out as headline figures rather than a label-and-value list. It SHALL NOT state
+a total token count: the total is the sum of two figures the panel already states, and a reader tuning a
+session acts on the split and on the cache share rather than on their sum. Monetary values SHALL carry the
+emphasis money carries elsewhere in the app, which is independent of the panel's source colour.
+
+**The cache hit SHALL be the share of the session's prompt tokens that the rollup records as served from the
+prompt cache**, stated as a percentage. A session whose recorded cached count is zero against a positive prompt
+count SHALL state `0%`, because a reported zero is a measurement: no cache hit. A session for which the rollup
+reports no cached count, or no positive prompt count, SHALL state the figure as unavailable rather than as `0%`,
+because a provider that reported nothing has not reported a miss. On an instance whose `sessions` entity has no
+cached-token column the figure SHALL be unavailable and the detail read SHALL still succeed. The figure SHALL
+carry a keyboard-reachable caveat: the rollup sums prompt tokens over every hop, so work an application
+mediates is counted more than once in the numerator and the denominator alike, and the share describes the
+summed hops rather than the user's own prompts.
 
 A panel field whose value cannot be read at face value SHALL carry a caveat stating why, and that caveat
 SHALL be reachable by keyboard. A field label is not focusable, so a caveat attached to it by hover alone is
@@ -944,8 +976,8 @@ shared note would misdescribe whichever it did not name. The view MUST NOT descr
 This restates a caveat previously carried only by the sessions grid's Duration column, which no longer
 exists — the figures remain on this panel, so the statement has to as well.
 
-Every panel that presents label-and-value rows rather than headline figures SHALL render them in **one
-register** — one type treatment, one row rhythm, one alignment — regardless of which source the values came
+Every panel that presents label-and-value rows rather than headline figures — the insights panel — SHALL render
+them in **one register** — one type treatment, one row rhythm, one alignment — regardless of which source the values came
 from. The rail's panels all list fields of the same record, so a treatment reserved for one of them states a
 difference in kind the record does not have; the panels are already distinguished by their heading and their
 provenance colour, which is what that distinction is for. Monospace in particular SHALL NOT appear in a
@@ -953,18 +985,19 @@ value: it is this feature's mark for a catalog identifier naming an entity the p
 session id, a user hash or a trace id is a value of the record rather than a name in the catalog.
 
 A value in that register SHALL occupy **one line** whatever its length, and a value too long for its column
-SHALL be clamped rather than allowed to reflow. Nothing bounds an insight value and most metadata values are
-opaque identifiers, so a few long fields allowed to wrap would take most of a panel whose point is that every
+SHALL be clamped rather than allowed to reflow. Nothing bounds an insight value, so a few long fields
+allowed to wrap would take most of a panel whose point is that every
 field is visible at once — the row rhythm is what makes the list scannable. A clamped value's full content
 SHALL remain reachable, on hover and through the trigger's accessible name; a `title` attribute alone does
 not satisfy this. Clamping SHALL apply only where the value actually overflows, so a value that fits carries
 no dead affordance.
 
-The metadata panel SHALL state the session id, the anonymized user identifier, the project, the first
-activity time, the successful-request count, the session's **trace ids** and the deployments that served
-the session, all from the rollup. A field the rollup carries SHALL NOT be rendered as unavailable: the
-panel states what the record holds, and marking a recorded field as absent misreports the data the view
-already fetched.
+The metadata panel SHALL present the whole of the session's record as the schema-grouped fields stated in "The
+metadata panel presents the session's record as the groups the schema defines", and among them SHALL state the
+session id, the anonymized user identifier, the project, the first activity time, the successful-request count,
+the session's **trace ids** and the deployments that served the session, all from the rollup. A field the
+rollup carries SHALL NOT be rendered as unavailable: the panel states what the record holds, and marking a
+recorded field as absent misreports the data the view already fetched.
 
 The trace ids SHALL be read from the rollup's `traces`. Their order is the rollup's own — ascending by id,
 not by turn — so the panel MUST NOT present them as a turn sequence or number them as turns. The panel MUST
@@ -988,7 +1021,36 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The usage panel reports real values
 
 - **WHEN** a session has recorded token usage and cost
-- **THEN** the usage panel states its prompt tokens, completion tokens, total tokens and total cost
+- **THEN** the usage panel states its prompt tokens, completion tokens, cache hit and total cost
+- **AND** it states no total token count
+
+#### Scenario: A cache hit is a share of prompt tokens
+
+- **WHEN** a session's rollup records cached prompt tokens against a positive prompt token count
+- **THEN** the cache hit states the cached count as a percentage of the prompt count
+
+#### Scenario: A reported zero is a miss, not an absence
+
+- **WHEN** a session's rollup records a cached prompt token count of zero against a positive prompt count
+- **THEN** the cache hit states `0%`
+
+#### Scenario: An unreported cached count is unavailable
+
+- **WHEN** a session's rollup carries no cached prompt token count
+- **THEN** the cache hit is marked unavailable
+- **AND** it does not state `0%`
+
+#### Scenario: An instance without the cached-token column still renders the session
+
+- **WHEN** the `sessions` entity reports no cached-token column
+- **THEN** the detail view renders with the cache hit marked unavailable
+- **AND** the detail read does not fail
+
+#### Scenario: The cache hit carries a keyboard-reachable caveat
+
+- **WHEN** the usage panel renders the cache hit
+- **THEN** it carries a caveat that prompt tokens are summed over every hop
+- **AND** the caveat is reachable by keyboard and exposed to assistive technology
 
 #### Scenario: No panel is populated entirely by unavailable markers
 
@@ -1053,8 +1115,8 @@ map to a colour, so a newly added source cannot render unstyled.
 
 #### Scenario: The row panels share one value register
 
-- **WHEN** the insights panel and the metadata panel both render label-and-value rows
-- **THEN** the two present their rows in the same type treatment, row rhythm and alignment
+- **WHEN** the panels that present label-and-value rows render
+- **THEN** they share one type treatment, row rhythm and alignment
 - **AND** no value is rendered in monospace
 - **AND** a value longer than its column is clamped to one line, with its full content reachable on hover
   and exposed to assistive technology
@@ -1062,9 +1124,9 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The metadata panel marks what the rollup lacks
 
 - **WHEN** the detail view renders
-- **THEN** the metadata panel states the session id, user identifier, project, first activity,
+- **THEN** the metadata panel's groups state the session id, user identifier, project, first activity,
   successful-request count, trace ids and the session's deployments
-- **AND** it marks none of them as unavailable, because the rollup carries every field it lists
+- **AND** it marks none of those the rollup carries as unavailable
 
 #### Scenario: Trace ids are not presented as a turn order
 
@@ -1538,3 +1600,165 @@ read is bounded and the spans interleave, so neither a sum nor a span of them is
 - **WHEN** a card whose root carries no session header is opened
 - **THEN** that root appears as a row in the tree
 - **AND** the span read's filter names the trace id and not the chat id
+
+### Requirement: A trace card states when its call started as a date and a time
+
+A card SHALL state the start of its own recorded call as a date and a time in the reader's locale, not as a
+time of day alone. The listing is ordered by start and a session can span days, so a time of day repeats across
+the session and leaves two cards a day apart looking adjacent. Where the card has no recorded start it SHALL
+state the unavailable marker.
+
+#### Scenario: A card on another day is told apart
+
+- **WHEN** a session has traces started on two different days
+- **THEN** each card's start states its date as well as its time
+
+#### Scenario: A card without a recorded start
+
+- **WHEN** a card's root records no start
+- **THEN** the card's start is marked unavailable
+
+### Requirement: The metadata panel presents the session's record as the groups the schema defines
+
+The metadata panel SHALL present the session's record as collapsible groups — one group per tag the `sessions`
+schema reports, in the order the schema reports them — and SHALL carry no other presentation of the record's
+fields, so a field is stated once, in the group of its tag. It SHALL present them the way the span rail
+presents a span's fields, with the same group control and the same rows, rather than in the label-and-value
+register of the insights panel: it is the same kind of content as the span rail's, and a reader moving between
+the two sees one control. The set of fields SHALL be discovered from the schema and not enumerated, so a column
+the service adds reaches the panel without a release, and a tag this release has no label for SHALL be presented
+under the schema's own spelling. One group SHALL be open at a time, and a header SHALL state whether it is
+expanded and what it controls.
+
+A closed caller group SHALL preview the user's name, so the reader sees who called without opening it; where
+the session records no name the group previews its first stated field, as every group does. The other groups
+preview as the span rail's do.
+
+Where this view states a column more exactly than the catalog names it, the row SHALL carry this view's label:
+the successful-request row, in particular, keeps the label that states what `success_count` counts.
+
+The panel SHALL leave out a column the service marks `heavy`, because the detail read is one row and a heavy
+column is the expensive one to transfer, with one exception: the trace ids, which the panel is required to state,
+remain read. It SHALL leave out the insight columns, which the insights panel presents. It SHALL NOT leave out a
+column because another panel states it in another form: the usage panel states token counts in compact form,
+which rounds them, so the groups state the counts exactly, and the dump states them again. A reported zero in a
+rollup is a sum, not an unmetered call, so a zero in a token, cost or duration group SHALL be stated as zero and
+not as unavailable. A column the service marks sensitive SHALL be presented, in a group and in the dump, only
+where the fetched schema reports it: the service removes such a column from the schema for a caller without the
+elevated role, so a column that arrived is one this caller may read.
+
+Where the schema could not be read and so no group can be formed, the panel SHALL say so in text and SHALL still
+offer the record as JSON, because the record the detail read returned does not depend on the schema.
+
+#### Scenario: Fields are grouped by the schema's tags
+
+- **WHEN** the detail view renders for an instance whose schema tags its columns
+- **THEN** the metadata panel presents one group per reported tag, in the schema's order
+- **AND** each group lists the fields reported under that tag
+- **AND** no field is presented outside a group
+
+#### Scenario: The panel reads as the span rail's field groups do
+
+- **WHEN** the metadata panel and the span rail's field groups are both on screen
+- **THEN** their groups use the same control and the same rows
+
+#### Scenario: A column the schema adds appears without a release
+
+- **WHEN** the schema reports a column this frontend has no entry for
+- **THEN** the column renders in the group of its tag under the schema's own label
+
+#### Scenario: A closed caller group previews the user's name
+
+- **WHEN** the metadata panel renders with its groups closed and the session records a user name
+- **THEN** the caller group previews that name
+
+#### Scenario: A caller group without a name previews its first field
+
+- **WHEN** the session records no user name
+- **THEN** the caller group previews its first stated field
+
+#### Scenario: The successful-request row keeps its qualified label
+
+- **WHEN** the group holding the successful-request count is open
+- **THEN** its label states that a turn counts when at least one of its hops succeeded
+
+#### Scenario: A figure the usage panel states is also stated exactly
+
+- **WHEN** the usage panel states a token count in compact form
+- **THEN** the token usage group states the same count exactly
+
+#### Scenario: A reported zero is stated as zero
+
+- **WHEN** the rollup records a zero in a token, cost or duration column
+- **THEN** its group states zero
+- **AND** it does not mark the field unavailable
+
+#### Scenario: A sensitive column the schema reports is presented
+
+- **WHEN** the schema reports a column marked sensitive
+- **THEN** the detail query names it
+- **AND** a group and the dump present it
+
+#### Scenario: A sensitive column the schema does not report is not presented
+
+- **WHEN** the schema does not report a column marked sensitive for the caller
+- **THEN** the detail query does not name it
+- **AND** no group and no dump presents it
+
+#### Scenario: An unreadable schema leaves the record available as JSON
+
+- **WHEN** the sessions schema could not be read
+- **THEN** the metadata panel says the schema could not be read
+- **AND** its JSON control still presents the record
+
+### Requirement: A metadata value can be copied
+
+Each value a metadata group's row presents SHALL offer a control that copies it to the clipboard. The control SHALL
+have an accessible name that states which value it copies, SHALL be reachable by keyboard, and SHALL confirm
+the outcome through the application's notification, which is announced to assistive technology, rather than
+through the control's own name. A value too long for its column is
+clamped for display; the copy SHALL carry the full value. A list value SHALL be copied as its items separated by
+a comma and a single space. A value marked unavailable SHALL offer no copy control, because there is nothing to
+copy.
+
+#### Scenario: A clamped value is copied in full
+
+- **WHEN** the reader activates the copy control of a value that is clamped for display
+- **THEN** the clipboard holds the whole value
+
+#### Scenario: A copy states its outcome to assistive technology
+
+- **WHEN** the reader activates a copy control
+- **THEN** a notification announces that the value was copied
+- **AND** the control's own accessible name is unchanged
+
+#### Scenario: An unavailable value offers no copy
+
+- **WHEN** a field is marked unavailable
+- **THEN** its row has no copy control
+
+### Requirement: The session's record is available as a JSON dump
+
+The metadata panel SHALL offer a control that presents the session's whole record as JSON in the shared viewer,
+in a popup over the page rather than inline. The dump SHALL hold every field the detail read returned, including
+those the groups omit as stated elsewhere, keyed by the column names the schema reports and not by display
+labels. A field with no value SHALL appear with the value it was read as. The dump SHALL carry no key of this
+console's own making and SHALL require no additional read.
+
+#### Scenario: The dump opens and holds the whole record
+
+- **WHEN** the reader activates the JSON control
+- **THEN** a popup presents the session's record as JSON
+- **AND** it includes the fields the groups omit as stated elsewhere
+
+#### Scenario: The dump is keyed by published column names
+
+- **WHEN** the dump is presented
+- **THEN** each key is the column name the schema reports, with its qualification
+- **AND** no key is a display label
+
+#### Scenario: The dump issues no read
+
+- **WHEN** the reader activates the JSON control
+- **THEN** no query is issued
+

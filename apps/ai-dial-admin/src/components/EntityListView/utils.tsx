@@ -4,7 +4,7 @@ import { exportFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
-import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
+import DuplicateAsset from '@/src/components/Assets/Modals/DuplicateAsset';
 import DuplicatePopup from '@/src/components/EntityView/Modals/Duplicate/Duplicate';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';

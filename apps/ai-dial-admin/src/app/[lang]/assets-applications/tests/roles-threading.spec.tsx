@@ -28,7 +28,7 @@ vi.mock('@/src/server/config-entities/read-page-options', () => ({
   readGlobalInterceptors: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('@/src/components/Assets/Apps/View', () => ({
+vi.mock('@/src/components/Assets/Entities/Apps/View', () => ({
   default: (props: Record<string, unknown>) => <div data-view="AppView" data-roles={JSON.stringify(props.roles)} />,
 }));
 vi.mock('@/src/components/Assets/Platform/Applications/View', () => ({

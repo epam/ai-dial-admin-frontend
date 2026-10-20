@@ -1,3 +1,11 @@
+# platform-entity-routes Specification
+
+## Purpose
+
+Routing of platform entities under platform- prefixed paths, addressed by the id segment alone, without affecting asset routes.
+
+## Requirements
+
 ### Requirement: Platform entity routes use platform- prefix
 The six World-B platform entity pages (Models, App Runners, Interceptors, Routes, Roles, Keys)
 SHALL be accessible under `/platform-*` URL paths. The previous `/assets-*` URLs for these pages

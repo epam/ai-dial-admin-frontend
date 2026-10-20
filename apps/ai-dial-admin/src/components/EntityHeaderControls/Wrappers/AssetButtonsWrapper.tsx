@@ -7,7 +7,7 @@ import { ButtonAppearance, DialDangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
+import AssetVersionControl from '@/src/components/Assets/Modals/AssetVersionControl';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';

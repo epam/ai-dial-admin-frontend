@@ -243,6 +243,15 @@ the applications it called made in turn.
 An application's Routes view SHALL read its own route calls: `deployment` = the application,
 within the Routes view's rows.
 
+An asset's path SHALL be read the way every other write path reads it — the flat field first, then
+the merge layer's metadata. A merged Core-resource detail entity carries its identity only in that
+metadata, and it is the detail view that opens the Audit tab, so reading the flat field alone left
+the dashboard with no name to match on exactly the surface that shows it.
+
+Where no name can be resolved, the panel SHALL state that the entity cannot be matched to the usage
+log, and SHALL issue no request. Rendering nothing leaves the tab blank — no figures, no frame,
+nothing that reads as a state — which is indistinguishable from a wiring fault and was one.
+
 #### Scenario: A model's dashboard counts only that model
 
 - **GIVEN** two models with traffic in the window
@@ -260,6 +269,19 @@ within the Routes view's rows.
 - **GIVEN** application A called application B, and B called a model
 - **WHEN** A's entity dashboard reads its call tree
 - **THEN** B's model call is among the rows it reads
+
+#### Scenario: An asset's identity is read from the merge metadata
+
+- **GIVEN** an asset toolset whose detail entity carries its path only in the merge metadata
+- **WHEN** its entity dashboard issues a request
+- **THEN** the deployment it matches is built from that path
+
+#### Scenario: An entity the log cannot name says so
+
+- **GIVEN** an entity whose name cannot be resolved
+- **WHEN** its Audit tab renders the dashboard
+- **THEN** the panel states that the entity cannot be matched to the usage log
+- **AND** no request is issued
 
 ### Requirement: An application's figures rest on its own calls
 
@@ -665,33 +687,43 @@ empty bucket there is a real zero.
 ### Requirement: Compare control sits beside the period selector and governs the whole page
 
 The controls bar SHALL render a `Compare` selector after the period selector, offering
-`Previous period` and an off option. The selection SHALL apply to every widget on the page that can
-express a change over time — the KPI cards and the breakdown table's delta column — rather than to
-one widget. The selection SHALL NOT affect the URL, and SHALL survive switching the `View by`
-option so a reader who moves between views keeps the comparison they asked for.
+`Previous period`, `Previous month`, `Previous year` and an off option. The selection SHALL apply to
+every widget on the page that can express a change over time — the KPI cards and the breakdown
+table's per-measure deltas — rather than to one widget. The selection SHALL NOT affect the URL, and
+SHALL survive switching the `View by` option so a reader who moves between views keeps the
+comparison they asked for.
 
 `Previous period` SHALL be the default. A figure without a comparison answers "how much" and not
 "more or less than before", which is the question this page exists to answer; a reader who does not
 want the comparison turns it off.
+
+A widget that names the compared window SHALL name the selected one rather than always saying
+`previous period`. Where a widget renders a change without knowing which comparison is selected,
+its text SHALL name no period at all instead of naming the wrong one.
 
 #### Scenario: Comparison is on by default
 
 - **WHEN** the user opens the usage page
 - **THEN** the `Compare` selector reads `Previous period`
 - **AND** each KPI card renders a delta against the previous window
-- **AND** the breakdown table renders its delta column
 
 #### Scenario: Turning comparison off drops every comparison at once
 
 - **WHEN** the user selects the off option
 - **THEN** no KPI card renders a delta
-- **AND** the breakdown table renders no delta column
+- **AND** the breakdown table renders no per-measure delta
 
 #### Scenario: Comparison survives a view switch
 
 - **GIVEN** comparison is set to `Previous period` in the LLM view
 - **WHEN** the user switches `View by` to MCP
 - **THEN** comparison is still `Previous period`
+
+#### Scenario: A card names the window it is compared against
+
+- **GIVEN** the comparison is set to `Previous year`
+- **WHEN** a KPI card renders its footnote
+- **THEN** the footnote names the previous year rather than the previous period
 
 ### Requirement: The previous window is the same span immediately before the current one
 
@@ -700,6 +732,9 @@ begins — `Last 2d` compares against the two days before those two days. For a 
 previous window SHALL be the same duration ending at the custom range's start. The previous window
 SHALL be derived from the current window when the window is taken, not stored, so a preset's
 sliding window and its comparison always share an edge.
+
+This rule governs `Previous period`. The calendar comparisons derive their window differently — see
+the requirement below.
 
 The window SHALL be taken once per change to the inputs that define it — the period, the custom
 range, and the manual refresh — and SHALL NOT be re-taken during rendering, so a preset window
@@ -877,13 +912,36 @@ user id on a call authenticated by a token, and the project the key belongs to o
 authenticated by an API key. Both branches of traffic are therefore counted, which is why the card
 is named for callers rather than users.
 
-It SHALL NOT count the anonymized user hash. That field is populated only on token calls and empty
+Where the principal reference is available it SHALL NOT count the anonymized user hash. That field is populated only on token calls and empty
 on every key call, so a distinct count over it folds all key traffic into one bucket and reports it
 as a single caller — measured on the live dataset, the overwhelming majority of rows counted as
 one.
 
 Two keys of the same project SHALL count once, because the log records no key identifier. The card
 therefore answers "how many distinct principals called" and not "how many keys were used".
+
+The principal reference comes from an enrichment provisioned per environment, and the service
+withholds catalogued-sensitive columns by role, so the column is not always there. The page SHALL
+read the usage log schema before it issues a request and, where the schema does not serve the
+column — or cannot be read — SHALL count the anonymized user hash instead and name no principal
+reference in any request: the service rejects a query that names a column it does not serve as an
+unknown field, which failed every read on the page rather than only the card. Where the column is
+served but empty on a row, that row SHALL fall back to the hash as well. Where the schema serves
+neither column, the page SHALL ask for no caller count and SHALL NOT draw the caller card.
+
+#### Scenario: A schema without the principal reference still loads the dashboard
+
+- **GIVEN** the usage log schema served to the current user has no `usage_client_identity.user_ref`
+- **WHEN** the dashboard loads
+- **THEN** no request names that column
+- **AND** the caller card counts distinct user hashes
+
+#### Scenario: A schema with neither caller column hides the caller card
+
+- **GIVEN** the usage log schema served to the current user has neither `usage_client_identity.user_ref` nor `user_hash`
+- **WHEN** the dashboard loads
+- **THEN** no request names either column
+- **AND** the caller card is not drawn, while the other cards load
 
 #### Scenario: Key traffic is not folded into a single caller
 
@@ -2080,4 +2138,84 @@ tab or in a copied cell.
 - **GIVEN** the `Applications` tab, whose fallback bucket outranks every named row
 - **WHEN** the table renders
 - **THEN** `Direct call` sits in its ranked place
+
+### Requirement: A calendar comparison moves the window by whole months and keeps its duration
+
+`Previous month` SHALL take the current window back one calendar month and `Previous year` back
+twelve, keeping the date and the time of day. Both SHALL keep the window's **duration** rather than
+its end date: a comparison measured over a different amount of time answers a different question,
+and February would otherwise shorten every window compared against it.
+
+Where the target month has no such day, the day SHALL be clamped to that month's last — 31 March
+compared against a previous month reads 28 February, and 29 February against a previous year reads
+28 February. The shift SHALL move the month with the day already set to the 1st, so a 31st does not
+roll forward into the month after the target.
+
+The shift SHALL read and write local date parts, so a comparison lands on the same wall-clock date
+a reader would name, rather than on an instant offset by daylight saving.
+
+Neither option SHALL add a request shape or change how many requests a window costs: the previous
+window is still one window, derived where the adjacent one is derived.
+
+#### Scenario: Previous month keeps the date and the time of day
+
+- **GIVEN** the window runs from 15 September 11:30 for two days
+- **WHEN** the comparison is set to `Previous month`
+- **THEN** the compared window starts 15 August 11:30
+- **AND** it spans two days
+
+#### Scenario: Previous month crosses the year boundary
+
+- **GIVEN** the window starts 20 January
+- **WHEN** the comparison is set to `Previous month`
+- **THEN** the compared window starts 20 December of the year before
+
+#### Scenario: A day the target month does not have is clamped
+
+- **GIVEN** the window starts 31 March
+- **WHEN** the comparison is set to `Previous month`
+- **THEN** the compared window starts 28 February
+
+#### Scenario: A leap day compares against the 28th
+
+- **GIVEN** the window starts 29 February of a leap year
+- **WHEN** the comparison is set to `Previous year`
+- **THEN** the compared window starts 28 February of the year before
+
+#### Scenario: A calendar comparison costs the same as the adjacent one
+
+- **GIVEN** the comparison is set to `Previous year`
+- **WHEN** the page loads
+- **THEN** the comparing shapes are each requested once per window, as they are for `Previous period`
+
+### Requirement: The breakdown card is as tall as it needs to be
+
+While the card holds fewer rows than it scrolls at, it SHALL take the height of the rows it holds.
+A single row in a box built for a full page is mostly empty space, and empty space under a header
+reads as rows that failed to load rather than as rows that do not exist.
+
+At or above that count the card SHALL keep its fixed height and scroll, as before. The threshold
+SHALL be low enough that the content height never exceeds the fixed one, so the card only ever
+shrinks at the boundary and never grows.
+
+A card with no rows SHALL keep the full height: its empty state is a message that needs somewhere
+to sit, not a row.
+
+#### Scenario: One row takes one row's height
+
+- **GIVEN** the active tab holds a single row
+- **WHEN** the card renders
+- **THEN** the table is as tall as that row and its header
+
+#### Scenario: A full page keeps the fixed box
+
+- **GIVEN** the active tab holds more rows than the card scrolls at
+- **WHEN** the card renders
+- **THEN** the table keeps its fixed height and scrolls
+
+#### Scenario: An empty card keeps its height
+
+- **GIVEN** the window holds no rows for the active tab
+- **WHEN** the card renders
+- **THEN** the table keeps its full height and states the empty window
 

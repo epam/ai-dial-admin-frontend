@@ -56,6 +56,8 @@ vi.mock('@/src/components/ListView/Header/ResetFiltersButton', () => ({
 
 interface ListViewMockProps {
   children?: ReactNode;
+  toolbar?: ReactNode;
+  listLabel?: ReactNode;
   columnDefs?: ColDef[];
   additionalGridOptions?: GridOptions;
   storageKey?: string;
@@ -68,7 +70,7 @@ const gridApiMock = {
 };
 
 const listViewPropsMock = vi.fn();
-vi.mock('@/src/components/ListView/ListView', () => ({
+vi.mock('@/src/components/ListView/List', () => ({
   __esModule: true,
   default: (props: ListViewMockProps) => {
     listViewPropsMock(props);
@@ -78,7 +80,18 @@ vi.mock('@/src/components/ListView/ListView', () => ({
       // captured by these tests.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    return <div>{props.children}</div>;
+    return (
+      <div>
+        {/* The real shell renders its children only inside the titled header. */}
+        {props.listLabel && (
+          <div>
+            <h1>{props.listLabel}</h1>
+            {props.children}
+          </div>
+        )}
+        {props.toolbar}
+      </div>
+    );
   },
 }));
 
@@ -136,6 +149,7 @@ import {
   ActionMenuOperationI18nKey,
   ButtonsI18nKey,
   EntitiesI18nKey,
+  MenuI18nKey,
   RollbackI18nKey,
   TelemetryI18nKey,
 } from '@/src/constants/i18n';
@@ -230,6 +244,22 @@ beforeEach(() => {
 });
 
 describe('ActivityAuditList :: view-aware behavior', () => {
+  test('shows the list title as a heading on the page, with the view select in the toolbar', () => {
+    render(<ActivityAuditList />);
+
+    expect(screen.getByRole('heading', { name: MenuI18nKey.ActivityAudit })).toBeInTheDocument();
+    expect(screen.getByLabelText('View')).toBeInTheDocument();
+  });
+
+  test('renders no heading or view select when embedded in an entity, but keeps reset and refresh', () => {
+    render(<ActivityAuditList entity={{ name: 'm' } as BaseEntity} entityType={ActivityAuditResourceType.MODEL} />);
+
+    expect(screen.queryByRole('heading')).toBeNull();
+    expect(screen.queryByLabelText('View')).toBeNull();
+    expect(screen.getByRole('button', { name: 'ResetFilters' })).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.Refresh)).toBeInTheDocument();
+  });
+
   test('renders Rollback button by default (Config view)', () => {
     render(<ActivityAuditList />);
     expect(screen.getByText(RollbackI18nKey.Rollback)).toBeInTheDocument();

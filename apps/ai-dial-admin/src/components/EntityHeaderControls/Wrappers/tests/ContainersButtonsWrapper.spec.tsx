@@ -27,7 +27,7 @@ vi.mock('@/src/components/EntityListView/CreateEntity/CreateEntity', () => ({
     </div>
   ),
 }));
-vi.mock('@/src/components/Assets/Deployments/CreateAsset', () => ({ default: () => null }));
+vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({ default: () => null }));
 vi.mock('@/src/components/EntityView/Modals/Delete/Delete', () => ({ default: () => null }));
 
 const baseContainer = (inferenceTask?: INFERENCE_TASK): Container => ({

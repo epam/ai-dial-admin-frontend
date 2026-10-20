@@ -16,7 +16,7 @@ import {
   updateCoreRunner,
 } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication } from '@/src/app/[lang]/applications/actions';
-import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';

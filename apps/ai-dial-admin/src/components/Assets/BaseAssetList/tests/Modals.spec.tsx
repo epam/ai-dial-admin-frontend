@@ -8,7 +8,7 @@ import { ModalType } from '../types';
 vi.mock('@/src/components/Assets/Modals/DuplicatePlatformAsset', () => ({
   default: () => <div>duplicate-platform-asset</div>,
 }));
-vi.mock('@/src/components/Assets/Deployments/DuplicateAsset', () => ({
+vi.mock('@/src/components/Assets/Modals/DuplicateAsset', () => ({
   default: () => <div>duplicate-asset</div>,
 }));
 

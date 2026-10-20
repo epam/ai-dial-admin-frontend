@@ -10,7 +10,7 @@ vi.mock('@/src/app/api/api', () => ({
   applicationsApi: { getApplicationsList: vi.fn().mockResolvedValue([]) },
 }));
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({ getAllRunners: vi.fn().mockResolvedValue([]) }));
-vi.mock('@/src/components/Assets/Apps/List', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/src/components/Assets/Entities/Apps/List', () => ({ __esModule: true, default: () => null }));
 
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   getApp: vi.fn().mockResolvedValue({ etag: 'e', response: { name: 'my-app', folderId: 'f' } }),
@@ -26,7 +26,7 @@ vi.mock('@/src/server/config-entities/read-page-options', () => ({
   readConfigEntities: vi.fn().mockResolvedValue([]),
   readGlobalInterceptors: vi.fn().mockResolvedValue([]),
 }));
-vi.mock('@/src/components/Assets/Apps/View', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/src/components/Assets/Entities/Apps/View', () => ({ __esModule: true, default: () => null }));
 vi.mock('@/src/components/Assets/Platform/Applications/View', () => ({ __esModule: true, default: () => null }));
 
 import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';

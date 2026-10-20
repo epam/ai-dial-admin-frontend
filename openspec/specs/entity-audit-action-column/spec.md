@@ -1,4 +1,10 @@
-## ADDED Requirements
+# entity-audit-action-column Specification
+
+## Purpose
+
+The action column of an entity's Audit tab grid: open in a new tab and roll back.
+
+## Requirements
 
 ### Requirement: Entity audit tab grid has action column
 The audit activities grid rendered inside the entity audit tab SHALL include an action column with the same operations as the standalone list.

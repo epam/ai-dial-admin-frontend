@@ -40,7 +40,7 @@ describe('EntityListHeaderButtons', () => {
 
   const startImport = async () => {
     const user = userEvent.setup();
-    render(<EntityListHeaderButtons route={ApplicationRoute.Prompts} toggleColumnsPanel={vi.fn()} />);
+    render(<EntityListHeaderButtons route={ApplicationRoute.Prompts} />);
     await user.click(screen.getByRole('button', { name: 'confirm-import' }));
   };
 

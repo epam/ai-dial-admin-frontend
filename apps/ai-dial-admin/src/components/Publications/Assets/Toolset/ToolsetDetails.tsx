@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import ToolsetAssetProperties from '@/src/components/Assets/Toolsets/View/Properties';
+import ToolsetAssetProperties from '@/src/components/Assets/Entities/Toolsets/View/Properties';
 import { ToolsetPublication } from '@/src/models/dial/publications';
 import { DialToolsetResource } from '@/src/models/dial/resource';
 

@@ -1,5 +1,6 @@
 import {
   BucketPoint,
+  CallerSource,
   ComparedMeasures,
   KpiFigure,
   KpiMetric,
@@ -74,6 +75,7 @@ const METRIC_SPARKLINE: Partial<Record<KpiMetric, (point: BucketPoint) => number
 
 interface FigureInput {
   view: UsageView;
+  callerSource?: CallerSource;
   current: UsageMeasures | null;
   previous: UsageMeasures | null;
   buckets: BucketPoint[];
@@ -100,8 +102,13 @@ export const isMadeMetric = (metric: KpiMetric): boolean => MADE_METRICS.has(met
 const measuresOfWindow = (measures: UsageMeasures | null): UsageMeasures | null =>
   measures && measures.calls > 0 ? measures : null;
 
-export const buildKpiFigures = ({ view, current, previous, buckets, made }: FigureInput): KpiFigure[] =>
-  VIEW_KPI_METRICS[view].map((metric) => {
+const metricsOf = (view: UsageView, callerSource?: CallerSource): KpiMetric[] =>
+  callerSource === CallerSource.None
+    ? VIEW_KPI_METRICS[view].filter((metric) => metric !== KpiMetric.UniqueCallers)
+    : VIEW_KPI_METRICS[view];
+
+export const buildKpiFigures = ({ view, callerSource, current, previous, buckets, made }: FigureInput): KpiFigure[] =>
+  metricsOf(view, callerSource).map((metric) => {
     const source = made && isMadeMetric(metric) ? made : { current, previous };
     const toSparkPoint = source === made ? void 0 : METRIC_SPARKLINE[metric];
     const value: WindowedValue = {
