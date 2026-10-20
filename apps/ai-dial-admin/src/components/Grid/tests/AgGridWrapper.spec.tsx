@@ -357,6 +357,15 @@ describe('AgGridWrapper — default and stored width of a sized column', () => {
 
     expect(renderedNameColumn()).toMatchObject({ width: 520, suppressSizeToFit: true });
   });
+
+  test('restores the dragged width for a column that defines only a field', () => {
+    storeModel({ columns: [{ colId: 'name', width: 520 }], filters: {}, sizedColIds: ['name'] });
+
+    render(<AgGridWrapper columnDefs={[{ field: 'name' }]} rowData={[]} storageKey={STORAGE_KEY} />);
+
+    const [column] = mockState.lastProps?.columnDefs as ColDef[];
+    expect(column).toMatchObject({ width: 520, suppressSizeToFit: true });
+  });
 });
 
 describe('AgGridWrapper — sizing strategy', () => {

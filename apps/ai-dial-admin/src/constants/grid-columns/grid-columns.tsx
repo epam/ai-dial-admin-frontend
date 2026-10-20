@@ -523,7 +523,7 @@ export const EXPORT_COLUMNS = (
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
   AUTHOR_COLUMN,
-  { ...CREATED_AT_COLUMN, sort: 'asc' },
+  { ...CREATED_AT_COLUMN, sort: 'desc' },
 ];
 
 export const getPublicationColumns = (

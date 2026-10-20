@@ -78,7 +78,8 @@ const applyGridState = (gridApi: GridApi, model: GridModel | null, defaultSorts:
 const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[], sizedColIds: string[]): ColDef[] => {
   const sized = new Set(sizedColIds);
   return columnDefs.map((col) => {
-    const fromStorage = stored?.find((s) => s.colId === col.colId);
+    const colId = col.colId ?? col.field;
+    const fromStorage = stored?.find((s) => s.colId === colId);
     if (!fromStorage) return { ...col, sort: undefined };
     const { width, ...stateWithoutWidth } = fromStorage;
     const keepWidth = typeof width === 'number' && sized.has(fromStorage.colId);
