@@ -14,6 +14,7 @@ import {
   getVersionColumnNames,
   hasColumnRowErrors,
   isDropRestrictedColumn,
+  isNullableLockedType,
   isRenameRestricted,
   isScanMetadataColumn,
   parseRowsJson,
@@ -21,6 +22,7 @@ import {
   tableDetailHref,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
+import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
@@ -146,6 +148,14 @@ describe('getIdentityColumnNames / getVersionColumnNames', () => {
     expect(getIdentityColumnNames(rows)).toEqual(['order_id', 'seen_at', 'event_date']);
   });
 
+  test.each([AnalyticsFieldType.Array, AnalyticsFieldType.Object, AnalyticsFieldType.Map])(
+    'identity options exclude a %s column, which the backend refuses as a scan cursor',
+    (type) => {
+      const withRefused = [...rows, row({ source_name: 'refused', name: 'refused', type })];
+      expect(getIdentityColumnNames(withRefused)).toEqual(['order_id', 'seen_at', 'event_date']);
+    },
+  );
+
   test('version options narrow the same set to Timestamp — a Date is rejected by the backend', () => {
     expect(getVersionColumnNames(rows)).toEqual(['seen_at']);
   });
@@ -167,12 +177,13 @@ describe('key column eligibility', () => {
     row({ source_name: 'id', type: AnalyticsFieldType.Uuid }),
     row({ source_name: 'maybe', type: AnalyticsFieldType.String, nullable: true }),
     row({ source_name: 'payload', type: AnalyticsFieldType.Object }),
+    row({ source_name: 'attrs', type: AnalyticsFieldType.Map }),
     row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
     row({ source_name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true }),
     row({ source_name: 'secret_day', type: AnalyticsFieldType.Date, sensitive: true }),
   ];
 
-  test('the ordering key excludes nullable and Object columns', () => {
+  test('the ordering key excludes nullable, Object and Map columns', () => {
     expect(getOrderingKeyColumnNames(rows)).toEqual(['id', 'seen_at', 'secret_day']);
   });
 
@@ -180,7 +191,7 @@ describe('key column eligibility', () => {
     expect(getPartitionColumnNames(rows)).toEqual(['seen_at', 'secret_day']);
   });
 
-  test('the grain key excludes Object columns of the source table and keeps the rest', () => {
+  test('the grain key excludes Object and Map columns of the source table and keeps the rest', () => {
     const column = (source_name: string, type: AnalyticsFieldType): AnalyticsTableColumn => ({
       source_name,
       name: source_name,
@@ -190,6 +201,7 @@ describe('key column eligibility', () => {
       getGrainKeyColumnNames([
         column('id', AnalyticsFieldType.Uuid),
         column('payload', AnalyticsFieldType.Object),
+        column('attrs', AnalyticsFieldType.Map),
         column('maybe', AnalyticsFieldType.String),
       ]),
     ).toEqual(['id', 'maybe']);
@@ -247,7 +259,7 @@ describe('reconcileKeySelections', () => {
     expect(reconcileKeySelections([id, seenAt, taken], [id, renamed, taken], selections).partitionColumn).toBe('');
   });
 
-  test('drops an ordering key or partition column flipped to nullable, and an ordering key retyped to Object', () => {
+  test('drops an ordering key or partition column flipped to nullable, and an ordering key and identity column retyped to Object', () => {
     const nullable = { ...seenAt, nullable: true };
     expect(reconcileKeySelections(prevRows, [id, nullable], selections)).toMatchObject({
       orderingKey: ['id'],
@@ -257,7 +269,15 @@ describe('reconcileKeySelections', () => {
     const asObject = { ...id, type: AnalyticsFieldType.Object };
     expect(reconcileKeySelections(prevRows, [asObject, seenAt], selections)).toMatchObject({
       orderingKey: ['seen_at'],
-      identityColumn: 'id',
+      identityColumn: '',
+    });
+  });
+
+  test('drops an ordering key and an identity column retyped to Map', () => {
+    const asMap = { ...id, type: AnalyticsFieldType.Map };
+    expect(reconcileKeySelections(prevRows, [asMap, seenAt], selections)).toMatchObject({
+      orderingKey: ['seen_at'],
+      identityColumn: '',
     });
   });
 
@@ -278,6 +298,35 @@ describe('reconcileKeySelections', () => {
     expect(reconcileKeySelections([id, other], [{ ...id, source_name: 'gone' }, renamed], two).orderingKey).toEqual([
       'id',
     ]);
+  });
+});
+
+describe('isNullableLockedType', () => {
+  test('locks the flag for Array, Object and Map, which the backend refuses as nullable', () => {
+    expect(isNullableLockedType(AnalyticsFieldType.Array)).toBe(true);
+    expect(isNullableLockedType(AnalyticsFieldType.Object)).toBe(true);
+    expect(isNullableLockedType(AnalyticsFieldType.Map)).toBe(true);
+  });
+
+  test('leaves the flag open for a scalar type', () => {
+    expect(isNullableLockedType(AnalyticsFieldType.String)).toBe(false);
+    expect(isNullableLockedType(AnalyticsFieldType.Enum)).toBe(false);
+  });
+});
+
+describe('column type options', () => {
+  test('the column-type picker offers Map, last, past the long-established Array', () => {
+    expect(COLUMN_TYPE_OPTIONS.map((option) => option.value).slice(-2)).toEqual([
+      AnalyticsFieldType.Array,
+      AnalyticsFieldType.Map,
+    ]);
+  });
+
+  test('an array element type cannot be a Map', () => {
+    const values = ELEMENT_TYPE_OPTIONS.map((option) => option.value);
+    expect(values).not.toContain(AnalyticsFieldType.Map);
+    expect(values).not.toContain(AnalyticsFieldType.Object);
+    expect(values).toContain(AnalyticsFieldType.String);
   });
 });
 
@@ -806,6 +855,7 @@ describe('buildRowsTemplate', () => {
       { source_name: 'active', name: 'active', type: AnalyticsFieldType.Boolean },
       { source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
       { source_name: 'meta', name: 'meta', type: AnalyticsFieldType.Object },
+      { source_name: 'attrs', name: 'attrs', type: AnalyticsFieldType.Map },
       { source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String },
     ];
     expect(JSON.parse(buildRowsTemplate(columns))).toEqual([
@@ -817,6 +867,7 @@ describe('buildRowsTemplate', () => {
         active: false,
         ts: '',
         meta: {},
+        attrs: {},
         tags: [],
       },
     ]);

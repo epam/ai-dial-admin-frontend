@@ -130,6 +130,31 @@ describe('ColumnRowsEditor', () => {
     ]);
   });
 
+  test('the Nullable switch is disabled and forced off for a Map row, even if nullable was already true', () => {
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.Map, nullable: true })]} onChange={vi.fn()} />);
+
+    const nullableSwitch = screen.getByLabelText(AnalyticsTablesI18nKey.Nullable);
+    expect(nullableSwitch).toBeDisabled();
+    expect(nullableSwitch).not.toBeChecked();
+  });
+
+  test('retyping a nullable row to Map stores the flag off and offers no element type', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.String, nullable: true })]} onChange={onChange} />);
+
+    await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.Map);
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ type: AnalyticsFieldType.Map, nullable: false, element_type: '' }),
+    ]);
+  });
+
+  test('does not render the element-type field for a Map row', () => {
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.Map })]} onChange={vi.fn()} />);
+    expect(screen.queryByLabelText(AnalyticsTablesI18nKey.ElementType)).not.toBeInTheDocument();
+  });
+
   test('the Nullable switch stays enabled for a row that is neither Array nor Object', () => {
     render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
     expect(screen.getByLabelText(AnalyticsTablesI18nKey.Nullable)).toBeEnabled();

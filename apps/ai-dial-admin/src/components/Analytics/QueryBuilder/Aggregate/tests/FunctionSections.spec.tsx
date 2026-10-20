@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -100,6 +100,20 @@ describe('QueryBuilder :: GroupBySection', () => {
     ['operand', 'low', 'high', 'count'].forEach((name) => {
       expect(screen.getByRole('button', { name })).toBeInTheDocument();
     });
+  });
+
+  // A map column cannot key a group, so the plain-column list withholds it.
+  test('the column dropdown omits a map field', async () => {
+    const fields = [...FIELDS, { name: 'attributes', type: AnalyticsFieldType.Map, source: 'attributes' }];
+    renderWith(stateWith({ fields }), <GroupBySection />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.GroupBy: QueryBuilder.AddField' }));
+    const listbox = screen.getByRole('listbox', { name: 'QueryBuilder.GroupBy: QueryBuilder.AddField' });
+    await user.click(within(listbox).getByRole('button', { name: /QueryBuilder.Untagged/ }));
+
+    expect(within(listbox).getByRole('option', { name: /latency/ })).toBeInTheDocument();
+    expect(within(listbox).queryByRole('option', { name: /attributes/ })).not.toBeInTheDocument();
   });
 });
 

@@ -32,10 +32,11 @@ export enum ConnectFormatRule {
   Date = 'date',
   Decimal = 'decimal',
   Array = 'array',
+  Map = 'map',
 }
 
 // A row value in a generated snippet, before it is serialized into a language's literal syntax.
-export type SnippetValue = string | number | boolean | SnippetValue[] | Record<string, never>;
+export type SnippetValue = string | number | boolean | SnippetValue[] | Record<string, string>;
 
 export type SnippetRow = Record<string, SnippetValue>;
 

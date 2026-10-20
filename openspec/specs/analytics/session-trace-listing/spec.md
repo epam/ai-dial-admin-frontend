@@ -84,7 +84,7 @@ reached from one it labelled and found nothing in, which no descriptive column c
 rule's only test is the enrichment namespace, so no category of column has to be recognised for it to hold.
 
 A column the enrichment exposes that the detail view cannot render as a value SHALL be excluded — one the
-schema types as an object or an array. The exclusion SHALL be decided by what the schema reports about the
+schema types as an object, an array or a map. The exclusion SHALL be decided by what the schema reports about the
 column rather than by its name, so a column newly typed is classified with no frontend change. A sensitive
 column needs no separate treatment here: the rule against referencing one governs every column this query
 names. The enrichment exposes no column of either kind today, so this is a guard against one being added
@@ -145,7 +145,7 @@ With no schema available the query names the required set alone, which holds non
 
 #### Scenario: A non-scalar insight column is excluded
 
-- **WHEN** the schema reports an insight column typed as an array or an object
+- **WHEN** the schema reports an insight column typed as an array, an object or a map
 - **THEN** the select does not name it
 - **AND** the exclusion follows the schema's own report rather than a list of column names
 
@@ -1761,4 +1761,3 @@ console's own making and SHALL require no additional read.
 
 - **WHEN** the reader activates the JSON control
 - **THEN** no query is issued
-

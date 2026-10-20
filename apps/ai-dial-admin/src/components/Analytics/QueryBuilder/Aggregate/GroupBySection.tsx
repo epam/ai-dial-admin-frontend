@@ -7,6 +7,7 @@ import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/Section
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import {
   fieldDisplayName,
+  comparableFieldOptions,
   fieldsToOptions,
   prefilledAlias,
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
@@ -34,7 +35,7 @@ const GroupBySection: FC = () => {
 
   // Picked columns stay listed so the dropdown can show them as selected and toggle them back off.
   const pickedColumns = state.groupBy.filter((g) => !g.fn).map((g) => g.field);
-  const addOptions = fieldsToOptions(state.fields);
+  const addOptions = comparableFieldOptions(fieldsToOptions(state.fields), pickedColumns);
   // The Functions group is sourced entirely from the served catalog's scalar functions.
   const functionOptions = scalarFunctionOptions(state.functions);
 

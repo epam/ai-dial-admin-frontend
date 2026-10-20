@@ -219,6 +219,14 @@ const computedColumnOptions = (state: QueryBuilderState): FieldOption[] => {
   }));
 };
 
+// Options for a position the service compares, groups or orders by — a filter operand, a plain group-by
+// column, a sort key. A map column is projection-only there, and one refused predicate or key rejects the
+// whole query, so it is withheld by its schema type; it stays offered to Select and to function arguments,
+// which is how one of its keys is read. A name already in `kept` stays listed, so a query authored elsewhere
+// still shows the field it names.
+export const comparableFieldOptions = (options: FieldOption[], kept: string[] = []): FieldOption[] =>
+  options.filter((o) => o.type !== AnalyticsFieldType.Map || kept.includes(o.name));
+
 export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
   const plainColumns = state.groupBy
     .filter((g) => !g.fn)
@@ -234,12 +242,17 @@ export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
   return sortByName([...plainColumns, ...computed, ...implicit]);
 };
 
-export const sortFieldOptions = (state: QueryBuilderState): FieldOption[] => {
+// `kept` is the field the sort row being edited already names, so a map column a query authored elsewhere
+// sorts by stays listed in that row only.
+export const sortFieldOptions = (state: QueryBuilderState, kept: string[] = []): FieldOption[] => {
   // Keep tags so the categorized dropdown can group; alias options (a row-mode function column, or
   // any aggregate-mode output) carry none. A row-mode function column is sortable by its alias
   // because the service registers a projection alias as one of the query's output names.
   if (state.mode === QueryMode.Row) {
-    return sortByName([...fieldsToOptions(state.fields), ...computedColumnOptions(state)]);
+    return sortByName([
+      ...comparableFieldOptions(fieldsToOptions(state.fields), kept),
+      ...computedColumnOptions(state),
+    ]);
   }
   return havingFieldOptions(state);
 };

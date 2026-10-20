@@ -42,7 +42,7 @@ export const nextColumnId = (): string => `col-${++counter}`;
 
 // The backend rejects a nullable column of these types, so the editors never offer the flag for them.
 export const isNullableLockedType = (type: AnalyticsFieldType): boolean =>
-  type === AnalyticsFieldType.Array || type === AnalyticsFieldType.Object;
+  type === AnalyticsFieldType.Array || type === AnalyticsFieldType.Object || type === AnalyticsFieldType.Map;
 
 export const createColumnRow = (): ColumnRow => ({
   id: nextColumnId(),
@@ -67,7 +67,18 @@ const collectColumnNames = (columns: ColumnRow[], isEligible: (column: ColumnRow
   return [...seen];
 };
 
-const isKeyableRow = (c: ColumnRow): boolean => !c.nullable && c.type !== AnalyticsFieldType.Object;
+// The backend refuses a column of these types as a scan cursor (`ScanMetadataRules`).
+const SCAN_CURSOR_REFUSED_TYPES: AnalyticsFieldType[] = [
+  AnalyticsFieldType.Array,
+  AnalyticsFieldType.Object,
+  AnalyticsFieldType.Map,
+];
+
+// The store defines no comparison over these types, so the backend refuses one as any kind of table key.
+const isKeyableType = (type: AnalyticsFieldType): boolean =>
+  type !== AnalyticsFieldType.Object && type !== AnalyticsFieldType.Map;
+
+const isKeyableRow = (c: ColumnRow): boolean => !c.nullable && isKeyableType(c.type);
 
 const isTemporalRow = (c: ColumnRow): boolean =>
   c.type === AnalyticsFieldType.Date || c.type === AnalyticsFieldType.Timestamp;
@@ -78,13 +89,13 @@ export const getPartitionColumnNames = (columns: ColumnRow[]): string[] =>
   collectColumnNames(columns, (c) => isTemporalRow(c) && !c.nullable);
 
 export const getIdentityColumnNames = (columns: ColumnRow[]): string[] =>
-  collectColumnNames(columns, (c) => !c.nullable && !c.sensitive);
+  collectColumnNames(columns, (c) => !c.nullable && !c.sensitive && !SCAN_CURSOR_REFUSED_TYPES.includes(c.type));
 
 export const getVersionColumnNames = (columns: ColumnRow[]): string[] =>
   collectColumnNames(columns, (c) => !c.nullable && !c.sensitive && c.type === AnalyticsFieldType.Timestamp);
 
 export const getGrainKeyColumnNames = (columns: AnalyticsTableColumn[]): string[] =>
-  columns.filter((c) => c.type !== AnalyticsFieldType.Object).map((c) => c.source_name);
+  columns.filter((c) => isKeyableType(c.type)).map((c) => c.source_name);
 
 // Neither end of a rename is followed when another row shares it: the old name may still be that row's, and
 // the new one already is.
@@ -326,6 +337,7 @@ const templateValueFor = (type: AnalyticsFieldType): unknown => {
     case AnalyticsFieldType.Boolean:
       return false;
     case AnalyticsFieldType.Object:
+    case AnalyticsFieldType.Map:
       return {};
     case AnalyticsFieldType.Array:
       return [];

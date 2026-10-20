@@ -1317,7 +1317,7 @@ A derived column SHALL take:
 
 A field SHALL NOT be offered as a derived column when:
 
-- its type is the non-scalar `object` or `array` — a grid cell is not a structured-value viewer, and
+- its type is the non-scalar `object`, `array` or `map` — a grid cell is not a structured-value viewer, and
   rendering one as text would assert a shape the view does not know;
 - a curated column already reads it, including a field a curated column composes without having a column of
   its own. `first_request_time` (composed into Activity) and `session_insights.title` (read by the
@@ -1476,7 +1476,7 @@ stored choice.
 
 #### Scenario: Non-scalar fields are not offered
 
-- **WHEN** the schema reports a field of an object or array type
+- **WHEN** the schema reports a field of an object, array or map type
 - **THEN** it is not offered as a column
 
 #### Scenario: A sensitive field is offered like any other

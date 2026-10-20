@@ -17,6 +17,7 @@ const TYPE_COLOR: Partial<Record<AnalyticsFieldType, string>> = {
   [AnalyticsFieldType.Object]: 'text-accent-tertiary',
   [AnalyticsFieldType.Array]: 'text-error',
   [AnalyticsFieldType.Enum]: 'text-accent-secondary',
+  [AnalyticsFieldType.Map]: 'text-accent-primary',
 };
 
 interface Props {

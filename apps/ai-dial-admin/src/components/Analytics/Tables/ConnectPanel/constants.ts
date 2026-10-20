@@ -39,6 +39,8 @@ export const ANALYTICS_FIELD_TYPE_SAMPLE: Record<AnalyticsFieldType, SnippetValu
   [AnalyticsFieldType.Object]: {},
   [AnalyticsFieldType.Array]: [],
   [AnalyticsFieldType.Enum]: 'example',
+  // One entry rather than none, so the snippet shows the bag's shape: string keys to string values.
+  [AnalyticsFieldType.Map]: { key: 'value' },
 };
 
 // The column types that carry a value-format rule worth stating. A type absent from this map produces
@@ -48,6 +50,7 @@ export const ANALYTICS_FIELD_TYPE_FORMAT_RULE: Partial<Record<AnalyticsFieldType
   [AnalyticsFieldType.Date]: ConnectFormatRule.Date,
   [AnalyticsFieldType.Decimal]: ConnectFormatRule.Decimal,
   [AnalyticsFieldType.Array]: ConnectFormatRule.Array,
+  [AnalyticsFieldType.Map]: ConnectFormatRule.Map,
 };
 
 // Order the notes render in, independent of column order, so two tables with the same types read the
@@ -57,6 +60,7 @@ export const CONNECT_FORMAT_RULE_ORDER: ConnectFormatRule[] = [
   ConnectFormatRule.Date,
   ConnectFormatRule.Decimal,
   ConnectFormatRule.Array,
+  ConnectFormatRule.Map,
 ];
 
 // Platform-owned columns: the backend fills them and rejects a row that names one.
