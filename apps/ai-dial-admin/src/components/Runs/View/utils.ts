@@ -1,8 +1,19 @@
-import { ColDef, ColGroupDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import TestCaseGroupCellRenderer from '@/src/components/Runs/ExecutionResults/TestCaseGroupCellRenderer';
+import ThresholdStatusCellRenderer from '@/src/components/Runs/ExecutionResults/ThresholdStatusCellRenderer';
+import {
+  TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
+  TEST_CASE_THRESHOLD_COLUMN_WIDTH,
+} from '@/src/components/Runs/ExecutionResults/constants';
+import {
+  ExecutionResultColumnOptions,
+  ExecutionResultRowType,
+  GroupedAnalyticsResult,
+} from '@/src/components/Runs/ExecutionResults/models';
 import {
   DURATION_COLUMN_WIDTH,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -69,6 +80,7 @@ const getInputColumns = (input: Record<string, unknown>, hide = false) => {
       minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
       ...NO_FILTER_COL_DEF,
       valueGetter: (params) => {
+        if (params.data?.resultRowType === ExecutionResultRowType.Group) return null;
         const value = params.data?.testCaseData?.[key];
         if (value == null) return '—';
         if (typeof value === 'object') return JSON.stringify(value);
@@ -88,6 +100,7 @@ const getExtractedColumns = (extracted: Record<string, unknown>) => {
       minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
       ...NO_FILTER_COL_DEF,
       valueGetter: (params) => {
+        if (params.data?.resultRowType === ExecutionResultRowType.Group) return null;
         const value = params.data?.extractedColumns?.[key];
         if (value == null) return '—';
         if (typeof value === 'object') return JSON.stringify(value);
@@ -129,6 +142,7 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
           ...rightAlignedColumn,
           cellClass: ['p-0', NO_BORDER_CLASS],
           valueGetter: (params) => {
+            if (params.data?.resultRowType === ExecutionResultRowType.Group) return '';
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';
             const value = params.data?.metricValues?.[groupKey]?.[key];
@@ -164,16 +178,24 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
 
 type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 
-const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
+const buildIndexColumn = (
+  field: IndexColumnField,
+  headerName: string,
+  width: number,
+  hasEllipsisHeader = true,
+): ColDef => ({
   field,
   headerName,
-  headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
+  ...(hasEllipsisHeader ? { headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS } : {}),
   colId: field,
   sortable: true,
   ...lockedWidthColDef(width),
   ...NO_FILTER_COL_DEF,
   ...rightAlignedColumn,
-  valueGetter: (params) => (params.data?.[field] != null ? params.data[field] + 1 : null),
+  valueGetter: (params) => {
+    if (params.data?.resultRowType === ExecutionResultRowType.Group) return null;
+    return params.data?.[field] != null ? params.data[field] + 1 : null;
+  },
 });
 
 const executionColumns: ColDef[] = [
@@ -189,9 +211,10 @@ const executionColumns: ColDef[] = [
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     ...rightAlignedColumn,
-    valueGetter: (params) => params.data?.totalRequests ?? null,
+    valueGetter: (params) =>
+      params.data?.resultRowType === ExecutionResultRowType.Group ? null : (params.data?.totalRequests ?? null),
   },
-  buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
+  buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH, false),
   {
     field: 'totalTurns',
     headerName: 'Total turns',
@@ -200,7 +223,8 @@ const executionColumns: ColDef[] = [
     ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     ...rightAlignedColumn,
-    valueGetter: (params) => params.data?.totalTurns ?? null,
+    valueGetter: (params) =>
+      params.data?.resultRowType === ExecutionResultRowType.Group ? null : (params.data?.totalTurns ?? null),
   },
   {
     field: 'responseStatusCode',
@@ -219,6 +243,7 @@ const executionColumns: ColDef[] = [
     ...NO_FILTER_COL_DEF,
     headerClass: 'align-right',
     valueGetter: (params) => {
+      if (params.data?.resultRowType === ExecutionResultRowType.Group) return null;
       const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
       return getFormattedDuration(duration);
     },
@@ -226,7 +251,10 @@ const executionColumns: ColDef[] = [
   },
 ];
 
-const detailsColumns = {
+const renderExecutionStatusCell = (params: ICellRendererParams<GroupedAnalyticsResult>) =>
+  params.data?.resultRowType === ExecutionResultRowType.Group ? null : ExecutionStatusCellRenderer(params);
+
+const getDetailsColumns = (options?: ExecutionResultColumnOptions): ColGroupDef => ({
   headerName: ' ',
   context: { panelName: 'Details' },
   children: [
@@ -237,7 +265,7 @@ const detailsColumns = {
       colId: 'status',
       ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
       ...NO_FILTER_COL_DEF,
-      cellRenderer: ExecutionStatusCellRenderer,
+      cellRenderer: renderExecutionStatusCell,
     },
     {
       field: 'testCaseName',
@@ -245,9 +273,50 @@ const detailsColumns = {
       colId: 'testCaseName',
       ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
       ...TEXT_FILTER_COL_DEF,
+      ...(options?.isGrouped
+        ? {
+            cellRenderer: TestCaseGroupCellRenderer,
+            cellRendererParams: { onToggleGroup: options.onToggleGroup },
+          }
+        : {}),
     },
+    ...(options && (options.showTestCaseSummary ?? options.isGrouped)
+      ? [
+          {
+            field: 'testCaseScore',
+            headerName: options.labels.score,
+            colId: 'testCaseScore',
+            ...lockedWidthColDef(TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH),
+            ...NO_FILTER_COL_DEF,
+            ...rightAlignedColumn,
+            cellClass: 'p-0',
+            cellRenderer: ScoreCellRenderer,
+            valueGetter: (params: ValueGetterParams<GroupedAnalyticsResult>) =>
+              !options.isGrouped || params.data?.resultRowType === ExecutionResultRowType.Group
+                ? (params.data?.testCaseScore ?? options.labels.notApplicable)
+                : '',
+          },
+          {
+            field: 'thresholdStatus',
+            headerName: options.labels.thresholdStatus,
+            colId: 'thresholdStatus',
+            hide: !options.hasThreshold,
+            ...lockedWidthColDef(TEST_CASE_THRESHOLD_COLUMN_WIDTH),
+            ...NO_FILTER_COL_DEF,
+            cellRenderer: ThresholdStatusCellRenderer,
+          },
+        ]
+      : []),
   ],
-};
+});
+
+const disableGroupedRowSortingAndFiltering = (columns: (ColDef | ColGroupDef)[]): (ColDef | ColGroupDef)[] =>
+  columns.map((column) => {
+    if ('children' in column && column.children) {
+      return { ...column, children: disableGroupedRowSortingAndFiltering(column.children as ColDef[]) };
+    }
+    return { ...column, sortable: false, filter: false, floatingFilter: false };
+  });
 
 /**
  * `Total requests` and `Total turns` ship hidden from `executionColumns`: a denominator is context for a
@@ -294,12 +363,12 @@ export const getRowDetailFieldSchema = (results: AnalyticsResult[]): RowDetailFi
   extractedColumns: mergeRecordSchema(results, (result) => result.extractedColumns),
 });
 
-export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[], options?: ExecutionResultColumnOptions) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = mergeRecordSchema(results, (result) => result.testCaseData);
 
-  return [
-    detailsColumns,
+  const columns = [
+    getDetailsColumns(options),
     getExecutionGroup(results),
     ...getMetricsColumns(metrics),
     {
@@ -311,6 +380,8 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
       children: getExtractedColumns(mergeRecordSchema(results, (result) => result.extractedColumns)),
     },
   ];
+
+  return options?.isGrouped ? disableGroupedRowSortingAndFiltering(columns) : columns;
 };
 
 const getCompareChainSuffix = (row: AnalyticsResult): string => `${row.requestIndex ?? 0}::${row.turnIndex ?? 0}`;

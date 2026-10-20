@@ -7,6 +7,7 @@ import {
   RUN_COMPARE_SECONDARY_INDEX,
 } from '@/src/components/Runs/Compare/constants';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+import { TestCaseScoreSummary } from '@/src/components/Runs/ExecutionResults/models';
 
 export type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
 
@@ -34,6 +35,7 @@ export interface CompareRunSource {
 }
 
 export interface ExecutionResultsTabUiState {
+  isGroupedByTestCase: boolean;
   viewDifferencesOnly: boolean;
   hideHighlights: boolean;
   panelColDefs: ColDef[];
@@ -42,6 +44,9 @@ export interface ExecutionResultsTabUiState {
   columnWidths: ColumnWidths;
   results: AnalyticsResult[] | null;
   comparedResults: AnalyticsResult[] | null;
+  testCaseScores: TestCaseScoreSummary[] | null;
+  primaryThreshold: number | null;
+  comparedThreshold: number | null;
 }
 
 export interface HeatMapTabUiState {

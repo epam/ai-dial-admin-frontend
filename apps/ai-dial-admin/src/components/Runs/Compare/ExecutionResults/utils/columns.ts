@@ -5,7 +5,7 @@ import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/Exe
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
 import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
-import { CompareRunEdge, formatCompareRunIndexHeader } from '@/src/components/Runs/Compare/constants';
+import { CompareRunEdge, CompareRunSlot, formatCompareRunIndexHeader } from '@/src/components/Runs/Compare/constants';
 import {
   compareScoreColDef,
   DEFAULT_COMPARE_DELTA_HEADER,
@@ -49,9 +49,17 @@ import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { baseNumberFilter } from '@/src/constants/grid-columns/filters';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
+import { lockedWidthColDef } from '@/src/components/Runs/grid-column-layout';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import TestCaseGroupCellRenderer from '@/src/components/Runs/ExecutionResults/TestCaseGroupCellRenderer';
+import ThresholdStatusCellRenderer from '@/src/components/Runs/ExecutionResults/ThresholdStatusCellRenderer';
+import { ExecutionResultRowType, GroupedCompareAnalyticsRow } from '@/src/components/Runs/ExecutionResults/models';
+import {
+  COMPARE_TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
+  COMPARE_TEST_CASE_THRESHOLD_COLUMN_WIDTH,
+} from '@/src/components/Runs/ExecutionResults/constants';
 
 interface RunColumnContext {
   run: CompareRun;
@@ -183,6 +191,10 @@ const buildRunMetricColumn = (context: RunColumnContext, groupKey: string, key: 
     cellClass: ['p-0', NO_BORDER_CLASS],
     cellRenderer: ScoreCellRenderer,
     valueGetter: (params) => {
+      if (
+        (params.data as Partial<GroupedCompareAnalyticsRow> | undefined)?.resultRowType === ExecutionResultRowType.Group
+      )
+        return '';
       const result = params.data && getCompareRowResult(params.data, run.slot);
       const groupExists = result?.metricValues != null && groupKey in result.metricValues;
       if (!groupExists) return '—';
@@ -221,6 +233,10 @@ const buildRunExtractedColumn = (context: RunColumnContext, key: string): ColDef
     minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => {
+      if (
+        (params.data as Partial<GroupedCompareAnalyticsRow> | undefined)?.resultRowType === ExecutionResultRowType.Group
+      )
+        return null;
       const result = params.data && getCompareRowResult(params.data, run.slot);
       if (!result) return '—';
       return formatCompareExtractedCellValue(result.extractedColumns?.[key]);
@@ -244,6 +260,11 @@ const buildRunIndexColumn = (
   ...fixedWidthColDef(width),
   ...rightAlignedColumn,
   valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
+    if (
+      (params.data as Partial<GroupedCompareAnalyticsRow> | undefined)?.resultRowType === ExecutionResultRowType.Group
+    ) {
+      return null;
+    }
     const index = params.data && getCompareRowResult(params.data, context.run.slot)?.[field];
     return index != null ? index + 1 : '—';
   },
@@ -256,8 +277,13 @@ const buildRunHttpColumn = (context: RunColumnContext): ColDef => ({
   ...NO_FILTER_COL_DEF,
   ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
   ...rightAlignedColumn,
-  valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-    (params.data && getCompareRowResult(params.data, context.run.slot))?.responseStatusCode ?? '—',
+  valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
+    if (
+      (params.data as Partial<GroupedCompareAnalyticsRow> | undefined)?.resultRowType === ExecutionResultRowType.Group
+    )
+      return null;
+    return (params.data && getCompareRowResult(params.data, context.run.slot))?.responseStatusCode ?? '—';
+  },
   ...pairCellClassRules(context, getHttpPairKind),
 });
 
@@ -269,6 +295,10 @@ const buildRunDurationColumn = (context: RunColumnContext): ColDef => ({
   ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
   ...rightAlignedColumn,
   valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
+    if (
+      (params.data as Partial<GroupedCompareAnalyticsRow> | undefined)?.resultRowType === ExecutionResultRowType.Group
+    )
+      return null;
     const result = params.data && getCompareRowResult(params.data, context.run.slot);
     if (!result) return '—';
     return getFormattedDuration(getCompareRowDurationMs(result) ?? undefined);
@@ -286,11 +316,16 @@ const buildRunStatusColumn = (context: RunColumnContext): ColDef => ({
   ...NO_FILTER_COL_DEF,
   valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
     (params.data && getCompareRowResult(params.data, context.run.slot))?.executionStatus,
-  cellRenderer: (params: ICellRendererParams<CompareAnalyticsRow>) =>
-    ExecutionStatusCellRenderer({
+  cellRenderer: (params: ICellRendererParams<CompareAnalyticsRow>) => {
+    if (
+      (params.data as Partial<GroupedCompareAnalyticsRow> | undefined)?.resultRowType === ExecutionResultRowType.Group
+    )
+      return null;
+    return ExecutionStatusCellRenderer({
       ...params,
       data: (params.data && getCompareRowResult(params.data, context.run.slot)) ?? null,
-    }),
+    });
+  },
   ...pairCellClassRules(context, getStatusPairKind),
 });
 
@@ -376,6 +411,65 @@ const getComparedExtractedGroupColumn = (
   };
 };
 
+const getCompareScoreField = (slot: CompareRunSlot): keyof GroupedCompareAnalyticsRow =>
+  slot === CompareRunSlot.Primary ? 'primaryScore' : 'comparedScore';
+
+const getCompareThresholdStatusField = (slot: CompareRunSlot): keyof GroupedCompareAnalyticsRow =>
+  slot === CompareRunSlot.Primary ? 'primaryThresholdStatus' : 'comparedThresholdStatus';
+
+const getRunThreshold = (slot: CompareRunSlot, options: CompareColumnsCompareOptions): number | null | undefined =>
+  slot === CompareRunSlot.Primary ? options.primaryThreshold : options.comparedThreshold;
+
+const getComparedTestCaseScoreGroup = (
+  runs: CompareRun[],
+  options: CompareColumnsCompareOptions,
+): ColGroupDef | null => {
+  if (!(options.showTestCaseSummary ?? options.isGrouped) || !options.groupingLabels) return null;
+
+  return {
+    headerName: options.groupingLabels.score,
+    children: [
+      {
+        headerName: options.groupingLabels.score,
+        children: runs.map((run) => ({
+          colId: getCompareRunColId(run.slot, 'testCaseScore'),
+          ...compareRunIndexHeaderDef(run.index, undefined, true),
+          ...lockedWidthColDef(COMPARE_TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH),
+          ...NO_FILTER_COL_DEF,
+          ...rightAlignedColumn,
+          cellClass: 'p-0',
+          cellRenderer: ScoreCellRenderer,
+          valueGetter: (params: ValueGetterParams<GroupedCompareAnalyticsRow>) =>
+            !options.isGrouped || params.data?.resultRowType === ExecutionResultRowType.Group
+              ? (params.data?.[getCompareScoreField(run.slot)] ?? options.groupingLabels?.notApplicable)
+              : '',
+        })),
+      },
+      {
+        headerName: options.groupingLabels.thresholdStatus,
+        children: runs.map((run) => ({
+          colId: getCompareRunColId(run.slot, 'thresholdStatus'),
+          ...compareRunIndexHeaderDef(run.index),
+          hide: getRunThreshold(run.slot, options) == null,
+          ...lockedWidthColDef(COMPARE_TEST_CASE_THRESHOLD_COLUMN_WIDTH),
+          ...NO_FILTER_COL_DEF,
+          cellRenderer: ThresholdStatusCellRenderer,
+          valueGetter: (params: ValueGetterParams<GroupedCompareAnalyticsRow>) =>
+            params.data?.[getCompareThresholdStatusField(run.slot)],
+        })),
+      },
+    ],
+  };
+};
+
+const disableGroupedRowSortingAndFiltering = (columns: (ColDef | ColGroupDef)[]): (ColDef | ColGroupDef)[] =>
+  columns.map((column) => {
+    if ('children' in column && column.children) {
+      return { ...column, children: disableGroupedRowSortingAndFiltering(column.children as ColDef[]) };
+    }
+    return { ...column, sortable: false, filter: false, floatingFilter: false };
+  });
+
 export const getCompareColumnsCompare = (
   results: CompareAnalyticsRow[],
   _errorText?: string,
@@ -388,8 +482,9 @@ export const getCompareColumnsCompare = (
   const metrics = options?.metricsSchema ?? mergeCompareMetricValuesSchema(allResults);
   const extracted = mergeExtractedColumnsSchema(allResults);
   const extractedGroup = getComparedExtractedGroupColumn(extracted, runs, hideHighlights);
+  const scoreGroup = options ? getComparedTestCaseScoreGroup(runs, options) : null;
 
-  return [
+  const columns: (ColDef | ColGroupDef)[] = [
     getComparedExecutionStatusGroup(runs, hideHighlights),
     {
       field: 'testCaseName',
@@ -398,9 +493,18 @@ export const getCompareColumnsCompare = (
       ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
       ...TEXT_FILTER_COL_DEF,
       suppressSpanHeaderHeight: true,
+      ...(options?.isGrouped
+        ? {
+            cellRenderer: TestCaseGroupCellRenderer,
+            cellRendererParams: { onToggleGroup: options.onToggleGroup },
+          }
+        : {}),
     },
+    ...(scoreGroup ? [scoreGroup] : []),
     getComparedExecutionColumns(allResults, runs, hideHighlights),
     ...getComparedMetricGroupColumns(metrics, runs, deltaHeader, hideHighlights),
     ...(extractedGroup ? [extractedGroup] : []),
   ];
+
+  return options?.isGrouped ? disableGroupedRowSortingAndFiltering(columns) : columns;
 };

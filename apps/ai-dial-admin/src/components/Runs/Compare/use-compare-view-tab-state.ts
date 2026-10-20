@@ -10,6 +10,7 @@ import {
 } from '@/src/components/Runs/Compare/models';
 
 const createDefaultExecutionResultsState = (): ExecutionResultsTabUiState => ({
+  isGroupedByTestCase: true,
   viewDifferencesOnly: false,
   hideHighlights: false,
   panelColDefs: [],
@@ -18,6 +19,9 @@ const createDefaultExecutionResultsState = (): ExecutionResultsTabUiState => ({
   columnWidths: {},
   results: null,
   comparedResults: null,
+  testCaseScores: null,
+  primaryThreshold: null,
+  comparedThreshold: null,
 });
 
 const createDefaultHeatMapState = (): HeatMapTabUiState => ({

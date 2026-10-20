@@ -14,11 +14,13 @@ const createDefaultSummaryState = (): SummaryTabUiState => ({
 const createDefaultExtractionResultState = (): ExtractionResultTabUiState => {
   const defaultColDefs = getAnalyticsColumns([]);
   return {
+    isGroupedByTestCase: true,
     showTreePanel: false,
     colDefs: defaultColDefs,
     panelColDefs: defaultColDefs,
     columnWidths: {},
     results: null,
+    testCaseScores: null,
     snapshots: [],
   };
 };
