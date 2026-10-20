@@ -346,7 +346,7 @@ Because the backend reports `permissions {write:false, modify:false}` for system
 
 ### Requirement: Table detail row writes
 
-The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add rows** button. The popup is a **hand-check** — a way for an admin to confirm the table accepts the shape they expect — and SHALL be presented as such, not as the way a table is populated; a table is populated by a client writing to its row endpoint programmatically (see "Table detail Connect panel"). Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. The popup SHALL NOT be reachable for an **enrichment** table (see the gating requirement); where the template is built for one, it includes the grain key as a top-level field, since an enrichment row cannot join to its source without it. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
+The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add rows** button. The popup is a **hand-check** — a way for an admin to confirm the table accepts the shape they expect — and SHALL be presented as such, not as the way a table is populated; a table is populated by a client writing to its row endpoint programmatically (see "Table detail Connect panel"). Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object and Map, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. The popup SHALL NOT be reachable for an **enrichment** table (see the gating requirement); where the template is built for one, it includes the grain key as a top-level field, since an enrichment row cannot join to its source without it. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
 
 The popup SHALL carry, above its editor, a statement of its purpose — that it inserts rows by hand for checking a schema, and that ongoing ingestion goes through the table's row endpoint — together with a **Write rows programmatically** action which closes the popup, discarding the editor's content, and opens the Connect panel on its **Write data** tab (see "Table detail Connect panel"). Both SHALL sit at the top of the popup body, above the editor and away from the submit controls, so a user who opened the popup for real ingestion is redirected before typing rather than after.
 
@@ -359,6 +359,11 @@ The popup SHALL carry, above its editor, a statement of its purpose — that it 
 
 - **WHEN** the user opens the Add rows editor for a table with declared columns
 - **THEN** the editor is prefilled with one row object keyed by each column's physical source name, with type-appropriate placeholder values
+
+#### Scenario: A map column's template value is an empty object
+
+- **WHEN** the user opens the Add rows editor for a table that declares a `map` column
+- **THEN** that column's template value is `{}`, not `""`, which the service would reject as a map value
 
 #### Scenario: Add rows template keys a renamed column by its source name
 
@@ -515,13 +520,13 @@ The same document MAY instead be authored as JSON — see "JSON editor for a tab
 
 The **display name** and **description** fields SHALL be optional and SHALL be presented inline on the column row alongside its other fields, with field labels rendered on the first row only, as the row's existing fields already are. A blank value SHALL be valid and SHALL be omitted from the submitted column, exactly as a blank tag is — the service treats an absent metadata field as "not set". A display name longer than 128 characters or a description longer than 1024 characters SHALL be rejected client-side with a per-row validation message and SHALL disable Save, because the service answers 422 for either (the same caps and the same message the per-column edit modal already applies).
 
-An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column. An Object-typed row's Nullable control SHALL be disabled and forced off in the same way, because the backend rejects a nullable object column (the store has no nullable form of its JSON type). Retyping a row to Object SHALL switch its Nullable off.
+An Array-typed column row SHALL offer an additional element-type selector, restricted to the scalar column types — no Array, Object or Map element (no nested arrays, objects or maps). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column. An Object-typed row's Nullable control SHALL be disabled and forced off in the same way, because the backend rejects a nullable object column (the store has no nullable form of its JSON type). A Map-typed row's Nullable control SHALL be disabled and forced off for the same reason — the store has no nullable map, and an absent bag is written as the empty map `{}`. Retyping a row to Object or Map SHALL switch its Nullable off.
 
 For a **source** table, the Partition column field's label SHALL carry an info affordance whose text includes the fact that only non-nullable Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious; the affordance and the rest of its text follow "Table schema keys are explained where they are chosen and where they are read". The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
 
-The key fields SHALL offer only columns the backend accepts as a key, so that a rejection it always answers (422 `validation_error`) cannot be reached from the surface. The **Ordering key** SHALL offer the declared columns that are non-nullable and not `Object`-typed. The **Partition column** SHALL offer the declared `Date` and `Timestamp` columns that are non-nullable; a sensitive column remains eligible, because the backend does not reject it. An enrichment's **Grain key** SHALL offer its source table's columns that are not `Object`-typed. A column row can still be declared nullable or `Object`; it is only not offered as a key.
+The key fields SHALL offer only columns the backend accepts as a key, so that a rejection it always answers (422 `validation_error`) cannot be reached from the surface. The **Ordering key** SHALL offer the declared columns that are non-nullable and neither `Object`- nor `Map`-typed (the store defines no comparison over a map, so it cannot key a table). The **Partition column** SHALL offer the declared `Date` and `Timestamp` columns that are non-nullable; a sensitive column remains eligible, because the backend does not reject it. An enrichment's **Grain key** SHALL offer its source table's columns that are neither `Object`- nor `Map`-typed. A column row can still be declared nullable, `Object` or `Map`; it is only not offered as a key.
 
-For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). The column chosen as the Identity column SHALL NOT be offered as the Version column, and the column chosen as the Version column SHALL NOT be offered as the Identity column, so one column can never fill both roles; clearing either selection offers its column again in the other select. Both labels SHALL carry an info affordance stating that these values are promises the service does not verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) — see "Table schema keys are explained where they are chosen and where they are read" for the affordance and the rest of its text.
+For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable, not sensitive and not `Array`-, `Object`- or `Map`-typed (the service refuses any of the three as a scan cursor); the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). The column chosen as the Identity column SHALL NOT be offered as the Version column, and the column chosen as the Version column SHALL NOT be offered as the Identity column, so one column can never fill both roles; clearing either selection offers its column again in the other select. Both labels SHALL carry an info affordance stating that these values are promises the service does not verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) — see "Table schema keys are explained where they are chosen and where they are read" for the affordance and the rest of its text.
 
 Because the scan requires **both** members and the backend accepts one alone — producing a table that is permanently unscannable, since `POST /v1/tables/{name}/schema` answers 409 once the table is `ACTIVE` and no `PATCH` member sets the pair — the surface SHALL treat the pair as all-or-nothing: while exactly one of the two is chosen, Save SHALL be disabled and the empty field SHALL show a validation message naming the other as required alongside it. Choosing neither SHALL be valid and SHALL leave the table unscannable, which is the correct declaration for a source whose row identity is its whole ordering key.
 
@@ -574,6 +579,18 @@ While the column-by-column surface is the active one, submitting the schema (a h
 - **THEN** its Nullable control is disabled and shows off
 - **AND** the built column payload does not send `nullable: true` for that row
 - **AND** a row that had Nullable on and is then retyped to Object shows it off
+
+#### Scenario: Map column cannot be nullable
+
+- **WHEN** a column row's type is Map
+- **THEN** its Nullable control is disabled and shows off
+- **AND** the built column payload does not send `nullable: true` for that row
+- **AND** a row that had Nullable on and is then retyped to Map shows it off
+
+#### Scenario: Map is not an element type
+
+- **WHEN** a column row is typed Array
+- **THEN** its element-type selector offers neither Array, Object, Enum nor Map
 
 #### Scenario: A type-specific column keeps every row aligned
 
@@ -661,7 +678,7 @@ While the column-by-column surface is the active one, submitting the schema (a h
 
 #### Scenario: The Ordering key offers only columns that can key a table
 
-- **WHEN** the declared column rows include a nullable `string`, a non-nullable `string`, and a non-nullable `object`
+- **WHEN** the declared column rows include a nullable `string`, a non-nullable `string`, a non-nullable `object`, and a `map`
 - **THEN** the Ordering key options are only the non-nullable `string`
 
 #### Scenario: The Partition column offers only non-nullable temporal columns
@@ -673,10 +690,16 @@ While the column-by-column surface is the active one, submitting the schema (a h
 
 - **WHEN** an enrichment's source table has a `string` column and an `object` column
 - **THEN** the Grain key options include the `string` column and exclude the `object` column
+- **AND** a `map` column of the source is excluded the same way
+
+#### Scenario: A non-scalar column is not offered as the Identity column
+
+- **WHEN** the declared column rows include a non-nullable, non-sensitive `string`, an `array`, an `object` and a `map`
+- **THEN** the Identity column options include the `string` and exclude the `array`, the `object` and the `map`
 
 #### Scenario: An Ordering key or Partition selection is dropped when its column stops qualifying
 
-- **WHEN** the column chosen in the Ordering key or as the Partition column is flipped to nullable, or the Ordering key's column is retyped to `object`
+- **WHEN** the column chosen in the Ordering key or as the Partition column is flipped to nullable, or the Ordering key's column is retyped to `object` or `map`
 - **THEN** that selection is removed, and the removed Partition column also clears its granularity
 - **AND** the submission carries neither the stale key nor the stale granularity
 
@@ -718,12 +741,12 @@ SQL-clause vocabulary. Each hint SHALL carry at least the following, and SHALL N
 
 | Field | The hint SHALL state |
 | --- | --- |
-| Ordering key | Rows are stored in this order, and filtering or sorting by the key's leading columns reads only part of the table; the most-filtered columns belong first; eligible columns are non-empty and not Object |
+| Ordering key | Rows are stored in this order, and filtering or sorting by the key's leading columns reads only part of the table; the most-filtered columns belong first; eligible columns are non-empty and neither Object nor Map |
 | Partition column | Rows are grouped into time chunks and a query filtered on this column skips the chunks it does not cover; most tables need no partition; only non-empty Date and Timestamp columns are eligible |
 | Granularity | How much time one chunk covers, and that too many small chunks read slower rather than faster |
-| Identity column | With Version column, it lets pipelines read the table in batches without handling a row twice; the value must differ in every row, uniqueness is not validated, and repeated values cause skipped rows; eligible columns are non-empty and not sensitive |
+| Identity column | With Version column, it lets pipelines read the table in batches without handling a row twice; the value must differ in every row, uniqueness is not validated, and repeated values cause skipped rows; eligible columns are non-empty, not sensitive and not Array, Object or Map |
 | Version column | It is how a pipeline tells which rows are new since its last pass; the value is expected at write time and must never move backwards, is not validated, and a backdated value causes missed rows; eligible columns are non-empty, non-sensitive Timestamp columns |
-| Grain key | It links this table to its source table, a row attaches to every source row carrying the same value, and only one row is kept per value — a repeated key replaces the previous row; Object columns are not eligible |
+| Grain key | It links this table to its source table, a row attaches to every source row carrying the same value, and only one row is kept per value — a repeated key replaces the previous row; Object and Map columns are not eligible |
 
 On the schema-definition surface the key fields SHALL be grouped under a **Keys** sub-header carrying a
 single note stating that the keys are set once, when the table is created, and are fixed afterwards.
@@ -764,9 +787,9 @@ competing name. A non-focusable icon SHALL NOT be used for this purpose anywhere
 #### Scenario: Key hints state which columns are eligible
 
 - **WHEN** the Ordering key, Partition column or Grain key hint renders
-- **THEN** the Ordering key hint states that eligible columns are non-empty and not Object
+- **THEN** the Ordering key hint states that eligible columns are non-empty and neither Object nor Map
 - **AND** the Partition column hint states that only non-empty Date and Timestamp columns are eligible
-- **AND** the Grain key hint states that Object columns are not eligible
+- **AND** the Grain key hint states that Object and Map columns are not eligible
 
 ### Requirement: A column may be declared with an enum type and a closed, ordered value list
 
@@ -1091,6 +1114,7 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 - `date` — a `YYYY-MM-DD` literal
 - `timestamp` — an ISO-8601 literal with a `T` separator and an explicit zone (`2026-01-15T10:00:00.000Z`), the only form the insert path accepts; a space separator, a missing zone, a bare date, or an epoch number is rejected with `422 validation_error`
 - `object` — an empty object literal
+- `map` — an object literal with one string key mapped to a string value (`{"key": "value"}`), so the snippet shows the bag's shape; a non-string value is not a map entry
 - `array` — a literal array of two values shaped by the column's `element_type`
 - `enum` — **one of the column's own declared values** (its first), never a generic example string: the domain is closed and the server itself refuses a value outside it, so a placeholder literal is a row the reader cannot insert
 
@@ -1111,7 +1135,7 @@ Every name a snippet asks the reader to set SHALL be one the product uses public
 
 A table with no declared columns SHALL still render every tab, with the write snippet carrying an empty row rather than failing to render.
 
-**The panel's format guidance SHALL be generated from the schema, exactly as its snippets are, and SHALL name this table's own columns rather than the types they happen to have.** For each declared column whose type carries a value-format rule — a timestamp's representation, a decimal's quoting, an array's element shape — the panel SHALL state the rule against the column's name, listing the columns of that type when there is more than one. A rule no declared column's type uses SHALL be omitted entirely, so a table of strings and integers shows no format guidance.
+**The panel's format guidance SHALL be generated from the schema, exactly as its snippets are, and SHALL name this table's own columns rather than the types they happen to have.** For each declared column whose type carries a value-format rule — a timestamp's representation, a decimal's quoting, an array's element shape, a map's string-to-string entries — the panel SHALL state the rule against the column's name, listing the columns of that type when there is more than one. A rule no declared column's type uses SHALL be omitted entirely, so a table of strings and integers shows no format guidance.
 
 The timestamp entry SHALL state the write format — ISO-8601 with `Z` or an explicit offset — **and** that it is the same form queries return, so a value read back can be written unchanged.
 
@@ -1187,6 +1211,12 @@ After the write snippets — not before them, since the generated snippet alread
 - **WHEN** a table has an `array` column whose `element_type` is `string`
 - **THEN** its value in the write snippets is an array of quoted strings, and an `array` of `long` yields an array of whole numbers
 
+#### Scenario: Map columns are shown as a string-to-string object
+
+- **WHEN** a table has a `map` column `attributes`
+- **THEN** its value in the write snippets is an object with one string key and one string value, in each snippet's own syntax
+- **AND** the format guidance states, against `attributes`, that its value is an object whose keys and values are all strings
+
 #### Scenario: Format guidance names columns, not types
 
 - **WHEN** a table has a `decimal` column named `score` and a `timestamp` column named `recorded_at`
@@ -1199,7 +1229,7 @@ After the write snippets — not before them, since the generated snippet alread
 
 #### Scenario: Irrelevant rules are omitted
 
-- **WHEN** a table declares no `decimal`, `timestamp`, `date`, or `array` column
+- **WHEN** a table declares no `decimal`, `timestamp`, `date`, `array`, or `map` column
 - **THEN** the panel shows no per-column format guidance
 
 #### Scenario: Row limits are stated per surface
@@ -2554,3 +2584,40 @@ not be mounted, so each opening reads the service afresh.
 - **WHEN** it ends on the scrim
 - **THEN** the drawer stays open
 
+### Requirement: A column may be declared with a map type
+
+The column-type vocabulary the schema editors offer SHALL include **map**, a bag of string keys mapped to string
+values — the service's `map` type, which carries no key or value type of its own. It SHALL be offered wherever a
+column is declared — the schema-definition surface of a `PENDING`/`FAILED` table, the "Add columns" popup of an
+`ACTIVE` one, and the JSON draft editor — and for both **source** and **enrichment** tables, since the service
+accepts it on either. A map column row SHALL offer no type-specific control: it takes neither an element type nor
+a value list.
+
+The column-type picker SHALL list Map **last**, after Array. The picker shows ten options before it scrolls, with
+no scrollbar at rest, so whichever types sit past the tenth are found only by scrolling; the long-established
+Array keeps its place and the newest type takes the one least likely to be looked for first.
+
+A map column SHALL be labelled with its type wherever a column's type is shown — the columns grid, the field
+dropdowns of the Query Builder, and the type badge, which SHALL give it a colour token of its own so it is not
+mistaken for an Object column. A map column MAY be marked sensitive, as any other column can.
+
+The rules that follow from the type — Nullable forced off, never offered as a key, an identity column or an
+element type, its Add rows template value and its Connect panel literal — are stated in "Define and materialize
+a table schema", "Table detail row writes" and "Connect panel snippets are generated from the table schema".
+
+#### Scenario: Map is offered as a column type
+
+- **WHEN** the user opens the type picker on a column row of a source or an enrichment table
+- **THEN** Map is offered, listed after Array
+- **AND** choosing it shows no element-type or value-list control on the row
+
+#### Scenario: A declared map column submits its type
+
+- **WHEN** the user declares a column `attributes` typed Map and saves the schema
+- **THEN** the submitted column carries `type: "map"` and does not carry `nullable: true`, `element_type`, or `enum_values`
+
+#### Scenario: A served map column shows its type
+
+- **WHEN** an `ACTIVE` table's schema reports a column typed `map`
+- **THEN** the columns grid shows its type as Map
+- **AND** its type badge uses a colour distinct from an Object column's
