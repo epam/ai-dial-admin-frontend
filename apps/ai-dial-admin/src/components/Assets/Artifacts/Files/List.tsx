@@ -4,31 +4,35 @@ import { useCallback, useState } from 'react';
 
 import { DialCopiedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 
-import { importFiles } from '@/src/utils/files/import-files';
 import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';
+import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
+import Modals from '@/src/components/Assets/BaseAssetList/Modals';
+import { ModalType } from '@/src/components/Assets/BaseAssetList/types';
+import {
+  getDeleteNotificationContent,
+  getExportNotificationContent,
+  getImportNotificationContent,
+} from '@/src/components/Assets/utils';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
+import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
-import { useImportProgress } from '@/src/hooks/use-import-progress';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useImportProgress } from '@/src/hooks/use-import-progress';
 import { useI18n } from '@/src/locales/client';
 import { ImportData } from '@/src/models/import-asset';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
+import { downloadFile } from '@/src/utils/download';
 import { getFolderName } from '@/src/utils/files/folder';
+import { importFiles } from '@/src/utils/files/import-files';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { FILES_GRID_COLUMNS } from './constants';
-import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
-import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { ResourceType } from '@/src/types/resource-type';
-import { downloadFile } from '@/src/utils/download';
-import { getDeleteNotificationContent, getExportNotificationContent, getImportNotificationContent } from '@/src/components/Assets/utils';
-import Modals from '@/src/components/Assets/BaseAssetList/Modals';
-import { ModalType } from '@/src/components/Assets/BaseAssetList/types';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
