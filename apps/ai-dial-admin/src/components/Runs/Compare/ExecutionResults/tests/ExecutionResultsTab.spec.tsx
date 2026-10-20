@@ -246,6 +246,59 @@ describe('ExecutionResultsTab', () => {
     expect(await screen.findByText('Runs.LoadError')).toBeInTheDocument();
   });
 
+  test('shows load error when compared run is missing', async () => {
+    getRunMock.mockImplementation((id: string) => {
+      if (id === 'run-sibling') {
+        return Promise.resolve(null);
+      }
+      return Promise.resolve({
+        id,
+        testSuiteId: 'suite-1',
+        testRunName: 'Run #316',
+      });
+    });
+
+    renderExecutionResultsTab();
+
+    expect(await screen.findByText('Runs.LoadError')).toBeInTheDocument();
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+  });
+
+  test('shows empty state when view differences only has no differing rows', async () => {
+    const user = userEvent.setup();
+    const matchingContent = [
+      {
+        id: 'result-1',
+        testCaseId: 'tc-1',
+        responseStatusCode: 200,
+        runIndex: 0,
+        executionStatus: ExtractionResultStatus.SUCCESS,
+        testCaseName: 'Test Case 1',
+        metricValues: { Accuracy: { precision: 0.5 } },
+      },
+    ];
+
+    renderExecutionResultsTab({
+      showDisplayPanel: true,
+      initialState: {
+        results: matchingContent,
+        comparedResults: matchingContent.map((row) => ({
+          ...row,
+          id: 'result-2',
+        })),
+      },
+    });
+
+    expect(await screen.findByText('Test Case 1')).toBeInTheDocument();
+
+    const viewDifferencesInput = document.getElementById('compare-view-differences-only');
+    expect(viewDifferencesInput).toBeTruthy();
+    await user.click(viewDifferencesInput!);
+
+    expect(await screen.findByText('Entities.NoResults')).toBeInTheDocument();
+    expect(screen.queryByText('Test Case 1')).not.toBeInTheDocument();
+  });
+
   test('renders nested execution fields in display panel', async () => {
     const user = userEvent.setup();
     renderExecutionResultsTab({ showDisplayPanel: true });

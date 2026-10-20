@@ -15,10 +15,14 @@ import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/Executio
 import {
   buildComparePanelColumnTree,
   columnStateFromComparePanelTree,
+  deriveCompareGridColDefs,
   flattenComparePanelColumnTree,
+  haveSameComparePanelLayout,
   orderComparePanelTree,
   preserveFlatColDefHideState,
   preservePanelHideState,
+  reconcileCompareColumns,
+  syncComparePanelFromColumnState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 
 const runNames = { primary: 'Run #316', secondary: 'Run #315' };
@@ -313,19 +317,204 @@ describe('Runs Compare :: buildComparePanelColumnTree run order', () => {
     expect(headers.indexOf('Set Comparison')).toBeLessThan(headers.indexOf(EXTRACTED_GROUP_HEADER));
     expect(headers.lastIndexOf('Set Comparison')).toBeGreaterThan(headers.indexOf(EXTRACTED_GROUP_HEADER));
   });
+
+  test('reconcileCompareColumns keeps custom order when the schema rebuilds for hide highlights', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const customOrder = reverseMetricBlocks(panel);
+    const previous = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: panel,
+      columnState: toState(customOrder),
+    });
+
+    const next = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: previous.panelColDefs,
+      columnState: toState(customOrder),
+    });
+
+    expect(next.panelColDefs.map(rowSummary)).toEqual(previous.panelColDefs.map(rowSummary));
+    expect(flatHeaderOrder(deriveCompareGridColDefs(next.panelColDefs))).toEqual(
+      flatHeaderOrder(deriveCompareGridColDefs(previous.panelColDefs)),
+    );
+  });
+
+  test('reconcileCompareColumns keeps a split metric group across a hide-highlights rebuild', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const splitOrder = recallAfterExtracted(panel);
+    const previous = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: panel,
+      columnState: toState(splitOrder),
+    });
+
+    const next = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: previous.panelColDefs,
+      columnState: toState(splitOrder),
+    });
+
+    const summaries = next.panelColDefs.map(rowSummary);
+    expect(summaries.filter((summary) => summary.startsWith('Set Comparison'))).toHaveLength(2);
+    expect(summaries.indexOf('Set Comparison[precision]')).toBeLessThan(summaries.indexOf('Extracted[intents_array]'));
+    expect(summaries.indexOf('Extracted[intents_array]')).toBeLessThan(summaries.indexOf('Set Comparison[recall]'));
+    expect(
+      flatHeaderOrder(deriveCompareGridColDefs(next.panelColDefs)).filter((name) => name === 'Set Comparison'),
+    ).toHaveLength(2);
+  });
+
+  test('reconcileCompareColumns preserves hide across a hide-highlights rebuild', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const hidePrecision = (nodes: ColDef[]): ColDef[] =>
+      nodes.map((node) => {
+        const children = getChildren(node);
+        if (children.length) {
+          return { ...node, children: hidePrecision(children) } as ColDef;
+        }
+        return getColId(node)?.includes('precision') ? { ...node, hide: true } : node;
+      });
+    const collectHiddenLeafIds = (nodes: ColDef[]): string[] =>
+      nodes.flatMap((node) => {
+        const children = getChildren(node);
+        if (children.length) {
+          return collectHiddenLeafIds(children);
+        }
+        const colId = getColId(node);
+        return colId && node.hide === true ? [colId] : [];
+      });
+    const hiddenPanel = hidePrecision(panel);
+    const order = leafIds(hiddenPanel);
+    const columnState = toState(order).map((column) =>
+      column.colId.includes('precision') ? { ...column, hide: true } : column,
+    );
+    const previous = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: hiddenPanel,
+      columnState,
+    });
+
+    const next = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: previous.panelColDefs,
+      columnState,
+    });
+
+    const hiddenPanelLeaves = collectHiddenLeafIds(next.panelColDefs).filter((colId) => colId.includes('precision'));
+    const hiddenGridLeaves = collectHiddenLeafIds(deriveCompareGridColDefs(next.panelColDefs, columnState)).filter(
+      (colId) => colId.includes('precision'),
+    );
+    expect(hiddenPanelLeaves.length).toBeGreaterThan(0);
+    expect(hiddenGridLeaves.length).toBeGreaterThan(0);
+  });
+
+  test('deriveCompareGridColDefs flattens the panel tree and applies hide from columnState', () => {
+    const panel = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const order = leafIds(panel);
+    const precisionIds = order.filter((colId) => colId.includes('precision'));
+    expect(precisionIds.length).toBeGreaterThan(0);
+
+    const columnState = toState(order).map((column) =>
+      column.colId.includes('precision') ? { ...column, hide: true } : { ...column, hide: false },
+    );
+    const gridDefs = deriveCompareGridColDefs(panel, columnState);
+    const hiddenLeaves = collectHiddenLeafIdsFromTree(gridDefs).filter((colId) => colId.includes('precision'));
+
+    expect(flatHeaderOrder(gridDefs)).toEqual(flatHeaderOrder(flattenComparePanelColumnTree(panel) as ColDef[]));
+    expect(hiddenLeaves).toEqual(precisionIds);
+  });
+
+  test('deriveCompareGridColDefs returns an empty list when the panel tree is empty', () => {
+    expect(deriveCompareGridColDefs([], [{ colId: 'http', hide: true }])).toEqual([]);
+  });
+
+  test('deriveCompareGridColDefs overlays schema leaf props while keeping panel order', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const customOrder = reverseMetricBlocks(panel);
+    const orderedPanel = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: panel,
+      columnState: toState(customOrder),
+    }).panelColDefs;
+
+    const withHighlights = deriveCompareGridColDefs(orderedPanel, toState(customOrder), highlighted);
+    const withoutHighlights = deriveCompareGridColDefs(orderedPanel, toState(customOrder), muted);
+
+    expect(flatHeaderOrder(withHighlights)).toEqual(flatHeaderOrder(withoutHighlights));
+    expect(haveSameComparePanelLayout(orderedPanel, orderedPanel)).toBe(true);
+
+    const highlightedLeaf = findLeafWithCellClassRules(withHighlights);
+    expect(highlightedLeaf).toBeDefined();
+    const highlightedColId = getColId(highlightedLeaf!);
+    expect(highlightedColId).toBeTruthy();
+    const mutedLeaf = findLeafByColIdInTree(withoutHighlights, highlightedColId!);
+    expect(highlightedLeaf!.cellClassRules).toBeTruthy();
+    expect(mutedLeaf?.cellClassRules).toBeUndefined();
+  });
+
+  test('haveSameComparePanelLayout ignores renderer-only differences on leaves', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const left = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: [],
+      columnState: null,
+    }).panelColDefs;
+    const right = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: left,
+      columnState: null,
+    }).panelColDefs;
+
+    expect(haveSameComparePanelLayout(left, right)).toBe(true);
+  });
+
+  test('syncComparePanelFromColumnState reorders the panel and applies hide', () => {
+    const panel = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const customOrder = reverseMetricBlocks(panel);
+    const columnState = toState(customOrder).map((column) =>
+      column.colId.includes('precision') ? { ...column, hide: true } : column,
+    );
+
+    const synced = syncComparePanelFromColumnState(panel, columnState);
+
+    expect(synced.map(rowSummary)).toEqual(orderComparePanelTree(panel, columnState).map(rowSummary));
+    expect(collectHiddenLeafIdsFromTree(synced).some((colId) => colId.includes('precision'))).toBe(true);
+  });
 });
 
-const getSetComparisonDefs = () =>
-  getCompareColumnsCompare([
-    makeRow({
-      metricValues: { 'Set Comparison': { precision: 0.8, recall: 0.4 } },
-      extractedColumns: { intents_array: 'a' },
-      _compared: makeResult({
-        metricValues: { 'Set Comparison': { precision: 0.5, recall: 0.2 } },
-        extractedColumns: { intents_array: 'b' },
+const getSetComparisonDefs = (options?: { hideHighlights?: boolean }) =>
+  getCompareColumnsCompare(
+    [
+      makeRow({
+        metricValues: { 'Set Comparison': { precision: 0.8, recall: 0.4 } },
+        extractedColumns: { intents_array: 'a' },
+        _compared: makeResult({
+          metricValues: { 'Set Comparison': { precision: 0.5, recall: 0.2 } },
+          extractedColumns: { intents_array: 'b' },
+        }),
       }),
-    }),
-  ]) as ColDef[];
+    ],
+    undefined,
+    undefined,
+    { hideHighlights: options?.hideHighlights },
+  ) as ColDef[];
 
 const toState = (colIds: string[]) => colIds.map((colId) => ({ colId }));
 
@@ -336,6 +525,56 @@ const recallAfterExtracted = (tree: ColDef[]): string[] => {
   const extractedEnd = withoutRecall.findLastIndex((colId) => extractedIds.includes(colId));
 
   return [...withoutRecall.slice(0, extractedEnd + 1), ...recallIds, ...withoutRecall.slice(extractedEnd + 1)];
+};
+
+const reverseMetricBlocks = (tree: ColDef[]): string[] => {
+  const ids = leafIds(tree);
+  const setComparisonIds = leafIdsUnder(tree, 'Set Comparison');
+  const extractedIds = leafIdsUnder(tree, EXTRACTED_GROUP_HEADER);
+  const without = ids.filter((colId) => !setComparisonIds.includes(colId) && !extractedIds.includes(colId));
+  return [...without, ...extractedIds, ...setComparisonIds];
+};
+
+const flatHeaderOrder = (defs: ColDef[]): string[] => defs.map((node) => node.headerName ?? getColId(node) ?? '');
+
+const collectHiddenLeafIdsFromTree = (nodes: ColDef[]): string[] =>
+  nodes.flatMap((node) => {
+    const children = getChildren(node);
+    if (children.length) {
+      return collectHiddenLeafIdsFromTree(children);
+    }
+    const colId = getColId(node);
+    return colId && node.hide === true ? [colId] : [];
+  });
+
+const findLeafWithCellClassRules = (nodes: ColDef[]): ColDef | undefined => {
+  for (const node of nodes) {
+    const children = getChildren(node);
+    if (children.length) {
+      const found = findLeafWithCellClassRules(children);
+      if (found) return found;
+      continue;
+    }
+    if (node.cellClassRules) {
+      return node;
+    }
+  }
+  return undefined;
+};
+
+const findLeafByColIdInTree = (nodes: ColDef[], colId: string): ColDef | undefined => {
+  for (const node of nodes) {
+    const children = getChildren(node);
+    if (children.length) {
+      const found = findLeafByColIdInTree(children, colId);
+      if (found) return found;
+      continue;
+    }
+    if (getColId(node) === colId) {
+      return node;
+    }
+  }
+  return undefined;
 };
 
 const rowSummary = (row: ColDef): string =>

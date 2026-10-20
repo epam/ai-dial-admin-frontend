@@ -1,4 +1,4 @@
-import { ColDef, ColGroupDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ColumnState, GridApi } from 'ag-grid-community';
 
 import { EXECUTION_GROUP_HEADER } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 
@@ -64,3 +64,33 @@ export const orderWithCompareBlocksIntact = (
   blocks: string[][],
   movedIds: ReadonlySet<string>,
 ): string[] => blocks.reduce((next, block) => placeBlock(next, block, movedIds), order);
+
+/**
+ * After a UI column drag, puts compare blocks back together if AG Grid split them, then returns
+ * the live column state (order already applied when correction was needed).
+ */
+export const applyCompareColumnMove = (
+  api: Pick<GridApi, 'getColumnState' | 'applyColumnState'>,
+  displayColDefs: (ColDef | ColGroupDef)[],
+  movedColumnIds: ReadonlySet<string>,
+): ColumnState[] => {
+  const current = api.getColumnState();
+  const correctedOrder = orderWithCompareBlocksIntact(
+    current.map((column) => column.colId),
+    collectCompareColumnBlocks(displayColDefs),
+    movedColumnIds,
+  );
+  const changed = correctedOrder.some((colId, index) => colId !== current[index]?.colId);
+  if (changed) {
+    const byId = new Map(current.map((column) => [column.colId, column]));
+    api.applyColumnState({
+      state: correctedOrder.flatMap((colId) => {
+        const column = byId.get(colId);
+        return column ? [column] : [];
+      }),
+      applyOrder: true,
+    });
+  }
+
+  return api.getColumnState();
+};
