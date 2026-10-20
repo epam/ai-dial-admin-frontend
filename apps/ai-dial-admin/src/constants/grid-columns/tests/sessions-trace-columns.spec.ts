@@ -394,6 +394,15 @@ describe('sessions columns :: a lagging deployment', () => {
     expect(columns([]).map((col) => col.field)).toContain(SessionColumn.Rating);
   });
 
+  test('omits the user column, sort and filter included, where the schema withholds it from the caller', () => {
+    const withheld = ALL_FIELDS.filter((entry) => entry.name !== SessionsField.UserHash);
+    const fields = columns(withheld).map((col) => col.field);
+
+    expect(fields).not.toContain(SessionsField.UserHash);
+    expect(fields).toContain(SessionsField.ProjectId);
+    expect(fields).toContain(SessionColumn.Rating);
+  });
+
   test('falls back to the curated columns alone when no schema is given', () => {
     expect(columns([]).map((col) => col.field)).toEqual(
       CURATED.filter((fieldName) => fieldName !== SessionsField.InsightTopics),

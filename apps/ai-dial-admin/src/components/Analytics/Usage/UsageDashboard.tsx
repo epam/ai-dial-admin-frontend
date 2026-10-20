@@ -4,7 +4,7 @@ import { FC, useCallback, useState } from 'react';
 
 import UsageControls from '@/src/components/Analytics/Usage/Controls/UsageControls';
 import { PAGE_SCOPE, VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
-import { ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
+import { CallerSource, ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
 import UsageBlock from '@/src/components/Analytics/Usage/UsageBlock';
 import { useLoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
@@ -12,8 +12,12 @@ import { AnalyticsUsageI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useI18n } from '@/src/locales/client';
 
+interface Props {
+  callerSource: CallerSource;
+}
+
 /** The standalone Dashboards page: one block, whichever view `View by` names. */
-const UsageDashboard: FC = () => {
+const UsageDashboard: FC<Props> = ({ callerSource }) => {
   const t = useI18n();
 
   const [view, setView] = useState<UsageView>(UsageView.Llm);
@@ -58,6 +62,7 @@ const UsageDashboard: FC = () => {
         refreshToken={refreshToken}
         notice={notice}
         onRefreshingChange={setIsRefreshing}
+        callerSource={callerSource}
       />
     </div>
   );

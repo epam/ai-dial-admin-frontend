@@ -12,6 +12,7 @@ import {
   BreakdownRow,
   BreakdownTab,
   BucketPoint,
+  CallerSource,
   ComparedWindows,
   DimensionBucketPoint,
   DonutMetric,
@@ -69,6 +70,7 @@ interface Params {
   refreshToken: number;
   /** Shared with the heatmap's hook, so one outage is one notification. */
   notice: LoadFailureNotice;
+  callerSource: CallerSource;
 }
 
 export interface UsageDashboardData {
@@ -106,6 +108,7 @@ export const useUsageDashboardData = ({
   timeSeriesView,
   refreshToken,
   notice,
+  callerSource,
 }: Params): UsageDashboardData => {
   const { report, reset } = notice;
 
@@ -146,8 +149,11 @@ export const useUsageDashboardData = ({
   ].join('|');
   const donutScopeKey = useRef(donutScope);
 
-  const baseScope = useMemo(() => ({ view, ...rows }), [view, rows]);
-  const madeScope = useMemo(() => (madeRows ? { view, ...madeRows } : null), [view, madeRows]);
+  const baseScope = useMemo(() => ({ view, callerSource, ...rows }), [view, callerSource, rows]);
+  const madeScope = useMemo(
+    () => (madeRows ? { view, callerSource, ...madeRows } : null),
+    [view, callerSource, madeRows],
+  );
   const madeTabsKey = madeTabs.join('|');
   /** The rows a tab ranks: the calls the entity made for a tab that reads those, its own rows otherwise. */
   const scopeOf = useCallback(

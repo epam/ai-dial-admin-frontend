@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import { BucketPoint, KpiMetric, UsageMeasures, UsageView } from '@/src/components/Analytics/Usage/models';
+import {
+  BucketPoint,
+  CallerSource,
+  KpiMetric,
+  UsageMeasures,
+  UsageView,
+} from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { VIEW_KPI_METRICS, buildKpiFigures, getShareOfTotal } from '@/src/components/Analytics/Usage/utils/kpi-cards';
 
@@ -34,6 +40,15 @@ describe('buildKpiFigures', () => {
     expect(buildKpiFigures(llm(measures({ calls: 1 }))).map((figure) => figure.metric)).toEqual(
       VIEW_KPI_METRICS[UsageView.Llm],
     );
+  });
+
+  test('leaves the caller card out where the log serves no column to count callers by', () => {
+    const metrics = buildKpiFigures({ ...llm(measures({ calls: 1 })), callerSource: CallerSource.None }).map(
+      (figure) => figure.metric,
+    );
+
+    expect(metrics).not.toContain(KpiMetric.UniqueCallers);
+    expect(metrics).toContain(KpiMetric.Requests);
   });
 
   test('reads each metric off the window aggregate', () => {

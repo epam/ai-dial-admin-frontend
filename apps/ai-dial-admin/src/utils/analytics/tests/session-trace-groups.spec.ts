@@ -206,6 +206,24 @@ describe('traceGroupsOf', () => {
     expect(group.cards.map(({ hasSessionLabel }) => hasSessionLabel)).toEqual([true, false]);
   });
 
+  test('reads the chat id as the label where the log serves no session id', () => {
+    const withoutSessionId = (over: Partial<SessionTraceRootRow>) => {
+      const row = root(over);
+      delete row['usage_client_identity.client_session_id'];
+      return row;
+    };
+    const [group] = groupsOf(
+      [pageRow(TRACE, 1000)],
+      [
+        withoutSessionId({ core_span_id: 'labelled', chat_id: 'the-chat', request_time: 404 }),
+        withoutSessionId({ core_span_id: 'bare', chat_id: '', request_time: 12760 }),
+      ],
+      [figure()],
+    );
+
+    expect(group.cards.map(({ hasSessionLabel }) => hasSessionLabel)).toEqual([true, false]);
+  });
+
   test('breaks a tie on recorded time by span id, so the order is stable', () => {
     const [group] = groupsOf(
       [pageRow(TRACE, 1000)],

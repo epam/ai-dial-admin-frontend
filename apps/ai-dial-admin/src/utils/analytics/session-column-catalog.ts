@@ -162,11 +162,17 @@ export const projectableSchemaFields = (
 // an older field set than this frontend knows. A field beyond the view's required core is therefore named
 // only when the fetched schema reports it. With no schema in hand the required core is all that is named:
 // a failed schema fetch is not evidence that an optional field exists, and guessing costs every row.
+//
+// With a schema in hand the required core is held to it too: a field it does not report would fail the whole
+// read rather than cost that one value.
 export const availableSelectFields = (ordered: string[], optional: string[], schemaFieldNames?: string[]): string[] => {
-  const isOptional = new Set(optional);
-  const available = new Set(schemaFieldNames ?? []);
+  if (schemaFieldNames?.length) {
+    const available = new Set(schemaFieldNames);
+    return ordered.filter((name) => available.has(name));
+  }
 
-  return ordered.filter((name) => !isOptional.has(name) || available.has(name));
+  const isOptional = new Set(optional);
+  return ordered.filter((name) => !isOptional.has(name));
 };
 
 // A derived column takes its formatting from the declared type, but it offers a filter only for the types

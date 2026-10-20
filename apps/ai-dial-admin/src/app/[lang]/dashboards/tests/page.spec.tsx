@@ -7,12 +7,15 @@ import UsageDashboard from '@/src/components/Analytics/Usage/UsageDashboard';
 import Page403 from '@/src/components/Page403/Page403';
 import DashboardView from '@/src/components/Telemetry/DashboardView';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
+import { getCallerSource } from '@/src/server/analytics/usage-caller-source';
+import { CallerSource } from '@/src/components/Analytics/Usage/models';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/components/Analytics/Usage/UsageDashboard', () => ({ default: vi.fn() }));
 vi.mock('@/src/components/Page403/Page403', () => ({ default: vi.fn() }));
 vi.mock('@/src/components/Telemetry/DashboardView', () => ({ default: vi.fn() }));
 vi.mock('@/src/server/analytics/analytics-access');
+vi.mock('@/src/server/analytics/usage-caller-source');
 
 const notFound = vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
@@ -52,6 +55,13 @@ describe('dashboards page', () => {
     process.env.DIAL_ADMIN_API_URL = 'http://admin';
 
     expect((await renderPage()).type).toBe(UsageDashboard);
+  });
+
+  test('tells the analytics page which column to count callers by', async () => {
+    enableAnalytics();
+    vi.mocked(getCallerSource).mockResolvedValue(CallerSource.Hash);
+
+    expect((await renderPage()).props).toMatchObject({ callerSource: CallerSource.Hash });
   });
 
   test('renders the forbidden page behind the analytics branch', async () => {

@@ -503,7 +503,8 @@ export interface SessionTraceRootRow {
   total_tokens: number | string | null;
   total_price: number | string | null;
   deployment_price: number | string | null;
-  'usage_client_identity.client_session_id': string | null;
+  'usage_client_identity.client_session_id'?: string | null;
+  chat_id?: string | null;
   request_uri: string | null;
   event_kind: string | null;
   number_request_messages: number | string | null;

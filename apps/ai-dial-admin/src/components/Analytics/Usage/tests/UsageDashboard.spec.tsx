@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { CallerSource } from '@/src/components/Analytics/Usage/models';
 import UsageDashboard from '@/src/components/Analytics/Usage/UsageDashboard';
 import { AnalyticsUsageI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { StructuredQuery } from '@/src/models/analytics/query';
@@ -55,7 +56,7 @@ beforeEach(() => {
 
 describe('UsageDashboard', () => {
   test('renders the page and its widgets', async () => {
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     expect(screen.getByRole('heading', { name: MenuI18nKey.Dashboard })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.DonutTitle })).toBeTruthy();
@@ -66,7 +67,7 @@ describe('UsageDashboard', () => {
   });
 
   test('reads each window exactly once on mount, since comparison starts on', async () => {
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     // Totals, buckets and the breakdown rows, each for the current window and the previous one,
     // plus the share chart's own ranking and the heatmap's independent week. An exact count, so a
@@ -76,7 +77,7 @@ describe('UsageDashboard', () => {
   });
 
   test('asks every query for the same entity', async () => {
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await settled();
     expect(queriesSent()).toHaveLength(8);
@@ -84,7 +85,7 @@ describe('UsageDashboard', () => {
   });
 
   test('leaves the split series unasked while the plain plot is the one showing', async () => {
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await settled();
     expect(runQueryMock).toHaveBeenCalledTimes(8);
@@ -93,7 +94,7 @@ describe('UsageDashboard', () => {
 
   test('asks for the split series once that plot is chosen', async () => {
     const user = userEvent.setup();
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     await user.click(screen.getByText(AnalyticsUsageI18nKey.TimeSeriesTabSplit));
@@ -103,7 +104,7 @@ describe('UsageDashboard', () => {
 
   test('re-ranks the share chart on spend and keeps the ring up while it reads', async () => {
     const user = userEvent.setup();
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     await user.click(screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost));
@@ -116,7 +117,7 @@ describe('UsageDashboard', () => {
 
   test('offers no spend plot in the MCP view, which records no price', async () => {
     const user = userEvent.setup();
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     expect(screen.getByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeTruthy();
 
@@ -128,7 +129,7 @@ describe('UsageDashboard', () => {
 
   test('reloads every widget from route rows on switching to Routes, keeping the comparison', async () => {
     const user = userEvent.setup();
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await settled();
     runQueryMock.mockClear();
@@ -149,7 +150,7 @@ describe('UsageDashboard', () => {
   test('renders the page when every request fails, stating the failure once', async () => {
     runQueryMock.mockResolvedValue({ isSuccess: false, result: null, error: 'upstream refused' });
 
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     // Nine requests failing the same way is one notification, not nine widgets each printing it.
     await settled();
@@ -164,7 +165,7 @@ describe('UsageDashboard', () => {
   test('says nothing when its requests are cancelled', async () => {
     runQueryMock.mockResolvedValue({ isSuccess: false, result: null, isCancelled: true });
 
-    render(<UsageDashboard />);
+    render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     // A cancelled read leaves its widget loading for good, so Refresh never comes back: wait instead for
     // every read to have been issued and answered, then let the page react to the answers.

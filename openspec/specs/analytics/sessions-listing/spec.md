@@ -98,6 +98,18 @@ NOT be presented as unrated-by-measurement.** Coding-agent traffic submits no ra
 than `all` narrows the result to chat-origin sessions as a consequence of the data rather than as a filter on
 client type, and the affordance MUST NOT be described as one.
 
+`response_ratings` is provisioned per environment. Where the service answers the entity's schema with 404, a
+state other than `all` SHALL issue no candidate query and SHALL narrow the result to nothing — no session can
+carry feedback that is not recorded — rather than failing the grid. Any other failed schema read SHALL leave
+the candidate query to run and report its own error.
+
+#### Scenario: A feedback filter on an environment without ratings narrows to nothing
+
+- **GIVEN** the service answers the `response_ratings` schema with 404
+- **WHEN** the reader selects the positive feedback state
+- **THEN** no candidate query is issued
+- **AND** the grid states no sessions instead of a load failure
+
 The rating source SHALL be the per-response rollup rather than the raw rate-event log. The rollup partitions
 each response's events into additive counts, which is what allows a direction to be selected and counted from
 the same columns; the event log carries a single normalized `rate` from which the directions cannot be
@@ -1262,6 +1274,14 @@ more, and the difference between them is the reason the schema is read rather th
 
 The curated columns SHALL keep their designed cells, headers and defaults and SHALL NOT be re-derived. They
 are Session, Project, User, Turns, Activity, Tokens, Cost, Deployments, Topics and Rating.
+
+Where a schema was read, a curated column reading a field of the entity SHALL be offered only when the schema
+reports that field — the original set included. No `sessions` field is catalogued `sensitive` by default, but an
+administrator can mark any column so and an instance can lag the frontend's field set, and a column whose sort
+or filter names an unreported field fails the whole listing. Rating
+reads no field of this entity and SHALL be kept. The same rule SHALL hold for every select the session views
+build from a read schema, the session detail record included: a field the schema does not report is not
+named. With no schema in hand only the required core is named.
 
 A derived column SHALL take:
 
