@@ -74,6 +74,8 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
 
   useEffect(() => {
     setSelectedDataset(structuredClone(originalDataset));
+    // The grid must pick up the freshly cloned rows, or its stale row objects no longer match the schema.
+    setIsSkipRefresh(false);
   }, [originalDataset]);
 
   useEffect(() => {

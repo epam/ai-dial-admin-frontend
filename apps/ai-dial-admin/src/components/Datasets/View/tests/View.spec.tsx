@@ -83,6 +83,16 @@ describe('DatasetView', () => {
     expect(screen.queryByText('json editor')).toBeNull();
   });
 
+  test('re-enables the grid refresh once the saved dataset is reloaded', () => {
+    const { rerender } = render(<DatasetView originalDataset={dataset(DatasetVisibility.PUBLIC)} etag="e" />);
+
+    act(() => tabsContent.props.onChange({ ...dataset(DatasetVisibility.PUBLIC), name: 'renamed' }, true));
+    expect(tabsContent.props.isSkipRefresh).toBe(true);
+
+    rerender(<DatasetView originalDataset={{ ...dataset(DatasetVisibility.PUBLIC), name: 'renamed' }} etag="e2" />);
+    expect(tabsContent.props.isSkipRefresh).toBe(false);
+  });
+
   test('visiting the Test Suites tab does not mark the dataset changed', () => {
     render(<DatasetView originalDataset={dataset(DatasetVisibility.PUBLIC)} etag="e" />);
 
