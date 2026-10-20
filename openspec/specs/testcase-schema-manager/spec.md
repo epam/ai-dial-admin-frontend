@@ -1,3 +1,11 @@
+# testcase-schema-manager Specification
+
+## Purpose
+
+Where a test case schema is viewed and edited: read-only on the test suite, editable on the dataset page.
+
+## Requirements
+
 ### Requirement: Schema tab in TestSuite view is read-only
 The Schema tab in the TestSuite view SHALL display the bound dataset's `testCaseSchema` as a read-only list. Editing schema fields SHALL NOT be possible from the TestSuite context. The tab SHALL include a link button ("Edit on Dataset page") that opens the bound dataset's detail page in a new tab.
 

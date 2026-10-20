@@ -1,3 +1,11 @@
+# application-container-source Specification
+
+## Purpose
+
+A container as an application source: the source dropdown option, the container picker for applications and the endpoint path it carries.
+
+## Requirements
+
 ### Requirement: SOURCE_FIELD carries mcpEndpointPath
 
 The `SOURCE_FIELD` interface in `components/SourceField/types.ts` SHALL include an optional `mcpEndpointPath?: string` field so that the BE `ApplicationContainerSourceDto.mcpEndpointPath` can be round-tripped without data loss.

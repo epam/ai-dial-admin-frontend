@@ -1,10 +1,10 @@
-# Global Firewall Import Preview
+# global-firewall-preview Specification
 
 ## Purpose
 
 Adds a dedicated "Global Firewall" tab to the deployment import preview showing the domain whitelist entries that will be merged on import. Includes a "Compare changes" button that opens `GlobalFirewallCompareModal` — a Before/After diff popup using `GridView` with `DIFF_ROW_CLASS_RULES` for row highlighting.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Global Firewall tab shows domain list
 

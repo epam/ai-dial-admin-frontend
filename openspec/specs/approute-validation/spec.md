@@ -1,3 +1,11 @@
+# approute-validation Specification
+
+## Purpose
+
+How App Routes register and remove their fields in the validation context so the routes editor knows which routes are valid.
+
+## Requirements
+
 ### Requirement: Validation context supports field removal
 The `SaveValidationContext` SHALL support a `RemoveField` action that removes a named key from the validation map and recomputes the aggregate `isValid` signal. After removal, `isValid` SHALL reflect only the remaining registered fields.
 

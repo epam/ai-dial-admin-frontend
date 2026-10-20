@@ -1,6 +1,10 @@
-## source-type-switch-cleanup
+# source-type-switch-cleanup Specification
+
+## Purpose
 
 Lifecycle invariants for `SourceField` and its sub-source components when a user switches source type — validation-field cleanup on unmount, and source-object reset on switch — so transient state from one source type cannot block submission of another. Applies uniformly across Toolsets, Models, Adapters, Interceptors, Applications (modal flow), and the Container source-type form.
+
+## Requirements
 
 ### Requirement: Sub-source components remove their validation entries on unmount
 

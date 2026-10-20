@@ -1,4 +1,8 @@
-# AI DIAL Admin Frontend — Asset Keys
+# platform-keys Specification
+
+## Purpose
+
+The Assets > Keys surface: menu entry, listing, creation and the key detail view.
 
 ## Requirements
 

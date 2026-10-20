@@ -1,3 +1,11 @@
+# duplicate-id-validation Specification
+
+## Purpose
+
+Immediate duplicate ID validation when a deployment entity is created.
+
+## Requirements
+
 ### Requirement: Immediate duplicate ID validation for deployment entities
 
 The `DeploymentProperties` component SHALL pass the `names` array to `IdControl` so that duplicate ID validation triggers immediately on user input, not only on form submission.

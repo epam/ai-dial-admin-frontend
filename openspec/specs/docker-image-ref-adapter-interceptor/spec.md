@@ -1,3 +1,11 @@
+# docker-image-ref-adapter-interceptor Specification
+
+## Purpose
+
+Creating and viewing adapter and interceptor containers whose source is a docker image reference.
+
+## Requirements
+
 ### Requirement: Adapter container creation from docker image reference
 The system SHALL allow users to create Adapter containers from a direct docker image reference, in addition to the existing internal image path.
 

@@ -1,4 +1,10 @@
-## ADDED Requirements
+# unified-container-source Specification
+
+## Purpose
+
+The container source model: one flat source type with a $type discriminator, used by containers and their templates.
+
+## Requirements
 
 ### Requirement: ContainerSource flat type with $type discriminator
 The system SHALL define a single flat `ContainerSource` type with a `$type` field of type `CONTAINER_SOURCE_TYPE` and all source-specific fields as optional: `imageDefinitionId`, `imageReference`, and `modelName`.
@@ -56,10 +62,15 @@ The `ContainerRedeploySnapshot` interface SHALL use `source: ContainerSource` in
 - **THEN** the snapshot SHALL include the container's `source` field instead of `imageDefinitionId`
 
 ### Requirement: Source-aware conditional rendering
-Components that currently check `container.source?.$type === MODEL_SOURCE_TYPE.HF` SHALL use `CONTAINER_SOURCE_TYPE.HUGGINGFACE`.
+Components that check whether a container's source is Hugging Face SHALL compare `container.source?.$type` with `CONTAINER_SOURCE_TYPE.HUGGINGFACE`, not with `MODEL_SOURCE_TYPE.HF`.
+
+#### Scenario: Hugging Face source detected by the container source type
+- **WHEN** a component renders a container whose `source.$type` is `huggingface`
+- **THEN** it SHALL detect the Hugging Face source through `CONTAINER_SOURCE_TYPE.HUGGINGFACE`
 
 ### Requirement: Spread pattern for source updates
 Callbacks that update source fields SHALL use spread: `{ ...container.source, fieldName: value }` to preserve the existing `$type`. Callbacks SHALL NOT reconstruct `$type`.
 
-### Requirement: Server API layer unchanged
-The server API layer (`server/deployments/containers.ts`) SHALL NOT be modified in this change.
+#### Scenario: Updating a source field keeps its type
+- **WHEN** a callback updates one field of a container's source
+- **THEN** the resulting source SHALL keep the existing `$type` and every other field unchanged

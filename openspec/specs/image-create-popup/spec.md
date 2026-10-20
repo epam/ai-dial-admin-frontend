@@ -1,3 +1,11 @@
+# image-create-popup Specification
+
+## Purpose
+
+Size of the image creation popup.
+
+## Requirements
+
 ### Requirement: Image creation popup size
 
 The image creation popup SHALL use `PopupSize.Md` to match the amount of content displayed in modal mode.

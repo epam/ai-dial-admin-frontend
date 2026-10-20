@@ -1,4 +1,10 @@
-## ADDED Requirements
+# deployment-metrics-tab Specification
+
+## Purpose
+
+The Metrics tab of a deployment: which deployment types offer it, how the live snapshot is fetched and how its sections and gauges render.
+
+## Requirements
 
 ### Requirement: Metrics tab availability per deployment type
 The system SHALL show a **Metrics** tab in the deployment/container detail view for MCP, Interceptor, Adaptor, Application containers and Model Servings. The system SHALL NOT show the Metrics tab for Images. The tab SHALL be disabled while the deployment status is not `RUNNING`, consistent with the Resources and Prompts tabs.

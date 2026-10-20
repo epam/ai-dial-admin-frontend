@@ -1,89 +1,47 @@
-## Capability: Request Cancellation on Logout
+# request-cancellation-on-logout Specification
 
-### Summary
+## Purpose
 
-Automatically cancels all in-flight API requests when the user logs out, preventing them from completing with stale authentication tokens.
+Logging out cancels every in-flight API request, so none completes with a stale authentication token or is processed after the user has left.
 
-### User-Facing Behavior
+## Requirements
 
-**When user clicks logout:**
+### Requirement: Every BaseApi request is tracked for cancellation
 
-1. All pending API requests are immediately cancelled
-2. No API responses are processed after logout is triggered
-3. User is redirected to login page (`/`) without delay
-4. No error notifications are shown for cancelled requests
+`BaseApi.sendRequest` SHALL register an `AbortController` with the request registry for every request, pass its signal to `fetch`, and unregister it when the request completes, so the registry holds only requests still in flight.
 
-**Example scenario:**
+#### Scenario: A completed request leaves the registry
 
-```
-User on /models page → clicks "Export All" (long-running request)
-→ immediately clicks "Log Out" (before export completes)
-→ Export request is cancelled
-→ User redirected to login page
-→ No export data is downloaded or processed
-```
+- **WHEN** a request made through `BaseApi` completes
+- **THEN** its controller SHALL be removed from the registry
 
-### Technical Behavior
+### Requirement: Logging out cancels all tracked requests
 
-**Request lifecycle with tracking:**
+`use-logout.ts` SHALL call `requestRegistry.cancelAll()` before `signOut()`, and the `signOut` event in `auth-options.ts` SHALL call it as well, as a fallback. `cancelAll()` SHALL abort every registered controller, clear the registry, and be safe to call more than once. Streaming (SSE) requests SHALL be closed the same way.
 
-```
-1. API method called (e.g., modelsApi.getModelsList(token))
-   ↓
-2. BaseApi.sendRequest registers AbortController
-   ↓
-3. fetch() called with signal: controller.signal
-   ↓
-4. Request completes OR user logs out
-   ↓
-5a. On completion: unregister controller, return response
-5b. On logout: cancelAll() aborts signal, fetch throws AbortError
-   ↓
-6. AbortError caught and handled gracefully (no logs, no retry)
-```
+#### Scenario: A long request is cancelled by logout
 
-**Cancellation trigger points:**
+- **GIVEN** the user started a long-running request such as "Export All"
+- **WHEN** the user clicks "Log Out" before it completes
+- **THEN** the request SHALL be aborted
+- **AND** its response SHALL NOT be processed
+- **AND** the user SHALL be redirected to the login page without delay
 
-1. **Primary**: `use-logout.ts` hook calls `requestRegistry.cancelAll()` before `signOut()`
-2. **Defensive**: `auth-options.ts` signOut event also calls `cancelAll()`
+#### Scenario: Repeated logout is harmless
 
-### Acceptance Criteria
+- **WHEN** `signOut()` is triggered several times in quick succession
+- **THEN** `cancelAll()` SHALL run each time without error
 
-- [ ] All fetch requests made via BaseApi are tracked with AbortControllers
-- [ ] Logging out cancels all tracked requests synchronously
-- [ ] Cancelled requests do not trigger error notifications or retries
-- [ ] Request registry cleans up completed requests (no memory leak)
-- [ ] SSE/streaming endpoints are cleanly closed on logout
-- [ ] Unit tests verify RequestRegistry register/unregister/cancelAll behavior
-- [ ] Integration test verifies in-flight request is cancelled on logout
+#### Scenario: A request that finished just before cancellation
 
-### Edge Cases
+- **WHEN** a request completes moments before `cancelAll()` reaches it
+- **THEN** its controller SHALL already be unregistered and no error SHALL be raised
 
-**Multiple simultaneous logouts:**
-If `signOut()` is called multiple times rapidly, `cancelAll()` is idempotent (safe to call multiple times).
+### Requirement: A cancelled request is not reported as a failure
 
-**Request completes during cancellation:**
-If a request completes milliseconds before cancellation reaches it, the controller is already unregistered. No error thrown.
+An `AbortError` raised by a cancelled request SHALL be handled silently: it SHALL NOT trigger an error notification, a log entry or a retry.
 
-**AbortController not supported:**
-Modern browsers support AbortController (Chrome 66+, Firefox 57+, Safari 12.1+). No fallback needed (admin tool targets modern browsers).
+#### Scenario: No error toast after logout
 
-### Dependencies
-
-- Requires `BaseApi` to wrap all fetch calls
-- Requires `use-logout.ts` to trigger cancellation before signOut
-- Requires `auth-options.ts` signOut event as fallback trigger
-
-### Testing Strategy
-
-**Unit tests** (`request-registry.spec.ts`):
-- Register creates controller and returns it
-- Unregister removes controller from map
-- CancelAll aborts all controllers and clears map
-- CancelAll is idempotent (safe to call twice)
-
-**Integration test** (`use-logout.spec.ts`):
-- Mock fetch to return delayed promise
-- Trigger logout while request in flight
-- Verify fetch was aborted (AbortError thrown)
-- Verify no response handler was called
+- **WHEN** logout aborts an in-flight request
+- **THEN** no error notification SHALL be shown for it
