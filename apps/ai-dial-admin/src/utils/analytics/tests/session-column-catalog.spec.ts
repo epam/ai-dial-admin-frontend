@@ -148,6 +148,15 @@ describe('SESSIONS_TRACE_COLUMNS', () => {
     expect(fieldsOf(columns())).not.toContain(SessionsField.Traces);
   });
 
+  test.each([AnalyticsFieldType.Object, AnalyticsFieldType.Array, AnalyticsFieldType.Map])(
+    'does not offer a %s-typed schema field as a derived column',
+    (type) => {
+      const withNonScalar = [...SCHEMA, sourceField('non_scalar_field', { type, tag: 'response' })];
+
+      expect(fieldsOf(columns(withNonScalar))).not.toContain('non_scalar_field');
+    },
+  );
+
   test('offers a scalar heavy field rather than withholding it for being heavy', () => {
     const withHeavyScalar = [...SCHEMA, sourceField('big_blob', { tag: 'response', heavy: true })];
 

@@ -1,7 +1,8 @@
 // Declaration order is also the order the column-type picker offers these in (`COLUMN_TYPE_OPTIONS` maps
 // `Object.values`), and the ui-kit select's option list shows ten rows before it scrolls — with no scrollbar
-// at rest on macOS. So an eleventh member is effectively hidden, and which one sits last is a real choice:
-// `Array` is long-established and looked for, so it takes that place rather than a type nobody knows yet.
+// at rest on macOS. So every member past the tenth is effectively hidden, and which ones sit there is a real
+// choice: `Array` is long-established and looked for, and `Map` is the newest and least looked for, so those
+// two take the places past the fold rather than a type people reach for first.
 export enum AnalyticsFieldType {
   Uuid = 'uuid',
   String = 'string',
@@ -20,6 +21,10 @@ export enum AnalyticsFieldType {
   Timestamp = 'timestamp',
   Object = 'object',
   Array = 'array',
+  // A bag of string keys mapped to string values (ClickHouse `Map(String, String)`), with no key or value
+  // type of its own. It is projection-only on the query surface — no comparison, grouping or ordering over
+  // it — so a key is read through a catalog function, and it can never key a table or be nullable.
+  Map = 'map',
 }
 
 export interface AnalyticsEntity {

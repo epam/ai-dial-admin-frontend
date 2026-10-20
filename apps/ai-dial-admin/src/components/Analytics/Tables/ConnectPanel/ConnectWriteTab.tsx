@@ -30,6 +30,7 @@ const FORMAT_RULE_KEY: Record<ConnectFormatRule, AnalyticsTablesI18nKey> = {
   [ConnectFormatRule.Date]: AnalyticsTablesI18nKey.ConnectFormatDate,
   [ConnectFormatRule.Decimal]: AnalyticsTablesI18nKey.ConnectFormatDecimal,
   [ConnectFormatRule.Array]: AnalyticsTablesI18nKey.ConnectFormatArray,
+  [ConnectFormatRule.Map]: AnalyticsTablesI18nKey.ConnectFormatMap,
 };
 
 const ConnectWriteTab: FC<Props> = ({

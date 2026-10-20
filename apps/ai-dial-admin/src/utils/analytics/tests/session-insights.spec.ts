@@ -45,15 +45,17 @@ describe('insightColumnsOf', () => {
     expect(columns.map(({ name }) => name)).toEqual(['session_insights.some_future_signal']);
   });
 
-  test('drops a column the panel could not render as a value', () => {
-    const columns = insightColumnsOf([
-      schemaField('session_insights.topic'),
-      schemaField('session_insights.evidence', { type: AnalyticsFieldType.Object }),
-      schemaField('session_insights.samples', { type: AnalyticsFieldType.Array }),
-    ]);
+  test.each([AnalyticsFieldType.Object, AnalyticsFieldType.Array, AnalyticsFieldType.Map])(
+    'drops a %s column, which the panel could not render as a value',
+    (type) => {
+      const columns = insightColumnsOf([
+        schemaField('session_insights.topic'),
+        schemaField('session_insights.non_scalar', { type }),
+      ]);
 
-    expect(columns.map(({ name }) => name)).toEqual(['session_insights.topic']);
-  });
+      expect(columns.map(({ name }) => name)).toEqual(['session_insights.topic']);
+    },
+  );
 
   test('takes the label and the hint from what the schema reports', () => {
     const [resolved] = insightColumnsOf([

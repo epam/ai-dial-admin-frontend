@@ -39,7 +39,7 @@ export interface AnalyticsTableColumn {
   source_name: string;
   name: string;
   type: AnalyticsFieldType;
-  // Required when `type` is Array; the array's scalar value type (no nested array/object).
+  // Required when `type` is Array; the array's scalar value type (no nested array/object/map).
   element_type?: AnalyticsFieldType;
   // Required when `type` is Enum, and rejected on a column of any other type; the closed value set in
   // declared order (see AnalyticsFieldType.Enum). Immutable once the column exists — a schema patch

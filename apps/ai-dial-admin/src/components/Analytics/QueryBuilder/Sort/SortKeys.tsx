@@ -38,7 +38,6 @@ const SortKeys: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
 
-  const fieldOptions = sortFieldOptions(state);
   const directionOptions = useMemo(() => toCompactSelectOptions(SORT_DIRECTION_OPTION_DESCRIPTORS, t), [t]);
   const nullsOptions = useMemo(() => toCompactSelectOptions(SORT_NULLS_OPTION_DESCRIPTORS, t), [t]);
 
@@ -54,55 +53,58 @@ const SortKeys: FC = () => {
       action={<SectionAction label={t(QueryBuilderI18nKey.AddField)} onClick={addSort} />}
     >
       <div className="flex flex-col gap-1.5">
-        {state.sort.map((sort) => (
-          <ChipRow
-            key={sort.id}
-            inline
-            color={QueryBuilderColor.Keyword}
-            summary={summaryOf(sort, fieldOptions, directionOptions, nullsOptions)}
-            onRemove={() => {
-              state.sort = state.sort.filter((s) => s !== sort);
-              refresh();
-            }}
-          >
-            <div className="min-w-0 flex-1">
-              <CategorizedFieldDropdown
-                id={`qb-sort-field-${sort.id}`}
-                mode={FieldDropdownMode.Picker}
-                options={fieldOptions}
-                value={sort.field}
-                placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
-                ariaLabel={t(QueryBuilderI18nKey.Field)}
-                onSelect={(name) => {
-                  sort.field = name;
-                  refresh();
-                }}
-              />
-            </div>
-            <div className="w-[112px] shrink-0">
-              <CompactSelect
-                ariaLabel={t(QueryBuilderI18nKey.Direction)}
-                options={directionOptions}
-                value={sort.dir}
-                onChange={(v) => {
-                  sort.dir = v as QuerySortDirection;
-                  refresh();
-                }}
-              />
-            </div>
-            <div className="w-[134px] shrink-0">
-              <CompactSelect
-                ariaLabel={t(QueryBuilderI18nKey.Nulls)}
-                options={nullsOptions}
-                value={sort.nulls}
-                onChange={(v) => {
-                  sort.nulls = v as QuerySortNulls;
-                  refresh();
-                }}
-              />
-            </div>
-          </ChipRow>
-        ))}
+        {state.sort.map((sort) => {
+          const fieldOptions = sortFieldOptions(state, sort.field ? [sort.field] : []);
+          return (
+            <ChipRow
+              key={sort.id}
+              inline
+              color={QueryBuilderColor.Keyword}
+              summary={summaryOf(sort, fieldOptions, directionOptions, nullsOptions)}
+              onRemove={() => {
+                state.sort = state.sort.filter((s) => s !== sort);
+                refresh();
+              }}
+            >
+              <div className="min-w-0 flex-1">
+                <CategorizedFieldDropdown
+                  id={`qb-sort-field-${sort.id}`}
+                  mode={FieldDropdownMode.Picker}
+                  options={fieldOptions}
+                  value={sort.field}
+                  placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
+                  ariaLabel={t(QueryBuilderI18nKey.Field)}
+                  onSelect={(name) => {
+                    sort.field = name;
+                    refresh();
+                  }}
+                />
+              </div>
+              <div className="w-[112px] shrink-0">
+                <CompactSelect
+                  ariaLabel={t(QueryBuilderI18nKey.Direction)}
+                  options={directionOptions}
+                  value={sort.dir}
+                  onChange={(v) => {
+                    sort.dir = v as QuerySortDirection;
+                    refresh();
+                  }}
+                />
+              </div>
+              <div className="w-[134px] shrink-0">
+                <CompactSelect
+                  ariaLabel={t(QueryBuilderI18nKey.Nulls)}
+                  options={nullsOptions}
+                  value={sort.nulls}
+                  onChange={(v) => {
+                    sort.nulls = v as QuerySortNulls;
+                    refresh();
+                  }}
+                />
+              </div>
+            </ChipRow>
+          );
+        })}
         {!state.sort.length && <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>}
       </div>
     </SectionBlock>
