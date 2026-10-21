@@ -233,8 +233,6 @@ export const SESSIONS_HEADER_STACK_HEIGHT =
 
 export const SESSIONS_STORAGE_KEY = 'analytics/sessions';
 
-export const SUMMARY_COST_PRECISION = 3;
-
 // Below a dollar, cost is rendered at significant digits; from a dollar up, rounded and abbreviated.
 export const COST_COMPACT_THRESHOLD = 1;
 
