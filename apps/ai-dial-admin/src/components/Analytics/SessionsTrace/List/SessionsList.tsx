@@ -81,8 +81,9 @@ const SessionsList: FC<Props> = ({
           datasource,
           components: GRID_COMPONENTS,
           context: gridContext,
-          // The view owns the empty state; AG Grid's untranslated built-in overlay would sit on top of it.
-          suppressNoRowsOverlay: true,
+          // The view owns the empty state; AG Grid's untranslated built-in overlays would sit on top of it.
+          // A filtered empty result raises `noMatchingRows`, which `suppressNoRowsOverlay` does not cover.
+          suppressOverlays: ['noRows', 'noMatchingRows'],
           // An enrichment column's exposed name carries a dot (`session_insights.title`) and the rows
           // are flat maps keyed by that whole name, so the default path interpretation finds nothing.
           suppressFieldDotNotation: true,
