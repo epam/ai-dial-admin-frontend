@@ -48,8 +48,21 @@ export interface AgGridProps<T> {
 }
 
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+const TEXT_ENTRY_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 
-const suppressArrowKeys = (params: SuppressKeyboardEventParams) => ARROW_KEYS.includes(params.event.key);
+const isTextEntryTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+  return TEXT_ENTRY_TAGS.has(target.tagName) || !!target.isContentEditable;
+};
+
+const suppressArrowKeys = (params: SuppressKeyboardEventParams) => {
+  const key = params.event.key;
+  if (ARROW_KEYS.includes(key)) return true;
+  // Cell-renderer inputs are not AG Grid editors, so Ctrl/Cmd+A would select every row
+  // and preventDefault would block selecting the field text. Suppress only that shortcut.
+  const isSelectAll = (key === 'a' || key === 'A') && (params.event.ctrlKey || params.event.metaKey);
+  return isSelectAll && isTextEntryTarget(params.event.target);
+};
 
 // The built-in floating filter waits for Enter when a filter includes an Apply button.
 const DEFAULT_COL_DEF: ColDef = {
