@@ -1,4 +1,10 @@
-## ADDED Requirements
+# mcp-dashboard-view Specification
+
+## Purpose
+
+The MCP view of the usage dashboard: the View by switch, its stat cards, queries and charts.
+
+## Requirements
 
 ### Requirement: View by dropdown switches between Chat and MCP dashboards
 The Dashboard page SHALL display a "View by" dropdown as the first control in the controls bar on the main Dashboard page and Applications entity audit. The dropdown SHALL have two options: "Chat" (default) and "MCP". Selecting an option SHALL replace the dashboard body with the corresponding layout. The selection SHALL NOT affect the URL. Applied filters SHALL be cleared when switching views.

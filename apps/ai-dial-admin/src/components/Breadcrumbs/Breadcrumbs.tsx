@@ -2,14 +2,17 @@
 
 import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 import classNames from 'classnames';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
 import { IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
 import {
+  enrichDetailsWithFolderBreadcrumbs,
   enrichWithFolderBreadcrumbs,
   getBreadcrumbs,
+  getEntityFolderPath,
   getFolderContext,
+  shouldEnrichDetailsWithFolderBreadcrumbs,
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
@@ -21,6 +24,8 @@ interface Props {
 
 const Breadcrumbs: FC<Props> = ({ mobile }) => {
   const pathname = usePathname();
+  const router = useRouter();
+  const entityPath = useSearchParams()?.get('path');
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const folderContext = pathname ? getFolderContext?.(pathname, currentLocale)?.() : undefined;
@@ -34,19 +39,39 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   const [enrichedBreadcrumbs, setEnrichedBreadcrumbs] = useState<Breadcrumb[] | null>(null);
 
+  const setFilePath = folderContext?.setFilePath;
+  const fetchFiles = folderContext?.fetchFiles;
+  const listHref = basicBreadcrumbs[0]?.href;
+
+  // A folder crumb on a details page selects that folder and goes back to the list, refreshing the folder
+  // the same way the redirect after deleting an entity does, so the list has its content.
+  const onOpenFolder = useCallback(
+    (folderPath: string) => {
+      setFilePath?.(folderPath);
+      fetchFiles?.(folderPath);
+      if (listHref) {
+        router.push(listHref);
+      }
+    },
+    [setFilePath, fetchFiles, listHref, router],
+  );
+
   useEffect(() => {
     if (!pathname) {
       setEnrichedBreadcrumbs(null);
       return;
     }
     if (shouldEnrichWithFolderBreadcrumbs(pathname, currentLocale) && folderContext?.filePath) {
+      setEnrichedBreadcrumbs(enrichWithFolderBreadcrumbs(basicBreadcrumbs, folderContext.filePath, setFilePath));
+    } else if (shouldEnrichDetailsWithFolderBreadcrumbs(pathname, currentLocale) && setFilePath) {
+      const folderPath = getEntityFolderPath(entityPath);
       setEnrichedBreadcrumbs(
-        enrichWithFolderBreadcrumbs(basicBreadcrumbs, folderContext.filePath, folderContext.setFilePath),
+        folderPath ? enrichDetailsWithFolderBreadcrumbs(basicBreadcrumbs, folderPath, onOpenFolder) : null,
       );
     } else {
       setEnrichedBreadcrumbs(null);
     }
-  }, [pathname, currentLocale, basicBreadcrumbs, folderContext?.filePath, folderContext?.setFilePath]);
+  }, [pathname, currentLocale, basicBreadcrumbs, folderContext?.filePath, setFilePath, entityPath, onOpenFolder]);
 
   const breadcrumbs = enrichedBreadcrumbs ?? basicBreadcrumbs;
 

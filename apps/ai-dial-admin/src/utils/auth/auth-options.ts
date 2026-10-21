@@ -1,4 +1,5 @@
 import { AuthOptions } from 'next-auth';
+import { NextAuthToken } from '@/src/models/auth';
 import { requestRegistry } from '@/src/utils/api/request-registry';
 import { callbacks } from './auth-callbacks';
 import { cookies } from './auth-cookies';
@@ -14,9 +15,9 @@ export const authOptions = {
     strategy: 'jwt',
   },
   events: {
-    signOut: async () => {
+    signOut: async ({ token }) => {
       requestRegistry.cancelAll();
-      NextClient.clearAllRefreshTokens();
+      NextClient.clearRefreshState(token as NextAuthToken | null);
     },
   },
   pages: {

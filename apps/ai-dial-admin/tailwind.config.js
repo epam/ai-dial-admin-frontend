@@ -1,41 +1,146 @@
-// Default color palette is black when no themes presented
+// Default color palette is light when no themes presented (fallbacks match the DIAL Chat light palette)
 
 const backgroundsColors = {
   transparent: 'transparent',
-  'layer-0': 'var(--bg-layer-0, #000000)',
-  'layer-1': 'var(--bg-layer-1, #0C101D)',
-  'layer-2': 'var(--bg-layer-2, #161B2D)',
-  'layer-3': 'var(--bg-layer-3, #1D2439)',
-  'layer-4': 'var(--bg-layer-4, #242C42)',
-  blackout: 'var(--bg-blackout, #0C101DB3)',
-  error: 'var(--bg-error, #402027)',
-  warning: 'var(--bg-warning, #3F3D25)',
-  info: 'var(--bg-info, #1C2C47)',
-  success: 'var(--bg-success, #1D3841)',
-  inverted: 'var(--bg-inverted, #EEF1F7)',
-  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #7DA4FF26)',
+  'layer-sunken': 'var(--bg-layer-sunken, #EEF1F7)',
+  'layer-base': 'var(--bg-layer-base, #F5F7FA)',
+  'layer-raised': 'var(--bg-layer-raised, #FCFCFC)',
+  error: 'var(--bg-error, #F3D6D8)',
+  warning: 'var(--bg-warning, #FAF0CF)',
+  info: 'var(--bg-info, #E1EAF9)',
+  success: 'var(--bg-success, #DBF1EB)',
+  backdrop: 'var(--bg-backdrop, #161B2D4D)',
+
+  // controls
+  'gradient-1-hover': 'var(--bg-gradient-1-hover, #6785FB)',
+  'gradient-1-active': 'var(--bg-gradient-1-active, #1D4ED8)',
+  'gradient-2': 'var(--bg-gradient-2, #885DF2)',
+  'gradient-2-hover': 'var(--bg-gradient-2-hover, #885DF2)',
+  'gradient-2-active': 'var(--bg-gradient-2-active, #7C3AED)',
+  'control-accent-alpha': 'var(--bg-control-accent-alpha, #2764D90F)',
+  'control-accent-alpha-hover': 'var(--bg-control-accent-alpha-hover, #2764D924)',
+  'control-accent-alpha-active': 'var(--bg-control-accent-alpha-active, #2764D933)',
+  'control-accent': 'var(--bg-control-accent, #1D4ED8)',
+  'control-accent-hover': 'var(--bg-control-accent-hover, #5976E9)',
+  'control-neutral': 'var(--bg-control-neutral, #FCFCFC)',
+  'control-neutral-hover-strong': 'var(--bg-control-neutral-hover-strong, #848E9C)',
+  'control-neutral-hover-muted': 'var(--bg-control-neutral-hover-muted, #E0E6F0)',
+  'control-neutral-active': 'var(--bg-control-neutral-active, #D1DBEA)',
+  'control-neutral-default': 'var(--bg-control-neutral-default, #ACB3C3)',
+  'control-inverted': 'var(--bg-control-inverted, #57647A)',
+  'control-error': 'var(--bg-control-error, #AE2F2F)',
+  'control-error-hover': 'var(--bg-control-error-hover, #BF3939)',
+  'control-error-active': 'var(--bg-control-error-active, #CC4545)',
+  'control-error-alpha-hover': 'var(--bg-control-error-alpha-hover, #F764641A)',
+  'control-error-alpha-active': 'var(--bg-control-error-alpha-active, #F7646433)',
+  'control-disable-primary': 'var(--bg-control-disable-primary, #DCE0E8)',
+  'control-disable-secondary': 'var(--bg-control-disable-secondary, #ACB3C3)',
+
+  // visuals
+  blue: 'var(--bg-visual-blue, #D6EDF9)',
+  'green-1': 'var(--bg-visual-green-1, #CDE8E5)',
+  'green-2': 'var(--bg-visual-green-2, #D1F0DC)',
+  brown: 'var(--bg-visual-brown, #FDE8D8)',
+  red: 'var(--bg-visual-red, #FCE7F3)',
+  'violet-1': 'var(--bg-visual-violet-1, #DDE3F9)',
+  'violet-2': 'var(--bg-visual-violet-2, #F1E9FF)',
+};
+
+const borderColors = {
+  transparent: 'transparent',
+  primary: 'var(--stroke-primary, #57647A)',
+  secondary: 'var(--stroke-secondary, #D1DBEA)',
+  tertiary: 'var(--stroke-tertiary, #E0E6F0)',
+  error: 'var(--stroke-error, #AE2F2F)',
+  warning: 'var(--stroke-warning, #EEC840)',
+  info: 'var(--stroke-info, #1D4ED8)',
+  accent: 'var(--stroke-accent, #1D4ED8)',
+  success: 'var(--stroke-success, #007274)',
+  focus: 'var(--stroke-focus, #161B2D)',
+
+  // controls
+  default: 'var(--stroke-default, #B2C2DD)',
+  'accent-alpha': 'var(--stroke-accent-alpha, #2764D933)',
+  'gradient-1': 'var(--stroke-gradient-1, #5976E9)',
+  'gradient-2': 'var(--stroke-gradient-2, #885DF2)',
+  'accent-focus': 'var(--stroke-accent-focus, #6785FB)',
+  'error-alpha': 'var(--stroke-error-alpha, #AE2F2F73)',
+  'control-disable-primary': 'var(--stroke-control-disable-primary, #848E9C)',
+};
+
+const textColors = {
+  transparent: 'transparent',
+  primary: 'var(--text-primary, #161B2D)',
+  secondary: 'var(--text-secondary, #57647A)',
+  tertiary: 'var(--text-tertiary, #848E9C)',
+  accent: 'var(--text-accent, #1D4ED8)',
+  error: 'var(--text-error, #AE2F2F)',
+  warning: 'var(--text-warning, #7F6300)',
+  'warning-icon': 'var(--text-warning-icon, #EEC840)',
+  info: 'var(--text-info, #1D4ED8)',
+  success: 'var(--text-success, #007274)',
+
+  // visuals
+  blue: 'var(--text-visual-blue, #1189C8)',
+  'green-1': 'var(--text-visual-green-1, #059669)',
+  'green-2': 'var(--text-visual-green-2, #0D6E72)',
+  'green-3': 'var(--text-visual-green-3, #065F46)',
+  'brown-1': 'var(--text-visual-brown-1, #D36817)',
+  'brown-2': 'var(--text-visual-brown-2, #B45309)',
+  red: 'var(--text-visual-red, #9D174D)',
+  'violet-1': 'var(--text-visual-violet-1, #7C3AED)',
+  'violet-2': 'var(--text-visual-violet-2, #3730B7)',
+
+  // controls
+  'control-permanent': 'var(--text-control-permanent, #FCFCFC)',
+  'control-inverted': 'var(--text-control-inverted, #FCFCFC)',
+  'control-disable-primary': 'var(--text-control-disable-primary, #848E9C)',
+  'control-disable-secondary': 'var(--text-control-disable-secondary, #DCE0E8)',
+  'control-accent-hover': 'var(--text-control-accent-hover, #5976E9)',
+  'control-accent-active': 'var(--text-control-accent-active, #6785FB)',
+};
+
+const shadowColors = {
+  'xs-1': 'var(--shadow-xs-1, #2764D933)',
+  'xs-2': 'var(--shadow-xs-2, #161B2D08)',
+  sm: 'var(--shadow-sm, #2764D914)',
+  md: 'var(--shadow-md, #2764D90F)',
+  lg: 'var(--shadow-lg, #2764D914)',
+};
+
+const placeholderColor = {
+  primary: 'var(--text-primary, #161B2D)',
+  secondary: 'var(--controls-text-secondary-disable, #ACB3C3)',
+};
+
+// TODO: remove colors
+const backgroundsColorsToRemove = {
+  'layer-0': 'var(--bg-layer-0, #FCFCFC)',
+  'layer-1': 'var(--bg-layer-1, #E0E6F0)',
+  'layer-2': 'var(--bg-layer-2, #FCFCFC)',
+  'layer-3': 'var(--bg-layer-3, #EEF1F7)',
+  'layer-4': 'var(--bg-layer-4, #D1DBEA)',
+  blackout: 'var(--bg-blackout, #161B2D4D)',
+  neutral: 'var(--bg-neutral, #EEF1F7)',
+  inverted: 'var(--bg-inverted, #161B2D)',
+  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #7DA4FF2E)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC2E)',
   'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2E)',
-
-  'model-icon': 'var(--bg-model-icon, #FFFFFF)', // TODO: use?
-
-  // TODO: need review - no des
-  'accent-primary': 'var(--bg-accent-primary, #7DA4FF)',
+  'accent-primary': 'var(--bg-accent-primary, #1D4ED8)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
-  secondary: 'var(--bg-secondary, #9FA6BD)',
-  // TODO: need review and change names
+  'model-icon': 'var(--bg-model-icon, #FFFFFF)',
+  secondary: 'var(--bg-secondary, #848E9C)',
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
   'orange-400': 'var(--bg-orange-400, #D97C27)',
   'yellow-400': 'var(--bg-yellow-400, #EEC840)',
-};
 
-const controlsBgColors = {
+  // controls
   'controls-accent-primary': 'var(--controls-bg-accent-primary, #3664E2)',
   'controls-accent-primary-hover': 'var(--controls-bg-accent-primary-hover, #2656D9)',
   'controls-accent-primary-active': 'var(--controls-bg-accent-primary-active, #124ACE)',
-  'controls-accent-primary-alpha-active': 'var(--controls-bg-accent-primary-alpha-active, #7DA4FF4D)',
+  'controls-accent-primary-alpha-active': 'var(--controls-bg-accent-primary-alpha-active, #7DA4FF5C)',
 
   'controls-accent-secondary-alpha-active': 'var(--controls-bg-accent-secondary-alpha-active, #37BABC5C)',
 
@@ -44,96 +149,159 @@ const controlsBgColors = {
   'controls-error': 'var(--controls-bg-error, #CC4545)',
   'controls-error-hover': 'var(--controls-bg-error-hover, #BF3939)',
   'controls-error-active': 'var(--controls-bg-error-active, #AE2F2F)',
-  'controls-error-alpha-hover': 'var(--controls-bg-alpha-hover, #F764642E)',
+  'controls-error-alpha-hover': 'var(--controls-bg-error-alpha-hover, #F764642E)',
   'controls-error-alpha-active': 'var(--controls-bg-error-alpha-active, #F764645C)',
 
-  'controls-disable-accent': 'var(--controls-bg-disable-accent, #696E7C)',
-  'controls-disable': 'var(--controls-bg-disable, #242C42)',
+  'controls-disable-accent': 'var(--controls-bg-disable-accent, #ACB3C3)',
+  'controls-disable': 'var(--controls-bg-disable, #DCE0E8)',
 
-  'controls-neutral-hover': 'var(--controls-bg-neutral-hover, #242C42)',
-  'controls-neutral-active': 'var(--controls-bg-neutral-active, #575F73)',
+  'controls-neutral-hover': 'var(--controls-bg-neutral-hover, #E0E6F0)',
+  'controls-neutral-active': 'var(--controls-bg-neutral-active, #D1DBEA)',
 
   'controls-accent-success-alpha-hover': 'var(--controls-bg-accent-success-alpha-hover, #37BABC2E)',
   'controls-accent-success-alpha-active': 'var(--controls-bg-accent-success-alpha-active, #37BABC5C)',
 
-  // TODO: old names, need to remove
-  'controls-accent': 'var(--controls-bg-accent, #5C8DEA)',
-  'controls-accent-hover': 'var(--controls-bg-accent-hover, #4878D2)',
-  'controls-accent-alpha': 'var(--controls-bg-accent-alpha, #5C8DEA2B)',
-  'controls-disable': 'var(--controls-bg-disable, #7F8792)',
+  'controls-accent': 'var(--controls-bg-accent, #1D4ED8)',
+  'controls-accent-hover': 'var(--controls-bg-accent-hover, #5976E9)',
+  'controls-accent-alpha': 'var(--controls-bg-accent-alpha, #2764D924)',
   'controls-enable-primary': 'var(--controls-enable-primary, #FCFCFC)',
 };
 
-const borderColors = {
-  transparent: 'transparent',
-  primary: 'var(--stroke-primary, #696E7C)',
-  secondary: 'var(--stroke-secondary, #242C42)',
-  tertiary: 'var(--stroke-tertiary, #0C101D)',
-  focus: 'var(--stroke-focus, #EEF1F7)',
-  error: 'var(--stroke-error, #F76464)',
-  warning: 'var(--stroke-warning, #EEC840)',
-  info: 'var(--stroke-info, #7DA4FF)',
-  success: 'var(--stroke-success, #37BABC)',
-  'accent-primary': 'var(--stroke-accent-primary, #7DA4FF)',
+const borderColorsToRemove = {
+  'controls-accent': 'var(--controls-bg-accent, #1D4ED8)',
+  'red-900': 'var(--red-900, #F3D6D8)',
+  'accent-primary': 'var(--stroke-accent-primary, #1D4ED8)',
   'accent-secondary': 'var(--stroke-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--stroke-accent-tertiary, #A972FF)',
-
-  // TODO: need review
-  hover: 'var(--stroke-hover, #EEF1F7)',
+  hover: 'var(--stroke-hover, #57647A)',
   blue800: 'var(--stroke-blue-800, #2764D9)',
 };
 
-const textColors = {
-  transparent: 'transparent',
-  primary: 'var(--text-primary, #EEF1F7)',
-  secondary: 'var(--text-secondary, #9FA6BD)',
-  error: 'var(--text-error, #F76464)',
-  warning: 'var(--text-warning, #EEC840)',
-  'warning-icon': 'var(--text-warning-icon, #EEC840)',
-  info: 'var(--text-info, #7DA4FF)',
-  success: 'var(--text-success, #37BABC)',
-  inverted: 'var(--text-inverted, #161B2D)',
-  'accent-primary': 'var(--text-accent-primary, #7DA4FF)',
+const textColorsToRemove = {
+  inverted: 'var(--text-inverted, #FCFCFC)',
+  'accent-primary': 'var(--text-accent-primary, #1D4ED8)',
   'accent-secondary': 'var(--text-accent-secondary, #37BABC)',
-  'accent-tertiary': 'var(--text-accent-tertiary, #A972FF)',
+  'accent-tertiary': 'var(--text-accent-tertiary, #7C3AED)',
 
-  // TODO: need review
-  'controls-disable': 'var(--controls-text-disable, #0C101D)',
-};
-
-const placeholderColor = {
-  primary: 'var(--text-primary, #EEF1F7)',
-};
-
-const controlsTextColors = {
+  // controls
   'controls-permanent': 'var(--controls-text-permanent, #FCFCFC)',
-
-  'controls-accent-disable': 'var(--controls-text-accent-disable, #242C42)',
-  'controls-primary-disable': 'var(--controls-text-primary-disable, #7C8293)',
-  'controls-secondary-disable': 'var(--controls-text-secondary-disable, #575F73)',
-
-  'controls-neutral': 'var(--controls-text-neutral, #FCFCFC)',
-
+  'controls-accent-disable': 'var(--controls-text-accent-disable, #DCE0E8)',
+  'controls-primary-disable': 'var(--controls-text-primary-disable, #848E9C)',
+  'controls-secondary-disable': 'var(--controls-text-secondary-disable, #ACB3C3)',
+  'controls-neutral': 'var(--controls-text-neutral, #161B2D)',
   'controls-accent-primary-hover': 'var(--controls-text-accent-primary-hover, #3664E2)',
   'controls-accent-primary-active': 'var(--controls-text-accent-primary-active, #124ACE)',
+  'controls-primary': 'var(--controls-primary, #161B2D)',
+  'controls-disable': 'var(--controls-text-disable, #ACB3C3)',
+};
 
-  // TODO: old names, need to remove
-  'controls-primary': 'var(--controls-primary, #FCFCFC)',
-  'controls-disable': 'var(--controls-text-disable, #575F73)',
+/**
+ * Score-cell palette (`Common/ScoreCell`) — one swatch per bucket of the "absolute" 0.00-1.00 score
+ * scale (`abs-00`…`abs-11`, red to green, `abs-00`/`abs-11` the exact-0/exact-1 edge buckets) and the
+ * "delta" -1.00..+1.00 scale (`delta-n4`…`delta-n1` negative, `delta-p1`…`delta-p4` positive).
+ * Source: Figma "DIAL Data Visualization" file, "UI Colors: Heat Map - Absolute values" /
+ * "- Delta" frames (node 62:572 / 72:409), pulled via the Figma MCP's variable defs — not
+ * hand-transcribed. Dark Mode values are the fallback here, matching every other token in this file.
+ * Per-theme values come from the themes service (`ai-dial-chat-themes` config.json) like every other
+ * token: `bg-score-*` / `text-score-*` / `stroke-score-*`, applied as `--<key>` by `applyThemeColors`.
+ */
+const scoreCellBackgroundColors = {
+  'score-abs-00': 'var(--bg-score-abs-00, #75010180)',
+  'score-abs-01': 'var(--bg-score-abs-01, #69100b80)',
+  'score-abs-02': 'var(--bg-score-abs-02, #6c210d80)',
+  'score-abs-03': 'var(--bg-score-abs-03, #59210a80)',
+  'score-abs-04': 'var(--bg-score-abs-04, #5f2b1880)',
+  'score-abs-05': 'var(--bg-score-abs-05, #53320e80)',
+  'score-abs-06': 'var(--bg-score-abs-06, #362a0e80)',
+  'score-abs-07': 'var(--bg-score-abs-07, #403d1280)',
+  'score-abs-08': 'var(--bg-score-abs-08, #22351380)',
+  'score-abs-09': 'var(--bg-score-abs-09, #0d372680)',
+  'score-abs-10': 'var(--bg-score-abs-10, #022d1c80)',
+  'score-abs-11': 'var(--bg-score-abs-11, #01361180)',
+  'score-delta-n4': 'var(--bg-score-delta-n4, #75010180)',
+  'score-delta-n3': 'var(--bg-score-delta-n3, #6c210d80)',
+  'score-delta-n2': 'var(--bg-score-delta-n2, #48171980)',
+  'score-delta-n1': 'var(--bg-score-delta-n1, #2b0f0480)',
+  'score-delta-p1': 'var(--bg-score-delta-p1, #1e2a1680)',
+  'score-delta-p2': 'var(--bg-score-delta-p2, #283f1680)',
+  'score-delta-p3': 'var(--bg-score-delta-p3, #30511b80)',
+  'score-delta-p4': 'var(--bg-score-delta-p4, #32640b80)',
+};
+
+const scoreCellTextColors = {
+  'score-abs-00': 'var(--text-score-abs-00, #ff4e50)',
+  'score-abs-01': 'var(--text-score-abs-01, #f26b5b)',
+  'score-abs-02': 'var(--text-score-abs-02, #e5764a)',
+  'score-abs-03': 'var(--text-score-abs-03, #e08c3f)',
+  'score-abs-04': 'var(--text-score-abs-04, #d9a638)',
+  'score-abs-05': 'var(--text-score-abs-05, #d4be3a)',
+  'score-abs-06': 'var(--text-score-abs-06, #b8c94a)',
+  'score-abs-07': 'var(--text-score-abs-07, #7ec96b)',
+  'score-abs-08': 'var(--text-score-abs-08, #4ecba8)',
+  'score-abs-09': 'var(--text-score-abs-09, #4ec5c5)',
+  'score-abs-10': 'var(--text-score-abs-10, #4dc87a)',
+  'score-abs-11': 'var(--text-score-abs-11, #30e070)',
+  'score-delta-n4': 'var(--text-score-delta-n4, #ff4e50)',
+  'score-delta-n3': 'var(--text-score-delta-n3, #f26b5b)',
+  'score-delta-n2': 'var(--text-score-delta-n2, #e5764a)',
+  'score-delta-n1': 'var(--text-score-delta-n1, #a57a1d)',
+  'score-delta-p1': 'var(--text-score-delta-p1, #9aa63c)',
+  'score-delta-p2': 'var(--text-score-delta-p2, #67a455)',
+  'score-delta-p3': 'var(--text-score-delta-p3, #4dc87a)',
+  'score-delta-p4': 'var(--text-score-delta-p4, #30e070)',
+};
+
+const scoreCellBorderColors = {
+  'score-abs-00': 'var(--stroke-score-abs-00, #ff4e50)',
+  'score-abs-01': 'var(--stroke-score-abs-01, #f26b5b)',
+  'score-abs-02': 'var(--stroke-score-abs-02, #e5764a)',
+  'score-abs-03': 'var(--stroke-score-abs-03, #e08c3f)',
+  'score-abs-04': 'var(--stroke-score-abs-04, #d9a638)',
+  'score-abs-05': 'var(--stroke-score-abs-05, #d4be3a)',
+  'score-abs-06': 'var(--stroke-score-abs-06, #b8c94a)',
+  'score-abs-07': 'var(--stroke-score-abs-07, #7ec96b)',
+  'score-abs-08': 'var(--stroke-score-abs-08, #4ecba8)',
+  'score-abs-09': 'var(--stroke-score-abs-09, #4ec5c5)',
+  'score-abs-10': 'var(--stroke-score-abs-10, #4dc87a)',
+  'score-abs-11': 'var(--stroke-score-abs-11, #30e070)',
+  // Delta's most-negative bucket is the one case where border and text diverge in Dark Mode
+  // (border uses Red/800, text uses the brighter Red/600) — every other bucket matches its text color.
+  'score-delta-n4': 'var(--stroke-score-delta-n4, #eb503e)',
+  'score-delta-n3': 'var(--stroke-score-delta-n3, #f26b5b)',
+  'score-delta-n2': 'var(--stroke-score-delta-n2, #e5764a)',
+  'score-delta-n1': 'var(--stroke-score-delta-n1, #a57a1d)',
+  'score-delta-p1': 'var(--stroke-score-delta-p1, #9aa63c)',
+  'score-delta-p2': 'var(--stroke-score-delta-p2, #67a455)',
+  'score-delta-p3': 'var(--stroke-score-delta-p3, #4dc87a)',
+  'score-delta-p4': 'var(--stroke-score-delta-p4, #30e070)',
 };
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
   content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
+  safelist: [{ pattern: /^(bg|text|border)-score-(abs-(0[0-9]|1[01])|delta-[np][1-4])$/ }],
   theme: {
-    backgroundColor: { ...backgroundsColors, ...controlsBgColors },
-    borderColor: borderColors,
-    stroke: borderColors,
-    divideColor: borderColors,
+    backgroundColor: { ...backgroundsColors, ...backgroundsColorsToRemove, ...scoreCellBackgroundColors },
+    borderColor: {
+      ...borderColors,
+      ...borderColorsToRemove,
+      ...scoreCellBorderColors,
+    },
+    stroke: { ...borderColors, ...borderColorsToRemove, ...scoreCellBorderColors },
+    // SVG fills paint surfaces (a tooltip arrow, a chart area), so the fill scale
+    // follows the background tokens the way `stroke` follows the border ones.
+    fill: {
+      none: 'none',
+      current: 'currentColor',
+      ...backgroundsColors,
+      ...backgroundsColorsToRemove,
+      ...scoreCellBackgroundColors,
+    },
+    divideColor: { ...borderColors, ...borderColorsToRemove },
     placeholderColor: placeholderColor,
-    textColor: { ...textColors, ...controlsTextColors },
-    gradientColorStops: backgroundsColors,
+    textColor: { ...textColors, ...textColorsToRemove, ...scoreCellTextColors },
+    gradientColorStops: { ...backgroundsColors, ...backgroundsColorsToRemove },
 
     extend: {
       screens: {
@@ -143,14 +311,31 @@ module.exports = {
         desktop: { min: '1280px', max: '2559px' },
         large_desktop: { min: '2560px' },
       },
+      outlineColor: {
+        ...borderColors,
+        ...borderColorsToRemove,
+        ...scoreCellBorderColors,
+      },
       boxShadow: {
-        DEFAULT: '0 0 4px 0 var(--bg-blackout, #0C101DB3)',
+        DEFAULT: '0 0 4px 0 var(--bg-blackout, #161B2D4D)',
+        xs: `0 1px 4px 0 ${shadowColors['xs-1']}, 0 1px 2px 0 ${shadowColors['xs-2']}`,
+        sm: `0 8px 10px 0 ${shadowColors.sm}`,
+        md: `0 8px 24px 0 ${shadowColors.md}`,
+        lg: `0 8px 44px 0 ${shadowColors.lg}`,
       },
       borderRadius: {
         DEFAULT: '3px',
       },
       opacity: {
         15: '15%',
+      },
+      backgroundImage: {
+        'control-accent-gradient':
+          'linear-gradient(99.78deg, var(--bg-gradient-1, #1D4ED8) 8.59%, var(--bg-gradient-2, #885DF2) 98.14%)',
+        'control-accent-gradient-hover':
+          'linear-gradient(99.78deg, var(--bg-gradient-1-hover, #6785FB) 8.59%, var(--bg-gradient-2-hover, #885DF2) 98.14%)',
+        'control-accent-gradient-active':
+          'linear-gradient(99.78deg, var(--bg-gradient-1-active, #1D4ED8) 8.59%, var(--bg-gradient-2-active, #7C3AED) 98.14%)',
       },
       colors: {
         transparent: 'transparent',
@@ -177,9 +362,9 @@ module.exports = {
       typography: {
         DEFAULT: {
           css: {
-            color: 'var(--text-primary, #EEF1F7)',
+            color: 'var(--text-primary, #161B2D)',
             a: {
-              color: 'var(--text-accent-primary, #7DA4FF)',
+              color: 'var(--text-accent, #1D4ED8)',
             },
             pre: {
               border: 'none',

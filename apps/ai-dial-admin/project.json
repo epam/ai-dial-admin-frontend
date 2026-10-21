@@ -53,6 +53,20 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/ai-dial-admin",
+        "command": "tsc -p tsconfig.app.json --noEmit"
+      }
+    },
+    "typecheck-specs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/ai-dial-admin",
+        "command": "tsc -p tsconfig.spec.json --noEmit"
+      }
     }
   }
 }

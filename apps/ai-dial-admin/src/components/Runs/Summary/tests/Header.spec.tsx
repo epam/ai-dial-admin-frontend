@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
-import { Run } from '@/src/models/evaluation/run';
+import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import Header from '../Header';
 
@@ -34,6 +34,12 @@ const getChainRow = () =>
     .find((row) => within(row).queryByRole('region', { name: 'label' })?.textContent === RunsI18nKey.RequestsInChain);
 
 describe('Runs Summary :: Header', () => {
+  test('does not repeat the run status, which the detail header shows', () => {
+    render(<Header run={{ status: RunStatus.COMPLETED }} testSuite={{}} />);
+
+    expect(screen.queryByText('Runs.Status.Completed')).toBeNull();
+  });
+
   test('omits the chain-size row when the suite has no additional requests', () => {
     render(<Header run={baseRun} testSuite={{}} />);
 

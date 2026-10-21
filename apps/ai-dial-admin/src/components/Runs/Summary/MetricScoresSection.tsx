@@ -49,7 +49,7 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
             key={group.name}
             title={group.name}
             data={group.bars}
-            maxValue={Math.max(1, ...Object.values(group.bars))}
+            maxValue={Math.max(1, ...Object.values(group.bars).filter((value): value is number => value != null))}
             onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
             inline
             nonCollapsible

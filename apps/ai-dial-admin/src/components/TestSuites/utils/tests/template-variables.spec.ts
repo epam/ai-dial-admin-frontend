@@ -2,12 +2,14 @@ import { describe, test, expect } from 'vitest';
 import {
   buildTurnEffectiveData,
   convertVariableIntoInitialRequest,
+  convertVariablesIntoInitialRequests,
   generateInputBindingsRowData,
   generateVariablesRowData,
+  hasIncompleteInputBindings,
   perTurnFieldNames,
   resolveVariablesForTurn,
 } from '../template-variables';
-import { InputBinding, TemplateVariable, TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { InputBinding, TemplateVariable, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
@@ -32,6 +34,34 @@ describe('buildTurnEffectiveData', () => {
 
   test('returns empty object when both maps are missing', () => {
     expect(buildTurnEffectiveData(undefined, undefined, new Set(['prompt']))).toEqual({});
+  });
+});
+
+describe('convertVariablesIntoInitialRequests', () => {
+  test('seeds one entry per chain request from that request own variables', () => {
+    const result = convertVariablesIntoInitialRequests({
+      '0': [createVariable({ name: 'first', defaultValue: 'a', hasDefault: true })],
+      '1': [createVariable({ name: 'second', defaultValue: 'b', hasDefault: true })],
+    });
+
+    expect(result).toEqual({ '0': { first: 'a' }, '1': { second: 'b' } });
+  });
+
+  test('keeps an entry for a request that declares no variables', () => {
+    expect(convertVariablesIntoInitialRequests({ '0': [createVariable({ name: 'first' })], '1': [] })).toEqual({
+      '0': { first: '' },
+      '1': {},
+    });
+  });
+
+  test('omits a request the response does not mention, so no out-of-range index is sent', () => {
+    expect(convertVariablesIntoInitialRequests({ '0': [createVariable({ name: 'first' })] })).toEqual({
+      '0': { first: '' },
+    });
+  });
+
+  test('returns an empty body for an empty response', () => {
+    expect(convertVariablesIntoInitialRequests({})).toEqual({});
   });
 });
 
@@ -601,5 +631,42 @@ describe('convertVariableIntoInitialRequest', () => {
 
     expect(result).toEqual({ dup: '' });
     expect(Object.keys(result)).toHaveLength(1);
+  });
+});
+
+describe('hasIncompleteInputBindings', () => {
+  const suite = (overrides?: Partial<TestSuite>): TestSuite => ({ id: 'suite-1', ...overrides });
+
+  test('returns false when there are no bindings', () => {
+    expect(hasIncompleteInputBindings(suite())).toBe(false);
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [] }))).toBe(false);
+  });
+
+  test('returns false for a constant or a selected attribute', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', constantValue: '' }] }))).toBe(
+      false,
+    );
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', dataField: 'col' }] }))).toBe(
+      false,
+    );
+  });
+
+  test('returns true for Attribute mode with an empty dataField', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', dataField: '' }] }))).toBe(true);
+  });
+
+  test('returns true when neither dataField nor constantValue is set', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a' }] }))).toBe(true);
+  });
+
+  test('returns true when an additional request has an incomplete binding', () => {
+    expect(
+      hasIncompleteInputBindings(
+        suite({
+          inputBindings: [{ templateVariable: 'ok', constantValue: 'x' }],
+          additionalRequests: [{ inputBindings: [{ templateVariable: 'followUp', dataField: '' }] }],
+        }),
+      ),
+    ).toBe(true);
   });
 });

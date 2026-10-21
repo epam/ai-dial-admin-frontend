@@ -1,32 +1,69 @@
+import { RelativeTimeUnit } from '@/src/models/time-range';
+
 export interface TimePeriodOption {
   value: string;
   label: string;
   offset: number;
+  // How the same span reads as a relative bound. Declared rather than derived from `offset`: a span
+  // of 86400000 ms is both 24 hours and 1 day, and a served bound has to lift back to the preset the
+  // user picked, not to an equivalent one.
+  unit: RelativeTimeUnit;
+  amount: number;
 }
+
+/**
+ * A period whose start is an absolute anchor instead of a sliding offset from "now", so its span
+ * grows as time passes. Anchors are parsed and validated before the option is built, so
+ * `startDate` is always a valid `Date`.
+ */
+export interface AnchoredTimePeriodOption {
+  value: string;
+  label: string;
+  startDate: Date;
+}
+
+export type TimeFilterOption = TimePeriodOption | AnchoredTimePeriodOption;
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const DEFAULT_TIME_PERIOD = '2d';
 
+export const SINCE_CREATION_PERIOD_ID = 'since-creation';
+
 export const timePeriodOptionsConfig: TimePeriodOption[] = [
-  { value: '15m', label: 'Last 15m', offset: 15 * 60 * 1000 },
-  { value: '30m', label: 'Last 30m', offset: 30 * 60 * 1000 },
-  { value: '1h', label: 'Last 1h', offset: 60 * 60 * 1000 },
-  { value: '3h', label: 'Last 3h', offset: 3 * 60 * 60 * 1000 },
-  { value: '6h', label: 'Last 6h', offset: 6 * 60 * 60 * 1000 },
-  { value: '12h', label: 'Last 12h', offset: 12 * 60 * 60 * 1000 },
-  { value: '24h', label: 'Last 24h', offset: 24 * 60 * 60 * 1000 },
-  { value: '2d', label: 'Last 2d', offset: 2 * 24 * 60 * 60 * 1000 },
-  { value: '7d', label: 'Last 7d', offset: 7 * 24 * 60 * 60 * 1000 },
-  { value: '30d', label: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000 },
+  { value: '15m', label: 'Last 15m', offset: 15 * 60 * 1000, unit: RelativeTimeUnit.Minute, amount: 15 },
+  { value: '30m', label: 'Last 30m', offset: 30 * 60 * 1000, unit: RelativeTimeUnit.Minute, amount: 30 },
+  { value: '1h', label: 'Last 1h', offset: 60 * 60 * 1000, unit: RelativeTimeUnit.Hour, amount: 1 },
+  { value: '3h', label: 'Last 3h', offset: 3 * 60 * 60 * 1000, unit: RelativeTimeUnit.Hour, amount: 3 },
+  { value: '6h', label: 'Last 6h', offset: 6 * 60 * 60 * 1000, unit: RelativeTimeUnit.Hour, amount: 6 },
+  { value: '12h', label: 'Last 12h', offset: 12 * 60 * 60 * 1000, unit: RelativeTimeUnit.Hour, amount: 12 },
+  { value: '24h', label: 'Last 24h', offset: 24 * 60 * 60 * 1000, unit: RelativeTimeUnit.Hour, amount: 24 },
+  { value: '2d', label: 'Last 2d', offset: 2 * 24 * 60 * 60 * 1000, unit: RelativeTimeUnit.Day, amount: 2 },
+  { value: '7d', label: 'Last 7d', offset: 7 * 24 * 60 * 60 * 1000, unit: RelativeTimeUnit.Day, amount: 7 },
+  { value: '30d', label: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000, unit: RelativeTimeUnit.Day, amount: 30 },
 ];
 
+export const findTimePeriodByRelative = (
+  unit: string,
+  amount: number,
+  options: TimeFilterOption[] = timePeriodOptionsConfig,
+): TimePeriodOption | undefined =>
+  options.find(
+    (option): option is TimePeriodOption =>
+      !isAnchoredTimePeriodOption(option) && option.unit === unit && option.amount === amount,
+  );
+
+export function isAnchoredTimePeriodOption(option: TimeFilterOption): option is AnchoredTimePeriodOption {
+  return 'startDate' in option;
+}
+
 export function getTimePeriodOptionsByMaxMs(
-  options: TimePeriodOption[] = timePeriodOptionsConfig,
+  options: TimeFilterOption[] = timePeriodOptionsConfig,
   maxRangeMs?: number,
-): TimePeriodOption[] {
+): TimeFilterOption[] {
   if (maxRangeMs == null) return options;
-  return options.filter((opt) => opt.offset <= maxRangeMs);
+  // An anchored option's span grows without bound, so there is nothing to compare against the cap.
+  return options.filter((opt) => !isAnchoredTimePeriodOption(opt) && opt.offset <= maxRangeMs);
 }
 
 export function getDefaultTimePeriod(options: TimePeriodOption[]): string {

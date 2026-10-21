@@ -3,7 +3,7 @@ import { FC, useMemo } from 'react';
 import { ButtonAppearance, DialDangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
-import PromptProperties from '@/src/components/Assets/Prompts/View/Properties';
+import PromptProperties from '@/src/components/Assets/Artifacts/Prompts/View/Properties';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import EditableTitle from '@/src/components/Common/EditableTitle/EditableTitle';
 import { ButtonsI18nKey } from '@/src/constants/i18n';

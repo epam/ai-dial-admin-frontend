@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -119,9 +119,7 @@ describe('DatasetTestCasesList', () => {
 
     render(<DatasetTestCasesList dataset={{ id: 'ds-1' }} />);
 
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith('ds-1', 0, 1000, [], []);
-    });
+    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledWith('ds-1', 0, 1000, [], []));
   });
 
   test('renders a multi-turn case as one collapsed GROUP row, not one row per turn', async () => {
@@ -129,10 +127,7 @@ describe('DatasetTestCasesList', () => {
 
     render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(1);
-    });
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.GROUP);
     expect(capturedRowData![0].turnCount).toBe(3);
   });
@@ -142,11 +137,11 @@ describe('DatasetTestCasesList', () => {
 
     render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedOnToggleExpand).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
 
     capturedOnToggleExpand!('case-1');
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(4));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(4));
     expect(capturedRowData!.map((row) => row.rowType)).toEqual([
       GridRowType.GROUP,
       GridRowType.TURN,
@@ -156,7 +151,7 @@ describe('DatasetTestCasesList', () => {
 
     capturedOnToggleExpand!('case-1');
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.GROUP);
   });
 
@@ -165,10 +160,7 @@ describe('DatasetTestCasesList', () => {
 
     render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(1);
-    });
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
     expect(capturedRowData![0].turnCount).toBeUndefined();
     expect(capturedRowData![0].turns).toBeUndefined();
@@ -179,11 +171,15 @@ describe('DatasetTestCasesList', () => {
 
     render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedTurnActionHandlers).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(capturedRowData).toEqual([expect.objectContaining({ id: 'case-2', rowType: GridRowType.SINGLE })]),
+    );
 
-    capturedTurnActionHandlers!.onAddTurn('case-2');
+    act(() => {
+      capturedTurnActionHandlers!.onAddTurn('case-2');
+    });
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(3));
     expect(capturedRowData!.map((row) => row.rowType)).toEqual([GridRowType.GROUP, GridRowType.TURN, GridRowType.TURN]);
     expect(capturedRowData![0].turnCount).toBe(2);
   });
@@ -193,13 +189,13 @@ describe('DatasetTestCasesList', () => {
 
     render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedTurnActionHandlers).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
 
     capturedTurnActionHandlers!.onDeleteTurn({ groupKey: 'case-1', _turnIndex: 2 });
-    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(3));
 
     capturedTurnActionHandlers!.onDeleteTurn({ groupKey: 'case-1', _turnIndex: 1 });
-    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
   });
 
@@ -208,16 +204,16 @@ describe('DatasetTestCasesList', () => {
 
     const { queryByText } = render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedOnToggleExpand).not.toBeNull());
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     capturedOnToggleExpand!('case-1');
-    await waitFor(() => expect(capturedRowData!.length).toBe(4));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(4));
 
     const turnRow = capturedRowData![2];
     expect(turnRow.rowType).toBe(GridRowType.TURN);
 
     capturedRemoveIconClick!(turnRow);
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(3));
     expect(capturedRowData![0].turnCount).toBe(2);
     expect(queryByText('Delete modal for case-1')).toBeNull();
   });
@@ -227,7 +223,7 @@ describe('DatasetTestCasesList', () => {
 
     const { findByText } = render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1));
     const groupRow = capturedRowData![0];
     expect(groupRow.rowType).toBe(GridRowType.GROUP);
 
@@ -249,8 +245,7 @@ describe('DatasetTestCasesList', () => {
       />,
     );
 
-    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
-    expect(capturedRowData!.length).toBe(1); // still collapsed — never toggled
+    await vi.waitFor(() => expect(capturedRowData?.length).toBe(1)); // still collapsed — never toggled
 
     capturedOnCellChange!({ id: 'case-1', _turnIndex: 1, data: { value: 'b' } }, 'value', 'edited-b');
 
@@ -258,5 +253,49 @@ describe('DatasetTestCasesList', () => {
     expect(dirty).toHaveLength(1);
     expect(dirty[0].data).toEqual({});
     expect(dirty[0].multiTurnData).toEqual([{ value: 'a' }, { value: 'edited-b' }, { value: 'c' }]);
+  });
+
+  describe('DatasetTestCasesList — unsaved rename', () => {
+    const field = (id: string, name: string) => ({
+      id,
+      name,
+      type: TestCaseItemType.STRING,
+      required: false,
+      description: '',
+    });
+    const savedSchema = [field('f-1', 'question'), field('f-2', 'answer')];
+    const renamedDataset: Dataset = { id: 'ds-1', testCaseSchema: [field('f-1', 'prompt'), field('f-2', 'answer')] };
+
+    test('shows the existing value under the renamed field', async () => {
+      vi.mocked(actions.getTestCases).mockResolvedValue(
+        createPageData([{ id: 'case-1', data: { question: 'q', answer: 'a' } }]),
+      );
+
+      render(<DatasetTestCasesList dataset={renamedDataset} savedSchema={savedSchema} />);
+
+      await vi.waitFor(() => expect(capturedRowData).toHaveLength(1));
+      expect(capturedRowData![0]).toMatchObject({ prompt: 'q', answer: 'a' });
+      expect(capturedRowData![0]).not.toHaveProperty('question');
+    });
+
+    test('does not remap the refetch after the rename is saved', async () => {
+      const actionsRef = createRef<DatasetTestCasesActions | null>();
+      vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([{ id: 'case-1', data: { question: 'q' } }]));
+
+      render(
+        <DatasetTestCasesList dataset={renamedDataset} savedSchema={savedSchema} testCasesActionsRef={actionsRef} />,
+      );
+      await vi.waitFor(() => expect(capturedRowData).toHaveLength(1));
+
+      // Server data now carries the new key; the old name is reused by an unrelated value.
+      vi.mocked(actions.getTestCases).mockResolvedValue(
+        createPageData([{ id: 'case-1', data: { prompt: 'q', question: 'other' } }]),
+      );
+      act(() => {
+        actionsRef.current!.clearDirtyAndRefresh(renamedDataset.testCaseSchema);
+      });
+
+      await vi.waitFor(() => expect(capturedRowData?.[0]).toMatchObject({ prompt: 'q', question: 'other' }));
+    });
   });
 });

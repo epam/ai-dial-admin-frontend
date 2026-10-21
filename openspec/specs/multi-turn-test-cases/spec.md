@@ -74,7 +74,7 @@ Each projected row SHALL have a grid row id unique across the whole grid — the
 
 While any column filter is active, the projection SHALL drop `GROUP` summary rows and emit every turn as its own row, so the grid's native per-column filtering can hide non-matching turns individually.
 
-A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row survives to carry them, a flattened turn row SHALL show the case's own `id` and name in their columns rather than leaving them blank — otherwise a filtered-down turn is unidentifiable and its case unrenameable. The case `id` SHALL be readable from the id column's value on every row type regardless of what that row displays, so an id filter can match a turn.
+A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row survives to carry them, a flattened turn row SHALL show the case's own `id`, name, and shared field values in their columns rather than leaving them blank — otherwise a filtered-down turn is unidentifiable, its case unrenameable, and its shared values invisible. The case `id` SHALL be readable from the id column's value on every row type regardless of what that row displays, so an id filter can match a turn.
 
 #### Scenario: Filtering matches inside a collapsed group
 
@@ -85,6 +85,11 @@ A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row
 
 - **WHEN** the name is edited on a flattened turn row
 - **THEN** every turn of that case carries the new name, exactly as editing it on the `GROUP` row would
+
+#### Scenario: Filtering keeps shared field values on flattened turns
+
+- **WHEN** a column filter flattens a multi-turn case
+- **THEN** each turn row shows the case's shared field values, rather than leaving those cells blank
 
 #### Scenario: Clearing the filter restores grouping
 
@@ -140,10 +145,10 @@ Each schema field SHALL be either per-turn (`perTurn` true) or shared. A field w
 
 Rendering SHALL follow the scope:
 
-| | collapsed `GROUP` row | `TURN` row | `SINGLE` row |
-|---|---|---|---|
-| per-turn field | every turn's value, one line per turn, read-only | editable | editable |
-| shared field | editable | blank | editable |
+| | collapsed `GROUP` row | nested `TURN` row | flattened `TURN` row | `SINGLE` row |
+|---|---|---|---|---|
+| per-turn field | every turn's value, one line per turn, read-only | editable | editable | editable |
+| shared field | editable | blank | editable | editable |
 
 Editing a shared field on a `GROUP` row SHALL write the value to every turn of that case. A case's turns SHALL always agree on their shared field values, whichever turn is later removed or reordered.
 
@@ -191,7 +196,7 @@ Scope-based reading SHALL apply only once the schema is known. Before it loads, 
 #### Scenario: A shared field is edited once
 
 - **WHEN** a shared field is edited on a `GROUP` row
-- **THEN** the value is applied to every turn of the case, and the case's `TURN` rows show that column blank
+- **THEN** the value is applied to every turn of the case, and nested `TURN` rows show that column blank
 
 #### Scenario: A shared value survives deleting the turn it was entered on
 
@@ -303,3 +308,63 @@ A group SHALL remain valid only when every one of its turns is valid.
 - **WHEN** any turn of a case is invalid
 - **THEN** the master row shows the invalid status
 
+### Requirement: Try Out is available on the case row, not on nested turns
+
+On the Test Suites Test Cases grid, the Try Out (green play) control SHALL appear only on a row that represents the whole test case: a `GROUP` row or a `SINGLE` row. A nested `TURN` row under an expanded group SHALL NOT show Try Out, because execution always runs every turn of the case in sequence.
+
+When column search flattens multi-turn groups into bare `TURN` rows (`isFlattened`), Try Out SHALL appear only on the first turn of each case (`turnNumber === 1`), so the case remains runnable without repeating the control on every turn.
+
+#### Scenario: Nested turn rows hide Try Out
+
+- **WHEN** a multi-turn test case is expanded
+- **THEN** the `GROUP` row shows Try Out and each nested `TURN` row does not
+
+#### Scenario: Single-turn rows keep Try Out
+
+- **WHEN** a single-turn test case is displayed
+- **THEN** its `SINGLE` row shows Try Out
+
+#### Scenario: Flattened search keeps one Try Out per case
+
+- **WHEN** a column filter flattens a three-turn case into turn rows
+- **THEN** only the first turn row of that case shows Try Out
+
+### Requirement: Multi-turn Try Out results show per-turn history
+
+When a test-case Try Out response includes a non-empty `history` array (genuine multi-turn sequence, N>1 turns executed), the Try Out Response tab SHALL present the envelope status (and Grafana link when present) and then one section per history entry in order, each labeled as that turn and showing that entry’s resolved request and response. The duplicated top-level request/response pair SHALL NOT also be rendered when history is shown.
+
+When `history` is absent (single-turn or collapsed multi-turn), the Response tab SHALL keep the existing single request/response presentation.
+
+#### Scenario: History present shows each turn
+
+- **WHEN** Try Out returns two history entries
+- **THEN** the result panel shows Turn 1 and Turn 2 request/response sections and does not duplicate a separate top-level request/response pair outside those turns
+
+#### Scenario: History absent keeps the single pair
+
+- **WHEN** Try Out returns no history
+- **THEN** the result panel shows one request section and one response section as before
+
+### Requirement: Multi-turn Try Out Request shows Dynamic configuration per turn
+
+When a test-case Try Out Request preview is opened for a case with `multiTurnData` of length greater than 1, the preview SHALL show one Dynamic configuration section per turn in order, each labeled as that turn, with template-variable values resolved for that turn (shared fields from `data`, per-turn fields from that turn's `multiTurnData` entry, using the input bindings of the request the section belongs to).
+
+When the case is single-turn (`multiTurnData` absent or length ≤ 1), the Request preview SHALL keep a single Dynamic configuration section.
+
+When the suite is a chain, the per-turn sections SHALL be shown within the selected request, so a chained multi-turn case shows that request's turns only. A request is treated as multi-turn when its own bindings reference a per-turn field.
+
+#### Scenario: Multi-turn Request shows one Dynamic configuration per turn
+
+- **WHEN** Try Out is opened for a three-turn test case
+- **THEN** the Request preview shows Turn 1, Turn 2, and Turn 3 Dynamic configuration sections with that turn's resolved values
+
+#### Scenario: Single-turn Request keeps one Dynamic configuration
+
+- **WHEN** Try Out is opened for a single-turn test case
+- **THEN** the Request preview shows one Dynamic configuration section and no turn labels
+
+#### Scenario: A chained multi-turn case shows turns within the selected request
+
+- **WHEN** Try Out is opened for a three-turn test case on a suite whose second request binds a per-turn field while request `#0` does not
+- **THEN** selecting request `#0` shows one Dynamic configuration section with no turn labels
+- **AND** selecting the second request shows Turn 1, Turn 2, and Turn 3 sections resolved from its own bindings

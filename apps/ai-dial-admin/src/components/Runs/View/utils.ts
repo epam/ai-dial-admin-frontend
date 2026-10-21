@@ -1,7 +1,8 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef } from 'ag-grid-community';
+import classNames from 'classnames';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
-import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
+import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
 import {
   DURATION_COLUMN_WIDTH,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -24,12 +25,16 @@ import {
   EXECUTION_GROUP_HEADER,
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
+import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 
 import { CompareAnalyticsRow, MetricGroup } from './models';
+import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
 export type { MetricGroup } from './models';
 
 export const RUN_FILTER = (id?: string | null): FilterDto[] => [
@@ -106,9 +111,11 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
           field: `${groupKey}_${key}`,
           colId: `${groupKey}_${key}`,
           headerName: key,
-          cellRenderer: MetricScoreCellRenderer,
+          cellRenderer: ScoreCellRenderer,
           ...NUMBER_FILTER_COL_DEF,
           ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+          ...rightAlignedColumn,
+          cellClass: 'p-0',
           valueGetter: (params) => {
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';
@@ -148,9 +155,12 @@ type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
   field,
   headerName,
+  headerComponentParams: { innerHeaderComponent: EllipsisHeader, innerHeaderComponentParams: { isRightAligned: true } },
   colId: field,
+  sortable: true,
   ...lockedWidthColDef(width),
   ...NO_FILTER_COL_DEF,
+  ...rightAlignedColumn,
   valueGetter: (params) => (params.data?.[field] != null ? params.data[field] + 1 : null),
 });
 
@@ -160,9 +170,13 @@ const executionColumns: ColDef[] = [
   {
     field: 'totalRequests',
     headerName: 'Total requests',
+    headerComponent: EllipsisHeader,
+    headerComponentParams: { isRightAligned: true },
     colId: 'totalRequests',
+    hide: true,
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
+    ...rightAlignedColumn,
     valueGetter: (params) => params.data?.totalRequests ?? null,
   },
   buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
@@ -170,8 +184,10 @@ const executionColumns: ColDef[] = [
     field: 'totalTurns',
     headerName: 'Total turns',
     colId: 'totalTurns',
+    hide: true,
     ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
+    ...rightAlignedColumn,
     valueGetter: (params) => params.data?.totalTurns ?? null,
   },
   {
@@ -180,7 +196,8 @@ const executionColumns: ColDef[] = [
     colId: 'http',
     ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
-    cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
+    headerClass: 'align-right',
+    cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
   {
     field: 'durationMs',
@@ -188,42 +205,48 @@ const executionColumns: ColDef[] = [
     colId: 'duration',
     ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
+    headerClass: 'align-right',
     valueGetter: (params) => {
       const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
       return getFormattedDuration(duration);
     },
-    cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
+    cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
 ];
 
-const staticColumns = [
-  {
-    headerName: ' ',
-    context: { panelName: 'Details' },
-    children: [
-      {
-        field: 'executionStatus',
-        headerName: ' ',
-        context: { panelName: 'Status' },
-        colId: 'status',
-        ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
-        ...NO_FILTER_COL_DEF,
-        cellRenderer: ExecutionStatusCellRenderer,
-      },
-      {
-        field: 'testCaseName',
-        headerName: 'Test Case name',
-        colId: 'testCaseName',
-        ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
-        ...TEXT_FILTER_COL_DEF,
-      },
-    ],
-  },
-  {
-    headerName: EXECUTION_GROUP_HEADER,
-    children: executionColumns,
-  },
-];
+const detailsColumns = {
+  headerName: ' ',
+  context: { panelName: 'Details' },
+  children: [
+    {
+      field: 'executionStatus',
+      headerName: ' ',
+      context: { panelName: 'Status' },
+      colId: 'status',
+      ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
+      ...NO_FILTER_COL_DEF,
+      cellRenderer: ExecutionStatusCellRenderer,
+    },
+    {
+      field: 'testCaseName',
+      headerName: 'Test Case name',
+      colId: 'testCaseName',
+      ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
+      ...TEXT_FILTER_COL_DEF,
+    },
+  ],
+};
+
+/**
+ * `Total requests` and `Total turns` ship hidden from `executionColumns`: a denominator is context for a
+ * position rather than a reading of its own. Of what is left, an index column that reads the same on
+ * every row distinguishes no result from another, so it too starts hidden and the operator re-enables it
+ * from the columns panel.
+ */
+const getExecutionGroup = (results: AnalyticsResult[]) => ({
+  headerName: EXECUTION_GROUP_HEADER,
+  children: hideUniformColumns(executionColumns, getUniformExecutionFields(results)),
+});
 
 /**
  * A single row only carries the columns of the request that produced it, so a request chain spreads
@@ -235,15 +258,40 @@ const mergeRecordSchema = (
 ): Record<string, unknown> =>
   results.reduce<Record<string, unknown>>((acc, result) => ({ ...acc, ...(getRecord(result) || {}) }), {});
 
+const INPUT_BINDINGS_GROUP_HEADER = 'INPUT BINDINGS';
+
+const NON_METRIC_GROUP_HEADERS = new Set([
+  ' ',
+  EXECUTION_GROUP_HEADER,
+  EXTRACTED_GROUP_HEADER,
+  INPUT_BINDINGS_GROUP_HEADER,
+]);
+
+/** Metric column-group headers in Extraction Result / Compare grid order. */
+export const getMetricGroupOrder = (colDefs: (ColDef | ColGroupDef)[]): string[] =>
+  colDefs
+    .filter((col) => {
+      const children = 'children' in col && col.children ? (col.children as ColDef[]) : [];
+      return children.length > 0 && !!col.headerName && !NON_METRIC_GROUP_HEADERS.has(col.headerName);
+    })
+    .map((col) => col.headerName as string);
+
+export const getRowDetailFieldSchema = (results: AnalyticsResult[]): RowDetailFieldSchema => ({
+  metricValues: mergeMetricValuesSchema(results),
+  testCaseData: mergeRecordSchema(results, (result) => result.testCaseData),
+  extractedColumns: mergeRecordSchema(results, (result) => result.extractedColumns),
+});
+
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = mergeRecordSchema(results, (result) => result.testCaseData);
 
   return [
-    ...staticColumns,
+    detailsColumns,
+    getExecutionGroup(results),
     ...getMetricsColumns(metrics),
     {
-      headerName: 'INPUT BINDINGS',
+      headerName: INPUT_BINDINGS_GROUP_HEADER,
       children: getInputColumns(input, true),
     },
     {

@@ -1,5 +1,6 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   QueryLogicalOperator,
   QueryOperator,
@@ -15,6 +16,7 @@ import {
   ChartType,
   CompactSelectOptionDescriptor,
   QueryBuilderWarning,
+  ResultValueClass,
 } from '@/src/models/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 
@@ -73,6 +75,23 @@ export const OPERATOR_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
   },
 ];
 
+// The two catalog functions a relative time bound is expressed with, and the only function names
+// the frontend states anywhere. Every function the user picks comes from the served catalog; the
+// toolbar offers no pick — it expresses one fixed meaning, so it has to name what carries it.
+export const RELATIVE_TIME_SUBTRACT_FN = 'date_sub';
+export const RELATIVE_TIME_NOW_FN = 'now';
+
+// The operators the service refuses over an enum field. ClickHouse defines comparison over an enum but not
+// the string functions, so `ico`/`inc` — and the case-sensitive `co`/`nc` a JSON-authored query may carry —
+// are all the same LIKE and all rejected. One bad predicate fails the whole query, so these are withheld
+// from the selector rather than left authorable; they stay in the model so a loaded query still round-trips.
+export const ENUM_UNSUPPORTED_OPERATORS: QueryOperator[] = [
+  QueryOperator.Co,
+  QueryOperator.Nc,
+  QueryOperator.Ico,
+  QueryOperator.Inc,
+];
+
 export const VALUE_TYPE_OPTIONS: SelectOption[] = toOptions(
   Object.values(QueryValueType).filter((t) => t !== QueryValueType.Null),
 );
@@ -97,10 +116,24 @@ export const SORT_DIRECTION_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] 
 ];
 
 export const SORT_NULLS_DEFAULT = QuerySortNulls.Default;
-export const SORT_NULLS_OPTIONS: SelectOption[] = [
-  { value: QuerySortNulls.Default, label: 'Default' },
-  { value: QuerySortNulls.First, label: 'First' },
-  { value: QuerySortNulls.Last, label: 'Last' },
+// Each label names what it places, because the option list shows no prefix. The default serializes as no
+// `nulls` at all, so its description states where the engine then puts them.
+export const SORT_NULLS_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
+  {
+    value: QuerySortNulls.Default,
+    labelKey: QueryBuilderI18nKey.NullsDefault,
+    descriptionKey: QueryBuilderI18nKey.NullsDefaultDescription,
+  },
+  {
+    value: QuerySortNulls.First,
+    labelKey: QueryBuilderI18nKey.NullsFirst,
+    descriptionKey: QueryBuilderI18nKey.NullsFirstDescription,
+  },
+  {
+    value: QuerySortNulls.Last,
+    labelKey: QueryBuilderI18nKey.NullsLast,
+    descriptionKey: QueryBuilderI18nKey.NullsLastDescription,
+  },
 ];
 
 export const PAGE_TYPE_OPTIONS: SelectOption[] = [
@@ -110,12 +143,14 @@ export const PAGE_TYPE_OPTIONS: SelectOption[] = [
 
 export const DEFAULT_PAGE_LIMIT = 25;
 export const DEFAULT_CURSOR_LIMIT = 100;
+// The CSV endpoints' per-request maximum: a higher limit is rejected, never clamped.
+export const EXPORT_ROW_LIMIT = 1000;
+export const DEFAULT_CSV_EXPORT_FILE_NAME = 'result.csv';
 
 export const UNTAGGED_KEY = 'untagged';
 
-// Alias of the count() column added to aggregate queries that define no aggregates of their own.
-// Deliberately shorter than the label an authored count row derives ("Row count"): this name is only
-// ever a result-grid header, never something the user typed or can edit.
+export const JSON_INDENT = 2;
+
 export const IMPLICIT_COUNT_ALIAS = 'Count';
 
 export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
@@ -146,11 +181,37 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
   [ChartType.Scatter]: { xSource: ChartColumnSource.Numeric, ySource: ChartColumnSource.Numeric, ...AXIS_SLOTS },
 };
 
+// A tooltip can show a short value in place; past this the value needs the viewer instead.
+export const RESULT_TOOLTIP_MAX_CHARS = 240;
+
+// Wider than a column ever shows, so the preview is never the limit on screen, but bounded so a wide
+// result does not hold whole documents in the DOM.
+export const RESULT_PREVIEW_CHARS = 400;
+
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
   [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
+  [QueryBuilderWarning.DroppedProjectionColumn]: QueryBuilderI18nKey.WarningDroppedProjectionColumn,
+  [QueryBuilderWarning.DroppedCondition]: QueryBuilderI18nKey.WarningDroppedCondition,
 };
 
 // Which section header surfaces which aggregate-validation warning.
 export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate, QueryBuilderWarning.MissingGroupByField];
 export const AGGREGATE_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
+
+// The schema's own statement about a column's value class. A type absent from this map is a type the
+// result grid does not format — Uuid, Enum, Boolean, String, Object, Array, Map.
+export const FIELD_TYPE_VALUE_CLASS: Partial<Record<AnalyticsFieldType, ResultValueClass>> = {
+  [AnalyticsFieldType.Integer]: ResultValueClass.Compact,
+  [AnalyticsFieldType.Long]: ResultValueClass.Compact,
+  [AnalyticsFieldType.Decimal]: ResultValueClass.Significant,
+  [AnalyticsFieldType.Timestamp]: ResultValueClass.DateTime,
+  [AnalyticsFieldType.Date]: ResultValueClass.DateTime,
+};
+
+// The catalog's own classification of what a column measures, and the only machine-readable unit signal a
+// field carries that is not its name: there is no unit attribute, `description` states the unit in prose
+// and `display_name` states it in parentheses on some rows only. The frontend already depends on this same
+// tag vocabulary — SESSION_TAG_LABEL_KEY in constants/analytics/sessions-trace.ts maps nine tag
+// values, `performance` among them, to the sessions column picker's group labels.
+export const DURATION_FIELD_TAG = 'performance';

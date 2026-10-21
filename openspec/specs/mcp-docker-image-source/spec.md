@@ -1,3 +1,9 @@
+# mcp-docker-image-source Specification
+
+## Purpose
+
+Creating and viewing MCP containers whose source is a docker image reference.
+
 ## Requirements
 
 ### Requirement: MCP Create button is a dropdown with two options

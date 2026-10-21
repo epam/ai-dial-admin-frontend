@@ -1,18 +1,38 @@
 import {
   bulkDeleteApps,
+  bulkDeletePlatformApplications,
   createApp,
+  createPlatformApplication,
   exportApps,
   getApp,
+  getPlatformApplication,
   importApps,
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
-import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/assets-app-runners/actions';
-import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
-import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/assets-skills/actions';
+import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import {
+  bulkDeleteCatalogSchemas,
+  createCatalogSchema,
+  getCatalogSchema,
+} from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import {
+  bulkDeleteInterceptors,
+  createInterceptor,
+  getInterceptor,
+} from '@/src/app/[lang]/platform-interceptors/actions';
+import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/app/[lang]/platform-translators/actions';
+import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
+import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
+import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
+import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
+import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/skills/actions';
+import {
+  bulkDeletePlatformToolsets,
   bulkDeleteToolsets,
+  createPlatformToolset,
   createToolset,
   exportToolsets,
+  getPlatformToolset,
   getToolset,
   importToolsets,
   moveToolsets,
@@ -32,24 +52,49 @@ import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
+import { useCatalogSchemasFolder } from '@/src/context/assets/CatalogSchemasFolderContext';
+import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
+import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
+import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
+import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
+import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import {
+  CoreValidationWarning,
+  DialAppRunnerResource,
+  DialModelResource,
+  DialModelResourceStatus,
+  DialPlatformApplicationResource,
+  DialPlatformToolsetResource,
+  PlatformAsset,
+} from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { isFileRootPath, isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
-import { MouseEvent } from 'react';
-import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
+import {
+  DialFileNodeType,
+  FileManagerColumnKey,
+  NAME_COLUMN,
+  UPDATED_AT_COLUMN,
+} from '@epam/ai-dial-react-file-manager';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { ReactNode } from 'react';
+import { customMultiSelectTagsRenderer } from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
+import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
+import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
+import { ASSET_TYPE_ICONS } from './constants';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
 
 export const getItems = (data: unknown) => {
@@ -60,13 +105,47 @@ export const getItems = (data: unknown) => {
     .map((v) => ({ value: v, label: v })) as SelectOption[];
 };
 
-export const customMultiSelectTagsRenderer = (
-  options: SelectOption[],
-  selectedValues: string[],
-  handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
-) => {
-  return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
-};
+/**
+ * The asset grid's name column. Built on ui-kit's `NAME_COLUMN` rather than replacing it, because
+ * that column's cell renderer is where the folder icon, the inline new-folder input and the inline
+ * rename editor all live — swapping it out for a plain display-name column is what
+ * left folders indistinguishable from assets and made a new folder unnameable and
+ * unsaveable. Its `colId` matters too: ui-kit attaches the arrow-key guard that keeps
+ * those inputs usable only to a column identified as `FileManagerColumnKey.Name`.
+ *
+ * Only ITEM rows keep the repo's own renderer, for the icon/displayName/id presentation a folder
+ * row has nothing to show for.
+ *
+ * Curried, like `UPDATED_AT_COLUMN`: `useFileManagerColumns` calls a function column with these
+ * three arguments, and ui-kit's renderer needs all of them — under the 800px compact breakpoint it
+ * swaps a folder row for `DialFileManagerItemSummaryCell`, which formats the modified date from
+ * `dateLocale`/`dateOptions`. Resolving them here instead would leave folder rows uncompacted in
+ * the one layout where the date column is hidden.
+ */
+export const getAssetNameColumn =
+  (headerName: string, view?: ApplicationRoute) =>
+  (
+    dateLocale: Intl.LocalesArgument,
+    dateOptions: Intl.DateTimeFormatOptions | undefined,
+    isCompactView: boolean,
+  ): ColDef => {
+    const fileManagerColumn = NAME_COLUMN(headerName)(dateLocale, dateOptions, isCompactView);
+    const renderFileManagerName = fileManagerColumn.cellRenderer as (params: ICellRendererParams) => ReactNode;
+
+    return {
+      ...fileManagerColumn,
+      // Sort and filter on the label actually rendered: a folder row has no `displayName`, and an
+      // asset row's `name` is its id, shown under the display name.
+      valueGetter: ({ data }) => data?.displayName ?? data?.name,
+      filterValueGetter: ({ data }) => displayNameFilterValue(data),
+      cellRenderer: (params: ICellRendererParams) =>
+        params.data?.nodeType === DialFileNodeType.FOLDER ? (
+          renderFileManagerName(params)
+        ) : (
+          <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} />
+        ),
+    };
+  };
 
 export const getGridColumns = (
   view: ApplicationRoute,
@@ -79,6 +158,7 @@ export const getGridColumns = (
   ) => void,
   selectedVersionsMap: Record<string, string[]>,
   hasSelectedItems: boolean,
+  currentPath?: string,
 ) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
@@ -131,21 +211,32 @@ export const getGridColumns = (
     field: 'createdAt',
   });
 
-  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: an
-  // app runner's row name is its `$id`, a model's is its plain name. Skills shares the same
-  // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
-  // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
-  // read a display name from.
-  if (isFlatPlatformView(view) || view === ApplicationRoute.AssetsSkills) {
+  // Cast once: ui-kit accepts a column factory wherever a `ColDef` is declared and resolves it in
+  // `useFileManagerColumns`, but that union is not in ag-grid's own type.
+  const NAME_COLUMN_DEF = getAssetNameColumn('Name', view) as unknown as ColDef;
+
+  if (isFileRootPath(currentPath)) {
+    return [NAME_COLUMN_DEF];
+  }
+
+  // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
+  // resource's storage name; schema body `$id` values are available after opening the resource.
+  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      NAME_COLUMN(view === ApplicationRoute.AssetsAppRunners ? 'ID' : 'Name') as ColDef,
+      NAME_COLUMN_DEF,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
     ];
   }
 
-  return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  // A versionless row (prompt/conversation) is a single stored resource — no Version column, so no
+  // per-row version selection.
+  if (isVersionlessAssetView(view)) {
+    return [NAME_COLUMN_DEF, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  }
+
+  return [NAME_COLUMN_DEF, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
 };
 
 export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
@@ -155,28 +246,29 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
   return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
 };
 
-export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
+export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion | DialPrompt => {
   const baseEmptyAsset = {
     name: TEMP_FOLDER,
     folderId: path,
-    version: '',
     path: `${path}${TEMP_FOLDER}`,
   };
 
   switch (view) {
     case ApplicationRoute.Prompts:
+      // A prompt never carries a version — the folder-marker body is plain name/folderId/content.
       return { ...baseEmptyAsset, content: '' };
     case ApplicationRoute.AssetsApplications:
-      return { ...baseEmptyAsset, endpoint: '' };
+      return { ...baseEmptyAsset, version: '', endpoint: '' };
     case ApplicationRoute.AssetsToolsets:
       return {
         ...baseEmptyAsset,
+        version: '',
         endpoint: 'http://mock',
         displayName: TEMP_FOLDER,
         transport: ToolsetTransport.HTTP.toUpperCase() as ToolsetTransport,
       };
     default:
-      return baseEmptyAsset;
+      return { ...baseEmptyAsset, version: '' };
   }
 };
 
@@ -190,11 +282,23 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Toolsets;
     case ApplicationRoute.Conversations:
       return FileManagerI18nKey.Conversations;
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return FileManagerI18nKey.Models;
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return FileManagerI18nKey.AppRunners;
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return FileManagerI18nKey.CatalogSchemas;
+    case ApplicationRoute.PlatformInterceptors:
+      return FileManagerI18nKey.Interceptors;
+    case ApplicationRoute.PlatformTranslators:
+      return FileManagerI18nKey.Translators;
+    case ApplicationRoute.PlatformRoutes:
+      return FileManagerI18nKey.Routes;
+    case ApplicationRoute.PlatformRoles:
+      return FileManagerI18nKey.Roles;
+    case ApplicationRoute.PlatformKeys:
+      return FileManagerI18nKey.Keys;
+    case ApplicationRoute.Skills:
       return FileManagerI18nKey.Skills;
     default:
       return '';
@@ -226,17 +330,47 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ConversationsEmptyStateTitle),
         description: '',
       };
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return {
         title: t(FileManagerI18nKey.ModelsEmptyStateTitle),
         description: t(FileManagerI18nKey.ModelsEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return {
         title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
         description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return {
+        title: t(FileManagerI18nKey.CatalogSchemasEmptyStateTitle),
+        description: t(FileManagerI18nKey.CatalogSchemasEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformInterceptors:
+      return {
+        title: t(FileManagerI18nKey.InterceptorsEmptyStateTitle),
+        description: t(FileManagerI18nKey.InterceptorsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformTranslators:
+      return {
+        title: t(FileManagerI18nKey.TranslatorsEmptyStateTitle),
+        description: t(FileManagerI18nKey.TranslatorsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformRoutes:
+      return {
+        title: t(FileManagerI18nKey.RoutesEmptyStateTitle),
+        description: t(FileManagerI18nKey.RoutesEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformRoles:
+      return {
+        title: t(FileManagerI18nKey.RolesEmptyStateTitle),
+        description: t(FileManagerI18nKey.RolesEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformKeys:
+      return {
+        title: t(FileManagerI18nKey.KeysEmptyStateTitle),
+        description: t(FileManagerI18nKey.KeysEmptyStateDescription),
+      };
+    case ApplicationRoute.Skills:
       return {
         title: t(FileManagerI18nKey.SkillsEmptyStateTitle),
         description: t(FileManagerI18nKey.SkillsEmptyStateDescription),
@@ -247,6 +381,9 @@ export const getEmptyStateContent = (
 };
 
 export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: PlatformAsset): PlatformAsset => {
+  // The caller passes a listing row, whose identity is flat (`path`/`folderId`) and whose
+  // `status`/`validationWarnings` appear only where Core's projection serves them — fields the
+  // resource types no longer declare flat, so the strip cast spells them out explicitly.
   const {
     path: __path,
     folderId: __folderId,
@@ -256,13 +393,16 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
     status: __status,
     validationWarnings: __validationWarnings,
     reference: __reference,
-    name,
     ...duplicate
-  } = asset as DialModelResource & DialAppRunnerResource;
+  } = asset as DialModelResource &
+    DialAppRunnerResource & {
+      path?: string;
+      folderId?: string;
+      status?: DialModelResourceStatus;
+      validationWarnings?: CoreValidationWarning[];
+    };
 
-  return view === ApplicationRoute.AssetsAppRunners
-    ? (duplicate as PlatformAsset)
-    : ({ ...duplicate, name } as PlatformAsset);
+  return duplicate as PlatformAsset;
 };
 
 export const getResourceTypeByRoute = (view: ApplicationRoute) => {
@@ -285,9 +425,15 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
-  [ApplicationRoute.AssetsModels]: useModelsFolder,
-  [ApplicationRoute.AssetsAppRunners]: useAppRunnersFolder,
-  [ApplicationRoute.AssetsSkills]: useSkillFolder,
+  [ApplicationRoute.PlatformModels]: useModelsFolder,
+  [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
+  [ApplicationRoute.PlatformCatalogSchemas]: useCatalogSchemasFolder,
+  [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
+  [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
+  [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
+  [ApplicationRoute.PlatformRoles]: useRolesFolder,
+  [ApplicationRoute.PlatformKeys]: useKeysFolder,
+  [ApplicationRoute.Skills]: useSkillFolder,
 };
 
 export const GetAssetActionMap = {
@@ -295,26 +441,95 @@ export const GetAssetActionMap = {
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
   [ApplicationRoute.Conversations]: getConversation,
-  [ApplicationRoute.AssetsModels]: getModel,
-  [ApplicationRoute.AssetsAppRunners]: getRunner,
-  [ApplicationRoute.AssetsSkills]: getSkill,
+  [ApplicationRoute.PlatformModels]: getModel,
+  [ApplicationRoute.PlatformAppRunners]: getRunner,
+  [ApplicationRoute.PlatformCatalogSchemas]: getCatalogSchema,
+  [ApplicationRoute.PlatformInterceptors]: getInterceptor,
+  [ApplicationRoute.PlatformTranslators]: getTranslator,
+  [ApplicationRoute.PlatformRoutes]: getRoute,
+  [ApplicationRoute.PlatformRoles]: getRole,
+  [ApplicationRoute.PlatformKeys]: getKey,
+  [ApplicationRoute.Skills]: getSkill,
 };
 
-export const CreateAssetActionMap: Record<
-  CreateAssetRoute,
-  (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
+/**
+ * Applications and Toolsets are the only views whose "get"/"create"/"bulk-delete" call depends on
+ * which bucket the target belongs to, not just on the view (design.md D2/`platform-applications`/
+ * `platform-toolsets`). Callers resolve this map by view for a target in the `platform` bucket,
+ * falling back to `GetAssetActionMap`/`CreateAssetActionMap`/`BulkDeleteAssetActionMap` otherwise.
+ */
+export const PlatformGetAssetActionMap: Partial<
+  Record<
+    ApplicationRoute,
+    (
+      path: string,
+      etag: string,
+    ) => Promise<ServerActionResponse<DialPlatformApplicationResource | DialPlatformToolsetResource>>
+  >
 > = {
+  [ApplicationRoute.AssetsApplications]: getPlatformApplication,
+  [ApplicationRoute.AssetsToolsets]: getPlatformToolset,
+};
+
+type CreateAssetAction = (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>;
+
+// A flat platform view uses `folderId` only to identify the selected root in the shared list flow;
+// Core config-resource bodies cannot carry it. `_metadata` is likewise a merged-read graft, not
+// resource content. Individual server actions still remove their own DTO-specific fields.
+const sanitizePlatformCreateAsset =
+  (createAsset: CreateAssetAction): CreateAssetAction =>
+  (asset) => {
+    const {
+      folderId: __folderId,
+      _metadata: __metadata,
+      ...payload
+    } = asset as AssetWithVersion & { _metadata?: unknown };
+    return createAsset(payload as AssetWithVersion);
+  };
+
+export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> = {
   [ApplicationRoute.Prompts]: createPrompt,
-  [ApplicationRoute.AssetsApplications]: createApp as (
+  // `createApp`/`createToolset` take the `Dial*Resource` shapes, which no longer overlap the
+  // `AssetWithVersion` create-payload surface (its flat `path` identity) — hence the double casts.
+  [ApplicationRoute.AssetsApplications]: createApp as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsToolsets]: createToolset as (
+  [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsModels]: createModel as (
+  [ApplicationRoute.PlatformModels]: sanitizePlatformCreateAsset(
+    createModel as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformAppRunners]: sanitizePlatformCreateAsset(
+    createRunner as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformCatalogSchemas]: sanitizePlatformCreateAsset(
+    createCatalogSchema as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformInterceptors]: sanitizePlatformCreateAsset(
+    createInterceptor as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformTranslators]: sanitizePlatformCreateAsset(
+    createTranslator as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRoutes]: sanitizePlatformCreateAsset(
+    createRoute as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRoles]: sanitizePlatformCreateAsset(
+    createRole as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformKeys]: sanitizePlatformCreateAsset(
+    createKey as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+};
+
+export const PlatformCreateAssetActionMap: Partial<
+  Record<ApplicationRoute, (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>>
+> = {
+  [ApplicationRoute.AssetsApplications]: createPlatformApplication as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsAppRunners]: createRunner as (
+  [ApplicationRoute.AssetsToolsets]: createPlatformToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -356,14 +571,20 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
   [ApplicationRoute.Conversations]: deleteConversations,
-  [ApplicationRoute.AssetsModels]: bulkDeleteModels,
-  [ApplicationRoute.AssetsAppRunners]: bulkDeleteRunners,
-  [ApplicationRoute.AssetsSkills]: bulkDeleteSkills,
+  [ApplicationRoute.PlatformModels]: bulkDeleteModels,
+  [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: bulkDeleteCatalogSchemas,
+  [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
+  [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
+  [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
+  [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
+  [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,
+  [ApplicationRoute.Skills]: bulkDeleteSkills,
 };
 
-export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {
-  const fullName = conversation.path.split('/').pop() || '';
-  const { name, version } = getNameVersionFromAsset(fullName);
-
-  return { ...conversation, name, version };
+export const PlatformBulkDeleteAssetActionMap: Partial<
+  Record<ApplicationRoute, (paths: { path: string }[]) => Promise<ServerActionResponse<Record<string, unknown>>>>
+> = {
+  [ApplicationRoute.AssetsApplications]: bulkDeletePlatformApplications,
+  [ApplicationRoute.AssetsToolsets]: bulkDeletePlatformToolsets,
 };

@@ -1,31 +1,37 @@
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { DialEllipsisTooltip, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import { IconCaretDownFilled, IconCaretRightFilled, IconFolder } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { DialFile as FileManagerFile, DialFoldersTree } from '@epam/ai-dial-react-file-manager';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@/src/models/dial/file';
-import { isFolder } from '@/src/utils/files/path';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { isFileRootPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
-  context?: () => AssetsFolderContext | RuleFolderContextType;
+  context?: () => AssetsFolderContextReader<AssetListItem> | RuleFolderContextType;
+  /** Roots the empty-state auto-fetch loads — both buckets for dual-bucket views (see `getRootFolders`). */
+  rootPaths?: string[];
 }
 
-const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch }) => {
+const DEFAULT_ROOT_PATHS = [`${ROOT_FOLDER}/`];
+
+// Expansion is owned by the folder context (`toggleFolder` runs from `onItemClick`). A handler must
+// still be passed: its presence is what makes the tree controlled, and its own toggle is discarded.
+const IGNORE_TREE_EXPANSION_CHANGE = () => undefined;
+
+const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPaths = DEFAULT_ROOT_PATHS }) => {
   const t = useI18n();
   const folderContext = context?.();
 
   const folderData = useMemo(() => {
-    return folderContext?.files;
+    return folderContext?.files?.filter((node) => !isFileRootPath(node.path));
   }, [folderContext]);
 
   const scrollToFolder = useCallback(() => {
@@ -53,68 +59,42 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch }) => {
       !initialPath &&
       (folderContext?.files == null || folderContext?.files?.length === 0)
     ) {
-      folderContext?.fetchFiles(`${ROOT_FOLDER}/`);
+      // Only the assets context has dual-bucket views (Applications/Toolsets) whose empty-state
+      // fetch takes several roots at once; a rule folder always has a single root.
+      const assetsContext = folderContext as AssetsFolderContextReader<AssetListItem> | undefined;
+      if (rootPaths.length > 1 && assetsContext) {
+        assetsContext.fetchFiles(rootPaths);
+      } else {
+        folderContext?.fetchFiles(rootPaths[0]);
+      }
     }
-  }, [folderContext, disableAutoFetch, initialPath, scrollToFolder]);
+  }, [folderContext, disableAutoFetch, initialPath, rootPaths, scrollToFolder]);
 
-  const getFolderClassName = (node: DialFile, level: number) => {
-    const isSelected = folderContext?.filePath === node.path;
-    const baseClassName = `flex justify-between pl-${level * 5}`;
-    const selectedClassName = isSelected
-      ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary rounded'
-      : 'border-l-2 border-l-transparent';
-    const iconClassName =
-      !node.items?.some((c) => isFolder(c.nodeType)) && folderContext?.fetchedFoldersData[node.path]
-        ? 'text-transparent'
-        : '';
-    return { baseClassName, selectedClassName, iconClassName };
-  };
+  // `context` is typed via `AssetsFolderContextReader`/`RuleFolderContextType`, neither of which
+  // exposes `toggleFolder` at the type level: the former omits it because it's the one member that
+  // isn't safely covariant across the per-entity `AssetListItem` variants (see
+  // `AssetsFolderContextReader`'s own comment), and the latter's version takes `DialFile`. The `node`
+  // here is always an `Asset` (the tree returns the objects it was given), so the actual runtime
+  // function is reached through an `unknown` cast to a signature that matches how this component calls it.
+  const onToggleFolder = useCallback(
+    (node: Asset) => {
+      const contextWithToggle = folderContext as unknown as
+        | { toggleFolder?: (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => void }
+        | undefined;
+      contextWithToggle?.toggleFolder?.(node);
+    },
+    [folderContext],
+  );
 
-  const renderTree = (nodes: Asset[] | undefined, level: number) => {
-    return nodes?.map((node) => {
-      const { path, nodeType, items, name } = node;
-      const { baseClassName, selectedClassName, iconClassName } = getFolderClassName(node, level);
-      const isExpanded = folderContext?.expandedFolders.has(path);
-
-      return (
-        <div key={path} className="small-medium cursor-pointer text-secondary">
-          {isFolder(nodeType) && (
-            <div className="flex flex-col">
-              <div
-                aria-selected={path === folderContext?.filePath}
-                className={classNames('group py-2', baseClassName, selectedClassName)}
-              >
-                <div
-                  className="flex-1 flex flex-row truncate"
-                  onClick={() => folderContext?.toggleFolder(node as AssetWithVersion)}
-                >
-                  <div className={classNames(iconClassName, 'flex items-center justify-center')}>
-                    {isExpanded ? (
-                      <IconCaretDownFilled {...BASE_BUTTON_ICON_PROPS} widths={10} height={10} className="shrink-0" />
-                    ) : (
-                      <IconCaretRightFilled {...BASE_BUTTON_ICON_PROPS} widths={10} height={10} className="shrink-0" />
-                    )}
-                  </div>
-                  <IconFolder {...BASE_BUTTON_ICON_PROPS} className={classNames('shrink-0 mr-2')} />
-                  <DialEllipsisTooltip text={name} className="text-primary" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isExpanded && items && <div key={`${path}-children`}>{renderTree(items, level + 1)}</div>}
-        </div>
-      );
-    });
-  };
+  const loadedPaths = useMemo(() => new Set(Object.keys(folderContext?.fetchedFoldersData ?? {})), [folderContext]);
 
   const ruleContext = folderContext as RuleFolderContextType | undefined;
-  const assetsContext = folderContext as AssetsFolderContext | undefined;
+  const assetsContext = folderContext as AssetsFolderContextReader<AssetListItem> | undefined;
   const isRuleFolderContext = ruleContext?.fetchFolderHierarchy != null;
   const isFetching = isRuleFolderContext
     ? ruleContext.isLoading || ruleContext.files == null
     : !!assetsContext?.isFetchingFiles;
-  const showNoFolders = !isFetching && !folderContext?.files?.length;
+  const showNoFolders = !isFetching && !folderData?.length;
 
   return (
     <div className="flex-1 size-full overflow-y-auto">
@@ -125,7 +105,17 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch }) => {
       ) : showNoFolders ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
       ) : (
-        renderTree(folderData ?? undefined, 0)
+        <DialFoldersTree
+          // Admin nodes are what `toggleFolder` expects; the tree hands back the same objects it was given.
+          items={folderData as unknown as FileManagerFile[]}
+          expandedPaths={folderContext?.expandedFolders}
+          selectedPath={folderContext?.filePath}
+          loadedPaths={loadedPaths}
+          areHiddenFilesVisible
+          ariaLabel={t(FoldersI18nKey.Folders)}
+          onItemClick={(node) => onToggleFolder(node as unknown as Asset)}
+          onExpandedPathsChange={IGNORE_TREE_EXPANSION_CHANGE}
+        />
       )}
     </div>
   );

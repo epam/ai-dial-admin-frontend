@@ -10,13 +10,22 @@ import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderW
 
 export const dateTimeColumn: Partial<ColDef> = {
   valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-  tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
   filterValueGetter: (params) => toDateOrNull(params.data?.[params.colDef.field || '']),
 };
 
-export const numericColumn: Partial<ColDef> = {
+/** Wider default for a name/ID column. Deliberately `width` and not `flex`: AG Grid lets `flex` win over `width`,
+ * which would stop `AgGridWrapper` restoring a width the operator dragged. */
+export const nameColumnSizing: Partial<ColDef> = { width: 400, minWidth: 260 };
+
+/** Right-aligns cell and header content. Split out of `numericColumn` so a column with its own
+ * `valueGetter`/comparator/filter can opt into alignment alone. */
+export const rightAlignedColumn: Partial<ColDef> = {
   cellClass: 'align-right',
   headerClass: 'align-right',
+};
+
+export const numericColumn: Partial<ColDef> = {
+  ...rightAlignedColumn,
   comparator: numberValueComparator,
   valueFormatter: ({ value }) => numberValueFormatter(value),
   filterValueGetter: ({ data, colDef }) => toNumberOrNull(data?.[colDef.field || '']),

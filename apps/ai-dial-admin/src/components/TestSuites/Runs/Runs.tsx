@@ -1,25 +1,31 @@
 'use client';
 
-import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2 } from '@tabler/icons-react';
+import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
-import { removeRun } from '@/src/app/[lang]/runs/actions';
-import { getRuns } from '@/src/app/[lang]/test-suites/actions';
+import { cancelRun, getRunsQuery, removeRun } from '@/src/app/[lang]/runs/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
-import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
+import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
+import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
+import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
+import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
+import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  getCancelOperation,
+  getCompareOperation,
   getDeleteOperation,
   getExportOperation,
   getOpenInNewTabOperation,
-  getCompareOperation,
 } from '@/src/constants/grid-columns/actions';
-import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { SUITE_RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -47,17 +53,43 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [selectedRun, setSelectedRun] = useState<Run | undefined>(undefined);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedExportRun, setSelectedExportRun] = useState<Run | undefined>(undefined);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [selectedCancelRun, setSelectedCancelRun] = useState<Run | undefined>(undefined);
+  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
+  useCancellingRunsPoll(gridApi);
+
+  const toggleColumnsPanel = useCallback(() => setShowColumnsPanel((prev) => !prev), []);
+
+  const onToggleColumnsPanel = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      toggleColumnsPanel();
+    },
+    [toggleColumnsPanel],
+  );
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    components: RUN_STATUS_FILTER_COMPONENTS,
+    rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
+    rowClassRules: {
+      'ag-activity-row-clickable': () => true,
+    },
+    onCellClicked: (e: CellClickedEvent) => {
+      if (e.colDef.field === ACTIONS_COLUMN_CEL_ID) {
+        return;
+      }
+      e.node.setSelected(true, true);
+      onOpenInNewTab(ApplicationRoute.Runs, e.data);
+    },
   };
 
   useEffect(() => {
     if (!runs && !isLoading) {
       setIsLoading(true);
-      getRuns(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
+      getRunsQuery(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
         if (runs) {
           return;
         }
@@ -85,7 +117,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           return;
         }
 
-        getRuns(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
+        getRunsQuery(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
           .then((res) => {
             const data = res == null || res.content.length === 0 ? [] : res?.content || [];
 
@@ -150,6 +182,31 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     [refreshGrid],
   );
 
+  const onOpenCancelModal = useCallback((run?: Run) => {
+    setSelectedCancelRun(run);
+    setIsCancelModalOpen(true);
+  }, []);
+
+  const onCloseCancelModal = useCallback(() => {
+    setSelectedCancelRun(undefined);
+    setIsCancelModalOpen(false);
+  }, []);
+
+  const onCancelRun = useCallback(
+    async (id: string) => {
+      const response = await cancelRun(id);
+      if (response.success) {
+        gridApi?.forEachNode((node) => {
+          if (node.data?.id === id) {
+            node.setData({ ...node.data, status: RunStatus.CANCELLING });
+          }
+        });
+      }
+      return response;
+    },
+    [gridApi],
+  );
+
   useEffect(() => {
     runRefreshRef.current = refreshGrid;
   }, [refreshGrid, runRefreshRef]);
@@ -177,28 +234,46 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const columnDefs = useMemo(
     () => [
-      ...RUNS_COLUMN,
+      ...SUITE_RUNS_COLUMN,
       ACTION_COLUMN(
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),
-          getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING),
+          getExportOperation(onOpenExportModal, (_, node) => node.data?.status !== RunStatus.COMPLETED),
           getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED),
+          getCancelOperation(onOpenCancelModal),
           getDeleteOperation(onOpenDeleteModal),
         ],
         true,
       ),
     ],
-    [onCompareRun, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
+    [onCompareRun, onOpenCancelModal, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
   );
 
   return (
     <>
-      <GridView
-        columnDefs={columnDefs}
-        additionalGridOptions={gridOptions}
-        emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
-        onGridReady={onGridReady}
-      />
+      <div className="size-full flex flex-col">
+        <div className="flex flex-row justify-between items-center mb-2">
+          <span className="text-sm text-secondary">
+            {t(TabsI18nKey.Runs)}: {totalElements}
+          </span>
+          <DialGhostButton
+            label={t(ButtonsI18nKey.Columns)}
+            iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            onClick={onToggleColumnsPanel}
+          />
+        </div>
+        <div className="flex-1 min-h-0">
+          <GridView
+            columnDefs={columnDefs}
+            additionalGridOptions={gridOptions}
+            emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
+            onGridReady={onGridReady}
+            showColumnsPanel={showColumnsPanel}
+            toggleColumnsPanel={toggleColumnsPanel}
+            storageKey={`${ApplicationRoute.TestSuites}/runs`}
+          />
+        </div>
+      </div>
       {isDeleteModalOpen &&
         createPortal(
           <DeleteConfirmationModal
@@ -212,6 +287,12 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       {isExportModalOpen &&
         selectedExportRun?.id &&
         createPortal(<ExportRunModal runId={selectedExportRun.id} onClose={onCloseExportModal} />, document.body)}
+      {isCancelModalOpen &&
+        selectedCancelRun &&
+        createPortal(
+          <RunCancelModal run={selectedCancelRun} onClose={onCloseCancelModal} onCancelRun={onCancelRun} />,
+          document.body,
+        )}
       {compareRunModal}
     </>
   );

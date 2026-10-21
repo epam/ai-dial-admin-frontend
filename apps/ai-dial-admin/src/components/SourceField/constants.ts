@@ -10,6 +10,19 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
  */
 export const MODEL_SERVING_SOURCE_TYPE = 'model-serving';
 
+/**
+ * Virtual source-mode value used only while creating an asset application. Interfaces persist in
+ * the resource's `interfaces` field and must never be written as a Core source discriminator.
+ */
+export const ASSET_APPLICATION_INTERFACES_SOURCE_TYPE = 'interfaces';
+
+export const ASSET_APPLICATION_CREATE_SOURCE_ITEMS: SelectOption[] = [
+  { value: ASSET_APPLICATION_INTERFACES_SOURCE_TYPE, label: 'Interfaces' },
+  { value: SOURCE_TYPE.ENDPOINTS, label: 'Endpoints' },
+  { value: SOURCE_TYPE.SCHEMA, label: 'App Runner' },
+  { value: CODE_APP_SOURCE_TYPE, label: 'Code App' },
+];
+
 export const INTERCEPTOR_SOURCE_ITEMS: SelectOption[] = [
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
   { value: SOURCE_TYPE.CONTAINER, label: 'Interceptor Container' },

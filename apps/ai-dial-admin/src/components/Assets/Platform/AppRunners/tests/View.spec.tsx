@@ -1,0 +1,147 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
+import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import AppRunnerAssetView from '../View';
+
+vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
+  updateRunner: vi.fn().mockResolvedValue({ success: true }),
+  removeRunner: vi.fn(),
+  getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: false }),
+  getRunners: vi.fn().mockResolvedValue([]),
+  getRunner: vi.fn(),
+  createRunner: vi.fn(),
+  bulkDeleteRunners: vi.fn(),
+}));
+
+// Always-enabled save so validation is the only thing that can stop the request — the real header
+// also disables on `isChanged`, which would otherwise mask whether validation ran at all.
+let capturedJsonConfiguration: any;
+vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
+  default: ({ onSave, jsonConfiguration }: any) => {
+    capturedJsonConfiguration = jsonConfiguration;
+    return (
+      <button type="button" onClick={onSave}>
+        save
+      </button>
+    );
+  },
+}));
+
+vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ setEntityReadOnly }),
+}));
+
+const runner = (overrides: Partial<DialAppRunnerResource> = {}): DialAppRunnerResource =>
+  ({
+    $id: 'https://host/runner',
+    'dial:applicationTypeDisplayName': 'Runner',
+    name: 'https%3A%2F%2Fhost%2Frunner',
+    path: 'https%3A%2F%2Fhost%2Frunner',
+    folderId: '',
+    ...overrides,
+  }) as DialAppRunnerResource;
+
+const clickSave = async (entity: DialAppRunnerResource) => {
+  const user = userEvent.setup();
+  render(
+    <AppRunnerAssetView etag="etag" originalRunner={entity} roles={[]} interceptors={[]} globalInterceptors={[]} />,
+  );
+  await user.click(screen.getByRole('button', { name: 'save' }));
+};
+
+describe('AppRunnerAssetView :: save validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('Should send a valid runner to Core with its etag', async () => {
+    await clickSave(runner());
+
+    expect(updateRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: 'https://host/runner' }), 'etag');
+  });
+
+  test('Should send a runner whose routes are valid', async () => {
+    await clickSave(
+      runner({
+        'dial:applicationTypeRoutes': {
+          my_route: {
+            'dial:paths': ['/a'],
+            'dial:methods': ['GET'],
+            'dial:upstreams': [{ 'dial:endpoint': 'http://svc' }],
+          },
+        },
+      }),
+    );
+
+    expect(updateRunner).toHaveBeenCalled();
+  });
+
+  test('Should block save when the display name is missing', async () => {
+    await clickSave(runner({ 'dial:applicationTypeDisplayName': '' }));
+
+    expect(updateRunner).not.toHaveBeenCalled();
+  });
+
+  test('Should block save when the id contains a character Core cannot store', async () => {
+    await clickSave(runner({ $id: "https://host/it's" }));
+
+    expect(updateRunner).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['an invalid route name', { 'bad-route': { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
+    ['no methods', { my_route: { 'dial:paths': ['/a'], 'dial:methods': [], 'dial:upstreams': [] } }],
+    ['no paths', { my_route: { 'dial:paths': [], 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
+    ['an unsupported method', { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['TRACE'], 'dial:upstreams': [] } }],
+    [
+      'an upstream without an endpoint',
+      { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [{}] } },
+    ],
+  ])('Should block save when a route has %s', async (_label, routes) => {
+    await clickSave(runner({ 'dial:applicationTypeRoutes': routes }));
+
+    expect(updateRunner).not.toHaveBeenCalled();
+  });
+});
+
+describe('AppRunnerAssetView :: config-file source', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {
+    const { unmount } = render(
+      <AppRunnerAssetView
+        etag="etag"
+        originalRunner={runner()}
+        roles={[]}
+        interceptors={[]}
+        globalInterceptors={[]}
+        isConfigFileSource
+      />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed runner', () => {
+    render(
+      <AppRunnerAssetView etag="etag" originalRunner={runner()} roles={[]} interceptors={[]} globalInterceptors={[]} />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
+  });
+});

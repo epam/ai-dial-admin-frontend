@@ -4,15 +4,54 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
+const { saveValidationDispatch } = vi.hoisted(() => ({ saveValidationDispatch: vi.fn() }));
+
+vi.mock('@/src/context/SaveValidationContext', () => ({
+  useSaveValidationContext: () => ({ dispatch: saveValidationDispatch, resetCounter: 0 }),
+  ValidationActionType: {
+    SetField: 'SET_FIELD_VALIDATION',
+    RemoveField: 'REMOVE_FIELD_VALIDATION',
+  },
+}));
+
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
-import { ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
-import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
+import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import {
+  DeploymentInterfaceType,
+  InterfaceFieldVariant,
+  InterfaceMode,
+  TranslatorReference,
+} from '@/src/models/dial/interfaces';
 
-type Entity = { interfaces?: Record<string, { baseUrl?: string }> };
+type InterfaceValue = {
+  baseUrl?: string;
+  base_url?: string;
+  mode?: InterfaceMode;
+  translator?: TranslatorReference;
+};
 
-const ControlledInterfacesField = ({ initialEntity }: { initialEntity: Entity }) => {
-  const [entity, setEntity] = useState(initialEntity);
-  return <InterfacesField entity={entity} onChangeEntity={setEntity} allowedTypes={SINGLE_TYPE} />;
+const ControlledInterfacesField = ({ initialInterfaces }: { initialInterfaces: Record<string, InterfaceValue> }) => {
+  const [interfaces, setInterfaces] = useState(initialInterfaces);
+  return <InterfacesField interfaces={interfaces} onChangeInterfaces={setInterfaces} allowedTypes={SINGLE_TYPE} />;
+};
+
+const ControlledAssetInterfacesField = ({
+  initialInterfaces,
+  translators = [],
+}: {
+  initialInterfaces: Record<string, InterfaceValue>;
+  translators?: { name: string }[];
+}) => {
+  const [interfaces, setInterfaces] = useState(initialInterfaces);
+  return (
+    <InterfacesField
+      interfaces={interfaces}
+      onChangeInterfaces={setInterfaces}
+      allowedTypes={SINGLE_TYPE}
+      translators={translators as any}
+      isAsset
+    />
+  );
 };
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
@@ -43,26 +82,32 @@ const MULTI_TYPES = [
 const SINGLE_TYPE = [DeploymentInterfaceType.OpenAIChatCompletions];
 
 const getBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
+// DialLabel renders the required marker as a `*` span inside the label, so it lands in the input's
+// accessible name.
+const getBaseUrlInputWithRequiredMarker = () =>
+  screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
+const queryBaseUrlInputWithRequiredMarker = () =>
+  screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
 
 describe('InterfacesField', () => {
   test('single allowed type: clicking Add creates the inputs directly, no dropdown', async () => {
     const user = userEvent.setup();
-    const onChangeEntity = vi.fn();
-    render(<InterfacesField entity={{ interfaces: {} }} onChangeEntity={onChangeEntity} allowedTypes={SINGLE_TYPE} />);
+    const onChangeInterfaces = vi.fn();
+    render(<InterfacesField interfaces={{}} onChangeInterfaces={onChangeInterfaces} allowedTypes={SINGLE_TYPE} />);
 
     await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
 
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } },
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: undefined },
     });
   });
 
   test('single allowed type: add button hides once the type is configured', () => {
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
-        onChangeEntity={vi.fn()}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
+        onChangeInterfaces={vi.fn()}
         allowedTypes={SINGLE_TYPE}
       />,
     );
@@ -74,8 +119,8 @@ describe('InterfacesField', () => {
     const user = userEvent.setup();
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } } }}
-        onChangeEntity={vi.fn()}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } }}
+        onChangeInterfaces={vi.fn()}
         allowedTypes={MULTI_TYPES}
       />,
     );
@@ -92,28 +137,26 @@ describe('InterfacesField', () => {
 
   test('multiple allowed types: selecting a type from the dropdown reveals its inputs and hides the dropdown', async () => {
     const user = userEvent.setup();
-    const onChangeEntity = vi.fn();
-    render(<InterfacesField entity={{ interfaces: {} }} onChangeEntity={onChangeEntity} allowedTypes={MULTI_TYPES} />);
+    const onChangeInterfaces = vi.fn();
+    render(<InterfacesField interfaces={{}} onChangeInterfaces={onChangeInterfaces} allowedTypes={MULTI_TYPES} />);
 
     await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
     await user.selectOptions(screen.getByRole('combobox'), DeploymentInterfaceType.AnthropicMessages);
 
-    expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: '' } },
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: undefined },
     });
   });
 
   test('multiple allowed types: add button hides once all types are configured', () => {
     render(
       <InterfacesField
-        entity={{
-          interfaces: {
-            [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'a' },
-            [DeploymentInterfaceType.OpenAIResponses]: { baseUrl: 'b' },
-            [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: 'c' },
-          },
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'a' },
+          [DeploymentInterfaceType.OpenAIResponses]: { baseUrl: 'b' },
+          [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: 'c' },
         }}
-        onChangeEntity={vi.fn()}
+        onChangeInterfaces={vi.fn()}
         allowedTypes={MULTI_TYPES}
       />,
     );
@@ -123,45 +166,45 @@ describe('InterfacesField', () => {
 
   test('deleting a row removes it and restores add availability', async () => {
     const user = userEvent.setup();
-    const onChangeEntity = vi.fn();
+    const onChangeInterfaces = vi.fn();
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } } }}
-        onChangeEntity={onChangeEntity}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
         allowedTypes={SINGLE_TYPE}
       />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Buttons.Delete' }));
 
-    expect(onChangeEntity).toHaveBeenCalledWith({ interfaces: {} });
+    expect(onChangeInterfaces).toHaveBeenCalledWith({});
   });
 
-  test('editing the base URL input calls onChangeEntity with the entity-backed camelCase baseUrl field', async () => {
+  test('editing the base URL input calls onChangeInterfaces with the entity-backed camelCase baseUrl field', async () => {
     const user = userEvent.setup();
-    const onChangeEntity = vi.fn();
+    const onChangeInterfaces = vi.fn();
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
-        onChangeEntity={onChangeEntity}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
+        onChangeInterfaces={onChangeInterfaces}
         allowedTypes={SINGLE_TYPE}
       />,
     );
 
     await user.type(getBaseUrlInput(), 'x');
 
-    expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'x' } },
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'x' },
     });
   });
 
-  test('editing an input value calls onChangeEntity with the core-backed snake_case base_url field when isAsset', async () => {
+  test('editing an input value calls onChangeInterfaces with the core-backed snake_case base_url field when isAsset', async () => {
     const user = userEvent.setup();
-    const onChangeEntity = vi.fn();
+    const onChangeInterfaces = vi.fn();
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } } }}
-        onChangeEntity={onChangeEntity}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+        onChangeInterfaces={onChangeInterfaces}
         allowedTypes={SINGLE_TYPE}
         isAsset
       />,
@@ -169,8 +212,8 @@ describe('InterfacesField', () => {
 
     await user.type(getBaseUrlInput(), 'x');
 
-    expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'x' } },
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'x' },
     });
   });
 
@@ -178,7 +221,7 @@ describe('InterfacesField', () => {
     const user = userEvent.setup();
     render(
       <ControlledInterfacesField
-        initialEntity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
       />,
     );
 
@@ -193,21 +236,21 @@ describe('InterfacesField', () => {
     expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
   });
 
-  test('does not show a validation error for a blank required base URL until edited', () => {
+  test('show a validation error for a blank required base URL', () => {
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
-        onChangeEntity={vi.fn()}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
+        onChangeInterfaces={vi.fn()}
         allowedTypes={SINGLE_TYPE}
       />,
     );
 
     expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
-    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
   });
 
   test('add button is wrapped in its own container so it does not stretch full width', () => {
-    render(<InterfacesField entity={{ interfaces: {} }} onChangeEntity={vi.fn()} allowedTypes={SINGLE_TYPE} />);
+    render(<InterfacesField interfaces={{}} onChangeInterfaces={vi.fn()} allowedTypes={SINGLE_TYPE} />);
 
     const addButton = screen.getByRole('button', { name: 'Buttons.AddInterface' });
     expect(addButton.parentElement?.tagName).toBe('DIV');
@@ -217,8 +260,8 @@ describe('InterfacesField', () => {
   test('disabled: hides add/delete controls and disables inputs', () => {
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } } }}
-        onChangeEntity={vi.fn()}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } }}
+        onChangeInterfaces={vi.fn()}
         allowedTypes={SINGLE_TYPE}
         disabled
       />,
@@ -232,12 +275,532 @@ describe('InterfacesField', () => {
   test('renders the interface type as a row title', () => {
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
-        onChangeEntity={vi.fn()}
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
+        onChangeInterfaces={vi.fn()}
         allowedTypes={SINGLE_TYPE}
       />,
     );
 
     expect(screen.getByText(InterfacesI18nKey.OpenAIChatCompletions)).toBeInTheDocument();
+  });
+
+  test('does not render a mode selector when isAsset is not set', () => {
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+});
+
+describe('InterfacesField — asset surfaces: mode & translator', () => {
+  const modeSelect = () =>
+    screen.getByRole('combobox', { name: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-mode` });
+  const translatorSelect = () => screen.getByRole('combobox', { name: InterfacesI18nKey.SelectTranslator });
+  const outSelect = () =>
+    screen.getByRole('combobox', {
+      name: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator-out`,
+    });
+
+  test('defaults to passthrough and shows the base_url input', () => {
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+      />,
+    );
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: InterfacesI18nKey.SelectTranslator })).not.toBeInTheDocument();
+  });
+
+  test('an existing interface with a saved mode of translator still renders identically to passthrough when mode is absent', () => {
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://x' } }}
+      />,
+    );
+
+    expect(getBaseUrlInput()).toHaveValue('https://x');
+  });
+
+  test('shows the override paths of the row type on asset surfaces only', () => {
+    const interfaces = { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://x' } };
+    const { unmount } = render(<ControlledAssetInterfacesField initialInterfaces={interfaces} />);
+
+    expect(screen.getByText(InterfacesI18nKey.OverridePaths)).toBeInTheDocument();
+    unmount();
+
+    render(<ControlledInterfacesField initialInterfaces={interfaces} />);
+
+    expect(screen.queryByText(InterfacesI18nKey.OverridePaths)).not.toBeInTheDocument();
+  });
+
+  test('switching to translator mode drops overridePaths and hides the editor', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: {
+            base_url: 'https://x',
+            overridePaths: { postAzureOpenaiChatCompletions: '/v1/chat/completions' },
+          },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        translators={[{ name: 'my-translator' }] as any}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        base_url: undefined,
+        mode: InterfaceMode.Translator,
+        overridePaths: undefined,
+      },
+    });
+  });
+
+  test('adding and editing an override path keeps the rest of the interface entry', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://x' } }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddOverridePath' }));
+    await user.type(
+      document.getElementById('interface-openaiChatCompletions-override-postAzureOpenaiChatCompletions')!,
+      '/p',
+    );
+
+    expect(getBaseUrlInput()).toHaveValue('https://x');
+    expect(
+      document.getElementById('interface-openaiChatCompletions-override-postAzureOpenaiChatCompletions'),
+    ).toHaveValue('/p');
+  });
+
+  test('switching modes validates only the active source until a translator is selected', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+        translators={[{ name: 'my-translator' }]}
+      />,
+    );
+    saveValidationDispatch.mockClear();
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-base-url`,
+      isValid: true,
+    });
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator`,
+      isValid: false,
+    });
+
+    await user.selectOptions(translatorSelect(), 'my-translator');
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator`,
+      isValid: true,
+    });
+
+    saveValidationDispatch.mockClear();
+    await user.selectOptions(modeSelect(), InterfaceMode.Passthrough);
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-base-url`,
+      isValid: false,
+    });
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator`,
+      isValid: true,
+    });
+  });
+
+  test('switching mode to translator hides base_url and shows the translator picker', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+        translators={[{ name: 'my-translator' }]}
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(
+      screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) }),
+    ).not.toBeInTheDocument();
+    expect(translatorSelect()).toBeInTheDocument();
+  });
+
+  test('switching mode to translator clears the previously saved base_url — the two are mutually exclusive', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://old-value' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        base_url: undefined,
+        mode: InterfaceMode.Translator,
+      },
+    });
+  });
+
+  test('switching mode back to passthrough clears the previously saved translator', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: {
+            mode: InterfaceMode.Translator,
+            translator: 'my-translator',
+          },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Passthrough);
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        mode: InterfaceMode.Passthrough,
+        translator: undefined,
+      },
+    });
+  });
+
+  test('re-entering a base_url after switching back to passthrough starts blank, not with the pre-translator value', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://old-value' } }}
+        translators={[{ name: 'my-translator' }]}
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+    await user.selectOptions(modeSelect(), InterfaceMode.Passthrough);
+
+    expect(getBaseUrlInput()).toHaveValue('');
+  });
+
+  test('selecting a named translator stores it as a plain name reference', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        translators={[{ name: 'my-translator' } as any]}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), 'my-translator');
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        base_url: '',
+        mode: InterfaceMode.Translator,
+        translator: 'my-translator',
+      },
+    });
+  });
+
+  test('selecting Custom reveals an inline base_url input and an out selector, with no in control', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+
+    expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toBeInTheDocument();
+    expect(outSelect()).toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.translatorIn)).not.toBeInTheDocument();
+  });
+
+  test('the out selector excludes the interface type this row is configured for', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+
+    const outOptionValues = Array.from(outSelect().querySelectorAll('option'))
+      .map((o) => o.getAttribute('value'))
+      .filter(Boolean);
+
+    expect(outOptionValues).not.toContain(DeploymentInterfaceType.OpenAIChatCompletions);
+  });
+
+  test('defaults the Custom out value to a type other than the row it is attached to', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+
+    const [[updatedInterfaces]] = onChangeInterfaces.mock.calls.slice(-1);
+    expect(
+      (updatedInterfaces[DeploymentInterfaceType.OpenAIChatCompletions] as { out: DeploymentInterfaceType }).out,
+    ).not.toBe(DeploymentInterfaceType.OpenAIChatCompletions);
+  });
+
+  test('filling in the Custom translator stores an inline base_url/out object, not a name', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+    await user.type(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) }), 'x');
+
+    expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toHaveValue('x');
+  });
+
+  test('renders a default headers editor and Defaults/Features buttons for an asset interface', () => {
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+      />,
+    );
+
+    expect(screen.getByText(EntityFieldsI18nKey.defaultHeaders)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Buttons.Defaults' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Buttons.Features' })).toBeInTheDocument();
+  });
+});
+
+describe('InterfacesField — entity base URL fallback', () => {
+  const toggleEntityBaseUrlButton = () => screen.getByRole('button', { name: 'toggle-entity-base-url' });
+
+  // Holds both the interfaces and the entity-level base URL so a test can flip the fallback the way
+  // the Properties views do (clearing/refilling the entity base_url re-renders InterfacesField).
+  const ControlledFallbackField = ({
+    initialEntityBaseUrl,
+    isAsset,
+  }: {
+    initialEntityBaseUrl?: string;
+    isAsset?: boolean;
+  }) => {
+    const [interfaces, setInterfaces] = useState<Record<string, InterfaceValue>>({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: isAsset ? { base_url: undefined } : { baseUrl: undefined },
+    });
+    const [entityBaseUrl, setEntityBaseUrl] = useState(initialEntityBaseUrl);
+    return (
+      <div>
+        <button onClick={() => setEntityBaseUrl((prev) => (prev ? undefined : 'https://entity'))}>
+          toggle-entity-base-url
+        </button>
+        <InterfacesField
+          interfaces={interfaces}
+          onChangeInterfaces={setInterfaces}
+          allowedTypes={SINGLE_TYPE}
+          isAsset={isAsset}
+          entityBaseUrl={entityBaseUrl}
+        />
+      </div>
+    );
+  };
+
+  test('an empty base URL carries no required marker while the entity-level base URL is set', () => {
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" />);
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+
+  test('an empty base URL carries the required marker while the entity-level base URL is empty', () => {
+    render(<ControlledFallbackField />);
+
+    expect(getBaseUrlInputWithRequiredMarker()).toBeInTheDocument();
+  });
+
+  test('clearing a filled base URL stores undefined, not an empty string', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    await user.clear(getBaseUrlInput());
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: undefined },
+    });
+  });
+
+  test('clearing a filled base URL shows no required error while the entity-level base URL is set', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" />);
+
+    await user.type(getBaseUrlInput(), 'https://x');
+    await user.clear(getBaseUrlInput());
+
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
+  });
+
+  test('clearing a filled base URL shows the required error with no entity-level base URL', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField />);
+
+    await user.type(getBaseUrlInput(), 'https://x');
+    await user.clear(getBaseUrlInput());
+
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+  });
+
+  test('clearing the entity-level base URL re-flags an empty row as required', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" />);
+
+    await user.click(toggleEntityBaseUrlButton());
+
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+    expect(getBaseUrlInputWithRequiredMarker()).toBeInTheDocument();
+  });
+
+  test('refilling the entity-level base URL clears an existing required error', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField />);
+
+    await user.type(getBaseUrlInput(), 'https://x');
+    await user.clear(getBaseUrlInput());
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+
+    await user.click(toggleEntityBaseUrlButton());
+
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+
+  test('asset surface: an empty snake_case base_url is optional while the entity-level base URL is set', () => {
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" isAsset />);
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+});
+
+describe('InterfacesField — upstream endpoint variant', () => {
+  const getEndpointInput = () => screen.getByRole('textbox', { name: EntityFieldsI18nKey.endpoint });
+
+  test('adding an interface stores an absent endpoint, not an empty string', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{}}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        variant={InterfaceFieldVariant.Endpoint}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined },
+    });
+  });
+
+  test('clearing a filled endpoint stores undefined, not an empty string', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        variant={InterfaceFieldVariant.Endpoint}
+      />,
+    );
+
+    await user.clear(getEndpointInput());
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined },
+    });
+  });
+
+  test('editing the endpoint passes the typed value through', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        variant={InterfaceFieldVariant.Endpoint}
+      />,
+    );
+
+    await user.type(getEndpointInput(), 'y');
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: 'https://xy' },
+    });
   });
 });

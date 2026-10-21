@@ -1,4 +1,4 @@
-import { ActionType, PublicationStatus } from '@/src/models/dial/publications';
+import { ActionType, PromptPublication, PublicationStatus } from '@/src/models/dial/publications';
 import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -14,6 +14,7 @@ const makeClients = (): EnrichmentClients => ({
   getAsset: vi.fn(),
   updateAsset: vi.fn(),
   getBucket: vi.fn(),
+  getSkillMetadata: vi.fn(),
   getFileMetadata: vi.fn(),
   uploadFile: vi.fn(),
 });
@@ -28,41 +29,26 @@ describe('Server :: CorePublicationsApi', () => {
     instance = new CorePublicationsApi({ host: TEST_URL }, clients);
   });
 
-  test('list posts the public path and filters/maps by resource type', async () => {
+  test('getPublicationList posts the public path and tags every publication with its resource type', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         publications: [
           { url: 'publications/public/p1', name: 'Prompt 1', resourceTypes: ['PROMPT'], status: 'PENDING' },
-          { url: 'publications/public/f1', name: 'File 1', resourceTypes: ['FILE'], status: 'PENDING' },
+          { url: 'publications/public/s1', name: 'Skill 1', resourceTypes: ['SKILL'], status: 'PENDING' },
+          { url: 'publications/public/u1', name: 'Untyped', resourceTypes: [], status: 'PENDING' },
         ],
       }),
       JSON_HEADERS,
     );
 
-    const result = await instance.getPublicationPromptList(TOKEN_MOCK);
+    const result = await instance.getPublicationList(TOKEN_MOCK);
 
     const [url, init] = fetch.mock.calls[0];
     expect(url).toContain('/v1/ops/publication/list');
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ url: 'publications/public/' });
-    expect(result).toHaveLength(1);
-    expect(result?.[0]).toMatchObject({ path: 'public/p1', requestName: 'Prompt 1' });
-  });
-
-  test('getPublicationSkillList posts the public path and filters/maps to SKILL', async () => {
-    fetch.mockResponseOnce(
-      JSON.stringify({
-        publications: [
-          { url: 'publications/public/s1', name: 'Skill 1', resourceTypes: ['SKILL'], status: 'PENDING' },
-          { url: 'publications/public/p1', name: 'Prompt 1', resourceTypes: ['PROMPT'], status: 'PENDING' },
-        ],
-      }),
-      JSON_HEADERS,
-    );
-
-    const result = await instance.getPublicationSkillList(TOKEN_MOCK);
-
-    expect(result).toHaveLength(1);
-    expect(result?.[0]).toMatchObject({ path: 'public/s1', requestName: 'Skill 1' });
+    expect(result).toHaveLength(2);
+    expect(result?.[0]).toMatchObject({ path: 'public/p1', requestName: 'Prompt 1', resourceType: 'PROMPT' });
+    expect(result?.[1]).toMatchObject({ path: 'public/s1', requestName: 'Skill 1', resourceType: 'SKILL' });
   });
 
   test('getPublication returns null for APPROVED publications', async () => {
@@ -96,15 +82,15 @@ describe('Server :: CorePublicationsApi', () => {
     (clients.getAsset as ReturnType<typeof vi.fn>).mockImplementation((_t, path: string) =>
       path.startsWith('public')
         ? Promise.resolve({ success: false })
-        : Promise.resolve({ success: true, response: { name: 'P', version: '1', content: 'body' } }),
+        : Promise.resolve({ success: true, response: { name: 'P', content: 'body' } }),
     );
 
-    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as Record<string, unknown>;
+    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
 
     expect(result.path).toBe('public/req');
     expect(result.action).toBe(ActionType.ADD);
     expect(result.resourceIssues).toEqual([]);
-    expect((result.prompts as { prompt: unknown }[])[0].prompt).toEqual({ name: 'P', version: '1', content: 'body' });
+    expect((result.prompts as { prompt: unknown }[])[0].prompt).toEqual({ name: 'P', content: 'body' });
   });
 
   test('getPublication records an issue when the resource is missing', async () => {
@@ -119,7 +105,7 @@ describe('Server :: CorePublicationsApi', () => {
     );
     (clients.getAsset as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false });
 
-    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as Record<string, unknown>;
+    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
 
     expect(result.prompts).toEqual([]);
     expect(result.resourceIssues).toEqual([
@@ -219,7 +205,8 @@ describe('Server :: CorePublicationsApi', () => {
           sourceUrl: 'prompts/src/P__1',
           targetUrl: 'prompts/old/P__1',
           reviewUrl: 'prompts/review/P__1',
-          prompt: { name: 'P', version: '1', content: 'body' },
+          // A prompt's target is its folder + plain name — the `__1` stays part of the name.
+          prompt: { name: 'P__1', content: 'body' },
         },
       ],
     };

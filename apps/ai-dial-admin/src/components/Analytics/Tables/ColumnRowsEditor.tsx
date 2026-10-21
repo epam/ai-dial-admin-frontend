@@ -1,12 +1,20 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { DialGhostButton, DialInput, DialRemoveButton, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import {
+  DialGhostButton,
+  DialInput,
+  DialLabel,
+  DialRemoveButton,
+  DialSelectField,
+  DialSwitch,
+} from '@epam/ai-dial-ui-kit';
 
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
+import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
+import { createColumnRow, isNullableLockedType } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow, ColumnRowError } from '@/src/models/analytics/tables-ui';
 
@@ -23,8 +31,13 @@ interface Props {
 // (text line + its bottom margin) — same offset as the equivalent fix in Routes/Paths/Path.tsx.
 const LABEL_ROW_OFFSET_CLASS = 'mt-[22px]';
 
+const TYPED_DETAIL_CELL_CLASS = 'flex-1 min-w-[160px]';
+
 const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
   const t = useI18n();
+
+  const hasArrayRow = rows.some((row) => row.type === AnalyticsFieldType.Array);
+  const hasEnumRow = rows.some((row) => row.type === AnalyticsFieldType.Enum);
 
   const update = (id: string, patch: Partial<ColumnRow>) =>
     onChange(rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -35,23 +48,36 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         const first = index === 0;
         const rowError = errors?.[index];
         const isArray = row.type === AnalyticsFieldType.Array;
+        const isEnum = row.type === AnalyticsFieldType.Enum;
+        const isNullableLocked = isNullableLockedType(row.type);
         const onTypeChange = (v: string | string[]) => {
           const type = v as AnalyticsFieldType;
-          update(row.id, { type, ...(type !== AnalyticsFieldType.Array ? { element_type: '' } : {}) });
+          update(row.id, {
+            type,
+            // Reset so a hidden `true` cannot resurface on a later retype.
+            ...(isNullableLockedType(type) ? { nullable: false } : {}),
+            ...(type !== AnalyticsFieldType.Array ? { element_type: '' } : {}),
+            // Dropped for the same reason the element type is: a domain kept across a retype would be
+            // submitted with a column that no longer has the type it belongs to.
+            ...(type !== AnalyticsFieldType.Enum ? { enum_values: [] } : {}),
+          });
         };
         // A validation error makes that field's column taller (label + input + error text). With
         // items-end (the normal bottom-aligned layout) that drags the erroring column's label out of
-        // line with its error-free siblings, so switch to top alignment whenever this row has any error.
+        // line with its error-free siblings, so switch to top alignment whenever this row has any error — or is
+        // an enum row, whose ordering note makes its value field taller the same way.
         const rowHasError = Boolean(
           rowError?.source_name ||
           rowError?.name ||
           rowError?.tag ||
           rowError?.display_name ||
           rowError?.description ||
-          rowError?.element_type,
+          rowError?.element_type ||
+          rowError?.enum_values,
         );
+        const isTopAligned = rowHasError || isEnum;
         return (
-          <div key={row.id} className={classNames('flex gap-2', rowHasError ? 'items-start' : 'items-end')}>
+          <div key={row.id} className={classNames('flex gap-2', isTopAligned ? 'items-start' : 'items-end')}>
             <DialInput
               id={`col-name-${row.id}`}
               containerClassName="flex-[2] min-w-[160px]"
@@ -90,19 +116,38 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               value={row.type}
               onChange={onTypeChange}
             />
-            {isArray && (
-              <DialSelectField
-                id={`col-element-type-${row.id}`}
-                containerClassName="flex-1 min-w-[140px]"
-                label={first ? t(AnalyticsTablesI18nKey.ElementType) : undefined}
-                required
-                options={ELEMENT_TYPE_OPTIONS}
-                value={row.element_type}
-                error={rowError?.element_type}
-                invalid={Boolean(rowError?.element_type)}
-                onChange={(v) => update(row.id, { element_type: v as AnalyticsFieldType })}
-              />
-            )}
+            {hasArrayRow &&
+              (isArray ? (
+                <DialSelectField
+                  id={`col-element-type-${row.id}`}
+                  containerClassName={TYPED_DETAIL_CELL_CLASS}
+                  label={first ? t(AnalyticsTablesI18nKey.ElementType) : undefined}
+                  required
+                  options={ELEMENT_TYPE_OPTIONS}
+                  value={row.element_type}
+                  error={rowError?.element_type}
+                  invalid={Boolean(rowError?.element_type)}
+                  onChange={(v) => update(row.id, { element_type: v as AnalyticsFieldType })}
+                />
+              ) : (
+                <div className={classNames(TYPED_DETAIL_CELL_CLASS, 'self-start')}>
+                  {first && <DialLabel label={t(AnalyticsTablesI18nKey.ElementType)} required />}
+                </div>
+              ))}
+            {hasEnumRow &&
+              (isEnum ? (
+                <EnumValuesField
+                  rowId={row.id}
+                  isLabelHidden={!first}
+                  values={row.enum_values}
+                  errorText={rowError?.enum_values}
+                  onChange={(values) => update(row.id, { enum_values: values })}
+                />
+              ) : (
+                <div className={classNames(TYPED_DETAIL_CELL_CLASS, 'self-start')}>
+                  {first && <DialLabel label={t(AnalyticsTablesI18nKey.EnumValues)} required />}
+                </div>
+              ))}
             <DialInput
               id={`col-tag-${row.id}`}
               containerClassName="flex-1 min-w-[120px]"
@@ -113,13 +158,16 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               onChange={(v) => update(row.id, { tag: v ?? '' })}
             />
             <div
-              className={classNames('flex h-[38px] items-center gap-2', rowHasError && first && LABEL_ROW_OFFSET_CLASS)}
+              className={classNames(
+                'flex h-[38px] items-center gap-2',
+                isTopAligned && first && LABEL_ROW_OFFSET_CLASS,
+              )}
             >
               <DialSwitch
                 switchId={`col-nullable-${row.id}`}
                 label={t(AnalyticsTablesI18nKey.Nullable)}
-                isOn={!isArray && row.nullable}
-                disabled={isArray}
+                isOn={!isNullableLocked && row.nullable}
+                disabled={isNullableLocked}
                 onChange={(value) => update(row.id, { nullable: value })}
               />
               <DialSwitch

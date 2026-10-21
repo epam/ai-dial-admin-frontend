@@ -58,8 +58,9 @@ If the change is tied to OpenSpec, review the artifacts **before** judging the c
    - Requirements discovered during implementation are captured in specs/design/tasks, not only code.
    - Non-goals are still respected.
 4. Confirm the delta spec was folded into the consolidated `openspec/specs/<capability>/spec.md`, or
-   that archiving will do it. For Analytics, changes belong in the single master
-   `openspec/specs/analytics/spec.md` — a new file under that directory is a finding.
+   that archiving will do it. For Analytics, a requirement belongs in the sub-capability that owns the
+   behaviour (`analytics/<sub>`); a new top-level `analytics-*` spec folder is a finding, and so is a
+   requirement specific to one surface parked in the shared `analytics/spec.md` index.
 5. If implementation reveals a design/spec gap, request an artifact update before or alongside code.
 
 Block merge when code behavior materially diverges from the artifacts, when tasks are marked complete

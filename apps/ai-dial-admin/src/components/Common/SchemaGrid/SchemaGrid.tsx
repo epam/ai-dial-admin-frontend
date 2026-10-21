@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent, ICellRendererParams, IsFullWidthRowParams } from 'ag-grid-community';
@@ -10,29 +10,65 @@ import isEqual from 'lodash/isEqual';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { findRowInTree, updateRowInTree } from '@/src/components/Common/TreeGrid/utils';
 import { getRowIdById } from '@/src/components/Grid/utils';
+import {
+  CATALOG_META_LOCALIZED,
+  CATALOG_META_SECTION,
+  CATALOG_META_TAB,
+  CATALOG_META_WIDGET,
+} from '@/src/constants/catalog-schemas';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
+import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from './constants';
+import { SchemaConstraintRule, SchemaFieldInputConfig, SchemaMetaColumn, SchemaMetaHandlers } from './models';
 import {
   SchemaFieldRow,
   createEmptyField,
   fieldsToJsonSchema,
   flattenFields,
   getGridSchemaPart,
+  getFieldConstraintViolations,
+  getNextFieldName,
+  hasInvalidFieldNames,
   jsonSchemaToFields,
+  resolveSchemaFieldInputProps,
 } from './utils';
+
+const CONSTRAINT_MESSAGE_KEYS: Record<SchemaConstraintRule, BasicI18nKey> = {
+  [SchemaConstraintRule.MaxLength]: BasicI18nKey.FieldValueTooLong,
+  [SchemaConstraintRule.MinLength]: BasicI18nKey.FieldValueTooShort,
+  [SchemaConstraintRule.Pattern]: BasicI18nKey.FieldValueFormatInvalid,
+};
 
 interface SchemaGridProps {
   schema?: JSONSchema7;
   onChange: (schema: JSONSchema7, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
-  isDialSchema?: boolean;
+  /** Which `dial:meta` columns this schema kind has — see the sets in `constants.ts`. */
+  metaColumns?: SchemaMetaColumn[];
+  /** Which of those columns the schema kind requires a value in, on every top-level property. */
+  requiredMetaColumns?: SchemaMetaColumn[];
+  /**
+   * Native attributes per free-text cell, merged over `DEFAULT_SCHEMA_FIELD_INPUT_PROPS`; `false` drops
+   * the defaults. Their `maxLength`, `minLength` and `pattern` also gate save. Pass a stable value (a
+   * named constant): the column definitions are rebuilt whenever it changes.
+   */
+  fieldInputProps?: SchemaFieldInputConfig | false;
   isReadonly?: boolean;
 }
 
-const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema, isReadonly }) => {
+const SchemaGrid: FC<SchemaGridProps> = ({
+  schema,
+  onChange,
+  isSkipRefresh,
+  metaColumns,
+  requiredMetaColumns,
+  fieldInputProps,
+  isReadonly,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonlyGrid = isReadonly || isReadOnlyAdmin;
@@ -142,29 +178,55 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     [updateFields],
   );
 
-  const onChangeOrder = useCallback(
-    (value: number | string, data: SchemaFieldRow) => {
+  // A cleared cell removes its key rather than storing an empty hint.
+  const onChangeDialMeta = useCallback(
+    (key: string, value: unknown, data: SchemaFieldRow, skipRefresh?: boolean) => {
       if (data.parentId !== null) return;
-      const num = typeof value === 'string' ? (value === '' ? undefined : Number(value)) : value;
-      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
-        ...f,
-        dialMeta: { ...f.dialMeta, 'dial:propertyOrder': num },
-      }));
-      updateFields(updated, true);
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => {
+        const dialMeta = { ...f.dialMeta };
+        if (value === '' || value === undefined) {
+          delete dialMeta[key];
+        } else {
+          dialMeta[key] = value;
+        }
+        return { ...f, dialMeta: Object.keys(dialMeta).length ? dialMeta : undefined };
+      });
+      updateFields(updated, skipRefresh);
     },
     [updateFields],
   );
 
-  const onChangePropertyKind = useCallback(
-    (value: string, data: SchemaFieldRow) => {
-      if (data.parentId !== null) return;
-      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
-        ...f,
-        dialMeta: { ...f.dialMeta, 'dial:propertyKind': value },
-      }));
-      updateFields(updated);
+  const onChangeOrder = useCallback(
+    (value: number | string, data: SchemaFieldRow) => {
+      const num = typeof value === 'string' ? (value === '' ? undefined : Number(value)) : value;
+      onChangeDialMeta(DIAL_META_PROPERTY_ORDER, num, data, true);
     },
-    [updateFields],
+    [onChangeDialMeta],
+  );
+
+  const onChangeTab = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_TAB, value, data, true),
+    [onChangeDialMeta],
+  );
+
+  const onChangeSection = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_SECTION, value, data, true),
+    [onChangeDialMeta],
+  );
+
+  const onChangeWidget = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_WIDGET, value, data),
+    [onChangeDialMeta],
+  );
+
+  const onChangeLocalized = useCallback(
+    (value: boolean, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_LOCALIZED, value, data),
+    [onChangeDialMeta],
+  );
+
+  const onChangePropertyKind = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(DIAL_META_PROPERTY_KIND, value, data),
+    [onChangeDialMeta],
   );
 
   const onRemoveField = useCallback(
@@ -186,7 +248,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   );
 
   const onAddField = useCallback(() => {
-    const newField = createEmptyField(null, 0);
+    const newField = createEmptyField(null, 0, getNextFieldName(fieldsRef.current));
     const updated = [...fieldsRef.current, newField];
     updateFields(updated);
   }, [updateFields]);
@@ -198,7 +260,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       const updated = updateRowInTree(fieldsRef.current, parentId, (p) => ({
         ...p,
         expanded: true,
-        children: [...p.children, createEmptyField(parentId, childDepth)],
+        children: [...p.children, createEmptyField(parentId, childDepth, getNextFieldName(p.children))],
       }));
       updateFields(updated);
     },
@@ -206,6 +268,47 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   );
 
   const rowData = useMemo(() => flattenFields(fields, 0, isReadonlyGrid), [fields, isReadonlyGrid]);
+
+  const validationField = useId();
+  const { dispatch, resetCounter } = useSaveValidationContext();
+  const hasNameErrors = useMemo(() => hasInvalidFieldNames(fields), [fields]);
+  const resolvedInputProps = useMemo(() => resolveSchemaFieldInputProps(fieldInputProps), [fieldInputProps]);
+  // A read-only grid holds a schema nobody here can edit, so its values must not block the save.
+  const constraintViolations = useMemo(
+    () => (isReadonlyGrid ? [] : getFieldConstraintViolations(fields, resolvedInputProps, metaColumns)),
+    [isReadonlyGrid, fields, resolvedInputProps, metaColumns],
+  );
+  const isValid = !hasNameErrors && !constraintViolations.length;
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: validationField, isValid });
+    // A Reset from a modal closing over this grid clears every field, so the grid reports itself again.
+  }, [dispatch, validationField, isValid, resetCounter]);
+
+  useEffect(
+    () => () => dispatch({ type: ValidationActionType.RemoveField, field: validationField }),
+    [dispatch, validationField],
+  );
+
+  const metaHandlers = useMemo<SchemaMetaHandlers>(() => {
+    const handlers: Record<SchemaMetaColumn, SchemaMetaHandlers[SchemaMetaColumn]> = {
+      [SchemaMetaColumn.Order]: onChangeOrder,
+      [SchemaMetaColumn.PropertyKind]: onChangePropertyKind,
+      [SchemaMetaColumn.Tab]: onChangeTab,
+      [SchemaMetaColumn.Section]: onChangeSection,
+      [SchemaMetaColumn.Widget]: onChangeWidget,
+      [SchemaMetaColumn.Localized]: onChangeLocalized,
+    };
+    return Object.fromEntries((metaColumns ?? []).map((column) => [column, handlers[column]]));
+  }, [
+    metaColumns,
+    onChangeOrder,
+    onChangePropertyKind,
+    onChangeTab,
+    onChangeSection,
+    onChangeWidget,
+    onChangeLocalized,
+  ]);
 
   const columnDefs: ColDef[] = useMemo(
     () =>
@@ -219,8 +322,9 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         onRemoveField,
         t,
         isReadonlyGrid,
-        isDialSchema ? onChangeOrder : undefined,
-        isDialSchema ? onChangePropertyKind : undefined,
+        metaHandlers,
+        requiredMetaColumns,
+        resolvedInputProps,
       ),
     [
       onToggleExpand,
@@ -231,10 +335,10 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       onChangeRequired,
       onRemoveField,
       t,
-      isDialSchema,
       isReadonlyGrid,
-      onChangeOrder,
-      onChangePropertyKind,
+      metaHandlers,
+      requiredMetaColumns,
+      resolvedInputProps,
     ],
   );
 
@@ -278,17 +382,27 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   );
 
   return (
-    <div className="h-full">
-      <GridView<SchemaFieldRow>
-        getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
-        emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
-        onGridReady={onGridReady}
-        additionalGridOptions={{
-          getRowId: getRowIdById,
-          isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
-          fullWidthCellRenderer,
-        }}
-      />
+    <div className="flex flex-col h-full">
+      {hasNameErrors && <DialErrorText className="mb-2" text={t(BasicI18nKey.FieldNamesInvalid)} />}
+      {constraintViolations.map(({ field, rule, limit }) => (
+        <DialErrorText
+          key={`${field}-${rule}`}
+          className="mb-2"
+          text={t(CONSTRAINT_MESSAGE_KEYS[rule], { field, limit })}
+        />
+      ))}
+      <div className="flex-1 min-h-0">
+        <GridView<SchemaFieldRow>
+          getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
+          emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+          onGridReady={onGridReady}
+          additionalGridOptions={{
+            getRowId: getRowIdById,
+            isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
+            fullWidthCellRenderer,
+          }}
+        />
+      </div>
     </div>
   );
 };

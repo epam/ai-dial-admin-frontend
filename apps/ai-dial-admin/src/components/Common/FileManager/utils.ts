@@ -1,23 +1,28 @@
 import { ReactNode } from 'react';
 
-import { DialFile, DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-react-file-manager';
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
 import { bulkActionLabels } from '@/src/components/Assets/constants';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
+import { ASSETS_ROW_HEIGHT, ICON_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
 import {
   CONTROL_CHARS_ONLY_REGEXP,
   CREATE_FOLDER_FORBIDDEN_CHARS,
+  FILE_MANAGER_GRID_CLASS,
   FILE_NAME_MAX_LENGTH,
   MAX_FOLDER_NESTING_DEPTH,
+  MOVE_EXCLUDED_PATHS,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder } from '@/src/utils/files/root-folder';
+import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isCatalogView } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -36,25 +41,45 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
 };
 
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
-  [ApplicationRoute.AssetsModels]: FileManagerI18nKey.Models,
-  [ApplicationRoute.AssetsAppRunners]: FileManagerI18nKey.AppRunners,
+  [ApplicationRoute.PlatformModels]: FileManagerI18nKey.Models,
+  [ApplicationRoute.PlatformAppRunners]: FileManagerI18nKey.AppRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: FileManagerI18nKey.CatalogSchemas,
+  [ApplicationRoute.PlatformInterceptors]: FileManagerI18nKey.Interceptors,
+  [ApplicationRoute.PlatformTranslators]: FileManagerI18nKey.Translators,
+  [ApplicationRoute.PlatformRoutes]: FileManagerI18nKey.Routes,
+  [ApplicationRoute.PlatformRoles]: FileManagerI18nKey.Roles,
+  [ApplicationRoute.PlatformKeys]: FileManagerI18nKey.Keys,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
   [ApplicationRoute.Files]: FileManagerI18nKey.Files,
   [ApplicationRoute.Conversations]: FileManagerI18nKey.Conversations,
-  [ApplicationRoute.AssetsSkills]: FileManagerI18nKey.Skills,
+  [ApplicationRoute.Skills]: FileManagerI18nKey.Skills,
 };
 
 export const getValidationMessages = (t: (key: string) => string) => {
-  return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
+  return {
+    emptyName: t(FileManagerI18nKey.EnterFolderName),
+    duplicateName: t(FileManagerI18nKey.NameExists),
+    // Deliberately without the kit's `warning__` prefix: that would make the dot check non-blocking.
+    hiddenItemWarning: t(FileManagerI18nKey.CreateFolderValidateFirstSymbol),
+  };
 };
 
+/**
+ * The popup embeds its own `DialFileManager`, which takes its own `onCreateFolder` — leaving it
+ * out is why "Add folder" there rendered an input that saved nothing. It is the same
+ * handler and the same validation the outer manager uses, so the two surfaces stay in step.
+ */
 export const getDestinationFolderPopupOptions = (
   view: ApplicationRoute,
   t: (key: string, options?: Record<string, string | number> | undefined) => string,
   handleFolderNestingDepthExceeded: () => void,
+  onCreateFolder?: (file: DialUploadFileItem, folderPath: string) => void | Promise<void>,
 ) => ({
+  onCreateFolder,
+  onCreateFolderValidate: (name: string) => validateCreateFolder(name, t),
+  folderCreationValidationMessages: getValidationMessages(t),
   emptyStateTitle: t(FileManagerI18nKey.EmptyMoveFolderTitle),
   emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
     items: t(assetEntityMap[view]).toLowerCase(),
@@ -62,6 +87,7 @@ export const getDestinationFolderPopupOptions = (
   navigationPanelOptions: {
     searchable: false,
   },
+  sortOptions: { sortable: false },
   maxNewFolderDepth: MAX_FOLDER_NESTING_DEPTH + 1,
   onNewFolderDepthExceeded: handleFolderNestingDepthExceeded,
   getMoveHeader: (itemsCount: number, itemName?: string) =>
@@ -69,6 +95,7 @@ export const getDestinationFolderPopupOptions = (
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
   processDestinationFolderPath: (path: string) => addTrailingSlash(path),
+  excludedPaths: MOVE_EXCLUDED_PATHS,
 });
 
 export const createEmptyFile = () => {
@@ -96,17 +123,15 @@ export const isItemNameValid = (name: string): boolean => {
 };
 
 /**
- * An app-runner's row name is its `$id`, a URI — `:` and `/` are inherent to it. The ui-kit's default
- * forbidden-symbols regex covers both, which would mark every row invalid (grey name, "please rename
- * it" tooltip) and disable its context-menu actions. Only control characters are genuinely invalid
- * here; the CRUD calls address the separately-held encoded `path`, not this name.
+ * Only control characters are genuinely invalid in a schema `$id`; the CRUD calls address the
+ * separately-held encoded `path`, not this name.
  */
 export const getForbiddenSymbolsRegExp = (view: ApplicationRoute): RegExp | undefined =>
-  view === ApplicationRoute.AssetsAppRunners ? CONTROL_CHARS_ONLY_REGEXP : undefined;
+  SCHEMA_ID_NAMED_VIEWS.includes(view) ? CONTROL_CHARS_ONLY_REGEXP : undefined;
 
-/** Opening a row navigates by encoded `path`, so a URI-shaped app-runner name is safe to open. */
+/** Opening a row navigates by encoded `path`, so a URI-shaped schema name is safe to open. */
 export const isItemOpenable = (view: ApplicationRoute, name: string): boolean =>
-  view === ApplicationRoute.AssetsAppRunners || isItemNameValid(name);
+  SCHEMA_ID_NAMED_VIEWS.includes(view) || isItemNameValid(name);
 
 export const validateCreateFolder = (
   name: string,
@@ -146,13 +171,21 @@ export const getGridOptions = (
   columnDefs: ColDef[],
   t: (key: string) => string,
   isSingleSelection?: boolean,
+  currentPath?: string,
 ) =>
   ({
-    alternateOddRowColors: true,
+    alternateOddRowColors: false,
     columnDefs,
-    selectionMode: isReadOnlyAdmin ? void 0 : isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
-    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin), t),
+    containerClassName: FILE_MANAGER_GRID_CLASS,
+    selectionMode:
+      isReadOnlyAdmin || isFileRootPath(currentPath)
+        ? void 0
+        : isSingleSelection
+          ? GridSelectionMode.SINGLE
+          : GridSelectionMode.MULTIPLE,
+    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
     additionalGridOptions: {
+      rowHeight: isCatalogView(view) ? ICON_ROW_HEIGHT : ASSETS_ROW_HEIGHT,
       defaultColDef: {
         minWidth: 150,
         floatingFilter: true,
@@ -177,35 +210,61 @@ export const getTreeOptions = (
   view: ApplicationRoute,
   setExpanded: (paths: Set<string>) => void,
   t: (key: string) => string,
+  currentPath?: string,
+  // An empty header suppresses the library's default "Folder Tree" title.
+  header = '',
 ) => {
   return {
     collapsed: false,
     expandedPaths: expandedPaths,
     loadedPaths,
     loadingPaths: isFetchingFiles ? new Set<string>([getRootFolder(view)]) : new Set<string>(),
-    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view), t),
+    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view, currentPath), t),
     onExpandedPathsChange: setExpanded,
-    header: t(FileManagerI18nKey.FolderTree),
+    header,
   };
 };
 
-export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => ({
+export const getToolbarOptions = (
+  route: ApplicationRoute,
+  isReadOnlyAdmin: boolean,
+  t: (key: string) => string,
+  currentPath?: string,
+) => ({
   showHiddenFilesToggle: false,
-  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin), t),
+  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin, currentPath), t),
   newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
 });
 
-export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
-  const actionLabels =
+export const getBulkActionsToolbarOptions = (
+  view: ApplicationRoute,
+  t: (key: string) => string,
+  currentPath?: string,
+) => {
+  if (isFileRootPath(currentPath)) {
+    return {
+      getSelectionLabel: () => t(FileManagerI18nKey.SelectedItems),
+      actionLabels: {},
+    };
+  }
+
+  const isFlatBulkView =
     view === ApplicationRoute.Conversations ||
-    view === ApplicationRoute.AssetsModels ||
-    view === ApplicationRoute.AssetsAppRunners ||
-    view === ApplicationRoute.AssetsSkills
-      ? bulkActionLabels.filter((action) => action.key === 'delete')
-      : bulkActionLabels;
+    view === ApplicationRoute.PlatformModels ||
+    view === ApplicationRoute.PlatformAppRunners ||
+    view === ApplicationRoute.PlatformCatalogSchemas ||
+    view === ApplicationRoute.PlatformInterceptors ||
+    view === ApplicationRoute.PlatformTranslators ||
+    view === ApplicationRoute.PlatformRoutes ||
+    view === ApplicationRoute.PlatformRoles ||
+    view === ApplicationRoute.PlatformKeys ||
+    view === ApplicationRoute.Skills ||
+    isPlatformDualBucketView(view, currentPath);
+
+  const actionLabels = isFlatBulkView ? bulkActionLabels.filter((action) => action.key === 'delete') : bulkActionLabels;
 
   return {
-    getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+    getSelectionLabel: () => t(FileManagerI18nKey.SelectedItems),
     actionLabels: getActionLabels(actionLabels, t),
   };
 };

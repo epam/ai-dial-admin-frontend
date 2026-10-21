@@ -1,4 +1,5 @@
 import {
+  QueryArrayExpr,
   QueryExpr,
   QueryExprType,
   QueryFieldExpr,
@@ -37,6 +38,17 @@ export const fn = (name: string, args: QueryExpr[] = [], distinct?: boolean): Qu
 
 export const col = (expr: QueryExpr, as?: string): QueryOutputColumn => ({ expr, ...(as ? { as } : {}) });
 
+// `if(condition, then, else)` is in the service's function catalog, which is closed and served at runtime by
+// `GET /v1/queries/functions` — read it there, not from the backend checkout, which lags the deployed
+// service and does not carry this branch. Its condition must be a boolean *expression*: a boolean column, or
+// a call to `not_empty` / `starts_with` / `contains` / `equals` / `json_extract_bool`, since the DSL offers no
+// comparison operator in expression position. A null condition takes the else branch.
+//
+// This is what makes a conditional aggregate expressible client-side: `sum(if(success, 0, 1))` counts
+// failures without a `CASE`, which the grammar deliberately lacks.
+export const fnIf = (condition: QueryExpr, then: QueryExpr, otherwise: QueryExpr): QueryFnExpr =>
+  fn('if', [condition, then, otherwise]);
+
 export const predicate = (op: QueryOperator, fieldName: string, val: QueryValueExpr): QueryPredicate => ({
   op,
   args: [field(fieldName), val],
@@ -63,9 +75,24 @@ export const isNotNull = (fieldName: string): QueryPredicate =>
 export const isNull = (fieldName: string): QueryPredicate =>
   predicate(QueryOperator.Eq, fieldName, value(QueryValueType.Null, null));
 
+export const arrayOf = (valueType: QueryValueType, values: string[]): QueryArrayExpr => ({
+  type: QueryExprType.Array,
+  items: values.map((val) => value(valueType, val)),
+});
+
 export const inValues = (fieldName: string, valueType: QueryValueType, values: string[]): QueryPredicate => ({
   op: QueryOperator.In,
-  args: [field(fieldName), { type: QueryExprType.Array, items: values.map((val) => value(valueType, val)) }],
+  args: [field(fieldName), arrayOf(valueType, values)],
+});
+
+// A comparison whose left operand is an arbitrary expression rather than a field. This is how a boolean
+// *function* reaches a filter at all: the array predicates (`array_has`, `array_has_any`) are catalog
+// functions returning boolean, and the filter grammar has no operator in expression position — so the call
+// is compared against a boolean literal. It is the same lowering the service's own SQL front end performs
+// for a bare `WHERE array_has_any(...)`.
+export const exprPredicate = (op: QueryOperator, left: QueryExpr, right: QueryExpr): QueryPredicate => ({
+  op,
+  args: [left, right],
 });
 
 export const ico = (fieldName: string, term: string): QueryPredicate =>

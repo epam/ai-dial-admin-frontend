@@ -1,25 +1,27 @@
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { describe, expect, test } from 'vitest';
-import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ImportFileType } from '@/src/types/import';
+import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test } from 'vitest';
 import {
   addNewVersion,
-  filterLatestVersions,
+  getAgentLinkForConversation,
   getDeleteNotificationContent,
   getEntityForUpdate,
-  getIsNeedToMove,
-  getImportNotificationContent,
-  getMoveNotificationContent,
   getExportNotificationContent,
+  getGridActionLabels,
+  getImportNotificationContent,
+  getIsNeedToMove,
+  getMoveNotificationContent,
   getParentPathByFullPath,
   getToolbarOptionLabels,
+  getTreeActionLabels,
   getVersionsPerName,
 } from '../utils';
 
 describe('getToolbarOptionLabels', () => {
   test('AssetsSkills offers Folder and Skill, with no Import option', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false);
+    const labels = getToolbarOptionLabels(ApplicationRoute.Skills, false);
 
     expect(labels).toEqual([
       { key: 'newFolder', label: FileManagerI18nKey.Folder, icon: null },
@@ -28,45 +30,187 @@ describe('getToolbarOptionLabels', () => {
   });
 
   test('AssetsSkills returns no options for a read-only admin', () => {
-    expect(getToolbarOptionLabels(ApplicationRoute.AssetsSkills, true)).toEqual([]);
+    expect(getToolbarOptionLabels(ApplicationRoute.Skills, true)).toEqual([]);
   });
 });
 
-describe('filterLatestVersions', () => {
-  test('Should return only latest versions', () => {
-    const res = filterLatestVersions([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
-    expect(res).toEqual([
-      { name: 'prompts', version: '7' },
-      { name: 'model', version: '1' },
-    ]);
+describe('getGridActionLabels', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s on the platform bucket offers only duplicate, delete, and openInNewTab',
+    (view) => {
+      const keys = getGridActionLabels(view, false, 'platform/').map((item) => item.key);
+
+      expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+      expect(keys).not.toContain('preview');
+      expect(keys).not.toContain('move');
+      expect(keys).not.toContain('rename');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s on the public bucket keeps the existing full action set',
+    (view) => {
+      const withPublicPath = getGridActionLabels(view, false, 'public/').map((item) => item.key);
+      const withoutPath = getGridActionLabels(view, false).map((item) => item.key);
+
+      expect(withPublicPath).toEqual(withoutPath);
+      // The public bucket keeps folder/versioning actions the platform bucket's restricted set lacks.
+      expect(withPublicPath).toContain('move');
+      expect(withPublicPath).toContain('rename');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s on the platform bucket still returns no options for a read-only admin',
+    (view) => {
+      expect(getGridActionLabels(view, true, 'platform/')).toEqual([]);
+    },
+  );
+});
+
+describe('getTreeActionLabels', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s offers no tree actions while browsing the platform bucket',
+    (view) => {
+      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s keeps folder-tree actions while browsing the public bucket',
+    (view) => {
+      const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+
+      expect(keys.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// Regression (4.4): conversation rows have no folder concept, so neither the grid row menu nor the
+// folder tree may offer a move action for them.
+describe('Conversations offers no move action', () => {
+  test('getGridActionLabels excludes move for Conversations', () => {
+    const keys = getGridActionLabels(ApplicationRoute.Conversations, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('move');
+  });
+
+  test('getGridActionLabels returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.Conversations, true)).toEqual([]);
+  });
+
+  test('getTreeActionLabels excludes move for Conversations, keeping only delete', () => {
+    const keys = getTreeActionLabels(false, ApplicationRoute.Conversations).map((item) => item.key);
+
+    expect(keys).toEqual(['delete']);
+  });
+
+  test('getTreeActionLabels returns no options for a read-only admin', () => {
+    expect(getTreeActionLabels(true, ApplicationRoute.Conversations)).toEqual([]);
+  });
+});
+
+describe('getToolbarOptionLabels — dual-bucket views', () => {
+  test('AssetsApplications offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
+
+    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }]);
+  });
+
+  test('AssetsToolsets offers a single "New Toolset" entry (same label as the public bucket) while browsing the platform bucket', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsToolsets, false, 'platform/');
+
+    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Toolset, icon: null }]);
+  });
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s keeps the existing toolbar entries while browsing the public bucket',
+    (view) => {
+      const withPublicPath = getToolbarOptionLabels(view, false, 'public/');
+      const withoutPath = getToolbarOptionLabels(view, false);
+
+      expect(withPublicPath).toEqual(withoutPath);
+    },
+  );
+});
+
+describe('getGridActionLabels', () => {
+  test('AssetsRoles offers delete and openInNewTab and duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformRoles, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab', 'duplicate']));
+  });
+
+  test('AssetsRoles returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformRoles, true)).toEqual([]);
+  });
+
+  test('AssetsRoutes still offers duplicate, unaffected by the AssetsRoles carve-out', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key);
+
+    expect(keys).toContain('duplicate');
+  });
+
+  test('PlatformKeys now exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformKeys, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+  });
+
+  test('PlatformKeys returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
+  });
+
+  test('PlatformTranslators exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformTranslators, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+  });
+
+  test('PlatformTranslators returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
+  });
+
+  test('PlatformCatalogSchemas exposes duplicate, delete, and openInNewTab for a writable API row', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'platform/').map(
+      (item) => item.key,
+    );
+
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+  });
+
+  test('PlatformCatalogSchemas exposes only openInNewTab for a file-root row', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'file/').map((item) => item.key);
+
+    expect(keys).toEqual(['openInNewTab']);
+  });
+
+  test('PlatformCatalogSchemas returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, true)).toEqual([]);
   });
 });
 
 describe('getVersionsPerName', () => {
   test('Should return correct map', () => {
     const res = getVersionsPerName([
-      { name: 'prompts', version: '1' },
-      { name: 'prompts', version: '2' },
-    ] as DialPrompt[]);
+      { name: 'app', version: '1' },
+      { name: 'app', version: '2' },
+    ] as AssetWithVersion[]);
     expect(res).toEqual({
-      prompts: ['1', '2'],
+      app: ['1', '2'],
     });
   });
   test('Should return correct map', () => {
     const res = getVersionsPerName([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
+      { name: 'app', version: '7' },
+      { name: 'app', version: '4' },
+      { name: 'toolset', version: '1' },
+      { name: 'app', version: '1' },
+    ] as AssetWithVersion[]);
     expect(res).toEqual({
-      prompts: ['1', '4', '7'],
-      model: ['1'],
+      app: ['1', '4', '7'],
+      toolset: ['1'],
     });
   });
 });
@@ -114,8 +258,11 @@ describe('addNewVersion', () => {
     expect(result).toEqual({
       folderId: '2',
       name: 'Prompt',
-      path: 'somePath__1.2.3',
-      version: '1.2.3',
+      path: 'somePath__0.0.1',
+      _metadata: {
+        path: 'somePath__1.2.3',
+        version: '1.2.3',
+      },
     });
   });
 
@@ -125,8 +272,24 @@ describe('addNewVersion', () => {
     expect(result).toEqual({
       folderId: '2',
       name: 'Prompt',
-      path: 'somePath__newVersion',
-      version: 'newVersion',
+      path: 'somePath__oldVersion',
+      _metadata: {
+        path: 'somePath__newVersion',
+        version: 'newVersion',
+      },
+    });
+  });
+
+  test('reads the source path from an existing _metadata graft when the flat path is absent', () => {
+    const entity = { folderId: '2', name: 'Prompt', _metadata: { path: 'somePath__0.0.1' } } as any;
+    const result = addNewVersion(entity, '1.2.3');
+    expect(result).toEqual({
+      folderId: '2',
+      name: 'Prompt',
+      _metadata: {
+        path: 'somePath__1.2.3',
+        version: '1.2.3',
+      },
     });
   });
 });
@@ -243,6 +406,19 @@ describe('getDeleteNotificationContent', () => {
     expect(result.description).toContain('2');
   });
 
+  // Regression: a platform-bucket application has no version, so the notification must show the
+  // bare name, not a `folderId+name__` path with a dangling separator.
+  test('should return the bare name, not a folderId+name__ path, for a platform-bucket application delete', () => {
+    const fileNodes = [{ name: 'pl_Ts', folderId: 'platform/' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
+
+    expect(result.title).toBe('Delete Application Success');
+    expect(result.description).toBe('Successfully deleted Application pl_Ts');
+  });
+
   test('should return correct notification for single toolset delete in Toolsets view', () => {
     const fileNodes = [{ name: 'My Toolset' }] as any[];
     const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT) as {
@@ -263,6 +439,19 @@ describe('getDeleteNotificationContent', () => {
 
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
+  });
+
+  // Regression: a platform-bucket toolset has no version, so the notification must show the bare
+  // name, not a `folderId+name__` path with a dangling separator (e.g. "platform/pl_Ts__").
+  test('should return the bare name, not a folderId+name__ path, for a platform-bucket toolset delete', () => {
+    const fileNodes = [{ name: 'pl_Ts', folderId: 'platform/' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
+
+    expect(result.title).toBe('Delete Toolset Success');
+    expect(result.description).toBe('Successfully deleted Toolset pl_Ts');
   });
 });
 
@@ -395,6 +584,7 @@ describe('getMoveNotificationContent', () => {
     expect(result.description).toContain('/toolsets/folder/');
   });
 });
+
 describe('getExportNotificationContent', () => {
   const mockT = (key: string, options?: Record<string, string | number>) => {
     if (key === FileManagerI18nKey.ExportSuccessTitle) {
@@ -810,5 +1000,103 @@ describe('getImportNotificationContent', () => {
     expect(result.description).toBe('Successfully imported one Toolset to /dest');
     expect(result.skippedTitle).toBe('Import 1 Toolset Skipped');
     expect(result.skippedDescription).toBe('Skipped import of /dest/toolset1');
+  });
+});
+
+describe('getAgentLinkForConversation', () => {
+  test('returns empty string when deployment is null', () => {
+    expect(getAgentLinkForConversation(null, 'en')).toBe('');
+  });
+
+  test('returns empty string when deployment is empty object', () => {
+    expect(getAgentLinkForConversation({}, 'en')).toBe('');
+  });
+
+  test('returns model link when deployment has model', () => {
+    const deployment = { model: 'gpt-4' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('encodes special characters in model name', () => {
+    const deployment = { model: 'my model/v1' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('my model/v1')}`);
+  });
+
+  test('returns application link when application equals reference', () => {
+    const deployment = { application: 'my-app', reference: 'my-app' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns assets application link when application differs from reference', () => {
+    const deployment = {
+      application: 'applications/my-app',
+      reference: 'other-ref',
+      displayName: 'My App',
+    };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My App')}?path=my-app`);
+  });
+
+  test('model takes precedence over application', () => {
+    const deployment = { model: 'gpt-4', application: 'my-app', reference: 'my-app' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('uses currentLocale in the path', () => {
+    const deployment = { model: 'gpt-4' };
+    expect(getAgentLinkForConversation(deployment, 'fr')).toContain('/fr/');
+    expect(getAgentLinkForConversation(deployment, 'de')).toContain('/de/');
+  });
+
+  test('returns model link from eval deployment $type', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'en',
+      ApplicationRoute.Models,
+    );
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('returns empty model link until modelRoute is resolved', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'en',
+    );
+    expect(result).toBe('');
+  });
+
+  test('returns platform model link when modelRoute is Catalog', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'msh-responses', displayName: 'msh-responses' },
+      'en',
+      ApplicationRoute.PlatformModels,
+    );
+    expect(result).toBe(`/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`);
+  });
+
+  test('returns application link from eval deployment $type', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-application', deploymentId: 'my-app', displayName: 'My App' },
+      'en',
+    );
+    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns assets application link from applications/ id prefix', () => {
+    const result = getAgentLinkForConversation(
+      {
+        $type: 'dial-application',
+        deploymentId: 'applications/folder/my-app__1.0.0',
+        displayName: 'My Asset App',
+      },
+      'en',
+    );
+    expect(result).toBe(
+      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My Asset App')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+    );
   });
 });

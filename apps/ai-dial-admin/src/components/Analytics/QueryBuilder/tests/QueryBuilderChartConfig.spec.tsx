@@ -2,11 +2,24 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { executeQuery } from '@/src/app/[lang]/queries/actions';
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ChartConfig, ChartType, QueryResultView } from '@/src/models/analytics/query-builder';
+import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
+
+const runQueryMock = vi.fn(
+  async (_query?: unknown): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }),
+);
+
+// One object for the file: a fresh one per render would change the identity the effects depend on.
+const RUNNER = {
+  runQuery: runQueryMock,
+  runSql: vi.fn(async (): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } })),
+};
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
+}));
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
@@ -65,8 +78,8 @@ describe('QueryBuilder — result view and chart configuration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    vi.mocked(executeQuery).mockImplementation(() =>
-      Promise.resolve({ success: true, response: { columns: ['project_id'], rows: [{ project_id: 'a' }] } }),
+    runQueryMock.mockImplementation(() =>
+      Promise.resolve({ isSuccess: true, result: { columns: ['project_id'], rows: [{ project_id: 'a' }] } }),
     );
   });
 

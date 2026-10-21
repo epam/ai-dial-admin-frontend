@@ -1,11 +1,17 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ToolsetAuthType } from '@/src/models/dial/toolset';
 import ApiKeySection from '../ApiKeySection';
 
 describe('ApiKeySection', () => {
   test('renders input with correct value and placeholder', () => {
-    render(<ApiKeySection authSettings={{ apiKeyHeader: 'test-key' }} disabled={false} />);
+    render(
+      <ApiKeySection
+        authSettings={{ authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'test-key' }}
+        disabled={false}
+      />,
+    );
     const input = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Header);
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue('test-key');
@@ -14,10 +20,18 @@ describe('ApiKeySection', () => {
 
   test('calls onChange with updated apiKeyHeader', () => {
     const handleChange = vi.fn();
-    render(<ApiKeySection authSettings={{ apiKeyHeader: 'old-key' }} onChange={handleChange} />);
+    render(
+      <ApiKeySection
+        authSettings={{ authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'old-key' }}
+        onChange={handleChange}
+      />,
+    );
     const input = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Header);
     fireEvent.change(input, { target: { value: 'new-key' } });
-    expect(handleChange).toHaveBeenCalledWith({ apiKeyHeader: 'new-key' });
+    expect(handleChange).toHaveBeenCalledWith({
+      authenticationType: ToolsetAuthType.API_KEY,
+      apiKeyHeader: 'new-key',
+    });
   });
 
   test('handles missing authSettings', () => {

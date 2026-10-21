@@ -18,76 +18,71 @@ describe('Server :: Core :: SkillsCoreApi :: getSkillMetadata', () => {
     fetch.resetMocks();
   });
 
-  test("reads the files listing and the parent folder's row for author/dates/etag, with no manifest fetch", async () => {
-    fetch
-      .mockResponseOnce(
-        jsonResponse({ items: [{ name: 'SKILL.md', url: 'skills/public/my-skill/files/SKILL.md', nodeType: 'ITEM' }] }),
-        JSON_HEADERS,
-      )
-      .mockResponseOnce(
-        jsonResponse({
-          name: 'public',
-          nodeType: 'FOLDER',
-          items: [
-            {
-              name: 'my-skill',
-              // A skill's own marker is stored as a folder-shaped resource, so its listing row's
-              // `url` carries a trailing slash even though it's classified `nodeType: 'ITEM'`.
-              url: 'skills/public/my-skill/',
-              nodeType: 'ITEM',
-              author: 'author-1',
-              createdAt: 1000,
-              updatedAt: 2000,
-              etag: 'etag-1',
-            },
-          ],
-        }),
-        JSON_HEADERS,
-      );
+  // Both requests start together, so the mock answers by URL rather than by call order.
+  const mockCore = (own: { body: unknown; status?: number }) => {
+    fetch.mockResponse((req) => {
+      if (req.url.includes('/files')) {
+        return Promise.resolve(
+          jsonResponse({
+            items: [{ name: 'SKILL.md', url: 'skills/public/my-skill/files/SKILL.md', nodeType: 'ITEM' }],
+          }),
+        );
+      }
+      return Promise.resolve({ body: jsonResponse(own.body), status: own.status ?? 200 });
+    }, JSON_HEADERS);
+  };
+
+  test("reads the skill's own metadata path for author/dates/etag, with no parent listing or manifest fetch", async () => {
+    mockCore({
+      body: {
+        name: 'my-skill',
+        url: 'skills/public/my-skill/',
+        nodeType: 'ITEM',
+        author: 'author-1',
+        createdAt: 1000,
+        updatedAt: 2000,
+        etag: 'etag-1',
+      },
+    });
 
     const skill = await instance.getSkillMetadata(TOKEN_MOCK, 'public/my-skill');
 
-    // Only two Core requests: the files listing and a single (non-paginated) read of the parent
-    // folder — no manifest fetch, since the parent listing row already carries the aggregate etag.
+    // Only two Core requests: the skill's own metadata and its files listing.
     expect(fetch).toHaveBeenCalledTimes(2);
-    const [filesUrl] = fetch.mock.calls[0];
-    const [parentUrl] = fetch.mock.calls[1];
-    expect(filesUrl).toContain('/v2/metadata/skills/public/my-skill/files');
-    expect(parentUrl).toContain('/v2/metadata/skills/public/');
+    const urls = fetch.mock.calls.map(([url]) => String(url));
+    expect(urls.some((url) => url.endsWith('/v2/metadata/skills/public/my-skill'))).toBe(true);
+    expect(urls.some((url) => url.includes('/v2/metadata/skills/public/my-skill/files'))).toBe(true);
+    expect(urls.some((url) => url.includes('/v2/metadata/skills/public/?'))).toBe(false);
     expect(skill).toEqual({
       name: 'my-skill',
       path: 'public/my-skill',
       folderId: 'public/',
+      // The trio nests under `_metadata` (epoch milliseconds stringified); `etag` stays a separate
+      // value, outside `_metadata`.
       etag: 'etag-1',
-      author: 'author-1',
-      createdAt: 1000,
-      updatedAt: 2000,
+      _metadata: {
+        author: 'author-1',
+        createdAt: '1000',
+        updatedAt: '2000',
+      },
       files: [{ name: 'SKILL.md' }],
     });
   });
 
-  test('returns null when the skill has no matching row in its parent listing', async () => {
-    fetch
-      .mockResponseOnce(jsonResponse({ items: [] }), JSON_HEADERS)
-      .mockResponseOnce(jsonResponse({ name: 'public', nodeType: 'FOLDER', items: [] }), JSON_HEADERS);
+  test('returns null when Core answers the skill path with a 404', async () => {
+    mockCore({ body: { message: 'Not found' }, status: 404 });
 
     const skill = await instance.getSkillMetadata(TOKEN_MOCK, 'public/missing');
 
     expect(skill).toBeNull();
-    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  test('does not paginate through the parent listing beyond its first page', async () => {
-    fetch
-      .mockResponseOnce(jsonResponse({ items: [] }), JSON_HEADERS)
-      .mockResponseOnce(
-        jsonResponse({ name: 'public', nodeType: 'FOLDER', items: [], nextToken: 'page-2' }),
-        JSON_HEADERS,
-      );
+  test('returns null when Core answers the path with a folder node instead of an item', async () => {
+    mockCore({ body: { name: 'public', url: 'skills/public/', nodeType: 'FOLDER', items: [] } });
 
-    await instance.getSkillMetadata(TOKEN_MOCK, 'public/my-skill');
+    const skill = await instance.getSkillMetadata(TOKEN_MOCK, 'public/sub');
 
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(skill).toBeNull();
   });
 });
 

@@ -1,8 +1,18 @@
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { CatalogComponentType } from '@/src/types/analytics/export';
+import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
-import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import {
+  CreatePipelineDto,
+  PipelineEnabledFilter,
+  PipelineKind,
+  TriggerKind,
+  TransformType,
+} from '@/src/models/analytics/pipeline';
+import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -26,7 +36,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getEntities(TOKEN_MOCK);
 
-    expect(res).toEqual(entities);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: entities }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/entities'),
       expect.objectContaining({ method: 'GET' }),
@@ -39,7 +49,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getEntitySchema('my entity', TOKEN_MOCK);
 
-    expect(res).toEqual(schema);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: schema }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/entities/schema/my%20entity'),
       expect.objectContaining({ method: 'GET' }),
@@ -62,7 +72,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getFunctions(TOKEN_MOCK);
 
-    expect(res).toEqual(functions);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: functions }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/functions'),
       expect.objectContaining({ method: 'GET' }),
@@ -93,6 +103,53 @@ describe('Server :: AnalyticsDataApi', () => {
       expect.stringContaining('/v1/queries/execute-sql'),
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
     );
+  });
+
+  test('executeCsvAction POSTs the structured query to /v1/queries/execute-csv and returns the file', async () => {
+    const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
+    fetch.mockResponseOnce('id\r\n1\r\n', {
+      headers: {
+        'content-type': 'text/csv; charset=UTF-8',
+        'content-disposition': 'attachment; filename="result.csv"',
+        'x-total-count': '12',
+      },
+    });
+
+    const res = await instance.executeCsvAction(query, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(res.response?.fileName).toBe('result.csv');
+    expect(res.response?.totalCount).toBe(12);
+    expect(await res.response?.blob.text()).toBe('id\r\n1\r\n');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/queries\/execute-csv$/),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(query) }),
+    );
+  });
+
+  test('executeSqlCsvAction POSTs { sql } to /v1/queries/execute-sql-csv', async () => {
+    const sql = 'SELECT id FROM conversation';
+    fetch.mockResponseOnce('id\r\n', { headers: { 'content-type': 'text/csv' } });
+
+    const res = await instance.executeSqlCsvAction(sql, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/queries\/execute-sql-csv$/),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
+    );
+  });
+
+  test.each([400, 422])('executeCsvAction maps a %s ErrorView to the failure envelope', async (status) => {
+    fetch.mockResponseOnce(JSON.stringify({ error: 'bad_request', message: 'limit above 1000' }), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.executeCsvAction({ entity: 'conversation', mode: QueryMode.Row }, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status }));
+    expect(res.response).toBeUndefined();
   });
 
   test('translateAction POSTs the structured query to /v1/queries/translate', async () => {
@@ -129,12 +186,13 @@ describe('Server :: AnalyticsDataApi', () => {
     expect(res.success).toBe(false);
   });
 
-  test('getEntities returns null on a failed response', async () => {
+  test('getEntities carries a failed response as an unsuccessful envelope', async () => {
     fetch.mockResponseOnce('nope', { status: 500 });
 
     const res = await instance.getEntities(TOKEN_MOCK);
 
-    expect(res).toBeNull();
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 500 }));
+    expect(res.response).toBeUndefined();
   });
 
   test('getTables issues GET /v1/tables and unwraps the { tables } envelope', async () => {
@@ -143,7 +201,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getTables(TOKEN_MOCK);
 
-    expect(res).toEqual(tables);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: tables }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables'),
       expect.objectContaining({ method: 'GET' }),
@@ -162,7 +220,12 @@ describe('Server :: AnalyticsDataApi', () => {
   });
 
   test('createTable POSTs the identity-only create payload to /v1/tables', async () => {
-    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, description: 'Raw events' };
+    const dto: CreateTableDto = {
+      name: 'events',
+      type: AnalyticsTableType.Source,
+      description: 'Raw events',
+      write: TableWriteMode.Append,
+    };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
     const res = await instance.createTable(dto, TOKEN_MOCK);
@@ -222,7 +285,9 @@ describe('Server :: AnalyticsDataApi', () => {
     };
     fetch.mockResponseOnce(JSON.stringify(table), { headers: { 'content-type': 'application/json' } });
 
-    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(table);
+    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(
+      expect.objectContaining({ success: true, response: table }),
+    );
   });
 
   test('defineTableSchema sends the scan-metadata pair only when declared', async () => {
@@ -278,23 +343,69 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getTableAccess('events', TOKEN_MOCK);
 
-    expect(res).toEqual(access);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: access }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events/access'),
       expect.objectContaining({ method: 'GET' }),
     );
   });
 
-  test('replaceTableAccess PUTs the lists to /v1/tables/{name}/access', async () => {
-    const access = { write: ['w'], modify: ['m'] };
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+  test('updateTableAccess PUTs only the given lists to /v1/tables/{name}/access', async () => {
+    const access = { write: ['w'] };
+    fetch.mockResponseOnce(JSON.stringify({ write: ['w'], ineffective_grants: [] }), JSON_HEADERS);
 
-    await instance.replaceTableAccess('events', access, TOKEN_MOCK);
+    const res = await instance.updateTableAccess('events', access, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events/access'),
       expect.objectContaining({ method: 'PUT', body: JSON.stringify(access) }),
     );
+    expect(res.response).toEqual({ write: ['w'], ineffective_grants: [] });
+  });
+
+  test('getRowPolicies issues GET /v1/tables/{name}/row-policies and returns the policies', async () => {
+    const policies = { policies: { 'team-x': { filter: { op: 'eq', args: [] } } } };
+    fetch.mockResponseOnce(JSON.stringify(policies), JSON_HEADERS);
+
+    const res = await instance.getRowPolicies('events', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/row-policies'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(res.response).toEqual(policies);
+  });
+
+  test('putRowPolicy PUTs the policy to the role-scoped URL with the role encoded', async () => {
+    const policy = { filter: { op: 'eq', args: [] } } as any;
+    fetch.mockResponseOnce(JSON.stringify(policy), JSON_HEADERS);
+
+    await instance.putRowPolicy('events', 'team x/1', policy, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/row-policies/team%20x%2F1'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(policy) }),
+    );
+  });
+
+  test('deleteRowPolicy issues DELETE on the role-scoped URL', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.deleteRowPolicy('events', 'team-x', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/row-policies/team-x'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('a failed row-policy write surfaces the failure to the caller', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ message: 'region is not a column' }), { status: 422 });
+
+    const res = await instance.putRowPolicy('events', 'team-x', { filter: { op: 'eq', args: [] } } as any, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+    expect(res.status).toBe(422);
   });
 });
 
@@ -338,15 +449,16 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
     const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
 
-    expect(res).toEqual([savedQuery]);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: [savedQuery] }));
   });
 
-  test('listSavedQueries returns null when the envelope is absent', async () => {
+  test('listSavedQueries reads a missing envelope as an unreadable body', async () => {
     fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
 
     const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
 
-    expect(res).toBeNull();
+    expect(res.success).toBe(false);
+    expect(res.response).toBeUndefined();
   });
 
   test('getSavedQuery issues GET on the encoded saved-query URL and returns the parsed query', async () => {
@@ -354,7 +466,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
     const res = await instance.getSavedQuery('sq /1', TOKEN_MOCK);
 
-    expect(res).toEqual(savedQuery);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: savedQuery }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/saved-queries/sq%20%2F1'),
       expect.objectContaining({ method: 'GET' }),
@@ -415,5 +527,592 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       expect.stringContaining('/v1/saved-queries/sq_1'),
       expect.objectContaining({ method: 'DELETE' }),
     );
+  });
+  describe('pipelines', () => {
+    const pipeline = {
+      name: 'turn_feedback_live',
+      kind: PipelineKind.Enrich,
+      target: 'turn_feedback',
+      inputs: ['response_ratings'],
+      trigger: { kind: TriggerKind.Schedule },
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
+      response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } },
+      grain_key: 'response_id',
+      enabled: true,
+      generation: 5,
+      created_at: '2026-08-20T14:39:05Z',
+      updated_at: '2026-08-21T09:37:29Z',
+    };
+
+    const createDto: CreatePipelineDto = {
+      name: 'new_pipeline',
+      kind: PipelineKind.Enrich,
+      target: 'turn_feedback',
+      trigger: { kind: TriggerKind.Schedule },
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
+      enabled: false,
+    };
+
+    test('getPipelines unwraps the {pipelines} envelope, not {items}', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [pipeline] }), JSON_HEADERS);
+
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [pipeline] }),
+      );
+    });
+
+    test('getPipelines reads a list under any other key as an unreadable body', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [pipeline] }), JSON_HEADERS);
+
+      const res = await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+      expect(res.response).toBeUndefined();
+    });
+
+    // Deployed builds disagree: some answer a bare array, some the wrapper.
+    test('getPipelines accepts a bare array as well as the wrapper', async () => {
+      fetch.mockResponseOnce(JSON.stringify([pipeline]), JSON_HEADERS);
+
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [pipeline] }),
+      );
+    });
+
+    test('getPipelines reads an empty bare array as no pipelines rather than a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify([]), JSON_HEADERS);
+
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [] }),
+      );
+    });
+
+    test('getPipelines carries a refusal as status 403 so the page can render its own fallback', async () => {
+      fetch.mockResponseOnce('', { status: 403 });
+
+      const res = await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+      expect(res.response).toBeUndefined();
+    });
+
+    test('getPipelines carries any other failure with the service status and words', async () => {
+      fetch.mockResponseOnce('{"error":"upstream","message":"registry timed out"}', { status: 500 });
+
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({
+          success: false,
+          status: 500,
+          errorHeader: 'upstream',
+          errorMessage: 'registry timed out',
+        }),
+      );
+    });
+
+    test('getPipelines omits enabled entirely when no preference is expressed', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines({ enabled: PipelineEnabledFilter.All }, TOKEN_MOCK);
+
+      const url = fetch.mock.calls[0][0] as string;
+      expect(url).not.toContain('enabled');
+    });
+
+    // The service refuses `view=compiled` in a listing that is not scoped to `kind=enrich`, and the
+    // default `source` projection already carries every member the grid renders.
+    test('getPipelines names no projection, so a cross-kind listing is not refused', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).not.toContain('view=');
+    });
+
+    test('getPipelines leaves no dangling query separator when no filter is set', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toMatch(/\/v1\/pipelines$/);
+    });
+
+    test('getPipelines sends enabled=true for the enabled-only filter', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines({ enabled: PipelineEnabledFilter.Enabled }, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('enabled=true');
+    });
+
+    test('getPipelines sends enabled=false for the disabled-only filter', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines({ enabled: PipelineEnabledFilter.Disabled }, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('enabled=false');
+    });
+
+    test('getPipelines scopes the listing to one kind', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines({ kind: PipelineKind.Aggregate }, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('kind=aggregate');
+    });
+
+    test('getPipelines combines every filter rather than one replacing the other', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(
+        {
+          kind: PipelineKind.Enrich,
+          enabled: PipelineEnabledFilter.Enabled,
+          updatedSince: '2026-08-01T00:00:00Z',
+        },
+        TOKEN_MOCK,
+      );
+
+      const url = fetch.mock.calls[0][0] as string;
+      expect(url).toContain('kind=enrich');
+      expect(url).toContain('enabled=true');
+      expect(url).toContain('updated_since=2026-08-01T00%3A00%3A00Z');
+    });
+
+    test('getPipelines sends updated_since alone when enabled is unfiltered', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(
+        { enabled: PipelineEnabledFilter.All, updatedSince: '2026-08-01T00:00:00Z' },
+        TOKEN_MOCK,
+      );
+
+      const url = fetch.mock.calls[0][0] as string;
+      expect(url).toContain('updated_since=');
+      expect(url).not.toContain('enabled');
+    });
+
+    test('getPipeline reads the declaration first, then the compiled projection for an enrich pipeline', async () => {
+      const declaration = { ...pipeline, response_schema: undefined, grain_key: undefined };
+      fetch.mockResponseOnce(JSON.stringify(declaration), JSON_HEADERS);
+      fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
+
+      const res = await instance.getPipeline('turn feedback', TOKEN_MOCK);
+
+      // The compiled answer is what the caller gets: it is the one carrying the resolved members.
+      expect(res).toEqual(expect.objectContaining({ success: true, response: pipeline }));
+      expect(fetch.mock.calls[0][0] as string).toContain('/v1/pipelines/turn%20feedback?view=source');
+      expect(fetch.mock.calls[1][0] as string).toContain('/v1/pipelines/turn%20feedback?view=compiled');
+      expect(fetch).toHaveBeenLastCalledWith(expect.any(String), expect.objectContaining({ method: 'GET' }));
+    });
+
+    // `view=compiled` is refused with 422 for every kind but `enrich`, so asking for it here would turn a
+    // readable aggregate pipeline into a failed read — which the detail page renders as a 404.
+    test('getPipeline reads an aggregate pipeline once and never asks for the compiled projection', async () => {
+      const aggregate = {
+        name: 'turns_rollup',
+        kind: PipelineKind.Aggregate,
+        target: 'turns',
+        inputs: ['dial_usage_log'],
+        trigger: { kind: TriggerKind.Schedule },
+        enabled: true,
+        generation: 8,
+        created_at: '2026-08-14T13:47:58Z',
+        updated_at: '2026-09-04T07:52:02Z',
+      };
+      fetch.mockResponseOnce(JSON.stringify(aggregate), JSON_HEADERS);
+
+      const res = await instance.getPipeline('turns_rollup', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: aggregate }));
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch.mock.calls[0][0] as string).toContain('view=source');
+    });
+
+    // Downgrading to the declaration would leave the detail view printing `grain_key` and
+    // `version_column` as "not set" — a false statement about an enrich pipeline, not a missing one.
+    test('getPipeline reports a failed compiled read rather than falling back to the declaration', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
+      fetch.mockResponseOnce('', { status: 500 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 500 }));
+      expect(res.response).toBeUndefined();
+      // Both reads were issued, so it is the compiled one that failed — not the declaration.
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A pipeline registered before it was declared has nothing to compile, and the service says so with
+    // 422. Reporting that would make the page the author finishes the declaration on a 404.
+    test('getPipeline serves the declaration when the compiled projection refuses an incomplete one', async () => {
+      const declaration = { ...pipeline, response_schema: undefined, grain_key: undefined, trigger: undefined };
+      fetch.mockResponseOnce(JSON.stringify(declaration), JSON_HEADERS);
+      fetch.mockResponseOnce(JSON.stringify({ error: 'pipeline_validation_failed' }), { status: 422 });
+
+      const res = await instance.getPipeline('half-written', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: declaration }));
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A 2xx whose body is not a pipeline leaves `handleResponse` with no error to describe, so the read
+    // reports the failure through an empty envelope rather than presenting an unusable object. The
+    // detail page turns that into its not-found state, which is why both reads need the guard.
+    test('getPipeline reports an unreadable declaration rather than an empty success', async () => {
+      fetch.mockResponseOnce('', { status: 200 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false }));
+      expect(res.response).toBeUndefined();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    test('getPipeline reports an unreadable compiled answer rather than an empty success', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
+      fetch.mockResponseOnce('', { status: 200 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false }));
+      expect(res.response).toBeUndefined();
+    });
+
+    test('getPipeline carries a refusal as status 403 rather than reporting the pipeline missing', async () => {
+      fetch.mockResponseOnce('', { status: 403 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+      expect(res.response).toBeUndefined();
+    });
+
+    test('createPipeline POSTs the whole pipeline in one request', async () => {
+      fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
+
+      await instance.createPipeline(createDto, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/pipelines'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(createDto) }),
+      );
+    });
+
+    test('updatePipeline PATCHes the name-addressed pipeline', async () => {
+      fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
+
+      await instance.updatePipeline('turn_feedback_live', createDto, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/pipelines/turn_feedback_live'),
+        expect.objectContaining({ method: 'PATCH', body: JSON.stringify(createDto) }),
+      );
+    });
+
+    test('deletePipeline issues DELETE on the encoded name URL', async () => {
+      fetch.mockResponseOnce('');
+
+      await instance.deletePipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/pipelines/turn_feedback_live'),
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
+    describe('previewPipeline', () => {
+      const preview = { columns: [], rows: [], notes: [] };
+
+      test('POSTs the name-addressed preview endpoint and returns the parsed sample', async () => {
+        fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+        const res = await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/v1/pipelines/turn_feedback_live/preview'),
+          expect.objectContaining({ method: 'POST' }),
+        );
+        expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
+      });
+
+      // The body only narrows an enrich sample, and an aggregate refuses any, so none is ever sent.
+      test('sends no body', async () => {
+        fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+        await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.not.objectContaining({ body: expect.anything() }),
+        );
+      });
+
+      test('encodes a name that is not a path segment', async () => {
+        fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+        await instance.previewPipeline('retrieval/quality', TOKEN_MOCK);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/v1/pipelines/retrieval%2Fquality/preview'),
+          expect.anything(),
+        );
+      });
+
+      // The caller tells a refused declaration from a budget refusal and from no access by this code.
+      test("returns the service's code, message and status when the preview is refused", async () => {
+        fetch.mockResponseOnce(
+          JSON.stringify({ status: 422, error: 'pipeline_validation_failed', message: 'transform.outputs is empty' }),
+          { status: 422, headers: { 'content-type': 'application/json' } },
+        );
+
+        const res = await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(res).toEqual(
+          expect.objectContaining({
+            success: false,
+            status: 422,
+            errorHeader: 'pipeline_validation_failed',
+            errorMessage: 'transform.outputs is empty',
+          }),
+        );
+      });
+
+      test('reports a success with no readable body as a failure', async () => {
+        fetch.mockResponseOnce('');
+
+        const res = await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(res.success).toBe(false);
+        expect(res.response).toBeUndefined();
+      });
+    });
+  });
+
+  // No evaluator call is exposed at all: the transform travels on the pipeline request, and a client
+  // method for a surface that authors nothing is a way to reintroduce one by accident.
+  test('exposes no call against any /v1/evaluators path', () => {
+    const surface = Object.getOwnPropertyNames(Object.getPrototypeOf(instance));
+
+    expect(surface.filter((name) => name.toLowerCase().includes('evaluator'))).toEqual([]);
+  });
+});
+
+describe('Server :: AnalyticsDataApi — catalog export', () => {
+  const instance = new AnalyticsDataApi({ host: TEST_URL });
+  const request = { components: [{ type: CatalogComponentType.TABLE, name: 'usage_sentiment' }] };
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('previewCatalogExport issues POST /v1/catalog/export/preview with the selection', async () => {
+    const preview = { objects: [], required_system_tables: [], skipped: [] };
+    fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+    const res = await instance.previewCatalogExport(request, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/catalog/export/preview'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(request) }),
+    );
+  });
+
+  test('exportCatalog returns the JSON bundle as a blob under the Content-Disposition name', async () => {
+    const bundle = JSON.stringify({ format: 'adas-catalog', format_version: 1 });
+    fetch.mockResponseOnce(bundle, {
+      headers: {
+        'content-type': 'application/json',
+        'content-disposition': 'attachment; filename="adas-catalog-20261007T120000Z.json"',
+      },
+    });
+
+    const res = await instance.exportCatalog(request, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(res.response?.fileName).toBe('adas-catalog-20261007T120000Z.json');
+    expect(await res.response?.blob.text()).toBe(bundle);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/catalog\/export$/),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('exportCatalog returns the error envelope when the service refuses the selection', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: 'catalog_export_invalid', message: 'otel_x is an OTLP table' }), {
+      status: 422,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.exportCatalog(request, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 422 }));
+    expect(res.response).toBeUndefined();
+  });
+});
+
+describe('Server :: AnalyticsDataApi — catalog import', () => {
+  const instance = new AnalyticsDataApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('previewCatalogImport posts the bundle with the policy and confirmation as query params', async () => {
+    const preview = { tables: [], pipelines: [], required_system_tables: [], env_specific: [], validation_errors: [] };
+    fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+    const body = new FormData();
+
+    const res = await instance.previewCatalogImport(body, CatalogResolutionPolicy.SKIP_IF_EXISTS, false, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '/v1/catalog/import/preview?resolution_policy=SKIP_IF_EXISTS&acknowledge_reused_names=false',
+      ),
+      expect.objectContaining({ method: 'POST', body }),
+    );
+  });
+
+  test('importCatalog sends the confirmation and returns the error envelope on a conflict', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: 'catalog_import_conflict', message: 'usage_sentiment exists' }), {
+      status: 409,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.importCatalog(new FormData(), CatalogResolutionPolicy.FAIL_IF_EXISTS, true, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 409 }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/catalog\/import\?resolution_policy=FAIL_IF_EXISTS&acknowledge_reused_names=true$/),
+      expect.anything(),
+    );
+  });
+
+  describe('table backfill', () => {
+    const run = {
+      runId: 'run-1',
+      from: '2026-09-01',
+      to: '2026-09-30',
+      daysTotal: 30,
+      state: 'running',
+      daysCompleted: 11,
+      daysFailed: 0,
+      filesProcessed: 120,
+      rowsInserted: 5000,
+      rowsSkipped: 0,
+      rowsDropped: 0,
+      startedAt: '2026-09-24T10:00:00Z',
+    };
+
+    test('startTableBackfill posts the dates with re-ingest off unless asked for', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runId: 'run-1', from: '2026-09-01', to: '2026-09-30', days: 30 }), {
+        status: 202,
+        ...JSON_HEADERS,
+      });
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', false, TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({ success: true, response: expect.objectContaining({ runId: 'run-1' }) }),
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/v1\/data-sync\/backfill$/),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ from: '2026-09-01', to: '2026-09-30', includeIngested: false }),
+        }),
+      );
+    });
+
+    test('startTableBackfill posts re-ingest on when asked for', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runId: 'run-1', from: '2026-09-01', to: '2026-09-30', days: 30 }), {
+        status: 202,
+        ...JSON_HEADERS,
+      });
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', true, TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({ success: true, response: expect.objectContaining({ runId: 'run-1' }) }),
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/v1\/data-sync\/backfill$/),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ from: '2026-09-01', to: '2026-09-30', includeIngested: true }),
+        }),
+      );
+    });
+
+    test('startTableBackfill carries the service refusal through', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({ status: 409, error: 'backfill_conflict', message: 'A run is in progress' }),
+        {
+          status: 409,
+          ...JSON_HEADERS,
+        },
+      );
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', false, TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({
+          success: false,
+          errorHeader: 'backfill_conflict',
+          errorMessage: 'A run is in progress',
+        }),
+      );
+    });
+
+    test('startTableBackfill carries the refusal of a backfill that is switched off', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({ status: 503, error: 'backfill_disabled', message: 'Backfill is disabled' }),
+        {
+          status: 503,
+          ...JSON_HEADERS,
+        },
+      );
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', false, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'backfill_disabled' }));
+    });
+
+    test('listTableBackfillRuns unwraps the envelope and sends no filter by default', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [run] }), JSON_HEADERS);
+
+      const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: [run] }));
+      expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/v1\/data-sync\/backfill$/), expect.anything());
+    });
+
+    test('listTableBackfillRuns filters by state', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [] }), JSON_HEADERS);
+
+      await instance.listTableBackfillRuns(TOKEN_MOCK, TableBackfillState.Running);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/data-sync/backfill?state=running'),
+        expect.anything(),
+      );
+    });
+
+    test('listTableBackfillRuns reads an empty list as no runs, not as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [] }), JSON_HEADERS);
+
+      const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: [] }));
+    });
+
+    test('listTableBackfillRuns reports a body without the envelope as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
+
+      const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+    });
   });
 });

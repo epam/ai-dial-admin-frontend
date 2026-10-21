@@ -15,11 +15,15 @@ export enum EntityViewTab {
   Roles = 'Roles',
   Interceptors = 'Interceptors',
   GlobalInterceptors = 'GlobalInterceptors',
+  RateLimitSchedule = 'RateLimitSchedule',
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
   Applications = 'Applications',
   Models = 'Models',
+  Preview = 'Preview',
+  Runtime = 'Runtime',
+  Groups = 'Groups',
   Audit = 'Audit',
   Activities = 'Activities',
   Dashboard = 'Dashboard',
@@ -32,6 +36,7 @@ export enum EntityViewTab {
   Attachments = 'Attachments',
   Tools = 'Tools',
   ParameterSchema = 'ParameterSchema',
+  Catalog = 'Catalog',
   Files = 'Files',
   ApplicationRunners = 'ApplicationRunners',
   Images = 'Images',
@@ -46,6 +51,7 @@ export enum EntityViewTab {
   Events = 'Events',
   Firewall = 'Firewall',
   TestCases = 'TestCases',
+  TestSuites = 'TestSuites',
   Runs = 'Runs',
   Summary = 'Summary',
   ExtractionResult = 'ExtractionResult',
@@ -53,8 +59,6 @@ export enum EntityViewTab {
   Permissions = 'Permissions',
   Body = 'Body',
   Headers = 'Headers',
-  RequestSchema = 'RequestSchema',
-  ResponseSchema = 'ResponseSchema',
   Response = 'Response',
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
@@ -66,6 +70,7 @@ export enum EntityViewTab {
   InputSchema = 'InputSchema',
   OutputSchema = 'OutputSchema',
   Schema = 'Schema',
+  Access = 'Access',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -84,9 +89,10 @@ export const featuresTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Features),
 });
 
-export const rolesTab = (t: (key: string) => string) => ({
+export const rolesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Roles,
   label: t(TabsI18nKey.Roles),
+  warning,
 });
 
 export const interceptorsTab = (t: (key: string) => string) => ({
@@ -99,14 +105,39 @@ export const globalInterceptorsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.GlobalInterceptors),
 });
 
+export const rateLimitScheduleTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.RateLimitSchedule,
+  label: t(TabsI18nKey.RateLimitSchedule),
+});
+
 export const parametersTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Parameters,
   label: t(TabsI18nKey.Parameters),
 });
 
+export const accessTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Access,
+  label: t(TabsI18nKey.Access),
+});
+
 export const auditTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Audit,
   label: t(TabsI18nKey.Audit),
+});
+
+export const previewTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Preview,
+  label: t(TabsI18nKey.Preview),
+});
+
+export const runtimeTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Runtime,
+  label: t(TabsI18nKey.Runtime),
+});
+
+export const groupsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Groups,
+  label: t(TabsI18nKey.Groups),
 });
 
 export const modelsTab = (t: (key: string) => string) => ({
@@ -167,6 +198,11 @@ export const toolsTab = (t: (key: string) => string) => ({
 export const parameterSchemaTab = (t: (key: string) => string) => ({
   id: EntityViewTab.ParameterSchema,
   label: t(TabsI18nKey.ParameterSchema),
+});
+
+export const catalogTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Catalog,
+  label: t(TabsI18nKey.CatalogMetadata),
 });
 
 export const entitiesTab = (t: (key: string) => string) => ({
@@ -256,6 +292,11 @@ export const testCasesTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.TestCases),
 });
 
+export const testSuitesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.TestSuites,
+  label: t(TabsI18nKey.TestSuites),
+});
+
 export const trendsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Trends,
   label: t(TabsI18nKey.Trends),
@@ -301,16 +342,6 @@ export const headersTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Headers),
 });
 
-export const requestSchemaTab = (t: (key: string) => string) => ({
-  id: EntityViewTab.RequestSchema,
-  label: t(TabsI18nKey.RequestSchema),
-});
-
-export const responseSchemaTab = (t: (key: string) => string) => ({
-  id: EntityViewTab.ResponseSchema,
-  label: t(TabsI18nKey.ResponseSchema),
-});
-
 export const columnsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Columns,
   label: t(TabsI18nKey.Columns),
@@ -346,11 +377,11 @@ export const schemaTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Schema),
 });
 
-export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), rolesTab(t), auditTab(t)];
+export const getRouteTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [propertiesTab(t), rolesTab(t), ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : [])];
 };
 
-export const getApplicationTabs = (t: (key: string) => string): TabModel[] => {
+export const getApplicationTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
   return [
     propertiesTab(t),
     featuresTab(t),
@@ -359,19 +390,25 @@ export const getApplicationTabs = (t: (key: string) => string): TabModel[] => {
     appRouteTab(t),
     rolesTab(t),
     interceptorsTab(t),
-    auditTab(t),
+    ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
   ];
 };
 
-export const getModelsTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)];
+export const getModelsTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [
+    propertiesTab(t),
+    featuresTab(t),
+    rolesTab(t),
+    interceptorsTab(t),
+    ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
+  ];
 };
 
-export const getAdapterTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), modelsTab(t), auditTab(t)];
+export const getAdapterTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [propertiesTab(t), modelsTab(t), ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : [])];
 };
 
-export const getAppRunnerTabs = (t: (key: string) => string): TabModel[] => {
+export const getAppRunnerTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
   return [
     propertiesTab(t),
     featuresTab(t),
@@ -379,7 +416,7 @@ export const getAppRunnerTabs = (t: (key: string) => string): TabModel[] => {
     interceptorsTab(t),
     applicationsTab(t),
     appRouteTab(t),
-    auditTab(t),
+    ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
   ];
 };
 
@@ -387,24 +424,30 @@ export const getAppRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), attachmentsTab(t), rolesTab(t)];
 };
 
-export const getRoleTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), entitiesTab(t), keysTab(t), auditTab(t)];
+export const getRoleTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [propertiesTab(t), entitiesTab(t), keysTab(t), ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : [])];
 };
 
-export const getInterceptorTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), parameterSchemaTab(t), entitiesTab(t), applicationRunnersTab(t), auditTab(t)];
+export const getInterceptorTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [
+    propertiesTab(t),
+    parameterSchemaTab(t),
+    entitiesTab(t),
+    applicationRunnersTab(t),
+    ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
+  ];
 };
 
-export const getToolsetTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)];
+export const getToolsetTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [propertiesTab(t), toolsTab(t), rolesTab(t), ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : [])];
 };
 
-export const getInterceptorTemplateTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), interceptorsTab(t), auditTab(t)];
+export const getInterceptorTemplateTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [propertiesTab(t), interceptorsTab(t), ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : [])];
 };
 
-export const getKeyTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), rolesTab(t), auditTab(t)];
+export const getKeyTabs = (t: (key: string) => string, featureFlags?: FeatureFlags): TabModel[] => {
+  return [propertiesTab(t), rolesTab(t), ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : [])];
 };
 
 export const getPublicationTabs = (t: (key: string) => string): TabModel[] => {
@@ -419,13 +462,24 @@ export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
   featureFlags?: FeatureFlags,
+  rolesWarning?: boolean,
 ): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
-    return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t), appRouteTab(t)];
+    return [
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      interceptorsTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+      // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
+      ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),
+    ];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
-    const tabs = [propertiesTab(t), toolsTab(t)];
-    if (featureFlags?.dashboardEnabled) {
+    const tabs = [propertiesTab(t), toolsTab(t), catalogTab(t)];
+    if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
       tabs.push(auditTab(t));
     }
     return tabs;
@@ -433,13 +487,32 @@ export const getTabsForAsset = (
   if (view === ApplicationRoute.Conversations) {
     return [propertiesTab(t), conversationTab(t)];
   }
-  if (view === ApplicationRoute.AssetsModels) {
-    return [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)];
+  if (view === ApplicationRoute.PlatformModels) {
+    const tabs = [propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
+    if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
+      tabs.push(auditTab(t));
+    }
+    return tabs;
   }
-  if (view === ApplicationRoute.AssetsAppRunners) {
+  if (view === ApplicationRoute.PlatformAppRunners) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), appRouteTab(t), interceptorsTab(t)];
   }
-  if (view === ApplicationRoute.AssetsSkills) {
+  if (view === ApplicationRoute.PlatformCatalogSchemas) {
+    return [propertiesTab(t), parametersTab(t)];
+  }
+  if (view === ApplicationRoute.PlatformInterceptors) {
+    return [propertiesTab(t), parameterSchemaTab(t), catalogTab(t)];
+  }
+  if (view === ApplicationRoute.PlatformRoutes) {
+    return [propertiesTab(t), rolesTab(t, rolesWarning)];
+  }
+  if (view === ApplicationRoute.PlatformKeys) {
+    return [propertiesTab(t), rolesTab(t)];
+  }
+  if (view === ApplicationRoute.PlatformRoles) {
+    return [propertiesTab(t), entitiesTab(t)];
+  }
+  if (view === ApplicationRoute.Skills) {
     return [propertiesTab(t), skillTab(t)];
   }
   return [propertiesTab(t)];
@@ -452,8 +525,15 @@ export const getAuditTabs = (
 ): TabModel[] => {
   const tabs: TabModel[] = [];
 
+  // Asset applications have no telemetry dashboard to fall back to, and the admin audit records no
+  // activity for a Core asset — as for asset toolsets — so their Audit tab holds the usage dashboard
+  // alone.
+  if (view === ApplicationRoute.AssetsApplications) {
+    return [dashboardTab(t)];
+  }
+
   if (featureFlags.dashboardEnabled) {
-    if (view === ApplicationRoute.AssetsToolsets) {
+    if (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) {
       return [dashboardTab(t), tracesTab(t)];
     }
 
@@ -475,14 +555,17 @@ export const getDeploymentsViewTabs = (
   status?: CONTAINER_STATUS | IMAGE_STATUS,
   allowedWhitelist?: string[],
   propertiesWarning?: boolean,
+  featureFlags?: FeatureFlags,
 ): TabModel[] => {
+  const maybeAuditTab = featureFlags?.adminApiEnabled ? [auditTab(t)] : [];
+
   if (route === ApplicationRoute.Images) {
     return [
       propertiesTab(t),
       firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
       relatedContainersTab(t, status as IMAGE_STATUS),
       installationLogTab(t, status as IMAGE_STATUS),
-      auditTab(t),
+      ...maybeAuditTab,
     ];
   }
   if (route === ApplicationRoute.McpContainers) {
@@ -495,7 +578,7 @@ export const getDeploymentsViewTabs = (
       metricsTab(t, status as CONTAINER_STATUS),
       executionLogTab(t),
       eventsTab(t),
-      auditTab(t),
+      ...maybeAuditTab,
     ];
   }
   return [
@@ -504,16 +587,16 @@ export const getDeploymentsViewTabs = (
     metricsTab(t, status as CONTAINER_STATUS),
     executionLogTab(t),
     eventsTab(t),
-    auditTab(t),
+    ...maybeAuditTab,
   ];
 };
 
 export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] => {
-  return [globalInterceptorsTab(t)];
+  return [globalInterceptorsTab(t), rateLimitScheduleTab(t)];
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), metricsTab(t), runsTab(t), trendsTab(t)];
+  return [propertiesTab(t), testCasesTab(t), testSuiteMethodTab(t), metricsTab(t), runsTab(t), trendsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
@@ -568,11 +651,7 @@ export const getRunTabs = (t: (key: string) => string): TabModel[] => {
 };
 
 export const getDatasetTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), schemaTab(t), testCasesTab(t)];
-};
-
-export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
-  return [requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)];
+  return [propertiesTab(t), schemaTab(t), testCasesTab(t), testSuitesTab(t)];
 };
 
 export const getMcpToolSchemaTabs = (t: (key: string) => string): TabModel[] => {

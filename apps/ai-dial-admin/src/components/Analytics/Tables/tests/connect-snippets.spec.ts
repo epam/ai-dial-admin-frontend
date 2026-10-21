@@ -7,6 +7,7 @@ import {
 import {
   buildConnectSnippets,
   buildFormatNotes,
+  buildRequiredColumns,
   buildSampleRow,
   toJsonLiteral,
   toPythonLiteral,
@@ -30,6 +31,26 @@ const table = (columns: AnalyticsTableColumn[], overrides: Partial<AnalyticsTabl
 });
 
 describe('buildSampleRow', () => {
+  // The domain is closed and the server refuses a value outside it, so the generic sample literal would be
+  // a row the reader cannot insert.
+  test('gives an enum column one of its own declared values, not a placeholder', () => {
+    const row = buildSampleRow(
+      table([
+        column({
+          name: 'status',
+          type: AnalyticsFieldType.Enum,
+          enum_values: ['pending', 'running', 'failed'],
+        }),
+      ]),
+    );
+    expect(row).toEqual({ status: 'pending' });
+  });
+
+  test('falls back to the type sample for an enum column declaring no values', () => {
+    const row = buildSampleRow(table([column({ name: 'status', type: AnalyticsFieldType.Enum })]));
+    expect(row.status).toBe('example');
+  });
+
   test('gives every column type a literal that is valid input for that type', () => {
     const row = buildSampleRow(
       table([
@@ -61,12 +82,10 @@ describe('buildSampleRow', () => {
     expect(typeof row.score).toBe('string');
   });
 
-  test('writes a timestamp in the space-separated form the insert path accepts', () => {
+  test('writes a timestamp as ISO-8601 with a T separator and an explicit zone, the only form the insert path accepts', () => {
     const row = buildSampleRow(table([column({ name: 'recorded_at', type: AnalyticsFieldType.Timestamp })]));
 
-    expect(row.recorded_at).toBe('2026-01-15 10:00:00.000');
-    expect(row.recorded_at).not.toContain('T');
-    expect(row.recorded_at).not.toContain('Z');
+    expect(row.recorded_at).toBe('2026-01-15T10:00:00.000Z');
   });
 
   test('shapes an array by its element type', () => {
@@ -107,6 +126,18 @@ describe('buildSampleRow', () => {
   test('yields an empty row for a table with no declared columns', () => {
     expect(buildSampleRow(table([]))).toEqual({});
   });
+
+  test('gives a map column one string entry, so the sample shows the bag’s shape', () => {
+    const row = buildSampleRow(
+      table([
+        column({ name: 'attrs', type: AnalyticsFieldType.Map }),
+        column({ name: 'payload', type: AnalyticsFieldType.Object }),
+      ]),
+    );
+
+    expect(row.attrs).toEqual({ key: 'value' });
+    expect(row.payload).toEqual({});
+  });
 });
 
 describe('literal serializers', () => {
@@ -124,6 +155,15 @@ describe('literal serializers', () => {
 
     expect(literal).toContain('"healthy": true');
     expect(literal).toContain('"score": "94.25"');
+  });
+
+  test('both spell a map entry as a quoted key and value, and an empty object as {}', () => {
+    const row = { attrs: { key: 'value' }, payload: {} };
+
+    expect(toPythonLiteral(row)).toContain('"attrs": {"key": "value"}');
+    expect(toPythonLiteral(row)).toContain('"payload": {}');
+    expect(toJsonLiteral(row, '')).toContain('"attrs": {"key": "value"}');
+    expect(toJsonLiteral(row, '')).toContain('"payload": {}');
   });
 
   test('renders an empty row without a dangling body', () => {
@@ -166,12 +206,48 @@ describe('buildFormatNotes', () => {
     expect(notes).toEqual([]);
   });
 
+  test('states the map rule last, against the map columns', () => {
+    const notes = buildFormatNotes(
+      table([
+        column({ name: 'attrs', type: AnalyticsFieldType.Map }),
+        column({ name: 'tags', type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String }),
+      ]),
+    );
+
+    expect(notes).toEqual([
+      { rule: ConnectFormatRule.Array, columns: ['tags'] },
+      { rule: ConnectFormatRule.Map, columns: ['attrs'] },
+    ]);
+  });
+
   test('names a column by its exposed name, which is what the grid shows', () => {
     const notes = buildFormatNotes(
       table([column({ name: 'total_cost', source_name: 'total_money', type: AnalyticsFieldType.Decimal })]),
     );
 
     expect(notes).toEqual([{ rule: ConnectFormatRule.Decimal, columns: ['total_cost'] }]);
+  });
+});
+
+describe('buildRequiredColumns', () => {
+  test('names every non-nullable column by its exposed name, in declared order', () => {
+    const required = buildRequiredColumns(
+      table([
+        column({ name: 'event_id', nullable: false }),
+        column({ name: 'note', nullable: true }),
+        column({ name: 'total_cost', source_name: 'total_money', nullable: false }),
+      ]),
+    );
+
+    expect(required).toEqual(['event_id', 'total_cost']);
+  });
+
+  test('omits platform-owned columns, which the platform fills in', () => {
+    expect(buildRequiredColumns(table([column({ name: '_ingested_at', nullable: false })]))).toEqual([]);
+  });
+
+  test('returns nothing when every column is nullable', () => {
+    expect(buildRequiredColumns(table([column({ name: 'note', nullable: true })]))).toEqual([]);
   });
 });
 
@@ -333,6 +409,31 @@ describe('buildConnectSnippets', () => {
     expect(all).toContain('DIAL_ANALYTICS_BASE_URL');
     expect(all).toContain('DIAL_ANALYTICS_FLIGHT_SQL_URL');
     expect(all.toLowerCase()).not.toContain('adas');
+  });
+
+  test('writes a map column’s sample entry in both write snippets, and an object column as {}', () => {
+    const snippets = buildConnectSnippets(
+      table([
+        column({ name: 'attrs', type: AnalyticsFieldType.Map }),
+        column({ name: 'payload', type: AnalyticsFieldType.Object }),
+      ]),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonWrite).toContain('"attrs": {"key": "value"}');
+    expect(snippets.pythonWrite).toContain('"payload": {}');
+    expect(snippets.curlWrite).toContain('"attrs": {"key": "value"}');
+    expect(snippets.curlWrite).toContain('"payload": {}');
+  });
+
+  test('keeps the curl body valid JSON with a map value in it', () => {
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'attrs', type: AnalyticsFieldType.Map })]),
+      noEndpoints,
+    );
+    const payload = snippets.curlWrite.match(/-d '([\s\S]*)'$/)?.[1] ?? '';
+
+    expect(JSON.parse(payload)).toEqual({ rows: [{ attrs: { key: 'value' } }] });
   });
 
   test('projects a wildcard when the table declares no columns', () => {

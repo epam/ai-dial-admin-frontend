@@ -1,17 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ValidationActionType } from '@/src/context/SaveValidationContext';
+import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import ClientSecretControl from '../ClientSecretControl';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: mockDispatch }),
-  ValidationActionType: {
-    SetField: 'SetField',
-  },
-}));
+const mockDispatch = vi.mocked(useSaveValidationContext().dispatch);
 
 describe('ClientSecretControl', () => {
   beforeEach(() => {
@@ -101,5 +95,101 @@ describe('ClientSecretControl', () => {
 
     const input = screen.getByLabelText(/EntityFields\.clientSecret/i);
     expect(input).toBeDisabled();
+  });
+});
+
+describe('ClientSecretControl — stored secret hint', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('shows the masked placeholder and an empty value when a hint is present', () => {
+    render(<ClientSecretControl clientSecret="" hasSecretHint />);
+
+    const input = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecretMasked);
+    expect(input).toHaveValue('');
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeNull();
+  });
+
+  test('treats an empty value as valid when a hint is present', () => {
+    render(<ClientSecretControl clientSecret="" hasSecretHint />);
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: true,
+    });
+    expect(screen.queryByText('Error.RequiredField')).toBeNull();
+  });
+
+  test('still requires a value when there is no hint', () => {
+    render(<ClientSecretControl clientSecret="" />);
+
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeTruthy();
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: false,
+    });
+  });
+
+  test('returns to the valid unchanged state when a typed secret is cleared', () => {
+    const { rerender } = render(<ClientSecretControl clientSecret="typed-secret" hasSecretHint />);
+    rerender(<ClientSecretControl clientSecret="" hasSecretHint />);
+
+    expect(mockDispatch).toHaveBeenLastCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: true,
+    });
+  });
+});
+
+describe('ClientSecretControl — minLength', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('is invalid and shows the length error for a value below the minimum', () => {
+    render(<ClientSecretControl clientSecret="short" minLength={8} />);
+
+    expect(screen.getByText('Error.ClientSecretMinLength')).toBeTruthy();
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: false,
+    });
+  });
+
+  test('is invalid for a short typed value even when a hint is present', () => {
+    render(<ClientSecretControl clientSecret="short" minLength={8} hasSecretHint />);
+
+    expect(screen.getByText('Error.ClientSecretMinLength')).toBeTruthy();
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: false,
+    });
+  });
+
+  test('is valid for a value at the minimum', () => {
+    render(<ClientSecretControl clientSecret="12345678" minLength={8} />);
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: true,
+    });
+  });
+
+  test('accepts a short value when no minimum is given', () => {
+    render(<ClientSecretControl clientSecret="short" />);
+
+    expect(screen.queryByText('Error.ClientSecretMinLength')).toBeNull();
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'authSettings.clientSecret',
+      isValid: true,
+    });
   });
 });

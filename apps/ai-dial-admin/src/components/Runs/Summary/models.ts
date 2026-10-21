@@ -1,14 +1,10 @@
 import { MetricStatistic } from '@/src/components/Common/MetricStatistics/models';
+import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
 
 export { MetricStatistic };
 
-/** Aggregated test-case execution outcome counts for a run, derived from `eval_summaries`. */
-export interface TestCaseStatusCounts {
-  passed: number;
-  failed: number;
-  error: number;
-  total: number;
-}
+/** Aggregated test-case execution outcome counts for a run, derived from `test_case_eval_scores`. */
+export type TestCaseStatusCounts = PassFailErrorCounts;
 
 /**
  * One bar group for a given statistic: the metric group name (the `metric_name` without its last
@@ -17,8 +13,8 @@ export interface TestCaseStatusCounts {
 export interface MetricScoreGroup {
   /** Metric group — `metric_name` up to the last `.`, e.g. `aidial_rag_eval.generation`. */
   name: string;
-  /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. */
-  bars: Record<string, number>;
+  /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. `null` when the metric was configured but produced no score. */
+  bars: Record<string, number | null>;
   /** The metric's own description, from its declaration; undefined until fetched. */
   description?: string;
   /** Leaf metric name (bar) → its output-field description, from the metric's `outputSchema`. */

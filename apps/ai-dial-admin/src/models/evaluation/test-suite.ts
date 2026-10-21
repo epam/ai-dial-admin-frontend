@@ -6,6 +6,7 @@ import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 export enum SuiteType {
   Deployment = 'DEPLOYMENT',
   McpTool = 'MCP_TOOL',
+  Route = 'ROUTE',
 }
 
 export enum OverallScoreType {
@@ -36,6 +37,9 @@ export interface OverallScoreFunction {
 
 export type OverallScoreConfig = OverallScoreMean | OverallScoreWeightedMean | OverallScoreFunction;
 
+/** Per-test-case score definition — Mean / WeightedMean only (BE rejects custom_function). */
+export type TestCaseOverallScoreConfig = OverallScoreMean | OverallScoreWeightedMean;
+
 export interface TestSuite {
   id?: string;
   name?: string;
@@ -52,6 +56,11 @@ export interface TestSuite {
   testCaseFilter?: FilterNode | null;
   overallScoreThreshold?: number;
   overallScore?: OverallScoreConfig;
+  /**
+   * Per-test-case score when `overallScore` is a suite-level `custom_function` (e.g. ROC AUC).
+   * Cleared when overall is Mean / Weighted mean so per-row scoring falls back to `overallScore`.
+   */
+  testCaseOverallScore?: TestCaseOverallScoreConfig;
 
   deploymentRef?: TestSuiteDeploymentRef;
   /**
@@ -66,6 +75,7 @@ export interface TestSuite {
   additionalRequests?: TestSuiteAdditionalRequest[];
 
   mcpDeploymentRef?: McpDeploymentRef;
+  routesRef?: RoutesRef;
   toolRef?: ToolRef;
   argumentTemplate?: ArgumentTemplate;
 }
@@ -84,13 +94,22 @@ export interface SuiteSnapshot {
   suiteType?: SuiteType;
   deploymentRef?: TestSuiteDeploymentRef;
   mcpDeploymentRef?: McpDeploymentRef;
+  routesRef?: RoutesRef;
   requestName?: string;
   additionalRequests?: TestSuiteAdditionalRequest[];
+  /** Score threshold captured at run start; used for per-row `passed` on eval summaries. */
+  overallScoreThreshold?: number;
+  /** Per-test-case score definition captured at run start (Mean / WeightedMean only). */
+  testCaseOverallScore?: TestCaseOverallScoreConfig;
 }
 
 export interface McpDeploymentRef {
   id: string;
   type: string;
+  name: string;
+}
+
+export interface RoutesRef {
   name: string;
 }
 
@@ -171,7 +190,25 @@ export interface TemplateVariable {
   resolvedValue?: unknown;
 }
 
+/**
+ * Template variables of every chain request, keyed by request index as the backend serializes it:
+ * `"0"` is the suite's own request, `"n"` is `additionalRequests[n-1]`. A request that declares no
+ * placeholders maps to an empty list.
+ */
+export type TemplateVariablesByRequest = Record<string, TemplateVariable[]>;
+
+/**
+ * Values entered for a suite-level try-out, keyed by request index like
+ * [[TemplateVariablesByRequest]] so two requests can carry different values for one variable name.
+ */
+export type TryOutVariablesByRequest = Record<string, Record<string, unknown>>;
+
 export interface TestCaseSchema {
+  /**
+   * Server-assigned and stable across renames; absent on a field added but not yet saved. Dataset
+   * update matches fields by it, so the same `id` with a new `name` moves the test case values.
+   */
+  id?: string;
   name: string;
   type: TestCaseItemType;
   required: boolean;
@@ -192,17 +229,54 @@ export interface InputBindingRowData extends InputBinding {
   defaultValue?: unknown;
 }
 
-export interface TryOutHistoryEntry {
+/** Terminal parse status of a streamed response; anything but `Success` means the invocation failed. */
+export enum StreamingStatus {
+  Success = 'SUCCESS',
+  Failed = 'FAILED',
+  Timeout = 'TIMEOUT',
+  Error = 'ERROR',
+}
+
+/** One column whose backend extraction failed, carrying the expression that was actually evaluated. */
+export interface ExtractionWarning {
+  column: string;
+  expression: string;
+  error: string;
+}
+
+export interface TryOutCoreResponse {
+  statusCode: number;
+  body?: unknown;
+  streaming?: boolean;
+  events?: unknown[];
+  streamingStatus?: StreamingStatus;
+  truncationWarning?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * `extractedColumns` is the backend's own reconciled extraction for this one invocation — a column
+ * whose extraction failed appears with an explicit `null`. Both fields are absent when no extraction
+ * was performed: the suite declares no response columns, the invocation failed, or the try-out is MCP.
+ */
+interface TryOutExtraction {
+  extractedColumns?: Record<string, unknown>;
+  extractionWarnings?: ExtractionWarning[];
+}
+
+export interface TryOutHistoryEntry extends TryOutExtraction {
   resolvedRequest: Record<string, unknown>;
-  response: Record<string, unknown>;
+  response: TryOutCoreResponse;
   durationMs?: number;
   traceId?: string;
   grafanaTraceUrl?: string;
+  requestIndex?: number;
+  turnIndex?: number;
 }
 
-export interface TryOutResponse {
+export interface TryOutResponse extends TryOutExtraction {
   resolvedRequest: Record<string, unknown>;
-  response: Record<string, unknown>;
+  response: TryOutCoreResponse;
   grafanaTraceUrl?: string;
   history?: TryOutHistoryEntry[];
 }

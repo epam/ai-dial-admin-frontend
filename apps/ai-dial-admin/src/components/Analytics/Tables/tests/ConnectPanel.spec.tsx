@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -37,7 +37,10 @@ const renderPanel = (onClose = vi.fn()) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getTableAccess).mockResolvedValue({ write: ['analytics-writer'], modify: [] });
+  vi.mocked(getTableAccess).mockResolvedValue({
+    success: true,
+    response: { get: [], read: [], sensitive: [], write: ['analytics-writer'], modify: [] },
+  });
 });
 
 describe('ConnectPanel :: tabs', () => {
@@ -115,11 +118,14 @@ describe('ConnectPanel :: roles', () => {
     vi.mocked(getTableAccess).mockReturnValue(new Promise(() => undefined));
     renderPanel();
 
-    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectRolesLoading)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: AnalyticsTablesI18nKey.ConnectRolesLoading })).toBeInTheDocument();
   });
 
   test('names the consequence when no role grants write access', async () => {
-    vi.mocked(getTableAccess).mockResolvedValue({ write: [], modify: [] });
+    vi.mocked(getTableAccess).mockResolvedValue({
+      success: true,
+      response: { get: [], read: [], sensitive: [], write: [], modify: [] },
+    });
     renderPanel();
 
     expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectNoWriteRoles)).toBeInTheDocument();
@@ -129,7 +135,9 @@ describe('ConnectPanel :: roles', () => {
     vi.mocked(getTableAccess).mockRejectedValue(new Error('403'));
     renderPanel();
 
-    await waitFor(() => expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectRolesLoading)).not.toBeInTheDocument());
+    await waitForElementToBeRemoved(() =>
+      screen.queryByRole('img', { name: AnalyticsTablesI18nKey.ConnectRolesLoading }),
+    );
     expect(screen.queryByText('analytics-writer')).not.toBeInTheDocument();
     expect(showNotification).not.toHaveBeenCalled();
     // The rest of the panel is unaffected — the snippets are the point of the panel, not the roles.
@@ -194,6 +202,62 @@ describe('ConnectPanel :: snippets', () => {
     expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectFormatDecimal)).toBeInTheDocument();
     // No timestamp column declared, so no timestamp rule is shown.
     expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectFormatTimestamp)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectFormatMap)).not.toBeInTheDocument();
+  });
+
+  test('states the map format and writes a sample entry for a map column, while an object stays {}', async () => {
+    render(
+      <ConnectPanel
+        table={{
+          ...table,
+          columns: [
+            ...(table.columns ?? []),
+            { source_name: 'attrs', name: 'attrs', type: AnalyticsFieldType.Map },
+            { source_name: 'payload', name: 'payload', type: AnalyticsFieldType.Object },
+          ],
+        }}
+        apiBaseUrl="https://analytics.example.com"
+        flightUri=""
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectFormatMap)).toBeInTheDocument();
+    const blocks = Array.from(document.querySelectorAll('pre')).map((pre) => pre.textContent ?? '');
+    const writeBlocks = blocks.filter((block) => block.includes('/rows'));
+    expect(writeBlocks).toHaveLength(2);
+    writeBlocks.forEach((block) => {
+      expect(block).toContain('"attrs": {"key": "value"}');
+      expect(block).toContain('"payload": {}');
+    });
+  });
+});
+
+describe('ConnectPanel :: rejections', () => {
+  test('states the forbidden rejection a key without a write role receives', async () => {
+    renderPanel();
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectForbidden)).toBeInTheDocument();
+  });
+
+  test('warns that non-nullable columns must be present when the table declares any', async () => {
+    renderPanel();
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectRequiredColumns)).toBeInTheDocument();
+  });
+
+  test('states no required-column rejection when every column is nullable', async () => {
+    render(
+      <ConnectPanel
+        table={{ ...table, columns: table.columns?.map((column) => ({ ...column, nullable: true })) }}
+        apiBaseUrl="https://analytics.example.com"
+        flightUri=""
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectForbidden)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectRequiredColumns)).not.toBeInTheDocument();
   });
 });
 

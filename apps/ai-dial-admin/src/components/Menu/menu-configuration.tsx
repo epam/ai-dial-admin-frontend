@@ -2,117 +2,110 @@ import {
   IconChartBar,
   IconDashboard,
   IconFlask,
-  IconFolders,
   IconHammer,
+  IconPackage,
   IconRocket,
+  IconRouter,
+  IconScale,
   IconSettings2,
   IconShieldCog,
 } from '@tabler/icons-react';
 import { JSX } from 'react';
 
-import Approvals from '@/public/images/icons/menu/approvals.svg';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
+
+export enum MenuBadge {
+  Preview = 'preview',
+  Deprecated = 'deprecated',
+}
 
 export interface MenuGroupConfiguration {
   key: MenuI18nKey;
   descriptionKey: MenuI18nKey;
   icon?: JSX.Element;
   items: MenuItem[];
-  isPreview?: boolean;
+  badge?: MenuBadge;
 }
 
 export interface MenuItem {
   key: MenuI18nKey;
   href: string;
-  isPreview?: boolean;
+  badge?: MenuBadge;
 }
 
 export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags): MenuGroupConfiguration[] => {
-  const config = [
+  // The `catalog` token of DISABLE_MENU_ITEMS hides every Core-direct (Preview) item, wherever it is grouped.
+  const catalogItems = (...items: MenuItem[]): MenuItem[] => (featureFlags.catalogEnabled === false ? [] : items);
+
+  const config: MenuGroupConfiguration[] = [
     {
       key: MenuI18nKey.Entities,
       descriptionKey: MenuI18nKey.EntitiesDescription,
       icon: <IconSettings2 width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
         { key: MenuI18nKey.Models, href: ApplicationRoute.Models },
-        {
-          key: MenuI18nKey.Applications,
-          href: ApplicationRoute.Applications,
-        },
-        {
-          key: MenuI18nKey.Toolsets,
-          href: ApplicationRoute.Toolsets,
-        },
-        {
-          key: MenuI18nKey.Interceptors,
-          href: ApplicationRoute.Interceptors,
-        },
-        {
-          key: MenuI18nKey.Routes,
-          href: ApplicationRoute.Routes,
-        },
+        { key: MenuI18nKey.Applications, href: ApplicationRoute.Applications },
+        { key: MenuI18nKey.Toolsets, href: ApplicationRoute.Toolsets },
+        { key: MenuI18nKey.Interceptors, href: ApplicationRoute.Interceptors },
+        { key: MenuI18nKey.Routes, href: ApplicationRoute.Routes },
+      ],
+    },
+    {
+      key: MenuI18nKey.AiGateway,
+      descriptionKey: MenuI18nKey.AiGatewayDescription,
+      icon: <IconRouter width={iconSize} height={iconSize} />,
+      items: [
+        ...catalogItems({ key: MenuI18nKey.PlatformModels, href: ApplicationRoute.PlatformModels }),
+        { key: MenuI18nKey.Toolsets, href: ApplicationRoute.AssetsToolsets },
+        ...catalogItems({
+          key: MenuI18nKey.PlatformTranslators,
+          href: ApplicationRoute.PlatformTranslators,
+        }),
+        ...catalogItems({ key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes }),
+        { key: MenuI18nKey.Applications, href: ApplicationRoute.AssetsApplications },
+        ...catalogItems({
+          key: MenuI18nKey.PlatformAppRunners,
+          href: ApplicationRoute.PlatformAppRunners,
+        }),
+        ...catalogItems({
+          key: MenuI18nKey.PlatformCatalogSchemas,
+          href: ApplicationRoute.PlatformCatalogSchemas,
+        }),
+      ],
+    },
+    {
+      key: MenuI18nKey.Artifacts,
+      descriptionKey: MenuI18nKey.ArtifactsDescription,
+      icon: <IconPackage width={iconSize} height={iconSize} />,
+      items: [
+        { key: MenuI18nKey.Skills, href: ApplicationRoute.Skills },
+        { key: MenuI18nKey.Files, href: ApplicationRoute.Files },
+        { key: MenuI18nKey.Conversations, href: ApplicationRoute.Conversations },
+        { key: MenuI18nKey.Prompts, href: ApplicationRoute.Prompts },
       ],
     },
     {
       key: MenuI18nKey.Builders,
       descriptionKey: MenuI18nKey.BuildersDescription,
       icon: <IconHammer width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
-        {
-          key: MenuI18nKey.ApplicationRunners,
-          href: ApplicationRoute.ApplicationRunners,
-        },
-        {
-          key: MenuI18nKey.InterceptorTemplates,
-          href: ApplicationRoute.InterceptorTemplates,
-        },
-        {
-          key: MenuI18nKey.Adapters,
-          href: ApplicationRoute.Adapters,
-        },
+        { key: MenuI18nKey.ApplicationRunners, href: ApplicationRoute.ApplicationRunners },
+        { key: MenuI18nKey.InterceptorTemplates, href: ApplicationRoute.InterceptorTemplates },
+        { key: MenuI18nKey.Adapters, href: ApplicationRoute.Adapters },
       ],
     },
     {
-      key: MenuI18nKey.Assets,
-      descriptionKey: MenuI18nKey.AssetsDescription,
-      icon: <IconFolders width={iconSize} height={iconSize} />,
+      key: MenuI18nKey.AccessManagement,
+      descriptionKey: MenuI18nKey.AccessManagementDescription,
+      icon: <IconShieldCog width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
-        {
-          key: MenuI18nKey.AssetsModels,
-          href: ApplicationRoute.AssetsModels,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.AppRunners,
-          href: ApplicationRoute.AssetsAppRunners,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.Applications,
-          href: ApplicationRoute.AssetsApplications,
-        },
-        {
-          key: MenuI18nKey.Toolsets,
-          href: ApplicationRoute.AssetsToolsets,
-        },
-        {
-          key: MenuI18nKey.Prompts,
-          href: ApplicationRoute.Prompts,
-        },
-        {
-          key: MenuI18nKey.Conversations,
-          href: ApplicationRoute.Conversations,
-        },
-        {
-          key: MenuI18nKey.Files,
-          href: ApplicationRoute.Files,
-        },
-        {
-          key: MenuI18nKey.Skills,
-          href: ApplicationRoute.AssetsSkills,
-        },
+        { key: MenuI18nKey.Roles, href: ApplicationRoute.Roles },
+        { key: MenuI18nKey.Keys, href: ApplicationRoute.Keys },
       ],
     },
     {
@@ -120,7 +113,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.MCPDescription,
       icon: <IconRocket width={iconSize} height={iconSize} />,
       items: [
-        ...(featureFlags.nimEnabled || featureFlags.hfEnabled
+        ...(featureFlags.hfEnabled
           ? [
               {
                 key: MenuI18nKey.ModelServings,
@@ -128,67 +121,8 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
               },
             ]
           : []),
-        {
-          key: MenuI18nKey.McpContainers,
-          href: ApplicationRoute.McpContainers,
-        },
-        {
-          key: MenuI18nKey.InterceptorContainers,
-          href: ApplicationRoute.InterceptorContainers,
-        },
-        {
-          key: MenuI18nKey.AdapterContainers,
-          href: ApplicationRoute.AdapterContainers,
-        },
-        {
-          key: MenuI18nKey.ApplicationContainers,
-          href: ApplicationRoute.ApplicationContainers,
-        },
-        {
-          key: MenuI18nKey.Images,
-          href: ApplicationRoute.Images,
-        },
-      ],
-    },
-    {
-      key: MenuI18nKey.AccessManagement,
-      descriptionKey: MenuI18nKey.AccessManagementDescription,
-      icon: <IconShieldCog width={iconSize} height={iconSize} />,
-      items: [
-        { key: MenuI18nKey.Roles, href: ApplicationRoute.Roles },
-        { key: MenuI18nKey.Keys, href: ApplicationRoute.Keys },
-        { key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage },
-      ],
-    },
-    {
-      key: MenuI18nKey.Approvals,
-      descriptionKey: MenuI18nKey.ApprovalsDescription,
-      icon: <Approvals width={iconSize} height={iconSize} />,
-      items: [
-        {
-          key: MenuI18nKey.ApplicationPublications,
-          href: ApplicationRoute.ApplicationPublications,
-        },
-        {
-          key: MenuI18nKey.ToolsetPublications,
-          href: ApplicationRoute.ToolsetPublications,
-        },
-        {
-          key: MenuI18nKey.PromptPublications,
-          href: ApplicationRoute.PromptPublications,
-        },
-        {
-          key: MenuI18nKey.ConversationPublications,
-          href: ApplicationRoute.ConversationPublications,
-        },
-        {
-          key: MenuI18nKey.FilePublications,
-          href: ApplicationRoute.FilePublications,
-        },
-        {
-          key: MenuI18nKey.SkillPublications,
-          href: ApplicationRoute.SkillPublications,
-        },
+        { key: MenuI18nKey.Containers, href: ApplicationRoute.Containers },
+        { key: MenuI18nKey.Images, href: ApplicationRoute.Images },
       ],
     },
     {
@@ -196,48 +130,48 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.EvaluationDescription,
       icon: <IconFlask width={iconSize} height={iconSize} />,
       items: [
-        { key: MenuI18nKey.Datasets, href: ApplicationRoute.Datasets },
         { key: MenuI18nKey.TestSuites, href: ApplicationRoute.TestSuites },
         { key: MenuI18nKey.Runs, href: ApplicationRoute.Runs },
-      ],
-    },
-    {
-      key: MenuI18nKey.Audit,
-      descriptionKey: MenuI18nKey.AuditDescription,
-      icon: <IconDashboard width={iconSize} height={iconSize} />,
-      items: [
-        {
-          key: MenuI18nKey.Dashboard,
-          href: ApplicationRoute.Dashboard,
-        },
-        {
-          key: MenuI18nKey.ActivityAudit,
-          href: ApplicationRoute.ActivityAudit,
-        },
-        {
-          key: MenuI18nKey.UsageLog,
-          href: ApplicationRoute.UsageLog,
-        },
+        { key: MenuI18nKey.Datasets, href: ApplicationRoute.Datasets },
       ],
     },
     {
       key: MenuI18nKey.Analytics,
       descriptionKey: MenuI18nKey.Analytics,
       icon: <IconChartBar width={iconSize} height={iconSize} />,
-      isPreview: true,
+      badge: MenuBadge.Preview,
       items: [
-        {
-          key: MenuI18nKey.Tables,
-          href: ApplicationRoute.AnalyticsTables,
-        },
-        {
-          key: MenuI18nKey.Queries,
-          href: ApplicationRoute.AnalyticsQueries,
-        },
-        {
-          key: MenuI18nKey.AnalyticsConversations,
-          href: ApplicationRoute.ConversationsTrace,
-        },
+        { key: MenuI18nKey.Dashboard, href: ApplicationRoute.Dashboard },
+        { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
+        { key: MenuI18nKey.AnalyticsSessions, href: ApplicationRoute.SessionsTrace },
+        { key: MenuI18nKey.Tables, href: ApplicationRoute.AnalyticsTables },
+        { key: MenuI18nKey.Pipelines, href: ApplicationRoute.AnalyticsPipelines },
+      ],
+    },
+    {
+      key: MenuI18nKey.Governance,
+      descriptionKey: MenuI18nKey.GovernanceDescription,
+      icon: <IconScale width={iconSize} height={iconSize} />,
+      items: [
+        ...catalogItems({ key: MenuI18nKey.PlatformRoles, href: ApplicationRoute.PlatformRoles }),
+        ...catalogItems({ key: MenuI18nKey.PlatformKeys, href: ApplicationRoute.PlatformKeys }),
+        { key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage },
+        ...catalogItems({
+          key: MenuI18nKey.PlatformInterceptors,
+          href: ApplicationRoute.PlatformInterceptors,
+        }),
+        { key: MenuI18nKey.Approvals, href: ApplicationRoute.Publications },
+      ],
+    },
+    {
+      key: MenuI18nKey.Audit,
+      descriptionKey: MenuI18nKey.AuditDescription,
+      icon: <IconDashboard width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
+      items: [
+        { key: MenuI18nKey.Dashboard, href: ApplicationRoute.Dashboard },
+        { key: MenuI18nKey.ActivityAudit, href: ApplicationRoute.ActivityAudit },
+        { key: MenuI18nKey.UsageLog, href: ApplicationRoute.UsageLog },
       ],
     },
   ];
@@ -253,6 +187,44 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
 
   if (!featureFlags.analyticsEnabled) {
     result = result.filter((item) => item.key !== MenuI18nKey.Analytics);
+  }
+
+  // One Dashboards item, declared in both groups: `/dashboards` serves the analytics page while both
+  // flags are on and the telemetry dashboard otherwise, so the item sits in the group that owns it.
+  // Both flags, not the usage flag alone: the usage flag without Analytics is a misconfiguration, and
+  // the telemetry dashboard is served instead — only while `dashboardEnabled` allows it.
+  const isAnalyticsDashboard = featureFlags.analyticsEnabled && featureFlags.analyticsUsageEnabled;
+  let dashboardsGroup: MenuI18nKey | undefined;
+  if (isAnalyticsDashboard) {
+    dashboardsGroup = MenuI18nKey.Analytics;
+  } else if (featureFlags.dashboardEnabled) {
+    dashboardsGroup = MenuI18nKey.Audit;
+  }
+  result = result.map((group) =>
+    group.key === MenuI18nKey.Analytics || group.key === MenuI18nKey.Audit
+      ? {
+          ...group,
+          items: group.items.filter((item) => item.key !== MenuI18nKey.Dashboard || group.key === dashboardsGroup),
+        }
+      : group,
+  );
+
+  if (!featureFlags.analyticsSessionsEnabled) {
+    result = result.map((group) =>
+      group.key === MenuI18nKey.Analytics
+        ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsSessions) }
+        : group,
+    );
+  }
+
+  if (!featureFlags.adminApiEnabled) {
+    result = result.filter(
+      (item) =>
+        item.key !== MenuI18nKey.Entities &&
+        item.key !== MenuI18nKey.Builders &&
+        item.key !== MenuI18nKey.AccessManagement &&
+        item.key !== MenuI18nKey.Audit,
+    );
   }
 
   return result;

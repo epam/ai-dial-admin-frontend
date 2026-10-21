@@ -101,7 +101,7 @@ Rules in order of importance:
 2. **Drop the conventional prefix** (`feat:`, `fix:`, `chore:`, `feat(scope):`). Replace with prose.
 3. **Drop scope-as-noun repetition.** Don't start the bullet with the scope name — `feat(deployments): stop button` → `Stop button for deployments` not `Deployments — stop button`.
 4. **Use a `—` em-dash for the "why" clause**, not a hyphen or colon.
-5. **Backticks for code identifiers**: env vars (`NIM_ENABLED`), config keys, component names, API paths.
+5. **Backticks for code identifiers**: env vars (`HF_ENABLED`), config keys, component names, API paths.
 6. **Preserve issue + PR refs at the end** in `#<issue> (#<PR>)` order. For grouped entries list all PRs: `(#2927, #2986, #3034)`.
 7. **Prefix with `[Preview]`** for preview-gated features (eval framework, MCP registry, etc. when still gated by an env var).
 8. **Flag regressions explicitly**: `(regression fix)` for items restoring previously-working behavior.
@@ -180,7 +180,7 @@ Use the alert callout if the changes are critical:
 
    | Variable | Required | Default | Description |
    |---|---|---|---|
-   | `NIM_ENABLED` | No | `false` | Enables the NIM Model Serving option in Deployments |
+   | `HF_ENABLED` | No | `false` | Enables the HF Model Serving option in Deployments |
    | `DIAL_CORE_API_URL` | Yes | — | DIAL Core API url |
    ```
 

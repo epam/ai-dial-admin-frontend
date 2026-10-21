@@ -1,0 +1,114 @@
+import { describe, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
+
+import SingleValueAutocomplete from '../SingleValueAutocomplete';
+
+const availableItems = [
+  { label: 'cachedReadTokens', value: 'cachedReadTokens' },
+  { label: 'serviceTier', value: 'serviceTier' },
+  { label: 'ttl', value: 'ttl' },
+];
+
+const renderAutocomplete = (props?: Partial<Parameters<typeof SingleValueAutocomplete>[0]>) =>
+  render(
+    <SingleValueAutocomplete
+      value=""
+      availableItems={availableItems}
+      onChange={vi.fn()}
+      placeholder="Standard field or $path"
+      {...props}
+    />,
+  );
+
+const typeIntoInput = async (text: string) => {
+  const input = screen.getByRole('textbox');
+  await userEvent.type(input, text);
+  return input;
+};
+
+describe('SingleValueAutocomplete', () => {
+  test('renders the selected value as a removable tag', () => {
+    renderAutocomplete({ value: 'ttl' });
+
+    expect(screen.getByText('ttl')).toBeTruthy();
+    expect(screen.getByRole('button')).toBeTruthy();
+  });
+
+  test('narrowes suggestions while typing', async () => {
+    renderAutocomplete();
+
+    await typeIntoInput('ser');
+
+    expect(screen.getByText('Service Tier')).toBeTruthy();
+    expect(screen.queryByText('Cached Read Tokens')).toBeNull();
+    expect(screen.queryByText('Ttl')).toBeNull();
+  });
+
+  test('commits the clicked suggestion', async () => {
+    const onChange = vi.fn();
+    renderAutocomplete({ onChange });
+
+    await typeIntoInput('tt');
+    await userEvent.click(screen.getByText('Ttl'));
+
+    expect(onChange).toHaveBeenCalledWith('ttl');
+  });
+
+  test('commits free text that matches no suggestion', async () => {
+    const onChange = vi.fn();
+    renderAutocomplete({ onChange });
+
+    await typeIntoInput('$.usage.ttl');
+    await userEvent.keyboard('{Enter}');
+
+    expect(onChange).toHaveBeenCalledWith('$.usage.ttl');
+  });
+
+  test('selects the highlighted suggestion with the keyboard', async () => {
+    const onChange = vi.fn();
+    renderAutocomplete({ onChange });
+
+    await typeIntoInput('tt');
+    await userEvent.keyboard('{Enter}');
+
+    expect(onChange).toHaveBeenCalledWith('ttl');
+  });
+
+  test('removing a long free-text field tag clears the value', async () => {
+    const onChange = vi.fn();
+    const jsonPath = '$.usage.details.very.long.nested.path.used.only.to.verify.the.field.tag.clear.control';
+    renderAutocomplete({ value: jsonPath, onChange });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Remove' }));
+
+    expect(onChange).toHaveBeenCalledWith('');
+  });
+
+  test('hides suggestions on Escape', async () => {
+    renderAutocomplete();
+
+    await typeIntoInput('tt');
+    expect(screen.getByText('Ttl')).toBeTruthy();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByText('Ttl')).toBeNull();
+  });
+
+  test('does not allow a disabled selected value to be removed', async () => {
+    const onChange = vi.fn();
+    renderAutocomplete({ value: 'ttl', disabled: true, onChange });
+
+    const removeButton = screen.getByRole('button', { name: 'Buttons.Remove' });
+    expect(removeButton).toBeDisabled();
+
+    await userEvent.click(removeButton);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('disables the input when disabled', () => {
+    renderAutocomplete({ disabled: true });
+
+    expect(screen.getByRole('textbox')).toBeDisabled();
+  });
+});

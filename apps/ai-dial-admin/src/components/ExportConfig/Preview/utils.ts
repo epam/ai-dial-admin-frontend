@@ -147,7 +147,6 @@ const COMPONENT_TYPE_TO_ENTITY_TYPE: Record<string, DeploymentExportEntityType> 
   [DeploymentExportComponentType.ADAPTER_DEPLOYMENT]: DeploymentExportEntityType.ADAPTER_CONTAINER,
   [DeploymentExportComponentType.APPLICATION_DEPLOYMENT]: DeploymentExportEntityType.APPLICATION_CONTAINER,
   [DeploymentExportComponentType.INTERCEPTOR_DEPLOYMENT]: DeploymentExportEntityType.INTERCEPTOR_CONTAINER,
-  [DeploymentExportComponentType.NIM_DEPLOYMENT]: DeploymentExportEntityType.MODEL_SERVING,
   [DeploymentExportComponentType.INFERENCE_DEPLOYMENT]: DeploymentExportEntityType.MODEL_SERVING,
   [DeploymentExportComponentType.MCP_IMAGE_DEFINITION]: DeploymentExportEntityType.IMAGE,
   [DeploymentExportComponentType.ADAPTER_IMAGE_DEFINITION]: DeploymentExportEntityType.IMAGE,

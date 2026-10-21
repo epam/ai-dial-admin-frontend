@@ -6,6 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { ErrorType } from '@/src/types/error-type';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 
@@ -17,11 +18,14 @@ interface Props<T> {
   isUrlId?: boolean;
   forbiddenChars?: readonly string[];
   isUniqueNameError?: boolean;
+  externalError?: string;
   isDeploymentId?: boolean;
   disabled?: boolean;
   onChangeEntity?: (entity: T) => void;
   checkEmptySymbols?: boolean;
   isFullWidth?: boolean;
+  inputId?: string;
+  validationField?: string;
 }
 
 const IdControl = <T extends { name?: string }>({
@@ -32,11 +36,14 @@ const IdControl = <T extends { name?: string }>({
   isUrlId,
   forbiddenChars,
   isUniqueNameError,
+  externalError,
   isDeploymentId,
   disabled,
   onChangeEntity,
   checkEmptySymbols,
   isFullWidth = true,
+  inputId = 'name',
+  validationField = 'name',
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -48,20 +55,22 @@ const IdControl = <T extends { name?: string }>({
     (name?: string) => {
       const error = isUrlId
         ? getErrorForUrlId(name, names, t, forbiddenChars)
-        : getErrorForName(
-            name,
-            names,
-            t,
-            isUniqueNameError,
-            true,
-            !!label && label !== t(EntityFieldsI18nKey.id),
-            isDeploymentId,
-            checkEmptySymbols,
-          );
+        : getErrorForName(name, names, t, isUniqueNameError, true, label, isDeploymentId, checkEmptySymbols);
       setNameError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: !error });
     },
-    [isUrlId, forbiddenChars, names, t, isUniqueNameError, isDeploymentId, label, checkEmptySymbols, dispatch],
+    [
+      isUrlId,
+      forbiddenChars,
+      names,
+      t,
+      isUniqueNameError,
+      isDeploymentId,
+      label,
+      checkEmptySymbols,
+      dispatch,
+      validationField,
+    ],
   );
 
   const onChangeName = useCallback(
@@ -76,20 +85,29 @@ const IdControl = <T extends { name?: string }>({
     if (entity.name) {
       validateName(entity.name);
     } else {
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: false });
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUniqueNameError]);
+  }, [isUniqueNameError, validationField]);
+
+  useEffect(() => {
+    if (externalError) {
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: false });
+    }
+  }, [externalError, dispatch, validationField]);
+
+  const activeError: FieldError | null =
+    nameError ?? (externalError ? { text: externalError, type: ErrorType.EXISTING } : null);
 
   return (
     <DialInput
       placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
       labelProps={{ label: label || t(EntityFieldsI18nKey.id), required: true }}
-      id="name"
+      id={inputId}
       value={entity.name}
       onChange={onChangeName}
-      error={nameError?.text}
-      invalid={!!nameError}
+      error={activeError?.text}
+      invalid={!!activeError}
       disabled={disabled || isReadOnlyAdmin}
       containerClassName={containerClassName}
     />

@@ -19,10 +19,14 @@ export const DIAL_ANALYTICS_FLIGHT_SQL_URL_ENV = 'DIAL_ANALYTICS_FLIGHT_SQL_URL'
 export const READ_SNIPPET_LIMIT = 100;
 
 // Mock literals, one per column type, chosen so a copied row is valid input for that type.
-// Two are not the obvious choice and are load-bearing:
+// Three are not the obvious choice and are load-bearing:
 //   Decimal   — a string, so the digits reach the store intact rather than through a JSON float.
-//   Timestamp — space-separated; the insert path rejects an ISO-8601 `T` separator or `Z` suffix,
-//               even though queries return this column in exactly that form.
+//   Timestamp — ISO-8601 with a `T` separator and an explicit zone; the insert path rejects a space
+//               separator, a missing zone, a bare date, and an epoch number.
+//   Enum      — unreachable in practice, and deliberately not a plausible value: an enum column's sample
+//               comes from its own declared domain (see `sampleFor`), because no fixed literal can be
+//               inside a domain the column chooses. This entry exists because the map is exhaustive over
+//               the type enum, and is reached only by a column declaring no values at all.
 export const ANALYTICS_FIELD_TYPE_SAMPLE: Record<AnalyticsFieldType, SnippetValue> = {
   [AnalyticsFieldType.Uuid]: '8f14e45f-ceea-4d1b-a1c0-9c1e6d3b7a52',
   [AnalyticsFieldType.String]: 'example',
@@ -31,9 +35,12 @@ export const ANALYTICS_FIELD_TYPE_SAMPLE: Record<AnalyticsFieldType, SnippetValu
   [AnalyticsFieldType.Decimal]: '94.25',
   [AnalyticsFieldType.Boolean]: true,
   [AnalyticsFieldType.Date]: '2026-01-15',
-  [AnalyticsFieldType.Timestamp]: '2026-01-15 10:00:00.000',
+  [AnalyticsFieldType.Timestamp]: '2026-01-15T10:00:00.000Z',
   [AnalyticsFieldType.Object]: {},
   [AnalyticsFieldType.Array]: [],
+  [AnalyticsFieldType.Enum]: 'example',
+  // One entry rather than none, so the snippet shows the bag's shape: string keys to string values.
+  [AnalyticsFieldType.Map]: { key: 'value' },
 };
 
 // The column types that carry a value-format rule worth stating. A type absent from this map produces
@@ -43,6 +50,7 @@ export const ANALYTICS_FIELD_TYPE_FORMAT_RULE: Partial<Record<AnalyticsFieldType
   [AnalyticsFieldType.Date]: ConnectFormatRule.Date,
   [AnalyticsFieldType.Decimal]: ConnectFormatRule.Decimal,
   [AnalyticsFieldType.Array]: ConnectFormatRule.Array,
+  [AnalyticsFieldType.Map]: ConnectFormatRule.Map,
 };
 
 // Order the notes render in, independent of column order, so two tables with the same types read the
@@ -52,6 +60,7 @@ export const CONNECT_FORMAT_RULE_ORDER: ConnectFormatRule[] = [
   ConnectFormatRule.Date,
   ConnectFormatRule.Decimal,
   ConnectFormatRule.Array,
+  ConnectFormatRule.Map,
 ];
 
 // Platform-owned columns: the backend fills them and rejects a row that names one.

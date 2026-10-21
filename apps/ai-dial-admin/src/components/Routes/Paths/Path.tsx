@@ -48,9 +48,6 @@ const Path: FC<Props> = ({
           : '';
   }, [disableValidation, isEmptyPath, index, isAllEmptyValues, required, t, isInvalidPath]);
 
-  const alignmentClassName =
-    index === 0 ? (error ? 'items-start' : 'items-end') : error ? 'items-start' : 'items-center';
-
   useEffect(() => {
     setIsEmptyPath(path === '');
     setIsInvalidPath(!isValidRoutePath(path));
@@ -62,7 +59,7 @@ const Path: FC<Props> = ({
   }, [dispatch, error, index, trackGlobalValidity]);
 
   return (
-    <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>
+    <div className={classNames('flex flex-row gap-x-2 items-start')}>
       <div className="flex-1 min-w-0">
         <DialInput
           id={`path-${index}`}
@@ -75,9 +72,7 @@ const Path: FC<Props> = ({
           invalid={!!error}
         />
       </div>
-      {!disabled && (
-        <DialRemoveButton onClick={() => onRemove(index)} className={error && index === 0 ? 'mt-[22px]' : ''} />
-      )}
+      {!disabled && <DialRemoveButton onClick={() => onRemove(index)} className={index === 0 ? 'mt-7' : ''} />}
     </div>
   );
 };

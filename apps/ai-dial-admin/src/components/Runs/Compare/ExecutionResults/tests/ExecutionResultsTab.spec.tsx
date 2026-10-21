@@ -5,8 +5,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { createDefaultCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 
 import ExecutionResultsTab from '../ExecutionResultsTab';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
@@ -25,8 +27,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 const defaultRunProps = {
-  primaryRunName: 'Run #316',
-  comparedRunName: 'Run #317',
+  runs: getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-sibling', name: 'Run #317' }),
+  onlyMatchingTestCases: false,
 };
 
 const defaultDisplayPanelProps = {
@@ -64,6 +66,9 @@ const ControlledExecutionResultsTab: FC<
         executionResultsState={executionResultsState}
         setExecutionResultsState={setExecutionResultsState}
         {...props}
+        // after the spread: `props` is a `Partial`, so it would otherwise widen a required prop to
+        // `boolean | undefined`
+        onlyMatchingTestCases={props.onlyMatchingTestCases ?? false}
       />
     </div>
   );
@@ -98,7 +103,7 @@ describe('ExecutionResultsTab', () => {
             testCaseId: 'tc-1',
             responseStatusCode: 200,
             runIndex: 0,
-            executionStatus: 'SUCCESS',
+            executionStatus: ExtractionResultStatus.SUCCESS,
             testCaseName: 'Test Case 1',
             metricValues: {
               Accuracy: { precision: isPrimary ? 0.5 : 0.8 },
@@ -109,7 +114,7 @@ describe('ExecutionResultsTab', () => {
             testCaseId: 'tc-2',
             responseStatusCode: 200,
             runIndex: 1,
-            executionStatus: 'SUCCESS',
+            executionStatus: ExtractionResultStatus.SUCCESS,
             testCaseName: 'Test Case 2',
             metricValues: {
               Accuracy: { precision: 0.7 },
@@ -123,14 +128,12 @@ describe('ExecutionResultsTab', () => {
   test('loads compare results for both runs and renders grid', async () => {
     renderExecutionResultsTab();
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
+    expect(await screen.findByRole('region', { name: 'Data grid' })).toBeInTheDocument();
 
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(getRunMock).toHaveBeenCalledWith('run-1');
     expect(getRunMock).toHaveBeenCalledWith('run-sibling');
     expect(getTestCaseRunResultsMock).toHaveBeenCalledTimes(2);
-    expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareDiffLabel')).toBeInTheDocument();
   });
 
@@ -141,7 +144,7 @@ describe('ExecutionResultsTab', () => {
         testCaseId: 'tc-1',
         responseStatusCode: 200,
         runIndex: 0,
-        executionStatus: 'SUCCESS',
+        executionStatus: ExtractionResultStatus.SUCCESS,
         testCaseName: 'Test Case 1',
         metricValues: { Accuracy: { precision: 0.5 } },
       },
@@ -158,9 +161,7 @@ describe('ExecutionResultsTab', () => {
       },
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole('table')).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('region', { name: 'Data grid' })).toBeInTheDocument();
 
     expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
   });
@@ -197,17 +198,13 @@ describe('ExecutionResultsTab', () => {
 
     const { unmount } = render(<Harness />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
 
     const hideHighlightsInput = document.getElementById('compare-hide-highlights');
     expect(hideHighlightsInput).toBeTruthy();
     await user.click(hideHighlightsInput!);
 
-    await waitFor(() => {
-      expect(latestState?.hideHighlights).toBe(true);
-    });
+    expect((latestState as ExecutionResultsTabUiState | null)?.hideHighlights).toBe(true);
 
     const preservedState = latestState!;
     unmount();
@@ -227,9 +224,7 @@ describe('ExecutionResultsTab', () => {
       </div>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
 
     expect(document.getElementById('compare-hide-highlights')).toBeChecked();
   });
@@ -248,20 +243,67 @@ describe('ExecutionResultsTab', () => {
 
     renderExecutionResultsTab();
 
-    await waitFor(() => {
-      expect(screen.getByText('Runs.LoadError')).toBeInTheDocument();
+    expect(await screen.findByText('Runs.LoadError')).toBeInTheDocument();
+  });
+
+  test('shows load error when compared run is missing', async () => {
+    getRunMock.mockImplementation((id: string) => {
+      if (id === 'run-sibling') {
+        return Promise.resolve(null);
+      }
+      return Promise.resolve({
+        id,
+        testSuiteId: 'suite-1',
+        testRunName: 'Run #316',
+      });
     });
+
+    renderExecutionResultsTab();
+
+    expect(await screen.findByText('Runs.LoadError')).toBeInTheDocument();
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+  });
+
+  test('shows empty state when view differences only has no differing rows', async () => {
+    const user = userEvent.setup();
+    const matchingContent = [
+      {
+        id: 'result-1',
+        testCaseId: 'tc-1',
+        responseStatusCode: 200,
+        runIndex: 0,
+        executionStatus: ExtractionResultStatus.SUCCESS,
+        testCaseName: 'Test Case 1',
+        metricValues: { Accuracy: { precision: 0.5 } },
+      },
+    ];
+
+    renderExecutionResultsTab({
+      showDisplayPanel: true,
+      initialState: {
+        results: matchingContent,
+        comparedResults: matchingContent.map((row) => ({
+          ...row,
+          id: 'result-2',
+        })),
+      },
+    });
+
+    expect(await screen.findByText('Test Case 1')).toBeInTheDocument();
+
+    const viewDifferencesInput = document.getElementById('compare-view-differences-only');
+    expect(viewDifferencesInput).toBeTruthy();
+    await user.click(viewDifferencesInput!);
+
+    expect(await screen.findByText('Entities.NoResults')).toBeInTheDocument();
+    expect(screen.queryByText('Test Case 1')).not.toBeInTheDocument();
   });
 
   test('renders nested execution fields in display panel', async () => {
     const user = userEvent.setup();
     renderExecutionResultsTab({ showDisplayPanel: true });
 
-    await waitFor(() => {
-      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
-    });
-
-    const panel = screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
+    const panel = await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
     const expandButtons = () => within(panel).getAllByRole('button', { name: 'Expand' });
 
     await user.click(expandButtons()[1]);
@@ -278,9 +320,7 @@ describe('ExecutionResultsTab', () => {
 
     renderExecutionResultsTab({ showDisplayPanel: true, onToggleDisplayPanel });
 
-    await waitFor(() => {
-      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Buttons.Close' }));
     expect(onToggleDisplayPanel).toHaveBeenCalled();
@@ -291,17 +331,15 @@ describe('ExecutionResultsTab', () => {
 
     renderExecutionResultsTab({ showDisplayPanel: true });
 
-    await waitFor(() => {
-      expect(screen.getByText('Test Case 1')).toBeInTheDocument();
-      expect(screen.getByText('Test Case 2')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Test Case 1')).toBeInTheDocument();
+    expect(await screen.findByText('Test Case 2')).toBeInTheDocument();
 
     const viewDifferencesInput = document.getElementById('compare-view-differences-only');
     expect(viewDifferencesInput).toBeTruthy();
     await user.click(viewDifferencesInput!);
 
+    await waitFor(() => expect(screen.queryByText('Test Case 2')).not.toBeInTheDocument());
     expect(screen.getByText('Test Case 1')).toBeInTheDocument();
-    expect(screen.queryByText('Test Case 2')).not.toBeInTheDocument();
   });
 
   test('hides diff legend when row detail panel is open', async () => {
@@ -312,16 +350,15 @@ describe('ExecutionResultsTab', () => {
         testCaseName: 'Test Case 1',
         responseStatusCode: 200,
         runIndex: 0,
-        executionStatus: 'SUCCESS',
+        executionStatus: ExtractionResultStatus.SUCCESS,
         metricValues: { Accuracy: { precision: 0.5 } },
         _compared: null,
       },
     });
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
+    expect(await screen.findByRole('region', { name: 'Data grid' })).toBeInTheDocument();
 
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(screen.queryByText('Runs.RunCompareDiffLabel')).not.toBeInTheDocument();
   });
 
@@ -329,53 +366,42 @@ describe('ExecutionResultsTab', () => {
     const user = userEvent.setup();
     renderExecutionResultsTab({ showDisplayPanel: true });
 
-    await waitFor(() => {
-      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
-    });
+    const panel = await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
 
     expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();
     expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument();
 
-    const panel = screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
     await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
 
     const httpCheckbox = within(panel).getByRole('checkbox', { name: 'HTTP' });
     await user.click(httpCheckbox);
 
-    await waitFor(() => {
-      expect(document.querySelector('[col-id="http"]')).toBeInTheDocument();
-      expect(document.querySelector('[col-id="cmp_http"]')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(document.querySelector('[col-id="http"]')).toBeInTheDocument());
+    await waitFor(() => expect(document.querySelector('[col-id="cmp_http"]')).toBeInTheDocument());
   });
 
   test('hides HTTP columns in grid when HTTP group is unchecked in display panel', async () => {
     const user = userEvent.setup();
     renderExecutionResultsTab({ showDisplayPanel: true });
 
-    await waitFor(() => {
-      expect(screen.getByRole('table')).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('region', { name: 'Data grid' })).toBeInTheDocument();
+    const panel = await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
 
     expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();
     expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument();
 
-    const panel = screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
     await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
 
     const httpCheckbox = within(panel).getByRole('checkbox', { name: 'HTTP' });
     await user.click(httpCheckbox);
 
-    await waitFor(() => {
-      expect(document.querySelector('[col-id="http"]')).toBeInTheDocument();
-      expect(document.querySelector('[col-id="cmp_http"]')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(document.querySelector('[col-id="http"]')).toBeInTheDocument());
+    await waitFor(() => expect(document.querySelector('[col-id="cmp_http"]')).toBeInTheDocument());
 
     await user.click(httpCheckbox);
 
-    await waitFor(() => {
-      expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();
-      expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument();
-    });
+    await waitFor(() => expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument());
+    await waitFor(() => expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument());
   });
 
   test('calls onOpenRowDetail when a row is clicked', async () => {
@@ -383,28 +409,48 @@ describe('ExecutionResultsTab', () => {
 
     renderExecutionResultsTab({ onOpenRowDetail });
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
+    const row = (await screen.findByText('Test Case 1')).closest('.ag-row');
+    expect(row).toBeTruthy();
 
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(document.querySelector('[col-id="compare_action"]')).not.toBeInTheDocument();
-
-    let row: HTMLElement | null = null;
-    await waitFor(() => {
-      row = document.querySelector('.ag-center-cols-container .ag-row');
-      expect(row).toBeTruthy();
-      expect(row?.textContent).toContain('Test Case 1');
-    });
 
     fireEvent.click(row!);
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(onOpenRowDetail).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'result-1',
           testCaseName: 'Test Case 1',
         }),
-      );
+      ),
+    );
+  });
+
+  test('calls onOpenRowDetail with focusFieldKey when a mapped cell is clicked', async () => {
+    const onOpenRowDetail = vi.fn();
+
+    renderExecutionResultsTab({ onOpenRowDetail });
+
+    await screen.findByText('Test Case 1');
+    const statusCell = await waitFor(() => {
+      const cell = document.querySelector<HTMLElement>('.ag-center-cols-container .ag-row [col-id="status"]');
+      if (!cell) throw new Error('status cell is not rendered yet');
+      return cell;
     });
+
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+
+    fireEvent.click(statusCell);
+
+    await vi.waitFor(() =>
+      expect(onOpenRowDetail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'result-1',
+          testCaseName: 'Test Case 1',
+        }),
+        { focusFieldKey: 'executionStatus' },
+      ),
+    );
   });
 });

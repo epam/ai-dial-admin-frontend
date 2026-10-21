@@ -7,4 +7,10 @@ export const RUN_FILTER = (testSuiteId: string): FilterDto => ({
   value: testSuiteId,
 });
 
+export const RUN_ID_FILTER = (runId: string): FilterDto => ({
+  column: 'id',
+  operator: FilterOperatorDto.EQUALS,
+  value: runId,
+});
+
 export const VALID_FILTERS = [{ column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' }];

@@ -2,7 +2,7 @@ import { FC, useCallback } from 'react';
 
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { PromptPublication } from '@/src/models/dial/publications';
-import { updatePathWithNameAndVersion } from '@/src/utils/files/path';
+import { updatePathWithName } from '@/src/utils/files/path';
 import PromptDetails from './PromptDetails';
 
 interface Props {
@@ -13,7 +13,8 @@ interface Props {
 const PromptsList: FC<Props> = ({ publication, onChange }) => {
   const onChangePrompt = useCallback(
     (updatedPrompt: DialPrompt, index: number) => {
-      const path = updatePathWithNameAndVersion(updatedPrompt.path, updatedPrompt.name || '', updatedPrompt.version);
+      // A prompt's path is folder + plain name — no `__version` suffix to rebuild.
+      const path = updatePathWithName(updatedPrompt.path, updatedPrompt.name || '');
       const updatedPrompts = [...(publication.prompts || [])];
       updatedPrompts[index] = { ...updatedPrompts[index], prompt: { ...updatedPrompt, path } };
       onChange?.({ ...publication, prompts: updatedPrompts });

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import { getSkillManifest, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/assets-skills/actions';
+import { getSkillManifest, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/skills/actions';
 import { updatePublication } from '@/src/app/actions/publications';
 import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -34,6 +34,7 @@ import {
 } from '@/src/models/dial/publications';
 import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -325,7 +326,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
             (correctedPublication as unknown as FilePublication).files?.length === 0);
 
         if (shouldRedirectToListView) {
-          router.push(view);
+          router.push(ApplicationRoute.Publications);
         } else {
           showNotification(
             getSuccessNotification(
@@ -398,7 +399,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
               oAuthCode={oAuthCode}
               publicationName={publication.requestName}
               publicationPath={publication.path}
-              view={ApplicationRoute.ToolsetPublications}
+              view={ApplicationRoute.Publications}
+              publicationType={ResourceType.TOOLSET}
               signInToolset={signInToolset}
               signOutToolset={signOutToolset}
             />

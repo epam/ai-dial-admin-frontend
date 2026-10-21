@@ -1,3 +1,4 @@
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import {
@@ -15,17 +16,21 @@ interface Props {
   curlSnippet: string;
   restEndpointSnippet: string;
   formatNotes: ConnectFormatNote[];
+  requiredColumns: string[];
   isBaseUrlPlaceholder: boolean;
   writeRoles: string[];
   isRolesLoading: boolean;
   isAccessReadable: boolean;
 }
 
+const LOADER_SIZE = 18;
+
 const FORMAT_RULE_KEY: Record<ConnectFormatRule, AnalyticsTablesI18nKey> = {
   [ConnectFormatRule.Timestamp]: AnalyticsTablesI18nKey.ConnectFormatTimestamp,
   [ConnectFormatRule.Date]: AnalyticsTablesI18nKey.ConnectFormatDate,
   [ConnectFormatRule.Decimal]: AnalyticsTablesI18nKey.ConnectFormatDecimal,
   [ConnectFormatRule.Array]: AnalyticsTablesI18nKey.ConnectFormatArray,
+  [ConnectFormatRule.Map]: AnalyticsTablesI18nKey.ConnectFormatMap,
 };
 
 const ConnectWriteTab: FC<Props> = ({
@@ -33,6 +38,7 @@ const ConnectWriteTab: FC<Props> = ({
   curlSnippet,
   restEndpointSnippet,
   formatNotes,
+  requiredColumns,
   isBaseUrlPlaceholder,
   writeRoles,
   isRolesLoading,
@@ -45,7 +51,7 @@ const ConnectWriteTab: FC<Props> = ({
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectWhoCanWrite)}</h4>
         {isRolesLoading && (
-          <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectRolesLoading)}</p>
+          <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(AnalyticsTablesI18nKey.ConnectRolesLoading)} />
         )}
         {!isRolesLoading && isAccessReadable && writeRoles.length > 0 && (
           <>
@@ -104,8 +110,13 @@ const ConnectWriteTab: FC<Props> = ({
           <li className="dial-tiny-text text-secondary border-l-2 border-tertiary pl-3">
             {t(AnalyticsTablesI18nKey.ConnectUnknownColumn)}
           </li>
+          {requiredColumns.length > 0 && (
+            <li className="dial-tiny-text text-secondary border-l-2 border-tertiary pl-3">
+              {t(AnalyticsTablesI18nKey.ConnectRequiredColumns, { columns: requiredColumns.join(', ') })}
+            </li>
+          )}
           <li className="dial-tiny-text text-secondary border-l-2 border-tertiary pl-3">
-            {t(AnalyticsTablesI18nKey.ConnectNotAuthorized)}
+            {t(AnalyticsTablesI18nKey.ConnectForbidden)}
           </li>
         </ul>
       </section>

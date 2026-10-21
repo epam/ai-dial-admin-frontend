@@ -34,7 +34,7 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = Sel
       onChange={(id) => {
         onChange?.(id as string);
       }}
-      footer={
+      header={
         onClick && (
           <DialGhostButton
             className="rounded-none"

@@ -257,50 +257,14 @@ export async function updateGlobalWhitelist(domainList: string[]) {
   return whitelistApi.updateGlobalWhitelist(domainList, token);
 }
 
-export async function getContainerMcpServers(params: {
-  search?: string;
-  cursor?: string;
-  limit?: number;
-  minResults?: number;
-}) {
+export async function getContainerMcpServers(params: { search?: string; cursor?: string; limit?: number }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const { minResults, ...requestParams } = params;
 
-  if (!minResults) {
-    return mcpRegistryApi.getContainerMcpServers(requestParams, token);
-  }
-
-  const allServers: unknown[] = [];
-  let cursor = params.cursor;
-
-  while (allServers.length < minResults) {
-    const result = await mcpRegistryApi.getContainerMcpServers({ ...requestParams, cursor }, token);
-    if (!result.success) return result;
-
-    const servers = result.response?.servers ?? [];
-    allServers.push(...servers);
-
-    cursor = result.response?.metadata?.nextCursor;
-    if (!cursor) break;
-  }
-
-  return {
-    success: true,
-    response: {
-      servers: allServers,
-      metadata: { nextCursor: cursor },
-    },
-  };
+  return mcpRegistryApi.getContainerMcpServers(params, token);
 }
 
-export async function getImageMcpServers(params: {
-  search?: string;
-  cursor?: string;
-  limit?: number;
-  minResults?: number;
-}) {
+export async function getImageMcpServers(params: { search?: string; cursor?: string; limit?: number }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const { minResults, ...requestParams } = params;
 
   const fetchMerged = async (fetchParams: { search?: string; cursor?: string; limit?: number }) => {
     const [repoResult, ociResult] = await Promise.all([
@@ -329,67 +293,13 @@ export async function getImageMcpServers(params: {
     return { success: true as const, response: { servers: merged, metadata: { nextCursor } } };
   };
 
-  if (!minResults) {
-    return fetchMerged(requestParams);
-  }
-
-  const allServers: unknown[] = [];
-  let cursor = params.cursor;
-
-  while (allServers.length < minResults) {
-    const result = await fetchMerged({ ...requestParams, cursor });
-    if (!result.success) return result;
-
-    const servers = result.response?.servers ?? [];
-    allServers.push(...servers);
-
-    cursor = result.response?.metadata?.nextCursor;
-    if (!cursor) break;
-  }
-
-  return {
-    success: true,
-    response: {
-      servers: allServers,
-      metadata: { nextCursor: cursor },
-    },
-  };
+  return fetchMerged(params);
 }
 
-export async function getToolsetMcpServers(params: {
-  search?: string;
-  cursor?: string;
-  limit?: number;
-  minResults?: number;
-}) {
+export async function getToolsetMcpServers(params: { search?: string; cursor?: string; limit?: number }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const { minResults, ...requestParams } = params;
 
-  if (!minResults) {
-    return mcpRegistryApi.getToolsetMcpServers(requestParams, token);
-  }
-
-  const allServers: unknown[] = [];
-  let cursor = params.cursor;
-
-  while (allServers.length < minResults) {
-    const result = await mcpRegistryApi.getToolsetMcpServers({ ...requestParams, cursor }, token);
-    if (!result.success) return result;
-
-    const servers = result.response?.servers ?? [];
-    allServers.push(...servers);
-
-    cursor = result.response?.metadata?.nextCursor;
-    if (!cursor) break;
-  }
-
-  return {
-    success: true,
-    response: {
-      servers: allServers,
-      metadata: { nextCursor: cursor },
-    },
-  };
+  return mcpRegistryApi.getToolsetMcpServers(params, token);
 }
 
 export async function getMcpServerVersion(serverName: string, version: string) {

@@ -1,66 +1,127 @@
-import { describe, test, expect } from 'vitest';
-import { getMultipliedValue, getPriceRealValue } from '../utils';
+import { describe, expect, test } from 'vitest';
 
-describe('getMultipliedValue', () => {
-  test('should multiply the value by 1,000,000 and round to 6 decimal places when isTokenType is true', () => {
-    expect(getMultipliedValue('0.0000008', true)).toBe('0.8');
-    expect(getMultipliedValue('0.00000009', true)).toBe('0.09');
-    expect(getMultipliedValue('0.000000009', true)).toBe('0.009');
-    expect(getMultipliedValue('0.0000000008', true)).toBe('0.0008');
-    expect(getMultipliedValue('0.000001', true)).toBe('1');
+import { ModelViewI18nKey } from '@/src/constants/i18n';
+import { PricingOperator, PricingRate } from '@/src/models/dial/model';
+
+import { formatPricingRate, getMultipliedRate, getRealRate } from '../utils';
+
+const t = (key: string) => key;
+
+const flatRate = '0.000003';
+
+const oneLevelTree: PricingRate = {
+  test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+  ifTrue: '0.000006',
+  ifFalse: '0.00000375',
+};
+
+const nestedTree: PricingRate = {
+  test: { field: 'cachedReadTokens', operator: PricingOperator.GT, value: '1024' },
+  ifTrue: {
+    test: { field: 'promptTokens', operator: PricingOperator.LT, value: '2048' },
+    ifTrue: '0.000006',
+    ifFalse: '0.000004',
+  },
+  ifFalse: '0.00000375',
+};
+
+describe('getMultipliedRate', () => {
+  test('multiplies a flat rate per million under the token unit', () => {
+    expect(getMultipliedRate(flatRate, true)).toEqual('3');
   });
 
-  test('should return the same value when isTokenType is false', () => {
-    expect(getMultipliedValue('0.0000008', false)).toBe('0.0000008');
-    expect(getMultipliedValue('100', false)).toBe('100');
-    expect(getMultipliedValue('hello', false)).toBe('hello');
+  test('leaves a flat rate unscaled outside the token unit', () => {
+    expect(getMultipliedRate(flatRate, false)).toEqual('0.000003');
   });
 
-  test('should return an empty string when the value is undefined and isTokenType is true', () => {
-    expect(getMultipliedValue(undefined, true)).toBe('');
+  test('multiplies every leaf of a one-level tree', () => {
+    expect(getMultipliedRate(oneLevelTree, true)).toEqual({
+      test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+      ifTrue: '6',
+      ifFalse: '3.75',
+    });
   });
 
-  test('should return an empty string when the value is undefined and isTokenType is false', () => {
-    expect(getMultipliedValue(undefined, false)).toBe('');
+  test('multiplies every leaf of a nested tree', () => {
+    expect(getMultipliedRate(nestedTree, true)).toEqual({
+      test: { field: 'cachedReadTokens', operator: PricingOperator.GT, value: '1024' },
+      ifTrue: {
+        test: { field: 'promptTokens', operator: PricingOperator.LT, value: '2048' },
+        ifTrue: '6',
+        ifFalse: '4',
+      },
+      ifFalse: '3.75',
+    });
   });
 
-  test('should return an empty string when the value is an empty string and isTokenType is true', () => {
-    expect(getMultipliedValue('', true)).toBe('');
+  test('keeps an empty leaf as an empty string so the input renders empty', () => {
+    expect(getMultipliedRate({ test: oneLevelTree.test, ifTrue: '0.000006', ifFalse: '' }, true)).toEqual({
+      test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+      ifTrue: '6',
+      ifFalse: '',
+    });
   });
 
-  test('should return an empty string when the value is an empty string and isTokenType is false', () => {
-    expect(getMultipliedValue('', false)).toBe('');
-  });
-
-  test('should handle invalid number values gracefully', () => {
-    expect(getMultipliedValue('invalid', true)).toBe('NaN');
-    expect(getMultipliedValue('invalid', false)).toBe('invalid');
+  test('returns undefined for an undefined rate', () => {
+    expect(getMultipliedRate(undefined, true)).toBeUndefined();
   });
 });
 
-describe('getPriceRealValue', () => {
-  test('should divide by 1000000 when isTokenType is true', () => {
-    expect(getPriceRealValue(2000000, true)).toBe('2');
-    expect(getPriceRealValue('3000000', true)).toBe('3');
+describe('getRealRate', () => {
+  test('divides a flat rate back to per token', () => {
+    expect(getRealRate('3', true)).toEqual('0.000003');
   });
 
-  test('should return value as string when isTokenType is false', () => {
-    expect(getPriceRealValue(42, false)).toBe('42');
-    expect(getPriceRealValue('42', false)).toBe('42');
+  test('round-trips a flat rate through display and back', () => {
+    expect(getRealRate(getMultipliedRate(flatRate, true), true)).toEqual(flatRate);
   });
 
-  test('should return "0" when value is 0', () => {
-    expect(getPriceRealValue(0, true)).toBe('0');
-    expect(getPriceRealValue(0, false)).toBe('0');
+  test('round-trips a nested tree through display and back', () => {
+    expect(getRealRate(getMultipliedRate(nestedTree, true), true)).toEqual(nestedTree);
   });
 
-  test('should return undefined when value is undefined', () => {
-    expect(getPriceRealValue(undefined, true)).toBeUndefined();
-    expect(getPriceRealValue(undefined, false)).toBeUndefined();
+  test('preserves an explicit zero leaf as zero', () => {
+    expect(getRealRate({ test: oneLevelTree.test, ifTrue: '0', ifFalse: '3' }, true)).toEqual({
+      test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+      ifTrue: '0',
+      ifFalse: '0.000003',
+    });
   });
 
-  test('should return undefined when value is null', () => {
-    expect(getPriceRealValue(null as any, true)).toBeUndefined();
-    expect(getPriceRealValue(null as any, false)).toBeUndefined();
+  test('omits a branch left empty so it is not persisted', () => {
+    expect(getRealRate({ test: oneLevelTree.test, ifTrue: '6', ifFalse: '' }, true)).toEqual({
+      test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+      ifTrue: '0.000006',
+    });
+  });
+
+  test('returns undefined for an empty flat rate', () => {
+    expect(getRealRate('', true)).toBeUndefined();
+  });
+});
+
+describe('formatPricingRate', () => {
+  test('formats a flat rate scaled per million', () => {
+    expect(formatPricingRate('0.000006', true, t)).toEqual('6');
+  });
+
+  test('formats a one-level tree as a conditional expression', () => {
+    expect(formatPricingRate(oneLevelTree, true, t)).toEqual('ttl == 1h ? 6 : 3.75');
+  });
+
+  test('parenthesises a nested branch', () => {
+    expect(formatPricingRate(nestedTree, true, t)).toEqual(
+      'cachedReadTokens > 1024 ? (promptTokens < 2048 ? 6 : 4) : 3.75',
+    );
+  });
+
+  test('shows the prompt-rate fallback for an omitted branch', () => {
+    expect(formatPricingRate({ test: oneLevelTree.test, ifTrue: '0.000006' }, true, t)).toEqual(
+      `ttl == 1h ? 6 : ${t(ModelViewI18nKey.PromptRate)}`,
+    );
+  });
+
+  test('returns an empty string for an undefined rate', () => {
+    expect(formatPricingRate(undefined, true, t)).toEqual('');
   });
 });

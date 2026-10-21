@@ -3,6 +3,8 @@
  * For routes with dynamic segments or query params, append them when building the URL.
  */
 export enum ApiRoute {
+  AnalyticsQuery = '/api/analytics/query',
+  AnalyticsQueryCsv = '/api/analytics/query/export-csv',
   AuthSignin = '/api/auth/signin',
   Events = '/api/events',
   FilesDownload = '/api/files/download',

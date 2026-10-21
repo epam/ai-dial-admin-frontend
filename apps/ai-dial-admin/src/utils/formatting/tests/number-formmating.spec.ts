@@ -1,4 +1,8 @@
-import { formatNumberWithExponent, formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
+import {
+  formatNumberWithExponent,
+  formatNumberByDelimiter,
+  formatSignificantNumber,
+} from '@/src/utils/formatting/number-formatting';
 import { describe, expect, test, vi } from 'vitest';
 
 describe('Utils :: formatting :: formatNumber', () => {
@@ -70,5 +74,19 @@ describe('Utils ::formatting :: formatNumberByDelimiter', () => {
   test('Should return formatted string', () => {
     const result = formatNumberByDelimiter('rherger');
     expect(result).toBe('');
+  });
+});
+
+describe('Utils :: formatting :: formatSignificantNumber', () => {
+  test.each([
+    [0, '0'],
+    [0.0004792, '0.00048'],
+    [19.74, '19.7'],
+    [4897666958, '4.9 B'],
+    [-0.0004792, '-0.00048'],
+    ['abc', ''],
+    ['', ''],
+  ])('Should format %p as %p', (value, expected) => {
+    expect(formatSignificantNumber(value)).toBe(expected);
   });
 });

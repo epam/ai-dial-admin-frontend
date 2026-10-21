@@ -1,19 +1,36 @@
 import {
+  CoreResourceEntityMetadata,
+  CoreValidationWarning,
   DialAppRunnerResource,
+  DialCatalogSchemaResource,
   DialApplicationResource,
+  DialInterceptorResource,
+  DialKeyResource,
   DialModelResource,
+  DialModelResourceStatus,
+  DialRoleResource,
+  DialRouteResource,
   DialToolsetResource,
+  DialTranslatorResource,
 } from '@/src/models/dial/resource';
+import { BucketType } from '@/src/models/dial/asset-list-item';
 import { DialConversation } from '@/src/models/dial/conversation';
-import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { fromCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
-import { fromCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { fromCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
+import { normalizeRoleLimits } from '@/src/utils/roles/limits';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
-import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
-import { parseEncodedFlatPath, parseEncodedVersionedPath, VersionedPathParts } from '@/src/server/publications/path';
+import { FOLDER_NESTED_VERSIONLESS_TYPES, VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
+import {
+  decodeCorePath,
+  parseEncodedFlatPath,
+  parseEncodedFolderPath,
+  parseEncodedVersionedPath,
+  stripPrefix,
+  VersionedPathParts,
+} from '@/src/server/publications/path';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 /**
  * DIAL Core's generic resource metadata node (`GET /v1/metadata/{type}/{path}`).
@@ -56,27 +73,52 @@ export interface ResourceInfo {
    * their delete has no content GET to source an etag from (see `skill-resources-core-api`).
    */
   etag?: string;
+  /** Mapped straight from the metadata node's own `bucket` — see `asset-list-item.ts`. */
+  bucket: BucketType;
 }
+
+/** Core's two schema resource kinds: stored under a percent-encoded JSON-Schema `$id`, body kept verbatim. */
+const SCHEMA_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set([
+  ResourceType.APP_TYPE_SCHEMA,
+  ResourceType.CATALOG_SCHEMA,
+]);
 
 export const isVersioned = (type: ResourceType): boolean => (VERSIONED_RESOURCE_TYPES as ResourceType[]).includes(type);
 
+/** Versionless but folder-nested (prompt, conversation): folder-path parse, never a `__` split. */
+export const isFolderNestedVersionless = (type: ResourceType): boolean => FOLDER_NESTED_VERSIONLESS_TYPES.has(type);
+
 const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType): ResourceInfo => {
   const prefix = RESOURCE_TYPE_PREFIX[type];
-  const { path, folderId, name, version }: VersionedPathParts = isVersioned(type)
-    ? parseEncodedVersionedPath(metadata.url, prefix)
-    : { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
+  let parts: VersionedPathParts;
+  if (isVersioned(type)) {
+    parts = parseEncodedVersionedPath(metadata.url, prefix);
+  } else if (isFolderNestedVersionless(type) || type === ResourceType.SKILL) {
+    // Prompt/conversation/skill: folder + plain name, never a `__` split. A genuine FOLDER row
+    // re-adds the trailing slash `parsePath` strips — the one implementation of that convention,
+    // matching every versioned type's folder rows — since generic path-matching code downstream
+    // (`mergeFiles`, per-path fetches) relies on it.
+    const folderParts = parseEncodedFolderPath(metadata.url, prefix);
+    parts = {
+      ...folderParts,
+      path: metadata.nodeType === 'FOLDER' ? `${folderParts.path}/` : folderParts.path,
+    };
+  } else {
+    parts = { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
+  }
   return {
-    // An app runner's resource name is its percent-encoded `$id`; rows show the `$id` while `path`
-    // stays encoded, since that is what the CRUD calls address.
-    name: type === ResourceType.APP_TYPE_SCHEMA ? fromCoreRunnerName(name) : name,
-    folderId,
-    path,
-    version,
+    // Schema metadata contains only the resource storage name, not the declared `$id` in the schema
+    // body. Decode it for list display while retaining the encoded `path` for CRUD calls.
+    name: SCHEMA_RESOURCE_TYPES.has(type) ? fromCoreSchemaResourceName(parts.name) : parts.name,
+    folderId: parts.folderId,
+    path: parts.path,
+    version: parts.version,
     author: metadata.author,
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
     nodeType: metadata.nodeType.toLowerCase() as DialFileNodeType,
     etag: metadata.etag,
+    bucket: metadata.bucket as BucketType,
   };
 };
 
@@ -88,42 +130,160 @@ export const toResourceInfoList = (node: CoreResourceMetadataNode | null, type: 
   return node.items.map((item) => toResourceInfo(item, type));
 };
 
-const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+/**
+ * Resolves one `_metadata` timestamp: the metadata node's value wins; where it omits one, the
+ * content response's own inline field backs it up — Core's `ApplicationService`/`ToolSetService`
+ * graft the blob metadata into public-bucket content GETs at serve time (`created_at`/`updated_at`
+ * via their `@JsonNaming(SnakeCaseStrategy)`), and a `Deployment`-based blob (model, interceptor)
+ * can carry the camelCase pair. Both spellings are checked so one fallback covers every serve
+ * path; the winner is stringified per the merge formatters' epoch-milliseconds convention.
+ */
+const graftedTimestamp = (
+  metadataValue: number | undefined,
+  content: Record<string, unknown>,
+  contentKeys: readonly (keyof Record<string, unknown>)[],
+): string | undefined => {
+  if (metadataValue !== undefined) {
+    return String(metadataValue);
+  }
+  for (const key of contentKeys) {
+    const value = content[key];
+    if (typeof value === 'number' || typeof value === 'string') {
+      return String(value);
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Splits Core's read-only validity projections (`status`/`validationWarnings`, served by
+ * `ConfigResourceController` on invalid reads) off the content object so they relocate into
+ * `_metadata` rather than staying flat on the entity. Types Core serves without them (every
+ * `ResourceController`-served read) leave no keys behind in either half.
+ */
+const splitValidityFields = (content: Record<string, unknown>) => {
+  const { status, validationWarnings, ...rest } = content;
+  const validity = {
+    ...(status !== undefined && { status: status as DialModelResourceStatus }),
+    ...(validationWarnings !== undefined && {
+      validationWarnings: validationWarnings as CoreValidationWarning[],
+    }),
+  };
+  return { content: rest, validity };
+};
+
+const metadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
   const { path, folderId, name, version } = parseEncodedVersionedPath(metadata.url, prefix);
   return {
     name,
     folderId,
     path,
     version: version ?? '',
-    author: metadata.author ?? '',
-    updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
-  };
-};
-
-const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
-  const { path, folderId, name } = parseEncodedFlatPath(metadata.url, prefix);
-  return {
-    name,
-    path,
-    folderId,
-    author: metadata.author ?? '',
-    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
-    updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
   };
 };
 
 /**
+ * Versionless folder-nested counterpart of `metadataFields` (prompt, conversation): same metadata
+ * sourcing, but the path parses as folder + plain name — a `__` in the name stays part of the name
+ * and no `version` is grafted.
+ */
+const folderMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
+  const { path, folderId, name } = parseEncodedFolderPath(metadata.url, prefix);
+  return {
+    name,
+    folderId,
+    path,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
+  };
+};
+
+/**
+ * `parseEncodedFlatPath`'s own `folderId` is always `''` (flat resources have no folder concept), which
+ * is correct for platform-only flat entities (models, roles, routes, interceptors, keys, schemas —
+ * see `DuplicatePlatformKeyModal.tsx`'s comment for why `''` matters there). The dual-bucket platform
+ * branch (see `dualBucketMetadataFields`) is the one exception: it needs `folderId: 'platform/'` so
+ * `isPlatformBucketPath(asset._metadata.folderId)` works on a freshly-fetched resource, matching what
+ * the write path already sets on create/update — hence the explicit `isDualBucketPlatform` flag rather
+ * than inferring it from `prefix`, which flat platform-only prefixes (`MODELS_PREFIX` et al.) already bake
+ * their fixed `platform/` segment into and would otherwise match too.
+ *
+ * The same flag governs `path`: a genuinely flat platform-only entity has `path === name` by design
+ * (no bucket to qualify against — `getEntityPath`'s flat-platform branch relies on this). A dual-bucket
+ * platform resource's `path` must instead be bucket-qualified (`platform/{name}`), matching the shape
+ * `metadataFields` already gives a public-bucket resource's `path` — every downstream consumer
+ * (delete, discovered-tools, sign-in/out) trusts `_metadata.path` as the complete, Core-addressable
+ * path, and a bare name resolves to no bucket at all (`ResourceDescriptorFactory.fromAnyUrl` in
+ * `ai-dial-core` requires `{type}/{bucket}/{path}`).
+ */
+const flatMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+  isDualBucketPlatform = false,
+): CoreResourceEntityMetadata => {
+  const { path, folderId, name } = parseEncodedFlatPath(metadata.url, prefix);
+  return {
+    name,
+    path: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/${name}` : path,
+    folderId: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/` : folderId,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
+  };
+};
+
+/**
+ * Applications and toolsets are dual-bucket (see `DUAL_BUCKET_VIEWS`): `public/…` is hierarchical
+ * and versioned, `platform/…` is flat like the other platform-only entities. Which bucket a given
+ * resource lives in is a property of its own metadata `url`, not its `ResourceType` — the same type
+ * serves both — so it's read off the URL here rather than threaded through as a caller flag. The
+ * `platform` segment is folded into the prefix for the flat case (matching how `MODELS_PREFIX` et al.
+ * already bake their fixed bucket segment in), so `name` parses correctly.
+ */
+const dualBucketMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
+  const remainder = decodeCorePath(stripPrefix(metadata.url, prefix));
+  if (isPlatformBucketPath(remainder)) {
+    return flatMetadataFields(metadata, `${prefix}${PLATFORM_ROOT_FOLDER}/`, content, true);
+  }
+  return metadataFields(metadata, prefix, content);
+};
+
+/**
  * Merges a Core content DTO with its Core metadata node into the frontend model shape,
- * matching the backend's `*ClientMapper` field split: name/folderId/version/author/updatedAt
- * come from metadata, everything else comes from content.
+ * matching the backend's `*ClientMapper` field split: the identity/audit grafts
+ * (name/folderId/path/version/author/createdAt/updatedAt) nest under `_metadata`, everything
+ * else comes from content untouched.
  */
 export const mergeApplicationResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialApplicationResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION], content);
   return {
-    ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]),
+    ...rest,
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
   } as DialApplicationResource;
 };
 
@@ -131,9 +291,16 @@ export const mergeToolsetResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialToolsetResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET], content);
+
   return {
-    ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]),
+    ...rest,
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
   } as DialToolsetResource;
 };
 
@@ -141,17 +308,34 @@ export const mergeConversation = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialConversation => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]),
+    ...rest,
+    _metadata: {
+      ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION], content),
+      ...validity,
+    },
   } as DialConversation;
 };
 
 export const mergePrompt = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode): DialPrompt => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT], content);
   return {
-    ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]),
-    nodeType: DialFileNodeType.ITEM,
+    ...rest,
+    // `DialFile.path` is required, and prompt content never carries `path`/`folderId` of its own —
+    // this fills a type-required gap, not an overwrite of a served content field (contrast the
+    // dual-bucket application/toolset `name` exception in `mergeApplicationResource`/
+    // `mergeToolsetResource`, where a content field genuinely gets overridden).
+    path: correctMetadata.path,
+    folderId: correctMetadata.folderId,
+    _metadata: {
+      ...correctMetadata,
+      // The prompt detail entity's own row-marker identity — Core serves prompts through the
+      // folder-tree shape, where `ITEM` vs `FOLDER` drives the tree/list distinction.
+      nodeType: DialFileNodeType.ITEM,
+      ...validity,
+    },
   } as DialPrompt;
 };
 
@@ -165,32 +349,285 @@ export const mergeModelResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialModelResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.MODEL]),
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.MODEL], content),
+      // Core's model GET injects `status`/`validationWarnings` as read-only projections — the
+      // one flat type whose validity fields every read carries (valid or invalid).
+      ...validity,
+    },
   } as DialModelResource;
 };
 
 /**
- * App runners are flat and unversioned like models, and additionally carry two conversions no other
- * type needs: the resource name is a percent-encoded `$id` (recovered here, since `$id` is the
- * runner's identity everywhere in the UI), and Core's `dial:applicationTypeRoutes` is a name-keyed
- * object that the route editors consume as an array.
+ * App runners are flat and unversioned like models. The resource storage name and body `$id` are
+ * independent: Core addresses the blob by the former and resolves runners by the latter.
  */
 export const mergeAppRunnerResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialAppRunnerResource => {
-  const { name, ...fields } = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]);
-  const routes = fromCoreAppRoutes(content['dial:applicationTypeRoutes'] as CoreAppRunnerRoutes | undefined);
+  const { content: rest, validity } = splitValidityFields(content);
+  const _metadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA], content);
+  const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
   return {
-    ...content,
-    ...fields,
-    name,
-    $id: fromCoreRunnerName(name),
-    ...(routes && { 'dial:applicationTypeRoutes': routes }),
+    ...rest,
+    _metadata: { ..._metadata, ...validity },
+    $id: declaredId ?? fromCoreSchemaResourceName(_metadata.name),
   } as DialAppRunnerResource;
 };
+
+/**
+ * Same `$id`-as-resource-name identity as an app runner, without its route conversion — but the
+ * stored body's own `$id` wins where it declares one.
+ *
+ * A schema this console created stores the two identically by construction. One created elsewhere
+ * can live under any legal blob name, because Core keys its merged configuration by `$id` and never
+ * compares the two; overwriting `$id` with the decoded name would then show the wrong identity and
+ * turn the next save into an `$id` change, which Core rejects with a conflict.
+ */
+export const mergeCatalogSchemaResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialCatalogSchemaResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const _metadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA], content);
+  const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
+  return {
+    ...rest,
+    _metadata: { ..._metadata, ...validity },
+    $id: declaredId ?? fromCoreSchemaResourceName(_metadata.name),
+  } as DialCatalogSchemaResource;
+};
+
+/**
+ * Interceptors are flat and unversioned like models — merged via `flatMetadataFields` for the same
+ * reason `mergeModelResource` is: the metadata `url`'s remainder after stripping
+ * `interceptors/platform/` is a bare name with no `/` separator to split into folderId + name.
+ */
+export const mergeInterceptorResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialInterceptorResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  return {
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR], content),
+      ...validity,
+    },
+  } as DialInterceptorResource;
+};
+
+/**
+ * Translators are flat and unversioned like interceptors — merged via `flatMetadataFields` for the
+ * same reason: the metadata `url`'s remainder after stripping `translators/platform/` is a bare name
+ * with no `/` separator to split into folderId + name. `Translator` is a plain POJO on Core (no
+ * `Deployment`/`RoleBasedEntity` base), so — unlike every other flat-platform merger — there is no
+ * additional content field this merger needs to normalize.
+ */
+export const mergeTranslatorResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialTranslatorResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  return {
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR], content),
+      ...validity,
+    },
+  } as DialTranslatorResource;
+};
+
+/**
+ * Routes are flat and unversioned like models and interceptors — merged via `flatMetadataFields` for
+ * the same reason: the metadata `url`'s remainder after stripping `routes/platform/` is a bare name
+ * with no `/` separator to split into folderId + name.
+ */
+export const mergeRouteResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialRouteResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTE], content);
+  return {
+    ...rest,
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
+  } as DialRouteResource;
+};
+
+/**
+ * Roles are flat and unversioned like models, interceptors, and routes — merged via
+ * `flatMetadataFields` for the same reason: the metadata `url`'s remainder after stripping
+ * `roles/platform/` is a bare name with no `/` separator to split into folderId + name.
+ *
+ * `costLimit`/`limits` are additionally normalized through `normalizeRoleLimits` here — Core's
+ * `Limit`/`CostLimit` fields have no `@JsonFormat(shape=STRING)`, so a within-range token arrives as
+ * a plain JSON number. An out-of-range one (e.g. the `Long.MAX_VALUE` "unlimited" sentinel, 19
+ * digits — far past `Number.MAX_SAFE_INTEGER`) is dropped rather than kept as the lossily-rounded
+ * number `JSON.parse` produces for it: Core's own field default already means "unlimited" once a
+ * token is missing, and a role write is always a full replace (see `normalizeRoleLimits`'s doc
+ * comment), so omitting it here is exactly equivalent to the sentinel, with no precision to lose.
+ */
+export const mergeRoleResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialRoleResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const { costLimit, limits, ...remaining } = rest as {
+    costLimit?: Record<string, unknown>;
+    limits?: Record<string, Record<string, unknown>>;
+  };
+  return {
+    ...remaining,
+    ...(costLimit !== undefined && { costLimit: normalizeRoleLimits(costLimit) }),
+    ...(limits !== undefined && {
+      limits: Object.fromEntries(
+        Object.entries(limits || {}).map(([name, roleLimits]) => [name, normalizeRoleLimits(roleLimits)]),
+      ),
+    }),
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROLE], content),
+      ...validity,
+    },
+  } as DialRoleResource;
+};
+
+/**
+ * Project keys are flat and unversioned like roles and routes — merged via `flatMetadataFields`
+ * for the same reason: the metadata `url`'s remainder after stripping `keys/platform/` is a bare
+ * name with no `/` separator to split into folderId + name.
+ *
+ * `allowedIpAddressRanges` is normalized here because Core's wire shape is asymmetric: the field
+ * deserializes from a JSON array of CIDR strings but serializes (via the default MAPPER, which has
+ * no custom serializer for `IpAddressRanges`) as the bean form `{"ranges":[…]}` with base64 byte
+ * arrays, or `null` when no restriction is configured. The frontend edits `string[]`, so:
+ *   - `null` / absent            → `undefined` (ALLOW_ALL — "no restriction")
+ *   - `{"ranges":[]}` (empty)    → `[]`        (BLOCK_ALL — "deny all"), preserved so a saved
+ *                                                  block-all survives a reload instead of silently
+ *                                                  reverting to allow-all
+ *   - `{"ranges":[…]}` populated → `["ip/prefix", …]` reconstructed from each range's base64
+ *                                                  `mask`/`maskedBaseIp` byte arrays (see
+ *                                                  `cidrFromRange`) — so a saved real range
+ *                                                  round-trips instead of degrading to allow-all
+ *   - a real `string[]`          → kept as-is (defensive: a future Core serializer would emit it)
+ * `undefined` (not `null`) is used for ALLOW_ALL so `isEqualSkippingUndefined` treats it as absent
+ * and the Save/Discard buttons clear on a clean round-trip.
+ */
+export const mergeKeyResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialKeyResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const { allowedIpAddressRanges, ...remaining } = rest as {
+    allowedIpAddressRanges?: string[] | { ranges?: IpRangeBean[] } | null;
+  };
+  const normalizedRanges = normalizeIpRanges(allowedIpAddressRanges);
+  const correctMetadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY], content);
+  return {
+    ...remaining,
+    ...(normalizedRanges !== undefined && { allowedIpAddressRanges: normalizedRanges }),
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
+  } as DialKeyResource;
+};
+
+/** Core's `IpAddressRange` bean as it appears on the wire: base64-encoded `mask`/`maskedBaseIp`. */
+interface IpRangeBean {
+  mask?: string;
+  maskedBaseIp?: string;
+}
+
+/**
+ * Maps Core's `allowedIpAddressRanges` wire shape to the `string[] | undefined` the frontend edits.
+ * See `mergeKeyResource` for the full asymmetry rationale.
+ */
+function normalizeIpRanges(value: string[] | { ranges?: IpRangeBean[] } | null | undefined): string[] | undefined {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (value && typeof value === 'object' && Array.isArray(value.ranges)) {
+    // An empty `ranges` array is BLOCK_ALL ("deny all") and must survive a reload. A populated one
+    // is the byte-array bean form; reconstruct each CIDR and drop any that fail to decode. If every
+    // range failed (so the result is empty but the source wasn't), treat as ALLOW_ALL rather than
+    // silently converting an unreadable restriction into "deny all".
+    if (value.ranges.length === 0) {
+      return [];
+    }
+    const decoded = value.ranges.map(cidrFromRange).filter(Boolean) as string[];
+    return decoded.length > 0 ? decoded : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Reconstructs a CIDR string (`ip/prefix`) from one Core `IpAddressRange` bean. Core stores only the
+ * masked base IP and the bitmask (as base64 byte arrays), so the CIDR is `<maskedBaseIp>/<prefixLen>`
+ * where `prefixLen` is the count of leading 1-bits in `mask`. Non-canonical inputs (host bits set,
+ * non-contiguous masks) normalize to the network address the range actually matches — the same
+ * address Core's deserializer stored — so a round-trip is stable. Returns `undefined` for a range
+ * that can't be decoded (malformed base64 / missing bytes) so the caller drops it.
+ */
+function cidrFromRange(range: IpRangeBean): string | undefined {
+  const maskBytes = decodeBase64Bytes(range?.mask);
+  const ipBytes = decodeBase64Bytes(range?.maskedBaseIp);
+  if (!maskBytes || !ipBytes || maskBytes.length !== ipBytes.length) {
+    return undefined;
+  }
+  let prefixLen = 0;
+  for (const byte of maskBytes) {
+    const bits = byte & 0xff;
+    // Count leading 1-bits; stop at the first 0.
+    for (let i = 7; i >= 0; i--) {
+      if (bits & (1 << i)) {
+        prefixLen++;
+      } else {
+        break;
+      }
+    }
+  }
+  return `${bytesToIp(ipBytes)}/${prefixLen}`;
+}
+
+/** Decodes a base64 string to a byte array; returns `undefined` for malformed/empty input. */
+function decodeBase64Bytes(value?: string): Uint8Array | undefined {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    const binary = typeof atob === 'function' ? atob(value) : Buffer.from(value, 'base64').toString('binary');
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Formats an IP byte array as a dotted-quad (IPv4) or colon-hex (IPv6) string. */
+function bytesToIp(bytes: Uint8Array): string {
+  if (bytes.length === 4) {
+    return Array.from(bytes, (b) => b & 0xff).join('.');
+  }
+  // IPv6: group 16 bytes into 8 big-endian 16-bit words, render as colon-separated hex.
+  const groups: string[] = [];
+  for (let i = 0; i < bytes.length; i += 2) {
+    groups.push(((bytes[i] << 8) | (bytes[i + 1] & 0xff)).toString(16));
+  }
+  return groups.join(':');
+}
 
 export type AssetMerge = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode) => unknown;
 
@@ -201,4 +638,10 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.PROMPT]: mergePrompt,
   [ResourceType.MODEL]: mergeModelResource,
   [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
+  [ResourceType.CATALOG_SCHEMA]: mergeCatalogSchemaResource,
+  [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
+  [ResourceType.TRANSLATOR]: mergeTranslatorResource,
+  [ResourceType.ROUTE]: mergeRouteResource,
+  [ResourceType.ROLE]: mergeRoleResource,
+  [ResourceType.PROJECT_KEY]: mergeKeyResource,
 };

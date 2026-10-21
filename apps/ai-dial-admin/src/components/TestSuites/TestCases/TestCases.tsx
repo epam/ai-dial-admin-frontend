@@ -10,10 +10,8 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import AdditionalRequestVariables from './AdditionalRequestVariables';
 import TestCasesList, { TestCasesActions } from './TestCasesList';
 import TestCasesSchemaModal from './TestCasesSchemaModal';
-import TemplateVariables from './TemplateVariables';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -45,17 +43,7 @@ const TestCases: FC<Props> = ({
   const isReadOnly = dataset?.visibility === DatasetVisibility.PUBLIC;
 
   return (
-    <div className="h-full flex flex-col gap-y-4">
-      <TemplateVariables selectedTestSuite={selectedTestSuite} schema={dataset?.testCaseSchema} onChange={onChange} />
-      {selectedTestSuite.additionalRequests?.map((_, index) => (
-        <AdditionalRequestVariables
-          key={index + 1}
-          selectedTestSuite={selectedTestSuite}
-          requestIndex={index + 1}
-          schema={dataset?.testCaseSchema}
-          onChange={onChange}
-        />
-      ))}
+    <div className="h-full flex flex-col gap-y-4 min-h-0">
       <TestCasesList
         selectedTestSuite={selectedTestSuite}
         onChange={onChange}

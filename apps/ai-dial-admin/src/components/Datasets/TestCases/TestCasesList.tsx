@@ -26,15 +26,16 @@ import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns
 import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
 import ListEntities from '@/src/components/ListView/List';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useDatasetExport } from '@/src/hooks/use-dataset-export';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { remapRenamedFields } from '@/src/utils/evaluation/schema-fields';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import DatasetTestCasesHeader from './Header';
@@ -44,23 +45,27 @@ import { GridRowType } from '@/src/types/grid-row-type';
 
 export interface DatasetTestCasesActions {
   getDirtyTestCases: () => DatasetTestCase[];
-  clearDirtyAndRefresh: () => void;
+  clearDirtyAndRefresh: (savedSchema?: TestCaseSchema[]) => void;
 }
 
 interface Props {
   dataset: Dataset;
+  savedSchema?: TestCaseSchema[];
   testCasesActionsRef?: RefObject<DatasetTestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
 }
 
-const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirtyChange }) => {
+const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesActionsRef, onDirtyChange }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const exportDataset = useDatasetExport();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
   const [newTestCases, setNewTestCases] = useState<Record<string, unknown>[]>([]);
+  const newTestCasesRef = useRef(newTestCases);
+  newTestCasesRef.current = newTestCases;
   const [isLoading, setIsLoading] = useState(false);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -68,6 +73,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
   const [selectedTestCase, setSelectedTestCase] = useState<DatasetTestCase | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<DatasetTestCase[]>([]);
   const onRemoveCaseRef = useRef<(data?: DatasetTestCase) => void>(() => {});
+  const savedSchemaRef = useRef(savedSchema);
 
   const onOpenDeleteModal = useCallback(
     (data?: DatasetTestCase) => {
@@ -121,19 +127,29 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
     setGridApi(api);
   }, []);
 
+  const onGridDirtyChange = useCallback(
+    (hasDirtyRows: boolean) => {
+      onDirtyChange?.(hasDirtyRows || newTestCasesRef.current.length > 0);
+    },
+    [onDirtyChange],
+  );
+
   const turnGrid = useTurnGroupGrid<DatasetTestCase>({
     schema: dataset.testCaseSchema,
     collapseRows: collapseRowsToDatasetTestCases,
     onDeleteCase,
-    onDirtyChange,
+    onDirtyChange: onGridDirtyChange,
     onGridReady: onGridReadyInner,
   });
 
   const onCellChange = useCallback(
     (row: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (newTestCases.some((r) => r.id === row.id)) {
-        row[field] = value;
-        if (field !== 'testCaseName' && row.data != null) {
+        const isDataField = field !== 'testCaseName';
+        if (field !== 'id') {
+          row[field] = value;
+        }
+        if (isDataField && row.data != null) {
           row.data = { ...(row.data as Record<string, unknown>), [field]: value };
         }
         setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? { ...row } : r)));
@@ -178,15 +194,26 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
   );
 
   const refreshGrid = useCallback(
-    (withRefreshPage?: boolean) => {
+    (withRefreshPage?: boolean, schemaOverride?: TestCaseSchema[]) => {
+      const activeSchema = schemaOverride ?? dataset.testCaseSchema;
       setIsLoading(true);
       getTestCases(dataset.id, 0, 1000, [], []).then((res) => {
         setIsLoading(false);
         const rows =
-          res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res.content, dataset.testCaseSchema);
+          res == null || res.content.length === 0
+            ? []
+            : expandTestCasesToRows(
+                remapRenamedFields(res.content, savedSchemaRef.current, activeSchema),
+                activeSchema,
+              );
         turnGrid.setServerRows(rows);
         setColumnDefs([
-          ...getDatasetTestCaseColumns({ dataset, onCellChange, onToggleExpand: turnGrid.onToggleExpand, t }),
+          ...getDatasetTestCaseColumns({
+            dataset: { ...dataset, testCaseSchema: activeSchema },
+            onCellChange,
+            onToggleExpand: turnGrid.onToggleExpand,
+            t,
+          }),
           {
             ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
             colId: 'action-remove',
@@ -211,6 +238,9 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
 
   const onGridReady = turnGrid.onGridReady;
 
+  const refreshGridRef = useRef(refreshGrid);
+  refreshGridRef.current = refreshGrid;
+
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
       const body = new FormData();
@@ -223,16 +253,11 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
           getDataset(dataset.id as string, '').then((datasetRes) => {
             const updatedDataset = datasetRes?.response;
             if (!updatedDataset) {
-              refreshGrid();
+              refreshGridRef.current();
               return;
             }
             const freshSchema = updatedDataset.testCaseSchema as TestCaseSchema[] | undefined;
-            const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(dataset?.testCaseSchema);
-            if (!schemaChanged) {
-              refreshGrid(true);
-            } else {
-              router.refresh();
-            }
+            refreshGridRef.current(true, freshSchema);
           });
         } else {
           showNotification(getErrorNotification(t(DatasetsI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'));
@@ -244,8 +269,8 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
 
   const onExport = useCallback(() => {
     if (!dataset.id) return;
-    window.open(`${ApiRoute.DatasetsExport}?id=${encodeURIComponent(dataset.id)}`, '_blank');
-  }, [dataset.id]);
+    void exportDataset(dataset.id);
+  }, [dataset.id, exportDataset]);
 
   const onAddTestCase = useCallback(() => {
     if (!dataset.id) return;
@@ -297,11 +322,17 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
     [turnGrid.getDirtyRows, newTestCases],
   );
 
-  const clearDirtyAndRefresh = useCallback(() => {
-    turnGrid.clearDirty();
-    setNewTestCases([]);
-    refreshGrid();
-  }, [turnGrid.clearDirty, refreshGrid]);
+  const clearDirtyAndRefresh = useCallback(
+    (persistedSchema?: TestCaseSchema[]) => {
+      if (persistedSchema) {
+        savedSchemaRef.current = persistedSchema;
+      }
+      turnGrid.clearDirty();
+      setNewTestCases([]);
+      refreshGrid();
+    },
+    [turnGrid.clearDirty, refreshGrid],
+  );
 
   useEffect(() => {
     if (gridApi && newTestCases.length > 0) {
@@ -310,6 +341,10 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
       gridApi.setGridOption('pinnedTopRowData', undefined);
     }
   }, [gridApi, newTestCases]);
+
+  useEffect(() => {
+    savedSchemaRef.current = savedSchema;
+  }, [savedSchema]);
 
   const schemaKey = JSON.stringify(dataset.testCaseSchema ?? null);
 
@@ -330,7 +365,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
   }, [onOpenDeleteModal]);
 
   return (
-    <div className="flex-1 min-h-0">
+    <div className="h-full min-h-0">
       {isLoading ? (
         <DialLoader size={40} />
       ) : (

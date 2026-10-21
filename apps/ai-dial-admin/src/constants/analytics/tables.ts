@@ -1,24 +1,39 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { PartitionGranularity } from '@/src/models/analytics/table';
+import { PartitionGranularity, TableWriteMode } from '@/src/models/analytics/table';
 
 export const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
+// Every type the table catalog accepts in a column declaration, `enum` included — it takes `enum_values`
+// the way `array` takes `element_type` (see AnalyticsFieldType.Enum).
 export const COLUMN_TYPE_OPTIONS: SelectOption[] = Object.values(AnalyticsFieldType).map((value) => ({
   value,
   label: capitalize(value),
 }));
 
-// An Array column's element type: any scalar, excluding Array/Object (backend rejects nested arrays/objects).
+// An Array column's element type: any scalar, excluding Array/Object/Enum/Map — the backend rejects a nested
+// array, object or map element, and an enum element outright. Each is subtracted explicitly rather than left
+// to fall out of the list above, so adding a type there cannot silently make it a legal element.
 export const ELEMENT_TYPE_OPTIONS: SelectOption[] = COLUMN_TYPE_OPTIONS.filter(
-  (option) => option.value !== AnalyticsFieldType.Array && option.value !== AnalyticsFieldType.Object,
+  (option) =>
+    option.value !== AnalyticsFieldType.Array &&
+    option.value !== AnalyticsFieldType.Object &&
+    option.value !== AnalyticsFieldType.Enum &&
+    option.value !== AnalyticsFieldType.Map,
 );
 
 // Backend grammar for user-declared table/column identifiers (ADAS `Identifiers.requireUserIdentifier`):
 // snake_case, must start with a lowercase letter, and must not start with `_` (reserved for system columns).
 export const ANALYTICS_IDENTIFIER_PATTERN = /^[a-z][a-z0-9_]*$/;
 export const ANALYTICS_IDENTIFIER_MAX_LENGTH = 64;
+
+// Backend rules for an Enum column's declared value set (ADAS `TableColumnRules`): 1-512 values, each
+// non-blank and at most 64 characters, distinct after trimming. Values are stored and materialized trimmed.
+export const ANALYTICS_ENUM_VALUES_MIN = 1;
+export const ANALYTICS_ENUM_VALUES_MAX = 512;
+export const ANALYTICS_ENUM_VALUE_MAX_LENGTH = 64;
 
 // Backend length caps for a column's free-form catalog metadata (ADAS `TableColumnRules`).
 export const ANALYTICS_TAG_MAX_LENGTH = 64;
@@ -29,4 +44,25 @@ export const PARTITION_NONE = '';
 export const PARTITION_GRANULARITY_OPTIONS: SelectOption[] = [
   { value: PARTITION_NONE, label: 'None' },
   ...Object.values(PartitionGranularity).map((value) => ({ value, label: capitalize(value) })),
+];
+
+// A source table's write discipline. The label names the mode and the description says what it does to
+// a write against a key the table already holds — the two are split so the dropdown panel stays inside a
+// small popup, which one label carrying both would not. The immutability caveat rides the field label
+// instead (see CreateTablePopup).
+export const WRITE_MODE_OPTIONS: {
+  value: TableWriteMode;
+  labelKey: AnalyticsTablesI18nKey;
+  descriptionKey: AnalyticsTablesI18nKey;
+}[] = [
+  {
+    value: TableWriteMode.Append,
+    labelKey: AnalyticsTablesI18nKey.WriteModeAppend,
+    descriptionKey: AnalyticsTablesI18nKey.WriteModeAppendDescription,
+  },
+  {
+    value: TableWriteMode.UpsertByKey,
+    labelKey: AnalyticsTablesI18nKey.WriteModeUpsertByKey,
+    descriptionKey: AnalyticsTablesI18nKey.WriteModeUpsertByKeyDescription,
+  },
 ];

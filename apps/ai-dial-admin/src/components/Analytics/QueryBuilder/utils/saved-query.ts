@@ -1,5 +1,6 @@
 import { StructuredQuery } from '@/src/models/analytics/query';
 import { ChartConfig, QueryResultView } from '@/src/models/analytics/query-builder';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
   SavedQuery,
   SavedQueryCaptureInput,
@@ -110,10 +111,11 @@ export const toSavedQueryRequest = (input: SavedQueryCaptureInput): SavedQueryRe
 };
 
 /**
- * Replaces a stored query's metadata, carrying its body, time intent, and chart across untouched — the
- * edit modal renames and re-tags, it does not re-author.
+ * Takes a stored query's authored content — body, time intent, result view, and chart — and pairs it with
+ * a fresh set of metadata. Neither caller re-authors: the edit modal replaces the same query under new
+ * metadata, and the duplicate modal creates a second one from the same content.
  */
-export const toMetadataUpdateRequest = (saved: SavedQuery, meta: SavedQueryMetadata): SavedQueryRequest =>
+export const toMetadataReplaceRequest = (saved: SavedQuery, meta: SavedQueryMetadata): SavedQueryRequest =>
   assembleRequest({
     meta,
     body: saved.sql ? { sql: saved.sql } : { query: saved.query },
@@ -122,14 +124,35 @@ export const toMetadataUpdateRequest = (saved: SavedQuery, meta: SavedQueryMetad
     chart: saved.chart,
   });
 
-export const deriveSavedQueryEditor = (saved: Pick<SavedQuery, 'sql' | 'query'>): SavedQueryEditor => {
+// `functions` is null for the saved-queries grid, which has no catalog loaded — see
+// isBuilderRepresentable for what that leaves unchecked.
+export const deriveSavedQueryEditor = (
+  saved: Pick<SavedQuery, 'sql' | 'query'>,
+  functions: QueryFunction[] | null,
+): SavedQueryEditor => {
   if (saved.sql?.trim()) return SavedQueryEditor.Sql;
-  if (saved.query && isBuilderRepresentable(saved.query)) return SavedQueryEditor.Builder;
+  if (saved.query && isBuilderRepresentable(saved.query, functions)) return SavedQueryEditor.Builder;
   return saved.query ? SavedQueryEditor.Json : SavedQueryEditor.Builder;
 };
 
-export const savedQueryEntityName = (saved: Pick<SavedQuery, 'query' | 'source'>): string =>
-  saved.query?.entity ?? saved.source ?? '';
+// A deployment may still answer with a single name rather than a list, so every read of `source` goes
+// through this rather than indexing the member: indexing a string would yield its first character.
+const savedQuerySources = (source: SavedQuery['source']): string[] => {
+  if (Array.isArray(source)) return source;
+  return typeof source === 'string' && source ? [source] : [];
+};
+
+// The one entity a saved query is treated as being about, for every consumer needing exactly one: the
+// schema prefetch, the source selector, SQL autocomplete, and the assistant's schema message. A SQL
+// body falls back to the first source, which for a composite statement is the alphabetically first
+// entity the service reports — arbitrary but stable, and better than no field suggestions at all.
+// `''` means nothing resolved, which callers read as "load no schema".
+export const savedQueryPrimarySource = (saved: Pick<SavedQuery, 'query' | 'source'>): string =>
+  saved.query?.entity ?? savedQuerySources(saved.source)[0] ?? '';
+
+// Every source a query reads, as one display string — for the Queries grid, where the full set belongs
+// on screen rather than the single primary source.
+export const savedQuerySourcesLabel = (source: SavedQuery['source']): string => savedQuerySources(source).join(', ');
 
 const parseInstant = (value: string): Date | null => {
   const date = new Date(value);
@@ -159,14 +182,19 @@ const toTimeRestore = (time: SavedQuery['time'], knownPeriods: string[]): SavedQ
 
 export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryRestore => {
   const { saved, fields, functions, knownPeriods } = input;
-  const entityName = savedQueryEntityName(saved);
+  const entityName = savedQueryPrimarySource(saved);
 
-  const state = saved.query
-    ? parseQuery(saved.query, fields, functions)
-    : { ...createInitialState(functions), entityName, fields };
+  const editor = deriveSavedQueryEditor(saved, functions);
+  // Only a query the builder can hold reaches builder state. Parsing one it cannot would seed the
+  // rail — and the SQL the rail generates on the way out — from a query missing whatever the parser
+  // could not keep, which is the loss this whole guard exists to prevent.
+  const state =
+    saved.query && editor === SavedQueryEditor.Builder
+      ? parseQuery(saved.query, fields, functions)
+      : { ...createInitialState(functions), entityName, fields };
 
   return {
-    editor: deriveSavedQueryEditor(saved),
+    editor,
     state,
     sqlText: saved.sql ?? '',
     jsonText: saved.query ? JSON.stringify(saved.query, null, JSON_INDENT) : '',

@@ -1,0 +1,2221 @@
+# Analytics Dashboards
+
+## Purpose
+
+The Dashboards page of the Analytics group, read from the usage log through the structured-query
+endpoint: how the page is reached at runtime and what it shares with the existing telemetry
+dashboard, how many requests it issues and what each one answers, the page-wide `Compare` control,
+the KPI row, the activity heatmap, the share donut, and the tabbed breakdown table with its dialog.
+## Requirements
+### Requirement: An environment flag decides which page Dashboards renders
+
+The system SHALL expose an environment variable that, when truthy per the existing flag helper and
+combined with the Analytics group's own flag, is surfaced on the runtime feature-flags object. The
+flag SHALL be read where the other feature flags are initialized and SHALL be added to the
+feature-flags model alongside them, so no surface learns about it through a separate mechanism. It
+SHALL be declared in the environment template as a commented entry.
+
+The `/dashboards` route SHALL render:
+
+| Configuration | `/dashboards` renders |
+| --- | --- |
+| both flags truthy | the analytics page, or the forbidden page for a user without analytics access |
+| either flag falsy, admin API configured, dashboard not disabled | the existing telemetry dashboard, with its own controls and its refresh-interval selector |
+| otherwise | not found |
+
+The usage flag without the analytics flag is a misconfiguration: it SHALL serve no analytics at all,
+exactly as if the usage flag were off. "Dashboard not disabled" is the existing dashboard flag,
+which `DISABLE_MENU_ITEMS` containing `dashboard` switches off.
+
+The route and the menu SHALL decide from the same inputs, so a reachable item never leads to a
+missing page and a reachable page is never absent from the menu. The one exception is the
+`dashboard` token of `DISABLE_MENU_ITEMS` while the analytics page is on: it hides the item and
+leaves the page reachable by URL, as the token does for every other menu item.
+
+#### Scenario: Both flags on render the analytics page
+
+- **GIVEN** the analytics flag and the usage flag both resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** the analytics page renders
+
+#### Scenario: The usage flag off falls back to the telemetry dashboard
+
+- **GIVEN** the usage flag is unset and the admin API is configured
+- **WHEN** the user opens `/dashboards`
+- **THEN** the existing telemetry dashboard renders, with its refresh-interval selector
+
+#### Scenario: The analytics flag off falls back too
+
+- **GIVEN** the usage flag resolves truthy but the analytics flag does not, and the admin API is
+  configured
+- **WHEN** the user opens `/dashboards`
+- **THEN** the existing telemetry dashboard renders
+
+#### Scenario: A disabled telemetry dashboard is not served
+
+- **GIVEN** either flag is falsy, the admin API is configured, and `DISABLE_MENU_ITEMS` contains
+  `dashboard`
+- **WHEN** the user opens `/dashboards`
+- **THEN** the route answers as not found
+
+#### Scenario: Neither page can render
+
+- **GIVEN** either flag is falsy and the admin API is not configured
+- **WHEN** the user opens `/dashboards`
+- **THEN** the route answers as not found
+
+#### Scenario: Flag is falsy for the usual falsy spellings
+
+- **GIVEN** the variable is set to `false`, an empty string, `0`, or any value the flag helper
+  treats as falsy
+- **WHEN** the feature flags are initialized
+- **THEN** the flag is false and `/dashboards` does not render the analytics page
+
+#### Scenario: Access control still applies behind the flag
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** a user without analytics access opens `/dashboards`
+- **THEN** the forbidden page renders rather than either dashboard
+
+### Requirement: The sidebar offers exactly one Dashboards item
+
+The sidebar SHALL offer at most one item named `Dashboards`, pointing at `/dashboards`, placed by
+the configuration:
+
+| Configuration | Item |
+| --- | --- |
+| both flags truthy | first item of the Analytics group |
+| either flag falsy, admin API configured, dashboard not disabled | in the Audit group, where the telemetry dashboard's item stood |
+| otherwise | absent |
+
+The Analytics group SHALL NOT be shown only to host the item: while its own flag is off it stays
+hidden, and the item lives in the Audit group.
+
+The item SHALL answer to the `dashboard` token of `DISABLE_MENU_ITEMS` in either group, as the
+telemetry dashboard's item did.
+
+#### Scenario: Analytics on puts the item first in Analytics
+
+- **GIVEN** both flags resolve truthy and the admin API is configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Analytics group's first item is `Dashboards`
+- **AND** the Audit group offers no `Dashboards` item
+
+#### Scenario: Analytics off keeps the item in Audit
+
+- **GIVEN** the usage flag is unset and the admin API is configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Audit group offers a `Dashboards` item
+- **AND** no other group offers one
+
+#### Scenario: The usage flag without Analytics is treated as off
+
+- **GIVEN** the usage flag resolves truthy, the analytics flag does not, and the admin API is
+  configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Audit group offers a `Dashboards` item
+- **AND** no Analytics group is shown
+
+#### Scenario: Analytics on without the admin API
+
+- **GIVEN** both flags resolve truthy and the admin API is not configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Analytics group's first item is `Dashboards`
+
+#### Scenario: The disable token hides the item wherever it is
+
+- **GIVEN** `DISABLE_MENU_ITEMS` contains `dashboard`
+- **WHEN** the sidebar menu renders, with the analytics flags on or off
+- **THEN** no group offers a `Dashboards` item
+
+### Requirement: The old paths redirect to Dashboards
+
+Opening `/dashboard` or `/usage` SHALL redirect to `/dashboards`, whatever the configuration, so a
+bookmark or a link to either old page lands on the page the configuration admits.
+
+#### Scenario: The telemetry dashboard's old path redirects
+
+- **WHEN** the user opens `/dashboard`
+- **THEN** the browser lands on `/dashboards`
+
+#### Scenario: The usage page's old path redirects
+
+- **WHEN** the user opens `/usage`
+- **THEN** the browser lands on `/dashboards`
+
+### Requirement: The entity Audit tab serves the usage dashboard behind the flags
+
+While both `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` resolve truthy — the same pair that
+decides what `/dashboards` serves — the Audit `Dashboard` tab of these entity types SHALL render the
+usage dashboard for that entity: Models, Platform models, Applications, Assets applications,
+Toolsets and Assets toolsets. With either flag falsy, the tab SHALL render the telemetry dashboard
+where it does today, unchanged.
+
+Assets applications SHALL gain an Audit tab only while both flags are truthy, and it SHALL hold
+`Dashboard` alone: they have no telemetry dashboard to fall back to, and the admin audit records no
+activity for them. Every other entity type's Audit tab SHALL be unchanged.
+
+When the analytics service refuses the user, the tab SHALL render the page's no-access state rather
+than an empty dashboard and a failure notification.
+
+#### Scenario: Flags on serve the usage dashboard on an entity
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens a model's Audit tab and selects `Dashboard`
+- **THEN** the usage dashboard renders for that model, with `View by`
+- **AND** no telemetry control (refresh interval, telemetry filters) is shown
+
+#### Scenario: A flag off keeps the telemetry dashboard
+
+- **GIVEN** `ANALYTICS_USAGE_ENABLED` resolves falsy
+- **WHEN** the user opens a model's Audit `Dashboard` tab
+- **THEN** the telemetry dashboard renders as before
+
+#### Scenario: Asset applications gain the tab behind the flags only
+
+- **GIVEN** an asset application
+- **WHEN** both flags resolve truthy
+- **THEN** it offers an Audit tab whose only entry is `Dashboard`
+- **AND** with either flag falsy it offers no Audit tab, as today
+
+#### Scenario: A refused user sees the no-access state
+
+- **GIVEN** both flags resolve truthy and the analytics service answers 403 for the user
+- **WHEN** the user opens an entity's Audit `Dashboard` tab
+- **THEN** the no-access state renders in the tab
+
+### Requirement: An entity dashboard offers View by over its entity's views
+
+An entity dashboard SHALL render the page's controls — `View by`, the period, `Compare` and refresh —
+over one view's widgets, exactly as `/dashboards` does. Its `View by` SHALL offer only the views its
+entity has traffic of, in this order, and SHALL be shown even where that is a single view, so every
+dashboard reads the same way:
+
+| Entity | Views offered |
+| --- | --- |
+| Models, Platform models | LLM |
+| Toolsets, Assets toolsets | MCP |
+| Applications, Assets applications | LLM, MCP, and Routes when the application declares routes |
+
+The first view SHALL be the one the dashboard opens with. The period and `Compare` SHALL govern every
+view, and the period SHALL start from, and write back to, the period the entity's other Audit tabs
+share, so switching to `Activities` and back keeps it.
+
+#### Scenario: A model offers its one view
+
+- **WHEN** a model's entity dashboard renders
+- **THEN** `View by` shows `LLM` and offers no other view
+
+#### Scenario: An application offers its views in order
+
+- **GIVEN** an application that declares routes
+- **WHEN** the user opens its `View by`
+- **THEN** it offers `LLM`, `MCP` and `Routes` in that order, with `LLM` selected
+
+#### Scenario: No routes, no Routes view
+
+- **GIVEN** an application that declares no routes
+- **WHEN** the user opens its `View by`
+- **THEN** it offers `LLM` and `MCP` only
+
+#### Scenario: One period governs every view and survives a tab switch
+
+- **GIVEN** an application's entity dashboard with the period set to the last 7 days
+- **WHEN** the user switches `View by` to `MCP`, opens `Activities`, and returns to `Dashboard`
+- **THEN** the dashboard reads the last 7 days
+
+### Requirement: Each entity type reads its own rows
+
+Every request an entity dashboard issues SHALL carry its view's clause, the window, and the entity's clause:
+
+| Entity | Entity clause | Name the clause matches |
+| --- | --- | --- |
+| Models, Platform models | `deployment` = the model | the model's name |
+| Toolsets | `deployment` = the toolset | the toolset's name |
+| Assets toolsets | `deployment` = the toolset | `toolsets/` + the toolset's path, each segment URI-encoded |
+| Applications | own calls: `deployment` = the application; its call tree: `execution_path` contains the application | the application's name |
+| Assets applications | as Applications | `applications/` + the application's path, each segment URI-encoded |
+
+An application's call tree SHALL be every row whose `execution_path` — the chain of deployments the
+request passed through — contains the application, at any depth: the calls it made, and the calls
+the applications it called made in turn.
+
+An application's Routes view SHALL read its own route calls: `deployment` = the application,
+within the Routes view's rows.
+
+An asset's path SHALL be read the way every other write path reads it — the flat field first, then
+the merge layer's metadata. A merged Core-resource detail entity carries its identity only in that
+metadata, and it is the detail view that opens the Audit tab, so reading the flat field alone left
+the dashboard with no name to match on exactly the surface that shows it.
+
+Where no name can be resolved, the panel SHALL state that the entity cannot be matched to the usage
+log, and SHALL issue no request. Rendering nothing leaves the tab blank — no figures, no frame,
+nothing that reads as a state — which is indistinguishable from a wiring fault and was one.
+
+#### Scenario: A model's dashboard counts only that model
+
+- **GIVEN** two models with traffic in the window
+- **WHEN** one model's entity dashboard renders
+- **THEN** its figures count only that model's calls
+
+#### Scenario: An asset toolset is matched by its encoded path
+
+- **GIVEN** an asset toolset whose path holds a space
+- **WHEN** its entity dashboard issues a request
+- **THEN** the deployment it matches is `toolsets/` + the path with the space encoded as `%20`
+
+#### Scenario: A nested application's calls are in the tree
+
+- **GIVEN** application A called application B, and B called a model
+- **WHEN** A's entity dashboard reads its call tree
+- **THEN** B's model call is among the rows it reads
+
+#### Scenario: An asset's identity is read from the merge metadata
+
+- **GIVEN** an asset toolset whose detail entity carries its path only in the merge metadata
+- **WHEN** its entity dashboard issues a request
+- **THEN** the deployment it matches is built from that path
+
+#### Scenario: An entity the log cannot name says so
+
+- **GIVEN** an entity whose name cannot be resolved
+- **WHEN** its Audit tab renders the dashboard
+- **THEN** the panel states that the entity cannot be matched to the usage log
+- **AND** no request is issued
+
+### Requirement: An application's figures rest on its own calls
+
+An application's LLM view SHALL compute `Requests`, `Unique callers`, `Error rate`, `Avg latency`,
+the requests and latency plots and the heatmap from the calls made *to* the application, so one user
+request is one request however many model calls it fanned out into.
+
+Every money and token figure SHALL rest on one set of rows instead: the **priced model calls in the
+application's call tree** — the rows of its call tree that carry a price of their own.
+
+- `Total spend` SHALL be the sum of their prices. It covers every model call the application caused,
+  however the application was invoked — as a chat, or by another application as an MCP server, whose
+  calls carry no total price.
+- `Tokens` SHALL be their prompt and completion tokens, with no caption.
+- `Cost per 1M tokens` SHALL divide `Total spend` by `Tokens`, both from those rows.
+- The spend plot SHALL plot their prices.
+
+A figure that rests on those rows and has no buckets of them SHALL draw no sparkline, and the
+heatmap of an application's LLM view SHALL offer requests alone, rather than draw the application's
+own calls beside a card that counts its call tree.
+
+A breakdown tab of an application's LLM view that ranks the application's own calls — `Projects` —
+SHALL state no cost: those calls carry no price of their own, and the cost the cards state rests on
+the call tree.
+
+An application's MCP view SHALL read the tool calls in its call tree, leaving out calls made to the
+application itself as an MCP server: those are other callers' use of the application.
+
+#### Scenario: One request fanned out is one request
+
+- **GIVEN** a user called the application once and it called models three times
+- **WHEN** the LLM view's KPI row renders
+- **THEN** `Requests` counts one
+
+#### Scenario: Spend covers the whole call tree
+
+- **GIVEN** the application called a nested application that called a model
+- **WHEN** the LLM view's KPI row renders
+- **THEN** `Total spend` includes that model call's price
+- **AND** `Tokens` includes its tokens
+
+#### Scenario: Work done as an MCP server is spend too
+
+- **GIVEN** another application invoked the application as an MCP server, and the application called a model to answer
+- **WHEN** the application's LLM view renders its KPI row
+- **THEN** `Total spend` includes that model call's price
+
+#### Scenario: Tokens name what they count
+
+- **WHEN** an application's LLM view renders its KPI row
+- **THEN** the `Tokens` card carries no caption, since it counts the whole call tree as its title says
+
+#### Scenario: The application's heatmap offers no cost
+
+- **WHEN** an application's LLM view renders its heatmap
+- **THEN** it offers requests alone
+
+#### Scenario: A tab of the application's own calls states no cost
+
+- **WHEN** an application's LLM view renders its `Projects` tab
+- **THEN** the breakdown has no cost column
+- **AND** its `Models` tab keeps one
+
+#### Scenario: Tools called by a nested application are the application's tools
+
+- **GIVEN** application A called application B, and B called a tool
+- **WHEN** A's MCP view renders
+- **THEN** that tool call is counted
+
+#### Scenario: Tools the application serves are not its tools
+
+- **GIVEN** another caller called a tool the application serves as an MCP server
+- **WHEN** the application's MCP view renders
+- **THEN** that tool call is not counted
+
+### Requirement: An entity's view hides the tab that would rank its entity against itself
+
+Each view of an entity dashboard SHALL offer its breakdown tabs less the one whose rows would be the
+entity alone:
+
+| Entity | View | Hidden tab | Tabs offered |
+| --- | --- | --- | --- |
+| Models, Platform models | LLM | `Models` | `Applications`, `Projects` |
+| Toolsets, Assets toolsets | MCP | `MCP Servers` | `Tools`, `Applications`, `Projects` |
+| Applications, Assets applications | LLM | `Applications` | `Models`, `Projects` |
+| Applications, Assets applications | MCP | `Applications` | `MCP Servers`, `Tools`, `Projects` |
+| Applications, Assets applications | Routes | `Owners` | `Paths`, `Callers`, `Projects` |
+
+The view's share donut and its split plot SHALL lead with its first offered tab.
+
+On an application's LLM view the `Models` tab and its donut SHALL rank the priced model calls in the
+application's call tree by model, their shares SHALL be shares of those calls rather than of the
+application's own calls, and the tab's cost column SHALL sum to the view's `Total spend`.
+
+#### Scenario: A model's view opens on its callers
+
+- **WHEN** a model's LLM view renders
+- **THEN** the breakdown offers `Applications` and `Projects`, opening on `Applications`
+- **AND** the donut splits by application
+
+#### Scenario: An application's model shares add up
+
+- **GIVEN** an application whose calls fanned out into many model calls
+- **WHEN** its LLM view's `Models` tab renders
+- **THEN** the shares of its rows sum to no more than one hundred per cent
+
+#### Scenario: A model reached through a nested application is ranked
+
+- **GIVEN** application A called application B, and B called model M
+- **WHEN** A's `Models` tab renders
+- **THEN** M is ranked among A's models
+
+#### Scenario: The models tab costs what the application spent
+
+- **WHEN** an application's `Models` tab renders every row of the window
+- **THEN** its rows' costs sum to the view's `Total spend`
+
+### Requirement: The Dashboards page is unchanged by the entity dashboards
+
+The standalone `/dashboards` page SHALL render, request and behave exactly as before this change:
+its `View by`, its views, its tabs and its figures.
+
+#### Scenario: The page keeps View by
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** `View by` offers LLM, MCP and Routes as before
+
+### Requirement: The analytics page is headed Dashboards and offers no telemetry help
+
+While `/dashboards` serves the analytics page, the page SHALL be headed `Dashboards`, the same name
+as its menu item, and the header's help control SHALL offer no documentation link: the only link
+keyed by the route documents the telemetry dashboard. While the route serves the telemetry
+dashboard, the help control SHALL keep offering that link.
+
+#### Scenario: The analytics page names itself after the section
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** the page heading reads `Dashboards`
+
+#### Scenario: No telemetry help over the analytics page
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** the header offers no help link
+
+#### Scenario: Telemetry help stays with the telemetry dashboard
+
+- **GIVEN** either flag is falsy and `/dashboards` serves the telemetry dashboard
+- **WHEN** the user opens `/dashboards`
+- **THEN** the header's help link opens the telemetry dashboard documentation
+
+### Requirement: The two pages share no mutable state
+
+The usage page SHALL NOT read or write any browser-stored preference, query constant, context value
+or component that the existing dashboard owns.
+
+Shared code SHALL be limited to what neither page needs to change: the structured-query server
+action, the domain-free presentational components, the time-filter hook, and the design system. A
+change required to make one of those fit the usage page SHALL be made so that the existing
+dashboard's behaviour is unchanged by construction — in the usage page's own wrapper where a
+wrapper can express it, and otherwise behind a parameter whose default is the existing behaviour.
+
+#### Scenario: A shared component keeps its behaviour for its existing callers
+
+- **GIVEN** a shared presentational component the usage page also renders
+- **WHEN** an existing caller renders it without naming the new parameter
+- **THEN** it renders exactly as it did before the usage page existed
+
+#### Scenario: The telemetry dashboard depends on nothing in the usage page's module
+
+- **GIVEN** the telemetry dashboard's modules
+- **WHEN** their imports are followed
+- **THEN** none reaches the usage page's own module; only the route that chooses between the two
+  pages imports both
+
+### Requirement: A view issues one request per data shape, per window
+
+A view SHALL obtain everything it renders from these shapes, each covering exactly one window:
+
+1. a **totals** request grouped by nothing, feeding the KPI figures and the window total that every
+   share on the page is normalized against;
+2. a **bucketed** request grouped by a time bucket, feeding the time series, the KPI sparklines and
+   the latency percentiles;
+3. a **leading-dimension** request grouped by the view's first breakdown dimension, feeding the
+   share chart and naming the series the split plot draws;
+4. a **tab** request grouped by the active breakdown tab's dimension, ordered and limited
+   server-side, feeding the breakdown table;
+5. a **split-series** request grouped by time bucket and the leading dimension, issued only while
+   the split plot is the one showing;
+6. a **spend** request bucketed over the page's own window at a bin of its own, issued only while
+   the spend plot is the one showing;
+7. a **heatmap** request bucketed hourly over the heatmap's own week, independent of the page
+   period;
+8. a **dialog block** request, the tab shape asked for one page of rows at an offset, issued only
+   while the full-list dialog is open and once per block the reader scrolls to, with a second
+   request per block naming that block's dimension values in the previous window.
+
+Shapes 1, 2 and 4 SHALL be issued once per window, so comparison adds one request each. The others
+SHALL be issued once regardless of comparison, except shape 8, whose comparison request is per
+block rather than per window.
+
+The spend request SHALL read the page's window like every other plot. It differs only in its bin:
+the page's resolution targets up to 200 points, which reads as a line and not as a row of bars, so
+spend takes the smallest recognizable step that cuts the window into roughly a dozen and a half
+bars. An earlier draft read spend on a calendar scale of its own — the last 14 days, or 12 months
+for a longer window — which answered a question the page was not asking and disagreed with every
+other figure on it.
+
+Totals is a shape of its own because distinct users cannot be summed out of the bucketed response:
+a user active in several buckets is one user, and no fold over per-bucket counts can know that.
+
+Shapes 5 and 6 SHALL NOT be issued until their plot is selected, and the share chart's request
+SHALL NOT be re-issued when the breakdown tab changes, so reading the table below does not reload
+the ring above it.
+
+Requests SHALL be issued in parallel, and a widget SHALL render as soon as the request it depends
+on resolves rather than waiting for the others. No widget SHALL issue a request of its own; a
+widget receives rows as input.
+
+#### Scenario: A view reads each window exactly once on load
+
+- **GIVEN** comparison is on and the requests plot is the one showing
+- **WHEN** the view loads
+- **THEN** eight requests are issued: totals, bucketed and tab rows for each of the two windows,
+  the leading dimension, and the heatmap's week
+- **AND** no shape is requested twice for the same window
+
+#### Scenario: Comparison off drops the second window's requests
+
+- **GIVEN** comparison is off
+- **WHEN** the view loads
+- **THEN** the totals, bucketed and tab shapes are each requested once
+
+#### Scenario: Switching tab re-issues only the tab request
+
+- **GIVEN** the view has loaded
+- **WHEN** the user selects another breakdown tab
+- **THEN** the tab shape is re-issued
+- **AND** the totals, bucketed, leading-dimension and heatmap responses are reused
+
+#### Scenario: A conditional plot is not paid for until it is chosen
+
+- **GIVEN** the requests plot is the one showing
+- **WHEN** the view loads
+- **THEN** no split-series and no spend-periods request is issued
+- **AND** selecting the split plot issues the split-series request
+
+#### Scenario: Switching view re-issues every shape
+
+- **WHEN** the user switches `View by` from LLM to MCP
+- **THEN** the shapes are re-issued against the MCP view's event kinds and dimensions
+- **AND** the number of requests does not grow with the number of widgets shown
+
+#### Scenario: A resolved request renders its widgets without waiting for the others
+
+- **GIVEN** the bucketed request resolves before the tab request
+- **WHEN** it resolves
+- **THEN** the time series renders
+- **AND** the breakdown table remains in its loading state
+
+### Requirement: Every bucketed request states its row limit
+
+A request that groups by a time bucket SHALL state a row limit explicitly. The service applies a
+default limit when a query states none and truncates the response silently — the response carries
+no marker for it — so an unstated limit turns a long window, or a split with several series, into a
+chart that ends early without saying so.
+
+#### Scenario: A long window is not cut without a word
+
+- **GIVEN** a window whose bucket count exceeds the service's default limit
+- **WHEN** the bucketed request resolves
+- **THEN** the response covers the whole window
+- **AND** the chart's last bucket is the window's last bucket
+
+### Requirement: A failure is stated once, in a notification, and leaves its widget empty
+
+When one request fails, the widgets fed by the others SHALL still render their data. The failure
+SHALL be stated in a notification carrying what the service said, and the widget the failed request
+feeds SHALL render its empty state rather than the message.
+
+The notification SHALL be raised once per distinct message for the life of a load, not once per
+request: the page issues up to nine of them across two hooks, and a backend that is down fails all
+of them the same way. A new load SHALL clear what was already stated, so the same failure is worth
+saying again.
+
+A widget SHALL NOT print the message itself. Seven cards each reading "Load failed" says one thing
+seven times, and an empty state is what the widget has to show either way — a window that reported
+nothing and a window that could not be read look the same on the page, and the notification is what
+tells them apart.
+
+A rejected request SHALL be handled as a failure rather than left unhandled, so no widget is left
+in its loading state indefinitely.
+
+#### Scenario: Tab request fails, bucketed widgets still render
+
+- **GIVEN** the tab request fails and the bucketed request succeeds
+- **WHEN** the page settles
+- **THEN** the time series renders its data
+- **AND** the breakdown table renders its empty state
+
+#### Scenario: One outage is one notification
+
+- **GIVEN** every request fails with the same message
+- **WHEN** the page settles
+- **THEN** exactly one notification is raised
+- **AND** it carries that message
+- **AND** no widget prints it
+
+#### Scenario: A rejected request settles its widget
+
+- **GIVEN** a request rejects rather than returning a failure
+- **WHEN** the page settles
+- **THEN** the widget it feeds leaves its loading state
+
+### Requirement: The page does not poll and refreshes on request
+
+This page SHALL NOT poll. Its controls bar SHALL offer no refresh-interval option, and no widget
+SHALL hold a timer that re-issues its data. The controls bar SHALL instead offer a `Refresh`
+control that re-issues every request once per activation, disabled while any of them is in flight.
+
+Two reasons. An interval a reader cannot see the effect of changes the figures under them without
+saying so, and a comparison makes that worse because both windows slide at once. And the dataset is
+minutes behind live by construction, so an interval shorter than that lag re-reads the same rows.
+
+This says nothing about the existing dashboard, which keeps its interval selector — see the
+gating requirements above.
+
+For a preset period, a manual refresh SHALL recompute the time range from the current time, so
+`Last 2d` after a refresh means the two days ending now. For a custom range, the fixed dates SHALL
+be reused unchanged.
+
+#### Scenario: No interval selector is offered
+
+- **WHEN** the user opens the usage page
+- **THEN** the controls bar offers no refresh-interval option
+- **AND** the page issues no further requests until the user acts
+
+#### Scenario: Refresh re-issues the requests once
+
+- **WHEN** the user activates `Refresh`
+- **THEN** every request is issued exactly once
+- **AND** the control is disabled until they all settle
+
+#### Scenario: Refresh slides a preset window
+
+- **GIVEN** the period is a preset and time has passed since the page loaded
+- **WHEN** the user activates `Refresh`
+- **THEN** the requested range is recomputed from the current time
+
+#### Scenario: Refresh keeps a custom range fixed
+
+- **GIVEN** a custom date range is selected
+- **WHEN** the user activates `Refresh`
+- **THEN** the original start and end dates are requested again unchanged
+
+### Requirement: A plot's tooltip names the period its bucket covers
+
+Every bucketed plot — the calls line, the split plot, the latency percentiles and the spend bars —
+SHALL head its tooltip with the period the hovered bucket covers, from its start to the start of the
+next one, which is the bound the query itself used. The axis SHALL keep naming only the start, since
+it has one line per tick.
+
+A bucket's own timestamp names only where it begins, so a tooltip stating it alone left the reader to
+work out how much traffic the figure covered — an hour's worth or a week's. A step of a day or more
+SHALL state no clock, and a shorter one SHALL name the day once unless the period crosses midnight.
+
+A series' colour SHALL be stated on the series itself, not only on the line it paints: the tooltip's
+marker and the legend read the series, so a colour given to `lineStyle` alone left them on the
+charting library's own palette and disagreeing with the plot.
+
+A latency line SHALL break where a bucket has no percentile to state. A bucket with no calls has no
+response time, and joining across it drew a flat line through hours the platform was idle — a
+reading the window never took. Such a line SHALL also go unsampled: a sampler drops points to fit
+the pixels, gaps included, and bridges them again. A calls or spend plot needs neither, because an
+empty bucket there is a real zero.
+
+#### Scenario: A latency line breaks over an idle stretch
+
+- **GIVEN** a window whose middle buckets recorded no calls
+- **WHEN** the latency plot renders
+- **THEN** the lines break over those buckets rather than joining across them
+
+#### Scenario: A tooltip marker matches its line
+
+- **GIVEN** a plot of more than one series
+- **WHEN** the reader hovers it
+- **THEN** each marker in the tooltip carries the colour of the line it names
+
+#### Scenario: The tooltip states both ends of the bucket
+
+- **GIVEN** a plot bucketed at two hours
+- **WHEN** the reader hovers a bucket
+- **THEN** the tooltip heads with that bucket's start and the start of the next one
+
+#### Scenario: A daily bucket states no clock
+
+- **GIVEN** a plot bucketed at a day or more
+- **WHEN** the reader hovers a bucket
+- **THEN** the period is stated as dates alone
+
+### Requirement: Compare control sits beside the period selector and governs the whole page
+
+The controls bar SHALL render a `Compare` selector after the period selector, offering
+`Previous period`, `Previous month`, `Previous year` and an off option. The selection SHALL apply to
+every widget on the page that can express a change over time — the KPI cards and the breakdown
+table's per-measure deltas — rather than to one widget. The selection SHALL NOT affect the URL, and
+SHALL survive switching the `View by` option so a reader who moves between views keeps the
+comparison they asked for.
+
+`Previous period` SHALL be the default. A figure without a comparison answers "how much" and not
+"more or less than before", which is the question this page exists to answer; a reader who does not
+want the comparison turns it off.
+
+A widget that names the compared window SHALL name the selected one rather than always saying
+`previous period`. Where a widget renders a change without knowing which comparison is selected,
+its text SHALL name no period at all instead of naming the wrong one.
+
+#### Scenario: Comparison is on by default
+
+- **WHEN** the user opens the usage page
+- **THEN** the `Compare` selector reads `Previous period`
+- **AND** each KPI card renders a delta against the previous window
+
+#### Scenario: Turning comparison off drops every comparison at once
+
+- **WHEN** the user selects the off option
+- **THEN** no KPI card renders a delta
+- **AND** the breakdown table renders no per-measure delta
+
+#### Scenario: Comparison survives a view switch
+
+- **GIVEN** comparison is set to `Previous period` in the LLM view
+- **WHEN** the user switches `View by` to MCP
+- **THEN** comparison is still `Previous period`
+
+#### Scenario: A card names the window it is compared against
+
+- **GIVEN** the comparison is set to `Previous year`
+- **WHEN** a KPI card renders its footnote
+- **THEN** the footnote names the previous year rather than the previous period
+
+### Requirement: The previous window is the same span immediately before the current one
+
+For a preset period, the previous window SHALL be the same span ending where the current window
+begins — `Last 2d` compares against the two days before those two days. For a custom range, the
+previous window SHALL be the same duration ending at the custom range's start. The previous window
+SHALL be derived from the current window when the window is taken, not stored, so a preset's
+sliding window and its comparison always share an edge.
+
+This rule governs `Previous period`. The calendar comparisons derive their window differently — see
+the requirement below.
+
+The window SHALL be taken once per change to the inputs that define it — the period, the custom
+range, and the manual refresh — and SHALL NOT be re-taken during rendering, so a preset window
+computed from the clock does not produce a new range on every pass.
+
+#### Scenario: Preset period compares against the adjacent span
+
+- **GIVEN** the period is `Last 2d`
+- **WHEN** the page requests data with comparison on
+- **THEN** the current window covers the last two days
+- **AND** the previous window covers the two days ending where the current window begins
+
+#### Scenario: Custom range compares against the same duration before it
+
+- **GIVEN** a custom range spanning four days
+- **WHEN** the page requests data with comparison on
+- **THEN** the previous window spans four days and ends at the custom range's start
+
+#### Scenario: A window is taken once per input change
+
+- **GIVEN** the page has loaded
+- **WHEN** nothing about the period changes
+- **THEN** no widget re-issues its request
+
+### Requirement: Each window is a request of its own
+
+The query grammar carries no comparison in expression position, so one aggregate cannot split its
+own rows into two windows. A widget group that compares SHALL therefore issue one request per
+window and pair the responses on the client, rather than widening a single request to the union of
+the two.
+
+Turning comparison on SHALL add exactly one request per comparing shape, and SHALL leave every
+non-comparing shape — the share chart's ranking, the heatmap's week, the split series, the spend
+periods — at one request.
+
+#### Scenario: Enabling comparison adds one request per comparing shape
+
+- **GIVEN** the page has loaded with comparison off
+- **WHEN** the user turns comparison on
+- **THEN** the totals, the bucketed series and the breakdown rows are each requested a second time
+- **AND** each of those requests covers exactly one of the two windows
+
+#### Scenario: A row is attributed to exactly one window
+
+- **WHEN** the two responses are paired into current and previous figures
+- **THEN** every row contributes to exactly one of the two windows
+- **AND** no row on the boundary is counted in both
+
+### Requirement: Five KPI cards head the dashboard
+
+The dashboard SHALL render a KPI row above the charts, carrying five cards in this order:
+`Total spend`, `Requests`, `Tokens`, `Cost per 1M tokens`, `Unique callers`. Each card SHALL show a
+title, its current value, a delta against the previous period when comparison is on, and a
+sparkline over the current window. A card MAY carry a one-line caption beneath the value.
+
+A card's value SHALL be abbreviated for reading (thousands, millions, billions), with money carrying
+its currency marker: a card holds one figure in a fixed width, and that is what an abbreviation is
+for.
+
+Every figure read as part of a set SHALL be stated in full instead, with its thousands grouped —
+`1,000,000`, not `1000000` and not `1.0M` — in one locale for the whole page. That covers the
+breakdown's columns, the donut's legend and centre, every plot's tooltip and its
+axes. An abbreviation compares badly where the comparison is the point: `1.0M` against `1.2M` hides
+the difference a reader came for. One locale, rather than the reader's own, keeps two widgets from
+separating thousands differently side by side.
+
+Where a column's rounding can hide what the change beside it measures — an error rate printing
+`0.0%` that still rose by half again, a price rounded past its cents — the figure SHALL offer its
+exact reading on hover, stating the counts it was derived from.
+
+A card whose request failed SHALL render the existing no-data state rather than a zero, because zero
+spend and unknown spend are different answers.
+
+This row replaces the four single-value cards of the current Chat view and the three of the MCP
+view. Each view SHALL render the KPI row with the cards its data supports.
+
+#### Scenario: A card abbreviates and a column does not
+
+- **GIVEN** a window of a million calls
+- **WHEN** the KPI row renders
+- **THEN** its card reads `1.0M`
+- **WHEN** the breakdown renders a row of a million calls
+- **THEN** that figure reads `1,000,000`
+
+#### Scenario: A rounded figure offers its exact reading
+
+- **GIVEN** a row whose error rate rounds to `0.0%` while its change reads a rise
+- **WHEN** the reader hovers the figure
+- **THEN** the exact rate is stated, with the failures and calls behind it
+
+#### Scenario: KPI row renders five cards in order
+
+- **WHEN** the Models view loads successfully
+- **THEN** the KPI row shows `Total spend`, `Requests`, `Tokens`, `Cost per 1M tokens` and
+  `Unique callers` in that order
+
+#### Scenario: A failed request shows no data rather than zero
+
+- **GIVEN** the request feeding a card failed
+- **WHEN** the card renders
+- **THEN** it shows the no-data state
+- **AND** it does not show `0`
+
+#### Scenario: Cards carry no delta when comparison is off
+
+- **GIVEN** comparison is off
+- **WHEN** the KPI row renders
+- **THEN** no card shows a delta
+- **AND** every card still shows its sparkline
+
+### Requirement: Tokens are counted once per call, on the row that was priced for it
+
+`Tokens` SHALL be the sum of prompt and completion tokens over the rows that carry a price of their
+own. An application calling a model gets a row of its own carrying the tokens of the call it made,
+so summing every row counts those tokens twice — once on the application and once on the model.
+Spend does not double the same way: only the row that reached a model carries a price. The presence
+of a price is therefore what separates a call from a record of a call, and the test SHALL be for a
+price being present rather than for any particular amount.
+
+The summation is expressed in the query, so no fold can disagree with the card about which rows
+count, and `Cost per 1M tokens` divides two figures resting on one basis.
+
+A model configured with no price loses its tokens from the total by the same rule. Measured on the
+live dataset that is under a hundredth of a percent of them, against roughly two percent lost to
+double counting, so the trade is taken knowingly.
+
+An earlier draft guarded the sum with a non-empty upstream URI instead, reading a row without one as
+an orchestrating application. Measured, that reading was wrong twice over: the column is empty on
+whole adapters, so the guard dropped two fifths of all tokens — ordinary model calls holding about
+half of all spend — while keeping the orchestrator rows it was meant to drop, which fill it.
+
+`Cost per 1M tokens` SHALL divide `Total spend` by that token total, scaled to one million tokens.
+A window whose token total is zero SHALL state no figure rather than a division result.
+
+Because both figures are window sums rather than per-bucket ones, they SHALL be derived from
+the consumption response, and their deltas from its previous-window measures.
+
+#### Scenario: An application's row does not repeat its model's tokens
+
+- **GIVEN** an application called a model for a thousand tokens
+- **AND** the window therefore holds the application's row and the model's row
+- **WHEN** the KPI row renders
+- **THEN** `Tokens` counts that thousand once
+- **AND** `Total spend` sums the price of the model's row, which the application's row does not carry
+
+#### Scenario: Tokens and spend rest on one basis
+
+- **WHEN** `Cost per 1M tokens` renders
+- **THEN** the rows behind its numerator are the rows behind its denominator
+
+#### Scenario: Multi-project rows for one deployment collapse first
+
+- **GIVEN** the window contains three rows for the same deployment triplet under three different
+  projects, carrying 0, 100 and 200 prompt tokens
+- **WHEN** the `Tokens` card renders
+- **THEN** it shows 300
+
+#### Scenario: Zero tokens suppress the cost-per-token card
+
+- **GIVEN** the window's token total is zero
+- **WHEN** the `Cost per 1M tokens` card renders
+- **THEN** it shows the no-data state
+- **AND** it does not show a division result
+
+#### Scenario: Large totals keep precision
+
+- **GIVEN** the token total approaches the largest exactly representable integer
+- **WHEN** the card renders
+- **THEN** the displayed figure is the precise sum, accumulated without intermediate float drift
+
+### Requirement: The caller count is over the principal, so key traffic is not one caller
+
+The fifth card SHALL count distinct **principal references** over the window: the identity-provider
+user id on a call authenticated by a token, and the project the key belongs to on a call
+authenticated by an API key. Both branches of traffic are therefore counted, which is why the card
+is named for callers rather than users.
+
+Where the principal reference is available it SHALL NOT count the anonymized user hash. That field is populated only on token calls and empty
+on every key call, so a distinct count over it folds all key traffic into one bucket and reports it
+as a single caller — measured on the live dataset, the overwhelming majority of rows counted as
+one.
+
+Two keys of the same project SHALL count once, because the log records no key identifier. The card
+therefore answers "how many distinct principals called" and not "how many keys were used".
+
+The principal reference comes from an enrichment provisioned per environment, and the service
+withholds catalogued-sensitive columns by role, so the column is not always there. The page SHALL
+read the usage log schema before it issues a request and, where the schema does not serve the
+column — or cannot be read — SHALL count the anonymized user hash instead and name no principal
+reference in any request: the service rejects a query that names a column it does not serve as an
+unknown field, which failed every read on the page rather than only the card. Where the column is
+served but empty on a row, that row SHALL fall back to the hash as well. Where the schema serves
+neither column, the page SHALL ask for no caller count and SHALL NOT draw the caller card.
+
+#### Scenario: A schema without the principal reference still loads the dashboard
+
+- **GIVEN** the usage log schema served to the current user has no `usage_client_identity.user_ref`
+- **WHEN** the dashboard loads
+- **THEN** no request names that column
+- **AND** the caller card counts distinct user hashes
+
+#### Scenario: A schema with neither caller column hides the caller card
+
+- **GIVEN** the usage log schema served to the current user has neither `usage_client_identity.user_ref` nor `user_hash`
+- **WHEN** the dashboard loads
+- **THEN** no request names either column
+- **AND** the caller card is not drawn, while the other cards load
+
+#### Scenario: Key traffic is not folded into a single caller
+
+- **GIVEN** the window holds calls from two projects' API keys and from one user's token
+- **WHEN** the card renders
+- **THEN** it counts three callers
+
+#### Scenario: Two keys of one project count once
+
+- **GIVEN** every call in the window was made with one of two keys belonging to the same project
+- **WHEN** the card renders
+- **THEN** it counts one caller
+
+### Requirement: A delta states direction, magnitude and the compared value
+
+When comparison is on, a card's delta SHALL show the signed percentage change from the previous
+window's value to the current one, and the card SHALL make the compared figure available — either in
+its caption or on hover — so a percentage is never the only thing a reader can see.
+
+Direction SHALL be conveyed by more than colour: an arrow SHALL show it and a screen reader SHALL
+hear it as a word, and the colour SHALL only reinforce it.
+
+A delta SHALL be coloured by whether the change is the welcome one **for that metric**, which the
+page declares per metric rather than inferring from the sign: spend, cost per token, error rate and
+latency are better falling; requests, tokens and users are read as better rising. A
+metric with no declared direction SHALL render its delta without a judgement. Colour is therefore
+never the only carrier of meaning, and a rise is not uniformly green.
+
+A previous window whose value is zero while the current one is not SHALL render as a new-activity
+marker rather than an infinite or 100% change. Both windows at zero SHALL render no delta.
+
+#### Scenario: Delta shows direction as a shape
+
+- **WHEN** a card's current value exceeds its previous value
+- **THEN** the delta shows an upward arrow
+- **AND** a screen reader hears the change as an increase
+- **AND** the direction is legible without relying on colour
+
+#### Scenario: Colour follows the metric, not the sign
+
+- **WHEN** spend rises and requests rise by the same proportion
+- **THEN** the spend delta is coloured as unwelcome and the requests delta as welcome
+
+#### Scenario: Previous value is available to the reader
+
+- **WHEN** a delta is shown
+- **THEN** the previous window's value is reachable from the card
+
+#### Scenario: Growth from zero is not a percentage
+
+- **GIVEN** the previous window's value is zero and the current one is not
+- **WHEN** the card renders
+- **THEN** the card marks this as new activity
+- **AND** it shows neither an infinite change nor `+100%`
+
+#### Scenario: Both windows empty show no delta
+
+- **GIVEN** both windows' values are zero
+- **WHEN** the card renders
+- **THEN** no delta is shown
+
+### Requirement: A sparkline plots the current window only
+
+A card's sparkline SHALL plot the metric over the current window's time buckets, at the resolution
+the page already picks for its time series. It SHALL NOT plot the previous window — the delta
+carries that comparison — and SHALL NOT carry axes, gridlines or a legend.
+
+A sparkline SHALL be omitted, leaving the value and delta in place, for a metric the bucketed
+request cannot express per bucket. Empty buckets inside the window SHALL be plotted as zero rather
+than skipped, so a gap in traffic reads as a gap.
+
+#### Scenario: Sparkline follows the page resolution
+
+- **WHEN** the period is long enough that the time series buckets by hour
+- **THEN** each sparkline plots one point per hour of the current window
+
+#### Scenario: Gaps in traffic are plotted as zero
+
+- **GIVEN** the window contains buckets with no rows
+- **WHEN** a sparkline renders
+- **THEN** those buckets are plotted at zero
+- **AND** the line does not join across them as if they were absent
+
+#### Scenario: A metric without per-bucket meaning omits its sparkline
+
+- **GIVEN** a card whose metric cannot be expressed per time bucket
+- **WHEN** the card renders
+- **THEN** the card shows its value and delta with no sparkline
+
+### Requirement: The heatmap paints the figure the reader picks
+
+The heatmap SHALL offer a switch between the figures it can paint per hour — cost and requests —
+placed with the week pager, since both decide what the grid shows: one which week, the other which
+figure. Where cost is offered it SHALL be listed first and SHALL be the figure the heatmap opens
+with, because the LLM view is read for where the money goes.
+
+Both figures SHALL be read from the heatmap's own hourly response rather than a second request, so
+switching paints what is already in hand. The shading ceiling SHALL follow the active figure: an
+hour's cost has nothing to do with the busiest hour's call count.
+
+Cost SHALL be offered in the LLM view only. An MCP row carries no price, so the grid there would be
+a week of empty cells. An hour with no price SHALL read as nothing rather than as its call count.
+Where cost is not offered, the heatmap SHALL paint requests.
+
+A cell SHALL state the active figure in its own words — a count of requests, or an amount spent —
+in both its tooltip and the label a screen reader reads.
+
+#### Scenario: The LLM view opens on cost
+
+- **WHEN** the LLM view's heatmap renders
+- **THEN** it offers `Cost` and then `Requests`
+- **AND** `Cost` is the selected figure
+
+#### Scenario: Switching the figure repaints the grid
+
+- **GIVEN** the LLM view's heatmap on requests
+- **WHEN** the reader switches to cost
+- **THEN** the cells shade by the cost of each hour
+- **AND** no further request is issued
+
+#### Scenario: The MCP view offers no cost
+
+- **WHEN** the MCP view's heatmap renders
+- **THEN** it offers requests alone
+
+#### Scenario: A cell names the figure it carries
+
+- **GIVEN** the grid is painting cost
+- **WHEN** the reader hovers an hour
+- **THEN** the tooltip states that hour and the amount, with no word between them
+
+### Requirement: The heatmap is a day-by-hour grid over the current window
+
+The dashboard SHALL render a heatmap whose rows are days and whose columns are the 24 hours of a
+day, each cell carrying the call count for that hour of that day within the current window. Cells
+SHALL be read from the bucketed request, restricted to the current window; the previous window SHALL
+NOT be plotted.
+
+The hour axis SHALL state the timezone it is drawn in, because an hour-of-day reading is meaningless
+without one. A window shorter than one day SHALL still render, showing the hours it covers.
+
+A window whose span exceeds what the grid can show legibly SHALL render the most recent days that
+fit and state that it is truncated, rather than compressing every day into an unreadable row.
+
+#### Scenario: Seven-day window renders seven day rows
+
+- **GIVEN** the period covers seven days
+- **WHEN** the heatmap renders
+- **THEN** it shows seven day rows and 24 hour columns
+- **AND** the hour axis states its timezone
+
+#### Scenario: Sub-day window renders the hours it covers
+
+- **GIVEN** the period covers six hours
+- **WHEN** the heatmap renders
+- **THEN** it renders the covered hours rather than an empty grid
+
+#### Scenario: Over-long window is truncated with a statement
+
+- **GIVEN** the period covers more days than the grid can render legibly
+- **WHEN** the heatmap renders
+- **THEN** it shows the most recent days that fit
+- **AND** it states that earlier days are not shown
+
+### Requirement: Intensity is relative to the window and readable without colour alone
+
+Cell intensity SHALL be scaled against the window's own maximum cell, so the grid always uses its
+full range. The heatmap SHALL carry a legend naming the low and high ends of that scale with their
+values, so intensity is quantified rather than merely ordered.
+
+An hour with no calls SHALL be visually distinct from the lowest non-zero intensity — an empty hour
+and a quiet hour are different facts. Every cell's exact value SHALL be reachable on hover and
+through its accessible name, so the grid does not depend on colour discrimination to be read.
+
+#### Scenario: Scale is relative to the window maximum
+
+- **GIVEN** the busiest hour in the window carries 500 calls
+- **WHEN** the heatmap renders
+- **THEN** that cell renders at the high end of the scale
+- **AND** the legend names the value at each end
+
+#### Scenario: Empty hour differs from a quiet hour
+
+- **GIVEN** one hour carries no calls and another carries one call
+- **WHEN** the heatmap renders
+- **THEN** the two cells are visually distinct
+
+#### Scenario: Cell value is reachable without colour
+
+- **WHEN** the user hovers or focuses a cell
+- **THEN** the cell's day, hour and exact call count are stated
+
+### Requirement: The heatmap follows the view and the page filters
+
+The heatmap SHALL plot the active view's calls — model calls or MCP calls — and SHALL
+honour the page's applied entity and project filters. Switching view SHALL replot it from the new
+view's bucketed request without leaving the previous view's cells in place.
+
+#### Scenario: Switching view replots the grid
+
+- **GIVEN** the heatmap shows model calls
+- **WHEN** the user switches `View by` to MCP
+- **THEN** the grid replots MCP calls
+- **AND** no cell from the previous view remains
+
+#### Scenario: Filters narrow the grid
+
+- **GIVEN** a project filter is applied
+- **WHEN** the heatmap renders
+- **THEN** its cells count only calls matching that filter
+
+### Requirement: The donut shows the top five plus a residual slice
+
+The dashboard SHALL render a donut splitting the current window across the five highest entities of
+the active view's primary dimension, with every remaining entity folded into one `Other` slice.
+Slices SHALL be ordered by value, descending, and `Other` SHALL always render last regardless of its
+size.
+
+The measure it splits by SHALL be the one the reader selects — see the requirement below. Each slice
+SHALL state its entity and its share of the window's total **of that measure**. The donut's centre
+SHALL state that same total, so the shares have a denominator on screen.
+
+`Other` SHALL state how many entities it folds, so a reader can tell a long tail from a sixth
+entity. When five or fewer entities exist, no `Other` slice SHALL be rendered.
+
+#### Scenario: Long tail folds into Other
+
+- **GIVEN** the window contains twelve deployments
+- **WHEN** the donut renders
+- **THEN** it shows five named slices and one `Other` slice
+- **AND** `Other` states that it folds seven entities
+
+#### Scenario: Other renders last even when large
+
+- **GIVEN** `Other` carries a larger share than any named slice
+- **WHEN** the donut renders
+- **THEN** `Other` is still the last slice
+
+#### Scenario: Few entities render without Other
+
+- **GIVEN** the window contains three deployments
+- **WHEN** the donut renders
+- **THEN** it shows three slices and no `Other` slice
+
+#### Scenario: Centre states the denominator
+
+- **WHEN** the donut renders
+- **THEN** its centre states the window's total of the selected measure
+
+### Requirement: The dialog lists the whole dimension, a block at a time
+
+`View all` SHALL open a dialog listing the dimension beyond the ring's five slices, reading it in
+blocks as the list is scrolled rather than in one page.
+
+The ring in that dialog SHALL draw every row read so far, not the card's five. The dialog is where
+the long tail is being read, and a ring that kept folding it into one slice would answer the
+question the card already answered. Its residual is therefore the window's total minus the rows
+read, and SHALL shrink as the legend reads further.
+
+The dialog's own filter SHALL narrow the list and never the ring, and SHALL apply to the rows read so
+far: it is a way to find an entity in a list that is already open, not a second reading of the
+window.
+
+While a block is in flight the dialog SHALL say so with a spinner under the list, so the rows
+already read stay where the reader left them.
+
+#### Scenario: A block in flight is stated under the list
+
+- **GIVEN** the dialog is reading the next block
+- **WHEN** it renders
+- **THEN** a spinner is shown under the list
+- **AND** it is gone once the block has arrived
+
+#### Scenario: Scrolling the list reads further into the dimension
+
+- **GIVEN** the dialog is open on a dimension holding more entities than one block
+- **WHEN** the reader scrolls the list to its end
+- **THEN** the next block of entities is read and listed
+
+#### Scenario: The ring draws what the list has read
+
+- **GIVEN** the dialog has read several blocks
+- **WHEN** the ring renders
+- **THEN** every row read so far is a slice of it
+- **AND** its residual is the window's total minus those rows
+
+#### Scenario: Nothing further is read once the dimension ends
+
+- **GIVEN** the dialog has read every entity of the dimension
+- **WHEN** the reader scrolls the list to its end again
+- **THEN** no further request is issued
+
+### Requirement: Shares are computed against the window total, and ties are ordered stably
+
+A slice's share SHALL be its calls divided by the sum of all the window's calls, including the
+entities folded into `Other` — never against the largest slice. The shares of all rendered slices
+SHALL therefore sum to the whole.
+
+Entities tied on value SHALL be ordered by name so that repeated renders of the same window produce
+the same donut, and the five-slice cut SHALL be taken after that ordering, so a tie at the boundary
+resolves the same way every time.
+
+An entity with a missing name SHALL render the same fallback label the breakdown table uses for that
+dimension, never the literal text `undefined`.
+
+#### Scenario: Shares sum to the whole
+
+- **WHEN** the donut renders with an `Other` slice
+- **THEN** the shares of the five named slices and `Other` sum to 100%
+
+#### Scenario: Share is not relative to the largest slice
+
+- **GIVEN** the largest entity accounts for two fifths of the window's calls
+- **WHEN** the donut renders
+- **THEN** its slice states two fifths, not the whole
+
+#### Scenario: Ties resolve identically across renders
+
+- **GIVEN** two entities at the five-slice boundary carry equal call counts
+- **WHEN** the donut is rendered twice over the same window
+- **THEN** the same entity is named in both renders
+
+#### Scenario: Missing name uses the shared fallback label
+
+- **GIVEN** a slice's entity name is missing
+- **WHEN** the donut renders
+- **THEN** the slice carries the dimension's fallback label
+- **AND** the literal text `undefined` is not shown
+
+### Requirement: Hovering a slice answers which slice it is
+
+Hovering a slice SHALL keep that slice's colour and fade the others, so the ring answers which slice
+the cursor is on. The hovered slice SHALL NOT grow: scaling it moves the ring's edge under the
+cursor, which reads as the pointer having left the slice it is on.
+
+#### Scenario: The hovered slice is the only one at full strength
+
+- **WHEN** the cursor rests on a slice
+- **THEN** that slice keeps its colour and the others fade
+- **AND** the ring's geometry does not change
+
+### Requirement: The donut follows the view's primary dimension
+
+The donut's dimension SHALL be the active view's leading breakdown dimension — models in the LLM
+view, MCP servers in the MCP view, owners in the Routes view — matching the breakdown table's
+default tab, so the two widgets never disagree about what the page is about.
+
+The donut SHALL read that dimension from a request of its own rather than from the breakdown
+table's. Sharing the table's response would make the ring reload, and change what it splits by,
+every time a reader switched the tab below it.
+
+#### Scenario: Donut and table agree on dimension
+
+- **WHEN** a view loads
+- **THEN** the donut splits by the same dimension the breakdown table's default tab lists
+
+#### Scenario: Switching view switches the dimension
+
+- **GIVEN** the donut splits by model
+- **WHEN** the user switches `View by` to MCP
+- **THEN** the donut splits by MCP server
+
+#### Scenario: The Routes view splits by owner
+
+- **WHEN** the user switches `View by` to `Routes`
+- **THEN** the donut splits by owner
+
+#### Scenario: Switching the breakdown tab leaves the donut alone
+
+- **GIVEN** the donut splits by model
+- **WHEN** the user selects the Projects tab in the breakdown table
+- **THEN** the donut still splits by model
+- **AND** it issues no request
+
+### Requirement: One tabbed table replaces the per-dimension grids
+
+Each view SHALL render a single breakdown table whose tabs select the dimension its rows are grouped
+by. The tab sets SHALL be:
+
+- **LLM view**: `Models`, `Applications`, `Projects`
+- **MCP view**: `MCP Servers`, `Tools`, `Applications`, `Projects`
+- **Routes view**: `Owners`, `Paths`, `Callers`, `Projects`
+
+The first tab of each set SHALL be the default. Switching tab SHALL issue exactly one request — the
+tab request named under the request contract above, grouped by that tab's dimension and ordered and
+limited server-side — and SHALL NOT re-issue the view's other requests. A tab is grouped and ranked
+by the backend rather than regrouped on the client because a top-N taken over rows grouped by every
+dimension at once ranks combinations, not the dimension the tab is about.
+
+The Routes view's `Callers` tab SHALL rank the deployment that called the route, and SHALL carry the
+`Direct call` fallback for a route called by a key or a user rather than by a deployment, with the
+tooltip that names such a call.
+
+The selected period SHALL apply to every tab.
+
+#### Scenario: Default tab is the view's leading dimension
+
+- **WHEN** the MCP view loads
+- **THEN** the breakdown table shows the `MCP Servers` tab
+- **AND** tabs for `Tools`, `Applications` and `Projects` are offered
+
+#### Scenario: The Routes view opens on owners
+
+- **WHEN** the Routes view loads
+- **THEN** the breakdown table shows the `Owners` tab
+- **AND** tabs for `Paths`, `Callers` and `Projects` are offered
+
+#### Scenario: A route called by a client is a direct call
+
+- **GIVEN** a route call with no calling deployment
+- **WHEN** the Routes view's `Callers` tab renders
+- **THEN** the call is counted under `Direct call`
+- **AND** its tooltip names a call made by a key or a user
+
+#### Scenario: Switching tab issues exactly one request
+
+- **GIVEN** the breakdown table has rendered
+- **WHEN** the user selects another tab
+- **THEN** one request is issued per window, grouped by the new tab's dimension
+- **AND** the view's totals, bucketed and leading-dimension responses are reused
+
+### Requirement: Each tab states what it counts and what one row aggregates
+
+The table SHALL state, for the active tab, which field the dimension is read from and what a single
+row covers. A tab's name alone does not say it: `Applications` ranks the deployment that *called*
+the model rather than applications that were called, and `Projects` ranks the project the calling
+API key belongs to rather than a project the traffic was about. A reader who cannot tell which of
+those a row is has no way to read the ranking.
+
+The statement SHALL change with the tab, SHALL sit with the table's title rather than inside a
+tooltip, and SHALL name the fallback bucket where the tab has one, so a row labelled `Direct call`
+or `No Project` is explained where it is ranked.
+
+#### Scenario: The statement follows the active tab
+
+- **GIVEN** the `Models` tab is selected
+- **WHEN** the user selects `Projects`
+- **THEN** the table's description changes to the one describing projects
+
+#### Scenario: A fallback bucket is explained where it is ranked
+
+- **WHEN** the `Applications` tab is selected
+- **THEN** its description names the bucket a call made directly against a model falls into
+
+### Requirement: The LLM view states each row's cost
+
+In the LLM view, every tab SHALL carry a cost column holding the sum of the row's prices over the
+window, formatted as money like every other spend figure on the page. A row with no price SHALL
+state no figure rather than a zero.
+
+The MCP view SHALL NOT render the column: an `mcp` row carries no price at all, so the column would
+be an empty one on every row rather than a measure.
+
+#### Scenario: Cost is stated per row in the LLM view
+
+- **WHEN** the `Models` tab renders in the LLM view
+- **THEN** each row states its cost over the window
+
+#### Scenario: The MCP view offers no cost column
+
+- **WHEN** the `MCP Servers` tab renders
+- **THEN** the table has no cost column
+
+### Requirement: Rows state their share of the window as a figure
+
+Every tab SHALL render, per row, the dimension value, its `Share of calls`, its call count, and the
+tab's own extra measures. `Share of calls` SHALL be the row's calls divided by **the sum of all rows
+in the window for that dimension** — including rows beyond the shown top-N — never by the largest
+row's calls. A share MUST NOT be rendered such that the top row reads as 100% while accounting for a
+fraction of the traffic.
+
+The share SHALL be stated as a figure, not as a bar. Rows arrive ranked by calls, so a bar's length
+only ever descends and restates the ranking, while taking a column's width to do it.
+
+Every column SHALL take an equal share of the table's width, and every figure SHALL end on its
+cell's right edge, so a column reads down as one set of numbers. Each measure carries its own change
+beside it, so the columns hold figures of one kind and deserve one width.
+
+On the card, rows SHALL be ordered by calls, descending, with ties broken by the dimension value so
+repeated renders of one window agree. That order is the backend's and the card offers no control
+over it, so the card's header SHALL NOT claim a sort state: `aria-sort` belongs to a column a reader
+can reorder, and announcing one that cannot be changed offers an interaction that does not exist.
+The full-list dialog opens on cost where the rows carry it, and lets the reader change the order.
+
+#### Scenario: Share is relative to the window total
+
+- **GIVEN** the window carries 204 calls across seven deployments, the largest of which carries 81
+- **WHEN** the `Deployments` tab renders
+- **THEN** the largest row's share reads as its portion of 204, not as 100%
+
+#### Scenario: The share is a figure
+
+- **WHEN** a row renders its share
+- **THEN** it states the percentage as a figure and draws no bar
+
+#### Scenario: Shares account for rows beyond the top-N
+
+- **GIVEN** more rows exist than are shown
+- **WHEN** the shown rows render
+- **THEN** their shares sum to less than 100%
+- **AND** each share is computed against the full window total
+
+#### Scenario: No column claims a sort a reader cannot change
+
+- **WHEN** the card renders ordered by calls
+- **THEN** no column header of the card announces a sort state
+
+### Requirement: Each measure states its own change beside it
+
+When comparison is on, every measure a row states — its calls, its error rate, its average latency
+and its cost — SHALL state its own change from the previous window, in the same cell, as the ratio of
+that measure's own previous value. The change SHALL be read from the previous-window response,
+matched to the row by its dimension value.
+
+There SHALL be no delta column of its own. One column can compare only one measure, and standing
+beside `Cost` it read as a change in money while it was counting calls. Each change SHALL carry the
+direction its own measure gives it — more calls read as growth, more spend, more errors and more
+latency do not — in the design system's badge, the same one the KPI cards state their change in, so
+one change reads the same way page-wide. Every change badge SHALL be one width, whatever it holds.
+
+The figure SHALL end on the cell's right edge, like every other number in the table, and SHALL take
+the width of the widest figure its column holds, so the change sits right beside the longest figure
+and every other change lines up under it. The figures SHALL read down as one set and the changes as
+another. In the full-list dialog that width SHALL only grow as blocks load, so the figures never move
+while the reader scrolls.
+
+A row absent from the previous window's response SHALL be called new only when that response was
+the whole dimension — non-empty, and shorter than the page size it was asked for. When the previous
+window recorded nothing at all, or its response was cut at the page size, the row's absence says
+nothing: the table SHALL state no comparison for it rather than calling it new. A window with no
+traffic would otherwise make every row look new, and a row ranked below the cut would be called new
+while it had been there all along.
+
+A row present in the previous window but absent from the current one SHALL NOT be added to the
+table — the table lists the current window's rows — and its disappearance is instead visible in the
+totals.
+
+The delta SHALL carry its direction as a shape and as text, not as colour alone: an arrow, the
+magnitude, and the direction spelled out for a screen reader.
+
+When comparison is off, no change SHALL be stated.
+
+#### Scenario: Delta matched by dimension value
+
+- **GIVEN** comparison is on and a deployment appears in both windows
+- **WHEN** its row renders
+- **THEN** the delta states the signed change between the two windows' call counts
+
+#### Scenario: A row new in this window reads as new
+
+- **GIVEN** the previous window's response listed the whole dimension
+- **AND** a model has calls in the current window and none in that response
+- **WHEN** its row renders
+- **THEN** the delta column marks it as new
+- **AND** it shows no percentage
+
+#### Scenario: An empty previous window makes no row new
+
+- **GIVEN** the previous window recorded no calls at all
+- **WHEN** the table renders
+- **THEN** no row is marked new
+- **AND** each states that there is no comparison
+
+#### Scenario: A truncated previous response makes no row new
+
+- **GIVEN** the previous window's response was cut at the page size
+- **AND** a model in the current window is absent from it
+- **WHEN** its row renders
+- **THEN** it states no comparison rather than being marked new
+
+#### Scenario: Each measure compares itself
+
+- **GIVEN** comparison is on and a row's cost doubled while its calls halved
+- **WHEN** the table renders
+- **THEN** the cost cell states a rise and the calls cell a fall
+- **AND** the rise in cost is toned as unwelcome while a rise in calls would be welcome
+
+#### Scenario: No delta column is rendered
+
+- **GIVEN** comparison is on
+- **WHEN** the table renders
+- **THEN** no column of its own states the change
+
+#### Scenario: Figures line up whatever the changes beside them
+
+- **GIVEN** one row states a change and the next has none to state
+- **WHEN** the table renders
+- **THEN** both figures end on the same line, and so do the changes beside them
+
+#### Scenario: Nothing is stated when comparison is off
+
+- **GIVEN** comparison is off
+- **WHEN** the table renders
+- **THEN** no cell states a change
+
+### Requirement: Top-N is answered by the backend and the dialog holds the full list
+
+The card SHALL show the ranked head of the dimension — ten rows — and SHALL say so beside its title,
+naming the number it is cut at, so the head is not taken for the whole list. It SHALL offer a
+`View all` affordance that opens the full list in a dialog. Both the card's page and the full list
+SHALL be ordered and limited by the backend, not by trimming a client-side list.
+
+The card SHALL NOT offer column sorting. It holds one ranked page, so a sort there would reorder that
+page while hiding that the rest of the dimension was never fetched.
+
+The dialog SHALL let the reader sort by any of its columns — the dimension, share, calls, error rate,
+average latency and cost — ascending or descending. The sort SHALL be taken by the backend over the
+whole dimension, never applied to the blocks already read: the dialog reads block by block, and a
+client-side sort would order the rows in hand and silently leave the rest where they were. The sort
+SHALL be part of what identifies the list: a new sort drops the blocks in hand and reads from the
+first one again. Where cost is offered the dialog SHALL open sorted by cost, descending, because the
+full list is read for where the money went; where it is not, the dialog SHALL open in the card's order.
+The sort SHALL be one column at a time: choosing another column SHALL replace the opening sort rather
+than join it, since the backend ranks on one key. The sorted column SHALL announce its direction. Share orders as calls do, its denominator being the same for every row.
+
+Neither surface SHALL offer per-column filters: the dialog reads the whole dimension block by block,
+so a filter there would sift the blocks it has read and silently miss the rest.
+
+The card SHALL NOT offer a search field either: a term pushed into the aggregate re-ranks the whole
+window and answers with rows the card never loaded, so the field read as a page that reorders
+itself. Finding a row outside the head is the dialog's job.
+
+#### Scenario: The card states ten rows and offers the full list without counting it
+
+- **GIVEN** the window contains more rows than the bound
+- **WHEN** the table renders
+- **THEN** it offers `View all`
+- **AND** it states no row count, since the count it holds is the count of its own page
+
+#### Scenario: The card says it shows the top rows
+
+- **WHEN** the card renders
+- **THEN** its title states that it lists the top 10
+
+#### Scenario: The dialog opens on cost and gives it up to the reader's sort
+
+- **GIVEN** the LLM view
+- **WHEN** the full-list dialog opens
+- **THEN** its rows are ordered by cost, descending, and only the cost column announces a sort
+- **WHEN** the reader sorts by error rate
+- **THEN** the rows are ordered by error rate and cost no longer announces a sort
+
+#### Scenario: The dialog opens on calls where there is no cost
+
+- **GIVEN** the MCP view
+- **WHEN** the full-list dialog opens
+- **THEN** its rows are ordered by calls, descending
+
+#### Scenario: No column offers a filter on either surface
+
+- **WHEN** the card renders
+- **THEN** its columns offer no filter
+- **WHEN** the full-list dialog opens
+- **THEN** its columns offer no filter either, and it offers a search over the dimension
+
+#### Scenario: The card offers no search field
+
+- **WHEN** the card renders
+- **THEN** no search field is present
+- **AND** switching tab issues the tab's own request and nothing else
+
+#### Scenario: A row outside the head is reached through the dialog
+
+- **GIVEN** a deployment ranks below the card's ten rows
+- **WHEN** the user opens `View all` and searches for its name
+- **THEN** the row is listed
+
+#### Scenario: The dialog sorts on the backend
+
+- **GIVEN** the full-list dialog is open
+- **WHEN** the reader sorts by average latency, descending
+- **THEN** the dialog reads its first block again, ordered by average latency on the backend
+- **AND** the latency column announces a descending sort
+
+#### Scenario: The dialog sorts by error rate
+
+- **GIVEN** the full-list dialog is open
+- **WHEN** the reader sorts by error rate
+- **THEN** the rows arrive ordered by their share of failed calls over the whole dimension
+
+#### Scenario: The card offers no sort
+
+- **WHEN** the card renders
+- **THEN** none of its columns can be sorted
+
+### Requirement: The dialog reads the dimension a block at a time
+
+The dialog SHALL read its rows in blocks as it is scrolled, not as one page: a dimension can hold
+more rows than the query surface will answer at once, and a reader who opened the dialog to look at
+the head should not wait for the tail.
+
+The dialog SHALL offer one search field over the dimension, answered by the backend and matched
+case-insensitively, so a term reaches values no block has read. The term SHALL be debounced before
+it becomes a request, since the field reports every keystroke, and SHALL be part of what identifies
+the list: a new term drops the blocks in hand and reads from the first one again. Closing the dialog
+SHALL clear it.
+
+The ranking SHALL carry the dimension as its last key, so a block is a stable slice of it: two rows
+holding the same figure would otherwise be free to come back in either order, and the same row could
+arrive in two blocks or in none.
+
+While a block is in flight the dialog SHALL say so with a spinner over the rows, not in place of
+them: a block read on scroll leaves the rows above it on screen, and replacing the grid would drop
+the reader back to the top of the list.
+
+An empty result in the dialog SHALL be stated by the grid's own no-rows message: there the emptiness
+is a term that matched nothing, while the card's message names a period with no traffic — wrong, and
+drawn on top of the grid's own answer.
+
+The card's empty state SHALL name no period. The page states its window in the time filter above,
+and repeating it inside the card bought a second copy of that reading, its own formatting and three
+props threaded through the grid.
+
+A fallback bucket SHALL keep its ranked place in the dialog rather than being pinned last as it is
+on the card: a block is 25 rows of a longer list, so pinning moves the bucket to the end of its own
+block, which is a position in the middle of the list.
+
+The delta SHALL be read per block, by asking the previous window for that block's own dimension
+values. A block is a position in this window's ranking, which the previous window does not share, so
+the values are asked for by name. A row the previous window does not answer for SHALL state no
+comparison rather than being called new, and a fallback bucket — whose value is an absence rather
+than a name — SHALL state none either.
+
+#### Scenario: Scrolling reads the next block
+
+- **GIVEN** the dialog is open on a dimension holding more rows than one block
+- **WHEN** the reader scrolls past the loaded rows
+- **THEN** the next block is read at its offset
+- **AND** the rows already shown are not re-read
+
+#### Scenario: A block in flight is stated over the rows
+
+- **GIVEN** the dialog has rows on screen and is reading the next block
+- **WHEN** the grid renders
+- **THEN** a spinner is shown over those rows
+- **AND** the rows already read stay where they are
+
+#### Scenario: The search reaches the whole dimension
+
+- **GIVEN** the dialog is open
+- **WHEN** the reader searches for a value ranked below every loaded block
+- **THEN** the rows are read again from the first block, narrowed by that term
+- **AND** the matching row is listed
+
+#### Scenario: A term that matches nothing is stated by the grid
+
+- **GIVEN** the dialog is open and searched for a value no row carries
+- **WHEN** the grid renders
+- **THEN** the grid's own no-rows message is shown
+- **AND** the card's own empty message is not
+
+#### Scenario: Closing the dialog clears the term
+
+- **GIVEN** the dialog is open with a term typed
+- **WHEN** the reader closes it and opens it again
+- **THEN** the field is empty and the whole dimension is listed
+
+#### Scenario: A block states its own comparison
+
+- **GIVEN** comparison is on and the dialog is open
+- **WHEN** a block of rows is read
+- **THEN** the previous window is asked for those rows by name
+- **AND** a row it does not answer for states no delta
+
+### Requirement: Only the dialog and its blocks issue further requests
+
+`View all`, a scroll to the next block, and a term typed into the dialog's search SHALL be the only
+interactions on this table that issue a request.
+
+#### Scenario: Reading the table issues nothing beyond its blocks
+
+- **GIVEN** the dialog is closed
+- **WHEN** the reader switches a tab or reads the rows of the table
+- **THEN** no request is issued
+
+### Requirement: The split plot draws each series from zero
+
+The plot that splits the window across the view's leading dimension SHALL draw every series from a
+shared zero baseline, not stacked. A stack draws each series at its cumulative height, so the
+topmost series' line traces the bucket total and is read as that series' own figure — a model
+credited with the whole window's spike while the share chart beside it states a fraction of that.
+
+Each series' value SHALL therefore be readable against the axis, and a spike SHALL belong to the
+series that caused it. Series areas SHALL be drawn faintly enough to read where they overlap, which
+a stack's never did.
+
+The window total SHALL NOT be stated by this plot. It is not lost from the page: the plain plot
+states the total and the share chart states composition, so the three surfaces answer three
+questions rather than two of them answering composition.
+
+#### Scenario: A spike belongs to one series
+
+- **GIVEN** one entity accounts for most of a bucket's calls
+- **WHEN** the split plot renders
+- **THEN** that entity's line reaches its own figure
+- **AND** no other series' line is raised by it
+
+#### Scenario: A value is read off the axis
+
+- **WHEN** a reader follows a series to the axis
+- **THEN** the value they read is that series' own
+
+### Requirement: A breakdown row's label has one tooltip
+
+A dimension cell SHALL truncate its label in exactly one element, and that element SHALL own the
+tooltip revealing the full name. Where the cell and its inner element both clipped the text, each
+believed it was the one truncated and the pointer drew two tooltips carrying the same name, beside
+a third from the row's info icon.
+
+The info icon's own tooltip SHALL remain its own: it explains what the row is, which is a different
+question from what the row is called.
+
+#### Scenario: A truncated label reveals itself once
+
+- **GIVEN** a row whose name does not fit its column
+- **WHEN** the reader hovers the name
+- **THEN** one tooltip states the full name
+
+#### Scenario: The icon keeps its own explanation
+
+- **GIVEN** a fallback row carrying an info icon
+- **WHEN** the reader hovers the icon
+- **THEN** the explanation is shown
+
+### Requirement: The share chart splits by calls or by cost, and the backend ranks on the choice
+
+The share chart SHALL offer the measure it splits by: `Cost` and `Calls`. `Cost` SHALL be listed
+first and SHALL be the selection the card opens with, because the LLM view is read for where the
+money goes.
+
+The MCP and Routes views SHALL offer no such choice and SHALL split by calls alone: no `mcp` row and
+no route row carries a price, so a cost ring there would be empty whatever the window. Switching
+the view SHALL return the selection to that view's default — `Cost` in the LLM view, `Calls`
+wherever cost is not offered.
+
+Choosing a measure SHALL re-issue the chart's ranking request **ordered by that measure**. The top-N
+cut is taken by the backend, so a ring ranked on calls and rendered on spend would show the five
+busiest entities' money rather than the five costliest entities — re-sorting the returned page
+cannot recover the rows the cut already dropped. This adds no new request shape: it is the same
+ranking request the page already issues, as a breakdown tab switch is.
+
+The ring's values, its denominator, its centre figure and the card's legend SHALL all follow the
+selected measure, and a money figure SHALL carry its currency marker wherever it is stated.
+
+The full-list dialog SHALL state **both** measures on every row, whichever one the reader opened it
+with, because the list has room for two figures where the card has room for one — and a reader deep
+in the long tail should not have to close the dialog to learn what a row costs. The rows SHALL keep
+the order the ring was ranked by, which is the measure the reader arrived with. Where a view prices
+nothing, the dialog SHALL state its single figure as the card does.
+
+While the re-ranking is being read, the chart SHALL keep the figures it already has rather than
+emptying: a ring replaced by a loader collapses the card to a fraction of its height and moves every
+widget below it. The figures SHALL state the measure they were **ranked by**, not the one just
+selected, so the interim reading is a correct picture of the old measure rather than a wrong one of
+the new. The selection flips the figures when its rows arrive.
+
+#### Scenario: Cost is offered in the LLM view
+
+- **WHEN** the share chart renders in the LLM view
+- **THEN** it offers `Cost` and then `Calls`
+- **AND** `Cost` is the selected measure
+
+#### Scenario: The MCP view offers no cost split
+
+- **WHEN** the share chart renders in the MCP view
+- **THEN** it offers no cost measure
+
+#### Scenario: The Routes view offers no cost split
+
+- **WHEN** the share chart renders in the Routes view
+- **THEN** it offers no cost measure
+
+#### Scenario: Choosing cost re-ranks on the backend
+
+- **GIVEN** the share chart is split by calls
+- **WHEN** the reader selects `Cost`
+- **THEN** the ranking request is re-issued ordered by spend
+- **AND** the ring names the costliest entities rather than the busiest ones
+
+#### Scenario: The board does not move while the re-ranking is read
+
+- **GIVEN** the share chart is split by calls
+- **WHEN** the reader selects `Cost` and the request is still in flight
+- **THEN** the ring still states its call figures
+- **AND** the card keeps its height
+
+#### Scenario: A cost ring states money
+
+- **GIVEN** the share chart is split by cost
+- **WHEN** it renders
+- **THEN** its centre and each legend row state a money figure with its currency marker
+
+#### Scenario: The dialog states both measures at once
+
+- **GIVEN** the share chart is split by calls
+- **WHEN** the reader opens the full list
+- **THEN** each row states both its call count and its cost
+- **AND** the list keeps the order the ring was ranked by
+
+#### Scenario: Switching view returns the measure to calls
+
+- **GIVEN** the share chart is split by cost in the LLM view
+- **WHEN** the reader switches to the MCP view
+- **THEN** the chart splits by calls
+
+#### Scenario: Returning to the LLM view returns to cost
+
+- **GIVEN** the reader switched from the LLM view to the MCP view
+- **WHEN** the reader switches back to the LLM view
+- **THEN** the chart splits by cost
+
+### Requirement: A tool row is one tool on one server
+
+A tool name is not unique across servers — the same `get_me` lives on dozens of toolsets — so the
+`Tools` tab SHALL group by the MCP server as well as the tool name. Each row SHALL be one tool on
+one server and SHALL state that server under the tool's own name.
+
+A row's identity SHALL carry both group values, so two servers' same-named tools are two rows
+wherever rows are matched by id. A request for the previous window's figures SHALL therefore ask by
+both parts of a key: matching on the dimension alone returns nothing, and every row's change reads
+as absent.
+
+The tab's search SHALL match the server as well as the tool, since a row is a tool on a server and a
+reader typing a server name means the tools it serves.
+
+A name SHALL be shown as a reader can take it in — without the `toolsets/` prefix, which the column
+already implies, and with Core's own percent-escapes decoded. A name that is not valid encoding SHALL
+be shown as it stands rather than dropped.
+
+#### Scenario: One tool name on two servers is two rows
+
+- **GIVEN** two MCP servers each expose a tool called `execute_python`
+- **WHEN** the `Tools` tab renders
+- **THEN** it shows two rows
+- **AND** each names its own server under the tool's name
+
+#### Scenario: The previous window is asked by both parts
+
+- **GIVEN** the `Tools` tab's full list is open with comparison on
+- **WHEN** the previous window's figures are requested
+- **THEN** the request groups by the server and the tool
+- **AND** each row states its change rather than an absent one
+
+#### Scenario: Searching by server finds its tools
+
+- **GIVEN** the `Tools` tab
+- **WHEN** the reader searches for a server's name
+- **THEN** the tools that server serves are listed
+
+#### Scenario: A tab without a qualifier is unchanged
+
+- **WHEN** the `Models` tab renders
+- **THEN** its rows are grouped by the deployment alone
+
+### Requirement: The MCP view counts tool calls, not protocol traffic
+
+Every request the MCP view issues SHALL be narrowed to the `tools/call` method, alongside its
+event-kind clause. Each figure in that view — the count card, the share chart, the time series, the
+breakdown rows, the error rate and the average latency — SHALL therefore rest on the same rows, and
+those rows SHALL be tool executions.
+
+An MCP client fires a handshake and a discovery exchange per connection: `initialize`,
+`notifications/initialized`, `tools/list`, `resources/list`. Measured on the live dataset those are
+the large majority of `mcp` rows and `tools/call` is a small minority of them. Counting them as
+calls made the view rank servers by how often clients connected rather than by what they did, and
+made its error rate and latency describe handshakes — which are fast and rarely fail — instead of
+tool execution.
+
+The view SHALL NOT offer a separate tool-call card, since every row it counts is a tool call and the
+card would restate the count beside it. The count card SHALL be named for tool calls in this view,
+so the figure that card carried is still stated.
+
+The view's surfaces SHALL be named for what they now count: its count card, its plain time-series
+plot and its share chart SHALL say tool calls rather than requests or calls.
+
+The LLM view SHALL carry no method clause: the method is an MCP concept and the column is empty on
+its rows.
+
+#### Scenario: Every MCP request is narrowed to the method
+
+- **WHEN** the MCP view issues any of its requests
+- **THEN** each carries a clause restricting the method to `tools/call`
+
+#### Scenario: The LLM view is unchanged
+
+- **WHEN** the LLM view issues its requests
+- **THEN** none of them carries a method clause
+
+#### Scenario: One count card, named for what it counts
+
+- **WHEN** the KPI row renders in the MCP view
+- **THEN** it offers no separate tool-call card
+- **AND** its count card is named for tool calls
+
+#### Scenario: The surfaces are named for tool calls
+
+- **WHEN** the MCP view renders
+- **THEN** its time-series plot and its share chart are named for tool calls
+
+#### Scenario: A ranking describes use rather than connections
+
+- **GIVEN** a server a client connects to often and calls rarely
+- **WHEN** the share chart and the breakdown rank the view's servers
+- **THEN** that server is ranked by the calls it served, not by the connections it received
+
+### Requirement: View by offers LLM, MCP and Routes
+
+The page's `View by` control SHALL offer three views, in this order: `LLM`, `MCP` and `Routes`.
+`LLM` SHALL remain the view the page opens with.
+
+Switching to `Routes` SHALL re-issue every request shape against the Routes view's rows, exactly as
+switching between LLM and MCP does, and SHALL keep the period and the `Compare` selection.
+
+#### Scenario: Routes is offered last
+
+- **WHEN** the page renders
+- **THEN** `View by` offers `LLM`, `MCP` and `Routes` in that order
+- **AND** `LLM` is selected
+
+#### Scenario: Switching to Routes keeps the window
+
+- **GIVEN** a custom period with comparison on
+- **WHEN** the user switches `View by` to `Routes`
+- **THEN** every widget reloads from the Routes view's rows
+- **AND** the period and the comparison are unchanged
+
+### Requirement: The Routes view reads application-route and global-route calls
+
+The Routes view SHALL read two kinds of row and no other:
+
+- an **application route** call: a row whose event kind is `route`. Its request URI has the shape
+  `/v1/deployments/<deployment>/route/<path>`, and its deployment is the deployment that declares
+  the route;
+- a **global route** call: a row whose event kind is empty and whose deployment is missing. Core
+  resolved it against its global routes map, and the log records neither a route name nor a
+  deployment for it.
+
+Every request the view issues SHALL carry that clause, so each of its figures rests on the same
+rows.
+
+#### Scenario: Both kinds are counted
+
+- **GIVEN** the window holds application-route calls and global-route calls
+- **WHEN** the Routes view loads
+- **THEN** its call count includes both
+
+#### Scenario: Model and MCP traffic is not counted
+
+- **GIVEN** the window holds LLM calls and MCP tool calls
+- **WHEN** the Routes view loads
+- **THEN** none of them is counted in any of its figures
+
+### Requirement: The LLM view does not count global route calls
+
+The LLM view SHALL exclude global route calls as defined above. Their event kind is empty, which
+the LLM view otherwise reads as an LLM call made through an API that carries no classified kind,
+so without the exclusion router and proxy traffic is counted as model calls, ranked as a model row
+with no name, and its latency is averaged into the models'.
+
+Excluding them SHALL NOT change the LLM view's spend or tokens, since no route row carries a price
+or a token count. It SHALL change the view's request count, error rate and latency by exactly the
+excluded rows.
+
+An LLM call whose event kind is empty and whose deployment is present SHALL still be counted.
+
+#### Scenario: A global route call is not an LLM call
+
+- **GIVEN** the window holds a global route call
+- **WHEN** the LLM view loads
+- **THEN** that call is counted in none of the LLM view's figures
+
+#### Scenario: An unclassified model call is still counted
+
+- **GIVEN** a call to a model through an API that carries no event kind
+- **WHEN** the LLM view loads
+- **THEN** that call is counted
+
+### Requirement: A route row states its owner, its path and its kind
+
+Every Routes view figure SHALL be grouped through three values derived from the row, computed by
+the backend so that grouping, ranking and paging rest on the same value:
+
+- **kind** — `Application` for an application route, `Global` for a global route;
+- **owner** — the declaring deployment for an application route; for a global route, the first
+  segment of the request path with its leading slash, since the log names no route;
+- **path** — for an application route, the part of the request URI after `/route/`, with a leading
+  slash; for a global route, the whole request path. A query string SHALL be dropped from both, so
+  one path called with different parameters is one path.
+
+Two global routes whose paths share a first segment SHALL rank as one owner. This is the stated cost
+of the log carrying no route name, and the `Owners` tab's description SHALL say so.
+
+#### Scenario: An application route is owned by its deployment
+
+- **GIVEN** a call to `/v1/deployments/app-a/route/v1/search?q=x`
+- **WHEN** the Routes view groups it
+- **THEN** its kind is `Application`, its owner is `app-a` and its path is `/v1/search`
+
+#### Scenario: A global route is owned by its first path segment
+
+- **GIVEN** a global route call to `/proxy/v1/messages`
+- **WHEN** the Routes view groups it
+- **THEN** its kind is `Global`, its owner is `/proxy` and its path is `/proxy/v1/messages`
+
+#### Scenario: The query string does not split a path
+
+- **GIVEN** two calls to one route path with different query strings
+- **WHEN** the `Paths` tab renders
+- **THEN** they are one row
+
+### Requirement: The Routes view states what route rows carry and nothing else
+
+The Routes view SHALL render the KPI row with four cards, in this order: `Requests`,
+`Unique callers`, `Error rate`, `Avg latency`. It SHALL NOT render spend, tokens or cost per token:
+no route row carries a price or a token count, so each would read zero for every window.
+
+Its time series SHALL offer the requests plot, the split plot by owner and the latency plot, and
+SHALL NOT offer the spend plot. Its heatmap SHALL paint requests alone. Its share chart SHALL split
+by calls alone.
+
+#### Scenario: Four cards head the Routes view
+
+- **WHEN** the Routes view loads
+- **THEN** the KPI row shows `Requests`, `Unique callers`, `Error rate` and `Avg latency` in that order
+- **AND** no spend, token or cost-per-token card is shown
+
+#### Scenario: No spend plot in the Routes view
+
+- **WHEN** the Routes view's time series renders
+- **THEN** it offers the requests, by-owner and latency plots
+- **AND** it offers no spend plot
+
+#### Scenario: The heatmap offers no cost
+
+- **WHEN** the Routes view's heatmap renders
+- **THEN** it offers requests alone
+
+### Requirement: Each Routes row states its kind
+
+The `Owners` and `Paths` tabs SHALL state each row's kind, `Application` or `Global`, in a column of
+its own beside the dimension, because the two kinds derive owner and path differently and a reader
+cannot tell them apart from the value alone. The kind SHALL be text, not colour or an icon alone.
+
+A row's identity on the `Paths` tab SHALL be its owner, path and request method together, so one
+path on two owners, or under two methods, is two rows.
+
+#### Scenario: The kind is stated as text
+
+- **WHEN** the `Owners` tab renders a global route's row
+- **THEN** its kind column reads `Global`
+
+#### Scenario: One path under two methods is two rows
+
+- **GIVEN** an owner's path is called with `GET` and with `POST`
+- **WHEN** the `Paths` tab renders
+- **THEN** it shows two rows, each stating its method
+
+### Requirement: A missing dimension value carries its tab's fallback label
+
+A row whose dimension value is missing — falsy or the literal string `undefined` — SHALL render its
+dimension's fallback label: `No Project` on the `Projects` tab, for a call made outside any project,
+`Direct call` on the `Applications` tab, for a call with no calling deployment. Each SHALL carry a tooltip stating the
+cause, and the `Direct call` tooltip SHALL be specific to the active view, because an LLM call with
+no parent was made against the model directly while an MCP call with no parent came from a try-out.
+
+The `Tools` tab SHALL carry no fallback bucket. It existed for the protocol methods —
+`initialize`, `tools/list`, a notification — and the MCP view no longer reads those rows at all, so
+no row reaching the tab can be without a tool name. No tab SHALL pin a fallback row below the ranked
+ones; every fallback row keeps its ranked place.
+
+Both labels SHALL be localized, SHALL be presentational — the underlying value is unchanged — and
+SHALL be what a copied cell carries. The literal text `undefined` SHALL never be rendered, on any
+tab or in a copied cell.
+
+#### Scenario: Missing project renders No Project
+
+- **WHEN** a row on the `Projects` tab has no project value
+- **THEN** the cell renders `No Project` with its tooltip
+
+#### Scenario: Missing parent deployment renders Direct call
+
+- **WHEN** a row on the `Applications` tab has no calling deployment value
+- **THEN** the cell renders `Direct call` with the tooltip its view defines
+
+#### Scenario: The Tools tab has no fallback bucket
+
+- **GIVEN** the MCP view's `Tools` tab
+- **WHEN** the table renders
+- **THEN** no `Other methods` row is shown
+- **AND** every row keeps its ranked place
+
+#### Scenario: A fallback row on another tab keeps its rank
+
+- **GIVEN** the `Applications` tab, whose fallback bucket outranks every named row
+- **WHEN** the table renders
+- **THEN** `Direct call` sits in its ranked place
+
+### Requirement: A calendar comparison moves the window by whole months and keeps its duration
+
+`Previous month` SHALL take the current window back one calendar month and `Previous year` back
+twelve, keeping the date and the time of day. Both SHALL keep the window's **duration** rather than
+its end date: a comparison measured over a different amount of time answers a different question,
+and February would otherwise shorten every window compared against it.
+
+Where the target month has no such day, the day SHALL be clamped to that month's last — 31 March
+compared against a previous month reads 28 February, and 29 February against a previous year reads
+28 February. The shift SHALL move the month with the day already set to the 1st, so a 31st does not
+roll forward into the month after the target.
+
+The shift SHALL read and write local date parts, so a comparison lands on the same wall-clock date
+a reader would name, rather than on an instant offset by daylight saving.
+
+Neither option SHALL add a request shape or change how many requests a window costs: the previous
+window is still one window, derived where the adjacent one is derived.
+
+#### Scenario: Previous month keeps the date and the time of day
+
+- **GIVEN** the window runs from 15 September 11:30 for two days
+- **WHEN** the comparison is set to `Previous month`
+- **THEN** the compared window starts 15 August 11:30
+- **AND** it spans two days
+
+#### Scenario: Previous month crosses the year boundary
+
+- **GIVEN** the window starts 20 January
+- **WHEN** the comparison is set to `Previous month`
+- **THEN** the compared window starts 20 December of the year before
+
+#### Scenario: A day the target month does not have is clamped
+
+- **GIVEN** the window starts 31 March
+- **WHEN** the comparison is set to `Previous month`
+- **THEN** the compared window starts 28 February
+
+#### Scenario: A leap day compares against the 28th
+
+- **GIVEN** the window starts 29 February of a leap year
+- **WHEN** the comparison is set to `Previous year`
+- **THEN** the compared window starts 28 February of the year before
+
+#### Scenario: A calendar comparison costs the same as the adjacent one
+
+- **GIVEN** the comparison is set to `Previous year`
+- **WHEN** the page loads
+- **THEN** the comparing shapes are each requested once per window, as they are for `Previous period`
+
+### Requirement: The breakdown card is as tall as it needs to be
+
+While the card holds fewer rows than it scrolls at, it SHALL take the height of the rows it holds.
+A single row in a box built for a full page is mostly empty space, and empty space under a header
+reads as rows that failed to load rather than as rows that do not exist.
+
+At or above that count the card SHALL keep its fixed height and scroll, as before. The threshold
+SHALL be low enough that the content height never exceeds the fixed one, so the card only ever
+shrinks at the boundary and never grows.
+
+A card with no rows SHALL keep the full height: its empty state is a message that needs somewhere
+to sit, not a row.
+
+#### Scenario: One row takes one row's height
+
+- **GIVEN** the active tab holds a single row
+- **WHEN** the card renders
+- **THEN** the table is as tall as that row and its header
+
+#### Scenario: A full page keeps the fixed box
+
+- **GIVEN** the active tab holds more rows than the card scrolls at
+- **WHEN** the card renders
+- **THEN** the table keeps its fixed height and scrolls
+
+#### Scenario: An empty card keeps its height
+
+- **GIVEN** the window holds no rows for the active tab
+- **WHEN** the card renders
+- **THEN** the table keeps its full height and states the empty window
+

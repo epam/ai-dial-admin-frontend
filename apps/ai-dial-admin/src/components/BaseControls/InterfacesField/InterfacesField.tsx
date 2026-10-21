@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 
-import { DialGhostButton, DialLabel, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialPrimaryButton, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -10,20 +10,34 @@ import { ButtonsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
+import { DeploymentInterfaceType, InterfaceFieldVariant } from '@/src/models/dial/interfaces';
+import { DialUpstreamInterface } from '@/src/models/dial/model';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
+import InterfaceEndpointRow from './InterfaceEndpointRow';
 import InterfaceRow from './InterfaceRow';
+import { BaseUrlInterfaceValue } from './models';
 
-type InterfaceValueMap = Record<string, { baseUrl?: string; base_url?: string }>;
+type InterfaceValue = BaseUrlInterfaceValue | DialUpstreamInterface;
 
-interface Props<T extends { interfaces?: InterfaceValueMap }> {
-  entity: T;
-  onChangeEntity: (entity: T) => void;
+interface Props<V extends InterfaceValue> {
+  interfaces?: Record<string, V>;
+  onChangeInterfaces: (interfaces: Record<string, V>) => void;
   allowedTypes: DeploymentInterfaceType[];
+  variant?: InterfaceFieldVariant;
   isAsset?: boolean;
   disabled?: boolean;
+  className?: string;
+  view?: ApplicationRoute;
+  // Available platform Translator assets for the translator-mode picker — isAsset surfaces only.
+  // Metadata-only (list, not content) — the picker only needs each translator's name.
+  translators?: ResourceInfo[];
+  // The entity-level base URL an interface's empty base_url falls back to; passed through to each
+  // row, which makes its own value optional. Absent on surfaces with no such field.
+  entityBaseUrl?: string;
 }
 
-const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
+export const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
   switch (type) {
     case DeploymentInterfaceType.OpenAIChatCompletions:
       return t(InterfacesI18nKey.OpenAIChatCompletions);
@@ -36,33 +50,44 @@ const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentIn
   }
 };
 
-const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
-  entity,
-  onChangeEntity,
+const InterfacesField = <V extends InterfaceValue>({
+  interfaces: interfacesProp,
+  onChangeInterfaces,
   allowedTypes,
+  variant = InterfaceFieldVariant.BaseUrl,
   isAsset,
   disabled,
-}: Props<T>) => {
+  className,
+  translators,
+  entityBaseUrl,
+  view,
+}: Props<V>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
+  const isEndpointVariant = variant === InterfaceFieldVariant.Endpoint;
   const baseUrlKey = isAsset ? 'base_url' : 'baseUrl';
+  const defaultHeadersKey = 'defaultHeaders';
 
   const [isSelectingType, setIsSelectingType] = useState(false);
 
-  const interfaces = useMemo(() => entity.interfaces || {}, [entity.interfaces]);
+  const interfaces = useMemo(() => interfacesProp || {}, [interfacesProp]);
   const usedTypes = Object.keys(interfaces) as DeploymentInterfaceType[];
   const availableTypes = allowedTypes.filter((type) => !usedTypes.includes(type));
 
+  // undefined, not '': an untouched row must persist as an entry with no base_url/endpoint field (Core
+  // reads an empty string as a present, broken URL).
+  const createEmptyValue = useCallback(
+    (): V => (isEndpointVariant ? { endpoint: undefined } : { [baseUrlKey]: undefined }) as unknown as V,
+    [isEndpointVariant, baseUrlKey],
+  );
+
   const onAddType = useCallback(
     (type: DeploymentInterfaceType) => {
-      onChangeEntity({
-        ...entity,
-        interfaces: { ...interfaces, [type]: { [baseUrlKey]: '' } },
-      });
+      onChangeInterfaces({ ...interfaces, [type]: createEmptyValue() });
       setIsSelectingType(false);
     },
-    [entity, interfaces, baseUrlKey, onChangeEntity],
+    [interfaces, createEmptyValue, onChangeInterfaces],
   );
 
   const onAddClick = useCallback(() => {
@@ -73,23 +98,20 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
     }
   }, [allowedTypes, onAddType]);
 
-  const onChangeField = useCallback(
-    (type: string, field: string, value: string) => {
-      onChangeEntity({
-        ...entity,
-        interfaces: { ...interfaces, [type]: { ...interfaces[type], [field]: value } },
-      });
+  const onChangeValue = useCallback(
+    (type: string, value: V) => {
+      onChangeInterfaces({ ...interfaces, [type]: value });
     },
-    [entity, interfaces, onChangeEntity],
+    [interfaces, onChangeInterfaces],
   );
 
   const onDeleteType = useCallback(
     (type: string) => {
       const updated = { ...interfaces };
       delete updated[type];
-      onChangeEntity({ ...entity, interfaces: updated });
+      onChangeInterfaces(updated);
     },
-    [entity, interfaces, onChangeEntity],
+    [interfaces, onChangeInterfaces],
   );
 
   const showAddButton = availableTypes.length > 0 && !isSelectingType;
@@ -101,7 +123,7 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
         <DialTooltip
           tooltip={
             <div className="flex flex-col gap-1">
-              <div>{t(InterfacesI18nKey.InfoBaseUrl)}</div>
+              <div>{isEndpointVariant ? t(InterfacesI18nKey.InfoEndpoint) : t(InterfacesI18nKey.InfoBaseUrl)}</div>
             </div>
           }
         >
@@ -109,17 +131,42 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
         </DialTooltip>
       </div>
 
-      <div className={classNames('flex flex-col gap-y-2 rounded border border-primary p-4', STANDARD_CONTROL_WIDTH)}>
-        {usedTypes.map((type) => (
-          <InterfaceRow
-            key={type}
-            fieldId={`interface-${type}`}
-            typeLabel={getInterfaceTypeLabel(t, type)}
-            baseUrl={interfaces[type]?.[baseUrlKey] || ''}
-            disabled={isReadonly}
-            onChangeBaseUrl={(value) => onChangeField(type, baseUrlKey, value)}
-            onDelete={() => onDeleteType(type)}
-          />
+      <div
+        className={classNames(
+          'flex flex-col gap-y-2 rounded border border-primary p-4',
+          className ?? STANDARD_CONTROL_WIDTH,
+        )}
+      >
+        {usedTypes.map((type, index) => (
+          <Fragment key={type}>
+            {index > 0 && <hr className="border-t border-primary" />}
+            {isEndpointVariant ? (
+              <InterfaceEndpointRow
+                fieldId={`interface-${type}`}
+                typeLabel={getInterfaceTypeLabel(t, type)}
+                value={(interfaces[type] as DialUpstreamInterface) || {}}
+                disabled={isReadonly}
+                onChange={(value) => onChangeValue(type, value as V)}
+                onDelete={() => onDeleteType(type)}
+              />
+            ) : (
+              <InterfaceRow
+                fieldId={`interface-${type}`}
+                type={type}
+                typeLabel={getInterfaceTypeLabel(t, type)}
+                value={(interfaces[type] as BaseUrlInterfaceValue) || {}}
+                baseUrlKey={baseUrlKey}
+                defaultHeadersKey={defaultHeadersKey}
+                disabled={isReadonly}
+                onChange={(value) => onChangeValue(type, value as V)}
+                onDelete={() => onDeleteType(type)}
+                isAsset={isAsset}
+                translators={translators}
+                entityBaseUrl={entityBaseUrl}
+                view={view}
+              />
+            )}
+          </Fragment>
         ))}
 
         {!isReadonly && isSelectingType && (
@@ -134,8 +181,8 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
         )}
 
         {!isReadonly && showAddButton && (
-          <div>
-            <DialGhostButton
+          <div className="flex flex-1 justify-end">
+            <DialPrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.AddInterface)}
               onClick={onAddClick}

@@ -1,3 +1,5 @@
+import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
+
 export interface TrendsRunPoint {
   runId: string;
   runName: string;
@@ -7,6 +9,9 @@ export interface TrendsRunPoint {
   isFailed: boolean;
 }
 
+/** Pass/fail/error counts for runs vs suite overallScoreThreshold in the Trends window. */
+export type TrendsThresholdStats = PassFailErrorCounts;
+
 export interface TrendsKpiData {
   runCount: number;
   latestOverallScore: number | null;
@@ -14,6 +19,8 @@ export interface TrendsKpiData {
   scoreMin: number | null;
   scoreMax: number | null;
   latestScore: number | null;
+  /** Null when the suite has no overallScoreThreshold — card is hidden. */
+  thresholdStats: TrendsThresholdStats | null;
 }
 
 export interface MetricTrendSeries {

@@ -47,3 +47,14 @@ fi
 if [ -n "$agent_files" ]; then
   node scripts/validate-agent-docs.mjs
 fi
+
+# Types are checked at commit time, not at push time: both projects run in ~2s once
+# `.tsbuildinfo` is warm (6.9s / 9.7s cold), so the feedback is worth the wait here.
+#
+# Both projects are hard gates and both are at zero errors. The spec project became one once the
+# fixture debt catalogued in
+# openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md reached zero — until
+# then it only printed a count, because a gate that always fails is not a gate. `git commit --no-verify`
+# is the escape hatch; the CI `typecheck` job is the backstop that cannot be skipped.
+npm run typecheck
+npm run typecheck:specs

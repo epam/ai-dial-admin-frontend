@@ -25,7 +25,7 @@ export default async function Page() {
       getEntities(),
     ]);
     queries = [...(personal ?? []), ...(common ?? [])];
-    entities = entitiesRes ?? [];
+    entities = entitiesRes.response ?? [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch queries list data');
   }

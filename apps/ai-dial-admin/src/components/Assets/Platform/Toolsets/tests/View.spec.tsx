@@ -1,0 +1,114 @@
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { TabsI18nKey } from '@/src/constants/i18n';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialRole } from '@/src/models/dial/role';
+import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
+import PlatformToolsetView from '../View';
+
+vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
+  useToolsetFolder: vi.fn(),
+}));
+
+vi.mock('@/src/app/[lang]/assets-toolsets/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/assets-toolsets/actions')>()),
+  removePlatformToolset: vi.fn(),
+  updatePlatformToolset: vi.fn(),
+  signInToolset: vi.fn(),
+  signOutToolset: vi.fn(),
+}));
+
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({
+    setEntityReadOnly,
+    featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
+  }),
+}));
+
+/**
+ * Matches `Assets/Platform/Applications/tests/View.spec.tsx`'s scope: a render smoke test, not deep
+ * interaction coverage — the component's real dependency surface (`TabsContent`, `SimpleEntityHeader`,
+ * `ResourceAuthButtons`) is exercised at the shared-component level, since this view reuses them
+ * unmodified (design.md's Context — Core gives platform-bucket toolsets full field/tab/auth parity).
+ */
+describe('PlatformToolsetView', () => {
+  const mockFetchFiles = vi.fn();
+
+  const mockOriginalToolset: AssetToolset = {
+    name: 'platform-toolset',
+    version: '',
+    folderId: 'platform/',
+    path: 'platform/platform-toolset',
+    displayName: 'Platform Toolset',
+  } as AssetToolset;
+
+  const mockRoles: DialRole[] = [];
+  const mockEtag = 'etag-123';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    (useToolsetFolder as Mock).mockReturnValue({
+      fetchFiles: mockFetchFiles,
+    });
+  });
+
+  test('renders the platform toolset detail view without crashing', () => {
+    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
+
+    expect(screen.getByText('platform-toolset')).toBeTruthy();
+  });
+
+  test('renders a Roles tab positioned after Tools and before Audit', () => {
+    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
+
+    const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
+    expect(tabLabels).toEqual([
+      TabsI18nKey.Properties,
+      TabsI18nKey.Tools,
+      TabsI18nKey.Roles,
+      TabsI18nKey.CatalogMetadata,
+    ]);
+  });
+
+  test.each([
+    [[], true],
+    [['role'], false],
+    [undefined, false],
+  ])('Should set the Roles tab warning icon presence to %s for user_roles %s', (userRoles, expectedWarning) => {
+    render(
+      <PlatformToolsetView
+        etag={mockEtag}
+        originalToolset={{ ...mockOriginalToolset, user_roles: userRoles } as AssetToolset}
+        roles={mockRoles}
+      />,
+    );
+
+    const rolesTab = screen.getByRole('tab', { name: TabsI18nKey.Roles });
+    expect(!!rolesTab.querySelector('svg.tabler-icon-alert-triangle')).toBe(expectedWarning);
+  });
+
+  test('Should mark the entity read-only when config-file-sourced, and clear it on unmount', () => {
+    const { unmount } = render(
+      <PlatformToolsetView
+        etag={mockEtag}
+        originalToolset={mockOriginalToolset}
+        roles={mockRoles}
+        isConfigFileSource
+      />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed toolset', () => {
+    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
+  });
+});

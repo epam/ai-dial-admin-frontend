@@ -3,6 +3,7 @@ import { contentTypes } from '@/src/constants/file';
 import { Token } from '@/src/models/auth';
 import { errorObjLog } from '@/src/server/logger';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { getFileNameFromContentDisposition } from './get-file-name';
 import { sendRequest } from './send-request';
 
 export const streamRequest = async (
@@ -16,12 +17,16 @@ export const streamRequest = async (
     const reader = res?.body as ReadableStream<Uint8Array>;
     const stream = createReadableStream(reader);
     const headers = new Headers();
-    const contentType = getContentType(fileName);
+    const resolvedFileName = getFileNameFromContentDisposition(res?.headers.get('Content-Disposition')) || fileName;
+    const contentType = res?.headers.get('Content-Type') || getContentType(resolvedFileName);
     if (contentType) {
       headers.append('Content-Type', contentType);
     }
 
-    headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; ${buildFilenameDisposition(fileName)}`);
+    headers.append(
+      'Content-Disposition',
+      isPreview ? 'inline' : `attachment; ${buildFilenameDisposition(resolvedFileName)}`,
+    );
     return new Response(stream, { headers });
   } catch (e) {
     errorObjLog(e, 'Stream request failed');

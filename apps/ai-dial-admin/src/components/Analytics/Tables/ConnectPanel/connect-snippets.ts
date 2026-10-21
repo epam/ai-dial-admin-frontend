@@ -25,11 +25,18 @@ const writableColumns = (table: AnalyticsTable): AnalyticsTableColumn[] =>
   (table.columns ?? []).filter((column) => !column.source_name.startsWith(PLATFORM_COLUMN_PREFIX));
 
 const sampleFor = (column: AnalyticsTableColumn): SnippetValue => {
-  if (column.type !== AnalyticsFieldType.Array) {
-    return ANALYTICS_FIELD_TYPE_SAMPLE[column.type];
+  if (column.type === AnalyticsFieldType.Array) {
+    const element = ANALYTICS_FIELD_TYPE_SAMPLE[column.element_type ?? AnalyticsFieldType.String];
+    return [element, element];
   }
-  const element = ANALYTICS_FIELD_TYPE_SAMPLE[column.element_type ?? AnalyticsFieldType.String];
-  return [element, element];
+  // An enum column's domain is closed and the server itself refuses a value outside it, so the generic
+  // sample literal is a row the reader cannot insert. Its own first declared value is the one sample
+  // guaranteed to be accepted. A declared-but-empty domain cannot reach the catalog, so the fallback is
+  // only for a column this app has not seen.
+  if (column.type === AnalyticsFieldType.Enum && column.enum_values?.length) {
+    return column.enum_values[0];
+  }
+  return ANALYTICS_FIELD_TYPE_SAMPLE[column.type];
 };
 
 /**
@@ -51,11 +58,17 @@ export const buildSampleRow = (table: AnalyticsTable): SnippetRow => {
 
 const indentLines = (lines: string[], indent: string): string => lines.map((line) => `${indent}${line}`).join('\n');
 
+// Python and JSON spell a string-keyed object the same way; only the values' own syntax differs.
+const toObjectLiteral = (value: Record<string, string>, toValue: (value: SnippetValue) => string): string => {
+  const entries = Object.entries(value).map(([key, entry]) => `"${key}": ${toValue(entry)}`);
+  return `{${entries.join(', ')}}`;
+};
+
 const toPythonValue = (value: SnippetValue): string => {
   if (typeof value === 'string') return `"${value}"`;
   if (typeof value === 'boolean') return value ? 'True' : 'False';
   if (Array.isArray(value)) return `[${value.map(toPythonValue).join(', ')}]`;
-  if (typeof value === 'object') return '{}';
+  if (typeof value === 'object') return toObjectLiteral(value, toPythonValue);
   return String(value);
 };
 
@@ -68,7 +81,7 @@ const toJsonValue = (value: SnippetValue): string => {
   if (typeof value === 'string') return `"${value}"`;
   if (typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) return `[${value.map(toJsonValue).join(', ')}]`;
-  if (typeof value === 'object') return '{}';
+  if (typeof value === 'object') return toObjectLiteral(value, toJsonValue);
   return String(value);
 };
 
@@ -96,6 +109,15 @@ export const buildFormatNotes = (table: AnalyticsTable): ConnectFormatNote[] => 
     columns: byRule.get(rule) ?? [],
   }));
 };
+
+/**
+ * The columns every row must carry with a non-null value — the insert path rejects a row that omits
+ * one or sends null. Named by the exposed name, like the format notes, since that is what the grid shows.
+ */
+export const buildRequiredColumns = (table: AnalyticsTable): string[] =>
+  writableColumns(table)
+    .filter((column) => !column.nullable)
+    .map((column) => column.name);
 
 const resolveBaseUrl = (baseUrl: string): string => (baseUrl ?? '').trim() || ANALYTICS_BASE_URL_PLACEHOLDER;
 

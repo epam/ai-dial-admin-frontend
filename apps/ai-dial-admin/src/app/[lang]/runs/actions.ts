@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { analyticsApi, runsApi, structuredQueryApi } from '@/src/app/api/api';
+import { buildRunsQuery, mapRunsQueryResult } from '@/src/components/ListView/Evaluation/utils/runs-query';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { FilterDto, SortDto } from '@/src/models/request';
@@ -13,14 +14,46 @@ export async function getRuns(page: number, size: number, sorts: SortDto[], filt
   return runsApi.getRuns(page, size, sorts, filters, token);
 }
 
+/**
+ * Runs listing served by the query API (`test_suite_runs`) rather than `GET /test-suite-runs`, so the
+ * list can read the fields only the DSL projects — the target deployment and the run's metric names.
+ */
+export async function getRunsQuery(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const query = buildRunsQuery(page, size, sorts, filters);
+  const result = await structuredQueryApi.execute(query, token);
+
+  return mapRunsQueryResult(result, page, size);
+}
+
+export async function getQueryEntities() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return structuredQueryApi.getEntities(token);
+}
+
+export async function getQueryEntitySchema(entity: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return structuredQueryApi.getEntitySchema(entity, token);
+}
+
 export async function getRun(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.getRun(id, token);
 }
 
+export async function getRunCosts(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return runsApi.getRunCosts(id, token);
+}
+
 export async function removeRun(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.removeRun(id, token);
+}
+
+export async function cancelRun(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return runsApi.cancelRun(id, token);
 }
 
 export async function getRunResults(filters: FilterDto[]) {

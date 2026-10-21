@@ -214,6 +214,37 @@ describe('Server :: Folders :: folders-core :: changeFolderCore', () => {
     expect(result.success).toBe(true);
   });
 
+  test('normalizes a destination path without a trailing slash before copying rules', async () => {
+    (assetApi.getMetadata as any).mockImplementation(
+      (_t: unknown, _type: unknown, path: string, options: { recursive?: boolean }) =>
+        options?.recursive
+          ? Promise.resolve(folderNode('prompts/old/', [itemNode('prompts/old/a__1')]))
+          : Promise.resolve(folderNode('prompts/old/')),
+    );
+    (publicationsApi.ruleList as any).mockResolvedValue({
+      success: true,
+      response: { rules: { 'old/': [{ source: 'title', function: 'equal', targets: ['x'] }] } },
+    });
+    (publicationsApi.createPublication as any).mockResolvedValue({
+      success: true,
+      response: { url: 'publications/new/' },
+    });
+    (publicationsApi.approvePublication as any).mockResolvedValue({ success: true });
+    (assetApi.move as any).mockResolvedValue({ success: true });
+
+    // Simulate the ui-kit's DialCopiedItem.destinationUrl which has no trailing slash
+    const result = await changeFolderCore(TOKEN_MOCK, 'old/', 'new', [ResourceType.PROMPT]);
+
+    expect(publicationsApi.createPublication).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      'new/',
+      [],
+      [{ source: 'title', function: 'equal', targets: ['x'] }],
+    );
+    expect(assetApi.move).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'old/a__1', 'new/a__1', false);
+    expect(result.success).toBe(true);
+  });
+
   test('stops at the first per-type move failure without rolling back', async () => {
     (assetApi.getMetadata as any).mockImplementation(
       (_t: unknown, _type: unknown, path: string, options: { recursive?: boolean }) =>

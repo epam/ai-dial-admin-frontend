@@ -32,7 +32,7 @@ export const getCorrectPublication = (publication: ApplicationPublication): Publ
         applicationResource: {
           ...publication.applicationResources?.[0]?.applicationResource,
           defaults,
-          applicationProperties,
+          application_properties: applicationProperties,
         },
       },
     ],

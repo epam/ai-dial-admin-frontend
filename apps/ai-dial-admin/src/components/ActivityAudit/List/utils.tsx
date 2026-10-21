@@ -24,11 +24,18 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
 const expandResourceTypeFilter = (filter: GridFilter, map: ResourceTypeLabelMap): GridFilter => {
-  if (filter.type !== GridFilterType.CONTAINS || typeof filter.filter !== 'string') {
+  if (typeof filter.filter !== 'string') {
     return filter;
   }
   const needle = filter.filter.toLowerCase();
   if (!needle) {
+    return filter;
+  }
+  if (filter.type === GridFilterType.EQUALS || filter.type === GridFilterType.NOT_EQUAL) {
+    const labelled = Object.hasOwn(map, needle) ? map[needle] : undefined;
+    return labelled?.length === 1 ? { ...filter, filter: labelled[0] } : filter;
+  }
+  if (filter.type !== GridFilterType.CONTAINS) {
     return filter;
   }
   const matched = new Set<ActivityAuditResourceType>();
@@ -108,6 +115,38 @@ export const getDeploymentActivityAuditColumns = (
     );
   }
   return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Deployments), ACTION_COLUMN(actions)];
+};
+
+/**
+ * Generate columns with actions for the analytics activity audit grid.
+ * `Open in new tab` is the only row action: the analytics backend exposes no endpoint
+ * that writes an audit record, revision or snapshot, so no rollback is offered here.
+ *
+ * @param {(activity: DialActivity) => void} open - open in new tab action
+ * @param {boolean} [isSingleEntity] - the list carries one resource type and one identifier
+ * @returns {ColDef[]} - columns
+ */
+export const getAnalyticsActivityAuditColumns = (
+  t: (key: string) => string,
+  open?: (activity?: DialActivity) => void,
+  isSingleEntity?: boolean,
+  isGlobalList?: boolean,
+): ColDef[] => {
+  const actions = [];
+  if (open) {
+    actions.push(
+      getOpenInNewTabOperation(
+        open,
+        void 0,
+        (_, node) => (node.data as DialActivity)?.activityType === ActivityAuditType.Import,
+      ),
+    );
+  }
+
+  return [
+    ...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, isSingleEntity, !!isGlobalList),
+    ACTION_COLUMN(actions),
+  ];
 };
 
 /**

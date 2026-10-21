@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { PublicationStatus } from '@/src/models/dial/publications';
+import { ResourceIssue, PublicationStatus } from '@/src/models/dial/publications';
 import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { CorePublicationResource, CoreResourceAction } from '@/src/server/publications/models';
 import { enrichSkillResource } from '../skill-resource';
@@ -49,7 +49,7 @@ describe('Server :: Publications :: enrichSkillResource', () => {
 
   test('records a not-found issue when the skill metadata lookup returns null', async () => {
     const clients = makeClients(vi.fn().mockResolvedValue(null));
-    const issues: { message: string }[] = [];
+    const issues: ResourceIssue[] = [];
 
     const result = await enrichSkillResource(resource(), PublicationStatus.PENDING, {} as never, clients, issues);
 
@@ -59,7 +59,7 @@ describe('Server :: Publications :: enrichSkillResource', () => {
 
   test('records an already-exists issue when a pending, non-DELETE target already has a skill', async () => {
     const clients = makeClients(vi.fn().mockResolvedValue({ name: 'Existing' }));
-    const issues: { message: string }[] = [];
+    const issues: ResourceIssue[] = [];
 
     const result = await enrichSkillResource(resource(), PublicationStatus.PENDING, {} as never, clients, issues);
 

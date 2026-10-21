@@ -1,4 +1,10 @@
-## ADDED Requirements
+# image-fields-layout Specification
+
+## Purpose
+
+Layout of the image form fields, with build privileges grouped among the base fields.
+
+## Requirements
 
 ### Requirement: ImageBuildPrivileges grouped with base fields
 

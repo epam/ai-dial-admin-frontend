@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { coreUtilityApi, interceptorsApi, utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -21,21 +21,39 @@ describe('Server actions', () => {
     vi.clearAllMocks();
     (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
     (getIsEnableAuthToggle as any).mockReturnValue(true);
-    (utilityApi.checkDeploymentByName as any).mockResolvedValue(null);
+    (coreUtilityApi.checkDeploymentByName as any).mockResolvedValue(null);
     (interceptorsApi.checkInterceptorByName as any).mockResolvedValue(null);
   });
 
-  test('Should call both deployment and interceptor endpoints for unique name check', async () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test('Should call both deployment and interceptor endpoints for unique name check when Admin API is configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
+
     const result = await checkIsUniqueDeploymentName('my-id');
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
+    expect(coreUtilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
     expect(interceptorsApi.checkInterceptorByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
     expect(result).toBe(true);
   });
 
+  test('Should skip deployment check and call only interceptor endpoint when Admin API is not configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+
+    const result = await checkIsUniqueDeploymentName('my-id');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorsApi.checkInterceptorByName).not.toHaveBeenCalled();
+    expect(coreUtilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
+    expect(result).toBe(true);
+  });
+
   test('Should return false when deployment already exists', async () => {
-    (utilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
+    (coreUtilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-id');
 
@@ -43,6 +61,7 @@ describe('Server actions', () => {
   });
 
   test('Should return false when interceptor already exists', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
     (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-id');
@@ -51,7 +70,8 @@ describe('Server actions', () => {
   });
 
   test('Should return false when both deployment and interceptor already exist', async () => {
-    (utilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
+    (coreUtilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
     (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-id');
@@ -69,14 +89,38 @@ describe('Server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getCoreVersions action', async () => {
-    (utilityApi.getCoreVersion as any).mockResolvedValue(RESPONSE_MOCK);
+  test('Should call the Admin API for Core versions when it is configured', async () => {
+    const response = { success: true, response: { defaultVersion: '1.0.0' } };
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
+    (utilityApi.getCoreVersion as any).mockResolvedValue(response);
 
     const result = await getCoreVersions();
 
     expect(getUserToken).toHaveBeenCalled();
     expect(utilityApi.getCoreVersion).toHaveBeenCalledWith(TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(coreUtilityApi.getCoreVersion).not.toHaveBeenCalled();
+    expect(result).toBe(response);
+  });
+
+  test('Should return the direct Core version as auto-detected when the Admin API is disabled', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    (coreUtilityApi.getCoreVersion as any).mockResolvedValue('1.2.3');
+
+    const result = await getCoreVersions();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(coreUtilityApi.getCoreVersion).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(utilityApi.getCoreVersion).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: true, response: { autoDetectedVersion: '1.2.3' } });
+  });
+
+  test('Should return an empty Core version response when direct Core version is unavailable', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    (coreUtilityApi.getCoreVersion as any).mockResolvedValue(null);
+
+    const result = await getCoreVersions();
+
+    expect(result).toEqual({ success: true, response: {} });
   });
 
   test('Should call setCoreVersion action', async () => {

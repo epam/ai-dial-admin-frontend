@@ -6,7 +6,7 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@0.0.79", "--browser", "chrome"]
+      "args": ["@playwright/mcp@0.0.79", "--browser", "chrome", "--output-dir", ".playwright-mcp"]
     }
   }
 }

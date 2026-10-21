@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
+import { DEFAULT_TIME_PERIOD, TimeFilterOption } from '@/src/constants/global-time-filter';
 import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { isRangeIncludingToday, isTimeRange } from '@/src/utils/time-filter/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
@@ -8,21 +8,22 @@ import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 interface UseTimeFilterOptions {
   defaultTimeFilter?: TimeFilterValue;
   onTimeFilterChange?: (filter: TimeFilterValue) => void;
+  timePeriodOptions?: TimeFilterOption[];
 }
 
-export function useTimeFilter({ defaultTimeFilter, onTimeFilterChange }: UseTimeFilterOptions = {}) {
+export function useTimeFilter({ defaultTimeFilter, onTimeFilterChange, timePeriodOptions }: UseTimeFilterOptions = {}) {
   const initIsCustom = isTimeRange(defaultTimeFilter);
   const initPresetId = initIsCustom ? DEFAULT_TIME_PERIOD : defaultTimeFilter || DEFAULT_TIME_PERIOD;
 
   const [timePeriod, setTimePeriod] = useState(initPresetId);
   const [timeRange, setTimeRange] = useState<TimeRange>(() =>
-    initIsCustom ? defaultTimeFilter : getTimeRangeById(initPresetId),
+    initIsCustom ? defaultTimeFilter : getTimeRangeById(initPresetId, timePeriodOptions),
   );
   const [isCustom, setIsCustom] = useState(initIsCustom);
 
   const getCurrentTimeRange = useCallback(
-    () => (isCustom ? timeRange : getTimeRangeById(timePeriod || DEFAULT_TIME_PERIOD)),
-    [isCustom, timeRange, timePeriod],
+    () => (isCustom ? timeRange : getTimeRangeById(timePeriod || DEFAULT_TIME_PERIOD, timePeriodOptions)),
+    [isCustom, timeRange, timePeriod, timePeriodOptions],
   );
 
   const onTimePeriodChange = useCallback(
@@ -30,9 +31,9 @@ export function useTimeFilter({ defaultTimeFilter, onTimeFilterChange }: UseTime
       setTimePeriod(period);
       setIsCustom(false);
       onTimeFilterChange?.(period);
-      setTimeRange(getTimeRangeById(period));
+      setTimeRange(getTimeRangeById(period, timePeriodOptions));
     },
-    [onTimeFilterChange],
+    [onTimeFilterChange, timePeriodOptions],
   );
 
   const onTimeRangeChange = useCallback(

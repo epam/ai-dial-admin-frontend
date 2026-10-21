@@ -3,36 +3,33 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  DialInput,
-  DialNotification,
-  DialPrimaryButton,
-  NotificationVariant,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialNotification, DialPrimaryButton, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
 
-import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
+import { getDeployment, getDeploymentById, getRoute } from '@/src/app/[lang]/test-suites/actions';
 import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
-import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
+import EditRequestWizard from '@/src/components/TestSuites/Modals/EditRequestWizard/EditRequestWizard';
 import MethodEndpoint from '@/src/components/TestSuites/Methods/Endpoint';
-import RequestChainSelector from '@/src/components/TestSuites/RequestChain/RequestChainSelector';
-import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
+import RequestsSidebar from '@/src/components/TestSuites/RequestChain/RequestsSidebar';
 import TryOutButton from '@/src/components/TestSuites/RequestTemplate/components/TryOutButton';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import McpMethodContent from '@/src/components/TestSuites/View/McpMethodContent';
+import RequestDynamicConfiguration from '@/src/components/TestSuites/View/RequestDynamicConfiguration';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { Deployment } from '@/src/models/evaluation/deployment';
+import { DialRouteResource } from '@/src/models/dial/resource';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import {
   addRequest,
   fromRequestView,
   getPreviousOutputVariables,
   getRequestCount,
   getRequestLabel,
-  getRequestName,
+  getTakenResponseColumnNames,
   removeRequestAt,
   toRequestView,
   updateRequestName,
@@ -42,27 +39,41 @@ interface Props {
   testSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  dataset?: Dataset | null;
 }
 
-const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
+const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh, dataset }) => {
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
   if (isMcp) {
     return <McpMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;
   }
 
-  return <DeploymentMethodContent testSuite={testSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />;
+  return (
+    <DeploymentMethodContent
+      testSuite={testSuite}
+      onChange={onChange}
+      isSkipRefresh={isSkipRefresh}
+      dataset={dataset}
+    />
+  );
 };
 
-const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
+const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh, dataset }) => {
   const t = useI18n();
-  const [deployments, setDeployments] = useState<Deployment[] | null>(null);
-  const [isChangeMethodModalOpen, setIsChangeMethodModalOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<DialRouteResource | null>(null);
+  const [isEditRequestWizardOpen, setIsEditRequestWizardOpen] = useState(false);
+  const [isNewRequest, setIsNewRequest] = useState(false);
   const [rawSelectedRequestIndex, setSelectedRequestIndex] = useState(0);
   const { sidebar } = useAppContext();
   const isTryOutOpen = sidebar.show;
 
   const selectedRequestIndex = Math.min(rawSelectedRequestIndex, Math.max(getRequestCount(testSuite) - 1, 0));
+  const deploymentId = testSuite.deploymentRef?.id;
+  const deploymentType = testSuite.deploymentRef?.type;
+  const routeName = fromCanonicalRouteName(testSuite.routesRef?.name);
+  const isRoute = testSuite.suiteType === SuiteType.Route;
 
   useEffect(() => {
     if (selectedRequestIndex !== rawSelectedRequestIndex) {
@@ -70,7 +81,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     }
   }, [selectedRequestIndex, rawSelectedRequestIndex]);
 
-  const requestView = toRequestView(testSuite, selectedRequestIndex);
+  const requestView = useMemo(() => toRequestView(testSuite, selectedRequestIndex), [testSuite, selectedRequestIndex]);
 
   const onChangeRequestView = useCallback(
     (view: TestSuite, isSkipRefreshChange?: boolean) =>
@@ -78,20 +89,56 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     [onChange, testSuite, selectedRequestIndex],
   );
 
-  const selectedApplication = deployments?.find((d) => d.deploymentId === testSuite.deploymentRef?.id) ?? null;
-
   useEffect(() => {
-    getDeployments().then((res) => {
-      if (res?.success) {
-        setDeployments(res.response || []);
+    if (isRoute) {
+      setSelectedApplication(null);
+      return;
+    }
+    if (!deploymentId) {
+      setSelectedApplication(null);
+      return;
+    }
+
+    let cancelled = false;
+    const load = deploymentType ? getDeployment(deploymentId, deploymentType) : getDeploymentById(deploymentId);
+
+    load.then((deployment) => {
+      if (!cancelled) {
+        setSelectedApplication(deployment);
       }
     });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deploymentId, deploymentType, isRoute]);
+
+  useEffect(() => {
+    if (!isRoute || !routeName) {
+      setSelectedRoute(null);
+      return;
+    }
+
+    let isCancelled = false;
+    const loadRoute = async () => {
+      const route = await getRoute(routeName);
+      if (!isCancelled) {
+        setSelectedRoute(route);
+      }
+    };
+
+    void loadRoute();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isRoute, routeName]);
 
   const onAddRequest = useCallback(() => {
     const updatedSuite = addRequest(testSuite);
     onChange(updatedSuite);
     setSelectedRequestIndex(getRequestCount(updatedSuite) - 1);
+    setIsNewRequest(true);
+    setIsEditRequestWizardOpen(true);
   }, [onChange, testSuite]);
 
   const onRemoveRequest = useCallback(
@@ -102,9 +149,19 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     [onChange, testSuite],
   );
 
-  const onChangeRequestName = useCallback(
-    (name?: string) => onChange(updateRequestName(testSuite, selectedRequestIndex, name ?? '')),
-    [onChange, testSuite, selectedRequestIndex],
+  const onOpenEditRequestWizard = useCallback(() => {
+    setIsNewRequest(false);
+    setIsEditRequestWizardOpen(true);
+  }, []);
+
+  const onCloseEditRequestWizard = useCallback(() => {
+    setIsEditRequestWizardOpen(false);
+    setIsNewRequest(false);
+  }, []);
+
+  const onRenameRequest = useCallback(
+    (index: number, name: string) => onChange(updateRequestName(testSuite, index, name)),
+    [onChange, testSuite],
   );
 
   const describeRequest = useCallback(
@@ -120,81 +177,90 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     [testSuite, selectedRequestIndex, describeRequest],
   );
 
+  const takenColumnNames = useMemo(
+    () => getTakenResponseColumnNames(testSuite, selectedRequestIndex),
+    [testSuite, selectedRequestIndex],
+  );
+
   const previousColumnNames = previousOutputVariables.map((variable) => `$${variable.name}`);
   const previousOutputsMessage = previousColumnNames.length
     ? t(TestSuitesI18nKey.RequestChainPreviousOutputsColumnsInfo, { columns: previousColumnNames.join(', ') })
     : t(TestSuitesI18nKey.RequestChainPreviousOutputsInfo);
 
   return (
-    <div className="flex flex-col gap-y-8">
-      <RequestChainSelector
-        testSuite={testSuite}
-        selectedIndex={selectedRequestIndex}
-        disabled={isTryOutOpen}
-        onSelect={setSelectedRequestIndex}
-        onAdd={onAddRequest}
-        onRemove={onRemoveRequest}
-      />
+    <div className="flex flex-row gap-6 h-full overflow-hidden">
+      <div className="h-full overflow-y-scroll">
+        <RequestsSidebar
+          testSuite={testSuite}
+          selectedIndex={selectedRequestIndex}
+          disabled={isTryOutOpen}
+          onSelect={setSelectedRequestIndex}
+          onAdd={onAddRequest}
+          onRemove={onRemoveRequest}
+          onRename={onRenameRequest}
+        />
+      </div>
 
-      <DialInput
-        id="request-name"
-        labelProps={{ label: t(TestSuitesI18nKey.RequestName) }}
-        containerClassName="max-w-[280px]"
-        disabled={isTryOutOpen}
-        value={getRequestName(testSuite, selectedRequestIndex) ?? ''}
-        onChange={onChangeRequestName}
-      />
+      <div className="flex flex-col gap-y-8 flex-1 min-w-0 h-full overflow-y-scroll">
+        {selectedRequestIndex > 0 && (
+          <DialNotification variant={NotificationVariant.Info} message={previousOutputsMessage} />
+        )}
 
-      {selectedRequestIndex > 0 && (
-        <DialNotification variant={NotificationVariant.Info} message={previousOutputsMessage} />
-      )}
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col">
+            <div className="flex flex-row justify-between">
+              <MethodEndpoint testSuite={requestView} showFormattedUrl />
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col">
-          <div className="flex flex-row justify-between">
-            <MethodEndpoint testSuite={requestView} showFormattedUrl />
-
-            <div className="flex flex-row gap-3 items-center">
-              <DialPrimaryButton
-                iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
-                appearance={ButtonAppearance.Ghost}
-                label={t(TestSuitesI18nKey.ChangeMethod)}
-                disabled={isTryOutOpen}
-                tooltipProps={
-                  isTryOutOpen ? { tooltip: t(TestSuitesI18nKey.ChangeMethodDisabledWhileTryOutOpen) } : undefined
-                }
-                onClick={() => setIsChangeMethodModalOpen(true)}
-              />
-              {selectedRequestIndex === 0 && <TryOutButton testSuite={testSuite} />}
+              <div className="flex flex-row gap-3 items-center">
+                <DialPrimaryButton
+                  iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                  appearance={ButtonAppearance.Ghost}
+                  label={t(TestSuitesI18nKey.EditRequest)}
+                  disabled={isTryOutOpen}
+                  tooltipProps={
+                    isTryOutOpen ? { tooltip: t(TestSuitesI18nKey.EditRequestDisabledWhileTryOutOpen) } : undefined
+                  }
+                  onClick={onOpenEditRequestWizard}
+                />
+                <TryOutButton testSuite={testSuite} />
+              </div>
             </div>
           </div>
+
+          <RequestDynamicConfiguration
+            key={`dynamic-configuration-${selectedRequestIndex}`}
+            testSuiteId={testSuite.id as string}
+            datasetId={dataset?.id}
+            requestView={requestView}
+            onChangeRequestView={onChangeRequestView}
+            schema={dataset?.testCaseSchema}
+            title={t(TestSuitesI18nKey.DynamicConfiguration)}
+          />
+          <EndpointSchema
+            key={`endpoint-schema-${selectedRequestIndex}`}
+            testSuite={requestView}
+            onChangeTestSuite={onChangeRequestView}
+            isSkipRefresh={isSkipRefresh}
+            jsonataVariables={previousOutputVariables}
+            takenColumnNames={takenColumnNames}
+          />
+
+          {isEditRequestWizardOpen &&
+            createPortal(
+              <EditRequestWizard
+                testSuite={requestView}
+                onChangeTestSuite={onChangeRequestView}
+                selectedApplication={selectedApplication}
+                selectedRoute={selectedRoute}
+                isOpen={isEditRequestWizardOpen}
+                isNewRequest={isNewRequest}
+                onClose={onCloseEditRequestWizard}
+                takenColumnNames={takenColumnNames}
+                jsonataVariables={previousOutputVariables}
+              />,
+              document.body,
+            )}
         </div>
-
-        <RequestTemplate
-          key={`request-template-${selectedRequestIndex}`}
-          testSuite={requestView}
-          onChangeTestSuite={onChangeRequestView}
-          jsonataVariables={previousOutputVariables}
-        />
-        <EndpointSchema
-          key={`endpoint-schema-${selectedRequestIndex}`}
-          testSuite={requestView}
-          onChangeTestSuite={onChangeRequestView}
-          isSkipRefresh={isSkipRefresh}
-          jsonataVariables={previousOutputVariables}
-        />
-
-        {isChangeMethodModalOpen &&
-          createPortal(
-            <ChangeMethodModal
-              testSuite={requestView}
-              onChangeTestSuite={onChangeRequestView}
-              selectedApplication={selectedApplication}
-              isOpen={isChangeMethodModalOpen}
-              onClose={() => setIsChangeMethodModalOpen(false)}
-            />,
-            document.body,
-          )}
       </div>
     </div>
   );

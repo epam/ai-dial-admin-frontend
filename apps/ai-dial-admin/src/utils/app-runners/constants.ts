@@ -1,10 +1,10 @@
+import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from '@/src/components/Common/SchemaGrid/constants';
+
 /** HTTP methods Core's app-runner meta schema allows on a route. */
 export const CORE_ROUTE_METHODS: readonly string[] = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH'];
 
 /**
- * Characters `encodeURIComponent` leaves unescaped that Core's `ENTITY_NAME_PATTERN`
- * (`^[A-Za-z0-9._%:-]+$`, applied to the URL-decoded segment) rejects. An `$id` containing any of
- * them has no representable Core resource name, so the id control rejects it while typing rather
- * than letting the save fail.
+ * `dial:meta` keys Core's app-runner meta schema requires on every top-level parameter, whatever its
+ * `required` status. Nested properties carry no `dial:meta` at all.
  */
-export const CORE_UNENCODABLE_ID_CHARS: readonly string[] = ['!', '~', '*', "'", '(', ')'];
+export const REQUIRED_PARAMETER_META_KEYS: readonly string[] = [DIAL_META_PROPERTY_ORDER, DIAL_META_PROPERTY_KIND];

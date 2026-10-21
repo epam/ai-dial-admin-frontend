@@ -2,9 +2,20 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import {
+  assetApi,
+  configFileApi,
+  externalServiceConsentApi,
+  externalServiceOpsApi,
+  toolsetOpsApi,
+} from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { DialApplicationResource, DialExternalServiceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
+import {
+  DialApplicationResource,
+  DialExternalServiceAuthSettings,
+  DialPlatformApplicationResource,
+  ToolsetAuthType,
+} from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { buildApplicationsExport, importApplicationsExport } from '@/src/server/applications/exim';
@@ -12,12 +23,16 @@ import { buildApplicationsZip, extractApplicationsFromZip } from '@/src/server/a
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
+import { stripMetadata, stripPlatformAssetFields } from '@/src/server/assets/exim';
 import { validateApplicationResourceFields } from '@/src/server/core/asset-validation';
 import { encodeCorePath, getVersionedName } from '@/src/server/publications/path';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { DialApplication } from '@/src/models/dial/application';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
@@ -28,6 +43,7 @@ function validationFailure(errors: Record<string, string | undefined>): ServerAc
   };
 }
 
+// Besides the computed statuses, drops the read-only `client_secret_hint` and an untouched (empty) secret.
 function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
   if (!app.external_services) return app;
   const external_services = Object.fromEntries(
@@ -36,7 +52,7 @@ function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApp
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { app_level_auth_status, user_level_auth_status, global_auth_status, ...cleanSettings } =
         service.auth_settings as DialExternalServiceAuthSettings;
-      return [id, { ...service, auth_settings: cleanSettings }];
+      return [id, { ...service, auth_settings: stripClientSecretHint(cleanSettings) }];
     }),
   );
   return { ...app, external_services };
@@ -63,14 +79,20 @@ export async function createApp(app: DialApplicationResource) {
     return validationFailure(validationErrors);
   }
 
-  const folderId = app.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(app.name || '', app.version)}`;
+  // Create flows seed flat `folderId`/`version`; a fetched entity carries them in `_metadata`
+  // instead (see `DialResource`'s field comments) — resolve both spellings.
+  const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
+  const version = app.version ?? app._metadata?.version;
+  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
   const asset = {
-    ...app,
-    displayVersion: app.version,
+    ...stripMetadata(app),
+    displayVersion: version,
     folderId: undefined,
     source: undefined,
     version: undefined,
+    // The application content DTO rejects a flat `path` outright (`FAIL_ON_UNKNOWN_PROPERTIES` —
+    // see `RESOURCE_TYPES_STRIPPED_BEFORE_PUT` in `app/api/api.ts`). Only the folder-marker payload
+    // carries one, which is why creating a folder 400'd while the create modal worked.
     path: undefined,
     application_type_schema_id:
       app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
@@ -100,17 +122,19 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
     return validationFailure(validationErrors);
   }
 
-  const folderId = app.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(app.name || '', app.version)}`;
-  const cleaned = stripExternalServiceAuthStatuses(app);
+  // Same flat-vs-`_metadata` resolution as `createApp` — an update's entity is a fetched, merged
+  // read whose identity grafts nest under `_metadata`.
+  const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
+  const version = app.version ?? app._metadata?.version;
+  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
+  const cleaned = stripExternalServiceAuthStatuses(stripMetadata(app));
   const application = {
     ...cleaned,
     defaults: { ...cleaned.defaults },
-    display_version: cleaned.version,
+    display_version: version,
     folderId: undefined,
     source: undefined,
     version: undefined,
-    path: undefined,
   };
   return assetApi.put(token, ResourceType.APPLICATION, path, application, { etag });
 }
@@ -123,6 +147,56 @@ export async function removeApp(path: string, etag?: string) {
 export async function bulkDeleteApps(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.APPLICATION, paths);
+}
+
+/**
+ * Platform-bucket applications ("World B") reuse the same Core `Application` entity as public-bucket
+ * ones — only the bucket segment of the path differs, and the bucket is flat (no folders, no
+ * versioning; see the `platform-applications` capability spec). `getApps`/`removeApp`/`bulkDeleteApps`
+ * already take an arbitrary path and need no platform-specific logic; `createApp`/`updateApp` compute
+ * a `public`-defaulted, version-suffixed path, so their platform counterparts pin `folderId` to the
+ * `platform` bucket and clear `version`, letting `getVersionedName`'s existing no-op-when-absent branch
+ * (see `createApp`/`updateApp`) produce the flat `platform/{name}` path without a new branch there.
+ */
+export async function getPlatformApplications(path: string) {
+  return getApps(path);
+}
+
+// Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+// (the platform bucket's write path) deserializes the request body straight into `Application` via
+// Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+// `toKeyPayload` strips extras for `Key.class`. See `stripPlatformAssetFields` for what it strips and
+// why.
+export async function createPlatformApplication(app: DialPlatformApplicationResource) {
+  return createApp({
+    ...stripPlatformAssetFields(app),
+    folderId: `${PLATFORM_ROOT_FOLDER}/`,
+    version: undefined,
+  } as unknown as DialApplicationResource);
+}
+
+export async function getPlatformApplication(path: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMergedWithEtag<DialPlatformApplicationResource>(token, ResourceType.APPLICATION, path, etag);
+}
+
+export async function updatePlatformApplication(app: DialPlatformApplicationResource, etag: string) {
+  return updateApp(
+    {
+      ...stripPlatformAssetFields(app),
+      folderId: `${PLATFORM_ROOT_FOLDER}/`,
+      version: undefined,
+    } as unknown as DialApplicationResource,
+    etag,
+  );
+}
+
+export async function removePlatformApplication(path: string, etag?: string) {
+  return removeApp(path, etag);
+}
+
+export async function bulkDeletePlatformApplications(paths: { path: string }[]) {
+  return bulkDeleteApps(paths);
 }
 
 export async function moveApps(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
@@ -187,4 +261,16 @@ export async function signOutExternalService(appPath: string, serviceId: string,
     credentialsLevel: level,
     authenticationType: authType,
   });
+}
+
+/** `config-file-entity-views`: the application names Core's config file declares. */
+export async function getConfigFileApplications() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Applications);
+}
+
+/** `config-file-entity-views`: reads an application by name from Core's config-file population directly. */
+export async function getConfigFileApplication(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialApplication>(token, ConfigFileEntityType.Applications, name);
 }

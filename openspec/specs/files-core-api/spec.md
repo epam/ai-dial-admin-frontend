@@ -16,6 +16,23 @@ The system SHALL route file list, delete, bulk-delete, move, download, and previ
 - **WHEN** `getFiles` is called without a path
 - **THEN** no default path is substituted, matching the BE's pure-passthrough file metadata behavior
 
+### Requirement: File listing rows are produced by the shared asset row mapper
+The files list action SHALL map Core's file metadata response through the shared asset row mapper,
+deriving each row's root-level `folderId` from the raw DTO's `parentPath`/`bucket` (the file DTO
+carries no `folderId` of its own) and paginating through the shared continuation-token helper, so
+file rows arrive in the same movable row shape with the same field provenance as every other
+asset type.
+
+#### Scenario: File rows carry the movable row shape
+- **WHEN** the files list action returns rows
+- **THEN** each row carries `name`, `path`, `nodeType`, `bucket`, and a root-level `folderId`
+  derived from the raw DTO, and participates in move flows like any other movable row
+
+#### Scenario: File listing paginates through the shared helper
+- **WHEN** Core's file listing response includes a continuation token
+- **THEN** the listing continues through the same paginated-list helper every other asset list
+  uses, and no per-type pagination loop exists for files
+
 ### Requirement: File delete requires a real etag
 The system SHALL require a concrete etag to delete a file, sourced from the file's Core metadata, and SHALL always send it as `If-Match`. This corrects the admin BE's behavior of silently ignoring the etag on file delete.
 
@@ -88,15 +105,20 @@ The system SHALL build a zip archive of selected files/folders by resolving each
 - **THEN** that file is fetched and included in the archive rather than the export hanging indefinitely
 
 ### Requirement: Archive path differs for single-file vs. folder selection
-The system SHALL place a single selected file at `files/public/<filename>` in the archive, and SHALL re-root a selected folder's contents under `files/public/<lastFolderSegment>/<path-relative-to-that-folder>`, preserving the folder's internal structure.
+The system SHALL place a single selected file at `files/<filename>` in the archive (no bucket
+prefix), and SHALL re-root a selected folder's contents under
+`files/<lastFolderSegment>/<path-relative-to-that-folder>`, preserving the folder's internal
+structure. The archive path SHALL be bucket-agnostic — the destination folder chosen at import time
+determines the final storage location.
 
 #### Scenario: Single file exported flat
 - **WHEN** a single file (not a folder) is selected for export
-- **THEN** its archive entry is `files/public/<filename>`
+- **THEN** its archive entry is `files/<filename>` with no bucket prefix
 
 #### Scenario: Folder exported with re-rooted structure
 - **WHEN** a folder is selected for export
-- **THEN** each of its child files' archive entries are re-rooted under `files/public/<lastFolderSegment>/`, preserving their relative path inside that folder
+- **THEN** each of its child files' archive entries are re-rooted under `files/<lastFolderSegment>/`,
+  preserving their relative path inside that folder, with no bucket prefix in the archive path
 
 ### Requirement: Folder export expands recursively at any depth
 The system SHALL include every descendant file of a selected folder in the export, at any nesting depth — not only the folder's direct children.

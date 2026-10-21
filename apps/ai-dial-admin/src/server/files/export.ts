@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { BlobWriter, Uint8ArrayReader, ZipWriter } from '@zip.js/zip.js';
 
 import { Token } from '@/src/models/auth';
 import { getFolderNameAndPath, getPathFromUrl } from '@/src/utils/files/path';
@@ -60,12 +60,13 @@ export const resolveExportEntries = async (
 };
 
 /**
- * A single selected file flattens to `public/<filename>`; a folder selection's children are
- * re-rooted to `public/<lastFolderSegment>/<path-relative-to-that-folder>`.
+ * A single selected file flattens to `<filename>`; a folder selection's children are re-rooted to
+ * `<lastFolderSegment>/<path-relative-to-that-folder>`. The archive path is bucket-agnostic — the
+ * destination folder chosen at import time determines the final storage location.
  */
 export const toExportArchivePath = (storagePath: string, exportFolderPath: string | null): string => {
   if (exportFolderPath === null) {
-    return `public/${getFolderNameAndPath(storagePath).name}`;
+    return getFolderNameAndPath(storagePath).name;
   }
 
   const normalizedFolder = exportFolderPath.endsWith('/') ? exportFolderPath : `${exportFolderPath}/`;
@@ -74,7 +75,7 @@ export const toExportArchivePath = (storagePath: string, exportFolderPath: strin
     ? storagePath.slice(normalizedFolder.length)
     : storagePath;
 
-  return `public/${lastSegment}/${relativePath}`;
+  return `${lastSegment}/${relativePath}`;
 };
 
 const generateExportFileName = (paths: string[]): string => {
@@ -98,15 +99,15 @@ export const buildFilesExportZip = async (
     );
 
   const entries = await resolveExportEntries(paths, getNode, gatherDescendantUrls);
-  const zip = new JSZip();
+  const zipWriter = new ZipWriter(new BlobWriter('application/zip'));
   for (const entry of entries) {
     const fileName = getFolderNameAndPath(entry.storagePath).name;
     const response = await filesCoreApi.downloadFile(token, entry.storagePath, fileName);
-    const buffer = await response.arrayBuffer();
+    const buffer = new Uint8Array(await response.arrayBuffer());
     const archivePath = toExportArchivePath(entry.storagePath, entry.exportFolderPath);
-    zip.file(`files/${archivePath}`, buffer);
+    await zipWriter.add(`files/${archivePath}`, new Uint8ArrayReader(buffer));
   }
 
-  const blob = await zip.generateAsync({ type: 'blob' });
+  const blob = await zipWriter.close();
   return { blob, fileName: generateExportFileName(paths) };
 };

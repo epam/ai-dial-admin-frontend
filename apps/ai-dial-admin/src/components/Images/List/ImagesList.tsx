@@ -21,7 +21,7 @@ import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entit
 import { getImageType, getUniqueImagesNames } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { CellClickedEvent, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -29,7 +29,7 @@ import { createPortal } from 'react-dom';
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
 import ImageDuplicateModal from '@/src/components/Deployments/Modals/ImageDuplicate';
 import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
-import ListView from '@/src/components/ListView/ListView';
+import ListEntities from '@/src/components/ListView/List';
 
 interface Props {
   route: ApplicationRoute;
@@ -44,10 +44,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
 
   const [currentImage, setCurrentImage] = useState<Image | null>(null);
   const [modalType, setModalType] = useState<ModalType>();
-  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
   const [versions, setVersions] = useState<ImageVersion[]>([]);
-
-  const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -71,10 +68,6 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     handleModalClose();
     setModalType(void 0);
   }, [handleModalClose]);
-
-  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
-    setGridApi(api);
-  }, []);
 
   const gridOptions: GridOptions = {
     onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
@@ -145,43 +138,27 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
 
   const columnDefs = [...IMAGES_LIST_COLUMNS(t), actionColumn];
 
-  const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
-
-  const closeColumnsPanel = useCallback(() => setShowColumnsPanel(false), [setShowColumnsPanel]);
-
   useEffect(() => {
     if (imagesList?.length) {
       imagesList.filter((image) => image.buildStatus === IMAGE_STATUS.BUILDING);
     }
   }, [imagesList, route, showNotification, t]);
 
-  useEffect(() => {
-    window.addEventListener('click', closeColumnsPanel);
-    return () => window.removeEventListener('click', closeColumnsPanel);
-  }, [closeColumnsPanel]);
-
   return (
     <>
-      <ListView
-        data={imagesList}
-        view={route}
+      <ListEntities
+        rowData={imagesList}
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
-        title={t(ImagesI18nKey.ImagesListTitle)}
-        emptyDataTitle={t(EntitiesI18nKey.NoImages)}
-        showColumnsPanel={showColumnsPanel}
-        toggleColumnsPanel={toggleColumnsPanel}
+        listLabel={t(ImagesI18nKey.ImagesListTitle)}
+        emptyDataProps={{ title: t(EntitiesI18nKey.NoImages) }}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.images}`}
-        onGridReady={onGridReady}
         getHref={(data) => getUrnForEntity(route, data)}
+        isMainListView
+        isEnableColumnPanel
       >
-        <HeaderButtons
-          toggleColumnsPanel={toggleColumnsPanel}
-          route={route}
-          gridApi={gridApi}
-          isReadOnlyAdmin={isReadOnlyAdmin}
-        />
-      </ListView>
+        <HeaderButtons route={route} isReadOnlyAdmin={isReadOnlyAdmin} />
+      </ListEntities>
       {isModalOpen &&
         modalType === ModalType.duplicate &&
         currentImage &&

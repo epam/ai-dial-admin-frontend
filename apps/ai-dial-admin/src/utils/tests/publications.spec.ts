@@ -1,8 +1,18 @@
 import { ActionType } from '@/src/models/dial/publications';
-import { getActionClassName, getModalsTranslations, isAddAction } from '../publications';
+import {
+  getActionClassName,
+  getModalsTranslations,
+  getPublicationEntityLabel,
+  getPublicationTypeLabel,
+  getPublicationView,
+  isAddAction,
+} from '../publications';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
+
+const t = (key: string) => key;
 
 describe('Utils :: publications :: getActionClass', () => {
   test('Should correctly return action class name', () => {
@@ -37,7 +47,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns prompt publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.PromptPublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.PromptPublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.PromptUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.PromptUnpublishDeclineModalTitle,
@@ -55,7 +65,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns file publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.FilePublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.FilePublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.FileUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.FileUnpublishDeclineModalTitle,
@@ -73,7 +83,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns application publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.ApplicationPublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.ApplicationPublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.ApplicationUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.ApplicationUnpublishDeclineModalTitle,
@@ -91,11 +101,77 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns toolset publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.ToolsetPublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.ToolsetPublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.ToolsetUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.ToolsetUnpublishDeclineModalTitle,
       ApproveDescription: PublicationsI18nKey.ToolsetUnpublishApproveDescription,
     });
+  });
+});
+
+describe('getPublicationEntityLabel', () => {
+  test('returns the application publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ApplicationPublications, t)).toBe(
+      PublicationsI18nKey.ApplicationPublicationEntity,
+    );
+  });
+
+  test('returns the toolset publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ToolsetPublications, t)).toBe(
+      PublicationsI18nKey.ToolsetPublicationEntity,
+    );
+  });
+
+  test('returns the prompt publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.PromptPublications, t)).toBe(
+      PublicationsI18nKey.PromptPublicationEntity,
+    );
+  });
+
+  test('returns the file publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.FilePublications, t)).toBe(
+      PublicationsI18nKey.FilePublicationEntity,
+    );
+  });
+
+  test('returns the conversation publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ConversationPublications, t)).toBe(
+      PublicationsI18nKey.ConversationPublicationEntity,
+    );
+  });
+
+  test('returns the skill publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.SkillPublications, t)).toBe(
+      PublicationsI18nKey.SkillPublicationEntity,
+    );
+  });
+});
+
+describe('getPublicationView', () => {
+  test('maps every publishable resource type to its view', () => {
+    expect(getPublicationView(ResourceType.APPLICATION)).toBe(ApplicationRoute.ApplicationPublications);
+    expect(getPublicationView(ResourceType.TOOLSET)).toBe(ApplicationRoute.ToolsetPublications);
+    expect(getPublicationView(ResourceType.PROMPT)).toBe(ApplicationRoute.PromptPublications);
+    expect(getPublicationView(ResourceType.FILE)).toBe(ApplicationRoute.FilePublications);
+    expect(getPublicationView(ResourceType.CONVERSATION)).toBe(ApplicationRoute.ConversationPublications);
+    expect(getPublicationView(ResourceType.SKILL)).toBe(ApplicationRoute.SkillPublications);
+  });
+
+  test('returns undefined for a missing or non-publishable type', () => {
+    expect(getPublicationView(undefined)).toBeUndefined();
+    expect(getPublicationView('bogus')).toBeUndefined();
+    expect(getPublicationView(ResourceType.MODEL)).toBeUndefined();
+  });
+});
+
+describe('getPublicationTypeLabel', () => {
+  test('returns the translated label of a publishable type', () => {
+    expect(getPublicationTypeLabel(ResourceType.SKILL, t)).toBe(PublicationsI18nKey.SkillType);
+  });
+
+  test('returns an empty string for a missing or non-publishable type', () => {
+    expect(getPublicationTypeLabel(undefined, t)).toBe('');
+    expect(getPublicationTypeLabel(ResourceType.MODEL, t)).toBe('');
   });
 });

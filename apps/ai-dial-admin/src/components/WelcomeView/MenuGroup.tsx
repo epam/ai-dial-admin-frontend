@@ -11,10 +11,11 @@ import { useI18n } from '@/src/locales/client';
 const iconColors: Record<string, string> = {
   [MenuI18nKey.Entities]: 'text-accent-primary',
   [MenuI18nKey.Builders]: 'text-accent-secondary',
-  [MenuI18nKey.Assets]: 'text-accent-tertiary',
+  [MenuI18nKey.AiGateway]: 'text-accent-secondary',
+  [MenuI18nKey.Artifacts]: 'text-accent-tertiary',
   [MenuI18nKey.Deployments]: 'text-accent-primary',
   [MenuI18nKey.AccessManagement]: 'text-accent-secondary',
-  [MenuI18nKey.Approvals]: 'text-accent-tertiary',
+  [MenuI18nKey.Governance]: 'text-accent-tertiary',
   [MenuI18nKey.Audit]: 'text-accent-primary',
 };
 
@@ -35,7 +36,7 @@ const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => 
         <h2>{t(menuGroup.key)}</h2>
       </div>
       <p className="small mb-3">{t(menuGroup.descriptionKey)}</p>
-      <ul className="flex flex-col gap-x-2">
+      <ul className="flex flex-col gap-x-2 min-h-0 overflow-y-auto">
         {menuGroup.items.map((item) => (
           <li
             key={item.key}

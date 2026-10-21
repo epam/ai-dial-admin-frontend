@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the audit-detail experience for deployment-manager activities at `/activity-audit/{activityId}`: how the detail page resolves activities by falling back from the admin backend to the deployment-manager backend, how image-definition and global-firewall snapshots are fetched and shaped for the diff engine, how the `AuditView` is adapted (rollback hidden, identifier chip omitted when absent, new section headers and synthesized rows for image and firewall activities), the predicates colocated with the resource-type enum, and the i18n keys required to localize the new labels.
-
 ## Requirements
-
 ### Requirement: Audit detail page resolves image and firewall activities from the deployment-manager backend
 
 The audit detail route at `/activity-audit/{activityId}` SHALL first attempt to fetch the activity from the admin backend via `activityAuditApi.getActivityById`. When the admin lookup returns no record, the page SHALL fall back to `deploymentAuditApi.getActivityById`. If both backends fail to return a record, the page SHALL preserve the existing not-found behavior. The page SHALL render `AuditView` once the activity is resolved, regardless of which backend produced it.
@@ -62,7 +60,7 @@ For activities whose `resourceType` is `ImageBuildDomainWhitelist`, the detail p
 
 ### Requirement: Resource Rollback button is hidden for deployment-manager activities
 
-The `AuditView` component SHALL render the Resource Rollback button for the eleven deployment-manager resource types (`AdapterImageDefinition`, `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition`, `ImageBuildDomainWhitelist`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, `InferenceDeployment`), routing it through the `deployment-entity-rollback` dispatch rather than the admin `rollbackEntityPerRevision` flow. The predicate `isDeploymentManagerResource(resourceType)` SHALL remain the centralized check for branching the rollback path. For `Update` activities on containers and image definitions, the button SHALL be governed by the lifecycle pre-check gate: when the current entity state blocks rollback the button is rendered disabled with an explanatory tooltip; otherwise it is enabled. The whitelist is never gated. The existing `isReadOnlyAdmin` gate continues to hide the button for read-only admins on admin-backend activities.
+The `AuditView` component SHALL render the Resource Rollback button for the ten deployment-manager resource types (`AdapterImageDefinition`, `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition`, `ImageBuildDomainWhitelist`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `InferenceDeployment`), routing it through the `deployment-entity-rollback` dispatch rather than the admin `rollbackEntityPerRevision` flow. The predicate `isDeploymentManagerResource(resourceType)` SHALL remain the centralized check for branching the rollback path. For `Update` activities on containers and image definitions, the button SHALL be governed by the lifecycle pre-check gate: when the current entity state blocks rollback the button is rendered disabled with an explanatory tooltip; otherwise it is enabled. The whitelist is never gated. The existing `isReadOnlyAdmin` gate continues to hide the button for read-only admins on admin-backend activities.
 
 #### Scenario: Image detail shows rollback when build state permits
 - **GIVEN** the user opens the detail page for an image-definition `Update` activity whose current `buildStatus` is `NOT_BUILT`
@@ -164,10 +162,10 @@ For `ImageBuildDomainWhitelist` activities, the diff body SHALL render a single 
 
 ### Requirement: Resource-type predicates colocated with the type enum
 
-The predicates `isDeploymentManagerResource`, `isImageDefinitionResource`, and `isGlobalFirewallResource` SHALL be exported from `src/types/activity-audit.ts`. Each SHALL accept `string | undefined` and return `boolean`. `isDeploymentManagerResource` SHALL return true for all eleven deployment-manager resource types. `isImageDefinitionResource` SHALL return true only for the four `*ImageDefinition` resource types. `isGlobalFirewallResource` SHALL return true only for `ImageBuildDomainWhitelist`.
+The predicates `isDeploymentManagerResource`, `isImageDefinitionResource`, and `isGlobalFirewallResource` SHALL be exported from `src/types/activity-audit.ts`. Each SHALL accept `string | undefined` and return `boolean`. `isDeploymentManagerResource` SHALL return true for all ten deployment-manager resource types. `isImageDefinitionResource` SHALL return true only for the four `*ImageDefinition` resource types. `isGlobalFirewallResource` SHALL return true only for `ImageBuildDomainWhitelist`.
 
-#### Scenario: `isDeploymentManagerResource` accepts all eleven types
-- **WHEN** the predicate is called with each of `AdapterImageDefinition`, `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition`, `ImageBuildDomainWhitelist`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, `InferenceDeployment`
+#### Scenario: `isDeploymentManagerResource` accepts all ten types
+- **WHEN** the predicate is called with each of `AdapterImageDefinition`, `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition`, `ImageBuildDomainWhitelist`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `InferenceDeployment`
 - **THEN** the result is `true` in every case
 
 #### Scenario: `isDeploymentManagerResource` rejects admin-backend types
@@ -175,7 +173,7 @@ The predicates `isDeploymentManagerResource`, `isImageDefinitionResource`, and `
 - **THEN** the result is `false`
 
 #### Scenario: `isImageDefinitionResource` is strictly narrower
-- **WHEN** the predicate is called with `ImageBuildDomainWhitelist` or any of the six `*Deployment` types
+- **WHEN** the predicate is called with `ImageBuildDomainWhitelist` or any of the five `*Deployment` types
 - **THEN** the result is `false`
 
 ### Requirement: i18n keys for the new section headers and synthesized rows
@@ -189,7 +187,7 @@ The locale dictionary SHALL include new keys under `EntitiesI18nKey`: `FirewallS
 
 ### Requirement: Audit detail page resolves container activities from the deployment-manager backend
 
-For activities whose `resourceType` is one of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, or `InferenceDeployment`, the audit detail route at `/activity-audit/{activityId}` SHALL resolve the activity via `deploymentAuditApi.getActivityById` after the admin-backend lookup returns null. The page SHALL fetch the current and previous revision snapshots from `GET /api/v1/deployments/{id}/revision/{revision}` on `DIAL_DEPLOYMENTS_API_URL` and render the result through `AuditView`. Sibling-activity lookup for the latest-revision-as-current SHALL use `deploymentAuditApi.getActivitiesList` exactly as it does for image and firewall activities.
+For activities whose `resourceType` is one of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, or `InferenceDeployment`, the audit detail route at `/activity-audit/{activityId}` SHALL resolve the activity via `deploymentAuditApi.getActivityById` after the admin-backend lookup returns null. The page SHALL fetch the current and previous revision snapshots from `GET /api/v1/deployments/{id}/revision/{revision}` on `DIAL_DEPLOYMENTS_API_URL` and render the result through `AuditView`. Sibling-activity lookup for the latest-revision-as-current SHALL use `deploymentAuditApi.getActivitiesList` exactly as it does for image and firewall activities.
 
 #### Scenario: Container activity resolves via the deployment-manager backend
 - **GIVEN** an `activityId` whose `resourceType` is `McpDeployment` and `revision: 12`
@@ -207,7 +205,7 @@ For activities whose `resourceType` is one of `AdapterDeployment`, `ApplicationD
 - **AND** the diff body renders the snapshot with no "Before" side
 
 #### Scenario: Container resource-route helper returns the deployments URL prefix
-- **WHEN** `getRevisionRouteForEntityType` is called with each of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, `InferenceDeployment` and a resource id `<uuid>`
+- **WHEN** `getRevisionRouteForEntityType` is called with each of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `InferenceDeployment` and a resource id `<uuid>`
 - **THEN** it returns `/deployments/<uuid>/revision/` in every case
 
 ### Requirement: Container detail renders the editor's accordion sections
@@ -225,8 +223,8 @@ For container activities, the diff body SHALL render sections in the existing `A
 
 Sections SHALL render only when at least one of their underlying fields is present in either the before or after snapshot. Sections whose every field is absent SHALL NOT render a header.
 
-#### Scenario: NIM Model Serving activity hides Autoscaling
-- **GIVEN** a `NimDeployment` activity whose snapshots have no `scaling` field
+#### Scenario: Inference Model Serving activity hides Autoscaling
+- **GIVEN** an `InferenceDeployment` activity whose snapshots have no `scaling` field
 - **WHEN** the diff body renders
 - **THEN** no `Autoscaling` section header appears
 - **AND** the remaining sections render in the documented order
@@ -357,7 +355,7 @@ Per-snapshot row visibility:
 - Let `minEqualsMax = scaling.minReplicas != null && scaling.maxReplicas != null && scaling.minReplicas === scaling.maxReplicas`.
 - `minReplicas` and `maxReplicas` rows SHALL emit a value **only when** `isNever`; otherwise their value is `undefined` (and the diff engine hides rows whose values are empty on both snapshots).
 - `scaleToZeroDelaySeconds` row SHALL always emit a value (defaulting to `0` if absent).
-- `scalingStrategyType` and `scalingStrategyThreshold` rows SHALL emit a value **unless** (`isNever` AND `minEqualsMax`). The static-replica case (e.g., NIM Model Serving with `minReplicas === maxReplicas === 1` and no scale-to-zero) hides them because the strategy is meaningless when no autoscaling occurs.
+- `scalingStrategyType` and `scalingStrategyThreshold` rows SHALL emit a value **unless** (`isNever` AND `minEqualsMax`). The static-replica case (e.g., HF Model Serving with `minReplicas === maxReplicas === 1` and no scale-to-zero) hides them because the strategy is meaningless when no autoscaling occurs.
 
 Value formatting:
 - `scaleToZeroDelaySeconds` maps numeric seconds → human label via `ContainersI18nKey.ScaleToZero*` (`0` → "Never automatically scale to zero", `300` → "After 5 minutes with no activity", `900` → "After 15 minutes with no activity", `1800` → "After 30 minutes with no activity", `3600` → "After 1 hour with no activity"). Unknown values fall through as raw.
@@ -377,7 +375,7 @@ Row label keys: `minReplicas`/`maxReplicas` use `ContainersI18nKey.MinReplicas`/
 - **WHEN** the Autoscaling section renders
 - **THEN** all five rows render in fixed order
 
-#### Scenario: Never + min equals max (e.g., NIM static serving) hides strategy + threshold
+#### Scenario: Never + min equals max (e.g., HF static serving) hides strategy + threshold
 - **GIVEN** `scaling: { minReplicas: 1, maxReplicas: 1, scaleToZeroDelaySeconds: 0, strategy: { $type: "active_requests", threshold: 80 } }`
 - **WHEN** the Autoscaling section renders
 - **THEN** the rendered rows are `minReplicas`, `maxReplicas`, `scaleToZeroDelaySeconds`
@@ -421,10 +419,10 @@ Value formatting:
 
 ### Requirement: Container deployment predicate
 
-The predicate `isContainerDeploymentResource(type)` SHALL be exported from `src/types/activity-audit.ts`, accept `string | undefined`, and return `true` only for the six container subtypes: `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, `InferenceDeployment`. The existing `isDeploymentManagerResource`, `isImageDefinitionResource`, and `isGlobalFirewallResource` predicates SHALL be unchanged.
+The predicate `isContainerDeploymentResource(type)` SHALL be exported from `src/types/activity-audit.ts`, accept `string | undefined`, and return `true` only for the five container subtypes: `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `InferenceDeployment`. The existing `isDeploymentManagerResource`, `isImageDefinitionResource`, and `isGlobalFirewallResource` predicates SHALL be unchanged.
 
-#### Scenario: Predicate accepts the six container subtypes
-- **WHEN** `isContainerDeploymentResource` is called with each of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, `InferenceDeployment`
+#### Scenario: Predicate accepts the five container subtypes
+- **WHEN** `isContainerDeploymentResource` is called with each of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `InferenceDeployment`
 - **THEN** the result is `true` in every case
 
 #### Scenario: Predicate rejects non-container deployment-manager types
@@ -443,7 +441,7 @@ Rationale: the `auditResourceRoute` map has no entry for `IMAGE_BUILD_DOMAIN_WHI
 - **THEN** the Resource identifier `LabelledText` row SHALL NOT be rendered (no identifier text, no icon)
 
 #### Scenario: Row still rendered for container activities
-- **GIVEN** an audit-detail page is open for an activity whose `resourceType` is any of `McpDeployment`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `NimDeployment`, or `InferenceDeployment`
+- **GIVEN** an audit-detail page is open for an activity whose `resourceType` is any of `McpDeployment`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, or `InferenceDeployment`
 - **WHEN** the header renders
 - **AND** the activity type is not Delete
 - **THEN** the Resource identifier row SHALL be rendered with both text and the clickable "open in new tab" icon
@@ -451,22 +449,14 @@ Rationale: the `auditResourceRoute` map has no entry for `IMAGE_BUILD_DOMAIN_WHI
 
 ### Requirement: Resource identifier chip navigates to the container's edit page
 
-The "Resource identifier" chip in the `AuditView` header SHALL be clickable for container activities and SHALL navigate to the entity's edit page in the appropriate section, using the `auditResourceRoute` map. The six container subtypes route as follows:
+The "Resource identifier" chip in the `AuditView` header SHALL be clickable for container activities and SHALL navigate to the entity's edit page in the appropriate section, using the `auditResourceRoute` map. The five container subtypes route as follows:
 
-- `McpDeployment` → `ApplicationRoute.McpContainers` (`/mcp-containers/{id}`)
-- `AdapterDeployment` → `ApplicationRoute.AdapterContainers` (`/adapter-containers/{id}`)
-- `ApplicationDeployment` → `ApplicationRoute.ApplicationContainers` (`/application-containers/{id}`)
-- `InterceptorDeployment` → `ApplicationRoute.InterceptorContainers` (`/interceptor-containers/{id}`)
-- `NimDeployment` → `ApplicationRoute.ModelServings` (`/model-servings/{id}`)
+- `McpDeployment`, `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment` → `ApplicationRoute.Containers` (`/containers/{id}`)
 - `InferenceDeployment` → `ApplicationRoute.ModelServings` (`/model-servings/{id}`)
 
 #### Scenario: MCP container chip navigates to McpContainers route
 - **WHEN** the user clicks the Resource identifier chip on an `McpDeployment` activity
-- **THEN** the browser navigates to `/{lang}/mcp-containers/{resourceId}`
-
-#### Scenario: NIM serving chip navigates to ModelServings route
-- **WHEN** the user clicks the Resource identifier chip on a `NimDeployment` activity
-- **THEN** the browser navigates to `/{lang}/model-servings/{resourceId}`
+- **THEN** the browser navigates to `/{lang}/containers/{resourceId}`
 
 #### Scenario: HF inference serving chip navigates to ModelServings route
 - **WHEN** the user clicks the Resource identifier chip on an `InferenceDeployment` activity
@@ -478,9 +468,8 @@ For container activities, the diff engine SHALL skip the following top-level key
 
 The flattened `source.$type` row in Properties SHALL be labelled with `EntityFieldsI18nKey.source` ("Source"). Its value SHALL be formatted via a container-aware source-type formatter:
 
-- `internal_image` → `t(SourceI18nKey.InternalImage, { type: <subtype label> })` where `<subtype label>` is derived from `resourceType` (e.g., `MCP_DEPLOYMENT` → `t(EntitiesI18nKey.MCP)`, `NIM_DEPLOYMENT` / `INFERENCE_DEPLOYMENT` → `t(EntitiesI18nKey.Model)`)
+- `internal_image` → `t(SourceI18nKey.InternalImage, { type: <subtype label> })` where `<subtype label>` is derived from `resourceType` (e.g., `MCP_DEPLOYMENT` → `t(EntitiesI18nKey.MCP)`, `INFERENCE_DEPLOYMENT` → `t(EntitiesI18nKey.Model)`)
 - `image_reference` → `t(SourceI18nKey.DockerImageReference)`
-- `ngc_registry` → `t(SourceI18nKey.NgcRegistry)`
 - `huggingface` → `t(SourceI18nKey.HuggingFace)`
 - `mcp-registry` (synthetic `$type` injected by `normalizeImageSource` when `externalRegistryRef` is present) → `t(SourceI18nKey.McpRegistry)`
 
@@ -573,3 +562,4 @@ When at least one side has a non-empty value for a key, the row SHALL be emitted
 - **WHEN** the diff body renders
 - **THEN** the `displayName` row is still emitted (existing primitive behavior)
 - **AND** the `nodePoolId` row is not emitted
+

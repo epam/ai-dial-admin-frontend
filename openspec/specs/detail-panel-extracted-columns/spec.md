@@ -1,4 +1,10 @@
-## ADDED Requirements
+# detail-panel-extracted-columns Specification
+
+## Purpose
+
+The Extracted Columns section of the run result and run metric detail panels.
+
+## Requirements
 
 ### Requirement: RunResultDetailPanel displays Extracted Columns section
 

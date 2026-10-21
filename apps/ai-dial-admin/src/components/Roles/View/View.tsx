@@ -7,6 +7,7 @@ import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -42,8 +43,9 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags } = useAppContext();
 
-  const tabs = getRoleTabs(t);
+  const tabs = getRoleTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(structuredClone(originalRole));

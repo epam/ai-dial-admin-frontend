@@ -10,7 +10,8 @@ import { OverallScoreType, OverallScoreWeight, TestCaseSchema, TestSuite } from 
 import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
 import { FunctionParameterSource, FunctionParameterSourceType, OverallScoreFunctionName } from './models';
 import SpecificFunction from './SpecificFunction';
-import { buildOverallScoreFunctionExpression } from './utils';
+import TestCaseOverallScore from './TestCaseOverallScore';
+import { buildOverallScoreFunctionExpression, createDefaultWeightedMeanWeights } from './utils';
 import WeightedMean from './WeightedMean';
 
 const DEFAULT_FUNCTION_PARAMETER_SOURCES: FunctionParameterSource[] = [
@@ -25,13 +26,18 @@ interface Props {
   onChange: (testSuite: TestSuite) => void;
 }
 
+const clearTestCaseOverallScore = (suite: TestSuite): TestSuite => {
+  const { testCaseOverallScore: __, ...rest } = suite;
+  return rest;
+};
+
 const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, onChange }) => {
   const t = useI18n();
 
   const overallScoreType = selectedTestSuite.overallScore?.type;
 
   const onSelectMean = useCallback(() => {
-    onChange({ ...selectedTestSuite, overallScore: { type: OverallScoreType.Mean } });
+    onChange(clearTestCaseOverallScore({ ...selectedTestSuite, overallScore: { type: OverallScoreType.Mean } }));
   }, [onChange, selectedTestSuite]);
 
   const onSelectWeightedMean = useCallback(() => {
@@ -39,8 +45,16 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
       return;
     }
 
-    onChange({ ...selectedTestSuite, overallScore: { type: OverallScoreType.WeightedMean, weights: [] } });
-  }, [onChange, overallScoreType, selectedTestSuite]);
+    onChange(
+      clearTestCaseOverallScore({
+        ...selectedTestSuite,
+        overallScore: {
+          type: OverallScoreType.WeightedMean,
+          weights: createDefaultWeightedMeanWeights(metrics),
+        },
+      }),
+    );
+  }, [metrics, onChange, overallScoreType, selectedTestSuite]);
 
   const onSelectFunction = useCallback(() => {
     if (overallScoreType === OverallScoreType.Function) {
@@ -56,12 +70,18 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
           DEFAULT_FUNCTION_PARAMETER_SOURCES,
         ),
       },
+      testCaseOverallScore: selectedTestSuite.testCaseOverallScore ?? { type: OverallScoreType.Mean },
     });
   }, [onChange, overallScoreType, selectedTestSuite]);
 
   const onWeightsChange = useCallback(
     (weights: OverallScoreWeight[]) => {
-      onChange({ ...selectedTestSuite, overallScore: { type: OverallScoreType.WeightedMean, weights } });
+      onChange(
+        clearTestCaseOverallScore({
+          ...selectedTestSuite,
+          overallScore: { type: OverallScoreType.WeightedMean, weights },
+        }),
+      );
     },
     [onChange, selectedTestSuite],
   );
@@ -74,17 +94,20 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
           type: OverallScoreType.Function,
           expression: buildOverallScoreFunctionExpression(functionName, parameterSources),
         },
+        testCaseOverallScore: selectedTestSuite.testCaseOverallScore ?? { type: OverallScoreType.Mean },
       });
     },
     [onChange, selectedTestSuite],
   );
 
   return (
-    <div className="flex flex-col">
-      <span className="body-semi text-primary">{t(TestSuitesI18nKey.OverallScore)}</span>
-      <p className="mt-2 small text-secondary">{t(TestSuitesI18nKey.OverallScoreDescription)}</p>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <span className="body-semi text-primary">{t(TestSuitesI18nKey.OverallScoreCalculationMethod)}</span>
+        <p className="small text-secondary">{t(TestSuitesI18nKey.OverallScoreDescription)}</p>
+      </div>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <DialRadioButton
           inputId="overallScoreType-mean"
           name="overallScoreType"
@@ -92,7 +115,6 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
           checked={overallScoreType === OverallScoreType.Mean}
           label={t(TestSuitesI18nKey.OverallScoreMean)}
           caption={t(TestSuitesI18nKey.OverallScoreMeanFormula)}
-          oneLineCaption
           onChange={onSelectMean}
         />
 
@@ -103,7 +125,6 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
           checked={overallScoreType === OverallScoreType.WeightedMean}
           label={t(TestSuitesI18nKey.OverallScoreWeightedMean)}
           caption={t(TestSuitesI18nKey.OverallScoreWeightedMeanFormula)}
-          oneLineCaption
           onChange={onSelectWeightedMean}
         />
 
@@ -128,6 +149,9 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
           responseColumns={getChainResponseColumns(selectedTestSuite)}
           metrics={metrics}
           onChange={onFunctionChange}
+          testCaseScoreContent={
+            <TestCaseOverallScore selectedTestSuite={selectedTestSuite} metrics={metrics} onChange={onChange} />
+          }
         />
       )}
     </div>

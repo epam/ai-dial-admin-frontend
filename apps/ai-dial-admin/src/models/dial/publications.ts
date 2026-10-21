@@ -1,7 +1,8 @@
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { DialRule } from '@/src/models/dial/rule';
 import { DialApplicationResource, DialSkillResource, DialToolsetResource } from '@/src/models/dial/resource';
+import { DialRule } from '@/src/models/dial/rule';
+import { ResourceType } from '@/src/types/resource-type';
 import { DialConversation } from './conversation';
 
 export interface Publication {
@@ -16,6 +17,8 @@ export interface Publication {
   rules?: DialRule[];
   resourceIssues?: ResourceIssue[];
   files?: PublicationFile[];
+  /** Set on rows of the merged Approvals list; detail payloads do not carry it. */
+  resourceType?: ResourceType;
 }
 
 export interface PublicationEntity {

@@ -107,16 +107,18 @@ The system SHALL revert unsaved test case changes (including newly added rows no
 ---
 
 ### Requirement: Export test cases to CSV
-The system SHALL allow users to export dataset test cases as CSV via an Export button in the Test Cases tab header. The export calls `GET /api/v1/datasets/{datasetId}/test-cases/export.csv`.
+The system SHALL allow users to export dataset test cases as CSV via an Export button in the Test Cases tab header. The export calls `GET /api/v1/datasets/{datasetId}/test-cases/export.csv`. When the dataset schema contains a `FILE`-type field with at least one attached file, the backend bundles the CSV together with the attached files into a ZIP archive; the system SHALL name and type the downloaded file according to the backend's actual `Content-Disposition`/`Content-Type` response headers rather than assuming a `.csv` extension, so the downloaded file is always importable back without corruption.
 
 #### Scenario: Exporting test cases
 - **WHEN** user clicks the Export button
 - **THEN** a CSV file download is triggered containing all test cases with columns matching the dataset schema
 
----
+#### Scenario: Exporting test cases with a FILE-type field
+- **WHEN** user clicks the Export button on a dataset whose schema contains a `FILE`-type field with at least one attached file
+- **THEN** the backend returns a ZIP archive and the downloaded file is saved with a `.zip` extension and archive content type, matching the backend's `Content-Disposition` header, so it can be re-imported without error
 
 ### Requirement: Import test cases from CSV
-The system SHALL allow users to import test cases from a CSV file via an Import button in the Test Cases tab header. The import flow SHALL include a preview step before committing.
+The system SHALL allow users to import test cases from a CSV file via an Import button in the Test Cases tab header. The import flow SHALL include a preview step before committing. When the dataset schema contains a `FILE`-type field, the export produced by this system is a ZIP archive rather than a plain CSV (see the Export requirement); the import file picker SHALL accept both CSV and ZIP files, so a file exported by this system can always be selected for re-import regardless of the OS-level file picker's extension filtering.
 
 The preview step SHALL render the case-level warnings returned by the preview response, in addition to the per-row validity indicator. Each warning SHALL identify the column and row it concerns.
 
@@ -144,6 +146,10 @@ The preview step SHALL render the case-level warnings returned by the preview re
 - **WHEN** imported CSV contains a test case name that already exists
 - **THEN** the preview step shows the conflict and the user can choose to proceed (OVERRIDE strategy) or cancel
 
+#### Scenario: Selecting a ZIP export for re-import
+- **WHEN** the user opens the file picker (initial browse, or "Change" after a file is already selected) to import test cases
+- **THEN** both CSV and ZIP files are selectable, so a previously exported `.zip` (from a dataset with `FILE`-type fields) is not filtered out by the OS file picker
+
 ### Requirement: Dataset Properties tab
 The system SHALL display a Properties tab on the dataset detail view with editable `name` (Display name) and `description` fields. Changes SHALL mark the dataset as dirty and be persisted via `PUT /api/v1/datasets/{id}` on Save.
 
@@ -162,4 +168,23 @@ The system SHALL display a Properties tab on the dataset detail view with editab
 #### Scenario: Discard properties changes
 - **WHEN** user clicks Discard after editing properties
 - **THEN** the name and description fields revert to the last saved values
+
+### Requirement: Numeric schema columns are right-aligned
+
+In the Test Cases grid, a schema-generated column whose field type is `NUMBER` or `INTEGER` SHALL
+render its cell content right-aligned, both in its editable and read-only states. Columns generated
+for other schema types (`STRING`, `BOOLEAN`, `OBJECT`, `ARRAY`, `FILE`) SHALL keep their existing left
+alignment.
+
+#### Scenario: A number or integer column is right-aligned
+
+- **WHEN** the dataset schema declares a field of type `NUMBER` or `INTEGER`
+- **THEN** that field's column renders its values right-aligned, whether the cell is editable or
+  read-only
+
+#### Scenario: Non-numeric columns are unaffected
+
+- **WHEN** the dataset schema declares a field of type `STRING`, `BOOLEAN`, `OBJECT`, `ARRAY`, or
+  `FILE`
+- **THEN** that field's column keeps its existing left alignment
 

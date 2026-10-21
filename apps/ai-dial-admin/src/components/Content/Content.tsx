@@ -1,7 +1,7 @@
 'use client';
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { getAppProcessStatus, getCoreVersions } from '@/src/app/actions';
+import { getAppProcessStatus, getBeVersion, getCoreVersions } from '@/src/app/actions';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import Blackout from '@/src/components/Common/Blackout/Blackout';
 import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
@@ -9,6 +9,7 @@ import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import Footer from '@/src/components/Footer/Footer';
 import UserMobile from '@/src/components/Header/User/UserMobile';
 import { ErrorI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -16,18 +17,20 @@ import { useI18n } from '@/src/locales/client';
 import { AppProcessStatus } from '@/src/models/app-process-status';
 import { CoreVersions } from '@/src/models/core-version';
 import { getErrorNotification } from '@/src/utils/notification';
+import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   children: ReactNode;
-  beVersion: string | null;
   isEnableAuth: boolean;
 }
 
 const CHECK_CORE_VERSION_INTERVAL = 60 * 1000;
 const CHECK_STATUS_INTERVAL = 2 * 60 * 1000;
 
-const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
+const Content: FC<Props> = ({ children, isEnableAuth }) => {
   const isTabletScreen = useIsTabletScreen();
+  const { sidebar, featureFlags } = useAppContext();
+  const isBottomSidebarOpen = sidebar.show && sidebar.position === SidebarPosition.Bottom;
   const showNotificationRef = useRef(useNotification().showNotification);
   const getReqRef = useRef(useProtectedRequest());
   const statusIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,6 +38,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const t = useI18n();
 
   const [coreVersions, setCoreVersions] = useState<CoreVersions | undefined>();
+  const [beVersion, setBeVersion] = useState<string | null>(null);
 
   const checkAppStatus = useCallback((): void => {
     getReqRef.current(getAppProcessStatus).then((response) => {
@@ -52,6 +56,18 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   }, []);
 
   useEffect(() => {
+    if (!featureFlags.adminApiEnabled) {
+      return;
+    }
+
+    getBeVersion().then((version) => setBeVersion(version));
+  }, [featureFlags.adminApiEnabled]);
+
+  useEffect(() => {
+    if (!featureFlags.adminApiEnabled) {
+      return;
+    }
+
     checkAppStatus();
     statusIntervalRef.current = setInterval(() => {
       checkAppStatus();
@@ -62,7 +78,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         clearInterval(statusIntervalRef.current);
       }
     };
-  }, [checkAppStatus]);
+  }, [checkAppStatus, featureFlags.adminApiEnabled]);
 
   useEffect(() => {
     checkCoreVersion();
@@ -82,14 +98,25 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
       <Blackout />
       <UserMobile isEnableAuth={isEnableAuth} />
       <div className="flex flex-row flex-1 min-h-0 relative">
-        <div className="h-full min-w-0 flex-1 lg:p-6 py-6 md:px-6 px-0 flex flex-col">
+        <div
+          className={mergeClasses(
+            'h-full min-w-0 flex-1 flex flex-col px-0 md:px-6 lg:px-6 pt-6',
+            isBottomSidebarOpen ? 'pb-0' : 'pb-6',
+          )}
+        >
           {isTabletScreen && <Breadcrumbs mobile={true} />}
           {children}
         </div>
         <Sidebar />
       </div>
       <Sidebar slot={SidebarPosition.Bottom} />
-      <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
+
+      <Footer
+        beVersion={beVersion}
+        coreVersions={coreVersions}
+        onChangeCoreVersion={setCoreVersions}
+        isOnlyFE={!featureFlags.adminApiEnabled}
+      />
     </div>
   );
 };

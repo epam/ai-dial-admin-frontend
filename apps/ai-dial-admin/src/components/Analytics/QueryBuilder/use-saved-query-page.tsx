@@ -2,9 +2,11 @@
 
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { updateSavedQuery } from '@/src/app/[lang]/queries/actions';
+import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
 import { toBuilderRestore, toSavedQueryRequest } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import {
   describeSavedQueryError,
@@ -13,9 +15,10 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
 import { KNOWN_TIME_PERIODS } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
+import { ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import {
   ChartConfig,
   QueryBuilderState,
@@ -31,10 +34,13 @@ import {
   SavedQueryTimeAction,
   SavedQueryTimeIntentInput,
 } from '@/src/models/analytics/saved-query';
+import { NotificationType } from '@/src/models/notification';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 export interface SavedQueryPageInput {
   savedQuery?: SavedQuery;
@@ -66,6 +72,7 @@ export interface SavedQueryPageInput {
 
 export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const t = useI18n();
+  const currentLocale = useCurrentLocale();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isFullAdmin } = useAppContext();
@@ -74,6 +81,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const [baseline, setBaseline] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isSaveAsOpen, setIsSaveAsOpen] = useState(false);
 
   // `applyRestore` must not depend on `input`, or it would be rebuilt every render and the seed effect
   // would reset the builder while the user types. It therefore reads the current values through this
@@ -147,8 +155,17 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const onSave = useCallback(async () => {
     if (!savedQuery || !liveRequest) return;
     setIsSaving(true);
-    const res = await updateSavedQuery(savedQuery.id, liveRequest);
-    setIsSaving(false);
+    let res: Awaited<ReturnType<typeof updateSavedQuery>>;
+    try {
+      res = await updateSavedQuery(savedQuery.id, liveRequest);
+    } catch {
+      // A transport failure carries no envelope to branch on; without this Save stayed disabled with
+      // nothing reported. Same handling as the create modal.
+      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(QueriesI18nKey.ErrorGeneric)));
+      return;
+    } finally {
+      setIsSaving(false);
+    }
 
     if (!res.success) {
       const descriptor = describeSavedQueryError(res);
@@ -187,6 +204,36 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
     setBaseline(JSON.stringify(toSavedQueryRequest(captureFrom(next, inputRef.current))));
   }, []);
 
+  // Reads through `inputRef`, so the callback stays stable and takes the live values at submit time.
+  const buildSaveAsRequest = useCallback(
+    (meta: QueryMetadataForm) => toSavedQueryRequest(captureFrom(meta, inputRef.current)),
+    [],
+  );
+
+  // Leaves `savedQuery` and the baseline alone: the edits now also live in the new query, but against
+  // the source they are still unsaved, so the page stays dirty and the user can keep iterating.
+  const onSaveAsCreated = useCallback(
+    (created: SavedQuery) => {
+      setIsSaveAsOpen(false);
+      showNotification(
+        getNotification(
+          NotificationType.success,
+          getCreateNotificationTitle(ApplicationRoute.AnalyticsQueries, t),
+          <>
+            {t(QueriesI18nKey.SavedAsNewQuery)}{' '}
+            <Link
+              href={`/${currentLocale}${getUrnForEntity(ApplicationRoute.AnalyticsQueries, created)}`}
+              className="text-accent-primary underline"
+            >
+              {created.name}
+            </Link>
+          </>,
+        ),
+      );
+    },
+    [showNotification, t, currentLocale],
+  );
+
   return {
     savedQuery,
     isDirty,
@@ -198,6 +245,11 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
     onSave,
     onDiscard,
     onEdited,
+    isSaveAsOpen,
+    onOpenSaveAs: () => setIsSaveAsOpen(true),
+    onCloseSaveAs: () => setIsSaveAsOpen(false),
+    buildSaveAsRequest,
+    onSaveAsCreated,
   };
 };
 

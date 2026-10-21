@@ -3,7 +3,6 @@ import { FC, useMemo } from 'react';
 
 import EntityProperties from '@/src/components/Applications/View/Properties/Properties';
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
-import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -22,7 +21,6 @@ const TabContent: FC<Props> = ({ applicationSchemes, names, view, selectedApp, o
     return (
       <>
         {view === ApplicationRoute.AssetsApplications ? <FoldersStorageLabel asset={selectedApp as AssetApp} /> : null}
-        <ValidityStatusLabel valid={selectedApp.validityState?.valid} message={selectedApp.validityState?.message} />
       </>
     );
   }, [selectedApp, view]);

@@ -5,6 +5,8 @@ import { GRID_COLUMNS_KEY } from './constants';
 export interface GridModel {
   columns: ColumnState[];
   filters: FilterModel;
+  // Columns the operator dragged. Other stored widths are an automatic fit saved with a sort or filter.
+  sizedColIds?: string[];
 }
 
 export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;
@@ -16,7 +18,9 @@ export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) 
 export const getColumnsStateFromStorage = (storageKey: string, defaultSorts: ColumnState[]): GridModel => {
   const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const parsed = JSON.parse(model);
-  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: [] };
+  // `filters` must stay an object: `applyGridState` hands it straight to `setFilterModel`, which
+  // reads it as a colId -> model map.
+  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: {} };
 };
 
 export const applyColumnStateOrderToColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
@@ -56,20 +60,65 @@ const getFirstLeafColId = (col: ColDef): string | undefined => {
   return (col.colId ?? col.field) as string | undefined;
 };
 
+const groupChildren = (col: ColDef): ColDef[] | null => {
+  const children = (col as ColGroupDef).children;
+  return Array.isArray(children) ? (children as ColDef[]) : null;
+};
+
 export const applyColumnStateOrderToTreeColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
   const colIdToIndex = new Map(columnState.map((state, i) => [state.colId, i]));
 
-  const getPosition = (col: ColDef): number => {
-    const leafId = getFirstLeafColId(col);
-    return leafId !== undefined ? (colIdToIndex.get(leafId) ?? Infinity) : Infinity;
+  const leafPosition = (col: ColDef): number => {
+    const id = (col.colId ?? col.field) as string | undefined;
+    return id !== undefined ? (colIdToIndex.get(id) ?? Infinity) : Infinity;
   };
 
-  return [...columnDefs].sort((a, b) => getPosition(a) - getPosition(b));
+  const position = (col: ColDef): number => {
+    const children = groupChildren(col);
+    if (!children?.length) {
+      return leafPosition(col);
+    }
+
+    return Math.min(...children.map(position));
+  };
+
+  const sortLevel = (nodes: ColDef[]): ColDef[] => {
+    const withSortedChildren = nodes.map((node) => {
+      const children = groupChildren(node);
+      if (!children?.length) {
+        return node;
+      }
+
+      const sortedChildren = sortLevel(children);
+      const unchanged = sortedChildren.every((child, index) => child === children[index]);
+      return unchanged ? node : { ...node, children: sortedChildren };
+    });
+
+    return [...withSortedChildren].sort((a, b) => position(a) - position(b));
+  };
+
+  return sortLevel(columnDefs);
 };
 
-export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+const sameTreeOrder = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
   columnDefs.length === nextColumnDefs.length &&
-  columnDefs.every((col, index) => getFirstLeafColId(col) === getFirstLeafColId(nextColumnDefs[index]));
+  columnDefs.every((col, index) => {
+    const next = nextColumnDefs[index];
+    if (getFirstLeafColId(col) !== getFirstLeafColId(next)) {
+      return false;
+    }
+
+    const children = groupChildren(col);
+    const nextChildren = groupChildren(next);
+    if (!children?.length && !nextChildren?.length) {
+      return true;
+    }
+
+    return !!children?.length && !!nextChildren?.length && sameTreeOrder(children, nextChildren);
+  });
+
+export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+  sameTreeOrder(columnDefs, nextColumnDefs);
 
 export interface ColumnLeaf {
   field: string;
@@ -80,11 +129,6 @@ export interface ColumnLeaf {
   groupName?: ColDef['headerName'];
   suppressColumnsToolPanel?: ColDef['suppressColumnsToolPanel'];
 }
-
-const groupChildren = (col: ColDef): ColDef[] | null => {
-  const children = (col as ColGroupDef).children;
-  return Array.isArray(children) ? (children as ColDef[]) : null;
-};
 
 const toLeaf = (col: ColDef, group?: ColGroupDef): ColumnLeaf => ({
   field: (col.field ?? col.colId ?? '') as string,
@@ -186,15 +230,36 @@ export const haveGroupedColDefsSamePanelState = (columnDefs: ColDef[], nextColum
   );
 };
 
-export const updateGroupedColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
+// Stored entries that match a leaf are re-slotted into the leaves' order, and leaves the grid has not
+// saved yet are appended, so the panel's order survives even before the grid first writes its state.
+const withLeafOrderAndVisibility = (columns: ColumnState[], colDefs: ColDef[]): ColumnState[] => {
+  const leaves = toColumnLeaves(colDefs).filter((leaf) => leaf.field);
+  const leafIndex = new Map(leaves.map((leaf, index) => [leaf.field, index]));
+  const indexOf = (col: ColumnState) => leafIndex.get(col.colId) ?? -1;
+  const ordered = columns.filter((col) => indexOf(col) >= 0).sort((a, b) => indexOf(a) - indexOf(b));
+
+  let next = 0;
+  const slotted = columns.map((col) => {
+    if (indexOf(col) < 0) {
+      return col;
+    }
+    const target = ordered[next++];
+    return { ...target, hide: leaves[indexOf(target)].hide };
+  });
+
+  const storedIds = new Set(columns.map((col) => col.colId));
+  const unsaved = leaves
+    .filter((leaf) => !storedIds.has(leaf.field))
+    .map((leaf) => ({ colId: leaf.field, hide: leaf.hide }));
+
+  return [...slotted, ...unsaved];
+};
+
+export const updateColumnPanelStateInStorage = (storageKey: string, colDefs: ColDef[]) => {
   const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const model: GridModel = JSON.parse(stored);
-  const leafByField = new Map(toColumnLeaves(colDefs).map((leaf) => [leaf.field, leaf]));
-  const columns = (model.columns || []).map((col) => {
-    const leaf = leafByField.get(col.colId);
-    return leaf ? { ...col, hide: leaf.hide } : col;
-  });
-  saveColumnsStateToStorage(storageKey, { ...model, columns });
+  const columns = withLeafOrderAndVisibility(model.columns || [], colDefs);
+  saveColumnsStateToStorage(storageKey, { ...model, filters: model.filters ?? {}, columns });
 };
 
 export const getGroupedColumnVisibilityFromGridState = (storageKey: string, columnDefs: ColDef[]): ColDef[] | null => {
@@ -207,16 +272,6 @@ export const getGroupedColumnVisibilityFromGridState = (storageKey: string, colu
     return null;
   }
   return applyColumnStateOrderToGroupedColDefs(columnDefs, model.columns);
-};
-
-export const updateColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
-  const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
-  const model: GridModel = JSON.parse(stored);
-  const columns = (model.columns || []).map((col) => {
-    const def = colDefs.find((d) => d.field === col.colId);
-    return def ? { ...col, hide: def.hide } : col;
-  });
-  saveColumnsStateToStorage(storageKey, { ...model, columns });
 };
 
 export const getColumnVisibilityFromGridState = (storageKey: string, columnDefs: ColDef[]): ColDef[] | null => {

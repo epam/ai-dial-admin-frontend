@@ -2,8 +2,9 @@ import { describe, expect, test } from 'vitest';
 
 import {
   deriveSavedQueryEditor,
-  toMetadataUpdateRequest,
-  savedQueryEntityName,
+  toMetadataReplaceRequest,
+  savedQueryPrimarySource,
+  savedQuerySourcesLabel,
   toBuilderRestore,
   toSavedQueryRequest,
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
@@ -291,39 +292,87 @@ describe('toSavedQueryRequest — the persisted body carries no time bound', () 
 
     expect(operatorsOnField(request.query?.filter, 'project')).toEqual([QueryOperator.Eq]);
   });
+
+  // The toolbar serializes a preset as a call relative to the current instant, and that call must
+  // not reach the persisted body: the preset already travels as time intent, and a body carrying it
+  // would be a second, competing bound.
+  test('carries no relative call either, whichever preset is selected', () => {
+    const request = toSavedQueryRequest(
+      baseCapture({ state: stateWithFilter(), time: { period: '30m', isCustom: false, range: RANGE } }),
+    );
+
+    expect(JSON.stringify(request.query)).not.toContain(QueryExprType.Fn);
+    expect(request.time).toEqual({ mode: SavedQueryTimeMode.Relative, period: '30m' });
+  });
+
+  // Unsaved-change detection compares the payload a save would send, so a body that shifted with the
+  // selected preset would make a clean page look dirty on every toolbar change.
+  test('produces the same body for two different presets', () => {
+    const capture = (period: string) =>
+      toSavedQueryRequest(baseCapture({ state: stateWithFilter(), time: { period, isCustom: false, range: RANGE } }));
+
+    expect(capture('30m').query).toEqual(capture('7d').query);
+  });
 });
 
 describe('deriveSavedQueryEditor', () => {
   const representable: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
 
   test('reports SQL for a query carrying a SQL body', () => {
-    expect(deriveSavedQueryEditor({ sql: 'SELECT 1' })).toBe(SavedQueryEditor.Sql);
+    expect(deriveSavedQueryEditor({ sql: 'SELECT 1' }, null)).toBe(SavedQueryEditor.Sql);
   });
 
   test('reports Builder for a representable structured body', () => {
-    expect(deriveSavedQueryEditor({ query: representable })).toBe(SavedQueryEditor.Builder);
+    expect(deriveSavedQueryEditor({ query: representable }, null)).toBe(SavedQueryEditor.Builder);
   });
 
   test('reports JSON for a structured body the builder cannot represent', () => {
-    expect(deriveSavedQueryEditor({ query: DEEPLY_NESTED_BODY })).toBe(SavedQueryEditor.Json);
+    expect(deriveSavedQueryEditor({ query: DEEPLY_NESTED_BODY }, null)).toBe(SavedQueryEditor.Json);
   });
 
   test('ignores a blank SQL body', () => {
-    expect(deriveSavedQueryEditor({ sql: '   ', query: representable })).toBe(SavedQueryEditor.Builder);
+    expect(deriveSavedQueryEditor({ sql: '   ', query: representable }, null)).toBe(SavedQueryEditor.Builder);
   });
 });
 
-describe('savedQueryEntityName', () => {
+describe('savedQueryPrimarySource', () => {
   test('prefers the body entity', () => {
-    expect(savedQueryEntityName({ query: { entity: 'a', mode: QueryMode.Row }, source: 'b' })).toBe('a');
+    expect(savedQueryPrimarySource({ query: { entity: 'a', mode: QueryMode.Row }, source: ['b'] })).toBe('a');
   });
 
   test('falls back to the derived source for a SQL body', () => {
-    expect(savedQueryEntityName({ source: 'b' })).toBe('b');
+    expect(savedQueryPrimarySource({ source: ['b'] })).toBe('b');
+  });
+
+  test('takes the first source of a composite SQL body', () => {
+    expect(savedQueryPrimarySource({ source: ['conversations', 'dial_usage_log'] })).toBe('conversations');
+  });
+
+  test('reads a single-name source from an older service', () => {
+    expect(savedQueryPrimarySource({ source: 'dial_usage_log' as unknown as string[] })).toBe('dial_usage_log');
+  });
+
+  test('returns an empty name for an empty source list', () => {
+    expect(savedQueryPrimarySource({ source: [] })).toBe('');
   });
 
   test('returns an empty name when neither is present', () => {
-    expect(savedQueryEntityName({})).toBe('');
+    expect(savedQueryPrimarySource({})).toBe('');
+  });
+});
+
+describe('savedQuerySourcesLabel', () => {
+  test('joins every source', () => {
+    expect(savedQuerySourcesLabel(['conversations', 'dial_usage_log'])).toBe('conversations, dial_usage_log');
+  });
+
+  test('renders a single-name source from an older service', () => {
+    expect(savedQuerySourcesLabel('dial_usage_log' as unknown as string[])).toBe('dial_usage_log');
+  });
+
+  test('renders an absent or empty source as an empty label', () => {
+    expect(savedQuerySourcesLabel(void 0)).toBe('');
+    expect(savedQuerySourcesLabel([])).toBe('');
   });
 });
 
@@ -355,8 +404,16 @@ describe('toBuilderRestore', () => {
     expect(result.state.fields).toEqual(FIELDS);
   });
 
+  test('leaves builder state untouched for a body the builder cannot represent', () => {
+    const result = restore({ query: DEEPLY_NESTED_BODY });
+
+    expect(result.editor).toBe(SavedQueryEditor.Json);
+    expect(result.state.filter.children).toEqual([]);
+    expect(result.jsonText).toContain('dial_usage_log');
+  });
+
   test('opens a SQL body in the SQL view with the stored statement intact', () => {
-    const result = restore({ sql: 'SELECT count(*) FROM dial_usage_log', source: 'dial_usage_log' });
+    const result = restore({ sql: 'SELECT count(*) FROM dial_usage_log', source: ['dial_usage_log'] });
 
     expect(result.editor).toBe(SavedQueryEditor.Sql);
     expect(result.sqlText).toBe('SELECT count(*) FROM dial_usage_log');
@@ -455,7 +512,6 @@ describe('toSavedQueryRequest ⇄ toBuilderRestore round trip', () => {
         scope: request.scope,
         query: request.query,
         time: request.time,
-        result_view: request.result_view,
         generation: 1,
         created_at: '2026-08-01T00:00:00Z',
         updated_at: '2026-08-02T00:00:00Z',
@@ -469,14 +525,14 @@ describe('toSavedQueryRequest ⇄ toBuilderRestore round trip', () => {
   });
 });
 
-describe('toMetadataUpdateRequest', () => {
+describe('toMetadataReplaceRequest', () => {
   const stored: SavedQuery = {
     id: 'sq_1',
     name: 'Top chats',
     description: 'For Monday',
     tag: 'Adoption',
     scope: SavedQueryScope.Personal,
-    source: 'dial_usage_log',
+    source: ['dial_usage_log'],
     query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate },
     time: { mode: SavedQueryTimeMode.Relative, period: '7d' },
     result_view: QueryResultView.Chart,
@@ -489,25 +545,24 @@ describe('toMetadataUpdateRequest', () => {
   const meta = { name: 'Renamed', description: 'd', tag: 't', scope: SavedQueryScope.Common };
 
   test('replaces the metadata and carries the body across untouched', () => {
-    const request = toMetadataUpdateRequest(stored, meta);
+    const request = toMetadataReplaceRequest(stored, meta);
 
     expect(request.name).toBe('Renamed');
     expect(request.scope).toBe(SavedQueryScope.Common);
     expect(request.query).toEqual(stored.query);
     expect(request.time).toEqual(stored.time);
     expect(request.chart).toEqual(stored.chart);
-    expect(request.result_view).toBe(QueryResultView.Chart);
   });
 
   test('carries a SQL body instead of a structured one', () => {
-    const request = toMetadataUpdateRequest({ ...stored, query: void 0, sql: 'SELECT 1' }, meta);
+    const request = toMetadataReplaceRequest({ ...stored, query: void 0, sql: 'SELECT 1' }, meta);
 
     expect(request.sql).toBe('SELECT 1');
     expect('query' in request).toBeFalsy();
   });
 
   test('sends no server-assigned member', () => {
-    const request = toMetadataUpdateRequest(stored, meta);
+    const request = toMetadataReplaceRequest(stored, meta);
 
     ['id', 'owner_id', 'owner_email', 'source', 'generation', 'created_at', 'updated_at'].forEach((member) => {
       expect(member in request).toBeFalsy();
@@ -515,7 +570,7 @@ describe('toMetadataUpdateRequest', () => {
   });
 
   test('trims and omits blank metadata like the capture path does', () => {
-    const request = toMetadataUpdateRequest(stored, { ...meta, name: '  Renamed  ', description: '  ', tag: '' });
+    const request = toMetadataReplaceRequest(stored, { ...meta, name: '  Renamed  ', description: '  ', tag: '' });
 
     expect(request.name).toBe('Renamed');
     expect('description' in request).toBeFalsy();
@@ -532,7 +587,7 @@ describe('toMetadataUpdateRequest', () => {
       state: baseState(),
       resultView: QueryResultView.Table,
     });
-    const viaMetadata = toMetadataUpdateRequest(
+    const viaMetadata = toMetadataReplaceRequest(
       { ...stored, query: viaCapture.query, time: void 0, result_view: QueryResultView.Table, chart: void 0 },
       meta,
     );

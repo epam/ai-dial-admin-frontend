@@ -1,23 +1,44 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
-import {
-  executeQuery,
-  executeSqlQuery,
-  generateQuery,
-  getEntitySchema,
-  translateQuery,
-  translateSqlToQuery,
-} from '@/src/app/[lang]/queries/actions';
+import { generateQuery, getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAppContext } from '@/src/context/AppContext';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
+import { QueryExprType, QueryMode, QueryPageType, StructuredQuery } from '@/src/models/analytics/query';
+import { QueryRequestKind } from '@/src/models/analytics/query-builder';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { CsvOutcome, QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
+import { downloadFile } from '@/src/utils/download';
+
+const runQueryMock = vi.fn(
+  async (_query?: unknown): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }),
+);
+const runSqlMock = vi.fn(async (_sql?: string): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }));
+
+// One object for the life of the file: a fresh one per render would change the identity the effects
+// depend on and re-issue every read forever.
+const exportCsvMock = vi.fn(
+  async (_request?: unknown): Promise<CsvOutcome> => ({
+    isSuccess: true,
+    file: { blob: new Blob(['id\r\n1\r\n']), fileName: 'result.csv' },
+  }),
+);
+const RUNNER = { runQuery: runQueryMock, runSql: runSqlMock, exportCsv: exportCsvMock };
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
+}));
 
 vi.mock('@/src/app/[lang]/queries/actions');
+vi.mock('@/src/utils/download');
+
+const { showNotificationMock } = vi.hoisted(() => ({ showNotificationMock: vi.fn() }));
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
+}));
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
@@ -53,7 +74,7 @@ const FIELDS: AnalyticsEntityField[] = [
 
 const DEEP_JSON = JSON.stringify({
   entity: 'dial_usage_log',
-  mode: 'row',
+  mode: QueryMode.Row,
   filter: {
     op: 'and',
     args: [
@@ -66,7 +87,7 @@ const DEEP_JSON = JSON.stringify({
               {
                 op: 'eq',
                 args: [
-                  { type: 'field', name: 'project_id' },
+                  { type: QueryExprType.Field, name: 'project_id' },
                   { type: 'value', value_type: 'string', value: 'x' },
                 ],
               },
@@ -187,21 +208,106 @@ describe('QueryBuilder', () => {
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeDisabled();
   });
 
-  test('preserves edited SQL across SQL ⇄ JSON switches without a prompt', async () => {
+  const typeSql = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.click(editor);
+    await user.paste(sql);
+  };
+
+  test('edited SQL switched to JSON is shown as its translated body', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' } }],
+        },
+      },
+    });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id FROM dial_usage_log');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect((await screen.findByLabelText('json-editor')) as HTMLTextAreaElement).toHaveDisplayValue(
+      /"name": "project_id"/,
+    );
+
+    // The SQL buffer was cleared, so returning to SQL re-seeds it from the builder translation.
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    expect(await screen.findByLabelText('sql-editor')).toHaveDisplayValue(/FROM\s+dial_usage_log/);
+  });
+
+  test('a translated body the builder cannot hold lands in JSON and still guards the Builder switch', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: true, response: { query: JSON.parse(DEEP_JSON) } });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id FROM dial_usage_log WHERE project_id = 1');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+    expect(await screen.findByText('QueryBuilder.NotShownInBuilder')).toBeInTheDocument();
+    expect(screen.getByLabelText('json-editor')).toHaveDisplayValue(/"op": "or"/);
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+  });
+
+  test('SQL that cannot be translated → JSON prompts; cancel keeps the buffer intact', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    renderBuilder();
+
+    await typeSql(user, 'SELECT a.x FROM conversations a JOIN dial_usage_log b ON b.chat_id = a.chat_id');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionJson')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.DiscardQueryDescriptionBuilder')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('json-editor')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+
+    expect(screen.getByLabelText('sql-editor')).toHaveValue(
+      'SELECT a.x FROM conversations a JOIN dial_usage_log b ON b.chat_id = a.chat_id',
+    );
+  });
+
+  test('confirming the JSON prompt opens the JSON view on the default body', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    renderBuilder();
+
+    await typeSql(user, 'SELECT bad');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
+
+    const editor = await screen.findByLabelText('json-editor');
+    expect(editor).toHaveDisplayValue(/"entity": "dial_usage_log"/);
+    expect(editor).not.toHaveDisplayValue(/SELECT bad/);
+  });
+
+  test('unedited (generated) SQL switches to JSON without translating', async () => {
     const user = userEvent.setup();
     vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    const editor = await screen.findByLabelText('sql-editor');
-    await user.clear(editor);
-    await user.type(editor, 'SELECT 1');
-
+    await screen.findByLabelText('sql-editor');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    expect(await screen.findByLabelText('sql-editor')).toHaveValue('SELECT 1');
+    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('json-editor')).toHaveDisplayValue(/"entity": "dial_usage_log"/);
+    expect(translateSqlToQuery).not.toHaveBeenCalled();
   });
 
   test('translatable SQL hydrates the builder without a prompt', async () => {
@@ -210,7 +316,11 @@ describe('QueryBuilder', () => {
     vi.mocked(translateSqlToQuery).mockResolvedValue({
       success: true,
       response: {
-        query: { entity: 'dial_usage_log', mode: 'row', select: [{ expr: { type: 'field', name: 'project_id' } }] },
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' } }],
+        },
       },
     });
     renderBuilder();
@@ -218,7 +328,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT project_id FROM dial_usage_log');
+    await user.click(editor);
+    await user.paste('SELECT project_id FROM dial_usage_log');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
     // No discard prompt — the SQL was translated and shown in the builder.
@@ -236,14 +347,42 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT bad');
+    await user.click(editor);
+    await user.paste('SELECT bad');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionBuilder')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.DiscardQueryDescriptionJson')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
 
     expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT bad');
+  });
+
+  // Regression: a renamed column passed the check and hydrated without its alias, and the SQL buffer
+  // holding the original text was cleared.
+  test('SQL whose translation the builder would hold only in part → Builder prompts instead of hydrating', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' }, as: 'project' }],
+        },
+      },
+    });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id AS project');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT project_id AS project');
   });
 
   test('confirming the prompt discards the untranslatable SQL and resets the builder', async () => {
@@ -255,7 +394,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
-    await user.type(editor, 'SELECT bad');
+    await user.click(editor);
+    await user.paste('SELECT bad');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
     await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
 
@@ -307,16 +447,16 @@ describe('QueryBuilder', () => {
 
   test('running from the Builder sends a structured query with the toolbar time bound', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeQuery).mockResolvedValue({
-      success: true,
-      response: { columns: ['event_id'], rows: [{ event_id: '1' }] },
-    });
+    runQueryMock.mockResolvedValue({
+      isSuccess: true,
+      result: { columns: ['event_id'], rows: [{ event_id: '1' }] },
+    } as never);
     renderBuilder();
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
 
-    expect(executeQuery).toHaveBeenCalledTimes(1);
-    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    expect(runQueryMock).toHaveBeenCalledTimes(1);
+    const sent = runQueryMock.mock.calls[0][0] as StructuredQuery;
     expect(sent.entity).toBe('dial_usage_log');
     const args = (sent.filter as { args: { op: string; args: { name?: string }[] }[] }).args;
     expect(args.map((a) => a.op)).toEqual(['ge', 'le']);
@@ -328,7 +468,7 @@ describe('QueryBuilder', () => {
 
   test('labeled field shows its label on the Select chip while the query keeps the raw name', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { columns: [], rows: [] } });
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { columns: [], rows: [] } });
     const labeledFields: AnalyticsEntityField[] = [
       ...FIELDS.filter((f) => f.name !== 'project_id'),
       {
@@ -352,8 +492,8 @@ describe('QueryBuilder', () => {
     expect(screen.queryByText('project_id')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
-    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
-    expect(sent.select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
+    const sent = runQueryMock.mock.calls[0][0] as StructuredQuery;
+    expect(sent.select).toEqual([{ expr: { type: QueryExprType.Field, name: 'project_id' } }]);
   });
 });
 
@@ -404,14 +544,16 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');
     await user.click(runButton);
 
-    expect(executeSqlQuery).toHaveBeenCalledWith('SELECT 1');
+    expect(runSqlMock).toHaveBeenCalledWith('SELECT 1');
     await vi.waitFor(() => expect(runButton).toBeDisabled());
+    // The run describes itself from the translation it already performed, never a second one.
+    expect(translateSqlToQuery).toHaveBeenCalledOnce();
   });
 
   test('a representable message run hydrates the builder and shows in the JSON view', async () => {
@@ -429,7 +571,7 @@ describe('QueryBuilder AI view', () => {
               {
                 op: 'eq',
                 args: [
-                  { type: 'field', name: 'project_id' },
+                  { type: QueryExprType.Field, name: 'project_id' },
                   { type: 'value', value_type: 'string', value: 'p1' },
                 ],
               },
@@ -438,7 +580,7 @@ describe('QueryBuilder AI view', () => {
         },
       },
     } as never);
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const runButton = await sendMessage(user, '```sql\nSELECT 1 WHERE project_id = ~p1~\n```');
@@ -456,14 +598,14 @@ describe('QueryBuilder AI view', () => {
       success: true,
       response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
     } as never);
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');
     await user.click(runButton);
 
-    expect(executeQuery).toHaveBeenCalled();
-    expect(executeSqlQuery).not.toHaveBeenCalled();
+    expect(runQueryMock).toHaveBeenCalled();
+    expect(runSqlMock).not.toHaveBeenCalled();
   });
 
   test('a message targeting another entity refreshes the schema so the time bound uses the right timestamp field', async () => {
@@ -474,13 +616,14 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(getEntitySchema).mockResolvedValue({
-      fields: [{ name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' }],
+      success: true,
+      response: { fields: [{ name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' }] },
     });
     vi.mocked(translateSqlToQuery).mockResolvedValue({
       success: true,
       response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
     } as never);
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder({
       initialEntities: [{ name: 'custom_source' }, { name: 'dial_usage_log' }],
@@ -491,7 +634,7 @@ describe('QueryBuilder AI view', () => {
     await user.click(runButton);
 
     expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log');
-    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    const sent = runQueryMock.mock.calls[0][0] as StructuredQuery;
     expect(sent.entity).toBe('dial_usage_log');
     const args = (sent.filter as { args: { op: string; args: { name?: string }[] }[] }).args;
     expect(args.map((a) => a.op)).toEqual(['ge', 'le']);
@@ -538,7 +681,7 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const firstRun = await sendMessage(user, '```sql\nSELECT 1\n```');
@@ -567,7 +710,7 @@ describe('QueryBuilder AI view', () => {
     // Clicking the first message's Run again moves execution back to it.
     await user.click(firstRun);
 
-    expect(executeSqlQuery).toHaveBeenLastCalledWith('SELECT 1');
+    expect(runSqlMock).toHaveBeenLastCalledWith('SELECT 1');
     await vi.waitFor(() => expect(firstRun).toBeDisabled());
     expect(runButtons[1]).toBeEnabled();
   });
@@ -576,8 +719,8 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
-    vi.mocked(getEntitySchema).mockResolvedValue({ fields: FIELDS });
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
 
     renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
     const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');
@@ -589,5 +732,502 @@ describe('QueryBuilder AI view', () => {
 
     expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
+  });
+
+  test('leaving the AI view and coming back keeps the conversation and which message is loaded', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT 1' } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled());
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+
+    expect(screen.getByText('cost by deployment')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
+
+    // Regression: the transcript used to restart empty while the loaded index survived, so the first
+    // new reply at that index came up disabled although it had never been run.
+    vi.mocked(generateQuery).mockResolvedValue({
+      success: true,
+      response: {
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '```sql\nSELECT 2\n```' } },
+        ],
+      },
+    } as never);
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'now by project');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+    await screen.findByText('SELECT 2');
+
+    expect(screen.getAllByRole('button', { name: 'QueryBuilder.Run' })[1]).toBeEnabled();
+  });
+
+  test('collapsing and restoring the rail keeps the conversation', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+
+    renderBuilder();
+    await sendMessage(user, '```sql\nSELECT 1\n```');
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.CollapsePanel' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.OpenPanel/ }));
+
+    expect(screen.getByText('cost by deployment')).toBeInTheDocument();
+    expect(screen.getByText('SELECT 1')).toBeInTheDocument();
+  });
+
+  test('a send that fails in transit notifies and leaves the prompt usable', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(generateQuery).mockRejectedValue(new Error('network'));
+
+    renderBuilder();
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+
+    await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalled());
+    expect(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeEnabled();
+  });
+
+  test('a reply still in flight when the entity changes does not land in the new conversation', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
+    let resolveReply: (value: unknown) => void = () => undefined;
+    vi.mocked(generateQuery).mockReturnValue(new Promise((resolve) => (resolveReply = resolve)) as never);
+
+    renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+
+    await user.click(screen.getByRole('button', { name: /dial_usage_log/ }));
+    await user.click(await screen.findByRole('option', { name: 'feedback' }));
+    resolveReply({
+      success: true,
+      response: {
+        choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'late reply' } }],
+      },
+    });
+
+    await vi.waitFor(() => expect(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeEnabled());
+    expect(screen.queryByText('late reply')).not.toBeInTheDocument();
+    expect(screen.queryByText('cost by deployment')).not.toBeInTheDocument();
+  });
+
+  test('a message whose schema read fails in transit still runs as SQL', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: { query: { entity: 'feedback', mode: QueryMode.Row } },
+    } as never);
+    vi.mocked(getEntitySchema).mockRejectedValue(new Error('network'));
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+
+    await vi.waitFor(() => expect(runSqlMock).toHaveBeenCalledWith('SELECT 1'));
+    expect(runQueryMock).not.toHaveBeenCalled();
+  });
+
+  test('a translation that fails in transit still runs the message as SQL and leaves Run usable', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network'));
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+
+    expect(runSqlMock).toHaveBeenCalledWith('SELECT 1');
+
+    vi.mocked(generateQuery).mockResolvedValue({
+      success: true,
+      response: {
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '```sql\nSELECT 2\n```' } },
+        ],
+      },
+    } as never);
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'now by project');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+    await screen.findByText('SELECT 2');
+
+    await vi.waitFor(() => expect(screen.getAllByRole('button', { name: 'QueryBuilder.Run' })[1]).toBeEnabled());
+  });
+
+  test('leaving the AI view for the Builder after a message ran as raw SQL asks for confirmation', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+    await vi.waitFor(() => expect(runSqlMock).toHaveBeenCalledWith('SELECT 1'));
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    expect(screen.getByRole('heading', { name: 'QueryBuilder.AiPanelHeading' })).toBeInTheDocument();
+  });
+
+  test('leaving the AI view for the Builder after a representable run switches without a prompt', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
+    } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect(translateSqlToQuery).toHaveBeenCalledOnce();
+  });
+
+  test('the view switcher is disabled while a message is loading', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    let resolveTranslation: (value: unknown) => void = () => undefined;
+    vi.mocked(translateSqlToQuery).mockReturnValue(new Promise((resolve) => (resolveTranslation = resolve)) as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+
+    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' })).toBeDisabled();
+    resolveTranslation({ success: false, status: 400 });
+    await vi.waitFor(() => expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' })).toBeEnabled());
+  });
+
+  test('SQL edited, left for the AI view, and then taken to the Builder is translated first', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.click(editor);
+    await user.paste('SELECT bad');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(translateSqlToQuery).toHaveBeenCalledWith('SELECT bad');
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+  });
+});
+
+describe('QueryBuilder :: SQL view Run', () => {
+  beforeEach(() => {
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT 1' } });
+  });
+
+  const AGG_ROWS = [
+    { deployment: 'gpt-4o', total: 120 },
+    { deployment: 'claude', total: 80 },
+  ];
+
+  const runSql = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.click(editor);
+    await user.paste(sql);
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+  };
+
+  test('translates and executes together, then charts the translated grouping', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Aggregate,
+          group_by: ['deployment'],
+          select: [{ expr: { type: QueryExprType.Field, name: 'deployment' } }],
+        } as StructuredQuery,
+      },
+    } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT deployment, count(*) AS total FROM dial_usage_log GROUP BY deployment');
+
+    expect(runSqlMock).toHaveBeenCalled();
+    expect(translateSqlToQuery).toHaveBeenCalled();
+
+    await user.click(await screen.findByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
+    expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
+  });
+
+  test('a rejected translation still shows the result and raises no notification', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT sum(a) / count(*) AS avg_a FROM dial_usage_log');
+
+    expect(await screen.findByText('grid rows: 2')).toBeInTheDocument();
+    expect(showNotificationMock).not.toHaveBeenCalled();
+  });
+
+  test('a rejected translation still charts, classifying columns from the rows', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT sum(a) / count(*) AS avg_a FROM dial_usage_log');
+    await screen.findByText('grid rows: 2');
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
+  });
+
+  test('a translation that rejects outright still shows the result and clears the running state', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network down'));
+
+    renderBuilder();
+    await runSql(user, 'SELECT deployment FROM dial_usage_log');
+
+    expect(await screen.findByText('grid rows: 2')).toBeInTheDocument();
+    expect(showNotificationMock).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled());
+  });
+
+  test('a failed run keeps its error notification', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: false, result: null, errorMessage: 'boom' } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT bad');
+
+    await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalled());
+  });
+
+  test('a period picked while the JSON view is open reaches its buffer', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    expect(await screen.findByLabelText('json-editor')).toHaveDisplayValue(/"value": "2"/);
+
+    await user.click(screen.getByRole('button', { name: /Last 2d/i }));
+    await user.click(screen.getByRole('button', { name: /Last 30m/i }));
+
+    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
+    expect(editor).toHaveDisplayValue(/"value": "minute"/);
+    expect(editor).toHaveDisplayValue(/"value": "30"/);
+  });
+
+  test('changing the source while the JSON view is open re-seeds its buffer', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getEntitySchema).mockResolvedValue({
+      success: true,
+      response: { fields: [{ name: 'started_at', type: AnalyticsFieldType.Timestamp, source: 'started_at' }] },
+    });
+    renderBuilder({ initialEntities: [...ENTITIES, { name: 'dial_sessions' }] });
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Source/ }));
+    await user.click(screen.getByRole('option', { name: 'dial_sessions' }));
+
+    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
+    await vi.waitFor(() => expect(editor).toHaveDisplayValue(/"entity": "dial_sessions"/));
+    // The new source's own timestamp column carries the bound, not the previous source's.
+    expect(editor).toHaveDisplayValue(/"name": "started_at"/);
+    expect(editor.value).not.toContain('request_time');
+  });
+
+  test('a time filter change leaves an edited JSON buffer alone', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
+    // A body the builder cannot hold marks the buffer as diverged — it is the user's from here on.
+    // `fireEvent.change` rather than typing: user-event reads `{` as its own key syntax.
+    fireEvent.change(editor, { target: { value: DEEP_JSON } });
+
+    await user.click(screen.getByRole('button', { name: /Last 2d/i }));
+    await user.click(screen.getByRole('button', { name: /Last 30m/i }));
+
+    expect(editor.value).toBe(DEEP_JSON);
+  });
+});
+
+describe('QueryBuilder — Export CSV', () => {
+  const EXPORT = { name: 'QueryBuilder.ExportCsv' };
+  const ROW_RESULT = { isSuccess: true, result: { columns: ['event_id'], rows: [{ event_id: '1' }] } };
+  const csvOf = (records: number, totalCount?: number): CsvOutcome => ({
+    isSuccess: true,
+    file: {
+      blob: new Blob([`id\r\n${'1\r\n'.repeat(records)}`]),
+      fileName: 'result.csv',
+      ...(totalCount != null && { totalCount }),
+    },
+  });
+
+  const runSqlView = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    fireEvent.change(editor, { target: { value: sql } });
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    await screen.findByRole('button', EXPORT);
+  };
+
+  beforeEach(() => {
+    runQueryMock.mockResolvedValue(ROW_RESULT as never);
+    runSqlMock.mockResolvedValue(ROW_RESULT as never);
+    exportCsvMock.mockResolvedValue(csvOf(1));
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: '' } });
+  });
+
+  test('offers no export before a run', () => {
+    renderBuilder();
+
+    expect(screen.queryByRole('button', EXPORT)).toBeNull();
+  });
+
+  test('exports a structured run as the first 1000 rows of the same query', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    await user.click(await screen.findByRole('button', EXPORT));
+
+    const ran = runQueryMock.mock.calls[0][0] as StructuredQuery;
+    const exported = exportCsvMock.mock.calls[0][0] as { kind: QueryRequestKind; query: StructuredQuery };
+    expect(exported.kind).toBe(QueryRequestKind.Structured);
+    expect(exported.query).toEqual({
+      ...ran,
+      page: { type: QueryPageType.Offset, offset: 0, limit: 1000, include_total: expect.any(Boolean) },
+    });
+  });
+
+  test('exports the statement that ran, not the one edited since', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    fireEvent.change(screen.getByLabelText('sql-editor'), { target: { value: 'SELECT 2' } });
+    await user.click(screen.getByRole('button', EXPORT));
+
+    expect(exportCsvMock).toHaveBeenCalledWith({ kind: QueryRequestKind.Sql, sql: 'SELECT 1' });
+  });
+
+  test('keeps the export bound to the shown result after a failed run', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    runSqlMock.mockResolvedValueOnce({ isSuccess: false, result: null, error: 'boom' });
+    fireEvent.change(screen.getByLabelText('sql-editor'), { target: { value: 'SELECT 2' } });
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalledOnce());
+    await user.click(screen.getByRole('button', EXPORT));
+
+    expect(exportCsvMock).toHaveBeenLastCalledWith({ kind: QueryRequestKind.Sql, sql: 'SELECT 1' });
+  });
+
+  test('shows the export as busy until the file arrives', async () => {
+    const user = userEvent.setup();
+    let finish: (outcome: CsvOutcome) => void = () => undefined;
+    exportCsvMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    expect(screen.getByRole('button', EXPORT)).toHaveAttribute('aria-busy', 'true');
+    finish(csvOf(1));
+    await waitFor(() => expect(screen.getByRole('button', EXPORT)).toHaveAttribute('aria-busy', 'false'));
+    expect(downloadFile).toHaveBeenCalledOnce();
+  });
+
+  test('downloads the file and shows no notice for a complete file', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() => expect(downloadFile).toHaveBeenCalledWith(expect.any(Blob), 'result.csv'));
+    expect(showNotificationMock).not.toHaveBeenCalled();
+  });
+
+  test('tells the user a file at the maximum may be partial', async () => {
+    const user = userEvent.setup();
+    exportCsvMock.mockResolvedValue(csvOf(1000));
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() =>
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'QueryBuilder.ExportCsvDone',
+          description: 'QueryBuilder.ExportCsvPartialAtLimit',
+        }),
+      ),
+    );
+  });
+
+  test('names the reported total when it exceeds the file', async () => {
+    const user = userEvent.setup();
+    exportCsvMock.mockResolvedValue(csvOf(1000, 4200));
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() =>
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({ description: 'QueryBuilder.ExportCsvPartialOfTotal' }),
+      ),
+    );
+  });
+
+  test('shows the service error and downloads nothing when the export fails', async () => {
+    const user = userEvent.setup();
+    exportCsvMock.mockResolvedValue({ isSuccess: false, file: null, errorHeader: 'bad_request', error: 'limit' });
+    renderBuilder();
+    await runSqlView(user, 'SELECT 1');
+
+    await user.click(screen.getByRole('button', EXPORT));
+
+    await vi.waitFor(() =>
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'bad_request', description: 'limit' }),
+      ),
+    );
+    expect(downloadFile).not.toHaveBeenCalled();
+    expect(screen.getByText('grid rows: 1')).toBeTruthy();
   });
 });

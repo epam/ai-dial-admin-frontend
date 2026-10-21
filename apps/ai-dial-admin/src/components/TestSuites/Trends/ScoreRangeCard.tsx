@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { FC } from 'react';
 
 import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
+import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -112,7 +113,7 @@ const ScoreRangeCard: FC<Props> = ({ title, scoreMin, scoreMax, latestScore, run
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 dial-tiny-text text-secondary">
             <span className="size-1 rounded-full bg-secondary" />
-            {t(TestSuitesI18nKey.TrendsRunsCount, { count: runCount })}
+            {formatTrendsRunsCountLabel(t, runCount)}
           </span>
           {latestScore != null && scoreMin !== scoreMax && (
             <span className={classNames('flex items-center gap-1 dial-tiny-text', latestLabelClass)}>

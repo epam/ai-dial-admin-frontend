@@ -9,7 +9,9 @@ import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { useStickyChartTooltip } from '@/src/components/TestSuites/Trends/use-sticky-chart-tooltip';
 import { buildOverallScoreChartOptions } from '@/src/components/TestSuites/Trends/utils/chart-options';
+import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useThemePalette } from '@/src/hooks/use-theme-palette';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -20,17 +22,18 @@ interface Props {
 
 const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
   const t = useI18n();
+  const palette = useThemePalette();
   const hasData = runOrder.some((point) => point.overallScore != null);
-  const chartRef = useStickyChartTooltip(hasData && !isLoading);
+  const { chartRef, onChartReady } = useStickyChartTooltip(hasData && !isLoading, runOrder.length);
 
   const options = useMemo(
     () =>
-      buildOverallScoreChartOptions(runOrder, {
+      buildOverallScoreChartOptions(palette, runOrder, {
         date: t(TestSuitesI18nKey.TrendsTooltipDate),
         run: t(TestSuitesI18nKey.TrendsTooltipRun),
         score: t(TestSuitesI18nKey.TrendsTooltipScore),
       }),
-    [runOrder, t],
+    [runOrder, t, palette],
   );
 
   return (
@@ -39,9 +42,7 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
       title={
         <>
           {t(TestSuitesI18nKey.OverallScoreTrend)}{' '}
-          <span className="font-normal text-secondary">
-            · {t(TestSuitesI18nKey.TrendsRunsCount, { count: runCount })}
-          </span>
+          <span className="font-normal text-secondary">· {formatTrendsRunsCountLabel(t, runCount)}</span>
         </>
       }
     >
@@ -52,7 +53,13 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
       ) : !hasData ? (
         <DialNoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
-        <ReactECharts ref={chartRef} option={options} className="h-[220px] w-full" opts={{ renderer: 'canvas' }} />
+        <ReactECharts
+          ref={chartRef}
+          option={options}
+          onChartReady={onChartReady}
+          className="h-[220px] w-full"
+          opts={{ renderer: 'canvas' }}
+        />
       )}
     </SummarySection>
   );

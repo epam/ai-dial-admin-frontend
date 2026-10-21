@@ -1,3 +1,4 @@
+import { ChartColors } from '@/src/components/Common/MetricCard/models';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
@@ -15,9 +16,19 @@ import { TimeRange } from '@/src/models/time-range';
 
 // The toolbar time filter serializes into the structured query as ge/le predicates on this field —
 // resolved once per build so the JSON view, Copy, and Run all carry the same visible time bound.
+// `period` names the preset the range came from, and is what makes the pair relative to the current
+// instant instead of two fixed ones; a custom range leaves it unset and serializes as instants.
 export interface QueryTimeBound {
   field: string;
   range: TimeRange;
+  period?: string;
+}
+
+// The pair of served functions a relative time bound needs, resolved from the catalog together so a
+// caller cannot hold one without the other.
+export interface RelativeTimeFunctions {
+  subtract: QueryFunction;
+  now: QueryFunction;
 }
 
 export enum FilterNodeKind {
@@ -25,14 +36,31 @@ export enum FilterNodeKind {
   Predicate = 'predicate',
 }
 
+// What a condition compares its left operand against: a typed literal (the value input), or a
+// scalar-function call. Kept as its own member rather than derived from `rightFn`, because "switched
+// to a function, none picked yet" is a state with its own editor.
+export enum FilterOperandKind {
+  Literal = 'literal',
+  Function = 'function',
+}
+
+// One condition. Its left operand is either a schema column (fn = null, named by `field`) or a
+// scalar-function call, named the same way an ExpressionRow names one. Its right operand is either
+// the literal `value`/`valueType`/`isNull` triple or, under `rightKind: Function`, a call named by
+// `rightFn` with one `rightArgs` slot per catalog argument.
 export interface FilterPredicateNode {
   id: string;
   kind: FilterNodeKind.Predicate;
   field: string;
+  fn: string | null;
+  args: FnArgValue[];
   op: QueryOperator;
   valueType: QueryValueType;
   value: string;
   isNull: boolean;
+  rightKind: FilterOperandKind;
+  rightFn: string | null;
+  rightArgs: FnArgValue[];
 }
 
 export interface FilterGroupNode {
@@ -44,19 +72,31 @@ export interface FilterGroupNode {
 
 export type FilterNode = FilterGroupNode | FilterPredicateNode;
 
+// A call standing in for an `expression` argument's value, with one `args` slot per the called
+// function's own catalog arguments.
+export interface FnCallValue {
+  fn: string;
+  args: FnArgValue[];
+}
+
 // One ordered argument value of a function row. Exactly one member is populated per the catalog
-// argument's kind: `field` for an `expression` argument, `literal` for a literal argument.
+// argument's kind: for an `expression` argument either `field` or `call`, `literal` for a literal
+// argument. The type is recursive while the argument editor renders one level of nesting only — the
+// depth limit belongs to the editor and the representability check, not to the shape a query may
+// take, so the two can move apart without a model change.
 export interface FnArgValue {
   field?: string;
   literal?: string;
+  call?: FnCallValue;
 }
 
-// One Group by entry: a plain column (fn = null) or a scalar-function expression. When fn is a
-// catalog function name, `args` holds one value slot per that function's catalog argument (in
-// order) and `field` is unused; when fn is null the row is a plain column named by `field`.
-// `aliasEdited` marks the alias as owned by the user: a function row's alias is derived from its
-// function and arguments and rederived as they change, until the user types one of their own.
-export interface GroupByRow {
+// One entry of a column list the user assembles — a Group by key or a row-mode projection column:
+// a plain column (fn = null, named by `field`) or a scalar-function expression (fn is a catalog
+// function name, `args` holds one value slot per that function's catalog argument in order, and
+// `field` is unused). `aliasEdited` marks the alias as owned by the user: a function row's alias is
+// derived from its function and arguments and rederived as they change, until the user types one of
+// their own.
+export interface ExpressionRow {
   id: string;
   fn: string | null;
   field: string;
@@ -64,6 +104,10 @@ export interface GroupByRow {
   aliasEdited: boolean;
   args: FnArgValue[];
 }
+
+export type GroupByRow = ExpressionRow;
+
+export type SelectRow = ExpressionRow;
 
 // One aggregate metric: a catalog function (aggregate / ordered_set_aggregate group) with one arg
 // value slot per catalog argument, an optional distinct flag, and an alias.
@@ -112,7 +156,7 @@ export interface QueryBuilderState {
   mode: QueryMode;
   distinct: boolean;
   filter: FilterGroupNode;
-  select: string[];
+  select: SelectRow[];
   groupBy: GroupByRow[];
   aggregates: AggregateRow[];
   having: FilterGroupNode;
@@ -176,6 +220,13 @@ export enum QueryRequestKind {
   Sql = 'sql',
 }
 
+// What to tell the user about an exported file that may not hold every matching row: the key and the
+// numbers its text interpolates.
+export interface PartialExportNotice {
+  key: QueryBuilderI18nKey;
+  params: Record<string, number>;
+}
+
 export type QueryRunRequest =
   | { kind: QueryRequestKind.Structured; query: StructuredQuery }
   | { kind: QueryRequestKind.Sql; sql: string };
@@ -183,6 +234,8 @@ export type QueryRunRequest =
 export enum QueryBuilderWarning {
   MissingGroupByField = 'MissingGroupByField',
   EmptyAggregate = 'EmptyAggregate',
+  DroppedProjectionColumn = 'DroppedProjectionColumn',
+  DroppedCondition = 'DroppedCondition',
 }
 
 // The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
@@ -245,6 +298,7 @@ export interface ChartSlotDescriptor {
 // "Other" bucket, scatter labels points by the row's dimension values, and axis titles/tooltips
 // show columns by their display label (see ExecutedQueryMeta.columnLabels).
 export interface ChartBuildContext {
+  colors: ChartColors;
   dimensionColumns: string[];
   otherLabel: string;
   columnLabels: Record<string, string>;
@@ -253,6 +307,15 @@ export interface ChartBuildContext {
 export interface PieSlice {
   name: string;
   value: number;
+}
+
+// How a result cell renders its value. Resolved from the executed query, not from the live builder
+// state, so what the grid shows follows the run that produced the shown result.
+export enum ResultValueClass {
+  Compact = 'compact',
+  Significant = 'significant',
+  DateTime = 'date-time',
+  Duration = 'duration',
 }
 
 // Snapshot of the query a result came from. Chart availability and the X/Y option lists must follow
@@ -265,4 +328,10 @@ export interface ExecutedQueryMeta {
   dimensionColumns: string[];
   aggregateColumns: string[];
   columnLabels: Record<string, string>;
+  columnValueClasses: Record<string, ResultValueClass>;
+}
+
+export interface ResultColumnClassification {
+  dimensionColumns: string[];
+  aggregateColumns: string[];
 }

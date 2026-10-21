@@ -1,4 +1,10 @@
-## ADDED Requirements
+# interceptor-source-field Specification
+
+## Purpose
+
+The interceptor template picker shown by SelectRunnerModal.
+
+## Requirements
 
 ### Requirement: SelectRunnerModal displays available interceptor templates
 The SelectRunnerModal SHALL pass `runners` data as `rowData` and `BASE_COLUMNS` as `columnDefs` to `GridView`, so that the grid renders and displays available templates.

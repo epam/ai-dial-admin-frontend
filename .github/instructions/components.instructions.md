@@ -151,7 +151,7 @@ version bumps where a grep result goes stale silently.
 
 Covered in full by `.claude/rules/a11y.md`, which is always loaded — ARIA state, focus management,
 live regions, contrast against this repo's tokens, keyboard parity, AG Grid specifics, and the
-truncation rules (`break-all`, `DialEllipsisTooltip`). Not repeated here.
+truncation rules (`break-all`, `EllipsisTooltip`, no duplicate AG Grid cell tooltips). Not repeated here.
 
 ## §10 i18n
 

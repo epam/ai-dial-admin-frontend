@@ -1,23 +1,17 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
-import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAssetVersionBusinessError } from '@/src/utils/deployments/validation';
-import { isDeploymentAsset } from '@/src/utils/is-view';
+import { isDeploymentAsset, isVersionlessAssetView } from '@/src/utils/is-view';
 
 interface Props {
   view?: ApplicationRoute;
@@ -26,9 +20,10 @@ interface Props {
   isEntityImmutable?: boolean;
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
-  runners?: DialApplicationScheme[];
-  initialValues?: Partial<AssetWithVersion>;
   isModal?: boolean;
+  /** Applications only — omits the version field/validation for a platform-bucket create (flat, unversioned). */
+  hideVersionField?: boolean;
+  isUniqueNameError?: boolean;
 }
 
 const AssetProperties: FC<Props> = ({
@@ -38,15 +33,18 @@ const AssetProperties: FC<Props> = ({
   onChangeEntity,
   isEntityImmutable = false,
   versionsMap,
-  runners,
-  initialValues,
   isModal,
+  hideVersionField,
+  isUniqueNameError,
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const { codeAppEditorUrl } = useAppContext();
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
+
+  // Prompts/conversations are versionless — no version field or validation, mirroring the
+  // platform-bucket `hideVersionField` carve-out for applications.
+  const isVersionless = isVersionlessAssetView(view);
 
   const isDeployment = useMemo(() => {
     return isDeploymentAsset(view);
@@ -63,7 +61,7 @@ const AssetProperties: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      onChangeEntity({ ...entity, version } as DialPrompt);
+      onChangeEntity({ ...entity, version } as AssetWithVersion);
       validateVersion(version);
     },
     [entity, onChangeEntity, validateVersion],
@@ -79,6 +77,7 @@ const AssetProperties: FC<Props> = ({
           names={names}
           onChangeEntity={onChangeEntity}
           checkEmptySymbols={false}
+          isUniqueNameError={isUniqueNameError}
         />
       )}
 
@@ -91,29 +90,17 @@ const AssetProperties: FC<Props> = ({
         />
       )}
 
-      <VersionControl
-        isFullWidth={!isEntityImmutable}
-        version={entity.version}
-        onChange={onChangeVersion}
-        error={versionError}
-      />
+      {!hideVersionField && !isVersionless && (
+        <VersionControl
+          isFullWidth={!isEntityImmutable}
+          version={entity.version}
+          onChange={onChangeVersion}
+          error={versionError}
+        />
+      )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
-      {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && !initialValues && (
-        <ResourceSourceField
-          id="sourceType"
-          view={view}
-          label={t(EntitiesI18nKey.SourceType)}
-          sourceItems={ASSET_APPLICATION_SOURCE_ITEMS}
-          entity={entity as DialApplicationResource}
-          runners={runners}
-          isEntityImmutable={isEntityImmutable}
-          onChange={onChangeEntity}
-          isModal={isModal}
-          codeAppEditorUrl={codeAppEditorUrl}
-        />
-      )}
       {view === ApplicationRoute.AssetsToolsets && !isEntityImmutable && (
         <ToolsetEndpoint isModal={isModal} entity={entity} onChange={onChangeEntity} isAsset />
       )}

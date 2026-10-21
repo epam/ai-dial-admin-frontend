@@ -33,6 +33,7 @@ import {
   ActivityAuditView,
   CompareView,
   DiffView,
+  isAnalyticsResource,
   isDeploymentManagerResource,
 } from '@/src/types/activity-audit';
 import { AuditListPreselect } from '@/src/types/audit-list-preselect';
@@ -90,6 +91,7 @@ const AuditView: FC<Props> = ({
 
   const isDeployment = isDeploymentManagerResource(activity.resourceType);
   const needsLifecycleCheck = needsDeploymentLifecycleCheck(activity);
+  const canRollbackResource = !isReadOnlyAdmin && !isAnalyticsResource(activity.resourceType);
 
   useEffect(() => {
     if (!needsLifecycleCheck) {
@@ -218,7 +220,7 @@ const AuditView: FC<Props> = ({
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              {!isReadOnlyAdmin && (
+              {canRollbackResource && (
                 <DialNeutralButton
                   iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(RollbackI18nKey.Resource)}

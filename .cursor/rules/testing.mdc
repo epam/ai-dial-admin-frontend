@@ -1,5 +1,5 @@
 ---
-description: "Test-authoring rules — queries, mocks, per-type approach, cost discipline. Use when editing test files."
+description: "Test-authoring rules — queries, mocks, async stability, per-type approach, cost discipline. Use when editing test files."
 globs: "**/*.spec.ts, **/*.spec.tsx, **/*.test.ts, **/*.test.tsx, **/test-setup.tsx"
 alwaysApply: false
 ---

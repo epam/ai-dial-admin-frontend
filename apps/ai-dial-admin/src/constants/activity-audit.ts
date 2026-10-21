@@ -1,4 +1,4 @@
-import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { EntityType } from '@/src/types/entity-type';
@@ -20,11 +20,10 @@ export const auditResourceRoute: Partial<Record<ActivityAuditResourceType, Appli
   [ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION]: ApplicationRoute.Images,
   [ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION]: ApplicationRoute.Images,
   [ActivityAuditResourceType.MCP_IMAGE_DEFINITION]: ApplicationRoute.Images,
-  [ActivityAuditResourceType.MCP_DEPLOYMENT]: ApplicationRoute.McpContainers,
-  [ActivityAuditResourceType.ADAPTER_DEPLOYMENT]: ApplicationRoute.AdapterContainers,
-  [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: ApplicationRoute.ApplicationContainers,
-  [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: ApplicationRoute.InterceptorContainers,
-  [ActivityAuditResourceType.NIM_DEPLOYMENT]: ApplicationRoute.ModelServings,
+  [ActivityAuditResourceType.MCP_DEPLOYMENT]: ApplicationRoute.Containers,
+  [ActivityAuditResourceType.ADAPTER_DEPLOYMENT]: ApplicationRoute.Containers,
+  [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: ApplicationRoute.Containers,
+  [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: ApplicationRoute.Containers,
   [ActivityAuditResourceType.INFERENCE_DEPLOYMENT]: ApplicationRoute.ModelServings,
 };
 
@@ -39,11 +38,12 @@ export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditR
   [ApplicationRoute.Routes]: ActivityAuditResourceType.ROUTE,
   [ApplicationRoute.InterceptorTemplates]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
   [ApplicationRoute.Toolsets]: ActivityAuditResourceType.TOOLSET,
+  [ApplicationRoute.AnalyticsTables]: ActivityAuditResourceType.TABLE,
+  [ApplicationRoute.AnalyticsPipelines]: ActivityAuditResourceType.PIPELINE,
 };
 
 export const CONTAINER_TYPE_TO_AUDIT: Record<CONTAINER_TYPE, ActivityAuditResourceType> = {
   [CONTAINER_TYPE.MCP]: ActivityAuditResourceType.MCP_DEPLOYMENT,
-  [CONTAINER_TYPE.NIM]: ActivityAuditResourceType.NIM_DEPLOYMENT,
   [CONTAINER_TYPE.HF]: ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
   [CONTAINER_TYPE.ADAPTER]: ActivityAuditResourceType.ADAPTER_DEPLOYMENT,
   [CONTAINER_TYPE.APPLICATION]: ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
@@ -68,3 +68,6 @@ export const importPreviewResource: Partial<Record<EntityType, ActivityAuditReso
   [EntityType.INTERCEPTOR_RUNNER]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
   [EntityType.ADAPTER]: ActivityAuditResourceType.ADAPTER,
 };
+
+// The activity types the analytics backend defines; the frontend's enum also holds Core's.
+export const ANALYTICS_ACTIVITY_TYPES = [ActivityAuditType.Create, ActivityAuditType.Update, ActivityAuditType.Delete];

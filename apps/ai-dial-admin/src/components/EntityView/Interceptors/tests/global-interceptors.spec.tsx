@@ -11,7 +11,7 @@ vi.mock('@/src/app/[lang]/system-properties/actions', () => ({
 
 const EntityInterceptors = (await import('@/src/components/EntityView/Interceptors/Interceptors')).default;
 
-const renderInterceptors = (globalInterceptors?: string[], view = ApplicationRoute.AssetsAppRunners) =>
+const renderInterceptors = (globalInterceptors?: string[], view = ApplicationRoute.PlatformAppRunners) =>
   render(
     <EntityInterceptors
       entity={{ 'dial:applicationTypeInterceptors': [] }}
@@ -77,7 +77,7 @@ describe('EntityInterceptors :: global interceptor source', () => {
         interceptors={[]}
         globalInterceptors={['added-later']}
         onChangeEntity={vi.fn()}
-        view={ApplicationRoute.AssetsAppRunners}
+        view={ApplicationRoute.PlatformAppRunners}
       />,
     );
 

@@ -5,15 +5,16 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialEllipsisTooltip, DialSwitch, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
+import { DialConfirmationPopup, DialSwitch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
+  FirstDataRenderedEvent,
   GridApi,
   GridOptions,
   GridReadyEvent,
   IRowNode,
+  NewColumnsLoadedEvent,
   SelectionChangedEvent,
 } from 'ag-grid-community';
 
@@ -27,33 +28,40 @@ import {
   removeMultipleTestCases,
   removeTestCase,
 } from '@/src/app/[lang]/datasets/actions';
-import { detachDataset, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { detachDataset, getTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns';
 import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
-import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
+import {
+  CONTENT_FIT_COLUMN_IDS,
+  getTestCaseColumns,
+  VALIDITY_STATUS_COLUMN_ID,
+} from '@/src/components/TestSuites/utils/columns';
 import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '@/src/components/TestSuites/utils/data';
+import { hasIncompleteInputBindings } from '@/src/components/TestSuites/utils/template-variables';
 import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-test-case';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useDatasetExport } from '@/src/hooks/use-dataset-export';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { FilterNode } from '@/src/models/evaluation/structured-query';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
-import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { DatasetDetachMode, TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { clearDatasetTestCases } from '@/src/utils/evaluation/clear-dataset-test-cases';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import DatasetBanner from './DatasetBanner';
 import HeaderButtons from './Header';
 import RunCondition from './RunCondition/RunCondition';
 import { useIncludedIds } from './RunCondition/use-included-ids';
@@ -92,6 +100,7 @@ const TestCasesList: FC<Props> = ({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const exportDataset = useDatasetExport();
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -185,11 +194,18 @@ const TestCasesList: FC<Props> = ({
     [applyIncludedInRunSort, setGridApi],
   );
 
+  const onGridDirtyChange = useCallback(
+    (hasDirtyRows: boolean) => {
+      onDirtyChange?.(hasDirtyRows || newTestCasesRef.current.length > 0);
+    },
+    [onDirtyChange],
+  );
+
   const turnGrid = useTurnGroupGrid<TestCase>({
     schema: dataset?.testCaseSchema,
     collapseRows: collapseRowsToTestCases,
     onDeleteCase,
-    onDirtyChange,
+    onDirtyChange: onGridDirtyChange,
     structuralFields: STRUCTURAL_FIELDS,
     onGridReady: onGridReadyInner,
   });
@@ -197,8 +213,11 @@ const TestCasesList: FC<Props> = ({
   const onCellChange = useCallback(
     (row: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (newTestCases.some((r) => r.id === row.id)) {
-        row[field] = value;
-        if (field !== 'testCaseName' && row.data != null) {
+        const isDataField = !STRUCTURAL_FIELDS.includes(field);
+        if (field !== 'id') {
+          row[field] = value;
+        }
+        if (isDataField && row.data != null) {
           row.data = { ...(row.data as Record<string, unknown>), [field]: value };
         }
         setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? { ...row } : r)));
@@ -219,8 +238,23 @@ const TestCasesList: FC<Props> = ({
   const includedIdsRef = useRef(includedIds);
   includedIdsRef.current = includedIds;
 
+  const onAutoSizeTestCaseColumns = useCallback((api: GridApi) => {
+    api.autoSizeColumns({
+      colIds: CONTENT_FIT_COLUMN_IDS,
+      columnLimits: [{ colId: VALIDITY_STATUS_COLUMN_ID, minWidth: 130 }],
+    });
+    api.sizeColumnsToFit();
+  }, []);
+
+  const onGridSizeChanged = useCallback((event: { api: GridApi }) => {
+    event.api.sizeColumnsToFit();
+  }, []);
+
   const gridOptions: GridOptions = {
     ...turnGrid.turnGridOptions,
+    onFirstDataRendered: (event: FirstDataRenderedEvent) => onAutoSizeTestCaseColumns(event.api),
+    onNewColumnsLoaded: (event: NewColumnsLoadedEvent) => onAutoSizeTestCaseColumns(event.api),
+    onGridSizeChanged,
     onSelectionChanged,
     onCellClicked,
     isExternalFilterPresent: () => showIncludedOnlyRef.current,
@@ -292,6 +326,7 @@ const TestCasesList: FC<Props> = ({
     (activeSchema?: TestCaseSchema[]) => [
       ...getTestCaseColumns({
         suite: selectedTestSuite,
+        dataset,
         onCellChange,
         onToggleExpand: turnGrid.onToggleExpand,
         t,
@@ -312,6 +347,7 @@ const TestCasesList: FC<Props> = ({
     ],
     [
       selectedTestSuite,
+      dataset,
       onCellChange,
       t,
       isReadOnly,
@@ -390,8 +426,8 @@ const TestCasesList: FC<Props> = ({
     const datasetId = selectedTestSuite.datasetId;
     if (!datasetId) return;
 
-    window.open(`${ApiRoute.DatasetsExport}?id=${encodeURIComponent(datasetId)}`, '_blank');
-  }, [selectedTestSuite.datasetId]);
+    void exportDataset(datasetId);
+  }, [exportDataset, selectedTestSuite.datasetId]);
 
   const onAddTestCase = useCallback(() => {
     const datasetId = selectedTestSuite.datasetId;
@@ -510,6 +546,10 @@ const TestCasesList: FC<Props> = ({
     onRemoveCaseRef.current = onOpenDeleteModal;
   }, [onOpenDeleteModal]);
 
+  useEffect(() => {
+    return () => sidebar.closeSidebar();
+  }, []);
+
   const onPublish = useCallback(
     async (name: string, description?: string) => {
       const datasetId = selectedTestSuite.datasetId;
@@ -530,9 +570,31 @@ const TestCasesList: FC<Props> = ({
     [selectedTestSuite.datasetId, showNotification, t, router, onChangeDataset],
   );
 
+  const notifyIncompleteBindings = useCallback(() => {
+    showNotification(
+      getErrorNotification(
+        t(TestSuitesI18nKey.AttachDatasetIncompleteConfig),
+        t(TestSuitesI18nKey.AttachDatasetIncompleteConfigDescription),
+      ),
+    );
+  }, [showNotification, t]);
+
+  const onBeforeAttach = useCallback(() => {
+    if (!hasIncompleteInputBindings(selectedTestSuite)) {
+      return true;
+    }
+    notifyIncompleteBindings();
+    return false;
+  }, [selectedTestSuite, notifyIncompleteBindings]);
+
   const onAttachDataset = useCallback(
     async (newDatasetId: string) => {
       if (!suiteEtag) return;
+
+      if (hasIncompleteInputBindings(selectedTestSuite)) {
+        notifyIncompleteBindings();
+        return;
+      }
 
       if (dataset?.visibility === DatasetVisibility.PRIVATE && dataset.id) {
         const deleteRes = await removeDataset(dataset.id);
@@ -549,20 +611,37 @@ const TestCasesList: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     },
-    [selectedTestSuite, suiteEtag, dataset, showNotification, router],
+    [selectedTestSuite, suiteEtag, dataset, showNotification, router, notifyIncompleteBindings],
   );
 
-  const onDetachDatasetCallback = useCallback(async () => {
-    const suiteId = selectedTestSuite.id;
-    if (!suiteId) return;
-    const res = await detachDataset(suiteId);
-    if (res.success) {
+  const onDetachDatasetCallback = useCallback(
+    async (mode: DatasetDetachMode) => {
+      const suiteId = selectedTestSuite.id;
+      if (!suiteId) return;
+
+      const detachRes = await detachDataset(suiteId);
+      if (!detachRes.success) {
+        showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), detachRes.errorMessage));
+        return;
+      }
+
+      if (mode === DatasetDetachMode.START_EMPTY) {
+        // Detach always copies the cases into a new private dataset, so the suite's datasetId changes.
+        const suiteRes = await getTestSuite(suiteId, DEFAULT_ETAG);
+        const privateDatasetId = (suiteRes?.response as TestSuite | undefined)?.datasetId;
+        const clearRes = privateDatasetId ? await clearDatasetTestCases(privateDatasetId) : null;
+        if (!clearRes?.success) {
+          showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), clearRes?.errorMessage));
+          router.refresh();
+          return;
+        }
+      }
+
       showNotification(getSuccessNotification(t(TestSuitesI18nKey.DetachSuccess)));
       router.refresh();
-    } else {
-      showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), res.errorMessage));
-    }
-  }, [selectedTestSuite.id, showNotification, t, router]);
+    },
+    [selectedTestSuite.id, showNotification, t, router],
+  );
 
   const totalCount = turnGrid.groups.length + newTestCases.length;
   const isPrivate = dataset?.visibility === DatasetVisibility.PRIVATE;
@@ -578,33 +657,19 @@ const TestCasesList: FC<Props> = ({
       ? includedIds.size
       : lastIncludedCountRef.current;
 
-  const publicTag = !isPrivate && dataset?.visibility && (
-    <button
-      type="button"
-      className="flex items-center gap-1 bg-accent-secondary-alpha border border-accent-secondary px-1.5 py-1 rounded-sm shrink-0 cursor-pointer"
-      onClick={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
-    >
-      <IconDatabaseExport size={16} className="text-accent-secondary" />
-      <DialEllipsisTooltip className="tiny max-w-[600px]" text={dataset?.name || ''} />
-      <IconExternalLink size={16} />
-    </button>
+  const datasetTag = isPrivate && (
+    <Tooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
+      <DialTag
+        label={t(DatasetsI18nKey.VisibilityPrivate)}
+        className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
+      />
+    </Tooltip>
   );
 
-  const datasetTag =
-    dataset?.visibility &&
-    (isPrivate ? (
-      <DialTooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
-        <DialTag
-          label={t(DatasetsI18nKey.VisibilityPrivate)}
-          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
-        />
-      </DialTooltip>
-    ) : (
-      publicTag
-    ));
+  const isPublicDatasetAttached = !isPrivate && !!dataset?.visibility;
 
   return (
-    <div className="flex-1 min-h-0">
+    <div className="h-full min-h-0">
       <ListEntities
         additionalGridOptions={gridOptions}
         listLabel={t(TabsI18nKey.TestCases)}
@@ -618,11 +683,22 @@ const TestCasesList: FC<Props> = ({
         }
         isGridLoading={isLoading}
         toolbar={
-          <RunCondition
-            testCaseFilter={selectedTestSuite.testCaseFilter}
-            schema={dataset?.testCaseSchema}
-            onChange={onRunConditionChange}
-          />
+          <div className="flex flex-col gap-4">
+            {isPublicDatasetAttached && (
+              <DatasetBanner
+                datasetName={dataset?.name || ''}
+                onOpenDataset={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
+                onDetachDataset={onDetachDatasetCallback}
+                onAttachDataset={onAttachDataset}
+                onBeforeAttach={onBeforeAttach}
+              />
+            )}
+            <RunCondition
+              testCaseFilter={selectedTestSuite.testCaseFilter}
+              schema={dataset?.testCaseSchema}
+              onChange={onRunConditionChange}
+            />
+          </div>
         }
         emptyDataProps={{
           title: t(TestSuitesI18nKey.NoTestCases),
@@ -644,7 +720,7 @@ const TestCasesList: FC<Props> = ({
           isReadOnly={isReadOnly}
           onPublish={onPublish}
           onAttachDataset={onAttachDataset}
-          onDetachDataset={onDetachDatasetCallback}
+          onBeforeAttach={onBeforeAttach}
           datasetTag={datasetTag}
         />
       </ListEntities>

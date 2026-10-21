@@ -6,6 +6,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButton,
+  DialLoader,
   DialPrimaryButton,
   DialTextarea,
   ElementSize,
@@ -14,33 +15,27 @@ import { IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
 import { splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
-import { generateQuery } from '@/src/app/[lang]/queries/actions';
-import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { buildSchemaSystemMessage } from '@/src/components/Analytics/QueryBuilder/utils/ai-context';
 import { QUERY_ASSISTANT_SUGGESTIONS } from '@/src/constants/analytics/query-assistant';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { QueryAssistantMessage, QueryAssistantRole } from '@/src/models/analytics/query-assistant';
-import { getErrorNotification } from '@/src/utils/notification';
+import { QueryAssistantRole } from '@/src/models/analytics/query-assistant';
 
 interface Props {
+  conversation: ReturnType<typeof useAiConversation>;
   onRunMessage: (sql: string, messageIndex: number) => void;
   loadedMessageIndex: number | null;
   runInFlight: boolean;
 }
 
-const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) => {
+const LOADER_SIZE = 18;
+
+const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, runInFlight }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
-  // The selected source and its schema come from the builder context, the same place every other
-  // section reads them from, so the assistant cannot fall out of step with the toolbar.
-  const { state } = useQueryBuilder();
+  const { messages, isSending } = conversation;
 
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<QueryAssistantMessage[]>([]);
-  const [loading, setLoading] = useState(false);
   const lastUserMessageRef = useRef<HTMLDivElement | null>(null);
 
   // Scrolls the latest user message to the top of the transcript, so the question that was just asked
@@ -51,35 +46,14 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
 
   const onSend = async () => {
     const prompt = input.trim();
-    if (!prompt || loading) {
+    if (!prompt || isSending) {
       return;
     }
-    const nextMessages: QueryAssistantMessage[] = [...messages, { role: QueryAssistantRole.User, content: prompt }];
-    setMessages(nextMessages);
     setInput('');
-    setLoading(true);
-    // The schema message is built per request and kept out of `messages`, so it never shows in the
-    // transcript and always describes the source selected *now* — switching source mid-conversation
-    // makes the next request carry the new schema.
-    const res = await generateQuery([buildSchemaSystemMessage(state.entityName, state.fields), ...nextMessages]);
-    if (res.success && res.response) {
-      const reply = res.response.choices?.[0]?.message;
-      if (reply) {
-        setMessages([...nextMessages, reply]);
-      }
-    } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(QueryBuilderI18nKey.AiGenerateFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
-    }
-    setLoading(false);
+    await conversation.send(prompt);
   };
 
-  const sendDisabled = !input.trim() || loading;
+  const sendDisabled = !input.trim() || isSending;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
@@ -151,7 +125,7 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
               appearance={ButtonAppearance.Ghost}
               variant={ButtonVariant.Secondary}
               onClick={() => setInput(t(key))}
-              disabled={loading}
+              disabled={isSending}
             />
           ))}
         </div>
@@ -164,12 +138,15 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
           placeholder={t(QueryBuilderI18nKey.AiPromptPlaceholder)}
           value={input}
           onChange={setInput}
-          disabled={loading}
+          disabled={isSending}
           rows={3}
         />
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2">
+          {isSending && (
+            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />
+          )}
           <DialPrimaryButton
-            label={loading ? t(QueryBuilderI18nKey.AiSending) : t(QueryBuilderI18nKey.AiSend)}
+            label={t(QueryBuilderI18nKey.AiSend)}
             iconBefore={<IconSparkles size={18} stroke={2} />}
             onClick={onSend}
             disabled={sendDisabled}

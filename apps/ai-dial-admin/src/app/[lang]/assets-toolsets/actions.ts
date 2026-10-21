@@ -2,20 +2,29 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialToolsetResource, ToolsetAuthCredentialLevel } from '@/src/models/dial/resource';
+import { Toolset } from '@/src/models/dial/toolset';
+import {
+  CoreResourceEntityMetadata,
+  DialPlatformToolsetResource,
+  DialToolsetResource,
+  DialToolsetResourceAuthSettings,
+  ToolsetAuthCredentialLevel,
+} from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/toolset-auth';
-// import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { getToolsetBasicBody, getToolsetSignInBody, stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { ImportFileType } from '@/src/types/import';
 import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
+import { stripMetadata, stripPlatformAssetFields } from '@/src/server/assets/exim';
 import { buildToolsetsExport, importToolsetsExport } from '@/src/server/toolsets/exim';
 import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '@/src/server/toolsets/mcp-client';
 import { buildToolsetsZip, extractToolsetsFromZip } from '@/src/server/toolsets/zip-exim';
@@ -28,15 +37,20 @@ export async function getToolsets(path: string) {
 
 export async function createToolset(toolset: DialToolsetResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const folderId = toolset.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(toolset.name || '', toolset.version)}`;
+  // Same flat-vs-`_metadata` resolution as `createApp` in `assets-applications/actions.ts`.
+  const folderId = toolset.folderId || toolset._metadata?.folderId || ROOT_FOLDER;
+  const version = toolset.version ?? toolset._metadata?.version;
+  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(token, ResourceType.TOOLSET, path, {
-    ...toolset,
+    ...stripMetadata(toolset),
+    auth_settings: toolset.auth_settings && stripClientSecretHint(toolset.auth_settings),
     allowedTools: getAllowTools(toolset),
     transport: getTransport(toolset),
-    displayVersion: toolset.version,
+    displayVersion: version,
     folderId: undefined,
     version: undefined,
+    // Same flat-`path` rejection as `createApp`, and the same folder-marker cause;
+    // `updateToolset` below already strips it.
     path: undefined,
   });
 }
@@ -57,11 +71,28 @@ export async function getToolset(path: string, etag: string) {
 
 export async function updateToolset(toolset: AssetToolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  // The View hands this action a merged detail entity cast to the row shape — its identity grafts
+  // nest under `_metadata`, absent from `AssetToolset`'s type — while create/duplicate flows seed
+  // flat `folderId`/`version`, so both spellings are resolved here (same as `updateApp`).
+  const castToolset = toolset as AssetToolset & {
+    _metadata?: CoreResourceEntityMetadata;
+    auth_settings?: DialToolsetResourceAuthSettings;
+  };
+  const folderId = castToolset.folderId || castToolset._metadata?.folderId || ROOT_FOLDER;
+  const version = castToolset.version ?? castToolset._metadata?.version;
+  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(
     token,
     ResourceType.TOOLSET,
-    toolset.path,
-    { ...toolset, displayVersion: toolset.version, folderId: undefined, version: undefined, path: undefined },
+    path,
+    {
+      ...stripMetadata(castToolset),
+      auth_settings: castToolset.auth_settings && stripClientSecretHint(castToolset.auth_settings),
+      displayVersion: version,
+      folderId: undefined,
+      version: undefined,
+      path: undefined,
+    },
     { etag },
   );
 }
@@ -74,6 +105,57 @@ export async function removeToolset(path: string, etag?: string) {
 export async function bulkDeleteToolsets(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.TOOLSET, paths);
+}
+
+/**
+ * Platform-bucket toolsets ("World B") reuse the same Core `ToolSet` entity as public-bucket ones —
+ * only the bucket segment of the path differs, and the bucket is flat (no folders, no versioning; see
+ * the `platform-toolsets` capability spec). `getToolsets`/`removeToolset`/`bulkDeleteToolsets` already
+ * take an arbitrary path and need no platform-specific logic; `createToolset`/`updateToolset` compute
+ * a `public`-defaulted, version-suffixed path, so their platform counterparts pin `folderId` to the
+ * `platform` bucket and clear `version`, letting `getVersionedName`'s existing no-op-when-absent
+ * branch (see `createToolset`/`updateToolset`) produce the flat `platform/{name}` path without a new
+ * branch there.
+ */
+export async function getPlatformToolsets(path: string) {
+  return getToolsets(path);
+}
+
+// Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+// (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
+// Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+// `toKeyPayload` strips extras for `Key.class`. See `stripPlatformAssetFields` for what it strips and
+// why.
+export async function createPlatformToolset(toolset: DialPlatformToolsetResource) {
+  return createToolset({
+    ...stripPlatformAssetFields(toolset),
+    folderId: `${PLATFORM_ROOT_FOLDER}/`,
+    version: undefined,
+  } as unknown as DialToolsetResource);
+}
+
+export async function getPlatformToolset(path: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMergedWithEtag<DialPlatformToolsetResource>(token, ResourceType.TOOLSET, path, etag);
+}
+
+export async function updatePlatformToolset(toolset: DialPlatformToolsetResource, etag: string) {
+  return updateToolset(
+    {
+      ...stripPlatformAssetFields(toolset),
+      folderId: `${PLATFORM_ROOT_FOLDER}/`,
+      version: undefined,
+    } as unknown as AssetToolset,
+    etag,
+  );
+}
+
+export async function removePlatformToolset(path: string, etag?: string) {
+  return removeToolset(path, etag);
+}
+
+export async function bulkDeletePlatformToolsets(paths: { path: string }[]) {
+  return bulkDeleteToolsets(paths);
 }
 
 export async function moveToolsets(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {
@@ -110,6 +192,18 @@ export async function exportToolsets(paths: string[], type?: ImportFileType) {
     buildZip: buildToolsetsZip,
     zipFileName: 'toolsets-export.zip',
   });
+}
+
+/** `config-file-entity-views`: the toolset names Core's config file declares. */
+export async function getConfigFileToolsets() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Toolsets);
+}
+
+/** `config-file-entity-views`: reads a toolset by name from Core's config-file population directly. */
+export async function getConfigFileToolset(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<Toolset>(token, ConfigFileEntityType.Toolsets, name);
 }
 
 export async function tryOutAssetTool(body: Record<string, unknown>, resourceType = ResourceType.TOOLSET) {

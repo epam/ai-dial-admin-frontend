@@ -21,13 +21,20 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { cellRenderParams } from './constants';
 
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
-  if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
-  if (view === ApplicationRoute.Applications) return RolesI18nKey.NotAvailableApplication;
+  if (view === ApplicationRoute.Models || view === ApplicationRoute.PlatformModels)
+    return RolesI18nKey.NotAvailableModel;
+  if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
+    return RolesI18nKey.NotAvailableApplication;
+  if (view === ApplicationRoute.PlatformRoutes) return RolesI18nKey.NotAvailableRoute;
   return RolesI18nKey.NotAvailableToolSet;
 };
 
 export const isDisableRole = (entity: EntityRoleLimits) => {
   return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;
+};
+
+export const isAssetUnavailable = (userRoles: string[] | null | undefined) => {
+  return Array.isArray(userRoles) && userRoles.length === 0;
 };
 
 export const getRolesGridData = (entity: EntityRoleLimits, roles: DialRole[]): RolesGridData[] => {
@@ -142,14 +149,15 @@ export const SHARING_COLUMNS = (
   onChange?: (value: number, data: DialRole, token: string) => void,
   getDefaultPlaceholder?: (node: IRowNode, colDef: ColDef) => string,
   isReadOnlyAdmin?: boolean,
+  typeLabels: Record<string, string> = sharingTypes,
 ): ColDef[] => [
   {
     headerName: 'Type',
     field: 'name',
     filter: false,
     floatingFilter: false,
-    valueFormatter: ({ value }) => formatType(value, t),
-    tooltipValueGetter: ({ value }) => formatType(value, t),
+    valueFormatter: ({ value }) => formatType(value, t, typeLabels),
+    tooltipValueGetter: ({ value }) => formatType(value, t, typeLabels),
   },
   {
     headerName: 'Expiration time (hours)',
@@ -185,8 +193,8 @@ export const SHARING_COLUMNS = (
   },
 ];
 
-const formatType = (value: string, t: (stringToTranslate: string) => string) => {
-  const typeFieldKey = sharingTypes[value as keyof typeof sharingTypes];
+const formatType = (value: string, t: (stringToTranslate: string) => string, typeLabels: Record<string, string>) => {
+  const typeFieldKey = typeLabels[value];
   if (typeFieldKey) {
     return t(typeFieldKey);
   }

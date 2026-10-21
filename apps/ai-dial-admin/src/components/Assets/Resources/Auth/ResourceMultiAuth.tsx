@@ -32,6 +32,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationResource, DialExternalService, ToolsetAuthType } from '@/src/models/dial/resource';
+import { resolveLocalizedText } from '@/src/utils/entities/localized-value';
 import ExternalServiceAuthButtons, { EXTERNAL_SERVICE_AUTH_REDIRECT_URL } from './ExternalServiceAuthButtons';
 import ExternalServiceConsentActions from './ExternalServiceConsentActions';
 import ResourceAuthentication from './ResourceAuthentication';
@@ -62,6 +63,11 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
   const [loadingServiceId, setLoadingServiceId] = useState<string | null>(null);
 
   const services = useMemo(() => asset.external_services || {}, [asset.external_services]);
+
+  // The external-service actions resolve the app by its Core path: a merged read carries it only
+  // in `_metadata`, while a publication review copy attaches it flat (stored payload copy, not a
+  // merged read) — hence the flat-first resolution.
+  const appPath = (asset as DialApplicationResource & { path?: string }).path ?? asset._metadata?.path ?? '';
 
   const isDuplicateId = useMemo(
     () => !!editState && editState.currentId !== editState.originalId && !!services[editState.currentId],
@@ -233,7 +239,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                 <div className="flex items-center gap-x-1 shrink-0">
                   {rowAction === ExternalServiceRowAction.SignIn && (
                     <ExternalServiceAuthButtons
-                      appPath={asset.path}
+                      appPath={appPath}
                       serviceId={serviceId}
                       service={service}
                       signIn={signInExternalService}
@@ -243,8 +249,8 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                   )}
                   {rowAction === ExternalServiceRowAction.Consent && (
                     <ExternalServiceConsentActions
-                      appPath={asset.path}
-                      applicationName={asset.display_name || asset.name || asset.path}
+                      appPath={appPath}
+                      applicationName={resolveLocalizedText(asset.display_name) || asset.name || appPath}
                       serviceId={serviceId}
                       service={service}
                       grantConsent={grantExternalServiceConsent}

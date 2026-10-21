@@ -11,16 +11,16 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.ApplicationRunners]: MenuI18nKey.ApplicationRunners,
   [ApplicationRoute.Prompts]: MenuI18nKey.Prompts,
   [ApplicationRoute.Files]: MenuI18nKey.Files,
-  [ApplicationRoute.AssetsModels]: MenuI18nKey.Models,
-  [ApplicationRoute.AssetsAppRunners]: MenuI18nKey.AppRunners,
+  [ApplicationRoute.PlatformModels]: MenuI18nKey.Models,
+  [ApplicationRoute.PlatformAppRunners]: MenuI18nKey.PlatformAppRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: MenuI18nKey.PlatformCatalogSchemas,
+  [ApplicationRoute.PlatformInterceptors]: MenuI18nKey.PlatformInterceptors,
+  [ApplicationRoute.PlatformRoutes]: MenuI18nKey.PlatformRoutes,
+  [ApplicationRoute.PlatformRoles]: MenuI18nKey.PlatformRoles,
+  [ApplicationRoute.PlatformKeys]: MenuI18nKey.PlatformKeys,
   [ApplicationRoute.AssetsApplications]: MenuI18nKey.Applications,
   [ApplicationRoute.Routes]: MenuI18nKey.Routes,
-  [ApplicationRoute.PromptPublications]: MenuI18nKey.PromptPublications,
-  [ApplicationRoute.ToolsetPublications]: MenuI18nKey.ToolsetPublications,
-  [ApplicationRoute.FilePublications]: MenuI18nKey.FilePublications,
-  [ApplicationRoute.ConversationPublications]: MenuI18nKey.ConversationPublications,
-  [ApplicationRoute.ApplicationPublications]: MenuI18nKey.ApplicationPublications,
-  [ApplicationRoute.SkillPublications]: MenuI18nKey.SkillPublications,
+  [ApplicationRoute.Publications]: MenuI18nKey.Approvals,
   [ApplicationRoute.ActivityAudit]: MenuI18nKey.ActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: MenuI18nKey.InterceptorTemplates,
   [ApplicationRoute.Toolsets]: MenuI18nKey.Toolsets,
@@ -44,15 +44,10 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.Routes]: EntitiesI18nKey.NoRoutes,
   [ApplicationRoute.Prompts]: EntitiesI18nKey.NoPrompts,
   [ApplicationRoute.Files]: EntitiesI18nKey.NoFiles,
-  [ApplicationRoute.AssetsModels]: EntitiesI18nKey.NoModels,
+  [ApplicationRoute.PlatformModels]: EntitiesI18nKey.NoModels,
   [ApplicationRoute.AssetsApplications]: EntitiesI18nKey.NoApplications,
   [ApplicationRoute.AssetsToolsets]: EntitiesI18nKey.NoToolsets,
-  [ApplicationRoute.PromptPublications]: EntitiesI18nKey.NoPublications,
-  [ApplicationRoute.ConversationPublications]: EntitiesI18nKey.NoPublications,
-  [ApplicationRoute.ToolsetPublications]: EntitiesI18nKey.NoPublications,
-  [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
-  [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
-  [ApplicationRoute.SkillPublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.Publications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
   [ApplicationRoute.Toolsets]: EntitiesI18nKey.NoToolsets,
@@ -65,3 +60,10 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
 };
 
 export const mainListEntitiesViewClassName = 'py-4 px-6';
+
+/**
+ * Column state is stored per view, and the reworked runs columns cannot be reconciled with what earlier
+ * versions stored (a separate id column, a hidden Test Suite ID, widths for columns that no longer
+ * exist), so the runs list reads and writes a versioned key and starts from its own defaults.
+ */
+export const RUNS_LIST_STORAGE_KEY = `${ApplicationRoute.Runs}-v2`;

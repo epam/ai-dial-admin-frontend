@@ -1,0 +1,331 @@
+## Purpose
+
+The `Assets > Roles` admin surface: a flat, unversioned list and Properties-only detail view over
+DIAL Core's `roles/platform` config resources, read and written directly through Core rather than the
+admin backend.
+
+## Requirements
+
+### Requirement: Assets > Roles menu entry
+The system SHALL add a `Roles` menu item to the Assets section of the admin menu, directly after
+`Routes`, linking to a new `/assets-roles` route.
+
+#### Scenario: Roles follows Routes in the Assets section
+- **WHEN** the Assets section of the menu renders
+- **THEN** `Roles` appears immediately after `Routes`
+
+### Requirement: Role asset list is flat with create and delete actions
+The system SHALL render the role asset list as a single, non-nested list of entries under the
+`platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and
+no folder-create, rename-folder, or move-into-folder controls.
+
+#### Scenario: List shows entries without a folder tree
+- **WHEN** a user opens `/assets-roles`
+- **THEN** all role resources are shown as direct entries with no folder-expand affordance
+
+#### Scenario: No create-folder or move action is present
+- **WHEN** a user opens the role asset list toolbar and row actions
+- **THEN** neither a create-folder action nor a move-to-folder action is offered
+
+#### Scenario: Create action opens the role create modal
+- **WHEN** a user activates the create action in the list toolbar
+- **THEN** a modal opens requesting only the role's name — no display name or description field,
+  since `Role` has neither — and submitting it creates the resource and navigates to its detail view
+
+#### Scenario: Bulk delete removes the selected roles
+- **WHEN** a user selects several roles and confirms bulk delete
+- **THEN** each selected role is deleted and the list refreshes without them
+
+#### Scenario: A read-only admin is offered no mutating actions
+- **WHEN** a read-only admin opens the role asset list
+- **THEN** no create, delete, or bulk-delete action is offered
+
+### Requirement: Role asset list columns are metadata-only
+The system SHALL show name, author, created-at, and updated-at columns for role assets, all sourced
+from Core's resource metadata, and SHALL NOT fetch each row's content to populate the list.
+
+#### Scenario: Listing issues no per-row content request
+- **WHEN** the role asset list loads
+- **THEN** only metadata requests are issued, with no content request per row
+
+#### Scenario: Timestamps come from Core metadata
+- **WHEN** the role asset list renders
+- **THEN** the created-at and updated-at columns are populated from the Core metadata node's
+  `createdAt` and `updatedAt` fields, each rendered as a localized date rather than raw epoch
+  milliseconds
+
+### Requirement: Role names follow Core's plain entity-name rule
+The system SHALL treat a role's name as a plain Core entity name — using the same shared name field
+and validation the `Assets > Models` create form already uses — and SHALL NOT apply any URI-encoding
+or `$id`-style handling to it.
+
+#### Scenario: The create form uses the shared name field
+- **WHEN** a user opens the role create form
+- **THEN** the same name field and validation `Assets > Models`/`Assets > Routes` use is shown, with
+  no display-name or description field alongside it, since `Role` has neither
+
+#### Scenario: A valid name creates the resource
+- **WHEN** a user submits a valid name
+- **THEN** the resource is created under `roles/platform/{name}` and the list/detail view address it
+  by that plain name
+
+### Requirement: Role asset detail view tab set
+The system SHALL render a role asset's detail view with exactly two tabs, `Properties` and `Entities`,
+in that order, and SHALL NOT include a `Keys` or `Audit` tab, or an Admin/CORE-format toggle.
+
+#### Scenario: Detail view renders Properties and Entities
+- **WHEN** a user opens a role asset's detail view
+- **THEN** the tab list contains exactly `Properties` and `Entities`, with `Properties` first
+
+#### Scenario: No Keys or Audit tab, and no format toggle
+- **WHEN** a user opens a role asset's detail view
+- **THEN** no `Keys` tab, no `Audit` tab, and no Admin/CORE-format toggle is shown
+
+### Requirement: Properties tab content
+The system SHALL render the role asset's Properties tab with a cost-limit toggle and, when enabled,
+minute/day/week/month cost-limit number inputs, plus a sharing grid (invitation TTL and max accepted
+users per shareable resource type with a reset-to-default action). Cost-limit values SHALL be plain
+numbers, not strings. A token whose Core-side value is too large for JavaScript to represent exactly
+(DIAL Core's `Long.MAX_VALUE` "unlimited" default) SHALL be treated as absent — shown as unset and
+omitted from the write — rather than displayed or persisted as an approximate, rounded number.
+
+The sharing grid SHALL list exactly the seven resource types DIAL Core allows a role to override —
+`APPLICATION`, `TOOL_SET`, `PROMPT`, `FILE`, `CONVERSATION`, `CREDENTIALS`, and `SKILL` — keyed on the
+role resource's `share` map by that exact uppercase name, matching Core's own
+`ResourceTypes.name()`. Max accepted users SHALL default to `10` for `APPLICATION`, `TOOL_SET`,
+`CREDENTIALS`, and `SKILL`, and SHALL have no specific default placeholder for `PROMPT`, `FILE`, and
+`CONVERSATION`; invitation TTL SHALL default to `72` hours for every type. A stored value of `-1` for
+either field (DIAL Core's own "not provided" sentinel) SHALL be treated as absent — shown as an empty
+input with the default placeholder — rather than displayed as the literal value `-1`. Clearing a
+field the user had set SHALL remove that field from the resource type's `share` entry entirely; a
+stored value of `0` SHALL only be written when the user explicitly enters `0`.
+
+#### Scenario: Cost limits are editable and persist
+- **WHEN** a user enables the cost-limit toggle, sets a value for a token, and saves
+- **THEN** the value is stored on the role resource's `costLimit` as a number and reappears on reload
+
+#### Scenario: Disabling the cost-limit toggle clears every token
+- **WHEN** a user disables the cost-limit toggle
+- **THEN** every cost-limit token is removed from the resource's `costLimit`, rather than being set to
+  an explicit sentinel value
+
+#### Scenario: An out-of-range cost-limit token is treated as unlimited, not an approximate number
+- **WHEN** a cost-limit token's stored value is too large for JavaScript to represent exactly
+- **THEN** the field is shown as unset rather than a rounded number, and saving without changing it
+  leaves that token unset on the resource
+
+#### Scenario: Sharing settings are editable and persist under Core's uppercase resource-type keys
+- **WHEN** a user sets an invitation TTL or max-accepted-users value for a resource type and saves
+- **THEN** the value is stored on the role resource's `share` map under that type's uppercase name
+  (e.g. `share.TOOL_SET.max_accepted_users`) and reappears on reload
+
+#### Scenario: Resetting a sharing row clears its override
+- **WHEN** a user resets a sharing row to default
+- **THEN** that resource type's entry is removed from the `share` map
+
+#### Scenario: Toolset max users defaults to 10, same as applications
+- **WHEN** a user opens the sharing grid for a role with no `TOOL_SET` override
+- **THEN** the max-users input for the Toolsets row is empty and shows a `10` placeholder, matching
+  the Applications row
+
+#### Scenario: A -1 stored value shows as unset, not as a literal -1
+- **WHEN** a role's `share` map has an entry whose `max_accepted_users` or `invitation_ttl` is `-1`
+- **THEN** the corresponding input is shown empty with its default placeholder, not the value `-1`
+
+#### Scenario: Clearing one field of a sharing row leaves the other field intact and omits the cleared field
+- **WHEN** a user clears the max-users value on a row that also has an invitation-TTL override, and
+  saves
+- **THEN** the resource type's `share` entry keeps its `invitation_ttl` and no longer has a
+  `max_accepted_users` field at all — not a value of `0` or an empty string
+
+#### Scenario: Credentials and Skills are available as shareable resource types
+- **WHEN** a user opens the sharing grid
+- **THEN** rows for Credentials (`CREDENTIALS`) and Skills (`SKILL`) are shown alongside Applications,
+  Toolsets, Prompts, Files, and Conversations, each defaulting to 10 max users and a 72-hour
+  invitation TTL
+
+### Requirement: Core validates a write; the client adds no meta-schema layer
+The system SHALL rely on Core's own server-side validation — Core deserializes a role write into its
+`Role` entity class and rejects an invalid one itself — rather than adding a client-side
+meta-schema-validation layer, and SHALL surface Core's rejection message to the user verbatim.
+
+#### Scenario: A rejected write surfaces Core's message
+- **WHEN** a save is rejected by Core
+- **THEN** an error notification shows Core's error message rather than a generic failure
+
+### Requirement: Configuring a role asset requires no admin-backend call
+Every field this surface reads or writes is owned by DIAL Core. The system SHALL NOT require any
+admin-backend request in order to view, create, edit, or delete a role asset.
+
+#### Scenario: The surface is configurable without the admin backend
+- **WHEN** a user opens a role asset and edits any field this surface exposes
+- **THEN** no admin-backend request is required for the edit to be made or saved
+
+### Requirement: Entities > Roles is unaffected
+The system SHALL leave the admin-BE-backed `Entities > Roles` surface — its route, storage, Entities,
+Keys, and Audit tabs, and the existing Admin/CORE-format toggle — unchanged by this capability.
+
+#### Scenario: Entity role view keeps all of its tabs and behavior
+- **WHEN** a user opens an entity-side role
+- **THEN** its Properties, Entities, Keys, and Audit tabs, and the Admin/CORE-format toggle, all
+  behave exactly as before
+
+### Requirement: Role asset list offers a duplicate action
+
+The system SHALL offer a `duplicate` row action for role assets. Activating it SHALL open the
+shared `DuplicatePlatformAsset` modal, which for roles collects only the new name — no Display
+Name field, since `Role` has no `displayName` — and SHALL create a copy of the selected role
+under the new name.
+
+#### Scenario: Duplicate action opens a name-only modal
+
+- **WHEN** a user activates the duplicate row action on a role
+- **THEN** a modal opens with only a name field (pre-filled with a copy-suffixed name) and no Display
+  Name field
+
+#### Scenario: Submitting creates the copy under the new name
+
+- **WHEN** a user enters a valid name and submits the duplicate modal
+- **THEN** a new role resource is created as a copy of the original under the new name, and the list
+  refreshes to include it
+
+#### Scenario: Save is blocked until the name field is non-empty
+
+- **WHEN** the duplicate modal opens with an empty name field
+- **THEN** the submit button is disabled until the user enters a valid name
+
+#### Scenario: A read-only admin is not offered the duplicate action
+
+- **WHEN** a read-only admin views the role asset list
+- **THEN** no duplicate action is offered in row menus
+
+### Requirement: Entities tab shows attached models with a count and an add action
+
+The system SHALL render the role asset's Entities tab with a header reading `Entities: {n}`, where `n`
+is the number of models currently keyed in the role's `limits` map, and an `+Add` action that opens a
+model-selection popup.
+
+#### Scenario: Header reflects the attached-model count
+
+- **WHEN** a user opens the Entities tab of a role with three models keyed in `limits`
+- **THEN** the header reads `Entities: 3`
+
+#### Scenario: A read-only admin sees no add action
+
+- **WHEN** a read-only admin opens the Entities tab
+- **THEN** no `+Add` action is offered
+
+### Requirement: Add-model popup offers only models, from both Core populations
+
+The system SHALL populate the add-model popup exclusively with DIAL Core models — drawn from both the
+`platform` population and the config-file population already merged for `Assets > Models` — and SHALL
+exclude every other entity type (applications, routes, toolsets, keys). The popup SHALL allow selecting
+several models before applying, and SHALL exclude any model already keyed in the role's `limits` map.
+
+#### Scenario: Popup lists platform and config-file models only
+
+- **WHEN** a user opens the add-model popup
+- **THEN** every row is a model sourced from either the platform or config-file population, and no
+  application, route, toolset, or key row is shown
+
+#### Scenario: Already-attached models are not offered again
+
+- **WHEN** a user opens the add-model popup for a role with two models already in `limits`
+- **THEN** neither of those two models appears as a selectable row
+
+#### Scenario: Selecting several models and applying attaches all of them
+
+- **WHEN** a user selects three models in the popup and applies
+- **THEN** all three appear as new rows in the Entities grid after the popup closes
+
+### Requirement: Entities grid shows name and four token-limit columns
+
+The system SHALL render the Entities grid with a `Name` column and four independently editable
+token-limit columns — `Tokens per minute`, `Tokens per day`, `Tokens per week`, and `Tokens per
+month` — one row per model keyed in the role's `limits` map.
+
+#### Scenario: Grid shows one row per attached model
+
+- **WHEN** a user opens the Entities tab of a role with two models in `limits`
+- **THEN** the grid shows exactly two rows, each showing that model's name and its four token columns
+
+### Requirement: Token-limit values are plain numbers with explicit no-limit, zero, and clear semantics
+
+The system SHALL write an edited token-limit value as a plain number — including `0` when the user
+enters it — into that model's entry under the role's `limits` map. A token column with no key present
+in the model's entry SHALL display a "No limits" placeholder rather than a blank or zero value.
+Clearing a token field that previously had a value SHALL remove that key from the model's entry
+entirely, leaving the model's other token values and its row in the grid unaffected — including when
+every token key for a model ends up removed, which SHALL leave the model attached with an empty limits
+entry rather than removing it from the grid.
+
+#### Scenario: Entering zero stores zero, not no-limit
+
+- **WHEN** a user enters `0` into a model's `Tokens per day` column
+- **THEN** the model's `limits` entry stores `day: 0`, and the column shows `0`, not the "No limits"
+  placeholder
+
+#### Scenario: An absent token key shows the No limits placeholder
+
+- **WHEN** a model's `limits` entry has no `week` key
+- **THEN** the `Tokens per week` column shows a "No limits" placeholder
+
+#### Scenario: Clearing a value removes only that key
+
+- **WHEN** a user clears a previously entered `Tokens per minute` value on a model that also has a
+  `Tokens per day` value set
+- **THEN** the model's `limits` entry no longer has a `minute` key, keeps its `day` key, and the model's
+  row remains in the grid
+
+#### Scenario: Clearing every token value keeps the model attached
+
+- **WHEN** a user clears every token column for a model, one at a time
+- **THEN** the model's `limits` entry becomes an empty object and the model's row remains in the
+  Entities grid, showing the "No limits" placeholder in all four columns
+
+### Requirement: Editing multiple rows does not disrupt the grid
+
+The system SHALL apply a token-limit edit to its row's underlying data without rebuilding the Entities
+grid's row set, so that editing values on several rows in sequence preserves the grid's scroll
+position, focus, and any other row's in-progress edit.
+
+#### Scenario: Editing a second row does not reset the first
+
+- **WHEN** a user edits a token value on one row and then edits a token value on a different row
+- **THEN** the first row's edited value remains visible and the grid does not scroll or lose focus as a
+  result of the second edit
+
+### Requirement: Removing a model deletes its limits entry
+
+The system SHALL offer a remove action per Entities-grid row that deletes that model's entry from the
+role's `limits` map entirely and removes its row from the grid.
+
+#### Scenario: Removing a model deletes its entry and row
+
+- **WHEN** a user removes a model from the Entities grid
+- **THEN** that model's key no longer exists in the role's `limits` map and its row no longer appears in
+  the grid
+
+#### Scenario: A read-only admin is offered no mutating row actions
+
+- **WHEN** a read-only admin opens the Entities tab
+- **THEN** no Set unlimited or Remove action is offered on any row
+
+### Requirement: Entities rows allow clearing all token limits without removing the model
+
+The system SHALL render all four editable token-limit cells without a triangle indicator. For every writable Entities-grid row, the system SHALL offer a Set unlimited action immediately before Remove. Selecting Set unlimited SHALL clear the model's minute, day, week, and month token keys by replacing its limits entry with an empty object, while keeping the model attached and visible in the grid.
+
+#### Scenario: Set unlimited clears all limits and retains the attached model
+
+- **WHEN** a user selects Set unlimited for a model with configured token limits
+- **THEN** that model's limits entry becomes an empty object, the model remains in the Entities grid, and other models' limits remain unchanged
+
+#### Scenario: Set unlimited is immediately before Remove
+
+- **WHEN** a writable model row renders its actions
+- **THEN** Set unlimited is listed immediately before Remove
+
+#### Scenario: Token cells render without triangle indicators
+
+- **WHEN** an attached model row renders
+- **THEN** its Tokens per minute, Tokens per day, Tokens per week, and Tokens per month cells have no triangle indicator

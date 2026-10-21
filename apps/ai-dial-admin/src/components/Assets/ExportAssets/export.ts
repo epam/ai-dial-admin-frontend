@@ -4,10 +4,10 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileData } from '@/src/utils/files/grid-data';
-import { isAssetWithVersion } from '@/src/utils/is-view';
+import { isAssetWithVersion, isVersionlessAssetView } from '@/src/utils/is-view';
 
 /**
- * Converts array of Assets into correct row data, joining multiple versions of prompts into one
+ * Converts array of Assets into correct row data, joining multiple versions of one asset into a row
  *
  * @param {AssetWithVersion[]} assets - Asset array
  * @param {?AssetWithVersion[]} [exportedAssets] - Asset array of already selected for import
@@ -147,6 +147,18 @@ export const findFileMatch = (file: DialFile, fetched: DialFile[]): DialFile[] =
 };
 
 /**
+ * Function which find selected versionless prompt based on its unique plain path
+ *
+ * @param {DialPrompt} prompt - selected prompt
+ * @param {DialPrompt[]} fetched - all prompts from folder
+ * @returns {DialPrompt[]} - DialPrompt array with the matching prompt
+ */
+export const findPromptMatch = (prompt: DialPrompt, fetched: DialPrompt[]): DialPrompt[] => {
+  const match = fetched.find((p) => p.path === prompt.path);
+  return match ? [match] : [];
+};
+
+/**
  * Generate export prompt array of paths
  *
  * @param {?Record<string, DialFile[]>} [promptsToExport] - array of DialPrompt for export
@@ -174,7 +186,13 @@ export const getExportGridData = (
   selected?: (DialPrompt | DialFile)[],
 ): (DialPrompt | DialFile)[] => {
   if (isAssetWithVersion(route)) {
-    return generateRowDataForExportGrid(fetched as DialPrompt[], selected as DialPrompt[]);
+    return generateRowDataForExportGrid(fetched as AssetWithVersion[], selected as AssetWithVersion[]);
+  }
+
+  if (isVersionlessAssetView(route)) {
+    // A versionless prompt is a single stored resource — each fetched prompt is its own row,
+    // with no same-name version merging (grid row selection tracks what is exported).
+    return (fetched as DialPrompt[]) || [];
   }
 
   if (route === ApplicationRoute.Files) {
@@ -196,11 +214,11 @@ export const getExportGridData = (
  */
 export const changeExportGridData = (
   route?: ApplicationRoute,
-  fetched?: Record<string, (AssetWithVersion | DialFile)[]>,
-  selected?: Record<string, (AssetWithVersion | DialFile)[]>,
+  fetched?: Record<string, (AssetWithVersion | DialFile | DialPrompt)[]>,
+  selected?: Record<string, (AssetWithVersion | DialFile | DialPrompt)[]>,
   selectedRows?: (DialPrompt | DialFile)[],
   filePath?: string,
-): Record<string, AssetWithVersion[]> => {
+): Record<string, (AssetWithVersion | DialFile | DialPrompt)[]> => {
   if (isAssetWithVersion(route)) {
     return changeExportAssetData(
       selectedRows as AssetWithVersion[],
@@ -210,13 +228,23 @@ export const changeExportGridData = (
     );
   }
 
+  if (isVersionlessAssetView(route)) {
+    return changeExportData<DialPrompt>(
+      selectedRows as DialPrompt[],
+      fetched as Record<string, DialPrompt[]>,
+      filePath as string,
+      selected as Record<string, DialPrompt[]>,
+      findPromptMatch,
+    );
+  }
+
   if (route === ApplicationRoute.Files) {
     return changeExportFileData(
       selectedRows as DialFile[],
       fetched as Record<string, DialFile[]>,
       filePath as string,
       selected as Record<string, DialFile[]>,
-    ) as Record<string, DialPrompt[]>;
+    );
   }
   return {};
 };

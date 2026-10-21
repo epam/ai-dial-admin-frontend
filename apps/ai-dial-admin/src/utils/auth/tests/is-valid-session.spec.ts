@@ -1,44 +1,29 @@
-import { describe, test, expect, vi } from 'vitest';
-import { getIsInvalidSession } from '../is-valid-session';
+import { describe, expect, test } from 'vitest';
 
-vi.mock('next-auth', () => ({
-  getServerSession: vi.fn(),
-}));
-import { getServerSession } from 'next-auth';
+import { getIsInvalidSession } from '../is-valid-session';
 
 describe('getIsInvalidSession', () => {
   test('returns false if isEnableAuth is false', async () => {
-    const result = await getIsInvalidSession(false, { accessTokenExpires: Date.now() + 10000 } as any);
-    expect(result).toBe(false);
+    expect(await getIsInvalidSession(false, null)).toBe(false);
   });
 
-  test('returns true if session is null', async () => {
-    (getServerSession as any).mockResolvedValue(null);
-    const result = await getIsInvalidSession(true, { accessTokenExpires: Date.now() + 10000 } as any);
-    expect(result).toBe(true);
+  test('returns true if token is missing', async () => {
+    expect(await getIsInvalidSession(true, null)).toBe(true);
+    expect(await getIsInvalidSession(true, undefined)).toBe(true);
   });
 
-  test('returns true if session.error exists', async () => {
-    (getServerSession as any).mockResolvedValue({ error: 'err' });
-    const result = await getIsInvalidSession(true, { accessTokenExpires: Date.now() + 10000 } as any);
-    expect(result).toBe(true);
+  test('returns true if the refresh failed', async () => {
+    expect(await getIsInvalidSession(true, { error: 'RefreshAccessTokenError' } as any)).toBe(true);
   });
 
-  test('returns true if token is null', async () => {
-    (getServerSession as any).mockResolvedValue({});
-    const result = await getIsInvalidSession(true, null);
-    expect(result).toBe(true);
+  // Regression: the cookie's access token is past its expiry, but the session was refreshed server-side
+  test('returns false for a token whose cookie expiry passed but that was refreshed', async () => {
+    const token = { accessTokenExpires: Date.now() - 10000, access_token: 'refreshed' } as any;
+
+    expect(await getIsInvalidSession(true, token)).toBe(false);
   });
 
-  test('returns true if token is expired', async () => {
-    (getServerSession as any).mockResolvedValue({});
-    const result = await getIsInvalidSession(true, { accessTokenExpires: Date.now() - 10000 } as any);
-    expect(result).toBe(true);
-  });
-
-  test('returns false if session and token are valid', async () => {
-    (getServerSession as any).mockResolvedValue({});
-    const result = await getIsInvalidSession(true, { accessTokenExpires: Date.now() + 10000 } as any);
-    expect(result).toBe(false);
+  test('returns false for a valid token', async () => {
+    expect(await getIsInvalidSession(true, { accessTokenExpires: Date.now() + 10000 } as any)).toBe(false);
   });
 });

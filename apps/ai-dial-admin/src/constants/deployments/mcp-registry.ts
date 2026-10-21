@@ -1,5 +1,8 @@
 import { McpServerFilterDto } from '@/src/types/deployments/mcp-registry';
 
+// One grid block = one registry request, so the first screen waits for as few registry pages as possible
+export const MCP_REGISTRY_PAGE_SIZE = 30;
+
 export const SUPPORTED_MCP_TRANSPORT_TYPES = ['streamable-http', 'sse'];
 
 export const CONTAINER_MCP_REGISTRY_FILTER: McpServerFilterDto = {

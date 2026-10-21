@@ -10,11 +10,24 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import ExternalUrlCellRenderer from '@/src/components/Grid/CellRenderers/ExternalUrlCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
+import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
+import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
+import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
+import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import { AUDIT_ENUM_VALUES_FILTER } from '@/src/components/ActivityAudit/List/audit-filter-components';
+import { EnumFilterValue } from '@/src/components/ActivityAudit/List/models';
+import { ANALYTICS_ACTIVITY_TYPES } from '@/src/constants/activity-audit';
+import OptionalValueCellRenderer, {
+  MISSING_VALUE_DISPLAY,
+} from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
+import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { formatPricingRate } from '@/src/components/ModelView/Pricing/utils';
+import { PricingRate, PricingType } from '@/src/models/dial/model';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
@@ -28,15 +41,19 @@ import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import {
   BasicI18nKey,
-  ConversationsTraceI18nKey,
+  SessionsTraceI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
   QueriesI18nKey,
   SourceI18nKey,
   TelemetryI18nKey,
+  TestSuitesI18nKey,
 } from '@/src/constants/i18n';
-import { deriveSavedQueryEditor } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import {
+  deriveSavedQueryEditor,
+  savedQuerySourcesLabel,
+} from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
 import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { RowImportMeta } from '@/src/models/deployments/import';
@@ -56,34 +73,28 @@ import {
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
 import {
-  CONVERSATION_FIELD_VALUE_TYPE,
-  CONVERSATION_TAG_LABEL_KEY,
-  FILTERABLE_CONVERSATION_FIELDS,
+  SESSION_FIELD_VALUE_TYPE,
+  SESSION_TAG_LABEL_KEY,
+  FILTERABLE_SESSION_FIELDS,
   OPTIONAL_CURATED_COLUMN_FIELDS,
   PROVENANCE_HINT_KEY,
   PROVENANCE_LABEL_KEY,
-  SORTABLE_CONVERSATION_FIELDS,
-} from '@/src/constants/analytics/conversations-trace';
-import {
-  conversationTopics,
-  formatCompactNumber,
-  formatSignificantCost,
-} from '@/src/utils/analytics/conversation-formatting';
-import {
-  buildConversationColumnCatalog,
-  conversationColumnGroups,
-} from '@/src/utils/analytics/conversation-column-catalog';
+  SORTABLE_SESSION_FIELDS,
+} from '@/src/constants/analytics/sessions-trace';
+import { sessionTopics, formatCompactNumber, formatFixedCost } from '@/src/utils/analytics/session-formatting';
+import { buildSessionColumnCatalog, sessionColumnGroups } from '@/src/utils/analytics/session-column-catalog';
 import {
   ColumnProvenance,
-  ConversationColumn,
-  ConversationColumnGroup,
-  ConversationsField,
-} from '@/src/models/analytics/conversations-trace';
+  SessionColumn,
+  SessionColumnGroup,
+  SessionsField,
+} from '@/src/models/analytics/sessions-trace';
 import { QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { Publication } from '@/src/models/dial/publications';
+import { getPublicationTypeLabel } from '@/src/utils/publications';
 import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
 import { FormDataPart, FormDataType } from '@/src/models/form-data';
 import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
@@ -92,6 +103,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import { isAssetWithVersion } from '@/src/utils/is-view';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import {
   ASSET_NAME_COLUMN,
@@ -117,19 +129,32 @@ import {
   VALIDITY_STATUS_COLUMN,
   VERSION_COLUMN,
 } from './base-columns';
-import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
-import ConversationCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ConversationCellRenderer';
-import TopicsCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/TopicsCellRenderer';
-import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace/List/ProvenanceHeaderGroup';
-import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
-import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
-import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/RatingCellRenderer';
-import UserCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/UserCellRenderer';
+import { CONTAINER_TYPE_LABELS } from '@/src/constants/deployments/container-types';
+import { Container } from '@/src/models/deployments/containers';
+import { dateTimeColumn, nameColumnSizing, numericColumn, priceColumn, rightAlignedColumn } from './configs';
+import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter, exactMatchFilter } from './filters';
+import SessionCellRenderer from '@/src/components/Analytics/SessionsTrace/List/SessionCellRenderer';
+import TopicsCellRenderer from '@/src/components/Analytics/SessionsTrace/List/TopicsCellRenderer';
+import ProvenanceHeaderGroup from '@/src/components/Analytics/SessionsTrace/List/ProvenanceHeaderGroup';
+import ActivityCellRenderer from '@/src/components/Analytics/SessionsTrace/List/ActivityCellRenderer';
+import ProjectCellRenderer from '@/src/components/Analytics/SessionsTrace/List/ProjectCellRenderer';
+import RatingCellRenderer from '@/src/components/Analytics/SessionsTrace/List/RatingCellRenderer';
+import UserCellRenderer from '@/src/components/Analytics/SessionsTrace/List/UserCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
-import { ActivityAuditView } from '@/src/types/activity-audit';
+import { ANALYTICS_AUDIT_RESOURCE_TYPES, ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
+import { formatRunCost } from '@/src/components/Runs/Summary/utils';
+import {
+  formatRunDuration,
+  formatRunScore,
+  getRunDurationMs,
+  resolveRunTarget,
+} from '@/src/components/Runs/utils/run-list-values';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
+import { Metric } from '@/src/models/evaluation/metric';
+import { Run } from '@/src/models/evaluation/run';
+import { getMetricOutputTags } from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -154,6 +179,15 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
+// A pricing rate is flat-or-tree: a flat rate keeps its stored string as before, while a tree renders
+// as the readable conditional with per-million leaves under the token unit.
+const getPricingRate = (
+  rate: PricingRate | undefined,
+  unit: string | undefined,
+  t: (str: string) => string,
+): string | undefined =>
+  typeof rate === 'string' || rate == null ? rate : formatPricingRate(rate, unit === PricingType.Token, t);
+
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
@@ -169,31 +203,30 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'limits.maxTotalTokens',
     headerName: 'Interaction limit',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.limits?.maxTotalTokens,
   },
   {
     field: 'pricing.prompt',
     headerName: 'Prompt price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.prompt,
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.prompt, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.completion',
     headerName: 'Completion price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.completion,
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.completion, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.cacheRead',
     headerName: 'Cache read price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.cacheRead,
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t) ?? '',
   },
   {
     field: 'pricing.cacheWrite',
     headerName: 'Cache write price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.cacheWrite,
+    valueFormatter: (params) => getPricingRate(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t) ?? '',
   },
 ];
 
@@ -254,6 +287,8 @@ export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
   { field: 'transport', headerName: 'Transport', hide: false },
 ];
 
+export const EVALUATION_ROUTES_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
+
 export const MCP_TOOLS_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Tool Name', hide: false },
   DESCRIPTION_COLUMN,
@@ -271,12 +306,23 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
   },
 ];
 
+// Core takes a substring on UUID columns; the analytics backend does not.
+const getIdentifierFilter = (view: ActivityAuditView): Partial<ColDef> =>
+  view === ActivityAuditView.Analytics ? exactMatchFilter : baseStringFilter;
+
+const getEnumFilter = (view: ActivityAuditView, values: EnumFilterValue[]): Partial<ColDef> =>
+  view === ActivityAuditView.Analytics
+    ? { filter: AUDIT_ENUM_VALUES_FILTER, filterParams: { values }, floatingFilterComponent: EmptyFloatingFilter }
+    : baseStringFilter;
+
 export const ACTIVITY_AUDIT_COLUMNS = (
   t: (s: string) => string,
   view: ActivityAuditView = ActivityAuditView.Config,
   isSingleEntity = false,
+  // Config groups under the admin Import parent; Analytics passes it for the global page, where it builds Import rows.
+  hasRowExpander = !isSingleEntity && view === ActivityAuditView.Config,
 ): ColDef[] => [
-  ...(!isSingleEntity && view === ActivityAuditView.Config
+  ...(hasRowExpander
     ? [
         {
           headerName: '',
@@ -294,7 +340,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
   {
     field: 'activityType',
     headerName: 'Activity type',
-    ...baseStringFilter,
+    ...getEnumFilter(
+      view,
+      ANALYTICS_ACTIVITY_TYPES.map((type) => ({ value: type, label: type })),
+    ),
     cellRenderer: ChildrenActivityTypeCellRenderer,
     cellRendererParams: {
       showIcon: !isSingleEntity,
@@ -306,8 +355,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
           field: RESOURCE_TYPE_COLUMN,
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
-          tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-          ...baseStringFilter,
+          ...getEnumFilter(
+            view,
+            ANALYTICS_AUDIT_RESOURCE_TYPES.map((type) => ({ value: type, label: getFormattedResourceType(type, t) })),
+          ),
         } as ColDef,
         { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,
       ]
@@ -324,8 +375,8 @@ export const ACTIVITY_AUDIT_COLUMNS = (
     filter: false,
   },
   { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
-  { field: 'activityId', headerName: 'Activity ID', ...baseStringFilter },
-  { field: 'parentActivityId', headerName: 'Parent ID', ...baseStringFilter },
+  { field: 'activityId', headerName: 'Activity ID', ...getIdentifierFilter(view) },
+  { field: 'parentActivityId', headerName: 'Parent ID', ...getIdentifierFilter(view) },
 ];
 
 export const BASE_KEYS_COLUMNS: ColDef[] = [
@@ -385,11 +436,31 @@ export const PICKER_RUNNER_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'origin',
     headerName: t(EntitiesI18nKey.Source),
     valueFormatter: ({ value }) =>
-      value === AppRunnerOrigin.Asset ? t(SourceI18nKey.AssetRunner) : t(SourceI18nKey.EntityRunner),
+      value === AppRunnerOrigin.Platform ? t(SourceI18nKey.PlatformRunner) : t(SourceI18nKey.ConfigRunner),
   },
   AUTHOR_COLUMN,
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
+
+/**
+ * The catalog-schema picker's columns with the entity-kind filter relaxed, where that kind varies
+ * and is the reason to be in that view.
+ *
+ * No author or updated-time column in either view: the read that unions the two schema populations
+ * (`v1/catalog_schemas/schemas`) carries no resource metadata, so those columns would cost one
+ * metadata request per row and stay empty for the config-file half anyway.
+ */
+export const CATALOG_SCHEMA_PICKER_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  { field: '$id', headerName: 'ID' },
+  { field: 'dial:catalogDisplayName', headerName: t(EntityFieldsI18nKey.displayName) },
+  { field: 'dial:catalogEntityType', headerName: t(EntityFieldsI18nKey.catalogEntityType) },
+];
+
+/**
+ * The picker's columns while filtered to one entity kind: the `$id` alone. That kind is a constant
+ * here, and display names are not unique, so the `$id` is the only column that identifies a schema.
+ */
+export const CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS = (): ColDef[] => [{ field: '$id', headerName: 'ID' }];
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
   ...BASE_COLUMNS,
@@ -435,7 +506,7 @@ export const EXPORT_COLUMNS = (
       cellClass: NO_BORDER_CLASS,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        getItems: (data: DialPrompt) => data.versions?.map((v) => ({ value: v, label: v })),
+        getItems: (data: AssetWithVersion) => data.versions?.map((v) => ({ value: v, label: v })),
         onChange,
         isMulti: true,
       },
@@ -452,13 +523,22 @@ export const EXPORT_COLUMNS = (
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
   AUTHOR_COLUMN,
-  { ...CREATED_AT_COLUMN, sort: 'asc' },
+  { ...CREATED_AT_COLUMN, sort: 'desc' },
 ];
 
-export const getPublicationColumns = (open: (publication?: Publication) => void): ColDef[] => {
+export const getPublicationColumns = (
+  open: (publication?: Publication) => void,
+  t: (key: string) => string,
+): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];
+  const [nameColumn, ...restColumns] = PUBLICATION_COLUMNS;
+  const typeColumn: ColDef = {
+    field: 'resourceType',
+    headerName: 'Type',
+    valueFormatter: ({ value }) => getPublicationTypeLabel(value, t),
+  };
 
-  return [...PUBLICATION_COLUMNS, ACTION_COLUMN(actions)];
+  return [nameColumn, typeColumn, ...restColumns, ACTION_COLUMN(actions)];
 };
 
 export const ENTITIES_COLUMNS = <T extends object>(
@@ -662,14 +742,14 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
     .map((c) => c.field as string),
 );
 
-const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
+const BASE_SESSIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
   {
-    field: ConversationsField.ChatId,
-    headerName: t(ConversationsTraceI18nKey.Conversation),
-    headerTooltip: t(ConversationsTraceI18nKey.ConversationHint),
-    cellRenderer: ConversationCellRenderer,
+    field: SessionsField.ChatId,
+    headerName: t(SessionsTraceI18nKey.Session),
+    headerTooltip: t(SessionsTraceI18nKey.SessionHint),
+    cellRenderer: SessionCellRenderer,
     // How a row is recognised and how it is opened. A log whose identity column can be hidden is a table of
-    // values belonging to conversations the reader cannot name — and this column's permanence is what makes
+    // values belonging to sessions the reader cannot name — and this column's permanence is what makes
     // its enrichment field unconditional in the projection. `lockVisible` guards AG Grid's own paths;
     // withholding it from the columns panel is what closes the one the app actually offers, since that panel
     // is this repo's own component and reads only `suppressColumnsToolPanel`.
@@ -679,38 +759,38 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 280,
   },
   {
-    field: ConversationsField.ProjectId,
-    headerName: t(ConversationsTraceI18nKey.Project),
+    field: SessionsField.ProjectId,
+    headerName: t(SessionsTraceI18nKey.Project),
     cellRenderer: ProjectCellRenderer,
     flex: 1.6,
     minWidth: 180,
   },
   {
-    field: ConversationsField.UserHash,
-    headerName: t(ConversationsTraceI18nKey.DetailUser),
+    field: SessionsField.UserHash,
+    headerName: t(SessionsTraceI18nKey.DetailUser),
     cellRenderer: UserCellRenderer,
     flex: 1.2,
     minWidth: 140,
   },
   {
-    field: ConversationsField.TurnCount,
-    headerName: t(ConversationsTraceI18nKey.Turns),
-    headerTooltip: t(ConversationsTraceI18nKey.TurnsHint),
+    field: SessionsField.TurnCount,
+    headerName: t(SessionsTraceI18nKey.Turns),
+    headerTooltip: t(SessionsTraceI18nKey.TurnsHint),
     ...numericColumn,
     flex: 0.6,
     minWidth: 90,
     hide: true,
   },
   {
-    field: ConversationsField.LastRequestTime,
-    headerName: t(ConversationsTraceI18nKey.Activity),
+    field: SessionsField.LastRequestTime,
+    headerName: t(SessionsTraceI18nKey.Activity),
     cellRenderer: ActivityCellRenderer,
     flex: 1.1,
     minWidth: 130,
   },
   {
-    field: ConversationsField.TotalTokens,
-    headerName: t(ConversationsTraceI18nKey.Tokens),
+    field: SessionsField.TotalTokens,
+    headerName: t(SessionsTraceI18nKey.Tokens),
     ...numericColumn,
     valueFormatter: ({ value }) => formatCompactNumber(value),
     flex: 0.8,
@@ -718,18 +798,18 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     hide: true,
   },
   {
-    field: ConversationsField.TotalPrice,
-    headerName: t(ConversationsTraceI18nKey.Cost),
+    field: SessionsField.TotalPrice,
+    headerName: t(SessionsTraceI18nKey.Cost),
     ...numericColumn,
-    valueFormatter: ({ value }) => formatSignificantCost(value),
-    cellClass: 'align-right text-accent-secondary',
+    valueFormatter: ({ value }) => formatFixedCost(value),
+    cellClass: 'align-right text-success',
     flex: 0.8,
     minWidth: 100,
   },
   {
-    field: ConversationsField.Deployments,
-    headerName: t(ConversationsTraceI18nKey.Deployments),
-    headerTooltip: t(ConversationsTraceI18nKey.DeploymentsHint),
+    field: SessionsField.Deployments,
+    headerName: t(SessionsTraceI18nKey.Deployments),
+    headerTooltip: t(SessionsTraceI18nKey.DeploymentsHint),
     cellRenderer: ModelsCellRenderer,
     // The array as recorded. Which of its values is a model is not derivable from it — a router or
     // application deployed under a plain name is indistinguishable from a model, and an embedding deployment
@@ -737,24 +817,23 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     cellRendererParams: (params: { data?: { deployments?: string[] } }) => ({
       items: params.data?.deployments ?? [],
       allItems: params.data?.deployments ?? [],
-      label: t(ConversationsTraceI18nKey.Deployments),
+      label: t(SessionsTraceI18nKey.Deployments),
     }),
     tooltipValueGetter: (params) => (params.data?.deployments as string[] | undefined)?.join(', ') || null,
-    // Stated rather than left to the sort/filter allow-lists: a header offering an affordance the query
-    // language cannot honour would discard the operator's input silently.
+    // Unsortable, and stated rather than left to the allow-list: no ordering of an array is expressible, so
+    // a sort affordance here would discard the operator's input silently. A *predicate* is expressible, so
+    // the filter comes from the column preset like any text column's.
     sortable: false,
-    filter: false,
     flex: 1.6,
     minWidth: 180,
     hide: true,
   },
   {
-    field: ConversationsField.InsightTopics,
-    headerName: t(ConversationsTraceI18nKey.Topics),
-    headerTooltip: t(ConversationsTraceI18nKey.TopicsHint),
+    field: SessionsField.InsightTopics,
+    headerName: t(SessionsTraceI18nKey.Topics),
+    headerTooltip: t(SessionsTraceI18nKey.TopicsHint),
     cellRenderer: TopicsCellRenderer,
-    tooltipValueGetter: (params) =>
-      conversationTopics(params.data?.[ConversationsField.InsightTopics]).join(', ') || null,
+    tooltipValueGetter: (params) => sessionTopics(params.data?.[SessionsField.InsightTopics]).join(', ') || null,
     // A delimited string, so lexicographic ordering would sort by whichever term happens to be written
     // first. A contains predicate matches a term wherever it sits, which is what the filter is for.
     sortable: false,
@@ -763,8 +842,8 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     hide: true,
   },
   {
-    field: ConversationColumn.Rating,
-    headerName: t(ConversationsTraceI18nKey.Rating),
+    field: SessionColumn.Rating,
+    headerName: t(SessionsTraceI18nKey.Rating),
     cellRenderer: RatingCellRenderer,
     flex: 1,
     minWidth: 140,
@@ -773,12 +852,12 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
 
 const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Long, QueryValueType.Decimal];
 
-const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
-  if (!fieldName || !FILTERABLE_CONVERSATION_FIELDS.includes(fieldName as ConversationsField)) {
+const sessionFilterPreset = (fieldName?: string): Partial<ColDef> => {
+  if (!fieldName || !FILTERABLE_SESSION_FIELDS.includes(fieldName as SessionsField)) {
     return { filter: false, floatingFilter: false };
   }
 
-  const valueType = CONVERSATION_FIELD_VALUE_TYPE[fieldName as ConversationsField];
+  const valueType = SESSION_FIELD_VALUE_TYPE[fieldName as SessionsField];
 
   return valueType && NUMERIC_FILTER_VALUE_TYPES.includes(valueType) ? baseNumberFilter : baseStringFilter;
 };
@@ -787,35 +866,39 @@ const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
 // query cannot name the field, so the cells could never fill, and an operator would read them as missing
 // data. Only the columns added beyond the view's original set are candidates — Rating reads no field of this
 // entity and must survive a schema that has never heard of it.
+//
+// With a schema in hand the original set is held to it too: sorting or filtering by a field the schema does
+// not report fails the whole listing.
+const ENTITY_FIELDS = new Set<string>(Object.values(SessionsField));
+
 const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntityField[]): ColDef[] => {
   const available = new Set(schemaFields.map(({ name }) => name));
-  const optional = new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
+  const candidates = available.size ? ENTITY_FIELDS : new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
 
-  return columns.filter((column) => !optional.has(column.field as string) || available.has(column.field as string));
+  return columns.filter((column) => !candidates.has(column.field as string) || available.has(column.field as string));
 };
 
-const curatedConversationColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
-  restrictSort(
-    availableCuratedColumns(BASE_CONVERSATIONS_TRACE_COLUMNS(t), schemaFields),
-    SORTABLE_CONVERSATION_FIELDS,
-  ).map((column) => ({
-    ...column,
-    ...conversationFilterPreset(column.field),
-    ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
-  }));
+const curatedSessionColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
+  restrictSort(availableCuratedColumns(BASE_SESSIONS_TRACE_COLUMNS(t), schemaFields), SORTABLE_SESSION_FIELDS).map(
+    (column) => ({
+      ...column,
+      ...sessionFilterPreset(column.field),
+      ...(column.field === SessionsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
+    }),
+  );
 
 // The curated set plus one column per field the fetched schema reports and no curated column already reads,
 // so the count is whatever the instance carries. With no schema in hand the curated columns are all there is:
 // an unfetched schema is not evidence that a field exists, and a column that can never fill is of no use.
-export const CONVERSATIONS_TRACE_COLUMNS = (
+export const SESSIONS_TRACE_COLUMNS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
-): ColDef[] => buildConversationColumnCatalog(curatedConversationColumns(t, schemaFields), schemaFields);
+): ColDef[] => buildSessionColumnCatalog(curatedSessionColumns(t, schemaFields), schemaFields);
 
 // The origin is what a reader needs to interpret an empty cell — a rollup value cannot be missing, an
 // enrichment value is missing until the evaluation reaches it — so it stays legible even where the tag
 // supplies the label.
-const groupOriginLabel = (t: (key: string) => string, { provenance, source }: ConversationColumnGroup): string => {
+const groupOriginLabel = (t: (key: string) => string, { provenance, source }: SessionColumnGroup): string => {
   const labelKey = PROVENANCE_LABEL_KEY[provenance];
   return labelKey ? t(labelKey) : source;
 };
@@ -824,31 +907,31 @@ const groupOriginLabel = (t: (key: string) => string, { provenance, source }: Co
 // prints this same string as each column's caption, and a caption reading "Evaluator run" over a checkbox
 // reading "Model" still leaves whose model it is to guess. The rollup takes no prefix — it is what the grid
 // is a list of.
-const groupHeaderName = (t: (key: string) => string, group: ConversationColumnGroup): string => {
+const groupHeaderName = (t: (key: string) => string, group: SessionColumnGroup): string => {
   const origin = groupOriginLabel(t, group);
   if (!group.tag) {
     return origin;
   }
 
-  const labelKey = CONVERSATION_TAG_LABEL_KEY[group.tag];
+  const labelKey = SESSION_TAG_LABEL_KEY[group.tag];
   const tagLabel = labelKey ? t(labelKey) : group.tag;
 
-  return group.provenance === ColumnProvenance.Conversations ? tagLabel : `${origin} · ${tagLabel}`;
+  return group.provenance === ColumnProvenance.Sessions ? tagLabel : `${origin} · ${tagLabel}`;
 };
 
 // A named origin identifies its source on its own — one origin, one enrichment — so its id needs no more
 // than the pair. `Other` is the catch-all every unnamed enrichment shares, so there the source is what keeps
 // two of them from claiming one id.
-const groupId = ({ provenance, source, tag }: ConversationColumnGroup): string =>
+const groupId = ({ provenance, source, tag }: SessionColumnGroup): string =>
   [provenance === ColumnProvenance.Other ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
 
-export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
+export const SESSIONS_TRACE_COLUMN_GROUPS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
 ): ColGroupDef[] => {
-  const columns = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields);
+  const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields);
 
-  return conversationColumnGroups(columns, schemaFields).map((group) => {
+  return sessionColumnGroups(columns, schemaFields).map((group) => {
     const headerName = groupHeaderName(t, group);
 
     return {
@@ -927,108 +1010,130 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   },
 ];
 
-export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
-  DISPLAY_NAME_COLUMN,
-  DESCRIPTION_COLUMN,
-  ...(route === ApplicationRoute.ModelServings
-    ? [
-        {
-          field: '$type',
-          headerName: 'Source type',
-          hide: false,
-          valueFormatter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
-          tooltipValueGetter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
-          filterValueGetter: (params) => t(MODEL_TYPES[params.data[params.colDef.field || ''] as MODEL_TYPE]),
-        } as ColDef,
-      ]
-    : [
-        {
-          headerName: 'Source type',
-          field: 'source.$type',
-          hide: false,
-          valueFormatter: ({ data }) => containerSourceTypeLabel(data?.source, t, type),
-          tooltipValueGetter: ({ data }) => containerSourceTypeLabel(data?.source, t, type),
-          filterValueGetter: (params) => containerSourceTypeLabel(params.data?.source, t, type),
-        } as ColDef,
-        {
-          headerName: 'Source Name',
-          field: 'source',
-          hide: false,
-          valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
-          tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
-          filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
-        } as ColDef,
-      ]),
-  {
-    ...BASE_STATUS_COLUMN,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
-    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
-    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
-  },
-  { field: 'url', headerName: 'Container URL', hide: true },
-  {
-    field: 'resources.requests.cpu',
-    headerName: t(EntityFieldsI18nKey.CPURequest),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.requests?.cpu),
-    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
-    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.requests?.cpu)),
-  },
-  {
-    field: 'resources.limits.cpu',
-    headerName: t(EntityFieldsI18nKey.CPULimit),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.limits?.cpu),
-    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
-    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.limits?.cpu)),
-  },
-  {
-    field: 'resources.requests.memory',
-    headerName: t(EntityFieldsI18nKey.MemoryRequest),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.requests?.memory),
-    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
-    filterValueGetter: (params) =>
-      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.requests?.memory)),
-  },
-  {
-    field: 'resources.limits.memory',
-    headerName: t(EntityFieldsI18nKey.MemoryLimit),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.limits?.memory),
-    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
-    filterValueGetter: (params) =>
-      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.limits?.memory)),
-  },
-  ...(route === ApplicationRoute.ModelServings
-    ? [
-        {
-          field: 'resources.gpu',
-          headerName: t(EntityFieldsI18nKey.GPURequest),
-          hide: true,
-          sortable: true,
-          filter: 'agTextColumnFilter',
-          valueGetter: (params: ValueGetterParams) =>
-            getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu']),
-          valueFormatter: ({ value }) => formatGpuColumnValue(value as number | null),
-          filterValueGetter: (params) =>
-            formatGpuColumnValue(getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu'])),
-        } as ColDef,
-      ]
-    : []),
-  AUTHOR_COLUMN,
-  TOPICS_COLUMN,
-  { ...CREATED_AT_COLUMN, filter: false },
-  { ...UPDATED_AT_COLUMN, filter: false },
-];
+export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => {
+  const isUnified = route === ApplicationRoute.Containers;
+  const getTypeLabel = (container?: Container): string => {
+    const labelKey = container && CONTAINER_TYPE_LABELS[container.$type];
+    return labelKey ? t(labelKey) : '';
+  };
+  // The unified list mixes types, so the "{type}" in "Internal {type} Image" comes from the row.
+  const getRowType = (container?: Container): string => (isUnified ? getTypeLabel(container) : type);
+
+  return [
+    DISPLAY_NAME_COLUMN,
+    DESCRIPTION_COLUMN,
+    ...(isUnified
+      ? [
+          {
+            field: '$type',
+            headerName: 'Type',
+            hide: false,
+            valueFormatter: ({ data }) => getTypeLabel(data),
+            tooltipValueGetter: ({ data }) => getTypeLabel(data),
+            filterValueGetter: (params) => getTypeLabel(params.data),
+          } as ColDef,
+        ]
+      : []),
+    ...(route === ApplicationRoute.ModelServings
+      ? [
+          {
+            field: '$type',
+            headerName: 'Source type',
+            hide: false,
+            valueFormatter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
+            tooltipValueGetter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
+            filterValueGetter: (params) => t(MODEL_TYPES[params.data[params.colDef.field || ''] as MODEL_TYPE]),
+          } as ColDef,
+        ]
+      : [
+          {
+            headerName: 'Source type',
+            field: 'source.$type',
+            hide: false,
+            valueFormatter: ({ data }) => containerSourceTypeLabel(data?.source, t, getRowType(data)),
+            tooltipValueGetter: ({ data }) => containerSourceTypeLabel(data?.source, t, getRowType(data)),
+            filterValueGetter: (params) => containerSourceTypeLabel(params.data?.source, t, getRowType(params.data)),
+          } as ColDef,
+          {
+            headerName: 'Source Name',
+            field: 'source',
+            hide: false,
+            valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
+            tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
+            filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
+          } as ColDef,
+        ]),
+    {
+      ...BASE_STATUS_COLUMN,
+      cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
+      tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
+      filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
+    },
+    { field: 'url', headerName: 'Container URL', hide: true },
+    {
+      field: 'resources.requests.cpu',
+      headerName: t(EntityFieldsI18nKey.CPURequest),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.requests?.cpu),
+      valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+      filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.requests?.cpu)),
+    },
+    {
+      field: 'resources.limits.cpu',
+      headerName: t(EntityFieldsI18nKey.CPULimit),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.limits?.cpu),
+      valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+      filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.limits?.cpu)),
+    },
+    {
+      field: 'resources.requests.memory',
+      headerName: t(EntityFieldsI18nKey.MemoryRequest),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.requests?.memory),
+      valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+      filterValueGetter: (params) =>
+        formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.requests?.memory)),
+    },
+    {
+      field: 'resources.limits.memory',
+      headerName: t(EntityFieldsI18nKey.MemoryLimit),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.limits?.memory),
+      valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+      filterValueGetter: (params) =>
+        formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.limits?.memory)),
+    },
+    ...(route === ApplicationRoute.ModelServings
+      ? [
+          {
+            field: 'resources.gpu',
+            headerName: t(EntityFieldsI18nKey.GPURequest),
+            hide: true,
+            sortable: true,
+            filter: 'agTextColumnFilter',
+            valueGetter: (params: ValueGetterParams) =>
+              getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu']),
+            valueFormatter: ({ value }) => formatGpuColumnValue(value as number | null),
+            filterValueGetter: (params) =>
+              formatGpuColumnValue(getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu'])),
+          } as ColDef,
+        ]
+      : []),
+    AUTHOR_COLUMN,
+    TOPICS_COLUMN,
+    { ...CREATED_AT_COLUMN, filter: false },
+    { ...UPDATED_AT_COLUMN, filter: false },
+  ];
+};
 
 export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
   {
@@ -1206,10 +1311,18 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     colId: 'name',
     headerName: 'Display Name',
     hide: false,
+    ...nameColumnSizing,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...evalStringFilter([GridFilterType.EQUALS]) },
+  {
+    field: 'id',
+    colId: 'id',
+    headerName: 'ID',
+    hide: false,
+    ...nameColumnSizing,
+    ...evalStringFilter([GridFilterType.EQUALS]),
+  },
   {
     field: 'suiteType',
     colId: 'suiteType',
@@ -1224,15 +1337,18 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     hide: false,
     sortable: false,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
-    valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
+    valueGetter: (params) =>
+      params.data?.deploymentRef?.name ||
+      params.data?.mcpDeploymentRef?.name ||
+      fromCanonicalRouteName(params.data?.routesRef?.name),
   },
-  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...CREATED_AT_COLUMN, ...dateFilter, sort: 'desc' },
   { ...UPDATED_AT_COLUMN, ...dateFilter },
   {
     field: 'createdBy',
     headerName: 'Created By',
     hide: false,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     field: 'method',
@@ -1252,12 +1368,20 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
   },
 ];
 
+const DATASET_TEST_SUITES_HIDDEN_COL_IDS = ['method', 'url'];
+
+/** The test suites list's columns minus the two it hides by default; the dataset's tab shows only the rest. */
+export const DATASET_TEST_SUITES_COLUMN: ColDef[] = TEST_SUITES_COLUMN.filter(
+  (col) => !DATASET_TEST_SUITES_HIDDEN_COL_IDS.includes(col.field ?? ''),
+);
+
 export const DATASETS_COLUMN: ColDef[] = [
   {
     field: 'name',
     colId: 'name',
     headerName: 'Display Name',
     hide: false,
+    ...nameColumnSizing,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
@@ -1265,62 +1389,257 @@ export const DATASETS_COLUMN: ColDef[] = [
   { ...UPDATED_AT_COLUMN, ...dateFilter },
 ];
 
+const RUN_STATUS_COLUMN_WIDTH = 65;
+
+const RUN_TARGET_COLUMN_MIN_WIDTH = 100;
+const RUN_FLEXIBLE_COLUMN_MIN_WIDTH = 100;
+const RUN_DATE_COLUMN_MIN_WIDTH = 166;
+
+const derivedRunColDef: Partial<ColDef> = { sortable: false, filter: false, hide: false };
+
 export const RUNS_COLUMN: ColDef[] = [
   {
-    field: 'id',
-    colId: 'id',
-    headerName: 'ID',
-    ...evalStringFilter([GridFilterType.EQUALS]),
+    field: 'status',
+    colId: 'status',
+    headerName: 'Status',
+    headerTooltip: 'Status',
+    cellRenderer: RunStatusCellRenderer,
+    cellRendererParams: { isLabelHidden: true },
+    tooltipValueGetter: () => undefined,
+    filter: RUN_STATUS_VALUE_FILTER,
+    floatingFilterComponent: EmptyFloatingFilter,
+    width: RUN_STATUS_COLUMN_WIDTH,
+    minWidth: RUN_STATUS_COLUMN_WIDTH,
+    maxWidth: RUN_STATUS_COLUMN_WIDTH,
+    cellClass: 'flex items-center justify-center',
     hide: false,
+  },
+  {
+    field: 'testRunName',
+    colId: 'testRunName',
+    headerName: 'Test suite run name',
+    headerTooltip: 'Test suite run name',
+    cellRenderer: TitleSubtitleCellRenderer,
+    cellRendererParams: { getSubtitle: (data?: Run) => data?.id },
+    tooltipValueGetter: () => undefined,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
+  },
+  {
+    field: 'runConfig.numberOfRuns',
+    colId: 'runConfig.numberOfRuns',
+    headerName: 'Runs',
+    maxWidth: 68,
+    filter: false,
+    hide: false,
+    ...rightAlignedColumn,
+  },
+  {
+    field: 'numberOfTestCases',
+    colId: 'numberOfTestCases',
+    headerTooltip: 'Test cases',
+    headerName: 'Test cases',
+    maxWidth: 98,
+    filter: false,
+    hide: false,
+    ...rightAlignedColumn,
   },
   {
     field: 'testSuiteId',
     colId: 'testSuiteId',
     headerName: 'Test Suite ID',
     ...evalStringFilter([GridFilterType.EQUALS]),
-    hide: true,
+    hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
   },
   {
-    field: 'testRunName',
-    colId: 'testRunName',
-    headerName: 'Test run name',
+    field: 'target',
+    colId: 'target',
+    headerName: 'Target',
+    valueGetter: ({ data }) => resolveRunTarget(data as Run)?.name ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: TitleSubtitleCellRenderer,
+    cellRendererParams: { getSubtitle: (data?: Run) => resolveRunTarget(data)?.kind },
+    tooltipValueGetter: () => undefined,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     hide: false,
+    minWidth: RUN_TARGET_COLUMN_MIN_WIDTH,
   },
   {
-    field: 'runConfig.numberOfRuns',
-    colId: 'runConfig.numberOfRuns',
-    headerName: 'Number of runs',
-    filter: false,
-    sortable: false,
+    field: 'metrics',
+    colId: 'metrics',
+    headerName: 'Metrics',
+    valueGetter: ({ data }) => (data as Run)?.metricNames ?? [],
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { value: string[] }) => ({
+      items: params.value,
+      tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
+    }),
+    tooltipValueGetter: () => null,
+    ...evalStringFilter([GridFilterType.CONTAINS]),
     hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
   },
   {
-    field: 'numberOfTestCases',
-    colId: 'numberOfTestCases',
-    headerName: 'Number of test cases',
-    filter: false,
-    sortable: false,
+    field: 'startedAt',
+    colId: 'startedAt',
+    headerName: 'Start Date',
+    ...dateTimeColumn,
+    ...dateFilter,
     hide: false,
+    minWidth: RUN_DATE_COLUMN_MIN_WIDTH,
   },
-  { field: 'createdAt', headerName: 'Created date', ...dateTimeColumn, ...dateFilter, hide: true },
-  { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn, ...dateFilter, hide: false },
-  { field: 'completedAt', headerName: 'End date', ...dateTimeColumn, ...dateFilter, hide: false },
   {
-    field: 'status',
-    headerName: 'Status',
-    cellRenderer: RunStatusCellRenderer,
-    tooltipValueGetter: () => undefined,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    field: 'completedAt',
+    colId: 'completedAt',
+    headerName: 'End Date',
+    ...dateTimeColumn,
+    ...dateFilter,
     hide: false,
+    minWidth: RUN_DATE_COLUMN_MIN_WIDTH,
+  },
+  {
+    field: 'duration',
+    colId: 'duration',
+    headerName: 'Duration',
+    valueGetter: ({ data }) => getRunDurationMs(data as Run),
+    valueFormatter: ({ value }) => formatRunDuration(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: OptionalValueCellRenderer,
+    maxWidth: 88,
+    ...derivedRunColDef,
+    ...rightAlignedColumn,
+  },
+  {
+    field: 'cost',
+    colId: 'cost',
+    headerName: 'Cost',
+    valueGetter: ({ data }) => (data as Run)?.totalCost ?? null,
+    valueFormatter: ({ value }) => formatRunCost(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    tooltipValueGetter: ({ data }) => formatRunCost((data as Run)?.totalCost ?? null) || undefined,
+    cellRenderer: OptionalValueCellRenderer,
+    maxWidth: 100,
+    ...derivedRunColDef,
+    ...rightAlignedColumn,
+  },
+  {
+    field: 'overallScore',
+    colId: 'overallScore',
+    headerName: 'Overall score',
+    valueGetter: ({ data }) => (data as Run)?.overallScoreValue ?? null,
+    valueFormatter: ({ value }) => formatRunScore(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: OptionalValueCellRenderer,
+    maxWidth: 110,
+    ...derivedRunColDef,
+    ...rightAlignedColumn,
   },
 ];
 
+const SUITE_SCOPED_RUN_COL_IDS = ['testSuiteId'];
+const SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS = ['target'];
+
+export const SUITE_RUNS_COLUMN: ColDef[] = RUNS_COLUMN.filter(
+  (col) => !SUITE_SCOPED_RUN_COL_IDS.includes(col.colId ?? ''),
+).map((col) => (SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS.includes(col.colId ?? '') ? { ...col, hide: true } : col));
+
+const COMPARE_RUN_PICKER_COL_IDS = [
+  'testRunName',
+  'numberOfTestCases',
+  'testSuiteId',
+  'metrics',
+  'startedAt',
+  'completedAt',
+  'duration',
+  'cost',
+  'overallScore',
+];
+
+/** The kit's default column minWidth (150) outweighs this column's own maxWidth, which stops the picker from fitting its width. */
+const COMPARE_RUN_PICKER_NARROW_COLUMN_MIN_WIDTHS: Record<string, number> = { numberOfTestCases: 60 };
+
+/** The compare picker may span sibling suites, so it leads with the suite's name before the run's own columns. */
+export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = [
+  {
+    colId: 'testSuiteName',
+    headerName: 'Test Suite',
+    valueGetter: ({ data }) => (data as CompareCandidateRun).testSuiteName || (data as CompareCandidateRun).testSuiteId,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
+  },
+  ...COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) => RUNS_COLUMN.filter((col) => col.colId === colId)).map((col) => {
+    const minWidth = COMPARE_RUN_PICKER_NARROW_COLUMN_MIN_WIDTHS[col.colId ?? ''];
+    return minWidth == null ? col : { ...col, minWidth };
+  }),
+];
+
 export const METRICS_COLUMN: ColDef[] = [
-  { field: 'id', colId: 'id', headerName: 'ID', hide: false },
-  { field: 'name', colId: 'name', headerName: 'Name', hide: false },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...nameColumnSizing },
+  { field: 'name', colId: 'name', headerName: 'Name', hide: false, ...nameColumnSizing },
   DESCRIPTION_COLUMN,
   CREATED_AT_COLUMN,
+];
+
+export const METRIC_NAME_COLUMN_WIDTH = 280;
+export const METRIC_DESCRIPTION_COLUMN_WIDTH = 370;
+export const METRIC_PROVIDER_COLUMN_WIDTH = 133;
+export const METRIC_OUTPUTS_COLUMN_WIDTH = 345;
+
+export const METRIC_RADIO_GROUP_NAME = 'metric-selection';
+
+export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  {
+    field: 'displayName',
+    colId: 'displayName',
+    headerName: t(TestSuitesI18nKey.Metric),
+    lockPosition: 'left',
+    cellRenderer: RadioNameCellRenderer,
+    cellRendererParams: { groupName: METRIC_RADIO_GROUP_NAME },
+    tooltipValueGetter: () => undefined,
+    minWidth: METRIC_NAME_COLUMN_WIDTH,
+    valueGetter: (params) => {
+      const { name, displayName } = params.data as Metric;
+
+      return displayName || name;
+    },
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  {
+    ...DESCRIPTION_COLUMN,
+    cellRenderer: ClampedTextCellRenderer,
+    cellRendererParams: { lines: 2 },
+    wrapText: true,
+    tooltipValueGetter: () => undefined,
+    minWidth: METRIC_DESCRIPTION_COLUMN_WIDTH,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  {
+    colId: 'outups',
+    headerName: t(TestSuitesI18nKey.Outputs),
+    cellRenderer: TagsCellRenderer,
+    valueGetter: (params) => {
+      const data = params.data as Metric;
+
+      return getMetricOutputTags(data?.latestVersion);
+    },
+    tooltipValueGetter: (params) => {
+      const data = params.data as Metric;
+
+      return getMetricOutputTags(data?.latestVersion).join(', ');
+    },
+    cellRendererParams: (params: { value: string[] }) => ({
+      items: params.value,
+      tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
+    }),
+    maxWidth: METRIC_OUTPUTS_COLUMN_WIDTH,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  {
+    field: 'providerId',
+    colId: 'providerId',
+    headerName: t(EntityFieldsI18nKey.provider),
+    maxWidth: METRIC_PROVIDER_COLUMN_WIDTH,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
 ];
 
 export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
@@ -1718,10 +2037,12 @@ export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
     ...baseStringFilter,
   },
   {
-    field: 'source',
     colId: 'source',
     headerName: t(QueriesI18nKey.Source),
     hide: false,
+    valueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
+    tooltipValueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
+    filterValueGetter: (params) => savedQuerySourcesLabel((params.data as SavedQuery)?.source),
     ...baseStringFilter,
   },
   { field: 'tag', colId: 'tag', headerName: t(QueriesI18nKey.Tag), hide: false, ...baseStringFilter },
@@ -1744,7 +2065,7 @@ export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
     colId: 'editor',
     headerName: t(QueriesI18nKey.Editor),
     hide: false,
-    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery)]),
+    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery, null)]),
     ...baseStringFilter,
   },
   {

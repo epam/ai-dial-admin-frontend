@@ -147,7 +147,6 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
             ) : (
               <JsonEditor
                 entity={requestBody}
-                options={{ stickyScroll: { enabled: false } }}
                 setSelectedEntity={onChangeConfiguration as Dispatch<SetStateAction<Record<string, unknown>>>}
               />
             )}
@@ -156,11 +155,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
         <Divider />
         <div className="flex-1 basis-0 min-h-0 flex flex-col">
           <h3 className="mb-4">{t(BasicI18nKey.Response)}</h3>
-          {isRequestSend ? (
-            <DialLoader />
-          ) : (
-            <JsonEditor entity={response} options={{ stickyScroll: { enabled: false } }} readonly={true} />
-          )}
+          {isRequestSend ? <DialLoader /> : <JsonEditor entity={response} readonly={true} />}
         </div>
       </div>
     </div>

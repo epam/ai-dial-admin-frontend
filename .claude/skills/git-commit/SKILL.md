@@ -1,6 +1,5 @@
 ---
 name: git-commit
-model: claude-haiku-4-5-20251001
 context: fork
 effort: low
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Edit(.claude/reference/areas.md)
@@ -8,10 +7,13 @@ arguments: ticket area
 argument-hint: "[ticket] [area]"
 description: >
   Use this skill whenever the user wants to commit, push, or ship changes in a git repository.
-  Triggers include: "commit changes", "push my changes", "ship it", "commit and push", "create a branch and commit",
-  "make a PR", "open a pull request", "create draft PR", or any variation of committing/pushing work.
-  Always use this skill when the user mentions committing — even casually — as it handles the full cycle:
-  branch → add → commit → push → (optionally) PR, with Conventional Commits format and automatic area detection.
+  This skill is intended to run with the developer's configured default Haiku model.
+  Triggers include: "commit changes", "push my changes", "ship it", "commit and push",
+  "create a branch and commit", "make a PR", "open a pull request", "create draft PR",
+  or any variation of committing/pushing work.
+  Always use this skill when the user mentions committing — even casually — as it handles
+  the full cycle: branch → add → commit → push → (optionally) PR, with Conventional Commits
+  format and automatic area detection.
 ---
 
 # Git Commit Skill
@@ -119,11 +121,14 @@ Format:
 |------|-------------|
 | `feat` | New feature or capability |
 | `fix` | Bug fix |
-| `chore` | Maintenance, deps, config, tooling |
-| `refactor` | Restructuring without behavior change |
+| `chore` | Maintenance, deps, config, tooling, refactoring, formatting, removing a feature |
 | `docs` | Documentation only |
 | `test` | Tests only |
-| `style` | Formatting, no logic change |
+| `ci` | CI workflows and pipelines |
+
+These six are the only types the `pr-title-check` CI job accepts (`epam/ai-dial-ci`). Never use
+`refactor`, `style`, `perf` or any other type: the PR title fails validation. A refactor or a feature
+removal that changes no intended behavior is `chore`; one that corrects unwanted behavior is `fix`.
 
 **Message rules:**
 - Analyze the diff to understand *what* changed and *why*

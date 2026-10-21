@@ -13,6 +13,9 @@ import {
   AnalyticsTable,
   AnalyticsTableColumn,
   AnalyticsTableType,
+  Cardinality,
+  DraftSchemaDto,
+  TableWriteMode,
 } from '@/src/models/analytics/table';
 import {
   ColumnEditValues,
@@ -21,8 +24,13 @@ import {
   CreateTableForm,
   DraftSchemaForm,
   ExistingColumnNames,
+  KeySelections,
 } from '@/src/models/analytics/tables-ui';
-import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/utils/validation/analytics-table-error';
+import {
+  getAnalyticsEnumValuesError,
+  getAnalyticsIdentifierError,
+  getAnalyticsLengthError,
+} from '@/src/utils/validation/analytics-table-error';
 
 type Translate = (key: string, args?: Record<string, string | number>) => string;
 
@@ -32,12 +40,17 @@ export const tableDetailHref = (name: string): string =>
 let counter = 0;
 export const nextColumnId = (): string => `col-${++counter}`;
 
+// The backend rejects a nullable column of these types, so the editors never offer the flag for them.
+export const isNullableLockedType = (type: AnalyticsFieldType): boolean =>
+  type === AnalyticsFieldType.Array || type === AnalyticsFieldType.Object || type === AnalyticsFieldType.Map;
+
 export const createColumnRow = (): ColumnRow => ({
   id: nextColumnId(),
   source_name: '',
   name: '',
   type: AnalyticsFieldType.String,
   element_type: '',
+  enum_values: [],
   tag: '',
   display_name: '',
   description: '',
@@ -45,31 +58,87 @@ export const createColumnRow = (): ColumnRow => ({
   sensitive: false,
 });
 
-export const getTemporalColumnNames = (columns: ColumnRow[]): string[] => {
+const collectColumnNames = (columns: ColumnRow[], isEligible: (column: ColumnRow) => boolean): string[] => {
   const seen = new Set<string>();
   columns.forEach((c) => {
     const s = c.source_name.trim();
-    if (s && (c.type === AnalyticsFieldType.Date || c.type === AnalyticsFieldType.Timestamp)) seen.add(s);
+    if (s && isEligible(c)) seen.add(s);
   });
   return [...seen];
 };
 
-export const getIdentityColumnNames = (columns: ColumnRow[]): string[] => {
-  const seen = new Set<string>();
-  columns.forEach((c) => {
-    const s = c.source_name.trim();
-    if (s && !c.nullable && !c.sensitive) seen.add(s);
+// The backend refuses a column of these types as a scan cursor (`ScanMetadataRules`).
+const SCAN_CURSOR_REFUSED_TYPES: AnalyticsFieldType[] = [
+  AnalyticsFieldType.Array,
+  AnalyticsFieldType.Object,
+  AnalyticsFieldType.Map,
+];
+
+// The store defines no comparison over these types, so the backend refuses one as any kind of table key.
+const isKeyableType = (type: AnalyticsFieldType): boolean =>
+  type !== AnalyticsFieldType.Object && type !== AnalyticsFieldType.Map;
+
+const isKeyableRow = (c: ColumnRow): boolean => !c.nullable && isKeyableType(c.type);
+
+const isTemporalRow = (c: ColumnRow): boolean =>
+  c.type === AnalyticsFieldType.Date || c.type === AnalyticsFieldType.Timestamp;
+
+export const getOrderingKeyColumnNames = (columns: ColumnRow[]): string[] => collectColumnNames(columns, isKeyableRow);
+
+export const getPartitionColumnNames = (columns: ColumnRow[]): string[] =>
+  collectColumnNames(columns, (c) => isTemporalRow(c) && !c.nullable);
+
+export const getIdentityColumnNames = (columns: ColumnRow[]): string[] =>
+  collectColumnNames(columns, (c) => !c.nullable && !c.sensitive && !SCAN_CURSOR_REFUSED_TYPES.includes(c.type));
+
+export const getVersionColumnNames = (columns: ColumnRow[]): string[] =>
+  collectColumnNames(columns, (c) => !c.nullable && !c.sensitive && c.type === AnalyticsFieldType.Timestamp);
+
+export const getGrainKeyColumnNames = (columns: AnalyticsTableColumn[]): string[] =>
+  columns.filter((c) => isKeyableType(c.type)).map((c) => c.source_name);
+
+// Neither end of a rename is followed when another row shares it: the old name may still be that row's, and
+// the new one already is.
+const getRenames = (prevRows: ColumnRow[], nextRows: ColumnRow[]): Map<string, string> => {
+  const prevNames = new Map(prevRows.map((r) => [r.id, r.source_name.trim()]));
+  const nextNameCounts = new Map<string, number>();
+  nextRows.forEach((r) => {
+    const name = r.source_name.trim();
+    nextNameCounts.set(name, (nextNameCounts.get(name) ?? 0) + 1);
   });
-  return [...seen];
+  const renames = new Map<string, string>();
+  nextRows.forEach((row) => {
+    const prev = prevNames.get(row.id);
+    const next = row.source_name.trim();
+    if (prev && prev !== next && !nextNameCounts.has(prev) && (nextNameCounts.get(next) ?? 0) <= 1) {
+      renames.set(prev, next);
+    }
+  });
+  return renames;
 };
 
-export const getVersionColumnNames = (columns: ColumnRow[]): string[] => {
-  const seen = new Set<string>();
-  columns.forEach((c) => {
-    const s = c.source_name.trim();
-    if (s && !c.nullable && !c.sensitive && c.type === AnalyticsFieldType.Timestamp) seen.add(s);
-  });
-  return [...seen];
+// A renamed column's selections follow it to the new name (a blank name carries nothing); whatever a field no
+// longer accepts is dropped.
+export const reconcileKeySelections = (
+  prevRows: ColumnRow[],
+  nextRows: ColumnRow[],
+  selections: KeySelections,
+): KeySelections => {
+  const renames = getRenames(prevRows, nextRows);
+  const follow = (name: string): string => renames.get(name) ?? name;
+  const keepIfEligible = (name: string, eligible: string[]): string =>
+    eligible.includes(follow(name)) ? follow(name) : '';
+
+  const orderingEligible = getOrderingKeyColumnNames(nextRows);
+  const partitionColumn = keepIfEligible(selections.partitionColumn, getPartitionColumnNames(nextRows));
+
+  return {
+    orderingKey: [...new Set(selections.orderingKey.map(follow))].filter((k) => orderingEligible.includes(k)),
+    partitionColumn,
+    granularity: selections.partitionColumn && !partitionColumn ? '' : selections.granularity,
+    identityColumn: keepIfEligible(selections.identityColumn, getIdentityColumnNames(nextRows)),
+    versionColumn: keepIfEligible(selections.versionColumn, getVersionColumnNames(nextRows)),
+  };
 };
 
 export const createTableForm = (tables: AnalyticsTable[]): CreateTableForm => {
@@ -78,6 +147,7 @@ export const createTableForm = (tables: AnalyticsTable[]): CreateTableForm => {
     name: '',
     description: '',
     sourceTable: firstSource?.name ?? '',
+    write: TableWriteMode.Append,
   };
 };
 
@@ -88,6 +158,7 @@ const toColumnRows = (columns: AnalyticsTableColumn[]): ColumnRow[] =>
     name: c.name,
     type: c.type,
     element_type: c.element_type ?? '',
+    enum_values: c.enum_values ?? [],
     tag: c.tag ?? '',
     display_name: c.display_name ?? '',
     description: c.description ?? '',
@@ -141,12 +212,19 @@ export const getColumnRowErrors = (
       error.element_type = t(ErrorI18nKey.RequiredField);
     }
 
+    if (row.type === AnalyticsFieldType.Enum) {
+      const enumValuesError = getAnalyticsEnumValuesError(row.enum_values, t);
+      if (enumValuesError) error.enum_values = enumValuesError.text;
+    }
+
     return error;
   });
 };
 
 export const hasColumnRowErrors = (errors: ColumnRowError[]): boolean =>
-  errors.some((e) => e.source_name || e.name || e.tag || e.display_name || e.description || e.element_type);
+  errors.some(
+    (e) => e.source_name || e.name || e.tag || e.display_name || e.description || e.element_type || e.enum_values,
+  );
 
 const normalized = (value?: string): string => (value ?? '').trim();
 
@@ -179,28 +257,73 @@ export const buildColumnEditPatch = (
 export const isRenameRestricted = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
   column.source_name.startsWith('_') ||
   column.source_name === table.grain?.grain_key ||
+  column.source_name === table.partition_by?.column ||
   Boolean(table.ordering_key?.includes(column.source_name));
 
 export const isScanMetadataColumn = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
   column.source_name === table.identity_column || column.source_name === table.version_column;
+
+export const isDropRestrictedColumn = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
+  isScanMetadataColumn(table, column) ||
+  column.source_name === table.partition_by?.column ||
+  Boolean(table.ordering_key?.includes(column.source_name));
 
 export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
   rows
     .filter((r) => r.source_name.trim() && r.name.trim())
     .map((r) => {
       const isArray = r.type === AnalyticsFieldType.Array;
+      const isEnum = r.type === AnalyticsFieldType.Enum;
       return {
         source_name: r.source_name.trim(),
         name: r.name.trim(),
         type: r.type,
-        nullable: isArray ? false : r.nullable,
+        nullable: isNullableLockedType(r.type) ? false : r.nullable,
         ...(isArray && r.element_type ? { element_type: r.element_type } : {}),
+        // Gated on the type, so retyping a row cannot leak a domain it no longer has. Trimmed here because
+        // the service stores them trimmed — sending the untrimmed spelling would make two values it treats
+        // as equal look distinct in the request.
+        ...(isEnum && r.enum_values.length ? { enum_values: r.enum_values.map((v) => v.trim()) } : {}),
         ...(r.tag.trim() ? { tag: r.tag.trim() } : {}),
         ...(r.display_name.trim() ? { display_name: r.display_name.trim() } : {}),
         ...(r.description.trim() ? { description: r.description.trim() } : {}),
         ...(r.sensitive ? { sensitive: true } : {}),
       };
     });
+
+// The schema body a draft's column-by-column surface would submit. Pure and callable on *any* form, not
+// just the live one, so the same builder can be applied to a freshly seeded baseline form and the two
+// DTOs compared — which is how `useDraftSchemaForm` decides `isChanged`. Comparing the forms themselves
+// cannot work: `createDraftSchemaForm` mints a new `ColumnRow.id` on every call, so a re-derived
+// baseline form never deep-equals the live one (design.md D9).
+export const buildDraftSchemaDto = (form: DraftSchemaForm, type: AnalyticsTableType): DraftSchemaDto => {
+  const columns = toTableColumns(form.columns);
+
+  if (type !== AnalyticsTableType.Source) {
+    return {
+      columns,
+      ...(form.grainKey.trim() ? { grain_key: form.grainKey.trim() } : {}),
+      cardinality: Cardinality.ZeroOrOne,
+    };
+  }
+
+  const orderingNames = getOrderingKeyColumnNames(form.columns);
+  const orderingKey = form.orderingKey.filter((k) => orderingNames.includes(k));
+
+  return {
+    columns,
+    ...(orderingKey.length ? { ordering_key: orderingKey } : {}),
+    ...(form.partitionColumn && form.granularity && getPartitionColumnNames(form.columns).includes(form.partitionColumn)
+      ? { partition_by: { column: form.partitionColumn, granularity: form.granularity } }
+      : {}),
+    ...(form.identityColumn && getIdentityColumnNames(form.columns).includes(form.identityColumn)
+      ? { identity_column: form.identityColumn }
+      : {}),
+    ...(form.versionColumn && getVersionColumnNames(form.columns).includes(form.versionColumn)
+      ? { version_column: form.versionColumn }
+      : {}),
+  };
+};
 
 // A type-shaped placeholder value for the write-rows template, so the example stays valid JSON for the
 // column's actual type instead of always suggesting a string (which the backend would reject for e.g. a
@@ -214,6 +337,7 @@ const templateValueFor = (type: AnalyticsFieldType): unknown => {
     case AnalyticsFieldType.Boolean:
       return false;
     case AnalyticsFieldType.Object:
+    case AnalyticsFieldType.Map:
       return {};
     case AnalyticsFieldType.Array:
       return [];

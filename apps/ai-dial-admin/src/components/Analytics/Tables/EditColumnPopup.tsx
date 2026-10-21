@@ -2,16 +2,21 @@
 
 import { FC, useState } from 'react';
 
-import { DialFormPopup, DialInput, DialSwitch, PopupSize } from '@epam/ai-dial-ui-kit';
+import { noop } from 'lodash';
 
+import { DialFormPopup, DialInput, DialSwitch, PopupSize, Tooltip } from '@epam/ai-dial-ui-kit';
+import { IconLock } from '@tabler/icons-react';
+
+import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
 import { buildColumnEditPatch } from '@/src/components/Analytics/Tables/utils';
 import {
   ANALYTICS_DESCRIPTION_MAX_LENGTH,
   ANALYTICS_DISPLAY_NAME_MAX_LENGTH,
   ANALYTICS_TAG_MAX_LENGTH,
 } from '@/src/constants/analytics/tables';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsSchemaPatch, AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { ColumnEditValues } from '@/src/models/analytics/tables-ui';
 import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/utils/validation/analytics-table-error';
@@ -20,6 +25,8 @@ interface Props {
   column: AnalyticsTableColumn;
   renameDisabled?: boolean;
   sensitiveDisabled?: boolean;
+  // The viewer lacks the sensitive clearance on this table, so the service would refuse the change.
+  isSensitiveLocked?: boolean;
   existingNames?: string[];
   onClose: () => void;
   onSubmit: (patch: AnalyticsSchemaPatch) => void;
@@ -29,6 +36,7 @@ const EditColumnPopup: FC<Props> = ({
   column,
   renameDisabled,
   sensitiveDisabled,
+  isSensitiveLocked,
   existingNames = [],
   onClose,
   onSubmit,
@@ -42,6 +50,11 @@ const EditColumnPopup: FC<Props> = ({
     description: column.description ?? '',
     sensitive: column.sensitive ?? false,
   });
+
+  const getSensitiveCaption = (): string | undefined => {
+    if (sensitiveDisabled) return t(AnalyticsTablesI18nKey.ScanColumnNotSensitive);
+    if (isSensitiveLocked) return t(AnalyticsTableAccessI18nKey.SensitiveLocked);
+  };
 
   const setValue = (key: 'name' | 'display_name' | 'tag' | 'description') => (value?: string) =>
     setValues((prev) => ({ ...prev, [key]: value ?? '' }));
@@ -58,6 +71,11 @@ const EditColumnPopup: FC<Props> = ({
   const hasError = Boolean(nameError || tagError || displayNameError || descriptionError);
 
   const patch = !hasError && values.name.trim() ? buildColumnEditPatch(column, values) : null;
+
+  // Read-only by contract, not by choice: the service rejects a schema-patch `update` carrying `enum_values`
+  // with 422 rather than ignoring it, since widening a ClickHouse enum rewrites the column. Shown rather
+  // than omitted so the closed domain is discoverable at all — `buildColumnEditPatch` never emits the key.
+  const enumValues = column.type === AnalyticsFieldType.Enum ? (column.enum_values ?? []) : [];
 
   return (
     <DialFormPopup
@@ -104,14 +122,37 @@ const EditColumnPopup: FC<Props> = ({
           invalid={Boolean(descriptionError)}
           onChange={setValue('description')}
         />
+        {enumValues.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {/* The same field the schema editor authors the domain with, read-only — so the domain reads the
+                same in both places, and the app's own tag treatment applies instead of a bespoke one. */}
+            <EnumValuesField disabled rowId={column.name} values={enumValues} />
+            <span className="dial-small-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesImmutable)}</span>
+          </div>
+        )}
         <DialSwitch
-          switchId="column-edit-sensitive"
-          label={t(AnalyticsTablesI18nKey.Sensitive)}
-          isOn={values.sensitive}
-          disabled={sensitiveDisabled}
-          caption={sensitiveDisabled ? t(AnalyticsTablesI18nKey.ScanColumnNotSensitive) : undefined}
-          onChange={setSensitive}
+          switchId="column-edit-nullable"
+          label={t(AnalyticsTablesI18nKey.Nullable)}
+          isOn={Boolean(column.nullable)}
+          disabled
+          caption={t(AnalyticsTablesI18nKey.ColumnNullableFixed)}
+          onChange={noop}
         />
+        <div className="flex items-start gap-2">
+          <DialSwitch
+            switchId="column-edit-sensitive"
+            label={t(AnalyticsTablesI18nKey.Sensitive)}
+            isOn={values.sensitive}
+            disabled={sensitiveDisabled || isSensitiveLocked}
+            caption={getSensitiveCaption()}
+            onChange={setSensitive}
+          />
+          {isSensitiveLocked && (
+            <Tooltip tooltip={t(AnalyticsTableAccessI18nKey.SensitiveLocked)}>
+              <IconLock size={16} className="text-secondary" aria-hidden />
+            </Tooltip>
+          )}
+        </div>
       </div>
     </DialFormPopup>
   );

@@ -1,7 +1,13 @@
+import { Token } from '@/src/models/auth';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
-import { stripAssetIdentityFields } from '@/src/server/assets/exim';
+import { AnalyticsRunnerApi } from '@/src/server/analytics/analytics-runner-api';
+import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
+import { stripAssetIdentityFields, stripMetadata } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
+import { CatalogSchemasApi } from '@/src/server/core/catalog-schemas-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
+import { CoreUtilityApi } from '@/src/server/core/core-utility-api';
+import { DeploymentConfigurationApi } from '@/src/server/core/deployment-configuration-api';
 import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
@@ -170,6 +176,16 @@ export const analyticsDataApi = new AnalyticsDataApi({
   host: process.env.DIAL_ANALYTICS_API_URL,
 });
 
+export const analyticsAuditApi = new AnalyticsAuditApi({
+  host: process.env.DIAL_ANALYTICS_API_URL,
+});
+
+// The enrichment runner is a separate deployment from the registry above, with its own availability:
+// it can be down, or absent entirely, while every analytics read still works.
+export const analyticsRunnerApi = new AnalyticsRunnerApi({
+  host: process.env.DIAL_ANALYTICS_RUNNER_API_URL,
+});
+
 // DIAL Core direct clients (publications migration)
 export const bucketApi = new BucketApi({
   host: process.env.DIAL_CORE_API_URL,
@@ -202,6 +218,18 @@ export const appRunnerSchemaApi = new AppRunnerSchemaApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+// Catalog-schema reads against Core's merged configuration — the picker's option list and the
+// single-schema resolve the values editor renders from.
+export const catalogSchemasApi = new CatalogSchemasApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Generic deployment-configuration read (`v1/deployments/{name}/configuration`) — resolves any
+// deployment type Core knows, including interceptors, by plain name.
+export const deploymentConfigurationApi = new DeploymentConfigurationApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
 // Config-file half of Core's merged configuration — the entities declared in aidial.config.json
 // rather than written through the API. Read-only, and separate from assetApi because this route
 // family is not bucket-scoped.
@@ -226,6 +254,17 @@ export const queryAssistantApi = new QueryAssistantApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+// Deployment listing/lookup, the global-settings singleton, and user identity — endpoints the
+// admin backend only ever proxied to Core unchanged.
+export const coreUtilityApi = new CoreUtilityApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// User identity: the admin backend's own security-info endpoint when it's configured (it computes
+// the FULL_ADMIN/READ_ONLY_ADMIN roles AppContext relies on), otherwise Core directly.
+export const getUserInfo = (token: Token) =>
+  process.env.DIAL_ADMIN_API_URL ? utilityApi.getUserInfo(token) : coreUtilityApi.getUserInfo(token);
+
 /**
  * Application/toolset-resource content DTOs reject `folderId`/`path`/`version`/`id`
  * (`FAIL_ON_UNKNOWN_PROPERTIES`) — those must be stripped before `put`. Conversation/prompt
@@ -239,7 +278,8 @@ const RESOURCE_TYPES_STRIPPED_BEFORE_PUT: ReadonlySet<ResourceType> = new Set([
 ]);
 
 // Publications talk to DIAL Core directly, including per-resource enrichment (asset get/put)
-// for the four versioned types, now that the assets→Core migration has landed AssetApi.
+// for the four ResourceController-served types (application/toolset versioned, conversation/
+// prompt versionless), now that the assets→Core migration has landed AssetApi.
 // File resources were already Core-native via filesCoreApi since Phase 1.
 const publicationEnrichmentClients: EnrichmentClients = {
   getAsset: (token, path, type, etag) => assetApi.getMergedWithEtag(token, type, path, etag),
@@ -247,10 +287,17 @@ const publicationEnrichmentClients: EnrichmentClients = {
     assetApi.put(
       token,
       type,
-      (asset as { path: string }).path,
       RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
-        ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
-        : asset,
+        ? (asset as { _metadata: { path: string } })._metadata.path
+        : (asset as { path: string }).path,
+      // `_metadata` rides the enriched review copies — stripped for every type (the config DTOs
+      // 400 on it, the prompt/conversation DTOs would store it verbatim); the flat identity strip
+      // stays application/toolset-only per the DTO contract above.
+      stripMetadata(
+        RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
+          ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
+          : asset,
+      ),
       { etag },
     ),
   getBucket: (token) => bucketApi.getBucket(token),

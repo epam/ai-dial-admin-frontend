@@ -14,6 +14,7 @@ import {
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -46,8 +47,9 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { featureFlags } = useAppContext();
 
-  const tabs: TabModel[] = getInterceptorTabs(t);
+  const tabs: TabModel[] = getInterceptorTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(structuredClone(originalInterceptor));

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
-import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
+import AttachmentInput, { AttachmentType } from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -45,15 +45,15 @@ const EntityAttachments = <T extends object>({ entity, onChangeEntity, isAsset }
   );
 
   const onChangeAttachmentTypes = useCallback(
-    (types?: string[]) => {
-      if (types) {
-        onChangeEntity({ ...entity, [attachmentTypesKey]: types } as T);
-      } else {
+    (types?: string[], type?: AttachmentType) => {
+      if (type === AttachmentType.NONE) {
         onChangeEntity({
           ...entity,
           [maxAttachmentsKey]: void 0,
           [attachmentTypesKey]: void 0,
         } as T);
+      } else {
+        onChangeEntity({ ...entity, [attachmentTypesKey]: types } as T);
       }
     },
     [entity, onChangeEntity, maxAttachmentsKey, attachmentTypesKey],
@@ -66,7 +66,7 @@ const EntityAttachments = <T extends object>({ entity, onChangeEntity, isAsset }
         label={t(AttachmentsI18nKey.Attachments)}
         placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
         availableItems={mimeMapping}
-        onChange={(values) => onChangeAttachmentTypes(values)}
+        onChange={onChangeAttachmentTypes}
       />
       {!!inputAttachmentTypes?.length && (
         <DialNumberInput

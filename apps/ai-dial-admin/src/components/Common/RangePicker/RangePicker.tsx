@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 
 import { RangeFsmState, differenceInCalendarDays, hydrate, reduce, toCommit, toDisplayRange } from './range-fsm';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
 // @ts-ignore
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -29,7 +29,7 @@ const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
       if (!day) return;
       const next = reduce(state, day, maxDays);
       setState(next);
-      onChange(toCommit(next));
+      onChange(toCommit(next, maxDays));
     },
     [state, maxDays, onChange],
   );

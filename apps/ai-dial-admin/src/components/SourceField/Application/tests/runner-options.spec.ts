@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
+import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import {
   buildAppRunnerOptions,
+  getRunnerOpenUrl,
   getRunnerOrigin,
-  getRunnerReference,
 } from '@/src/components/SourceField/Application/utils';
 import { LIST_RUNNER_COLUMNS, PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { SourceI18nKey } from '@/src/constants/i18n';
@@ -30,14 +30,14 @@ describe('buildAppRunnerOptions', () => {
   it('references an entity runner by its bare $id', () => {
     const [option] = buildAppRunnerOptions([entityRunner], []);
 
-    expect(option.origin).toBe(AppRunnerOrigin.Entity);
+    expect(option.origin).toBe(AppRunnerOrigin.Config);
     expect(option.reference).toBe('http://entity-runner');
   });
 
   it('references an asset runner by its Core resource name', () => {
     const [option] = buildAppRunnerOptions([], [assetRunner]);
 
-    expect(option.origin).toBe(AppRunnerOrigin.Asset);
+    expect(option.origin).toBe(AppRunnerOrigin.Platform);
     expect(option.reference).toBe('schemas/platform/http%3A%2F%2Fasdqwe');
   });
 
@@ -67,27 +67,12 @@ describe('buildAppRunnerOptions', () => {
   it('merges both populations, entity rows first', () => {
     const options = buildAppRunnerOptions([entityRunner], [assetRunner]);
 
-    expect(options.map((o) => o.origin)).toEqual([AppRunnerOrigin.Entity, AppRunnerOrigin.Asset]);
+    expect(options.map((o) => o.origin)).toEqual([AppRunnerOrigin.Config, AppRunnerOrigin.Platform]);
   });
 
   it('tolerates either list being absent', () => {
     expect(buildAppRunnerOptions(null, null)).toEqual([]);
     expect(buildAppRunnerOptions(undefined, undefined)).toEqual([]);
-  });
-});
-
-describe('getRunnerReference / getRunnerOrigin', () => {
-  it('falls back to $id for a plain scheme from an untouched picker consumer', () => {
-    expect(getRunnerReference(entityRunner)).toBe('http://entity-runner');
-    expect(getRunnerOrigin(entityRunner)).toBe(AppRunnerOrigin.Entity);
-  });
-
-  it('reads the reference off a built option rather than its $id', () => {
-    const [option] = buildAppRunnerOptions([], [assetRunner]);
-
-    expect(getRunnerReference(option)).toBe('schemas/platform/http%3A%2F%2Fasdqwe');
-    expect(getRunnerReference(option)).not.toBe(option.$id);
-    expect(getRunnerOrigin(option)).toBe(AppRunnerOrigin.Asset);
   });
 });
 
@@ -113,7 +98,30 @@ describe('PICKER_RUNNER_COLUMNS', () => {
   it('renders the Source cell per origin', () => {
     const format = columns.find((c) => c.field === 'origin')?.valueFormatter as (p: { value: string }) => string;
 
-    expect(format({ value: AppRunnerOrigin.Asset })).toBe(SourceI18nKey.AssetRunner);
-    expect(format({ value: AppRunnerOrigin.Entity })).toBe(SourceI18nKey.EntityRunner);
+    expect(format({ value: AppRunnerOrigin.Platform })).toBe(SourceI18nKey.PlatformRunner);
+    expect(format({ value: AppRunnerOrigin.Config })).toBe(SourceI18nKey.ConfigRunner);
+  });
+});
+
+describe('getRunnerOpenUrl', () => {
+  const [configOption, platformOption] = buildAppRunnerOptions(
+    [{ $id: 'urn:runner:entity' } as DialApplicationScheme],
+    [assetRunner],
+  );
+
+  it('opens a Platform runner by its storage path', () => {
+    expect(getRunnerOpenUrl(platformOption, 'en')).toBe('/en/platform-app-runners/http%253A%252F%252Fasdqwe');
+  });
+
+  it('opens a configuration-file runner by $id in config-file mode', () => {
+    expect(getRunnerOpenUrl(configOption, 'en')).toBe('/en/platform-app-runners/urn%3Arunner%3Aentity?configFile=true');
+  });
+
+  it('has no target for a Platform option without a path or a Config option without a reference', () => {
+    const withoutPath: AppRunnerOption = { ...platformOption, path: undefined };
+    const withoutReference: AppRunnerOption = { ...configOption, reference: '' };
+
+    expect(getRunnerOpenUrl(withoutPath, 'en')).toBeUndefined();
+    expect(getRunnerOpenUrl(withoutReference, 'en')).toBeUndefined();
   });
 });

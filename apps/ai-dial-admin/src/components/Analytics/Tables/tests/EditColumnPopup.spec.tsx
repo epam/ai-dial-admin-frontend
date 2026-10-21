@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import {
+  AnalyticsTableAccessI18nKey,
+  AnalyticsTablesI18nKey,
+  ButtonsI18nKey,
+  ErrorI18nKey,
+} from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
@@ -22,6 +27,9 @@ const renderPopup = (props?: Partial<Parameters<typeof EditColumnPopup>[0]>) => 
   render(<EditColumnPopup column={COLUMN} onClose={onClose} onSubmit={onSubmit} {...props} />);
   return { onSubmit, onClose };
 };
+
+const nullableSwitch = () => screen.getAllByRole('checkbox')[0];
+const sensitiveSwitch = () => screen.getAllByRole('checkbox')[1];
 
 const setInput = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -127,7 +135,7 @@ describe('EditColumnPopup', () => {
     const user = userEvent.setup();
     const { onSubmit } = renderPopup();
 
-    const sensitive = screen.getByRole('checkbox');
+    const sensitive = sensitiveSwitch();
     expect(sensitive).not.toBeChecked();
     fireEvent.click(sensitive);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -138,7 +146,7 @@ describe('EditColumnPopup', () => {
   test('sensitiveDisabled disables the switch and explains why', () => {
     renderPopup({ sensitiveDisabled: true });
 
-    expect(screen.getByRole('checkbox')).toBeDisabled();
+    expect(sensitiveSwitch()).toBeDisabled();
     expect(screen.getByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).toBeInTheDocument();
   });
 
@@ -156,10 +164,117 @@ describe('EditColumnPopup', () => {
     });
   });
 
+  test('isSensitiveLocked locks the switch, keeps its value and gives the reason', () => {
+    renderPopup({ isSensitiveLocked: true, column: { ...COLUMN, sensitive: true } });
+
+    expect(sensitiveSwitch()).toBeDisabled();
+    expect(sensitiveSwitch()).toBeChecked();
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.SensitiveLocked)).toBeInTheDocument();
+  });
+
+  test('isSensitiveLocked leaves every other field editable and submits without a sensitivity change', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup({ isSensitiveLocked: true });
+
+    setInput(AnalyticsTablesI18nKey.Description, 'Row identity');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', description: 'Row identity' }] });
+  });
+
+  test('a scan-metadata column keeps its own reason when the clearance is also missing', () => {
+    renderPopup({ sensitiveDisabled: true, isSensitiveLocked: true });
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.SensitiveLocked)).toBeNull();
+  });
+
   test('the switch is enabled and unexplained by default', () => {
     renderPopup();
 
-    expect(screen.getByRole('checkbox')).toBeEnabled();
+    expect(sensitiveSwitch()).toBeEnabled();
     expect(screen.queryByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.SensitiveLocked)).not.toBeInTheDocument();
+  });
+
+  test("shows a nullable column's flag on and a non-nullable one's off, read-only and explained", () => {
+    const { unmount } = render(
+      <EditColumnPopup column={{ ...COLUMN, nullable: true }} onClose={vi.fn()} onSubmit={vi.fn()} />,
+    );
+    const nullable = nullableSwitch();
+    expect(nullable).toBeChecked();
+    expect(nullable).toBeDisabled();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ColumnNullableFixed)).toBeInTheDocument();
+    unmount();
+
+    renderPopup();
+    expect(nullableSwitch()).not.toBeChecked();
+  });
+
+  test('an edit patch never carries the nullable flag', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup();
+
+    setInput(AnalyticsTablesI18nKey.Tag, 'cost');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', tag: 'cost' }] });
+  });
+
+  describe('an enum column', () => {
+    const ENUM_COLUMN: AnalyticsTableColumn = {
+      source_name: 'status',
+      name: 'status',
+      type: AnalyticsFieldType.Enum,
+      enum_values: ['pending', 'running', 'failed'],
+    };
+
+    // Shown through the same field the schema editor authors with, in its disabled mode — so read-only here
+    // means there is no way into the value popup at all, not merely that the values render as text.
+    test('shows the declared values with no way to edit them', () => {
+      renderPopup({ column: ENUM_COLUMN });
+
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValues)).toBeInTheDocument();
+      for (const value of ['pending', 'running', 'failed']) {
+        expect(screen.getAllByText(value).length).toBeGreaterThan(0);
+      }
+      expect(screen.queryByRole('button', { name: 'open-popup' })).toBeNull();
+    });
+
+    // Presenting the restriction is the point — without it the closed domain is invisible, and an operator
+    // would have no way to learn that widening it means dropping and re-adding the column.
+    test('says the value set cannot be changed', () => {
+      renderPopup({ column: ENUM_COLUMN });
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValuesImmutable)).toBeInTheDocument();
+    });
+
+    test('shows nothing of the kind for a column of any other type', () => {
+      renderPopup();
+
+      expect(screen.queryByRole('group', { name: AnalyticsTablesI18nKey.EnumValues })).toBeNull();
+      expect(screen.queryByText(AnalyticsTablesI18nKey.EnumValuesImmutable)).toBeNull();
+    });
+
+    // The service answers 422 for an `update` entry carrying `enum_values` rather than ignoring it.
+    test('a metadata edit submits a patch that does not carry the domain', async () => {
+      const user = userEvent.setup();
+      const { onSubmit } = renderPopup({ column: ENUM_COLUMN });
+
+      setInput(AnalyticsTablesI18nKey.DisplayName, 'Run status');
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+      expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'status', display_name: 'Run status' }] });
+      expect(JSON.stringify(onSubmit.mock.calls[0][0])).not.toContain('enum_values');
+    });
+
+    test('a rename is still offered and carries no domain either', async () => {
+      const user = userEvent.setup();
+      const { onSubmit } = renderPopup({ column: ENUM_COLUMN });
+
+      setInput(AnalyticsTablesI18nKey.ColumnName, 'run_status');
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+      expect(onSubmit).toHaveBeenCalledWith({ rename: [{ from: 'status', to: 'run_status' }] });
+    });
   });
 });

@@ -48,31 +48,8 @@ export class CorePublicationsApi extends CoreApi {
     this.clients = clients;
   }
 
-  getPublicationApplicationList(token: Token): Promise<Publication[] | undefined> {
-    return this.listByType(ResourceType.APPLICATION, token);
-  }
-
-  getPublicationToolsetList(token: Token): Promise<Publication[] | undefined> {
-    return this.listByType(ResourceType.TOOLSET, token);
-  }
-
-  getPublicationPromptList(token: Token): Promise<Publication[] | undefined> {
-    return this.listByType(ResourceType.PROMPT, token);
-  }
-
-  getPublicationFileList(token: Token): Promise<Publication[] | undefined> {
-    return this.listByType(ResourceType.FILE, token);
-  }
-
-  getPublicationConversationList(token: Token): Promise<Publication[] | undefined> {
-    return this.listByType(ResourceType.CONVERSATION, token);
-  }
-
-  getPublicationSkillList(token: Token): Promise<Publication[] | undefined> {
-    return this.listByType(ResourceType.SKILL, token);
-  }
-
-  private async listByType(type: ResourceType, token: Token): Promise<Publication[] | undefined> {
+  /** Every publication of every resource type, each tagged with its resolved `resourceType`. */
+  async getPublicationList(token: Token): Promise<Publication[] | undefined> {
     const res = await this.post<{ url: string }, CorePublicationInfos>(
       CORE_PUBLICATION_LIST_URL,
       { url: PUBLIC_PUBLICATIONS_PATH },
@@ -81,9 +58,10 @@ export class CorePublicationsApi extends CoreApi {
     if (!res) {
       return undefined;
     }
-    return (res.publications ?? [])
-      .filter((publication) => resolvePublicationResourceType(publication.resourceTypes) === type)
-      .map((publication) => mapPublicationBase(publication));
+    return (res.publications ?? []).flatMap((publication) => {
+      const resourceType = resolvePublicationResourceType(publication.resourceTypes);
+      return resourceType ? [{ ...mapPublicationBase(publication), resourceType }] : [];
+    });
   }
 
   async getPublication(token: Token, path: string): Promise<Publication | null> {
@@ -162,6 +140,10 @@ export class CorePublicationsApi extends CoreApi {
     }
 
     for (const { asset, type } of resourcePuts) {
+      if (type === ResourceType.CONVERSATION) {
+        continue;
+      }
+
       const putRes = await this.clients.updateAsset(token, asset, type, DEFAULT_ETAG);
       if (!putRes.success) {
         return putRes;

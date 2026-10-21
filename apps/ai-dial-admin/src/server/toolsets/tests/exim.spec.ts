@@ -19,20 +19,21 @@ describe('Server :: Toolsets :: exim :: resolveImportDestination', () => {
 });
 
 describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
-  test('fetches each selected toolset, sets a prefixed id, keeps authSettings unredacted', async () => {
+  test('fetches each selected toolset, omits `_metadata`, and keeps authSettings unredacted', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'toolsets/public/folder/name__1.0', nodeType: 'ITEM' }),
       getMerged: vi.fn().mockResolvedValue({
         name: 'name',
         version: '1.0',
         authSettings: { authenticationType: 'oauth', clientSecret: 'super-secret' },
+        _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', version: '1.0' },
       }),
     } as any;
 
     const result = await buildToolsetsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.TOOLSET, 'public/folder/name__1.0');
-    expect(result.toolSets[0]).toEqual({
+    expect((result.toolSets ?? [])[0]).toEqual({
       name: 'name',
       version: '1.0',
       authSettings: { authenticationType: 'oauth', clientSecret: 'super-secret' },
@@ -55,7 +56,7 @@ describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
 describe('Server :: Toolsets :: exim :: importToolsetsExport', () => {
   const baseOptions = { path: 'public/target/', conflictResolutionStrategy: 'override', flatImport: true };
 
-  test('imports a valid toolset successfully', async () => {
+  test('imports a valid toolset successfully, stripping the flat identity fields and the `_metadata` graft', async () => {
     const assetApi = {
       list: vi.fn().mockResolvedValue([]),
       put: vi.fn().mockResolvedValue({ success: true }),
@@ -64,15 +65,26 @@ describe('Server :: Toolsets :: exim :: importToolsetsExport', () => {
     const result = await importToolsetsExport(
       assetApi,
       {} as any,
-      { toolSets: [{ id: 'toolsets/public/source/name__1.0', name: 'name', version: '1.0' } as any] },
+      {
+        toolSets: [
+          {
+            id: 'toolsets/public/source/name__1.0',
+            name: 'name',
+            version: '1.0',
+            _metadata: { name: 'name', folderId: 'public/source/', path: 'public/source/name__1.0', version: '1.0' },
+          } as any,
+        ],
+      },
       baseOptions,
     );
 
+    // Exact body: `stripAssetIdentityFields` drops id/version, the import loop drops `_metadata`,
+    // and nothing else is removed.
     expect(assetApi.put).toHaveBeenCalledWith(
       {},
       ResourceType.TOOLSET,
       'public/target/name__1.0',
-      expect.objectContaining({ name: 'name' }),
+      { name: 'name' },
       { allowOverride: true },
     );
     expect(result.importResults).toEqual([

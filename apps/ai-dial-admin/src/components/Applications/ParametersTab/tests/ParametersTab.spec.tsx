@@ -1,12 +1,34 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { ApplicationSourceType } from '@/src/models/dial/application';
+import { DialApplicationResource } from '@/src/models/dial/resource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
   getResolvedApplicationScheme: vi.fn().mockResolvedValue({ success: false }),
 }));
+
+vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
+  getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: false }),
+  getRunner: vi.fn().mockResolvedValue({
+    success: true,
+    response: { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe' },
+  }),
+}));
+
+vi.mock('@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer', () => ({
+  __esModule: true,
+  default: ({ data }: { data: Record<string, string> }) => <div>{data.model}</div>,
+}));
+
+import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', async () => {
@@ -43,5 +65,48 @@ describe('Applications - ApplicationParametersTab', () => {
     render(<ParametersTab application={{ editorUrl: 'editorUrl' }} />);
 
     expect(await screen.findByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
+  });
+
+  test('renders publication resource configuration from its declared schema', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', undefined);
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValueOnce({
+      success: true,
+      response: { $id: 'publication-scheme', properties: { model: { type: 'string' } } },
+    } as never);
+
+    render(
+      <ParametersTab
+        application={
+          {
+            application_type_schema_id: 'publication-scheme',
+            application_properties: { model: 'publication-model' },
+          } as unknown as DialApplicationResource
+        }
+        applicationSchemes={[{ $id: 'publication-scheme' }]}
+        view={ApplicationRoute.ApplicationPublications}
+      />,
+    );
+
+    expect(await screen.findByText('publication-model')).toBeInTheDocument();
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('publication-scheme');
+  });
+
+  test('resolves a platform-origin runner via its content $id before rendering', async () => {
+    render(
+      <ParametersTab
+        application={{ source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'http://asdqwe' } }}
+        applicationSchemes={[
+          {
+            $id: 'http://asdqwe',
+            origin: AppRunnerOrigin.Platform,
+            path: 'http%3A%2F%2Fasdqwe',
+          } as never,
+        ]}
+        view={ApplicationRoute.Applications}
+      />,
+    );
+
+    await vi.waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
+    await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
   });
 });

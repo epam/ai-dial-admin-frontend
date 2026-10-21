@@ -1,8 +1,12 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
 import { TelemetryQuery } from '@/src/models/telemetry';
+
+vi.mock('@/src/components/Grid/GridView/GridView', () => ({
+  default: ({ rowData }: { rowData?: unknown[] }) => <div role="grid" aria-rowcount={rowData?.length ?? 0} />,
+}));
 
 const query = {
   $type: 'test',
@@ -17,7 +21,7 @@ describe('TelemetryGrid', () => {
 
     render(<TelemetryGrid title="Calls by Deployment" columnDefs={columnDefs} getData={getData} query={query} />);
 
-    await waitFor(() => expect(getData).toHaveBeenCalledWith(query));
+    await vi.waitFor(() => expect(getData).toHaveBeenCalledWith(query));
   });
 
   // Regression for #3577: changing the Time Period rebuilds getData (it closes over the
@@ -29,13 +33,13 @@ describe('TelemetryGrid', () => {
     const { rerender } = render(
       <TelemetryGrid title="Calls by Deployment" columnDefs={columnDefs} getData={firstGetData} query={query} />,
     );
-    await waitFor(() => expect(firstGetData).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(firstGetData).toHaveBeenCalledTimes(1));
 
     rerender(
       <TelemetryGrid title="Calls by Deployment" columnDefs={columnDefs} getData={secondGetData} query={query} />,
     );
 
-    await waitFor(() => expect(secondGetData).toHaveBeenCalledWith(query));
+    await vi.waitFor(() => expect(secondGetData).toHaveBeenCalledWith(query));
   });
 
   test('does not fetch in controlled mode (parent owns the data)', async () => {
@@ -45,7 +49,7 @@ describe('TelemetryGrid', () => {
       <TelemetryGrid title="Project Consumption" columnDefs={columnDefs} getData={getData} query={query} data={[]} />,
     );
 
-    await new Promise((r) => setTimeout(r, 0));
+    await act(async () => {});
     expect(getData).not.toHaveBeenCalled();
   });
 });

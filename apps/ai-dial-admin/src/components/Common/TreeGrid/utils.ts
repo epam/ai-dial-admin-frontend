@@ -41,7 +41,7 @@ export function buildTreeFromParentPointer<T>(rows: T[], opts: BuildTreeOptions<
 
   const visitedKeys = new Set<string>();
   const depthCapHits: string[] = [];
-  let cycleWarned = false;
+  let backEdgeWarned = false;
 
   const buildNode = (key: string, depth: number, ancestors: Set<string>): TreeRow<T> => {
     visitedKeys.add(key);
@@ -57,9 +57,9 @@ export function buildTreeFromParentPointer<T>(rows: T[], opts: BuildTreeOptions<
 
     const filteredChildKeys = childKeysToProcess.filter((childKey) => {
       if (ancestors.has(childKey)) {
-        if (!cycleWarned) {
+        if (!backEdgeWarned) {
           console.warn(`[TreeGrid] Cycle detected: "${childKey}" is an ancestor. Back-edge dropped.`);
-          cycleWarned = true;
+          backEdgeWarned = true;
         }
         return false;
       }
@@ -81,12 +81,13 @@ export function buildTreeFromParentPointer<T>(rows: T[], opts: BuildTreeOptions<
 
   const result = rootKeys.map((key) => buildNode(key, 0, new Set()));
 
-  const cycleKeys = [...rowByKey.keys()].filter((key) => !visitedKeys.has(key));
-  if (cycleKeys.length > 0) {
+  const unreachableKeys = [...rowByKey.keys()].filter((key) => !visitedKeys.has(key));
+  if (unreachableKeys.length > 0) {
     console.warn(
-      `[TreeGrid] Cycle detected involving: ${cycleKeys.join(', ')}. Treating first unvisited node as root.`,
+      `[TreeGrid] ${unreachableKeys.length} row(s) unreachable from any root (cycle or depth cap): ` +
+        `${unreachableKeys.join(', ')}. Re-rooting them so none is lost.`,
     );
-    for (const key of cycleKeys) {
+    for (const key of unreachableKeys) {
       if (!visitedKeys.has(key)) {
         result.push(buildNode(key, 0, new Set()));
       }
@@ -136,10 +137,14 @@ export function findRowInTree<R extends { id: string; children: R[] }>(rows: R[]
   return undefined;
 }
 
-export function overlayExpandedState<T>(tree: TreeRow<T>[], prev: Map<string, boolean>): TreeRow<T>[] {
+export function overlayExpandedState<T>(
+  tree: TreeRow<T>[],
+  prev: Map<string, boolean>,
+  fallbackExpanded?: boolean,
+): TreeRow<T>[] {
   return tree.map((row) => ({
     ...row,
-    expanded: prev.has(row.id) ? (prev.get(row.id) as boolean) : row.expanded,
-    children: overlayExpandedState(row.children, prev),
+    expanded: prev.has(row.id) ? (prev.get(row.id) as boolean) : (fallbackExpanded ?? row.expanded),
+    children: overlayExpandedState(row.children, prev, fallbackExpanded),
   }));
 }

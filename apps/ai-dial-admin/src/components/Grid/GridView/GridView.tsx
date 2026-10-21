@@ -24,8 +24,7 @@ import {
   haveGroupedColDefsSamePanelState,
   isGroupedColDefs,
   toColumnLeaves,
-  updateColumnVisibilityInStorage,
-  updateGroupedColumnVisibilityInStorage,
+  updateColumnPanelStateInStorage,
   withLeafMoved,
   withLeafVisibility,
 } from '../utils';
@@ -83,24 +82,18 @@ const GridView = <T extends object>({
       return;
     }
 
-    if (showColumnsPanel) {
-      if (currentColDefs == null || currentColDefs.length === 0) {
-        const readStoredColumns = isGroupedColDefs(columnDefs)
-          ? getGroupedColumnVisibilityFromGridState
-          : getColumnVisibilityFromGridState;
-        const storageColumns = storageKey ? readStoredColumns(storageKey, columnDefs) : null;
-        setCurrentColDefs(
-          !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
-            ? storageColumns || [...(columnDefs || [])]
-            : [...columnDefs],
-        );
-        const hasChanges = isGroupedColDefs(columnDefs) ? checkGroupedColDefsChanges : checkColDefsChanges;
-        setShowResetButton(storageColumns ? hasChanges(storageColumns, columnDefs || []) : false);
-      }
+    // Outside an open panel the columns follow storage, so closing the panel keeps the chosen order.
+    if (showColumnsPanel && currentColDefs?.length) {
       return;
     }
 
-    setCurrentColDefs([...columnDefs]);
+    const readStoredColumns = isGroupedColDefs(columnDefs)
+      ? getGroupedColumnVisibilityFromGridState
+      : getColumnVisibilityFromGridState;
+    const storageColumns = storageKey ? readStoredColumns(storageKey, columnDefs) : null;
+    setCurrentColDefs(storageColumns ?? [...columnDefs]);
+    const hasChanges = isGroupedColDefs(columnDefs) ? checkGroupedColDefsChanges : checkColDefsChanges;
+    setShowResetButton(storageColumns ? hasChanges(storageColumns, columnDefs) : false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnDefs, storageKey, showColumnsPanel]);
 
@@ -120,18 +113,13 @@ const GridView = <T extends object>({
   const isGrouped = useMemo(() => isGroupedColDefs(columnDefs), [columnDefs]);
   const columnLeaves = useMemo(() => toColumnLeaves(currentColDefs || []), [currentColDefs]);
 
-  const persistVisibility = useCallback(
+  const persistPanelState = useCallback(
     (colDefs: ColDef[]) => {
-      if (!storageKey) {
-        return;
+      if (storageKey) {
+        updateColumnPanelStateInStorage(storageKey, colDefs);
       }
-      if (isGrouped) {
-        updateGroupedColumnVisibilityInStorage(storageKey, colDefs);
-        return;
-      }
-      updateColumnVisibilityInStorage(storageKey, colDefs);
     },
-    [isGrouped, storageKey],
+    [storageKey],
   );
 
   const hasPanelChanges = useCallback(
@@ -169,10 +157,10 @@ const GridView = <T extends object>({
 
       const newColDefs = withLeafVisibility(currentColDefs, id, isHiding);
       setCurrentColDefs(newColDefs);
-      persistVisibility(newColDefs);
+      persistPanelState(newColDefs);
       setShowResetButton(hasPanelChanges(newColDefs));
     },
-    [currentColDefs, columnLeaves, clearSortAndFilter, hasPanelChanges, persistVisibility],
+    [currentColDefs, columnLeaves, clearSortAndFilter, hasPanelChanges, persistPanelState],
   );
 
   const onResetToDefault = () => {
@@ -183,7 +171,7 @@ const GridView = <T extends object>({
     clearSortAndFilter(hiddenByReset);
 
     setCurrentColDefs([...defaults]);
-    persistVisibility(defaults);
+    persistPanelState(defaults);
     setShowResetButton(false);
   };
 
@@ -203,11 +191,11 @@ const GridView = <T extends object>({
         return;
       }
 
-      persistVisibility(updatedColDefs);
+      persistPanelState(updatedColDefs);
       setCurrentColDefs(updatedColDefs);
       setShowResetButton(hasPanelChanges(updatedColDefs));
     },
-    [currentColDefs, hasPanelChanges, persistVisibility],
+    [currentColDefs, hasPanelChanges, persistPanelState],
   );
 
   const handleGridReady = useCallback(

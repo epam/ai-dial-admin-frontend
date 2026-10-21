@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { MockInstance, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { downloadFile } from '../download';
 
 const mockUrl = 'blob:http://example.com/fake-blob';
 describe('Utils :: downloadFile', () => {
-  let createObjectURLSpy: vi.SpyInstance;
-  let revokeObjectURLSpy: vi.SpyInstance;
+  let createObjectURLSpy: MockInstance;
+  let revokeObjectURLSpy: MockInstance;
 
   beforeEach(() => {
     global.URL.createObjectURL = vi.fn(() => mockUrl);

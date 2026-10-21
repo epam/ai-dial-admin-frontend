@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
@@ -13,7 +13,33 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: showNotificationSpy }),
 }));
 
+const setGridOptionSpy = vi.fn();
+vi.mock('@/src/components/ListView/List', () => ({
+  default: ({
+    listLabel,
+    onGridReady,
+  }: {
+    listLabel?: string;
+    onGridReady?: (event: { api: { setGridOption: typeof setGridOptionSpy } }) => void;
+  }) => {
+    onGridReady?.({ api: { setGridOption: setGridOptionSpy } });
+    return <h1>{listLabel}</h1>;
+  },
+}));
+
+// The hook ends every fetch with setLoading(false) and chains the next window synchronously, so
+// "N calls made and the last grid-loading write is `false`" means the whole fetch chain has settled.
+const waitForFetchesToSettle = (getData: ReturnType<typeof vi.fn>, callCount: number) =>
+  vi.waitFor(() => {
+    expect(getData).toHaveBeenCalledTimes(callCount);
+    expect(setGridOptionSpy).toHaveBeenLastCalledWith('loading', false);
+  });
+
 describe('List', () => {
+  beforeEach(() => {
+    setGridOptionSpy.mockClear();
+  });
+
   const timeRange = {
     startDate: new Date('2026-04-01T00:00:00.000Z'),
     endDate: new Date('2026-04-02T00:00:00.000Z'),
@@ -41,25 +67,25 @@ describe('List', () => {
     expect(screen.getByRole('heading', { name: TabsI18nKey.Traces })).toBeInTheDocument();
   });
 
-  test('accepts an onGridReady prop without errors', () => {
+  test('forwards the grid-ready event to onGridReady', () => {
     const getData = vi.fn().mockResolvedValue({ success: true, response: { data: [], headers: [] } });
     const onGridReady = vi.fn();
 
-    expect(() =>
-      render(
-        <List
-          route={ApplicationRoute.UsageLog}
-          getData={getData}
-          query={TRACES_QUERY}
-          columnDefs={USAGE_LOG_TRACES_COLUMNS}
-          listLabel={TabsI18nKey.Traces}
-          emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
-          timeRange={timeRange}
-          entityName={null}
-          onGridReady={onGridReady}
-        />,
-      ),
-    ).not.toThrow();
+    render(
+      <List
+        route={ApplicationRoute.UsageLog}
+        getData={getData}
+        query={TRACES_QUERY}
+        columnDefs={USAGE_LOG_TRACES_COLUMNS}
+        listLabel={TabsI18nKey.Traces}
+        emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
+        timeRange={timeRange}
+        entityName={null}
+        onGridReady={onGridReady}
+      />,
+    );
+
+    expect(onGridReady).toHaveBeenCalledOnce();
   });
 
   test('initial fetch sends no limit, no offset, and the user time range in where.$and', async () => {
@@ -81,7 +107,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+    await waitForFetchesToSettle(getData, 1);
     const firstCall = getData.mock.calls[0][0];
     expect(firstCall.query.limit).toBeUndefined();
     expect(firstCall.query.offset).toBeUndefined();
@@ -112,8 +138,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
-    await new Promise((r) => setTimeout(r, 50));
+    await waitForFetchesToSettle(getData, 1);
     expect(getData).toHaveBeenCalledTimes(1);
   });
 
@@ -136,7 +161,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+    await waitForFetchesToSettle(getData, 1);
 
     const newTimeRange = {
       startDate: new Date('2026-04-02T00:00:00.000Z'),
@@ -156,7 +181,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(2));
+    await waitForFetchesToSettle(getData, 2);
     const secondCall = getData.mock.calls[1][0];
     expect(secondCall.query.offset).toBeUndefined();
     expect(secondCall.query.where?.$and).toEqual(
@@ -191,7 +216,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(3));
+    await waitForFetchesToSettle(getData, 3);
 
     const firstCall = getData.mock.calls[0][0];
     expect(firstCall.query.where?.$and).toEqual(
@@ -209,7 +234,6 @@ describe('List', () => {
       ]),
     );
 
-    await new Promise((r) => setTimeout(r, 50));
     expect(getData).toHaveBeenCalledTimes(3);
   });
 
@@ -239,8 +263,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
-    await new Promise((r) => setTimeout(r, 50));
+    await waitForFetchesToSettle(getData, 1);
     expect(getData).toHaveBeenCalledTimes(1);
   });
 
@@ -263,7 +286,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+    await waitForFetchesToSettle(getData, 1);
     const firstCall = getData.mock.calls[0][0];
     expect(firstCall.query.orderBy).toEqual([{ $desc: '_time' }]);
   });
@@ -305,8 +328,8 @@ describe('List', () => {
     // Auto-fetch: first window succeeds (2 rows, < MIN_ROWS_TO_ENABLE_SCROLL),
     // second window errors. Only one error notification should fire — the auto-fetch
     // chain stops once we hit the error.
-    await waitFor(() => expect(getData).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(showNotificationSpy).toHaveBeenCalledTimes(1));
+    await waitForFetchesToSettle(getData, 2);
+    expect(showNotificationSpy).toHaveBeenCalledOnce();
 
     const notification = showNotificationSpy.mock.calls[0][0];
     expect(notification.title).toBe('Backend exploded');

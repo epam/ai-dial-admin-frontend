@@ -1,4 +1,4 @@
-import matter from 'gray-matter';
+import { parseFrontmatter, stringifyFrontmatter } from '@/src/utils/frontmatter';
 
 export interface SkillManifest {
   name: string;
@@ -8,15 +8,14 @@ export interface SkillManifest {
 
 /**
  * Parses `SKILL.md`'s YAML frontmatter (`name`/`description`) and its body content (the markdown
- * after the frontmatter block). Built on `gray-matter`, already used elsewhere in the app (`MdViewer`)
- * to strip frontmatter — reused here instead of hand-rolling a YAML parser, so the parse boundary
- * matches Core's own `SkillHandler.parseFrontmatter` regex/YAML expectations.
+ * after the frontmatter block). The shared parser keeps this boundary aligned with Core's own
+ * `SkillHandler.parseFrontmatter` regex/YAML expectations.
  */
 export const parseSkillManifest = (content: string): SkillManifest => {
-  const { data, content: body } = matter(content);
+  const { attributes, body } = parseFrontmatter(content);
   return {
-    name: typeof data.name === 'string' ? data.name : '',
-    description: typeof data.description === 'string' ? data.description : '',
+    name: typeof attributes.name === 'string' ? attributes.name : '',
+    description: typeof attributes.description === 'string' ? attributes.description : '',
     body,
   };
 };
@@ -29,6 +28,7 @@ export const parseSkillManifest = (content: string): SkillManifest => {
  * they actually edit.
  */
 export const buildSkillManifest = (originalContent: string, manifest: SkillManifest): string => {
-  const { data } = matter(originalContent);
-  return matter.stringify(manifest.body, { ...data, name: manifest.name, description: manifest.description });
+  const { attributes } = parseFrontmatter(originalContent);
+
+  return stringifyFrontmatter({ ...attributes, name: manifest.name, description: manifest.description }, manifest.body);
 };

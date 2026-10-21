@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AnalyticsTable } from '@/src/models/analytics/table';
 import { errorObjLog } from '@/src/server/logger';
 import { getTable } from '../actions';
@@ -13,7 +14,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   let table: AnalyticsTable | null = null;
   try {
-    table = await getTable(name);
+    table = (await getTable(name)).response ?? null;
   } catch (e) {
     errorObjLog(e, 'Failed to fetch table view data');
   }
@@ -30,5 +31,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   // exposed gRPC port, usually on a different host.
   const flightUri = process.env.ANALYTICS_FLIGHT_SQL_PUBLIC_URL ?? '';
 
-  return <TableDetailView name={name} initialTable={table} apiBaseUrl={apiBaseUrl} flightUri={flightUri} />;
+  return (
+    <SaveValidationContextProvider>
+      <TableDetailView name={name} initialTable={table} apiBaseUrl={apiBaseUrl} flightUri={flightUri} />
+    </SaveValidationContextProvider>
+  );
 }

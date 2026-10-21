@@ -5,12 +5,14 @@ import { FC, RefObject } from 'react';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
 import DatasetSchemaTab from '@/src/components/Datasets/Schema/SchemaTab';
+import DatasetTestSuites from '@/src/components/Datasets/TestSuites/TestSuites';
 import DatasetTestCases from '@/src/components/Datasets/TestCases/TestCases';
 import { DatasetTestCasesActions } from '@/src/components/Datasets/TestCases/TestCasesList';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
+import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
@@ -18,7 +20,9 @@ interface Props {
   onTestCaseDirtyChange: (hasDirty: boolean) => void;
   activeTab: EntityViewTab;
   selectedDataset: Dataset;
+  savedSchema?: TestCaseSchema[];
   isSkipRefresh?: boolean;
+  isSchemaReadOnly?: boolean;
   onChange: (dataset: Dataset, isSkipRefresh?: boolean) => void;
   nameExistsError?: string;
 }
@@ -28,7 +32,9 @@ const DatasetTabsContent: FC<Props> = ({
   onTestCaseDirtyChange,
   activeTab,
   selectedDataset,
+  savedSchema,
   isSkipRefresh,
+  isSchemaReadOnly,
   onChange,
   nameExistsError,
 }) => {
@@ -55,15 +61,22 @@ const DatasetTabsContent: FC<Props> = ({
         </div>
       )}
       {activeTab === EntityViewTab.Schema && (
-        <DatasetSchemaTab dataset={selectedDataset} isSkipRefresh={isSkipRefresh} onChange={onChange} />
+        <DatasetSchemaTab
+          dataset={selectedDataset}
+          isSkipRefresh={isSkipRefresh}
+          isReadOnly={isSchemaReadOnly}
+          onChange={onChange}
+        />
       )}
       {activeTab === EntityViewTab.TestCases && (
         <DatasetTestCases
           dataset={selectedDataset}
+          savedSchema={savedSchema}
           testCasesActionsRef={testCasesActionsRef}
           onDirtyChange={onTestCaseDirtyChange}
         />
       )}
+      {activeTab === EntityViewTab.TestSuites && <DatasetTestSuites datasetId={selectedDataset.id as string} />}
     </>
   );
 };

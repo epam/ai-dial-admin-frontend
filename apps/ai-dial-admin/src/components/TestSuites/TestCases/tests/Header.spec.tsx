@@ -68,21 +68,32 @@ describe('HeaderButtons', () => {
     fireEvent.click(importItem);
   };
 
-  test('renders More dropdown, Attach and Add buttons when editable', () => {
+  test('renders More dropdown, Test Case Schema, Attach and Add buttons when editable', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
     expect(screen.getByText(TestSuitesI18nKey.More)).toBeInTheDocument();
-    expect(screen.getByText(TestSuitesI18nKey.AttachDataset)).toBeInTheDocument();
-    expect(screen.getByText(ButtonsI18nKey.Add)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: TestSuitesI18nKey.TestCaseSchema })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: TestSuitesI18nKey.AttachDataset })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
 
-  test('renders read-only actions when isReadOnly is true', () => {
+  test('does not nest Test Case Schema inside the More dropdown', () => {
+    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
+
+    expect(screen.getByText(TestSuitesI18nKey.PublishToDataset)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ImportFromPC)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.ExportCsv)).toBeInTheDocument();
+  });
+
+  test('renders no actions in read-only mode (detach/change live in the dataset banner)', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} isReadOnly />);
 
-    expect(screen.getByText(ButtonsI18nKey.ExportCsv)).toBeInTheDocument();
-    expect(screen.getByText(TestSuitesI18nKey.ChangeDataset)).toBeInTheDocument();
-    expect(screen.getByText(TestSuitesI18nKey.DetachFromDataset)).toBeInTheDocument();
-    expect(screen.queryByText(ButtonsI18nKey.Add)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ExportCsv })).toBeNull();
+    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeNull();
+    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeNull();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).toBeNull();
+    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.TestCaseSchema })).toBeNull();
+    expect(screen.queryByText(TestSuitesI18nKey.More)).toBeNull();
   });
 
   test('does not render modals initially', () => {
@@ -97,7 +108,7 @@ describe('HeaderButtons', () => {
     const mockOnAdd = vi.fn();
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onAdd={mockOnAdd} />);
 
-    fireEvent.click(screen.getByText(ButtonsI18nKey.Add));
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(mockOnAdd).toHaveBeenCalledTimes(1);
   });
@@ -148,13 +159,45 @@ describe('HeaderButtons', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText(TestSuitesI18nKey.AttachDataset));
+    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.AttachDataset }));
     expect(screen.getByText('Pick Public Dataset Modal')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Confirm Attach'));
 
     expect(mockOnAttachDataset).toHaveBeenCalledWith('picked-dataset');
     expect(screen.queryByText('Pick Public Dataset Modal')).not.toBeInTheDocument();
+  });
+
+  test('does not open attach modal when onBeforeAttach returns false', () => {
+    const mockOnBeforeAttach = vi.fn().mockReturnValue(false);
+    render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onBeforeAttach={mockOnBeforeAttach}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.AttachDataset }));
+
+    expect(mockOnBeforeAttach).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Pick Public Dataset Modal')).not.toBeInTheDocument();
+  });
+
+  test('opens attach modal when onBeforeAttach returns true', () => {
+    const mockOnBeforeAttach = vi.fn().mockReturnValue(true);
+    render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onBeforeAttach={mockOnBeforeAttach}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.AttachDataset }));
+
+    expect(mockOnBeforeAttach).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Pick Public Dataset Modal')).toBeInTheDocument();
   });
 
   test('opens publish modal and forwards values on confirm', () => {
@@ -170,7 +213,7 @@ describe('HeaderButtons', () => {
     expect(screen.queryByText('Publish Dataset Modal')).not.toBeInTheDocument();
   });
 
-  test('invokes onOpenSchemaModal from the More dropdown', () => {
+  test('invokes onOpenSchemaModal when the Test Case Schema button is clicked', () => {
     const mockOnOpenSchemaModal = vi.fn();
     render(
       <HeaderButtons
@@ -180,7 +223,7 @@ describe('HeaderButtons', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText(TestSuitesI18nKey.TestCaseSchema));
+    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.TestCaseSchema }));
 
     expect(mockOnOpenSchemaModal).toHaveBeenCalledTimes(1);
   });
@@ -200,7 +243,7 @@ describe('HeaderButtons', () => {
       <HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onBatchDelete={mockOnBatchDelete} />,
     );
 
-    expect(screen.queryByText(ButtonsI18nKey.Delete)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Delete })).toBeNull();
 
     rerender(
       <HeaderButtons
@@ -211,7 +254,7 @@ describe('HeaderButtons', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText(ButtonsI18nKey.Delete));
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
     expect(mockOnBatchDelete).toHaveBeenCalledTimes(1);
   });
 

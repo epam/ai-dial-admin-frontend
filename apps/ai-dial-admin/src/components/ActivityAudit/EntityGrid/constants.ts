@@ -19,9 +19,10 @@ import {
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
 import { sourceTypeFormatter } from '@/src/constants/grid-columns/formatters';
-import { EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import {
   ActivityAuditResourceType,
+  isAnalyticsResource,
   isContainerDeploymentResource,
   isImageDefinitionResource,
 } from '@/src/types/activity-audit';
@@ -79,6 +80,30 @@ export const ROLE_LIMITS_DIFF_COLUMNS = [
   { field: 'enabled', headerName: 'Enabled' },
 ];
 
+export const ANALYTICS_ROW_LABEL_KEYS: Record<string, AnalyticsTablesI18nKey> = {
+  name: AnalyticsTablesI18nKey.Name,
+  description: AnalyticsTablesI18nKey.Description,
+  type: AnalyticsTablesI18nKey.Type,
+  status: AnalyticsTablesI18nKey.Status,
+  system: AnalyticsTablesI18nKey.System,
+  source_table: AnalyticsTablesI18nKey.SourceTable,
+  columns: AnalyticsTablesI18nKey.Columns,
+  column_count: AnalyticsTablesI18nKey.ColumnsCount,
+  ordering_key: AnalyticsTablesI18nKey.OrderingKey,
+  identity_column: AnalyticsTablesI18nKey.IdentityColumn,
+  version_column: AnalyticsTablesI18nKey.VersionColumn,
+  tag_order: AnalyticsTablesI18nKey.TagOrder,
+  'grain.grain_key': AnalyticsTablesI18nKey.GrainKey,
+  'partition_by.column': AnalyticsTablesI18nKey.PartitionColumn,
+  'partition_by.granularity': AnalyticsTablesI18nKey.Granularity,
+  element_type: AnalyticsTablesI18nKey.ElementType,
+  enum_values: AnalyticsTablesI18nKey.EnumValues,
+  nullable: AnalyticsTablesI18nKey.Nullable,
+  tag: AnalyticsTablesI18nKey.Tag,
+  display_name: AnalyticsTablesI18nKey.DisplayName,
+  sensitive: AnalyticsTablesI18nKey.Sensitive,
+};
+
 export const RESOURCE_DIFF_COLUMNS = (
   t: (stringToTranslate: string, params?: Record<string, string>) => string,
   parameter?: string,
@@ -87,12 +112,13 @@ export const RESOURCE_DIFF_COLUMNS = (
 ): ColDef[] => {
   const isImageRow = isImageDefinitionResource(resourceType);
   const isContainerRow = isContainerDeploymentResource(resourceType);
+  const isAnalyticsRow = isAnalyticsResource(resourceType);
   return [
     {
       field: 'parameter',
       headerName: 'Parameter',
-      valueFormatter: ({ value }) => formatParameter(value, t, isImageRow, isContainerRow),
-      tooltipValueGetter: ({ value }) => formatParameter(value, t, isImageRow, isContainerRow),
+      valueFormatter: ({ value }) => formatParameter(value, t, isImageRow, isContainerRow, isAnalyticsRow),
+      tooltipValueGetter: ({ value }) => formatParameter(value, t, isImageRow, isContainerRow, isAnalyticsRow),
     },
     {
       field: 'value',
@@ -134,12 +160,20 @@ const formatParameter = (
   t: (stringToTranslate: string) => string,
   isImageRow?: boolean,
   isContainerRow?: boolean,
+  isAnalyticsRow?: boolean,
 ) => {
   if ((isImageRow || isContainerRow) && value === '$type') {
     return t(EntityFieldsI18nKey.source);
   }
   if (isImageRow && value === 'url') {
     return t(EntityFieldsI18nKey.SourceURL);
+  }
+  if (isAnalyticsRow) {
+    const analyticsRowKey = ANALYTICS_ROW_LABEL_KEYS[value];
+    // Deliberately no fall-through to the generic lookups below: they are keyed by
+    // admin-config field names, and an analytics field sharing one of those names
+    // would be labelled with the wrong feature's wording.
+    return analyticsRowKey ? t(analyticsRowKey) : value;
   }
   const containerRowKey = CONTAINER_ROW_LABEL_KEYS[value];
   if (containerRowKey) {

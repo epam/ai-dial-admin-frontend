@@ -25,6 +25,7 @@ export interface Metric {
   // aggregated
   metricDeclaration?: Metric;
   metricDeclarationVersion?: Metric;
+  latestVersion?: Metric;
 }
 
 export interface MetricResponse {

@@ -8,6 +8,7 @@ import {
   createTestSuite,
   deleteTestSuiteMetric,
   getDeployment,
+  getDeploymentById,
   getDeployments,
   getMetricDeclarations,
   getMetricLatestVersion,
@@ -16,6 +17,7 @@ import {
   getTestSuiteMetricDetails,
   getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
+  getTestSuiteMetricsAggregated,
   getTestSuiteTemplateVariables,
   getTestCase,
   getTestSuite,
@@ -183,6 +185,14 @@ describe('TestSuites :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should call getDeploymentById action', async () => {
+    (testSuitesApi.getDeploymentById as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getDeploymentById('gpt-4');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getDeploymentById).toHaveBeenCalledWith('gpt-4', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
   test('Should call getTestSuiteTemplateVariables action ', async () => {
     (testSuitesApi.getTestSuiteTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getTestSuiteTemplateVariables('id');
@@ -252,6 +262,14 @@ describe('TestSuites :: server actions', () => {
     const result = await getTestSuiteMetricDetailsWithSchema('suite-id', 'metric-id');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-id', 'metric-id', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getTestSuiteMetricsAggregated action', async () => {
+    (testSuitesApi.getTestSuiteMetricsAggregated as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getTestSuiteMetricsAggregated('suite-id');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-id', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

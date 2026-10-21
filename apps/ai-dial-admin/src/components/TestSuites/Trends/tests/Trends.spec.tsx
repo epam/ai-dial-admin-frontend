@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import Trends from '@/src/components/TestSuites/Trends/Trends';
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
@@ -12,6 +12,10 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getRuns: vi.fn(),
+}));
+
+vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
+  default: () => <div data-testid="heat-map-grid" />,
 }));
 
 vi.mock('echarts-for-react', () => ({
@@ -61,10 +65,8 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={suite} onStartRun={onStartRun} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.TrendsNoRunsTitle)).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.TrendsNoRunsDescription)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.TrendsNoRunsTitle)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.TrendsNoRunsDescription)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Run }));
     expect(onStartRun).toHaveBeenCalledTimes(1);
@@ -78,32 +80,38 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={suite} />);
 
-    await waitFor(() => {
-      expect(screen.queryByText(TestSuitesI18nKey.TrendsNoRunsTitle)).not.toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.TrendsNoRunsTitle)).not.toBeInTheDocument();
   });
 
   test('renders KPI and section titles when data is available', async () => {
-    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
-      rows: [
-        {
-          test_suite_run_id: 'run-1',
-          metric_name: 'overall',
-          metric_score_name: 'overall',
-          value: 0.58,
-          computed_at_ms: 1000,
-        },
-        {
-          test_suite_run_id: 'run-1',
-          metric_name: 'ragas.faithfulness',
-          metric_score_name: 'AVG',
-          value: 0.7,
-          computed_at_ms: 1000,
-        },
-      ],
+    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockImplementation(async (query: { entity?: string }) => {
+      if (query?.entity === 'test_case_eval_scores') {
+        return {
+          rows: [{ test_suite_run_id: 'run-1', test_case_name: 'case-a', score: 0.5, passed: true }],
+        };
+      }
+      return {
+        rows: [
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'overall',
+            metric_score_name: 'overall',
+            value: 0.58,
+            computed_at_ms: 1000,
+          },
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'AVG',
+            value: 0.7,
+            computed_at_ms: 1000,
+          },
+        ],
+      };
     });
     (getRuns as ReturnType<typeof vi.fn>).mockResolvedValue({
       content: [{ id: 'run-1', testRunName: 'Run#1', startedAt: 0, completedAt: 341 }],
@@ -111,11 +119,48 @@ describe('Trends', () => {
 
     render(<Trends selectedTestSuite={suite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('0.58')).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText('0.58')).toBeInTheDocument();
+
+    expect(screen.queryByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).not.toBeInTheDocument();
+  });
+
+  test('shows Runs Passed Threshold card when suite threshold is set', async () => {
+    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
+      rows: [
+        {
+          test_suite_run_id: 'run-1',
+          metric_name: 'overall',
+          metric_score_name: 'overall',
+          value: 0.8,
+          computed_at_ms: 1000,
+        },
+        {
+          test_suite_run_id: 'run-2',
+          metric_name: 'overall',
+          metric_score_name: 'overall',
+          value: 0.3,
+          computed_at_ms: 2000,
+        },
+      ],
     });
+    (getRuns as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: [
+        { id: 'run-1', testRunName: 'Run#1', status: 'COMPLETED', startedAt: 0, completedAt: 100 },
+        { id: 'run-2', testRunName: 'Run#2', status: 'FAILED', startedAt: 200, completedAt: 300 },
+      ],
+    });
+
+    render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.5 }} />);
+
+    expect(await screen.findByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
+    expect((await screen.findAllByText(new RegExp(TestSuitesI18nKey.TrendsRunsCount))).length).toBeGreaterThan(0);
+    expect(await screen.findByText('/ 2')).toBeInTheDocument();
+    expect(await screen.findByText(`1 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
+    expect(await screen.findByText(`0 ${RunsI18nKey.Fail}`)).toBeInTheDocument();
+    expect(await screen.findByText(`1 ${RunsI18nKey.ExecError}`)).toBeInTheDocument();
   });
 });

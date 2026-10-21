@@ -29,6 +29,7 @@ interface GridProps {
     field?: string;
     headerName?: string;
     valueGetter?: (params: { data: SavedQuery }) => unknown;
+    filterValueGetter?: (params: { data: SavedQuery }) => unknown;
     cellRendererParams?: { items: { id: string; onClick: (entity?: SavedQuery) => void; hidden?: unknown }[] };
   }[];
   emptyDataProps?: { title?: string };
@@ -96,6 +97,23 @@ describe('QueriesList', () => {
     expect(scope?.valueGetter?.({ data: COMMON })).toBe('Queries.ScopeCommon');
   });
 
+  test('lists every source a query reads, comma-separated', () => {
+    renderList();
+    const source = column('source');
+    const joined = baseQuery({ sql: 'SELECT 1', source: ['conversations', 'dial_usage_log'] });
+
+    expect(source?.valueGetter?.({ data: joined })).toBe('conversations, dial_usage_log');
+    expect(source?.filterValueGetter?.({ data: joined })).toBe('conversations, dial_usage_log');
+  });
+
+  test('renders an empty source cell rather than failing', () => {
+    renderList();
+    const source = column('source');
+
+    expect(source?.valueGetter?.({ data: baseQuery({ source: [] }) })).toBe('');
+    expect(source?.valueGetter?.({ data: baseQuery({}) })).toBe('');
+  });
+
   test('derives the editor column from the body rather than a stored field', () => {
     renderList();
     const editor = column('editor');
@@ -144,11 +162,12 @@ describe('QueriesList', () => {
     expect(savedBy?.valueGetter?.({ data: baseQuery({ owner_email: 'jane@example.com' }) })).toBe('jane@example.com');
   });
 
-  test('offers Open in new tab, Edit, and Delete as row actions', () => {
+  test('offers Open in new tab, Duplicate, Edit, and Delete as row actions', () => {
     renderList();
 
     expect(actions().map((action) => action.id)).toEqual([
       'ActionMenuOperation.Open_in_new_tab',
+      'ActionMenuOperation.Duplicate',
       'ActionMenuOperation.Edit',
       'ActionMenuOperation.Delete',
     ]);
@@ -158,7 +177,7 @@ describe('QueriesList', () => {
     setFullAdmin(false);
     renderList();
 
-    const [, edit, remove] = actions();
+    const [, , edit, remove] = actions();
     const commonNode = { data: COMMON } as never;
     const personalNode = { data: PERSONAL } as never;
 
@@ -171,11 +190,23 @@ describe('QueriesList', () => {
     setFullAdmin(true);
     renderList();
 
-    const [, edit, remove] = actions();
+    const [, , edit, remove] = actions();
     const commonNode = { data: COMMON } as never;
 
     expect((edit.hidden as (api: unknown, node: unknown) => boolean)(null, commonNode)).toBe(false);
     expect((remove.hidden as (api: unknown, node: unknown) => boolean)(null, commonNode)).toBe(false);
+  });
+
+  test('offers Duplicate on a common query even to a caller who cannot write it', () => {
+    setFullAdmin(false);
+    renderList();
+
+    const [, duplicate, edit, remove] = actions();
+    const commonNode = { data: COMMON } as never;
+
+    expect(duplicate.hidden).toBeUndefined();
+    expect((edit.hidden as (api: unknown, node: unknown) => boolean)(null, commonNode)).toBe(true);
+    expect((remove.hidden as (api: unknown, node: unknown) => boolean)(null, commonNode)).toBe(true);
   });
 
   test('shows an empty state when the caller has no visible queries', () => {
@@ -197,10 +228,20 @@ describe('QueriesList', () => {
   test('opens the edit modal from a row action, seeded with that query', async () => {
     renderList();
 
-    const [, edit] = actions();
+    const [, , edit] = actions();
     edit.onClick(COMMON);
 
     expect(await screen.findByText('Queries.EditQuery')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Shared')).toBeInTheDocument();
+  });
+
+  test('opens the duplicate modal from a row action, seeded with a copy of that query', async () => {
+    renderList();
+
+    const [, duplicate] = actions();
+    duplicate.onClick(COMMON);
+
+    expect(await screen.findByText('DuplicateEntity.Title')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Shared (copy)')).toBeInTheDocument();
   });
 });

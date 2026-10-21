@@ -1,14 +1,17 @@
 import { cookies, headers } from 'next/headers';
 
+import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi } from '@/src/app/api/api';
-import { getAllRunners } from '@/src/app/[lang]/assets-app-runners/actions';
-import AppsList from '@/src/components/Assets/Apps/List';
-import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
+import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
+import AppsList from '@/src/components/Assets/Entities/Apps/List';
 import { AppRunnerOption } from '@/src/components/SourceField/Application/models';
+import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { errorObjLog } from '@/src/server/logger';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -19,24 +22,35 @@ export default async function Page() {
 
   let runners: DialApplicationScheme[] | null = [];
   let assetRunners: ResourceInfo[] = [];
+  let translators: ResourceInfo[] = [];
 
-  try {
-    runners = await applicationRunnersApi.getApplicationSchemesList(token);
-  } catch (e) {
-    errorObjLog(e, 'Failed to fetch applications data');
+  // Admin-backend enrichment only: this page is otherwise Core-direct (assetRunners below), so when
+  // DIAL_ADMIN_API_URL is unset there is no host to call and `runners` stays empty rather than
+  // attempting a request that would fail.
+  if (process.env.DIAL_ADMIN_API_URL) {
+    try {
+      runners = await applicationRunnersApi.getApplicationSchemesList(token);
+    } catch (e) {
+      errorObjLog(e, 'Failed to fetch applications data');
+    }
+  } else {
+    [runners] = await Promise.all([
+      readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, [], true),
+    ]);
   }
 
   try {
     assetRunners = await getAllRunners();
+    translators = (await getTranslators('')) || [];
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch asset app runners');
+    errorObjLog(e, 'Failed to fetch asset app runners and translators');
   }
 
   const options: AppRunnerOption[] = buildAppRunnerOptions(runners, assetRunners);
 
   return (
     <SaveValidationContextProvider>
-      <AppsList runners={options} />
+      <AppsList runners={options} translators={translators} />
     </SaveValidationContextProvider>
   );
 }

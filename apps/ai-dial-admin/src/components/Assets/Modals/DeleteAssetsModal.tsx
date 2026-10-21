@@ -3,19 +3,18 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { ApplicationRoute } from '@/src/types/routes';
+import { ConfirmationPopupVariant, DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import {
-  ConfirmationPopupVariant,
-  DialConfirmationPopup,
   DialFile,
   DialFileManager,
   DialFileNodeType,
   DialRootFolder,
   GridOptions,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import {
   generateTreeForDeletingItems,
@@ -26,6 +25,7 @@ import {
   processAssetsData,
 } from './utils';
 import { ColDef } from 'ag-grid-community';
+import { FILE_MANAGER_GRID_CLASS } from '@/src/components/Common/FileManager/constants';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
 interface Props {
@@ -33,7 +33,7 @@ interface Props {
   isOpen: boolean;
   itemsToDelete: DialFile[];
   selectedVersionsMap?: Record<string, string[]>;
-  context: () => AssetsFolderContext;
+  context: () => AssetsFolderContextReader<AssetListItem>;
   onRemove: () => void;
   onClose: () => void;
 }
@@ -94,7 +94,7 @@ const DeleteAssetsModal: FC<Props> = ({
   );
 
   const getDeleteModalContent = useCallback(() => {
-    const columnDefs = getGridColumns(view, hasFoldersToDelete, selectedVersionsMap);
+    const columnDefs = getGridColumns(view, hasFoldersToDelete, selectedVersionsMap, itemsToDelete);
 
     return (
       <div className="px-6 dial-small mb-6">
@@ -131,11 +131,12 @@ const DeleteAssetsModal: FC<Props> = ({
               gridOptions={
                 {
                   alternateOddRowColors: true,
+                  containerClassName: FILE_MANAGER_GRID_CLASS,
                   columnDefs: columnDefs,
                 } as GridOptions
               }
               treeOptions={{
-                header: t(FileManagerI18nKey.FolderTree),
+                header: '',
                 expandedPaths: expandedFolders,
                 onExpandedPathsChange: setExpandedFolders,
               }}

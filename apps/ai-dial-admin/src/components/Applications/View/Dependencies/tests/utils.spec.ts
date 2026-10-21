@@ -13,17 +13,13 @@ describe('countValidDependencies', () => {
 });
 
 describe('getDependenciesData', () => {
-  const models: DialModel[] = [
-    { name: 'modelA', type: MenuI18nKey.Models },
-    { name: 'modelB', type: MenuI18nKey.Models },
-    { name: 'modelC', type: MenuI18nKey.Models },
-  ];
+  // The helper is what puts `type` on a row, so the fixtures carry names only — a `type` here would
+  // be a menu key sitting in `DialModel['type']`, which holds a model type.
+  const modelNames = ['modelA', 'modelB', 'modelC'];
+  const applicationNames = ['appA', 'appB', 'appC'];
 
-  const applications: DialApplication[] = [
-    { name: 'appA', type: MenuI18nKey.Applications },
-    { name: 'appB', type: MenuI18nKey.Applications },
-    { name: 'appC', type: MenuI18nKey.Applications },
-  ];
+  const models: DialModel[] = modelNames.map((name) => ({ name }));
+  const applications: DialApplication[] = applicationNames.map((name) => ({ name }));
 
   test('should correctly separate dependencies and available entities', () => {
     const dependencies = ['modelB', 'appC'];
@@ -63,7 +59,7 @@ describe('getDependenciesData', () => {
   });
 
   test('should return all entities in rowData if all dependencies match', () => {
-    const dependencies = [...models.map((m) => m.name), ...applications.map((a) => a.name)];
+    const dependencies = [...modelNames, ...applicationNames];
 
     const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);
 

@@ -5,7 +5,7 @@ import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import MetricOutputs from '../Outputs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialTag: ({ label }: { label: string }) => <span>{label}</span>,
+  DialTag: ({ label, className }: { label: string; className?: string }) => <span className={className}>{label}</span>,
 }));
 
 const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
@@ -28,7 +28,7 @@ describe('MetricOutputs', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test('renders title and output rows with tags', () => {
+  test('renders title and output rows with name tags', () => {
     const fields: SchemaFieldRow[] = [
       makeField({ id: 'f1', name: 'score', type: 'number', description: 'Evaluation score' }),
       makeField({ id: 'f2', name: 'passed', type: 'boolean', description: 'Whether passed' }),
@@ -39,10 +39,10 @@ describe('MetricOutputs', () => {
     expect(screen.getByText('Outputs')).toBeInTheDocument();
     expect(screen.getByText('score')).toBeInTheDocument();
     expect(screen.getByText('Evaluation score')).toBeInTheDocument();
-    expect(screen.getByText('number')).toBeInTheDocument();
+    expect(screen.queryByText('number')).not.toBeInTheDocument();
     expect(screen.getByText('passed')).toBeInTheDocument();
     expect(screen.getByText('Whether passed')).toBeInTheDocument();
-    expect(screen.getByText('boolean')).toBeInTheDocument();
+    expect(screen.queryByText('boolean')).not.toBeInTheDocument();
   });
 
   test('sets title attribute on description text', () => {

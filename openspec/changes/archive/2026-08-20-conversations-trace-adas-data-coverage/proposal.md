@@ -33,7 +33,7 @@ Detail page (`/conversations-trace/[id]`):
 - Header **Deployments** reads the rollup's `deployments` as recorded. It was first built as a *Model*
   field narrowed by the existing `narrowToModels` helper, matching the grid's Models column; review
   measured that narrowing against `turns.models` on dev and it disagreed in both directions — keeping
-  three orchestrating `statgpt-*` deployments the rollup excludes and dropping two embedding deployments
+  three orchestrating application deployments the rollup excludes and dropping two embedding deployments
   the rollup includes because they were billed. Which value is a model is not derivable from the array, so
   **both** the header entry and the grid column are now labelled for the field they read, render it
   unnarrowed, and `narrowToModels` is deleted. A real per-conversation model set needs a

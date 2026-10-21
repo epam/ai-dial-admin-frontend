@@ -1,5 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Toolset } from '@/src/models/dial/toolset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -49,7 +50,7 @@ const Endpoints = <T extends object>({
         <ToolsetEndpoint
           entity={entity as Toolset}
           disabled={toolsetDisabled}
-          onChange={onChange as (entity: Toolset) => void}
+          onChange={onChange as (entity: Toolset | DialToolsetResource) => void}
           isModal={isModal}
           prefix={prefix}
         />

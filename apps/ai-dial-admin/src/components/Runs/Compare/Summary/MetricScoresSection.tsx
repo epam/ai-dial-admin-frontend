@@ -6,7 +6,9 @@ import { DialAnalyticsBarGroup, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
-import { getCompareBarGroups, intersectStatistics, maxBarValue } from '@/src/components/Runs/Compare/Summary/utils';
+import { getCompareBarGroups, unionStatistics, maxBarValue } from '@/src/components/Runs/Compare/Summary/utils';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { METRIC_SCORES_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { MetricScoresData } from '@/src/components/Runs/Summary/models';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
@@ -16,8 +18,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   primaryData: MetricScoresData | null;
   comparedData: MetricScoresData | null;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   selectedStatistic: string | null;
   onSelectStatistic: (statistic: string) => void;
   onSelectMetric: (name: string) => void;
@@ -26,8 +27,7 @@ interface Props {
 const MetricScoresSection: FC<Props> = ({
   primaryData,
   comparedData,
-  primaryRunName,
-  comparedRunName,
+  runs,
   selectedStatistic,
   onSelectStatistic,
   onSelectMetric,
@@ -35,7 +35,7 @@ const MetricScoresSection: FC<Props> = ({
   const t = useI18n();
 
   const statistics = useMemo(
-    () => intersectStatistics(primaryData?.statistics ?? [], comparedData?.statistics ?? []),
+    () => unionStatistics(primaryData?.statistics ?? [], comparedData?.statistics ?? []),
     [primaryData?.statistics, comparedData?.statistics],
   );
 
@@ -48,7 +48,7 @@ const MetricScoresSection: FC<Props> = ({
 
   const descriptionKey = getMetricStatisticDescriptionKey(selectedStatistic);
 
-  const compareLabels: [string, string] = [primaryRunName, comparedRunName];
+  const [firstLabel, secondLabel] = runs.map((run) => run.name);
 
   const isLoading = !primaryData || !comparedData;
 
@@ -65,25 +65,30 @@ const MetricScoresSection: FC<Props> = ({
     }
     return (
       <div className={METRIC_SCORES_GRID_CLASS}>
-        {groups.map((group) => (
-          <DialAnalyticsBarGroup
-            key={group.name}
-            title={group.name}
-            data={group.data}
-            compareData={group.compareData}
-            compareLabels={compareLabels}
-            maxValue={maxBarValue(group.data, group.compareData)}
-            onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
-            inline
-            nonCollapsible
-            defaultExpanded
-            className="min-w-0 overflow-hidden bg-layer-2"
-            barDescriptions={group.barDescriptions}
-            barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
-            titleTooltip={group.description}
-            barTitleClassName="block min-w-0 truncate text-secondary"
-          />
-        ))}
+        {groups.map((group) => {
+          const barsBySlot = { [CompareRunSlot.Primary]: group.data, [CompareRunSlot.Secondary]: group.compareData };
+          const [data, compareData] = runs.map((run) => barsBySlot[run.slot]);
+
+          return (
+            <DialAnalyticsBarGroup
+              key={group.name}
+              title={group.name}
+              data={data}
+              compareData={compareData}
+              compareLabels={[firstLabel, secondLabel]}
+              maxValue={maxBarValue(group.data, group.compareData)}
+              onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
+              inline
+              nonCollapsible
+              defaultExpanded
+              className="min-w-0 overflow-hidden bg-layer-2"
+              barDescriptions={group.barDescriptions}
+              barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
+              titleTooltip={group.description}
+              barTitleClassName="block min-w-0 truncate text-secondary"
+            />
+          );
+        })}
       </div>
     );
   };

@@ -1,0 +1,187 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { removeModel, updateModel } from '@/src/app/[lang]/platform-models/actions';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useI18n } from '@/src/locales/client';
+import { AssetModel } from '@/src/models/dial/deployment-asset';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import TabsContent from './TabsContent';
+
+interface Props {
+  etag: string;
+  originalModel: AssetModel;
+  roles: DialRole[];
+  interceptors: DialInterceptor[];
+  globalInterceptors?: string[];
+  /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
+  optionWarnings?: EntitiesI18nKey[];
+  translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
+  /** True when `originalModel` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
+}
+
+const ModelView: FC<Props> = ({
+  etag: initialEtag,
+  originalModel,
+  roles,
+  interceptors,
+  globalInterceptors,
+  optionWarnings,
+  translators,
+  catalogSchemas,
+  isConfigFileSource,
+}) => {
+  const t = useI18n();
+  const { featureFlags, setEntityReadOnly } = useAppContext();
+  const router = useRouter();
+  const { fetchFiles } = useModelsFolder();
+  const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
+
+  const [etag, setEtag] = useState(initialEtag);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [selectedModel, setSelectedModel] = useState(structuredClone(originalModel));
+  const [isChanged, setIsChanged] = useState(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
+
+  const jsonConfiguration = useMemo<JsonConfiguration>(
+    () => ({
+      isEditorEnabled,
+      onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
+    }),
+    [isEditorEnabled, isConfigFileSource],
+  );
+
+  const tabs = useMemo(
+    () =>
+      getTabsForAsset(t, ApplicationRoute.PlatformModels, featureFlags, isAssetUnavailable(selectedModel.userRoles)),
+    [t, featureFlags, selectedModel.userRoles],
+  );
+
+  useEffect(() => {
+    setSelectedModel(structuredClone(originalModel));
+  }, [originalModel]);
+
+  // Resyncs after a `router.refresh()` (a successful save re-fetches the page). A failed save updates
+  // `etag` itself from the response below, without waiting for a refresh — Core returns its current
+  // etag on every response, success or not, and a save rejected for an unrelated reason (e.g. a
+  // validation error) still leaves the retry needing that fresher value or it fails precondition.
+  useEffect(() => {
+    setEtag(initialEtag);
+  }, [initialEtag]);
+
+  // An option list read from only one of Core's two populations is shown rather than withheld, so the
+  // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
+
+  useEffect(() => {
+    if (Object.keys(selectedModel).length && originalModel) {
+      setIsChanged(!isEqualSkippingUndefined(originalModel, selectedModel));
+    }
+  }, [selectedModel, originalModel]);
+
+  const onDiscard = useCallback(() => {
+    setSelectedModel(structuredClone(originalModel));
+    setDiscardKey((prev) => prev + 1);
+  }, [originalModel]);
+
+  const onSave = useCallback(() => {
+    getReqRef.current(updateModel, selectedModel, etag).then((res) => {
+      if (res.etag) {
+        setEtag(res.etag);
+      }
+      if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.PlatformModels, t),
+            getUpdateNotificationDescription(ApplicationRoute.PlatformModels, selectedModel.name, t),
+          ),
+        );
+        fetchFiles(selectedModel.folderId || selectedModel._metadata?.folderId || '');
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [selectedModel, etag, showNotification, t, router, fetchFiles]);
+
+  return (
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+      <SimpleEntityHeader
+        view={ApplicationRoute.PlatformModels}
+        entity={selectedModel}
+        etag={etag}
+        isChanged={isChanged}
+        onDiscard={onDiscard}
+        onSave={onSave}
+        tabs={tabs}
+        jsonConfiguration={jsonConfiguration}
+        activeTab={activeTab}
+        onChangeActiveTab={setActiveTab}
+        onRemove={removeModel}
+        getAssetContext={useModelsFolder}
+      />
+
+      <div className="flex-1 overflow-auto min-h-0">
+        {isEditorEnabled ? (
+          <EntityJsonEditor
+            key={discardKey}
+            entity={selectedModel}
+            setSelectedEntity={setSelectedModel}
+            setIsChanged={setIsChanged}
+          />
+        ) : (
+          <TabsContent
+            key={discardKey}
+            activeTab={activeTab}
+            selectedModel={selectedModel}
+            originalModel={originalModel}
+            roles={roles}
+            interceptors={interceptors}
+            globalInterceptors={globalInterceptors}
+            translators={translators}
+            catalogSchemas={catalogSchemas}
+            onChange={setSelectedModel}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ModelView;

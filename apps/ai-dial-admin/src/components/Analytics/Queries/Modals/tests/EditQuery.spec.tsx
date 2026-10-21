@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -32,7 +32,7 @@ const STRUCTURED: SavedQuery = {
   description: 'For the Monday review',
   tag: 'Adoption',
   scope: SavedQueryScope.Personal,
-  source: 'dial_usage_log',
+  source: ['dial_usage_log'],
   query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate },
   time: { mode: SavedQueryTimeMode.Relative, period: '7d' },
   result_view: QueryResultView.Chart,
@@ -86,7 +86,7 @@ describe('EditQuery', () => {
     setName('Renamed');
     await submit(user);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.name).toBe('Renamed');
     expect(request.query).toEqual(STRUCTURED.query);
@@ -102,7 +102,7 @@ describe('EditQuery', () => {
     setName('Renamed');
     await submit(user);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     expect(vi.mocked(updateSavedQuery).mock.calls[0][0]).toBe('sq_1');
   });
 
@@ -113,7 +113,7 @@ describe('EditQuery', () => {
     setName('Renamed');
     await submit(user);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     ['id', 'owner_id', 'owner_email', 'source', 'generation', 'created_at', 'updated_at'].forEach((member) => {
       expect(member in request).toBeFalsy();
@@ -127,7 +127,7 @@ describe('EditQuery', () => {
     setName('Renamed');
     await submit(user);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
     expect(request.sql).toBe('SELECT count(*) FROM dial_usage_log');
     expect('query' in request).toBeFalsy();
@@ -187,7 +187,7 @@ describe('EditQuery', () => {
     await user.click(screen.getByRole('radio', { name: /Queries.ScopeCommon/ }));
     await submit(user);
 
-    await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     expect(sentRequest().scope).toBe(SavedQueryScope.Common);
   });
 
@@ -198,7 +198,7 @@ describe('EditQuery', () => {
     setName('Renamed');
     await submit(user);
 
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(mockShowNotification).toHaveBeenCalled();
   });
 
@@ -215,7 +215,7 @@ describe('EditQuery', () => {
     setName('Renamed');
     await submit(user);
 
-    await waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
     expect(mockShowNotification).toHaveBeenCalledWith(
       expect.objectContaining({ description: 'Queries.ErrorForbidden' }),

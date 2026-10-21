@@ -1,20 +1,30 @@
 import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialTag, FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-ui-kit';
+import { DialTag } from '@epam/ai-dial-ui-kit';
+import { FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { enrichConversationWithVersion } from '@/src/components/Assets/BaseAssetList/utils';
+import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 
 export const getGridColumns = (
   view: ApplicationRoute,
   hasFoldersToDelete: boolean,
   selectedVersionsMap?: Record<string, string[]>,
+  itemsToDelete?: DialFile[],
 ) => {
   const GRID_NAME_COLUMN = {
     colId: FileManagerColumnKey.Name,
     field: 'name',
-    headerName: 'Display name',
+    headerName: 'Name',
+    width: 200,
+  };
+
+  const AUTHOR_COLUMN = {
+    colId: FileManagerColumnKey.Author,
+    field: 'author',
+    headerName: 'Author',
     width: 200,
   };
 
@@ -52,11 +62,23 @@ export const getGridColumns = (
   };
 
   switch (view) {
-    case ApplicationRoute.Prompts:
+    // A platform-bucket application/toolset row has no version — showing Name+Version here would
+    // repeat the same "no version" gap the delete-notification fix addresses, so this shows
+    // Name+Author instead, matching the flat column set the row's own list view already uses.
     case ApplicationRoute.AssetsApplications:
-    case ApplicationRoute.AssetsToolsets:
-    case ApplicationRoute.Conversations:
+    case ApplicationRoute.AssetsToolsets: {
+      const firstItemToDelete = itemsToDelete?.[0] as { bucket?: string; folderId?: string } | undefined;
+      const isPlatformBucketDelete =
+        !hasFoldersToDelete && isPlatformBucketRow(firstItemToDelete?.bucket, firstItemToDelete?.folderId);
+      if (isPlatformBucketDelete) {
+        return [GRID_NAME_COLUMN, AUTHOR_COLUMN];
+      }
       return hasFoldersToDelete ? [NAME_COLUMN('Display name'), VERSION_COLUMN] : [GRID_NAME_COLUMN, VERSION_COLUMN];
+    }
+    case ApplicationRoute.Prompts:
+    case ApplicationRoute.Conversations:
+      // Versionless rows — a single stored resource each, so no version tags column.
+      return hasFoldersToDelete ? [NAME_COLUMN('Display name')] : [GRID_NAME_COLUMN];
     case ApplicationRoute.Files:
       return hasFoldersToDelete
         ? [NAME_COLUMN('Display name'), SIZE_COLUMN('Size')]
@@ -97,15 +119,39 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Conversations) : t(FileManagerI18nKey.Conversation),
       });
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Models) : t(FileManagerI18nKey.Model),
       });
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner),
       });
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.CatalogSchemas) : t(FileManagerI18nKey.CatalogSchema),
+      });
+    case ApplicationRoute.PlatformInterceptors:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor),
+      });
+    case ApplicationRoute.PlatformTranslators:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Translators) : t(FileManagerI18nKey.Translator),
+      });
+    case ApplicationRoute.PlatformRoutes:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Routes) : t(FileManagerI18nKey.Route),
+      });
+    case ApplicationRoute.PlatformRoles:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Roles) : t(FileManagerI18nKey.Role),
+      });
+    case ApplicationRoute.PlatformKeys:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key),
+      });
+    case ApplicationRoute.Skills:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill),
       });
@@ -165,15 +211,42 @@ export const getDeleteModalDescription = (
               : t(FileManagerI18nKey.Conversation)
             ).toLowerCase(),
           });
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Models) : t(FileManagerI18nKey.Model)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1
+          ? t(FileManagerI18nKey.CatalogSchemas)
+          : t(FileManagerI18nKey.CatalogSchema)
+        ).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformInterceptors:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformTranslators:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Translators) : t(FileManagerI18nKey.Translator)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformRoutes:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Routes) : t(FileManagerI18nKey.Route)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformRoles:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Roles) : t(FileManagerI18nKey.Role)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformKeys:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key)).toLowerCase(),
+      });
+    case ApplicationRoute.Skills:
       return hasFoldersToDelete
         ? t(FileManagerI18nKey.DeleteItemsAndFoldersModalDescription, {
             items: t(FileManagerI18nKey.Skills).toLowerCase(),
@@ -300,11 +373,14 @@ export const processAssetsData = (
     return asset;
   });
 
+  // A versionless row (prompt/conversation) is a single stored resource — no same-name version
+  // merging, no per-row version selection state.
+  if (isVersionlessAssetView(view)) {
+    return processedAssets;
+  }
+
   return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
     if (curr.nodeType === DialFileNodeType.ITEM) {
-      if (view === ApplicationRoute.Conversations && !curr.version) {
-        curr = enrichConversationWithVersion(curr);
-      }
       curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
       const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
       if (existing) {

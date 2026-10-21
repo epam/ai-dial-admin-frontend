@@ -2,7 +2,12 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { datasetsApi } from '@/src/app/api/api';
+import { datasetsApi, structuredQueryApi } from '@/src/app/api/api';
+import { TEST_SUITE_DATASET_FILTER } from '@/src/components/ListView/Evaluation/utils/constants';
+import {
+  buildTestSuitesQuery,
+  mapTestSuitesQueryResult,
+} from '@/src/components/ListView/Evaluation/utils/test-suites-query';
 import {
   Dataset,
   DatasetPublishBody,
@@ -59,6 +64,23 @@ export async function removeDataset(id: string) {
 export async function getDatasetTestSuites(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.getDatasetTestSuites(id, token);
+}
+
+/**
+ * Test suites bound to a dataset, served by the query API. The dataset scope is added here rather than
+ * by the caller so a client cannot widen it through the filters it passes.
+ */
+export async function getDatasetTestSuitesPage(
+  datasetId: string,
+  page: number,
+  size: number,
+  sorts: SortDto[],
+  filters: FilterDto[],
+) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const query = buildTestSuitesQuery(page, size, sorts, [TEST_SUITE_DATASET_FILTER(datasetId), ...filters]);
+  const result = await structuredQueryApi.execute(query, token);
+  return mapTestSuitesQueryResult(result, page, size);
 }
 
 export async function transitionVisibility(id: string, body: DatasetVisibilityTransition) {
@@ -128,4 +150,19 @@ export async function importTestCase(
 export async function publishDataset(id: string, body: DatasetPublishBody) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.publishDataset(id, body, token);
+}
+
+export async function getDatasetFiles(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getDatasetFiles(id, token);
+}
+
+export async function uploadDatasetFiles(id: string, file: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.uploadDatasetFiles(id, file, token);
+}
+
+export async function removeDatasetFile(id: string, fileName: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.removeDatasetFile(id, fileName, token);
 }

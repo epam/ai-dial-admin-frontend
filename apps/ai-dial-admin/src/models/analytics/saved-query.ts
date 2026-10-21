@@ -56,7 +56,7 @@ export interface SavedQuery {
   scope: SavedQueryScope;
   owner_id?: string;
   owner_email?: string;
-  source?: string;
+  source?: string[];
   query?: StructuredQuery;
   sql?: string;
   time?: SavedQueryTime;

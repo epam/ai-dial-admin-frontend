@@ -1,0 +1,462 @@
+# platform-catalog-schemas Specification
+
+## Purpose
+The `Catalog ▸ Catalog Schemas` surface: menu entry, flat list with create/delete/bulk-delete, and a
+two-tab detail view (Properties, Parameters) over DIAL Core's own `catalog_schemas` config resources
+— the registered JSON-Schema documents that declare what display metadata a catalog entity type
+exposes and how a catalog renders it. Covers the `$id`-as-resource-name identity, the client-side
+meta-schema validation that substitutes for Core's absent write-time checks. The surface owns the
+API-written resources and exposes the operator-managed file-declared population through a synthetic,
+read-only `file` root. The consumer side (`catalog_schema_id` / `catalog_properties` on deployments)
+belongs to `catalog-properties-editing`.
+
+## Requirements
+
+### Requirement: Catalog > Catalog Schemas menu entry
+
+The system SHALL add a `Catalog Schemas` menu item to the Catalog section of the admin menu, directly
+after `App Runners`, linking to a new `/platform-catalog-schemas` route.
+
+#### Scenario: Catalog Schemas follows App Runners in the Catalog section
+
+- **WHEN** the Catalog section of the menu renders
+- **THEN** `Catalog Schemas` appears immediately after `App Runners` and before `Roles`
+
+#### Scenario: The list page is reachable at its route
+
+- **WHEN** a user navigates to `/<lang>/platform-catalog-schemas`
+- **THEN** the system renders the Catalog Schemas list page
+
+#### Scenario: A detail page is addressed by the id segment alone
+
+- **WHEN** a user opens a catalog schema's detail view
+- **THEN** the address bar shows `/<lang>/platform-catalog-schemas/<id>` with no `?path=` query
+  parameter
+
+### Requirement: Catalog-schema list is flat with create, duplicate, and delete actions
+
+The system SHALL render the catalog-schema list as a single, non-nested list of entries under the `platform` root, built on the shared asset list, exposing create, duplicate, delete, and bulk-delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
+
+#### Scenario: List shows entries without a folder tree
+
+- **WHEN** a user opens `/platform-catalog-schemas`
+- **THEN** all catalog-schema resources are shown as direct entries with no folder-expand affordance
+
+#### Scenario: Duplicate action creates a copy with separate identities
+
+- **WHEN** a user opens Duplicate for a Catalog Schema with storage name `agent-schema`, declared `$id` `https://dial.example.com/catalog_schemas/agent`, and display name `Agent`
+- **THEN** the modal shows Name `agent-schema-copy`, ID `https://dial.example.com/catalog_schemas/agent-copy`, and display name `Agent`
+- **AND** submitting valid values sends the edited Name and ID with the source schema's remaining properties through the existing Core-backed create flow
+
+#### Scenario: The folder tree offers no folder actions
+
+- **WHEN** a user opens the context menu on the catalog-schema folder tree's root
+- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered
+
+#### Scenario: Create action requests both identities
+
+- **WHEN** a user activates the create action in the list toolbar
+- **THEN** a modal requests required storage `name`, declared `$id`, entity type, and display name fields
+- **AND** submitting valid values creates the resource and refreshes the list
+
+#### Scenario: Metadata-only row shows the storage name
+
+- **WHEN** the list renders a Catalog Schema whose Core storage name differs from its declared body `$id`
+- **THEN** the `Name` column shows the decoded storage name
+- **AND** no content request is made merely to display the declared `$id`
+
+#### Scenario: Bulk delete removes the selected schemas
+
+- **WHEN** a user selects several catalog schemas and confirms bulk delete
+- **THEN** each selected schema is deleted and the list refreshes without them
+
+#### Scenario: A read-only admin is offered no mutating actions
+
+- **WHEN** a read-only admin opens the catalog-schema list
+- **THEN** no create, duplicate, delete, or bulk-delete action is offered
+
+### Requirement: Catalog-schema list columns are metadata-only
+
+The system SHALL show `$id`, author, created-at, and updated-at columns for catalog schemas, all
+sourced from Core's resource metadata, and SHALL NOT fetch each row's content to populate the list.
+Entity type and display name are therefore not list columns — they live in the resource body, which a
+metadata listing does not return, and fetching them would cost one content request per row.
+
+#### Scenario: Listing issues no per-row content request
+
+- **WHEN** the catalog-schema list loads
+- **THEN** only metadata requests are issued, with no content request per row
+
+#### Scenario: Both timestamp columns render as localized dates
+
+- **WHEN** the list renders its created-at and updated-at columns
+- **THEN** each shows a locale-formatted date, not the raw epoch-milliseconds value Core returns
+
+#### Scenario: The id column shows the decoded `$id`
+
+- **WHEN** the list renders a row whose Core resource name is a percent-encoded `$id`
+- **THEN** the column shows the decoded `$id`, not the encoded resource name
+
+### Requirement: A URI-shaped `$id` is a valid, fully usable row name
+
+Because the row name is the schema's `$id`, the system SHALL support names containing characters the shared asset list treats as illegal in a filename — notably `:` and `/`. The system SHALL present such a row as ordinary and
+fully usable for this view: rendered in the normal text style with no invalid-name indication,
+opening on click, and offering its row actions. Views whose names are filenames SHALL keep the
+stricter default.
+
+#### Scenario: A URI-shaped name is not flagged as invalid
+
+- **WHEN** the list renders a schema whose `$id` is a URI such as `https://dial.example.com/catalog_schemas/agent`
+- **THEN** the name is shown in the normal style with no forbidden-character indication or rename
+  prompt
+
+#### Scenario: A URI-shaped name opens on click
+
+- **WHEN** a user clicks a row whose name contains `:` and `/`
+- **THEN** the detail view opens, navigating by the row's encoded path
+
+#### Scenario: Row and bulk actions stay enabled
+
+- **WHEN** a user opens the row context menu or selects schemas for bulk delete
+- **THEN** the delete action is enabled rather than disabled on account of the name's characters
+
+#### Scenario: Filename-shaped views keep the stricter rule
+
+- **WHEN** any other asset view renders a name containing `/` or `%`
+- **THEN** that view's existing invalid-name treatment is unchanged
+
+### Requirement: `$id` is the schema identity and is immutable after creation
+
+The system SHALL preserve and display the `$id` declared in a Catalog Schema's stored body. The loaded Core storage `name` and `_metadata.path` SHALL address the resource's route, update, and deletion; declared `$id` SHALL be used for merged-schema lookup and a deployment's `catalog_schema_id`. The system SHALL allow entering both values only on creation and SHALL reject any attempt to change an existing schema's declared `$id`, including through raw JSON editing.
+
+#### Scenario: Create keeps name and id separate
+
+- **WHEN** a user creates a schema with storage name `agent-schema` and `$id` `https://dial.example.com/catalog_schemas/agent`
+- **THEN** Core receives the create at the encoded `agent-schema` storage address
+- **AND** the stored schema body carries the typed URI as `$id`
+
+#### Scenario: Id is read-only on the detail view
+
+- **WHEN** a user opens an existing schema's Properties tab
+- **THEN** the declared `$id` is shown but cannot be edited
+
+#### Scenario: A duplicate id is reported as the server's conflict
+
+- **WHEN** Core rejects a create because either the storage name or declared `$id` is already registered
+- **THEN** an error notification carrying Core's conflict message is shown and the modal stays open
+
+#### Scenario: A schema stored under a different name keeps its declared id
+
+- **WHEN** a schema stored under `agent-schema` declares `$id` `https://dial.example.com/catalog_schemas/agent`
+- **THEN** the detail view and JSON editor show the declared `$id`
+- **AND** saving an unrelated edit addresses the loaded `_metadata.path` and preserves the declared `$id`
+
+#### Scenario: Existing schema deletes at its original storage path
+
+- **WHEN** an admin deletes a schema whose storage name differs from its declared `$id`
+- **THEN** the delete addresses the loaded storage path rather than a path reconstructed from `$id`
+
+#### Scenario: Raw JSON cannot change the declared id
+
+- **WHEN** an admin changes an existing schema's `$id` in the raw JSON editor and saves
+- **THEN** the save is blocked before a Core write
+- **AND** the edited JSON remains available for correction
+
+### Requirement: Detail view renders exactly two tabs
+
+The system SHALL render a catalog schema's detail view with exactly two tabs — `Properties` and
+`Parameters` — and SHALL NOT include a `Features`, `AppRoutes`, `Interceptors`, `Roles`, or `Audit`
+tab, nor a Core-sync status banner, nor any outbound create action. A catalog schema is display
+metadata, not a deployment: it has no endpoints, no routing, no interceptor chain, and no roles.
+
+#### Scenario: Detail view renders exactly two tabs
+
+- **WHEN** a user opens a catalog schema's detail view
+- **THEN** the tab list contains exactly `Properties` and `Parameters`
+
+#### Scenario: No deployment-shaped tabs are present
+
+- **WHEN** a user opens a catalog schema's detail view
+- **THEN** no `Features`, `AppRoutes`, `Interceptors`, or `Roles` tab is present
+
+#### Scenario: No Audit tab, sync banner, or create action
+
+- **WHEN** a user opens a catalog schema's detail view
+- **THEN** no `Audit` tab is present, no Core-sync status banner is rendered in the header, and the
+  header offers no create action for any other entity
+
+
+### Requirement: Properties tab content
+
+The system SHALL render the catalog-schema Properties tab with the resource info header, the
+read-only `$id`, a required entity-type selection, a required display name, and an optional default
+locale.
+
+The entity-type selection SHALL offer exactly `model`, `agent`, `toolset`, and `interceptor`.
+`skill` SHALL NOT be offered: a skill cannot carry a catalog schema, because `Skill` does not extend
+`Deployment` in DIAL Core and the console's Skills view has no catalog surface to feed, so offering it
+would invite authoring a schema nothing can reference.
+
+What the selection offers is deliberately narrower than what a save accepts. DIAL Core's catalog
+meta-schema allows five values — `model`, `agent`, `toolset`, `skill`, `interceptor` — and `required`s
+the field, so a configuration file may legally declare a schema typed `skill`. The save gate SHALL
+therefore continue to accept all five, as `Client-side validation replaces Core's absent write-time
+checks` requires. Narrowing both halves together is the Issue #4880 regression: the console offered
+and accepted the same shortened list, so a legally-typed schema opened and then could never be saved.
+
+When the schema being edited declares an entity kind outside the offered four, the selection SHALL
+also offer that kind, so the field shows the schema's real value rather than appearing blank and
+discarding it on the next edit.
+
+The entity type SHALL be presented as a declaration of which catalog entity kind the schema is
+written for. DIAL Core validates a deployment's `catalog_properties` against the schema its
+`catalog_schema_id` names and never checks the deployment's kind against the schema's entity type, so
+this value SHALL NOT be enforced as a constraint on save.
+
+#### Scenario: The four fields are shown with the id fixed
+
+- **WHEN** a user opens an existing schema's Properties tab
+- **THEN** the read-only `$id`, the entity-type selection, the display name, and the default locale
+  are shown
+
+#### Scenario: Entity type offers exactly the four offerable kinds
+
+- **WHEN** a user opens the entity-type selection on a schema declaring one of the offered kinds, or
+  none
+- **THEN** the options are exactly `model`, `agent`, `toolset`, and `interceptor`
+- **AND** `skill` is not among them
+
+#### Scenario: Edits round-trip on the resource
+
+- **WHEN** a user edits the display name, entity type, or default locale and saves
+- **THEN** a success notification naming the updated schema is shown and the values reappear on
+  reload
+
+#### Scenario: A failed save keeps the pending edits
+
+- **WHEN** a save request fails
+- **THEN** an error notification carrying the server's message is shown and the edited values are
+  still present for a retry
+
+### Requirement: Parameters tab edits the schema's own properties
+
+The system SHALL populate the catalog-schema Parameters tab from the schema resource as loaded, and
+SHALL make those properties editable. Unlike an app runner, a catalog schema declares no external
+schema endpoint — DIAL Core resolves it from configuration alone — so there is no resolved read to
+perform and no read-only mode to enter.
+
+Because the tab is always editable, it SHALL offer the property editor even when the schema declares
+no properties yet, so the first property can be created here rather than only through the raw JSON
+editor. An empty presentation is the editor's own, reserved for the case where editing is not
+offered at all.
+
+The tab SHALL expose the catalog presentation hints each property may carry — the tab and section it
+renders in, its order, its widget, and whether its value is a locale map — as editable fields
+alongside the property's name, type, title, description, and requiredness. The widget selection SHALL
+offer exactly the values Core's catalog meta-schema allows: `text`, `richText`, `badge`, `chips`,
+`url`, `boolean`, `image`, and `date`.
+
+#### Scenario: Properties are editable with no resolved read
+
+- **WHEN** a user opens a catalog schema's Parameters tab
+- **THEN** the schema's own properties are shown and editable
+- **AND** no resolved-schema request is issued
+
+#### Scenario: Presentation hints are editable
+
+- **WHEN** a user edits a property's tab, section, order, widget, or localized flag and saves
+- **THEN** the values are stored under that property's catalog metadata and reappear on reload
+
+#### Scenario: Presentation hints stay optional on a required property
+
+- **WHEN** a user marks a property as required and leaves its order empty
+- **THEN** the order field is not marked invalid and the save is not blocked
+
+#### Scenario: Widget offers exactly the supported values
+
+- **WHEN** a user opens the widget selection on a property
+- **THEN** the options are exactly `text`, `richText`, `badge`, `chips`, `url`, `boolean`, `image`,
+  and `date`
+
+#### Scenario: A schema with no properties still offers the property editor
+
+- **WHEN** a user opens the Parameters tab of a schema that declares no properties
+- **THEN** the property editor is shown, empty, with its add-field action — not an empty state in
+  place of it
+- **AND** adding a field and saving stores that first property on the schema
+
+#### Scenario: Editing preserves extensions the tab does not render
+
+- **WHEN** a user edits one property of a schema whose other properties carry a file-valued
+  declaration, a string format, or nested presentation metadata
+- **THEN** those declarations survive the save unchanged
+- **AND** the file-valued property still resolves as a DIAL file reference to Core on publish
+
+### Requirement: Client-side validation replaces Core's absent write-time checks
+
+DIAL Core SHALL store this resource's body verbatim and validate only the `$id`, so a schema that
+violates the catalog meta-schema is accepted on write and only surfaces later — as an `invalid`
+status on read, and as a rejected deployment when something references it. The system SHALL block
+such a save and SHALL surface the reason to the user.
+
+The enforced rules are: a non-blank `$id`; an entity type within the five values Core's catalog
+meta-schema allows; a non-blank display name; a default locale matching `^[a-z]{2}(-[A-Z]{2})?$` when
+present; and, for any property declared file-valued, the string type and encoded-file format the
+meta-schema requires alongside it.
+
+The entity-type rule SHALL mirror Core's meta-schema exactly — `model`, `agent`, `toolset`, `skill`,
+`interceptor` — and SHALL NOT be narrowed to the four kinds the Properties tab offers for authoring.
+A schema a configuration file types `skill` SHALL keep saving. Enforcing the narrower offered list
+here is the Issue #4880 regression, where a legally-typed schema opened in the console and then failed
+every save with a message listing fewer kinds than Core allows.
+
+#### Scenario: A missing display name blocks save
+
+- **WHEN** a user attempts to save a schema with a blank display name
+- **THEN** the save action is disabled or rejected and no request reaches Core
+
+#### Scenario: A missing or unsupported entity type blocks save
+
+- **WHEN** a schema carries no entity type, or one outside the five values Core's meta-schema allows
+- **THEN** the save is blocked with a message identifying the field
+- **AND** a schema typed `skill` is not blocked, even though the Properties tab does not offer that
+  kind for authoring
+
+#### Scenario: A malformed default locale blocks save
+
+- **WHEN** a user enters a default locale that is not a BCP-47 language or language-region tag
+- **THEN** the save is blocked with a message identifying the expected form
+
+#### Scenario: An inconsistent file-valued property blocks save
+
+- **WHEN** a property is declared file-valued without the string type and encoded-file format the
+  meta-schema requires
+- **THEN** the save is blocked with a message identifying the offending property
+
+#### Scenario: The raw JSON editor is gated by the same rules
+
+- **WHEN** a user edits the schema through the raw JSON editor and introduces any of the violations
+  above
+- **THEN** the save is blocked with the same message, rather than the editor bypassing validation
+
+### Requirement: `$id` constraint violations are reported at the create form
+
+The system SHALL disable save when `$id` is absent. The create form SHALL additionally reject any
+`$id` containing characters DIAL Core cannot store in a resource name, with an inline client-side
+error as the user types, preventing a round-trip rejection for identifiers Core will refuse
+regardless.
+
+#### Scenario: An absent id is reported as missing
+
+- **WHEN** a create is attempted with no `$id`
+- **THEN** the save button is disabled with the id field shown as required, not as forbidden
+  characters
+
+#### Scenario: A forbidden character surfaces while typing
+
+- **WHEN** a user types an `$id` containing a character Core cannot store in a resource name
+- **THEN** an inline error is shown immediately, before any save attempt
+
+### Requirement: Catalog Schema create and duplicate actions check the declared ID with Core
+
+When the user activates Create or Duplicate for an otherwise locally valid Catalog Schema form, the system SHALL call `getCatalogSchemaById` with the proposed declared `$id` before invoking the existing Core-backed create callback. The resolver SHALL treat both API-written and configuration-file Catalog Schemas as occupied declared IDs.
+
+If the resolver returns a Catalog Schema, the system SHALL show the standard existing-ID error inline under ID, keep the active modal open, and SHALL NOT invoke the Core-backed create callback. This error SHALL participate in the form validity state and SHALL clear when the user edits ID.
+
+If the resolver returns no Catalog Schema or fails, the system SHALL use the existing Core-backed create callback. The normal Core success or error result, including a write-time conflict response, SHALL remain visible.
+
+#### Scenario: Core-resolved ID blocks Catalog Schema creation
+
+- **WHEN** a user activates Create for a valid Catalog Schema form and Core resolves the proposed `$id`
+- **THEN** the Create modal shows the standard existing-ID error under ID
+- **AND** Create is disabled
+- **AND** the Core-backed create callback is not invoked
+
+#### Scenario: Core-resolved ID blocks Catalog Schema duplication
+
+- **WHEN** a user activates Duplicate for a valid Catalog Schema form and Core resolves the proposed `$id`
+- **THEN** the Duplicate modal shows the standard existing-ID error under ID
+- **AND** Duplicate is disabled
+- **AND** the Core-backed create callback is not invoked
+
+#### Scenario: Editing an occupied Catalog Schema ID restores the active action
+
+- **WHEN** a Catalog Schema Create or Duplicate modal displays the resolved existing-ID error
+- **AND** the user changes ID to a locally valid value
+- **THEN** the resolved existing-ID error is removed
+- **AND** the active action is enabled when every other required field is valid
+
+#### Scenario: An unresolved or unavailable Catalog Schema ID uses the normal action flow
+
+- **WHEN** a user activates Create or Duplicate for a valid Catalog Schema form and the resolver returns no schema or fails
+- **THEN** the system invokes the existing Core-backed create callback with the edited schema values
+- **AND** the normal Core success or error result remains visible
+
+### Requirement: Configuring a catalog schema requires no admin-backend call
+
+Every field this surface reads or writes is owned by DIAL Core. The system SHALL NOT require any
+admin-backend request in order to list, view, create, edit, or delete an API-written catalog schema,
+or to list and view a file-defined catalog schema through the synthetic `file` root, so the surface
+remains usable when that service is unavailable.
+
+#### Scenario: The surface is usable without the admin backend
+
+- **WHEN** a user lists, opens, edits, and saves an API-written catalog schema while the admin backend is not
+  configured
+- **THEN** no admin-backend request is required for any of those operations
+
+#### Scenario: File-defined schemas are listed without the admin backend
+
+- **WHEN** a user opens the `file` root on `/platform-catalog-schemas` while the admin backend is not configured
+- **THEN** the names are read from DIAL Core's config-file endpoint without an admin-backend request
+
+### Requirement: File-declared schemas are discoverable through a read-only file root
+
+This surface SHALL include a synthetic, flat `file` root beside its API-written `platform` root. The
+`file` root SHALL list configuration-file catalog schema names with the initial root batch, show
+name-only entries, and offer no mutating or folder action. It SHALL navigate rows to the existing
+ordinary encoded `$id` detail address without `configFile=true`.
+
+The existing detail resolver SHALL read the API-written resource first and, when no resource exists,
+read the configuration-file population by `$id`; a file-defined result SHALL render read-only. The
+`file` root SHALL not alter this resolver or introduce a new detail route.
+
+#### Scenario: File root exposes file-defined schemas
+
+- **WHEN** a user opens the `file` root on `/platform-catalog-schemas`
+- **THEN** configuration-file schema names appear as read-only, name-only rows
+
+#### Scenario: File row preserves the fallback detail route
+
+- **WHEN** a user opens a file-defined Catalog Schema row
+- **THEN** the browser navigates to `/platform-catalog-schemas/{encoded-id}` without `configFile=true`, and the existing fallback renders the file-defined schema read-only
+
+#### Scenario: File root has no mutation controls
+
+- **WHEN** a user browses the Catalog Schemas `file` root
+- **THEN** no create, delete, bulk-delete, duplicate, rename, move, drag-and-drop, or folder action is offered
+
+#### Scenario: A schema a deployment points at opens when only the configuration file declares it
+
+- **WHEN** a user follows a deployment's catalog-schema selection to its detail view, and that `$id` has no API-written resource
+- **THEN** the schema the configuration file declares is shown
+
+#### Scenario: A file-declared schema is read-only
+
+- **WHEN** the detail view resolves a schema from the configuration file
+- **THEN** it renders with no save, delete, or create action
+
+#### Scenario: An unknown id is not found
+
+- **WHEN** a user opens a detail address whose `$id` is in neither population
+- **THEN** the page reports it as not found rather than rendering an empty schema
+
+### Requirement: Catalog Schema storage name is visible but immutable after creation
+
+The detail view SHALL show the loaded Core storage name separately from declared `$id` and SHALL not offer a rename control for either identity.
+
+#### Scenario: Existing schema exposes both identities
+
+- **WHEN** an admin opens an API-written Catalog Schema whose storage name differs from `$id`
+- **THEN** the Properties view shows both values distinctly
+- **AND** neither value is editable

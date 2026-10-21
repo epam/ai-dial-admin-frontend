@@ -23,25 +23,54 @@ const noneConfig = {
 
 describe('AuthTypeSection', () => {
   test('renders config title and icon', () => {
-    render(<AuthTypeSection config={baseConfig} isSelected={false} />);
+    render(
+      <AuthTypeSection
+        toolsetName="my-toolset"
+        view={ApplicationRoute.AssetsToolsets}
+        config={baseConfig}
+        isSelected={false}
+      />,
+    );
     expect(screen.getByText('API Key')).toBeInTheDocument();
     expect(screen.getByText('icon')).toBeInTheDocument();
   });
 
   test('calls onClick when header is clicked', () => {
     const onClick = vi.fn();
-    render(<AuthTypeSection config={baseConfig} isSelected={false} onClick={onClick} />);
+    render(
+      <AuthTypeSection
+        toolsetName="my-toolset"
+        view={ApplicationRoute.AssetsToolsets}
+        config={baseConfig}
+        isSelected={false}
+        onClick={onClick}
+      />,
+    );
     fireEvent.click(screen.getByText('API Key'));
     expect(onClick).toHaveBeenCalledWith(ToolsetAuthType.API_KEY);
   });
 
   test('shows ApiKeySection when selected and API_KEY', () => {
-    render(<AuthTypeSection config={baseConfig} isSelected={true} />);
+    render(
+      <AuthTypeSection
+        toolsetName="my-toolset"
+        view={ApplicationRoute.AssetsToolsets}
+        config={baseConfig}
+        isSelected={true}
+      />,
+    );
     expect(screen.getByText('API Key')).toBeInTheDocument();
   });
 
   test('shows OAuth radio group when selected and OAUTH', () => {
-    render(<AuthTypeSection view={ApplicationRoute.AssetsToolsets} config={oauthConfig} isSelected={true} />);
+    render(
+      <AuthTypeSection
+        toolsetName="my-toolset"
+        view={ApplicationRoute.AssetsToolsets}
+        config={oauthConfig}
+        isSelected={true}
+      />,
+    );
     expect(screen.getByText('OAuth')).toBeInTheDocument();
     expect(screen.getByText(ToolsetI18nKey.WithLogin)).toBeInTheDocument();
   });
@@ -49,10 +78,11 @@ describe('AuthTypeSection', () => {
   test('shows OAuthSection when With_config_and_login selected', () => {
     render(
       <AuthTypeSection
+        toolsetName="my-toolset"
         view={ApplicationRoute.AssetsToolsets}
         config={oauthConfig}
         isSelected={true}
-        authSettings={{ clientId: 'client' }}
+        authSettings={{ authenticationType: ToolsetAuthType.OAUTH, clientId: 'client' }}
       />,
     );
     expect(screen.getByText('OAuth')).toBeInTheDocument();
@@ -60,7 +90,14 @@ describe('AuthTypeSection', () => {
   });
 
   test('does not show details when config id is NONE', () => {
-    render(<AuthTypeSection config={noneConfig} isSelected={true} />);
+    render(
+      <AuthTypeSection
+        toolsetName="my-toolset"
+        view={ApplicationRoute.AssetsToolsets}
+        config={noneConfig}
+        isSelected={true}
+      />,
+    );
     expect(screen.getByText('None')).toBeInTheDocument();
     expect(screen.queryByText(ToolsetI18nKey.WithLogin)).not.toBeInTheDocument();
   });
@@ -69,15 +106,17 @@ describe('AuthTypeSection', () => {
     const onChange = vi.fn();
     render(
       <AuthTypeSection
+        toolsetName="my-toolset"
+        view={ApplicationRoute.AssetsToolsets}
         config={baseConfig}
         isSelected={true}
-        authSettings={{ apiKeyHeader: 'old-key' }}
+        authSettings={{ authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'old-key' }}
         onChange={onChange}
       />,
     );
     // Simulate input change by finding input by placeholder
     const input = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Header);
     fireEvent.change(input, { target: { value: 'new-key' } });
-    expect(onChange).toHaveBeenCalledWith({ apiKeyHeader: 'new-key' });
+    expect(onChange).toHaveBeenCalledWith({ authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'new-key' });
   });
 });

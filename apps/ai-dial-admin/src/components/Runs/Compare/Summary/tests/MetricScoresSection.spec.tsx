@@ -3,6 +3,7 @@ import { createElement, FC, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { MetricScoresData } from '@/src/components/Runs/Summary/models';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import MetricScoresSection from '../MetricScoresSection';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -91,18 +92,20 @@ const COMPARED: MetricScoresData = {
   },
 };
 
+const RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
+
 const Controlled: FC<{
   primary?: MetricScoresData | null;
   compared?: MetricScoresData | null;
   onSelectMetric?: (name: string) => void;
-}> = ({ primary = PRIMARY, compared = COMPARED, onSelectMetric = vi.fn() }) => {
+  isReversed?: boolean;
+}> = ({ primary = PRIMARY, compared = COMPARED, onSelectMetric = vi.fn(), isReversed = false }) => {
   const [selectedStatistic, setSelectedStatistic] = useState<string | null>('AVG');
   return (
     <MetricScoresSection
       primaryData={primary}
       comparedData={compared}
-      primaryRunName="Run #316"
-      comparedRunName="Run #315"
+      runs={isReversed ? RUNS.slice().reverse() : RUNS}
       selectedStatistic={selectedStatistic}
       onSelectStatistic={setSelectedStatistic}
       onSelectMetric={onSelectMetric}
@@ -116,8 +119,7 @@ describe('Compare Summary :: MetricScoresSection', () => {
       <MetricScoresSection
         primaryData={null}
         comparedData={COMPARED}
-        primaryRunName="Run #316"
-        comparedRunName="Run #315"
+        runs={getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' })}
         selectedStatistic={null}
         onSelectStatistic={vi.fn()}
         onSelectMetric={vi.fn()}
@@ -154,5 +156,33 @@ describe('Compare Summary :: MetricScoresSection', () => {
     fireEvent.click(screen.getByText('p:context_recall:0.8'));
 
     expect(onSelectMetric).toHaveBeenCalledWith('ragas.context_recall');
+  });
+
+  test('keeps metric scores visible when the compared run has none', () => {
+    const empty: MetricScoresData = { overallScore: 0, statistics: [], byStatistic: {} };
+    render(<Controlled compared={empty} />);
+
+    const group = screen.getByRole('group', { name: 'ragas' });
+    expect(within(group).getByText('p:context_recall:0.8')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.NoMetricScores')).not.toBeInTheDocument();
+  });
+
+  test('keeps metric scores visible when the primary run has none', () => {
+    const empty: MetricScoresData = { overallScore: 0, statistics: [], byStatistic: {} };
+    render(<Controlled primary={empty} />);
+
+    const group = screen.getByRole('group', { name: 'ragas' });
+    expect(within(group).getByText('c:context_recall:0.3')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.NoMetricScores')).not.toBeInTheDocument();
+  });
+
+  test('puts the compared run first when displayed in reverse', () => {
+    render(<Controlled isReversed />);
+
+    const group = screen.getByRole('group', { name: 'ragas' });
+    const labels = Array.from(group.querySelectorAll('span')).map((span) => span.textContent);
+    expect(labels).toEqual(['Run #315', 'Run #316']);
+    expect(within(group).getByText('p:context_recall:0.3')).toBeInTheDocument();
+    expect(within(group).getByText('c:context_recall:0.8')).toBeInTheDocument();
   });
 });

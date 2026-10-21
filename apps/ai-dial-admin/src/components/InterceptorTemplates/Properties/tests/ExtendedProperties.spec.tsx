@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ComponentProps } from 'react';
+import { Mock, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ExtendedProperties from '../ExtendedProperties';
 
@@ -48,6 +49,8 @@ vi.mock('@/src/components/BaseControls/Topics', () => ({
   ),
 }));
 
+type OnChange = NonNullable<ComponentProps<typeof ExtendedProperties>['onChange']>;
+
 describe('InterceptorTemplates :: ExtendedProperties', () => {
   const template = {
     name: 'template-1',
@@ -57,11 +60,11 @@ describe('InterceptorTemplates :: ExtendedProperties', () => {
     topics: ['old-topic'],
   } as any;
 
-  let onChange: ReturnType<typeof vi.fn>;
+  let onChange: Mock<OnChange>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    onChange = vi.fn();
+    onChange = vi.fn<OnChange>();
   });
 
   test('renders all sections and passes immutable mode to base properties', () => {

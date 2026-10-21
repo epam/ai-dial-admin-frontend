@@ -1,6 +1,6 @@
 import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { getGridOptions } from '@/src/components/Common/FileManager/utils';
 import { getGridColumns } from '@/src/components/Assets/BaseAssetList/utils';
 

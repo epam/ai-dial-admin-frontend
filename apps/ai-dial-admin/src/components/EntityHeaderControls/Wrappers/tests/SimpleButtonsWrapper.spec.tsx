@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import SimpleButtonsWrapper from '@/src/components/EntityHeaderControls/Wrappers/SimpleButtonsWrapper';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -21,7 +22,7 @@ vi.mock('@/src/components/EntityView/Modals/Delete/Delete', () => ({
 }));
 
 const baseProps = {
-  view: ApplicationRoute.AssetsModels,
+  view: ApplicationRoute.PlatformModels,
   entity: { name: 'example-from-admin' },
   isChanged: false,
   onDiscard: vi.fn(),
@@ -38,7 +39,9 @@ const openDeleteModal = async () => {
 describe('SimpleButtonsWrapper :: getAssetContext forwarding', () => {
   test('forwards getAssetContext to DeleteConfirmationModal when provided', async () => {
     const fetchFiles = vi.fn();
-    const getAssetContext = vi.fn(() => ({ fetchFiles, filePath: 'platform/' }));
+    // The fake carries only what the wrapper forwards; the cast happens once, here.
+    const assetContext = { fetchFiles, filePath: 'platform/' } as unknown as AssetsFolderContextReader;
+    const getAssetContext = vi.fn<() => AssetsFolderContextReader>(() => assetContext);
 
     render(<SimpleButtonsWrapper {...baseProps} getAssetContext={getAssetContext} />);
 
@@ -54,5 +57,42 @@ describe('SimpleButtonsWrapper :: getAssetContext forwarding', () => {
 
     await openDeleteModal();
     expect(screen.getByText('received-getAssetContext:false')).toBeInTheDocument();
+  });
+});
+
+describe('SimpleButtonsWrapper :: isSaving', () => {
+  test('disables Save while isSaving is true, so a spammed click cannot fire a second save', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged isSaving />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
+  test('leaves Save enabled once isSaving clears, following isValid as before', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged isSaving={false} />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+
+  test('leaves Save enabled when isSaving is omitted, unchanged for callers that do not guard saves', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+});
+
+describe('SimpleButtonsWrapper :: isSaveDisabled', () => {
+  test('disables Save but not Discard while isSaveDisabled is true', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged isSaveDisabled />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Discard })).toBeEnabled();
+  });
+
+  test('leaves Save enabled when isSaveDisabled is false or omitted', () => {
+    const { rerender } = render(<SimpleButtonsWrapper {...baseProps} isChanged isSaveDisabled={false} />);
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+
+    rerender(<SimpleButtonsWrapper {...baseProps} isChanged />);
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
   });
 });

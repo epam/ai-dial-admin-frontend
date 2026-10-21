@@ -150,20 +150,23 @@ describe('getDefaultPlaceholder', () => {
 });
 
 describe('isResetToDefaultHidden', () => {
-  const mockApi = {
+  // The fakes stay in their own object so they keep their `Mock` type; the cast to `GridApi` happens
+  // once, where the fake is handed to the function under test.
+  const gridApi = {
     getCellValue: vi.fn(),
     getColumn: vi.fn(),
-  } as unknown as GridApi;
+  };
+  const mockApi = gridApi as unknown as GridApi;
 
   const mockNode: IRowNode = { data: {} } as IRowNode;
 
   test('should return true when both invitationTtl and maxAcceptedUsers are falsy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return undefined;
       if (colKey === 'maxAcceptedUsers') return undefined;
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -174,12 +177,12 @@ describe('isResetToDefaultHidden', () => {
   });
 
   test('should return false when invitationTtl is truthy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return '3600';
       if (colKey === 'maxAcceptedUsers') return undefined;
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -190,12 +193,12 @@ describe('isResetToDefaultHidden', () => {
   });
 
   test('should return false when maxAcceptedUsers is truthy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return undefined;
       if (colKey === 'maxAcceptedUsers') return '10';
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -206,12 +209,12 @@ describe('isResetToDefaultHidden', () => {
   });
 
   test('should return false when both invitationTtl and maxAcceptedUsers are truthy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return '3600';
       if (colKey === 'maxAcceptedUsers') return '10';
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -223,20 +226,23 @@ describe('isResetToDefaultHidden', () => {
 });
 
 describe('isSetNoLimitsHidden', () => {
-  const mockApi = {
+  // The fakes stay in their own object so they keep their `Mock` type; the cast to `GridApi` happens
+  // once, where the fake is handed to the function under test.
+  const gridApi = {
     getCellValue: vi.fn(),
     getColumn: vi.fn(),
-  } as unknown as GridApi;
+  };
+  const mockApi = gridApi as unknown as GridApi;
 
   const mockNode: IRowNode = { data: {} } as IRowNode;
 
   test('should return true when both invitationTtl and maxAcceptedUsers are falsy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return undefined;
       if (colKey === 'maxAcceptedUsers') return undefined;
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -247,12 +253,12 @@ describe('isSetNoLimitsHidden', () => {
   });
 
   test('should return true when invitationTtl is UNLIMITED_VALUE and maxAcceptedUsers is UNLIMITED_ACCEPTED_USERS', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return UNLIMITED_VALUE;
       if (colKey === 'maxAcceptedUsers') return UNLIMITED_ACCEPTED_USERS;
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -263,12 +269,12 @@ describe('isSetNoLimitsHidden', () => {
   });
 
   test('should return false when invitationTtl is truthy and maxAcceptedUsers is falsy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return '3600';
       if (colKey === 'maxAcceptedUsers') return undefined;
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -279,13 +285,12 @@ describe('isSetNoLimitsHidden', () => {
   });
 
   test('should return false when invitationTtl is falsy and maxAcceptedUsers is truthy', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
-      if (colKey === 'invitationTtl') return '3600';
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return undefined;
       if (colKey === 'maxAcceptedUsers') return '10';
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;
@@ -296,12 +301,12 @@ describe('isSetNoLimitsHidden', () => {
   });
 
   test('should return false when both invitationTtl and maxAcceptedUsers are truthy but do not match UNLIMITED_VALUE', () => {
-    mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
+    gridApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return '3600';
       if (colKey === 'maxAcceptedUsers') return '10';
     });
 
-    mockApi.getColumn.mockImplementation((colKey: string) => {
+    gridApi.getColumn.mockImplementation((colKey: string) => {
       if (colKey === 'invitationTtl') return 'invitationTtl';
       if (colKey === 'maxAcceptedUsers') return 'maxAcceptedUsers';
       return {} as Column;

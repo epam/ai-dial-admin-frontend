@@ -16,7 +16,7 @@ describe('getUpdateAction', () => {
     expect(getUpdateAction(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA).name).toBe('updateApplicationScheme');
   });
   test('returns null for unknown type', () => {
-    expect(getUpdateAction('Unknown')).toBeNull();
+    expect(getUpdateAction('Unknown' as ActivityAuditResourceType)).toBeNull();
   });
 });
 
@@ -34,7 +34,7 @@ describe('getCreateAction', () => {
     expect(getCreateAction(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA)?.name).toBe('createApplicationScheme');
   });
   test('returns null for unknown type', () => {
-    expect(getCreateAction('Unknown')).toBeNull();
+    expect(getCreateAction('Unknown' as ActivityAuditResourceType)).toBeNull();
   });
 });
 
@@ -52,6 +52,6 @@ describe('getDeleteAction', () => {
     expect(getDeleteAction(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA)?.name).toBe('removeApplicationScheme');
   });
   test('returns null for unknown type', () => {
-    expect(getDeleteAction('Unknown')).toBeNull();
+    expect(getDeleteAction('Unknown' as ActivityAuditResourceType)).toBeNull();
   });
 });

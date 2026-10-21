@@ -12,6 +12,8 @@ export interface RunComparisonRun {
   matchedSuccessRowCount: number;
   avgExecDurationMs?: number | null;
   unmatchedEvalSummaryIds: string[];
+  /** test_case_id values with no counterpart in the other compared run (backed by `test_case_eval_scores`). */
+  unmatchedEvalTestCaseIds: string[];
   scores: MetricScoreValue[];
 }
 

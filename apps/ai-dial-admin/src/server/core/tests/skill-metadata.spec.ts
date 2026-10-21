@@ -21,6 +21,7 @@ describe('Server :: Core :: toSkillList', () => {
           createdAt: 1000,
           updatedAt: 2000,
           etag: 'etag-1',
+          bucket: 'public',
         },
       ],
     } as any);
@@ -35,6 +36,7 @@ describe('Server :: Core :: toSkillList', () => {
         updatedAt: '2000',
         nodeType: 'item',
         etag: 'etag-1',
+        bucket: 'public',
       },
     ]);
   });

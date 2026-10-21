@@ -1,6 +1,8 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BaseApi } from '../base-api';
+import { DEFAULT_ETAG, IF_MATCH } from '@/src/constants/api-headers';
 import { requestRegistry } from '@/src/utils/api/request-registry';
+import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import * as sendRequestModule from '@/src/utils/api/send-request';
 
 describe('BaseApi request cancellation', () => {
@@ -14,6 +16,10 @@ describe('BaseApi request cancellation', () => {
 
     public async testSendActionRequest(url: string, type: string) {
       return this.sendActionRequest(url, type);
+    }
+
+    public async testPutActionWithEtag(url: string, dto: object, etag: string | undefined) {
+      return this.putActionWithEtag(url, dto, TOKEN_MOCK, etag);
     }
   }
 
@@ -77,16 +83,24 @@ describe('BaseApi request cancellation', () => {
 
   test('cancelAll aborts in-flight request', async () => {
     let abortController: AbortController | undefined;
+    let markStarted!: () => void;
+    const hasStarted = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
 
-    // Capture the AbortController passed to sendRequest
+    // Capture the AbortController passed to sendRequest and keep the request in flight until it is aborted
     vi.spyOn(sendRequestModule, 'sendRequest').mockImplementation(async (_url, _type, _headers, _dto, signal) => {
-      // Store the signal to check if it gets aborted
       if (signal) {
         abortController = { signal } as AbortController;
       }
+      markStarted();
 
-      // Simulate a delayed request
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        if (signal?.aborted) {
+          resolve();
+        }
+        signal?.addEventListener('abort', () => resolve());
+      });
 
       // If aborted, throw AbortError
       if (signal?.aborted) {
@@ -101,8 +115,8 @@ describe('BaseApi request cancellation', () => {
     // Start request (don't await yet)
     const requestPromise = api.testSendRequest('/test', 'GET');
 
-    // Cancel all requests while in flight
-    await new Promise((resolve) => setTimeout(resolve, 10)); // Let request start
+    // Cancel all requests once the request is in flight
+    await hasStarted;
     requestRegistry.cancelAll();
 
     // Wait for request to complete
@@ -129,5 +143,148 @@ describe('BaseApi request cancellation', () => {
       errorMessage: 'Request cancelled',
     });
     expect(unregisterSpy).toHaveBeenCalledOnce();
+  });
+});
+
+describe('BaseApi putActionWithEtag', () => {
+  class TestApi extends BaseApi {
+    public async testPutActionWithEtag(url: string, dto: object, etag: string | undefined) {
+      return this.putActionWithEtag(url, dto, TOKEN_MOCK, etag);
+    }
+  }
+
+  let api: TestApi;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    api = new TestApi({ host: 'http://test.com' });
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+  });
+
+  test('sends If-Match with the given etag when one is defined', async () => {
+    await api.testPutActionWithEtag('/test', {}, 'real-etag');
+
+    expect(sendRequestModule.sendRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      'PUT',
+      expect.objectContaining({ [IF_MATCH]: 'real-etag' }),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  test('sends If-Match: * when DEFAULT_ETAG is passed explicitly', async () => {
+    await api.testPutActionWithEtag('/test', {}, DEFAULT_ETAG);
+
+    expect(sendRequestModule.sendRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      'PUT',
+      expect.objectContaining({ [IF_MATCH]: DEFAULT_ETAG }),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  test('omits If-Match entirely when etag is undefined', async () => {
+    await api.testPutActionWithEtag('/test', {}, undefined);
+
+    const headers = (sendRequestModule.sendRequest as ReturnType<typeof vi.fn>).mock.calls[0][2];
+    expect(headers).not.toHaveProperty(IF_MATCH);
+  });
+});
+
+describe('BaseApi postDownloadAction', () => {
+  class TestApi extends BaseApi {
+    public testPostDownloadAction(url: string, signal?: AbortSignal) {
+      return this.postDownloadAction(url, {}, TOKEN_MOCK, signal);
+    }
+  }
+
+  const api = new TestApi({ host: 'http://test.com' });
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('returns a JSON body as a blob under the Content-Disposition name', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('{"a":1}', {
+        status: 200,
+        headers: { 'content-type': 'application/json', 'content-disposition': 'attachment; filename="bundle.json"' },
+      }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.success).toBe(true);
+    expect(res.response?.fileName).toBe('bundle.json');
+    expect(await res.response?.blob.text()).toBe('{"a":1}');
+  });
+
+  test('reads the total count when the service sends one', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('id\r\n', { status: 200, headers: { 'content-type': 'text/csv', 'x-total-count': '4200' } }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.response?.totalCount).toBe(4200);
+  });
+
+  test('leaves the total out when the service sends none', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('id\r\n', { status: 200, headers: { 'content-type': 'text/csv' } }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.response).not.toHaveProperty('totalCount');
+  });
+
+  test('leaves the total out when the header is not a number', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('id\r\n', { status: 200, headers: { 'content-type': 'text/csv', 'x-total-count': 'n/a' } }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.response).not.toHaveProperty('totalCount');
+  });
+
+  // The caller's signal is combined with the registry's, so either one cancels the request.
+  test("aborts the request when the caller's signal aborts", async () => {
+    const spy = vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(new Response('', { status: 200 }));
+    const caller = new AbortController();
+
+    await api.testPostDownloadAction('/download', caller.signal);
+    caller.abort();
+
+    expect((spy.mock.calls[0][4] as AbortSignal).aborted).toBe(true);
+  });
+
+  test('returns the error envelope for a 403 instead of an empty success', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'forbidden', message: 'No access' }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+    expect(res.response).toBeUndefined();
+  });
+
+  test('returns the cancelled envelope when the request is aborted', async () => {
+    const abortError = new Error('aborted');
+    abortError.name = 'AbortError';
+    vi.spyOn(sendRequestModule, 'sendRequest').mockRejectedValue(abortError);
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res).toEqual({ success: false, status: 0, errorMessage: 'Request cancelled' });
   });
 });

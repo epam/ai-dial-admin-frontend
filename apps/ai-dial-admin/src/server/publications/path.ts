@@ -114,6 +114,12 @@ export const getVersionedName = (name: string, version?: string): string => {
   return version == null || version.trim() === '' ? name : `${name}__${version}`;
 };
 
+/** Replaces the last segment of a decoded path with `name__version` — the review copy's location after a version edit. */
+export const replaceVersionedName = (path: string, name: string, version?: string): string => {
+  const lastSlashIndex = path.lastIndexOf('/');
+  return `${path.slice(0, lastSlashIndex + 1)}${getVersionedName(name, version)}`;
+};
+
 /** Builds an encoded `folder/Name__version` path (mirrors `PathUtils.buildEncodedPath`). */
 export const buildEncodedPath = (folderId: string, name: string, version?: string): string => {
   const cleanFolderId = stripTrailingSlash(folderId);

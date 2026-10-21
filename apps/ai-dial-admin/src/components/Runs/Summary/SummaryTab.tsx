@@ -19,6 +19,7 @@ import { MetricInfo, MetricOption, MetricScoresData } from './models';
 import {
   attachMetricInfo,
   buildMetricScoresQuery,
+  fillUnscoredMetricBars,
   parseMetricScores,
   toMetricInfoByName,
   toMetricOptions,
@@ -35,29 +36,34 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   const [metricScores, setMetricScores] = useState<MetricScoresData | null>(null);
   const [metricOptions, setMetricOptions] = useState<MetricOption[]>([]);
   const [metricInfoByName, setMetricInfoByName] = useState<Record<string, MetricInfo>>({});
+  const [metricSnapshotCount, setMetricSnapshotCount] = useState<number | undefined>(undefined);
   const { selectedStatistic } = summaryState;
 
   const enrichedMetricScores = useMemo(
-    () => (metricScores ? attachMetricInfo(metricScores, metricInfoByName) : metricScores),
-    [metricScores, metricInfoByName],
+    () =>
+      metricScores
+        ? attachMetricInfo(fillUnscoredMetricBars(metricScores, metricOptions), metricInfoByName)
+        : metricScores,
+    [metricScores, metricOptions, metricInfoByName],
   );
 
   useEffect(() => {
-    if (!metricScores) {
+    if (!enrichedMetricScores) {
       return;
     }
 
     const isStaleOverall = selectedStatistic === OVERALL_METRIC_SCORE_NAME;
-    const isMissingSelection = selectedStatistic == null;
+    const isMissingSelection =
+      selectedStatistic == null || !enrichedMetricScores.statistics.includes(selectedStatistic);
     if (!isStaleOverall && !isMissingSelection) {
       return;
     }
 
-    const defaultStatistic = metricScores.statistics[0] ?? null;
+    const defaultStatistic = enrichedMetricScores.statistics[0] ?? null;
     if (defaultStatistic) {
       setSummaryState({ selectedStatistic: defaultStatistic });
     }
-  }, [metricScores, selectedStatistic, setSummaryState]);
+  }, [enrichedMetricScores, selectedStatistic, setSummaryState]);
 
   useEffect(() => {
     if (!run?.testSuiteId) {
@@ -75,12 +81,14 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
       setMetricScores(null);
       setMetricOptions([]);
       setMetricInfoByName({});
+      setMetricSnapshotCount(undefined);
       return;
     }
 
     let cancelled = false;
     setMetricScores(null);
     setMetricInfoByName({});
+    setMetricSnapshotCount(undefined);
 
     executeStructuredQuery(buildMetricScoresQuery(run.id)).then((result) => {
       if (!cancelled) {
@@ -93,6 +101,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
         return;
       }
       setMetricOptions(toMetricOptions(snapshots));
+      setMetricSnapshotCount(snapshots?.length ?? 0);
 
       const declarationIds = Array.from(
         new Set((snapshots ?? []).map((snapshot) => snapshot.metricDeclarationId).filter(Boolean)),
@@ -128,9 +137,15 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-8">
-      <Header run={run} testSuite={testSuite} />
-      <Analytics run={run} overallScore={enrichedMetricScores?.overallScore} />
+    <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
+      <div className="flex shrink-0 flex-col gap-8">
+        <Header run={run} testSuite={testSuite} />
+        <Analytics
+          run={run}
+          overallScore={enrichedMetricScores?.overallScore}
+          metricSnapshotCount={metricSnapshotCount}
+        />
+      </div>
       <div className={SUMMARY_PANELS_GRID_CLASS}>
         <MetricScoresSection
           data={enrichedMetricScores}

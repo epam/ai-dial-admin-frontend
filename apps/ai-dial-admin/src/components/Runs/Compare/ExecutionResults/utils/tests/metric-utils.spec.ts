@@ -416,3 +416,15 @@ describe('Runs Compare :: hasCompareRowDiff', () => {
     expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(true);
   });
 });
+
+describe('Runs Compare :: deltas are measured from the baseline (primary) run', () => {
+  test('swapping which run is the baseline negates the delta', () => {
+    expect(getMetricDelta(1, 0.917)).toEqual({ kind: MetricDeltaKind.Changed, value: -0.083 });
+    expect(getMetricDelta(0.917, 1)).toEqual({ kind: MetricDeltaKind.Changed, value: 0.083 });
+  });
+
+  test('swapping which run is the baseline swaps removed and added for a one-sided value', () => {
+    expect(getCompareFieldDelta('x', null)).toBe(MetricDeltaKind.Removed);
+    expect(getCompareFieldDelta(null, 'x')).toBe(MetricDeltaKind.Added);
+  });
+});

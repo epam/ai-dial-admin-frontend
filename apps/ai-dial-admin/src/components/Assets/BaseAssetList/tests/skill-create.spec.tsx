@@ -1,12 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { createSkill, createSkillFolder } from '@/src/app/[lang]/assets-skills/actions';
+import { createSkill, createSkillFolder } from '@/src/app/[lang]/skills/actions';
 import { ApplicationRoute } from '@/src/types/routes';
 import BaseAssetList from '../BaseAssetList';
 
-vi.mock('@/src/app/[lang]/assets-skills/actions', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/src/app/[lang]/assets-skills/actions')>()),
+vi.mock('@/src/app/[lang]/skills/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/skills/actions')>()),
   createSkill: vi.fn().mockResolvedValue({ success: true }),
   createSkillFolder: vi.fn().mockResolvedValue({ success: true }),
 }));
@@ -32,7 +32,7 @@ vi.mock('../Modals', () => ({
  */
 describe('BaseAssetList :: AssetsSkills create branches', () => {
   test('Create > Folder calls createSkillFolder with no trailing slash, not CreateAssetActionMap', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsSkills} />);
+    render(<BaseAssetList view={ApplicationRoute.Skills} />);
 
     fireEvent.click(screen.getByText('create-folder'));
 
@@ -43,7 +43,7 @@ describe('BaseAssetList :: AssetsSkills create branches', () => {
   });
 
   test('Create > Skill calls createSkill with name, description, and the current root folder', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsSkills} />);
+    render(<BaseAssetList view={ApplicationRoute.Skills} />);
 
     fireEvent.click(screen.getByText('create-skill'));
 

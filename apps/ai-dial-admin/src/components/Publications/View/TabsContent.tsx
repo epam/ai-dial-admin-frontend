@@ -2,14 +2,14 @@
 import { Dispatch, SetStateAction, useCallback } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
-import Conversations from '@/src/components/Assets/Conversations/View/Conversations';
+import Conversations from '@/src/components/Assets/Artifacts/Conversations/View/Conversations';
 import FilesDetails from '@/src/components/Publications/Assets/Files/FilesDetails';
 import ApplicationProperties from '@/src/components/Publications/Properties/ApplicationProperties';
 import ConversationProperties from '@/src/components/Publications/Properties/ConversationProperties';
 import FileProperties from '@/src/components/Publications/Properties/FileProperties';
 import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
 import SkillProperties from '@/src/components/Publications/Properties/SkillProperties';
-import SkillManifestTab from '@/src/components/Assets/Skills/View/SkillManifestTab';
+import SkillManifestTab from '@/src/components/Assets/Artifacts/Skills/View/SkillManifestTab';
 import ToolsetProperties from '@/src/components/Publications/Properties/ToolsetProperties';
 import Tools from '@/src/components/Tools/Tools';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';

@@ -11,7 +11,8 @@ import {
 import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
+import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'result-1',
@@ -19,7 +20,7 @@ const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult =
   testCaseName: 'Test Case 1',
   runIndex: 0,
   responseStatusCode: 200,
-  executionStatus: 'SUCCESS',
+  executionStatus: ExtractionResultStatus.SUCCESS,
   metricValues: {},
   ...overrides,
 });
@@ -29,9 +30,12 @@ const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalytics
   ...overrides,
 });
 
+const runs = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' });
+const buildRows = (mergedRows: CompareAnalyticsRow[], displayRuns = runs) => buildHeatMapRows(mergedRows, displayRuns);
+
 describe('buildHeatMapRows', () => {
   test('creates group row and both run rows per metric', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         testCaseId: 'tc-1',
         metricValues: { Accuracy: { precision: 0.5 } },
@@ -50,7 +54,7 @@ describe('buildHeatMapRows', () => {
   });
 
   test('maps cell values per test case column for each run', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         id: 'r1',
         testCaseId: 'tc-1',
@@ -80,7 +84,7 @@ describe('buildHeatMapRows', () => {
   });
 
   test('maps distinct columns for chained requests of the same test case', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         id: 'r1',
         testCaseId: 'tc-blr',
@@ -129,7 +133,7 @@ describe('buildHeatMapRows', () => {
   });
 
   test('maps distinct columns for multiple sub-runs of the same test case', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         id: 'r1',
         testCaseId: 'tc-blr',
@@ -157,7 +161,7 @@ describe('buildHeatMapRows', () => {
   });
 
   test('group rows have no cell values', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         metricValues: { Accuracy: { precision: 0.5 } },
         _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } } }),
@@ -222,6 +226,20 @@ describe('buildHeatMapDeltaRows', () => {
     expect(deltaRow?.values[formatHeatMapTestCaseColId('tc-4', 0)]).toBeUndefined();
   });
 
+  test('measures the delta from the baseline, so swapping the runs negates it', () => {
+    const buildDelta = (primary: number, compared: number) =>
+      buildHeatMapDeltaRows([
+        makeRow({
+          testCaseId: 'tc-1',
+          metricValues: { Accuracy: { precision: primary } },
+          _compared: makeResult({ metricValues: { Accuracy: { precision: compared } } }),
+        }),
+      ]).find((row) => row.rowType === HeatMapRowType.Metric)?.values[formatHeatMapTestCaseColId('tc-1', 0)];
+
+    expect(buildDelta(1, 0.444)).toBe(-0.556);
+    expect(buildDelta(0.444, 1)).toBe(0.556);
+  });
+
   test('omits delta when either run is missing a numeric value', () => {
     const rows = buildHeatMapDeltaRows([
       makeRow({
@@ -252,8 +270,8 @@ describe('buildHeatMapRowsForMode', () => {
       }),
     ];
 
-    expect(buildHeatMapRowsForMode(mergedRows, HeatMapColorDisplayMode.Absolute)).toEqual(buildHeatMapRows(mergedRows));
-    expect(buildHeatMapRowsForMode(mergedRows, HeatMapColorDisplayMode.Delta)).toEqual(
+    expect(buildHeatMapRowsForMode(mergedRows, HeatMapColorDisplayMode.Absolute, runs)).toEqual(buildRows(mergedRows));
+    expect(buildHeatMapRowsForMode(mergedRows, HeatMapColorDisplayMode.Delta, runs)).toEqual(
       buildHeatMapDeltaRows(mergedRows),
     );
   });
@@ -261,7 +279,7 @@ describe('buildHeatMapRowsForMode', () => {
 
 describe('filterHeatMapRowsByExpandedGroups', () => {
   test('hides metric rows when their group is collapsed', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         metricValues: { Accuracy: { precision: 0.5 } },
         _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } } }),
@@ -276,7 +294,7 @@ describe('filterHeatMapRowsByExpandedGroups', () => {
 
 describe('getHeatMapGroupKeys', () => {
   test('returns group keys from heat map rows', () => {
-    const rows = buildHeatMapRows([
+    const rows = buildRows([
       makeRow({
         metricValues: { Accuracy: { precision: 0.5 }, Quality: { score: 0.9 } },
         _compared: makeResult({
@@ -286,5 +304,44 @@ describe('getHeatMapGroupKeys', () => {
     ]);
 
     expect(getHeatMapGroupKeys(rows)).toEqual(['Accuracy', 'Quality']);
+  });
+});
+
+describe('buildHeatMapRows run order', () => {
+  const rows = [
+    makeRow({
+      testCaseId: 'tc-1',
+      metricValues: { Accuracy: { precision: 0.5 } },
+      _compared: makeResult({ id: 'result-2', metricValues: { Accuracy: { precision: 0.8 } } }),
+    }),
+  ];
+  const reversedRuns = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' }).reverse();
+  const metricRunIndexes = (heatMapRows: ReturnType<typeof buildHeatMapRows>) =>
+    heatMapRows.filter((row) => row.rowType === HeatMapRowType.Metric).map((row) => row.runIndex);
+
+  test('lists run rows in the order of the runs', () => {
+    expect(metricRunIndexes(buildRows(rows))).toEqual([RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX]);
+    expect(metricRunIndexes(buildRows(rows, reversedRuns))).toEqual([
+      RUN_COMPARE_SECONDARY_INDEX,
+      RUN_COMPARE_PRIMARY_INDEX,
+    ]);
+  });
+
+  test('keeps each row bound to its own run values', () => {
+    const [, first, second] = buildRows(rows, reversedRuns);
+    const colId = Object.keys(first.values)[0];
+
+    expect(first.runIndex).toBe(RUN_COMPARE_SECONDARY_INDEX);
+    expect(first.values[colId]).toBe(0.8);
+    expect(second.values[colId]).toBe(0.5);
+  });
+
+  test('passes the runs through buildHeatMapRowsForMode but never reorders the delta rows', () => {
+    expect(metricRunIndexes(buildHeatMapRowsForMode(rows, HeatMapColorDisplayMode.Absolute, reversedRuns))[0]).toBe(
+      RUN_COMPARE_SECONDARY_INDEX,
+    );
+    expect(buildHeatMapRowsForMode(rows, HeatMapColorDisplayMode.Delta, reversedRuns)).toEqual(
+      buildHeatMapDeltaRows(rows),
+    );
   });
 });

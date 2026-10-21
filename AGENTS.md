@@ -17,7 +17,17 @@ Things that cost time or fail silently if you don't know them:
 - **`@/` resolves from `apps/ai-dial-admin/`**, so vitest must run from that directory or the alias
   won't resolve.
 - **`npm run test` always runs with coverage.** While iterating use
-  `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate.
+  `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate. It goes through
+  `scripts/run-tests.mjs`, which sets the heap limit (so it works on Windows too) and logs the exit code
+  and **signal** at the end: a run that stops with no test output and `signal=SIGKILL` was killed (out of
+  memory), not failed by a test.
+- **Two typecheck gates, both blocking, both at zero.** `npm run typecheck`
+  (`tsc -p tsconfig.app.json`) covers app source; `npm run typecheck:specs`
+  (`tsc -p tsconfig.spec.json`) covers `*.spec.ts(x)` plus `test-setup.tsx`. Both run in
+  `.husky/pre-commit` and in the blocking CI `typecheck` job. A green test run still says nothing about
+  types — vitest strips them through esbuild and eslint ignores spec files — so the spec project is the
+  only thing that catches a fixture drifting from its production type. Keep it at zero: the 726 errors it
+  started with took ten PRs to clear.
 - **Test mocks are centralized in `apps/ai-dial-admin/test-setup.tsx`**, and its mocked `t()` returns
   the i18n key as-is — so component tests assert keys, not translated text. Add missing mocks there,
   not inline in a spec.
@@ -33,15 +43,30 @@ Things that cost time or fail silently if you don't know them:
   it as a default project skills location, so both see the canonical files. The `openspec-*` entries
   under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
   variant per tool and owns them.
-- **Analytics is one master spec** — `openspec/specs/analytics/spec.md`. Don't create per-feature
-  analytics specs.
-- **Pre-commit runs lint-staged plus the agent-config validator; pre-push runs the suite.** Don't skip
-  hooks.
+- **Analytics is a root index plus ten sub-capabilities** under `openspec/specs/analytics/` —
+  `query-builder`, `query-viewer`, `saved-queries`, `tables`, `sessions-listing`,
+  `session-trace-listing`, `session-trace-detail`, `pipelines`, `dashboards`, `config-transfer`. Address one as
+  `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
+  shares, plus a routing table naming what each sub-capability answers — add a row when you add one.
+  Never create a top-level `analytics-*` spec folder.
+- **Analytics archives keep only `proposal.md` and `design.md`** — archiving a change whose deltas
+  touch `analytics/*` deletes its `tasks.md` and `specs/` delta, because the delta is already folded
+  into the consolidated specs. Analytics-only; every other capability keeps the stock layout.
+- **Pre-commit runs lint-staged, the agent-config validator and both typechecks; pre-push runs the
+  suite.** Don't skip hooks.
 
 ## Hard constraints
 
-- **Never read `.env*.local`.** A `PreToolUse` hook blocks it. New variables go into `.env.template`
-  as commented entries.
+- **Never read or write `.env*.local`.** A `PreToolUse` hook blocks it. New variables go into
+  `.env.template` as commented entries; if an existing local value must change, name the variable and
+  let the user edit their own file. The hook also refuses two things whose target it cannot see in the
+  command text, because a repo-wide rename once edited `.env.local` through exactly that gap: an
+  **in-place write over a runtime-built path list** (`xargs perl -pi`, `find -exec sed -i`,
+  `perl -i $(…)`), and a **recursive content search** over a directory that holds an env file. Both
+  clear once you exclude env files where the list is built — `--exclude='.env*'`, `! -name '.env*'`,
+  `| grep -v '\.env'` — which is the fix, not a workaround; `grep -rl` (names only) is never blocked.
+  A trailing `# env-guard: reviewed` waives a blind write you have inspected. Regression suite:
+  `bash .claude/hooks/tests/block-env-local-access.test.sh`.
 - **Don't post to GitHub** — issues, PR comments, review replies — without the user explicitly asking
   for that specific action. Implementing a fix is not authorization to reply.
 

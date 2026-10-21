@@ -1,9 +1,8 @@
 import { FC, useCallback } from 'react';
 
-import ToolsetAssetProperties from '@/src/components/Assets/Toolsets/View/Properties';
+import ToolsetAssetProperties from '@/src/components/Assets/Entities/Toolsets/View/Properties';
 import { ToolsetPublication } from '@/src/models/dial/publications';
 import { DialToolsetResource } from '@/src/models/dial/resource';
-import { updatePathWithNameAndVersion } from '@/src/utils/files/path';
 
 interface Props {
   publication: ToolsetPublication;
@@ -13,12 +12,8 @@ interface Props {
 const ToolsetDetails: FC<Props> = ({ publication, onChange }) => {
   const onChangeToolset = useCallback(
     (updatedToolset: DialToolsetResource) => {
-      const path = updatePathWithNameAndVersion(updatedToolset.path, updatedToolset.name || '', updatedToolset.version);
       const updatedToolsets = [...(publication.toolSetResources || [])];
-      updatedToolsets[0] = {
-        ...updatedToolsets[0],
-        toolSetResource: { ...updatedToolset, path },
-      };
+      updatedToolsets[0] = { ...updatedToolsets[0], toolSetResource: updatedToolset };
       onChange?.({ ...publication, toolSetResources: updatedToolsets });
     },
     [publication, onChange],

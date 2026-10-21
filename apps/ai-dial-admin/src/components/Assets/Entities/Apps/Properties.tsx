@@ -1,0 +1,189 @@
+import { FC, useMemo } from 'react';
+
+import classNames from 'classnames';
+
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
+import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
+import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
+import DescriptionControl from '@/src/components/BaseControls/Description';
+import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import IconControl from '@/src/components/BaseControls/Icon';
+import IdControl from '@/src/components/BaseControls/Id/Id';
+import IntroControl from '@/src/components/BaseControls/Intro';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
+import TopicsControl from '@/src/components/BaseControls/Topics';
+import VersionControl from '@/src/components/BaseControls/Version';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
+import FilePath from '@/src/components/Common/FilePath/FilePath';
+import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
+import Defaults from '@/src/components/Defaults/Defaults';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
+import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
+import { ASSET_APPLICATION_CREATE_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useI18n } from '@/src/locales/client';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { CoreResourceEntityMetadata, DialApplicationResource } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
+
+interface Props {
+  asset: DialApplicationResource;
+  runners?: DialApplicationScheme[];
+  translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
+  onChange: (asset: DialApplicationResource) => void;
+  isPublication?: boolean;
+}
+
+const ApplicationAssetProperties: FC<Props> = ({
+  asset,
+  runners,
+  translators,
+  catalogSchemas,
+  onChange,
+  isPublication,
+}) => {
+  const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { codeAppEditorUrl } = useAppContext();
+
+  const assetApp = asset as DialApplicationResource;
+  const schemaSourceId = assetApp.application_type_schema_id;
+
+  // A merged read carries the folder only in `_metadata`; the create flow seeds it flat. Resolved
+  // once here for every folder read below (storage label, bucket check, the Move field).
+  const folderId = asset.folderId ?? asset._metadata?.folderId ?? '';
+
+  const appRunner = useMemo(() => getAppRunner(assetApp, runners ?? []), [assetApp, runners]);
+
+  const showResponsesDefaults =
+    (!schemaSourceId && !!assetApp.responses_endpoint) ||
+    (!!schemaSourceId && !!appRunner?.['dial:applicationTypeResponsesEndpoint']);
+
+  const headerPostfix = useMemo(() => {
+    return (
+      <>
+        <FoldersStorageLabel asset={{ folderId }} />
+      </>
+    );
+  }, [folderId]);
+
+  return (
+    <div className="flex flex-col">
+      {!isPublication && <ResourceInfoHeader entity={asset} postfix={headerPostfix} />}
+      <div className={classNames('flex flex-col gap-y-8', !isPublication && 'mt-8')}>
+        {isPublication && (
+          <IdControl entity={asset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
+        )}
+        <DisplayNameControl
+          displayName={asset.display_name}
+          required
+          isFullWidth={false}
+          onChange={(display_name) => onChange({ ...asset, display_name })}
+        />
+        {isPublication && (
+          <VersionControl
+            containerClassName="w-[175px]"
+            version={asset._metadata?.version}
+            onChange={(version?: string) =>
+              onChange?.({
+                ...asset,
+                display_version: version || '',
+                _metadata: {
+                  ...asset._metadata,
+                  version: version || '',
+                } as CoreResourceEntityMetadata,
+              })
+            }
+          />
+        )}
+        <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
+        <IntroControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
+
+        <IconControl iconUrl={asset.icon_url} onChange={(icon_url) => onChange({ ...asset, icon_url })} />
+        <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsApplications} />
+
+        {/* The platform bucket is flat — no folder tree to move into (design.md's `platform-applications` capability) — so this control is meaningless there and is hidden rather than shown-but-inert. */}
+        {!isPublication && !isPlatformBucketPath(folderId) && (
+          <FilePath
+            value={folderId}
+            label={t(EntitiesI18nKey.FolderStorage)}
+            modalTitle={t(BasicI18nKey.MoveToFolder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Path)}
+            onChange={(folderId) => onChange?.({ ...asset, folderId })}
+            context={useAppsFolder}
+            disabled={isReadOnlyAdmin}
+            onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsApplications)}
+            view={ApplicationRoute.AssetsApplications}
+          />
+        )}
+
+        <ResourceSourceField
+          id="sourceType"
+          view={ApplicationRoute.AssetsApplications}
+          label={t(EntitiesI18nKey.SourceType)}
+          sourceItems={ASSET_APPLICATION_CREATE_SOURCE_ITEMS}
+          entity={asset as DialApplicationResource}
+          onChange={onChange as (entity: DialApplicationResource) => void}
+          runners={runners}
+          isEntityImmutable={true}
+          codeAppEditorUrl={codeAppEditorUrl}
+          translators={translators}
+        />
+        <OverrideNameControl entity={asset as any} onChangeEntity={onChange} isAsset />
+        <EndpointControl
+          id="base_url"
+          label={t(EntityFieldsI18nKey.baseUrl)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          endpoint={asset.base_url}
+          onChange={(base_url) => onChange({ ...asset, base_url })}
+        />
+        <ResourceMultiAuth asset={asset} onChange={onChange} />
+        <EntityAttachments entity={asset} onChangeEntity={onChange} isAsset />
+        <Defaults
+          values={(asset as DialApplication).defaults}
+          onChangeValues={(defaults) => onChange({ ...asset, defaults } as DialApplicationResource)}
+          title={t(EntityFieldsI18nKey.completionDefaults)}
+        />
+        {showResponsesDefaults && (
+          <Defaults
+            values={asset.responses_defaults}
+            onChangeValues={(responses_defaults) =>
+              onChange({ ...asset, responses_defaults } as DialApplicationResource)
+            }
+            title={t(EntityFieldsI18nKey.responsesDefaults)}
+            validationKey="responsesDefaultKeys"
+          />
+        )}
+        <KeyValueGrid
+          label={t(EntityFieldsI18nKey.defaultHeaders)}
+          value={asset.default_headers}
+          onChange={(default_headers) => onChange({ ...asset, default_headers })}
+        />
+        <MaxRetryAttempts entity={asset} onChangeEntity={onChange} isAsset />
+        {!isPublication && (
+          <CatalogSchemaField
+            schemaId={asset.catalog_schema_id}
+            options={catalogSchemas?.options}
+            optionsError={catalogSchemas?.error}
+            entityType={CATALOG_SCHEMA_PICKER_ENTITY_TYPE.applications}
+            onChange={(catalog_schema_id) => onChange({ ...asset, catalog_schema_id, catalog_properties: void 0 })}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ApplicationAssetProperties;

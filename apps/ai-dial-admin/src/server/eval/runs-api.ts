@@ -1,5 +1,5 @@
 import { Token } from '@/src/models/auth';
-import { ExtractionResult, Run } from '@/src/models/evaluation/run';
+import { ExtractionResult, Run, RunCosts } from '@/src/models/evaluation/run';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -9,6 +9,8 @@ import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 
 export const RUNS_URL = `${API}/test-suite-runs`;
 export const RUN_URL = (id: string) => `${RUNS_URL}/${id}`;
+export const RUN_COSTS_URL = (id: string) => `${RUN_URL(id)}/costs`;
+export const RUN_CANCEL_URL = (id: string) => `${RUN_URL(id)}/cancel`;
 export const RUN_RESULTS_URL = `${API}/analytics/test-case-results`;
 export class RunsApi extends BaseApi {
   getRuns(
@@ -31,8 +33,16 @@ export class RunsApi extends BaseApi {
     return this.get<Run>(RUN_URL(id), token);
   }
 
+  getRunCosts(id: string, token: Token): Promise<RunCosts | null> {
+    return this.get<RunCosts>(RUN_COSTS_URL(id), token);
+  }
+
   removeRun(id: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(RUN_URL(id), token);
+  }
+
+  cancelRun(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(RUN_CANCEL_URL(id), {}, token);
   }
 
   getRunResults(token: Token, filters: FilterDto[]): Promise<{ content: ExtractionResult[] } | null> {

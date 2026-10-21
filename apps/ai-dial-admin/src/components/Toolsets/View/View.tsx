@@ -17,6 +17,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -47,8 +48,9 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { featureFlags } = useAppContext();
 
-  const tabs = getToolsetTabs(t);
+  const tabs = getToolsetTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);

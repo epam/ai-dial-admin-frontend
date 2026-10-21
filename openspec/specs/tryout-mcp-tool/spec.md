@@ -1,4 +1,10 @@
-## ADDED Requirements
+# tryout-mcp-tool Specification
+
+## Purpose
+
+Trying out an MCP container's tool from the admin console against the deployments backend.
+
+## Requirements
 
 ### Requirement: TryOut button visible for MCP container tools
 The TryOut button SHALL be displayed in the tool header for each tool listed under an MCP container deployment, matching the existing behavior for core and asset toolsets.

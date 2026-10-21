@@ -11,17 +11,11 @@ import { ResourceType } from '@/src/types/resource-type';
 import { changePath, extractVersionByPath } from '@/src/utils/files/path';
 import { buildFilesExportZip } from '@/src/server/files/export';
 import { toFileList } from '@/src/server/core/file-metadata';
+import { fetchAllPages } from '@/src/server/core/pagination';
 
-export async function getFiles(path: string) {
+export async function getFiles(path: string): Promise<DialFile[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const files: DialFile[] = [];
-  let nextToken: string | undefined;
-  do {
-    const metadata = await filesCoreApi.getFileMetadata(token, path, false, nextToken);
-    files.push(...toFileList(metadata));
-    nextToken = metadata?.nextToken;
-  } while (nextToken);
-  return files;
+  return fetchAllPages((nextToken) => filesCoreApi.getFileMetadata(token, path, false, nextToken), toFileList);
 }
 
 export async function bulkDeleteFiles(items: { path: string; etag: string }[]): Promise<ServerActionResponse> {

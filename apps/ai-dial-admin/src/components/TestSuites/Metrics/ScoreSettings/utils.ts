@@ -8,7 +8,12 @@ import {
   QueryMode,
   StructuredQuery,
 } from '@/src/models/evaluation/structured-query';
-import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
+import {
+  OverallScoreType,
+  OverallScoreWeight,
+  TestCaseOverallScoreConfig,
+  TestSuite,
+} from '@/src/models/evaluation/test-suite';
 import { and, col, field, fn, param } from '@/src/utils/structured-query/build';
 import { ErrorType } from '@/src/types/error-type';
 import {
@@ -29,6 +34,7 @@ import {
   MetricOutputOption,
   OverallScoreFunctionName,
 } from './models';
+import { JSONSchema7 } from 'json-schema';
 
 const DEFAULT_METRIC_SCORE_FIELD = 'score';
 
@@ -62,6 +68,51 @@ export const getMetricOutputOptions = (metrics?: Metric[]): MetricOutputOption[]
       label: `${metricName} — ${outputField}`,
     }));
   });
+
+/** Default coefficient for a new weighted-mean row (Figma: 1.0). */
+export const DEFAULT_WEIGHTED_MEAN_WEIGHT = 1;
+
+/**
+ * Format weight for DialNumberInput so whole numbers render with one decimal (Figma: 1.0).
+ * Passing a string avoids the browser collapsing numeric `1` to `"1"`.
+ */
+export const formatWeightedMeanWeightInputValue = (weight: number | undefined): string | number | undefined => {
+  if (weight === undefined || !Number.isFinite(weight)) {
+    return weight;
+  }
+
+  return Number.isInteger(weight) ? weight.toFixed(1) : String(weight);
+};
+
+export const createWeightedMeanWeight = (
+  option: Pick<MetricOutputOption, 'metricName' | 'outputField'>,
+  weight = DEFAULT_WEIGHTED_MEAN_WEIGHT,
+): OverallScoreWeight => ({
+  metricName: option.metricName,
+  outputField: option.outputField,
+  weight,
+});
+
+/** Seed weighted mean with the first metric output and weight 1.0 when selecting the method. */
+export const createDefaultWeightedMeanWeights = (metrics?: Metric[]): OverallScoreWeight[] => {
+  const firstOption = getMetricOutputOptions(metrics)[0];
+  return firstOption ? [createWeightedMeanWeight(firstOption)] : [];
+};
+
+/** Next unused metric output for Add, or null when every option is already used. */
+export const createNextWeightedMeanWeight = (
+  metrics: Metric[] | undefined,
+  weights: OverallScoreWeight[],
+): OverallScoreWeight | null => {
+  const nextOption = getAvailableOptionsForRow(getMetricOutputOptions(metrics), weights, weights.length)[0];
+  return nextOption ? createWeightedMeanWeight(nextOption) : null;
+};
+
+export const getMetricOutputTags = (metric?: Metric) => {
+  return Object.entries(metric?.outputSchema?.properties ?? {}).map(
+    ([key, property]) => (property as JSONSchema7)?.title || key,
+  );
+};
 
 export const getAvailableOptionsForRow = (
   allOptions: MetricOutputOption[],
@@ -193,3 +244,148 @@ export const buildOverallScoreFunctionExpression = (
     ),
   ],
 });
+
+const isWeightedMeanValid = (weights: OverallScoreWeight[]): boolean =>
+  weights.length > 0 &&
+  weights.every(
+    (weight) =>
+      Boolean(weight.metricName) && Boolean(weight.outputField) && Number.isFinite(weight.weight) && weight.weight > 0,
+  );
+
+const isTestCaseOverallScoreValid = (config?: TestCaseOverallScoreConfig): boolean => {
+  if (!config) {
+    return false;
+  }
+
+  if (config.type === OverallScoreType.Mean) {
+    return true;
+  }
+
+  return config.type === OverallScoreType.WeightedMean && isWeightedMeanValid(config.weights);
+};
+
+/** Normalize suite score fields for Apply: clear nested for mean/weighted_mean; keep for function. */
+export const normalizeOverallScoreApplyPayload = (suite: TestSuite): TestSuite => {
+  const overallType = suite.overallScore?.type;
+
+  if (overallType === OverallScoreType.Function) {
+    return {
+      ...suite,
+      testCaseOverallScore: suite.testCaseOverallScore ?? { type: OverallScoreType.Mean },
+    };
+  }
+
+  const { testCaseOverallScore: __, ...rest } = suite;
+  return rest;
+};
+
+export const isOverallScoreDraftValid = (suite: TestSuite): boolean => {
+  const overall = suite.overallScore;
+
+  if (!overall) {
+    return true;
+  }
+
+  if (overall.type === OverallScoreType.WeightedMean && !isWeightedMeanValid(overall.weights)) {
+    return false;
+  }
+
+  if (overall.type === OverallScoreType.Function && !isTestCaseOverallScoreValid(suite.testCaseOverallScore)) {
+    return false;
+  }
+
+  if (suite.testCaseOverallScore?.type === OverallScoreType.WeightedMean) {
+    if (!isWeightedMeanValid(suite.testCaseOverallScore.weights)) {
+      return false;
+    }
+  }
+
+  if (getOverallScoreThresholdError(suite.overallScoreThreshold)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const getOverallScoreMethodLabelKey = (suite: TestSuite): string => {
+  switch (suite.overallScore?.type) {
+    case OverallScoreType.WeightedMean:
+      return TestSuitesI18nKey.OverallScoreWeightedMean;
+    case OverallScoreType.Function:
+      return TestSuitesI18nKey.OverallScoreFunction;
+    case OverallScoreType.Mean:
+    default:
+      return TestSuitesI18nKey.OverallScoreMean;
+  }
+};
+
+/** Short method label for the Overall Score summary card (Figma). */
+export const getOverallScoreCardMethodLabelKey = (suite: TestSuite): string => {
+  switch (suite.overallScore?.type) {
+    case OverallScoreType.WeightedMean:
+      return TestSuitesI18nKey.OverallScoreWeightedMean;
+    case OverallScoreType.Function:
+      return TestSuitesI18nKey.OverallScoreFunction;
+    case OverallScoreType.Mean:
+    default:
+      return TestSuitesI18nKey.OverallScoreMeanCard;
+  }
+};
+
+export const getOverallScoreFormulaLabelKey = (suite: TestSuite): string | null => {
+  switch (suite.overallScore?.type) {
+    case OverallScoreType.WeightedMean:
+      return TestSuitesI18nKey.OverallScoreWeightedMeanFormula;
+    case OverallScoreType.Function:
+      return TestSuitesI18nKey.OverallScoreFunctionRocAuc;
+    case OverallScoreType.Mean:
+    default:
+      return TestSuitesI18nKey.OverallScoreMeanFormula;
+  }
+};
+
+/** Method label for nested test-case score on the Overall Score card (Figma). */
+export const getTestCaseOverallScoreCardMethodLabelKey = (suite: TestSuite): string => {
+  switch (suite.testCaseOverallScore?.type) {
+    case OverallScoreType.WeightedMean:
+      return TestSuitesI18nKey.OverallScoreWeightedMean;
+    case OverallScoreType.Mean:
+    default:
+      return TestSuitesI18nKey.OverallScoreMeanCard;
+  }
+};
+
+export const getTestCaseOverallScoreFormulaLabelKey = (suite: TestSuite): string | null => {
+  switch (suite.testCaseOverallScore?.type) {
+    case OverallScoreType.WeightedMean:
+      return TestSuitesI18nKey.OverallScoreWeightedMeanFormula;
+    case OverallScoreType.Mean:
+    default:
+      return TestSuitesI18nKey.OverallScoreMeanFormula;
+  }
+};
+
+export const stripMetricFromScoreWeights = (suite: TestSuite, removedMetricName: string): TestSuite => {
+  let next = suite;
+
+  if (next.overallScore?.type === OverallScoreType.WeightedMean) {
+    const remainingWeights = next.overallScore.weights.filter((weight) => weight.metricName !== removedMetricName);
+    if (remainingWeights.length !== next.overallScore.weights.length) {
+      next = { ...next, overallScore: { type: OverallScoreType.WeightedMean, weights: remainingWeights } };
+    }
+  }
+
+  if (next.testCaseOverallScore?.type === OverallScoreType.WeightedMean) {
+    const remainingWeights = next.testCaseOverallScore.weights.filter(
+      (weight) => weight.metricName !== removedMetricName,
+    );
+    if (remainingWeights.length !== next.testCaseOverallScore.weights.length) {
+      next = {
+        ...next,
+        testCaseOverallScore: { type: OverallScoreType.WeightedMean, weights: remainingWeights },
+      };
+    }
+  }
+
+  return next;
+};

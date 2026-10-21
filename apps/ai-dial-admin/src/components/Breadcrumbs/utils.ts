@@ -41,26 +41,18 @@ export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcr
   return pathSegments.map((pathSegment, index) => {
     const configSegment = config.segments[index];
     const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
+    const defaultHref =
+      configSegment.href !== false ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}` : '';
+
     return {
       key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
       name: decodePathSegment(pathSegment),
-      href:
-        configSegment.href !== false
-          ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}`
-          : '',
+      href: defaultHref,
     };
   });
 }
 
-export function enrichWithFolderBreadcrumbs(
-  breadcrumbs: Breadcrumb[],
-  path?: string,
-  setFilePath?: Dispatch<SetStateAction<string>>,
-): Breadcrumb[] {
-  if (!path) {
-    return breadcrumbs;
-  }
-
+const getFolderBreadcrumbs = (path: string, onFolderClick?: (href: string) => void): Breadcrumb[] => {
   const trimmedPath = path.replace(/^\/|\/$/g, '');
   const parts = trimmedPath.split('/');
   let newBreadcrumbs: Breadcrumb[] = [];
@@ -72,7 +64,7 @@ export function enrichWithFolderBreadcrumbs(
       name: decodePathSegment(part),
       href: href,
       callback: (href: string) => {
-        setFilePath?.(href);
+        onFolderClick?.(href);
       },
     });
   });
@@ -93,7 +85,45 @@ export function enrichWithFolderBreadcrumbs(
     ];
   }
 
-  return [...breadcrumbs, ...newBreadcrumbs];
+  return newBreadcrumbs;
+};
+
+export function enrichWithFolderBreadcrumbs(
+  breadcrumbs: Breadcrumb[],
+  path?: string,
+  setFilePath?: Dispatch<SetStateAction<string>>,
+): Breadcrumb[] {
+  if (!path) {
+    return breadcrumbs;
+  }
+
+  return [...breadcrumbs, ...getFolderBreadcrumbs(path, (href) => setFilePath?.(href))];
+}
+
+/**
+ * The folder an entity lives in, from the `path` its details URL carries (`public/folder/name__1.0`
+ * gives `public/folder/`); `undefined` when the entity has no folder part.
+ */
+export function getEntityFolderPath(entityPath?: string | null): string | undefined {
+  const separatorIndex = entityPath?.lastIndexOf('/') ?? -1;
+
+  return separatorIndex > 0 ? entityPath?.slice(0, separatorIndex + 1) : undefined;
+}
+
+/**
+ * Puts the entity's folders between the section crumb and the entity crumb of a details page, so the
+ * trail reads `Applications > public > folder > name`. Each folder crumb reports its own path.
+ */
+export function enrichDetailsWithFolderBreadcrumbs(
+  breadcrumbs: Breadcrumb[],
+  folderPath?: string,
+  onFolderClick?: (href: string) => void,
+): Breadcrumb[] {
+  if (!folderPath || breadcrumbs.length < 2) {
+    return breadcrumbs;
+  }
+
+  return [...breadcrumbs.slice(0, -1), ...getFolderBreadcrumbs(folderPath, onFolderClick), breadcrumbs.at(-1)!];
 }
 
 export function getRouteDataByPath(pathname: string, currentLocale: string) {
@@ -115,7 +145,7 @@ export function getFolderContext(pathname: string, currentLocale: string) {
       return usePromptFolder;
     case ApplicationRoute.AssetsToolsets:
       return useToolsetFolder;
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return useSkillFolder;
     case ApplicationRoute.Files:
       return useFileFolder;
@@ -130,4 +160,10 @@ export function shouldEnrichWithFolderBreadcrumbs(pathname: string, currentLocal
   const { pathSegments, config } = getRouteDataByPath(pathname, currentLocale);
 
   return config?.segments?.[pathSegments.length - 1]?.shouldEnrichWithFolderBreadcrumbs;
+}
+
+export function shouldEnrichDetailsWithFolderBreadcrumbs(pathname: string, currentLocale: string) {
+  const { pathSegments, config } = getRouteDataByPath(pathname, currentLocale);
+
+  return pathSegments.length > 1 && !!config?.segments?.[0]?.shouldEnrichWithFolderBreadcrumbs;
 }

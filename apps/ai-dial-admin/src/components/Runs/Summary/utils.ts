@@ -1,8 +1,9 @@
 import { JSONSchema7 } from 'json-schema';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
+import { DialModelPricing } from '@/src/models/dial/model';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
-import { ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { ExtractionResultStatus, RunCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
@@ -30,6 +31,7 @@ import {
   EVAL_SUMMARY_ID_FIELD,
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
+  PASSED_FIELD,
   LATEST_COMPUTATION,
   METRIC_EVAL_DURATION_MS_FIELD,
   METRIC_FIELD_PREFIX,
@@ -39,6 +41,8 @@ import {
   METRIC_SCORE_RESULTS_ENTITY,
   OVERALL_METRIC_SCORE_NAME,
   RUN_ID_FIELD,
+  TEST_CASE_EVAL_SCORES_ENTITY,
+  TEST_CASE_ID_FIELD,
   VALUE_FIELD,
 } from './constants';
 import {
@@ -47,27 +51,29 @@ import {
   MetricScoreGroup,
   MetricScoresData,
   MetricStatCard,
+  MetricStatistic,
   TestCaseStatusCounts,
 } from './models';
 
 /**
- * Query: count of test-case eval summaries grouped by execution status within a run.
- * Rows shape: `{ execution_status: string, count: number }`.
- * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])`
- * so counts describe the matched-only population used in run comparison.
+ * Query: count of test-case eval scores grouped by threshold `passed` and execution status.
+ * Rows shape: `{ passed: boolean | null, execution_status: string, count: number }`.
+ * When `excludeTestCaseIds` is non-empty, those test cases are excluded via
+ * `NOT (test_case_id IN [...])` so counts describe the matched-only population used in run
+ * comparison (backed by the backend's `unmatchedEvalTestCaseIds`).
  */
-export const buildTestCasesStatusQuery = (runId: string, excludeEvalSummaryIds: string[] = []): StructuredQuery => {
+export const buildTestCasesStatusQuery = (runId: string, excludeTestCaseIds: string[] = []): StructuredQuery => {
   const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
   const filter =
-    excludeEvalSummaryIds.length > 0
-      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+    excludeTestCaseIds.length > 0
+      ? and([runFilter, not(inValues(TEST_CASE_ID_FIELD, ValueType.Uuid, excludeTestCaseIds))])
       : runFilter;
 
   return aggregateQuery({
-    entity: EVAL_SUMMARIES_ENTITY,
+    entity: TEST_CASE_EVAL_SCORES_ENTITY,
     filter,
-    groupBy: [EXECUTION_STATUS_FIELD],
-    select: [col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
+    groupBy: [PASSED_FIELD, EXECUTION_STATUS_FIELD],
+    select: [col(field(PASSED_FIELD)), col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
   });
 };
 
@@ -226,6 +232,55 @@ export const splitMetricName = (metricName: string): { group: string; bar: strin
 };
 
 /**
+ * Ensures every configured metric appears in Metric Scores, even when `metric_score_results` has no
+ * per-statistic rows (e.g. the metric 422'd on every test case). Missing bars are `null` so
+ * `DialAnalyticsBarGroup` can render an em dash. When the run has configured metrics but no
+ * statistic rows, AVG is seeded so the section has a selectable statistic.
+ */
+export const fillUnscoredMetricBars = (data: MetricScoresData, options: MetricOption[]): MetricScoresData => {
+  if (options.length === 0) {
+    return data;
+  }
+
+  const placeholderBarsByGroup = new Map<string, Record<string, number | null>>();
+  for (const option of options) {
+    const { group, bar } = splitMetricName(option.name);
+    const bars = placeholderBarsByGroup.get(group) ?? {};
+    if (!(bar in bars)) {
+      bars[bar] = null;
+    }
+    placeholderBarsByGroup.set(group, bars);
+  }
+
+  const statistics = data.statistics.length > 0 ? data.statistics : [MetricStatistic.Avg];
+  const byStatistic: Record<string, MetricScoreGroup[]> = {};
+
+  for (const statistic of statistics) {
+    const existing = data.byStatistic[statistic] ?? [];
+    const byName = new Map(existing.map((group) => [group.name, { ...group, bars: { ...group.bars } }]));
+
+    for (const [groupName, placeholderBars] of placeholderBarsByGroup) {
+      const group = byName.get(groupName);
+      if (!group) {
+        byName.set(groupName, { name: groupName, bars: { ...placeholderBars } });
+        continue;
+      }
+      for (const [bar, value] of Object.entries(placeholderBars)) {
+        if (!(bar in group.bars)) {
+          group.bars[bar] = value;
+        }
+      }
+    }
+
+    byStatistic[statistic] = [...byName.values()].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
+  }
+
+  return { ...data, statistics: sortMetricStatistics(statistics), byStatistic };
+};
+
+/**
  * Folds `metric_score_results` rows into bar groups per statistic. For each statistic
  * (`metric_score_name`, e.g. AVG), metrics are grouped by their name prefix (before the last `.`),
  * and each leaf metric name becomes a bar with its value. Also collects the distinct statistic
@@ -363,23 +418,36 @@ const toCount = (value: unknown): number => {
   return Number.isFinite(num) ? num : 0;
 };
 
+/** True when a snapshotted (or live) overall score threshold is set, including `0`. */
+export const hasOverallScoreThreshold = (threshold: number | null | undefined): boolean => threshold != null;
+
+const isPassedTrue = (value: unknown): boolean => value === true || value === 'true';
+
+const isPassedFalse = (value: unknown): boolean => value === false || value === 'false';
+
 /**
- * Folds status-grouped rows into pass/fail/error buckets. SUCCESS → passed, ERROR → error,
- * everything else (FAILED, TIMEOUT) → failed, so the buckets always sum to the total.
+ * Folds grouped rows into pass/fail/error buckets.
+ * Non-SUCCESS execution (FAILED, TIMEOUT, ERROR) → error.
+ * SUCCESS + `passed === true` → passed; SUCCESS + `passed === false` → failed.
+ * SUCCESS with null `passed` (unscored) only increases total.
  */
 export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null): TestCaseStatusCounts => {
   const counts: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, total: 0 };
 
   for (const row of result?.rows ?? []) {
     const status = row[EXECUTION_STATUS_FIELD];
+    const passed = row[PASSED_FIELD];
     const count = toCount(row[COUNT_ALIAS]);
     counts.total += count;
 
-    if (status === ExtractionResultStatus.SUCCESS) {
-      counts.passed += count;
-    } else if (status === ExtractionResultStatus.ERROR) {
+    if (status !== ExtractionResultStatus.SUCCESS) {
       counts.error += count;
-    } else {
+      continue;
+    }
+
+    if (isPassedTrue(passed)) {
+      counts.passed += count;
+    } else if (isPassedFalse(passed)) {
       counts.failed += count;
     }
   }
@@ -402,3 +470,49 @@ export const parseAvgRunTimeMs = (
 
 /** Display seconds from avg duration ms (one decimal place). */
 export const formatAvgRunTimeSeconds = (avgRunTimeMs: number): number => Math.round(avgRunTimeMs / 100) / 10;
+
+const RUN_COST_SIGNIFICANT_DIGITS = 2;
+
+const stripTrailingZeros = (text: string): string =>
+  text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
+
+/**
+ * Formats a run cost average as `$…`. Returns `null` when the value is missing/non-finite
+ * so callers can render an em dash. Zero is a real value (`$0`).
+ */
+export const formatRunCost = (value: number | null | undefined): string | null => {
+  if (value == null || Number.isNaN(value) || !Number.isFinite(value)) {
+    return null;
+  }
+  if (value === 0) {
+    return '$0';
+  }
+
+  const abs = Math.abs(value);
+  if (abs >= 1) {
+    return `$${stripTrailingZeros(value.toFixed(2))}`;
+  }
+
+  // Sub-dollar: significant digits so tiny averages stay legible (e.g. $0.0004 not $0.00).
+  const exponent = Math.floor(Math.log10(abs));
+  const decimals = -exponent + RUN_COST_SIGNIFICANT_DIGITS - 1;
+  return `$${stripTrailingZeros(value.toFixed(decimals))}`;
+};
+
+/**
+ * Whether a `GET /costs` payload actually carries a figure. The endpoint responds before the backend
+ * has aggregated the run's usage logs, and that not-ready answer reaches the client in several shapes
+ * — all-null averages, `{}`, or an empty body that `BaseApi` degrades to `''`. None of them are a
+ * result, so the caller must keep waiting rather than settle on them. Zero is a real average.
+ */
+export const hasRunCostFigure = (costs: RunCosts | null | undefined): boolean =>
+  Number.isFinite(costs?.avgTestCaseCost) || Number.isFinite(costs?.avgMetricEvalCost);
+
+/**
+ * Whether a model's pricing carries a usable rate. `prompt`/`completion` are the only flat rates a
+ * model bills from (cache rates fall back to the prompt rate when unset, per `DialModelPricing`), so
+ * a model with neither set has no price at all — any run against it can never produce a cost figure,
+ * no matter how long `/costs` is polled.
+ */
+export const hasModelPricing = (pricing: DialModelPricing | undefined): boolean =>
+  Boolean(pricing?.prompt) || Boolean(pricing?.completion);

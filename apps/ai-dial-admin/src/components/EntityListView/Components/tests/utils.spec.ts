@@ -4,6 +4,7 @@ import { prepareEntityForDuplicate, getCorrectPath, preparePathForAsset } from '
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { DialRole } from '@/src/models/dial/role';
 
 vi.mock('@/src/app/[lang]/applications/actions', () => ({
   getApplication: vi.fn(() =>
@@ -111,15 +112,15 @@ describe('Utils :: prepareEntityForDuplicate', () => {
         grantedKeys: ['key'],
         share: { a: {} },
         limits: { a: {} },
-      },
+      } as DialRole,
       {} as any,
     );
     expect(result).toEqual({
       name: 'n',
       description: 'd',
       grantedKeys: [],
-      limits: {},
-      share: {},
+      share: { a: {} },
+      limits: { a: {} },
     });
   });
 
@@ -389,25 +390,22 @@ describe('Utils :: prepareEntityForDuplicate', () => {
     });
   });
 
-  test('Should extract prompt data for Prompts route', async () => {
+  test('Should extract prompt data for Prompts route without a version field', async () => {
     const prompt = {
       name: 'test-prompt',
       folderId: 'folder',
-      version: '1.0.0',
     };
 
     const result = await prepareEntityForDuplicate(ApplicationRoute.Prompts, prompt, {
       current: {
         name: 'test-prompt',
         folderId: 'folder',
-        version: '1.0.0',
       },
     } as any);
 
     expect(result).toEqual({
       name: 'test-prompt',
       folderId: 'folder',
-      version: '1.0.0',
       description: 'Test Prompt Description',
       content: 'Test prompt content',
     });
@@ -444,6 +442,7 @@ describe('Utils :: getCorrectPath', () => {
       folderId: 'my-folder',
       name: 'my-entity',
       version: '1.0.0',
+      path: 'toolsets/my-folder/my-entity__1.0.0',
     };
 
     const result = getCorrectPath(entity);

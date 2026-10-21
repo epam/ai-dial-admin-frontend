@@ -1,22 +1,30 @@
 'use client';
 import { FC } from 'react';
 
+import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
+import CreateApplication from '@/src/components/Assets/Entities/Apps/CreateApplication';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
+import CreateKeyModal from '@/src/components/Assets/Platform/Keys/CreateKeyModal';
+import DuplicateAsset from '@/src/components/Assets/Modals/DuplicateAsset';
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
-import { PlatformAsset } from '@/src/models/dial/resource';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
+import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ImportFileType } from '@/src/types/import';
 import { ImportData } from '@/src/models/import-asset';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DialFile, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { DialFile, DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 import DeleteAssetsModal from '@/src/components/Assets/Modals/DeleteAssetsModal';
 
 interface Props {
@@ -28,10 +36,11 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   selectedVersionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
+  translators?: ResourceInfo[];
   duplicateItem?: AssetWithVersion | null;
   deletedItems?: DialFile[] | null;
   hasSelectedItems: boolean;
-  getContext: () => AssetsFolderContext;
+  getContext: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onImport?: (
     fileType: ImportFileType,
@@ -41,8 +50,13 @@ interface Props {
     ignorePaths?: boolean,
   ) => void;
   onExport?: (fileType: ImportFileType) => void;
-  onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
-  onDuplicate?: (entity: AssetWithVersion) => void;
+  onCreate?: (
+    asset: AssetWithVersion,
+    path?: string,
+    isCreateDuplicate?: boolean,
+    shouldCloseModal?: boolean,
+  ) => Promise<ServerActionResponse>;
+  onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onRemove: () => Promise<void>;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
@@ -55,6 +69,7 @@ const Modals: FC<Props> = ({
   versionsMap,
   selectedVersionsMap,
   runners,
+  translators,
   preselectedItems,
   duplicateItem,
   deletedItems,
@@ -68,6 +83,14 @@ const Modals: FC<Props> = ({
   onRemove,
   onCreateFolder,
 }) => {
+  let getEntityById: ((id: string) => Promise<ServerActionResponse>) | undefined;
+
+  if (view === ApplicationRoute.PlatformAppRunners) {
+    getEntityById = getResolvedRunnerSchema;
+  } else if (view === ApplicationRoute.PlatformCatalogSchemas) {
+    getEntityById = getCatalogSchemaById;
+  }
+
   return (
     <>
       {isModalOpen && modalType === ModalType.import && (
@@ -80,22 +103,56 @@ const Modals: FC<Props> = ({
           preselectedItems={preselectedItems}
         />
       )}
-      {isModalOpen && modalType === ModalType.create && (
-        <CreateEntity
-          context={getContext}
-          route={view}
-          isModalOpen={isModalOpen}
-          onClose={onClose}
-          createEntity={onCreate}
+      {isModalOpen && modalType === ModalType.create && view === ApplicationRoute.PlatformKeys && (
+        <CreateKeyModal isOpen={isModalOpen} names={names || []} onClose={onClose} />
+      )}
+      {isModalOpen && modalType === ModalType.create && view === ApplicationRoute.AssetsApplications && (
+        <CreateApplication
+          isOpen={isModalOpen}
           names={names || []}
           versionsMap={versionsMap}
           runners={runners}
-          isModal
+          translators={translators}
+          getContext={getContext}
+          onClose={onClose}
+          onCreate={onCreate}
+        />
+      )}
+      {isModalOpen &&
+        modalType === ModalType.create &&
+        view !== ApplicationRoute.PlatformKeys &&
+        view !== ApplicationRoute.AssetsApplications && (
+          <CreateEntity
+            context={getContext}
+            route={view}
+            isModalOpen={isModalOpen}
+            onClose={onClose}
+            createEntity={onCreate}
+            getEntityById={getEntityById}
+            names={names || []}
+            versionsMap={versionsMap}
+            runners={runners}
+            isModal
+          />
+        )}
+      {isModalOpen && modalType === ModalType.duplicate && view === ApplicationRoute.PlatformKeys && duplicateItem && (
+        <DuplicatePlatformKeyModal
+          isOpen={isModalOpen}
+          names={names || []}
+          entity={duplicateItem as unknown as DialKeyResource}
+          onClose={onClose}
         />
       )}
       {isModalOpen &&
         modalType === ModalType.duplicate &&
-        (isFlatPlatformView(view) ? (
+        view !== ApplicationRoute.PlatformKeys &&
+        // A platform-bucket application/toolset row duplicates the same flat, unversioned way the
+        // six other flat platform views already do (design.md D2/`platform-applications`/
+        // `platform-toolsets`) — the row's own `folderId` decides it (reliably `'platform/'` for a
+        // platform-bucket row since `fix-platform-bucket-folder-storage`; a `.path` fallback used to
+        // be needed here and was the cause of Issue #4420 — `.path` never carries the bucket prefix,
+        // so it always won the `||` and made this check false for a platform-bucket row).
+        (isFlatPlatformView(view) || isPlatformDualBucketView(view, duplicateItem?._metadata?.folderId) ? (
           <DuplicatePlatformAsset
             view={view}
             isModalOpen={isModalOpen}

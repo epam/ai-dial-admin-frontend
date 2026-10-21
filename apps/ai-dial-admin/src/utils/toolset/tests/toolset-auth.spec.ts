@@ -6,6 +6,7 @@ import {
   getToolsetSignInBody,
   isFullLoggedInToToolset,
   isLoggedInToToolset,
+  stripClientSecretHint,
 } from '../toolset-auth';
 
 describe('toolset-auth utils', () => {
@@ -28,7 +29,9 @@ describe('toolset-auth utils', () => {
 
   test('getToolsetSignInBody returns APIKEY body with apiKeyHeader', () => {
     const toolset = {
-      path: 'public/toolset1',
+      _metadata: {
+        path: 'public/toolset1',
+      },
       authSettings: { authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'X-API-KEY' },
     } as any;
     const result = getToolsetSignInBody(toolset, ToolsetAuthCredentialLevel.USER, 'value');
@@ -41,10 +44,32 @@ describe('toolset-auth utils', () => {
   });
 
   test('getToolsetBasicBody returns basic body', () => {
-    const toolset = { path: 'public/toolset1', authSettings: { authenticationType: ToolsetAuthType.API_KEY } } as any;
+    const toolset = {
+      _metadata: {
+        path: 'public/toolset1',
+      },
+      authSettings: { authenticationType: ToolsetAuthType.API_KEY },
+    } as any;
     const result = getToolsetBasicBody(toolset, ToolsetAuthCredentialLevel.USER);
     expect(result).toMatchObject({
       url: 'toolsets/public/toolset1',
+      credentialsLevel: ToolsetAuthCredentialLevel.USER,
+      authenticationType: ToolsetAuthType.API_KEY,
+    });
+  });
+
+  // Regression (Issue #4447): Core's `DeploymentService.findDeployment` resolves a platform-bucket
+  // toolset by bare name via the merged config store — the sign-in/sign-out `url` must be the bare
+  // name alone, with neither the `toolsets/` prefix nor the `platform/` bucket segment.
+  test('getToolsetBasicBody strips the platform bucket segment and prefix for a platform-bucket toolset', () => {
+    const toolset = {
+      name: 'toolset1',
+      path: 'platform/toolset1',
+      authSettings: { authenticationType: ToolsetAuthType.API_KEY },
+    } as any;
+    const result = getToolsetBasicBody(toolset, ToolsetAuthCredentialLevel.USER);
+    expect(result).toMatchObject({
+      url: 'toolset1',
       credentialsLevel: ToolsetAuthCredentialLevel.USER,
       authenticationType: ToolsetAuthType.API_KEY,
     });
@@ -140,5 +165,34 @@ describe('isFullLoggedInToToolset', () => {
   test('returns false if authSettings is missing', () => {
     const toolset = {} as any;
     expect(isFullLoggedInToToolset(toolset)).toBe(false);
+  });
+});
+
+describe('stripClientSecretHint', () => {
+  test('drops the hint and an empty client secret', () => {
+    expect(stripClientSecretHint({ client_id: 'id', client_secret: '', client_secret_hint: 'cret' })).toEqual({
+      client_id: 'id',
+    });
+  });
+
+  test('drops the hint when no client secret is present', () => {
+    const result = stripClientSecretHint({ client_id: 'id', client_secret_hint: 'cret' });
+
+    expect(result).toEqual({ client_id: 'id' });
+    expect('client_secret' in result).toBe(false);
+  });
+
+  test('keeps a typed client secret while dropping the hint', () => {
+    expect(
+      stripClientSecretHint({ client_id: 'id', client_secret: 'typed-secret', client_secret_hint: 'cret' }),
+    ).toEqual({ client_id: 'id', client_secret: 'typed-secret' });
+  });
+
+  test('does not mutate its input', () => {
+    const input = { client_secret: '', client_secret_hint: 'cret' };
+
+    stripClientSecretHint(input);
+
+    expect(input).toEqual({ client_secret: '', client_secret_hint: 'cret' });
   });
 });

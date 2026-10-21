@@ -1,6 +1,7 @@
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import {
   getActivityAuditColumns,
+  getAnalyticsActivityAuditColumns,
   getAuditActivityHref,
   getDeploymentActivityAuditColumns,
   getEndOfDay,
@@ -11,8 +12,10 @@ import {
 } from '@/src/components/ActivityAudit/List/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
-import { describe, expect, test, vi } from 'vitest';
-import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { getOpenInNewTabOperation, getResourceRollbackOperation } from '@/src/constants/grid-columns/actions';
+import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ActivityAuditResourceType, ActivityAuditType, ActivityAuditView } from '@/src/types/activity-audit';
 import type { FilterDto } from '@/src/models/request';
 import { DialActivity } from '@/src/models/activity-audit';
 
@@ -29,11 +32,15 @@ vi.mock('@/src/constants/grid-columns/actions', () => ({
 vi.mock('@/src/constants/grid-columns/grid-columns', async () => {
   const actual = (await vi.importActual('@/src/types/activity-audit')) as { ActivityAuditView: Record<string, string> };
   return {
-    ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) =>
-      view === actual.ActivityAuditView.Deployments
-        ? [{ colId: 'd1' }, { colId: 'd2' }]
-        : [{ colId: 'a' }, { colId: 'b' }],
-    ),
+    ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) => {
+      if (view === actual.ActivityAuditView.Deployments) {
+        return [{ colId: 'd1' }, { colId: 'd2' }];
+      }
+      if (view === actual.ActivityAuditView.Analytics) {
+        return [{ colId: 'an1' }, { colId: 'an2' }];
+      }
+      return [{ colId: 'a' }, { colId: 'b' }];
+    }),
     RESOURCE_TYPE_COLUMN: 'resourceType',
   };
 });
@@ -98,6 +105,81 @@ describe('Activity Audit List utils :: getDeploymentActivityAuditColumns', () =>
   });
 });
 
+describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => {
+  const t = (s: string) => s;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('returns the analytics column set with the action column at the end', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    expect(cols).toHaveLength(3);
+    expect(cols[0]).toEqual({ colId: 'an1' });
+    expect(cols[1]).toEqual({ colId: 'an2' });
+    expect(cols[2].colId).toBe('actions');
+  });
+
+  test('builds its columns for the Analytics view, whose column set carries no Version column', () => {
+    getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    // The third argument is the single-entity flag, undefined for a caller that omits it.
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, void 0, false);
+  });
+
+  test('offers Open in new tab as the only row action and never a rollback one', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('open');
+    expect(getResourceRollbackOperation).not.toHaveBeenCalled();
+  });
+
+  test('asks for the row expander on the global list only', () => {
+    getAnalyticsActivityAuditColumns(t, vi.fn(), false, true);
+
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, false, true);
+  });
+
+  test('hides Open in new tab on a client-built Import row only', () => {
+    getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    const isHidden = vi.mocked(getOpenInNewTabOperation).mock.lastCall?.[2] as (
+      api: unknown,
+      node: { data: Partial<DialActivity> },
+    ) => boolean;
+    expect(isHidden({}, { data: { activityType: ActivityAuditType.Import } })).toBe(true);
+    expect(isHidden({}, { data: { activityType: ActivityAuditType.Create } })).toBe(false);
+  });
+
+  test('returns an empty action list when no open handler is provided', () => {
+    const cols = getAnalyticsActivityAuditColumns(t);
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(0);
+  });
+
+  test('forwards the single-entity flag, so a one-resource tab drops Resource type and identifier', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn(), true);
+
+    // The column set itself is `ACTIVITY_AUDIT_COLUMNS`' to build: with the flag true it emits
+    // neither `resourceType` nor `resourceId`, which `List.spec.tsx` asserts against the real one.
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, true, false);
+    expect(cols[2].colId).toBe('actions');
+  });
+
+  test('offers no rollback action on a single-entity tab either', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn(), true);
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('open');
+    expect(getResourceRollbackOperation).not.toHaveBeenCalled();
+  });
+});
+
 describe('Activity Audit List utils :: getGridFilters', () => {
   const mockStartDate = new Date('2024-01-01T00:00:00.000Z');
   const mockEndDate = new Date('2024-01-02T00:00:00.000Z');
@@ -149,13 +231,16 @@ describe('Activity Audit List utils :: getGridFilters', () => {
   });
 
   describe('resourceType label-aware filter transform', () => {
+    // This map is hand-built, so these tests prove the transform, not the real label → enum map the
+    // app passes in. That map is guarded in `src/constants/grid-columns/tests/formatters.spec.ts`.
     const labelMap = {
       'global firewall': [ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST],
       'adapter container': [ActivityAuditResourceType.ADAPTER_DEPLOYMENT],
       'application container': [ActivityAuditResourceType.APPLICATION_DEPLOYMENT],
       'interceptor container': [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT],
       'mcp container': [ActivityAuditResourceType.MCP_DEPLOYMENT],
-      'model serving': [ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT],
+      'model serving': [ActivityAuditResourceType.INFERENCE_DEPLOYMENT],
+      image: [ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION, ActivityAuditResourceType.MCP_IMAGE_DEFINITION],
     };
 
     test('single-match contains substring expands to eq with the matching enum', () => {
@@ -259,6 +344,49 @@ describe('Activity Audit List utils :: getGridFilters', () => {
       expect(activityType?.value).toBe('GLO');
     });
 
+    test('an exact label under equals resolves to its enum', () => {
+      const result = getGridFilters(
+        { resourceType: { filter: 'Global Firewall', type: GridFilterType.EQUALS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+    });
+
+    test('an exact label under not-equal resolves to its enum', () => {
+      const result = getGridFilters(
+        { resourceType: { filter: 'mcp container', type: GridFilterType.NOT_EQUAL, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.NOT_EQUAL,
+        value: ActivityAuditResourceType.MCP_DEPLOYMENT,
+      });
+    });
+
+    test.each([
+      ['a label shared by several types', 'image'],
+      ['a partial label', 'global'],
+      ['a typed enum name', 'ImageBuildDomainWhitelist'],
+      ['a name inherited from Object', 'constructor'],
+    ])('%s is sent unchanged under equals', (_name, typed) => {
+      const result = getGridFilters(
+        { resourceType: { filter: typed, type: GridFilterType.EQUALS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(result[0]).toEqual({ column: 'resourceType', operator: FilterOperatorDto.EQUALS, value: typed });
+    });
+
     test('omitting the labelMap leaves resourceType filters untouched', () => {
       const gridFilter = {
         resourceType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
@@ -338,23 +466,20 @@ describe('getAuditActivityHref', () => {
   test('returns entity-namespaced href for container deployment types', () => {
     const mockEntity = { name: 'gpt-4-turbo' };
 
-    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.NIM_DEPLOYMENT, 'abc-123')).toBe(
-      '/model-servings/gpt-4-turbo/abc-123',
-    );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, 'abc-123')).toBe(
       '/model-servings/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.MCP_DEPLOYMENT, 'abc-123')).toBe(
-      '/mcp-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER_DEPLOYMENT, 'abc-123')).toBe(
-      '/adapter-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_DEPLOYMENT, 'abc-123')).toBe(
-      '/application-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT, 'abc-123')).toBe(
-      '/interceptor-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
   });
 
@@ -390,10 +515,18 @@ describe('getAuditActivityHref', () => {
     expect(href).toBe('');
   });
 
-  test('returns empty href for a resource type not registered in auditResourceRoute', () => {
+  test('returns empty href for a resource type not registered in auditResourceRoute, including the analytics types design.md D5 keeps out of it', () => {
     const mockEntity = { name: 'entity' };
-    const href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADMIN_PROPERTIES, '1');
-    expect(href).toBe('');
+
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADMIN_PROPERTIES, '1')).toBe('');
+
+    // Guard for design.md D5: analytics rows open the global detail page, so `auditResourceRoute`
+    // must stay free of analytics entries. Registering `Table` there to fix the audit detail
+    // header's external link would make these hrefs `/tables/entity/1`, an entity-namespaced audit
+    // route this change deliberately does not create — a 404 on every analytics row click. The
+    // header resolves its link through `View/Header/utils.ts` instead.
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.TABLE, '1')).toBe('');
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.TABLE_COLUMN, '1')).toBe('');
   });
 });
 

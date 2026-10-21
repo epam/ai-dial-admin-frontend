@@ -155,7 +155,6 @@ describe('toolset container capability helpers', () => {
     expect(isToolsetCapableContainer(container({ $type: CONTAINER_TYPE.HF, inferenceTask: INFERENCE_TASK.NONE }))).toBe(
       false,
     );
-    expect(isToolsetCapableContainer(container({ $type: CONTAINER_TYPE.NIM }))).toBe(false);
   });
 
   test('isContainerFamilySource recognises both toolset container selector values', () => {
@@ -175,9 +174,6 @@ describe('getRouteForContainer', () => {
 
   test('routes an inference (Model Serving) container to ModelServings', () => {
     expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.HF }), ApplicationRoute.Toolsets)).toBe(
-      ApplicationRoute.ModelServings,
-    );
-    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.NIM }), ApplicationRoute.Toolsets)).toBe(
       ApplicationRoute.ModelServings,
     );
   });

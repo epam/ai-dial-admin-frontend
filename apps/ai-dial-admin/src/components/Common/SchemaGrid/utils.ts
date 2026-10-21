@@ -1,6 +1,17 @@
 import { JSONSchema7, JSONSchema7Definition, JSONSchema7TypeName } from 'json-schema';
 
+import { CATALOG_META_SECTION, CATALOG_META_TAB } from '@/src/constants/catalog-schemas';
 import { resolveRef } from '@/src/utils/schema';
+import { DEFAULT_SCHEMA_FIELD_INPUT_PROPS, NEW_FIELD_NAME_PREFIX } from './constants';
+import {
+  ResolvedSchemaFieldInputProps,
+  SchemaConstraintRule,
+  SchemaConstraintViolation,
+  SchemaFieldInputConfig,
+  SchemaFieldInputProps,
+  SchemaInputField,
+  SchemaMetaColumn,
+} from './models';
 
 export interface SchemaFieldRow {
   id: string;
@@ -21,8 +32,13 @@ export interface SchemaFieldRow {
   parentId: string | null;
   depth: number;
   isAddSubFieldRow?: boolean;
-  /** Value of dial:meta from schema (first-level only). Stored as-is, e.g. { "dial:propertyKind": "server", "dial:propertyOrder": 1 }. */
+  /** `dial:meta` as stored, at any depth. Editable columns exist for first-level rows only. */
   dialMeta?: Record<string, unknown>;
+  /**
+   * Keywords of the source property the grid does not own, carried verbatim: both rebuild paths
+   * reconstruct a property from the row's editable fields, so a keyword not held here is dropped.
+   */
+  preserved?: Record<string, unknown>;
   /** Enum values from schema when property has "enum". */
   enum?: string[];
   /** Default value from schema (e.g. for bindings row default). */
@@ -42,6 +58,22 @@ export interface SchemaTreeNode {
 
 const SCHEMA_TYPES: JSONSchema7TypeName[] = ['string', 'number', 'integer', 'boolean', 'object', 'array', 'null'];
 const DIAL_META_KEY = 'dial:meta';
+
+/**
+ * Rebuilt from a row's editable fields, so not preserved. `$ref` is resolved for display —
+ * re-emitting it beside the resolved type would double-declare the property.
+ */
+const GRID_OWNED_KEYWORDS: ReadonlySet<string> = new Set([
+  'type',
+  'title',
+  'description',
+  'properties',
+  'required',
+  'items',
+  'additionalProperties',
+  '$ref',
+  DIAL_META_KEY,
+]);
 const MAP_ARRAY_ITEM_PRIMITIVE_TYPES = new Set<JSONSchema7TypeName>(['string', 'number', 'integer', 'boolean']);
 
 export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
@@ -49,9 +81,9 @@ export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
 let nextId = 0;
 export const generateFieldId = (): string => `schema-field-${++nextId}`;
 
-export const createEmptyField = (parentId: string | null = null, depth = 0): SchemaFieldRow => ({
+export const createEmptyField = (parentId: string | null = null, depth = 0, name = ''): SchemaFieldRow => ({
   id: generateFieldId(),
-  name: '',
+  name,
   type: 'string',
   required: false,
   title: '',
@@ -61,6 +93,29 @@ export const createEmptyField = (parentId: string | null = null, depth = 0): Sch
   parentId,
   depth,
 });
+
+/**
+ * A property is keyed by its name, so a new row takes the first free `field_N` among its siblings:
+ * two unnamed rows would otherwise share the key `''` and collapse into one property.
+ */
+export const getNextFieldName = (siblings: SchemaFieldRow[]): string => {
+  const taken = new Set(siblings.map((field) => field.name));
+  let index = 1;
+  while (taken.has(`${NEW_FIELD_NAME_PREFIX}${index}`)) {
+    index++;
+  }
+  return `${NEW_FIELD_NAME_PREFIX}${index}`;
+};
+
+/** True when some level holds an empty name or a name used twice — either one loses a property on save. */
+export const hasInvalidFieldNames = (fields: SchemaFieldRow[]): boolean => {
+  const names = fields.map((field) => field.name);
+  return (
+    names.some((name) => !name.trim()) ||
+    new Set(names).size !== names.length ||
+    fields.some((field) => hasInvalidFieldNames(field.children ?? []))
+  );
+};
 
 const isJSONSchema7 = (def: JSONSchema7Definition): def is JSONSchema7 => typeof def === 'object';
 
@@ -188,7 +243,6 @@ export const getPrimaryType = (schema: JSONSchema7): JSONSchema7TypeName => {
  * @param {(string | null)} parentId - id of the parent field row
  * @param {number} depth - current depth level
  * @param {boolean} isRequired - whether this property is required
- * @param {boolean} isFirstLevel - whether this is a first-level (depth 0) property (for dialMeta extraction)
  * @returns {SchemaFieldRow} - the resulting schema field row with children recursively resolved
  */
 const convertPropertyToField = (
@@ -198,7 +252,6 @@ const convertPropertyToField = (
   parentId: string | null,
   depth: number,
   isRequired: boolean,
-  isFirstLevel: boolean,
 ): SchemaFieldRow => {
   const resolvedDef = resolveDef(def, rootSchema);
   if (!isJSONSchema7(resolvedDef)) {
@@ -207,11 +260,14 @@ const convertPropertyToField = (
 
   const effectiveDef = getEffectiveSchema(def, rootSchema) ?? (resolvedDef as JSONSchema7);
   const type = getPrimaryType(effectiveDef);
-  const rawDef = isFirstLevel && typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
+  const rawDef = typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
   const dialMeta =
     rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
       ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
       : undefined;
+  const preserved = rawDef
+    ? Object.fromEntries(Object.entries(rawDef).filter(([keyword]) => !GRID_OWNED_KEYWORDS.has(keyword)))
+    : {};
   const propSchema = resolvedDef as JSONSchema7;
   const enumValues = Array.isArray(propSchema.enum) ? propSchema.enum.map((v) => String(v)) : undefined;
 
@@ -229,6 +285,7 @@ const convertPropertyToField = (
     ...(propSchema.minimum !== undefined && { minimum: propSchema.minimum }),
     ...(propSchema.maximum !== undefined && { maximum: propSchema.maximum }),
     ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
+    ...(Object.keys(preserved).length && { preserved }),
     ...(enumValues?.length && { enum: enumValues }),
     ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
   };
@@ -238,15 +295,7 @@ const convertPropertyToField = (
   if (type === 'object' && objectPropertyKeys.length > 0) {
     const nestedRequired = effectiveDef.required || [];
     field.children = Object.entries(effectiveDef.properties!).map(([childName, childDef]) =>
-      convertPropertyToField(
-        childName,
-        childDef,
-        rootSchema,
-        field.id,
-        depth + 1,
-        nestedRequired.includes(childName),
-        false,
-      ),
+      convertPropertyToField(childName, childDef, rootSchema, field.id, depth + 1, nestedRequired.includes(childName)),
     );
     if (field.children.length) {
       field.expanded = true;
@@ -289,7 +338,6 @@ const convertPropertyToField = (
           field.id,
           depth + 1,
           nestedRequired.includes(childName),
-          false,
         ),
       );
       if (field.children.length) {
@@ -335,8 +383,15 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
   const requiredFields = schema.required || [];
 
   return Object.entries(schema.properties).map(([name, def]) =>
-    convertPropertyToField(name, def, rootSchema, null, 0, requiredFields.includes(name), true),
+    convertPropertyToField(name, def, rootSchema, null, 0, requiredFields.includes(name)),
   );
+};
+
+const applyPreservedKeywords = (prop: JSONSchema7 & Record<string, unknown>, field: SchemaFieldRow): void => {
+  Object.assign(prop, field.preserved);
+  if (field.dialMeta && Object.keys(field.dialMeta).length) {
+    prop[DIAL_META_KEY] = field.dialMeta;
+  }
 };
 
 /**
@@ -385,9 +440,7 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
       }
     }
 
-    if (field.parentId === null && field.dialMeta) {
-      prop[DIAL_META_KEY] = field.dialMeta;
-    }
+    applyPreservedKeywords(prop, field);
 
     schema.properties![fieldName] = prop as JSONSchema7;
     if (field.required) {
@@ -414,9 +467,10 @@ const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 =>
 
   children.forEach((child) => {
     const childName = child.name;
-    const childProp: JSONSchema7 = { type: child.type };
+    const childProp: JSONSchema7 & Record<string, unknown> = { type: child.type };
     if (child.title) childProp.title = child.title;
     if (child.description) childProp.description = child.description;
+    applyPreservedKeywords(childProp, child);
 
     if (child.type === 'object') {
       if (child.children?.length) {
@@ -573,4 +627,96 @@ export const schemaToTreeNodes = (
         : undefined;
     return { path, name, type, children, ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }) };
   });
+};
+
+/**
+ * `undefined` keeps the defaults and `false` drops them all; otherwise each field's attributes are merged
+ * over its defaults, `null` drops that field, and an attribute set to `undefined` renders as absent.
+ */
+export const resolveSchemaFieldInputProps = (
+  config?: SchemaFieldInputConfig | false,
+): ResolvedSchemaFieldInputProps => {
+  if (config === false) return {};
+  if (!config) return { ...DEFAULT_SCHEMA_FIELD_INPUT_PROPS } as ResolvedSchemaFieldInputProps;
+
+  const fields = new Set([
+    ...Object.keys(DEFAULT_SCHEMA_FIELD_INPUT_PROPS),
+    ...Object.keys(config),
+  ]) as Set<SchemaInputField>;
+  const resolved: ResolvedSchemaFieldInputProps = {};
+  fields.forEach((field) => {
+    const override = config[field];
+    if (override === null) return;
+    resolved[field] = { ...DEFAULT_SCHEMA_FIELD_INPUT_PROPS[field], ...override };
+  });
+  return resolved;
+};
+
+/** `<input pattern>` matches the whole value in `u` mode; a pattern that cannot compile checks nothing. */
+const compilePattern = (pattern: string): RegExp | null => {
+  try {
+    return new RegExp(`^(?:${pattern})$`, 'u');
+  } catch {
+    return null;
+  }
+};
+
+const getRuleViolations = (
+  field: SchemaInputField,
+  value: string,
+  props: SchemaFieldInputProps | undefined,
+): SchemaConstraintViolation[] => {
+  if (!props) return [];
+  const violations: SchemaConstraintViolation[] = [];
+  const { maxLength, minLength, pattern } = props;
+
+  if (maxLength != null && value.length > maxLength) {
+    violations.push({ field, rule: SchemaConstraintRule.MaxLength, limit: maxLength });
+  }
+  // As in HTML, an empty value is emptiness's concern, not a length or format one.
+  if (!value) return violations;
+  if (minLength != null && value.length < minLength) {
+    violations.push({ field, rule: SchemaConstraintRule.MinLength, limit: minLength });
+  }
+  if (pattern && compilePattern(pattern)?.test(value) === false) {
+    violations.push({ field, rule: SchemaConstraintRule.Pattern, limit: pattern });
+  }
+  return violations;
+};
+
+const toText = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+/**
+ * The values an input's own `maxLength` cannot stop — from the raw JSON editor, an import, or a schema
+ * stored before the limits — checked the way the browser would. Tab and Section are checked only where
+ * their cells exist: on first-level rows of a consumer that shows those columns.
+ */
+export const getFieldConstraintViolations = (
+  fields: SchemaFieldRow[],
+  resolved: ResolvedSchemaFieldInputProps,
+  metaColumns: SchemaMetaColumn[] = [],
+): SchemaConstraintViolation[] => {
+  const hasTab = metaColumns.includes(SchemaMetaColumn.Tab);
+  const hasSection = metaColumns.includes(SchemaMetaColumn.Section);
+  const found = new Map<string, SchemaConstraintViolation>();
+
+  const check = (field: SchemaInputField, value: unknown) =>
+    getRuleViolations(field, toText(value), resolved[field]).forEach((violation) =>
+      found.set(`${violation.field}:${violation.rule}`, violation),
+    );
+
+  const walk = (rows: SchemaFieldRow[]) =>
+    rows.forEach((row) => {
+      check(SchemaInputField.Name, row.name);
+      check(SchemaInputField.Title, row.title);
+      check(SchemaInputField.Description, row.description);
+      if (row.parentId === null) {
+        if (hasTab) check(SchemaInputField.Tab, row.dialMeta?.[CATALOG_META_TAB]);
+        if (hasSection) check(SchemaInputField.Section, row.dialMeta?.[CATALOG_META_SECTION]);
+      }
+      walk(row.children ?? []);
+    });
+
+  walk(fields);
+  return [...found.values()];
 };

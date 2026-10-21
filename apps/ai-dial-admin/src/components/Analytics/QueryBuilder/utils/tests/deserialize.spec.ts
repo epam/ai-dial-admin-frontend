@@ -5,13 +5,13 @@ import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serial
 import {
   createAggregate,
   createGroup,
-  createGroupByColumn,
-  createGroupByFn,
+  createColumnRow,
+  createFnRow,
   createInitialState,
   createPredicate,
   createSort,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import { QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { FilterOperandKind, FilterPredicateNode, QueryBuilderState } from '@/src/models/analytics/query-builder';
 import {
   QueryExprType,
   QueryFilterNode,
@@ -24,6 +24,8 @@ import {
   QuerySortNulls,
   QueryValueType,
   StructuredQuery,
+  QueryExpr,
+  QueryFnExpr,
 } from '@/src/models/analytics/query';
 import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
@@ -43,7 +45,7 @@ describe('parseQuery round-trip', () => {
   test('row query with filter, projection, sort and offset page', () => {
     const s = base();
     s.distinct = true;
-    s.select = ['project_id', 'chat_id'];
+    s.select = [createColumnRow('project_id'), createColumnRow('chat_id')];
 
     const eq = createPredicate();
     eq.field = 'event_kind';
@@ -111,13 +113,13 @@ describe('parseQuery round-trip', () => {
     const s = base();
     s.mode = QueryMode.Aggregate;
 
-    const bucket = createGroupByFn(fnFixture('date_bin'), [
+    const bucket = createFnRow(fnFixture('date_bin'), [
       { literal: '5' },
       { literal: 'hour' },
       { field: 'request_time' },
     ]);
     bucket.alias = 'bucket';
-    s.groupBy = [createGroupByColumn('deployment'), bucket];
+    s.groupBy = [createColumnRow('deployment'), bucket];
 
     const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = 'sum_tokens';
@@ -136,7 +138,7 @@ describe('parseQuery round-trip', () => {
   test('aggregate query with a scalar-function group-by entry', () => {
     const s = base();
     s.mode = QueryMode.Aggregate;
-    const row = createGroupByFn(fnFixture('lower'), [{ field: 'deployment' }]);
+    const row = createFnRow(fnFixture('lower'), [{ field: 'deployment' }]);
     row.alias = 'dep';
     s.groupBy = [row];
     roundTrips(s);
@@ -145,7 +147,7 @@ describe('parseQuery round-trip', () => {
   test('aggregate query with an ordered-set aggregate (percentile_cont) round-trips', () => {
     const s = base();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = [createGroupByColumn('deployment')];
+    s.groupBy = [createColumnRow('deployment')];
     const agg = createAggregate(fnFixture('percentile_cont'), [{ literal: '0.5' }, { field: 'latency' }]);
     agg.alias = 'p50';
     s.aggregates = [agg];
@@ -241,9 +243,9 @@ describe('isBuilderRepresentable', () => {
   const base: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
 
   test('no filter, a bare predicate, and a flat group are representable', () => {
-    expect(isBuilderRepresentable(base)).toBe(true);
-    expect(isBuilderRepresentable({ ...base, filter: pred })).toBe(true);
-    expect(isBuilderRepresentable({ ...base, filter: { op: QueryLogicalOperator.And, args: [pred, pred] } })).toBe(
+    expect(isBuilderRepresentable(base, [])).toBe(true);
+    expect(isBuilderRepresentable({ ...base, filter: pred }, [])).toBe(true);
+    expect(isBuilderRepresentable({ ...base, filter: { op: QueryLogicalOperator.And, args: [pred, pred] } }, [])).toBe(
       true,
     );
   });
@@ -253,7 +255,7 @@ describe('isBuilderRepresentable', () => {
       op: QueryLogicalOperator.And,
       args: [pred, { op: QueryLogicalOperator.Or, args: [pred, pred] }],
     };
-    expect(isBuilderRepresentable({ ...base, filter })).toBe(true);
+    expect(isBuilderRepresentable({ ...base, filter }, [])).toBe(true);
   });
 
   test('a group nested inside a nested group is not representable', () => {
@@ -261,7 +263,7 @@ describe('isBuilderRepresentable', () => {
       op: QueryLogicalOperator.And,
       args: [{ op: QueryLogicalOperator.Or, args: [pred, { op: QueryLogicalOperator.And, args: [pred] }] }],
     };
-    expect(isBuilderRepresentable({ ...base, filter })).toBe(false);
+    expect(isBuilderRepresentable({ ...base, filter }, [])).toBe(false);
   });
 
   test('the having tree follows the same rule', () => {
@@ -269,7 +271,559 @@ describe('isBuilderRepresentable', () => {
       op: QueryLogicalOperator.And,
       args: [{ op: QueryLogicalOperator.Or, args: [{ op: QueryLogicalOperator.And, args: [pred] }] }],
     };
-    expect(isBuilderRepresentable({ ...base, mode: QueryMode.Aggregate, having: deep })).toBe(false);
-    expect(isBuilderRepresentable({ ...base, mode: QueryMode.Aggregate, having: pred })).toBe(true);
+    expect(isBuilderRepresentable({ ...base, mode: QueryMode.Aggregate, having: deep }, [])).toBe(false);
+    expect(isBuilderRepresentable({ ...base, mode: QueryMode.Aggregate, having: pred }, [])).toBe(true);
+  });
+});
+
+describe('parseQuery — row-mode function columns', () => {
+  const extractExpr: QueryFnExpr = {
+    type: QueryExprType.Fn,
+    name: 'json_extract_string',
+    args: [
+      { type: QueryExprType.Field, name: 'request_tags' },
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'baggage' },
+    ],
+  };
+
+  const rowQuery = (as?: string): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Row,
+    select: [{ expr: { type: QueryExprType.Field, name: 'project_id' } }, { expr: extractExpr, ...(as ? { as } : {}) }],
+  });
+
+  test('an fn select entry becomes a function row with its arguments filled', () => {
+    const state = parseQuery(rowQuery('baggage'), [], TEST_FUNCTIONS);
+
+    expect(state.select.map((row) => row.fn)).toEqual([null, 'json_extract_string']);
+    expect(state.select[1].args).toEqual([{ field: 'request_tags' }, { literal: 'baggage' }]);
+  });
+
+  test('an authored alias is kept and marked user-owned', () => {
+    const state = parseQuery(rowQuery('baggage'), [], TEST_FUNCTIONS);
+
+    expect(state.select[1]).toMatchObject({ alias: 'baggage', aliasEdited: true });
+  });
+
+  test('an entry with no alias is prefilled with the derived one', () => {
+    const state = parseQuery(rowQuery(), [], TEST_FUNCTIONS);
+
+    expect(state.select[1]).toMatchObject({ alias: 'request_tags (Json extract string)', aliasEdited: false });
+  });
+
+  // A hand-authored call can omit `args` while the JSON is still syntactically valid — reached by
+  // typing in the JSON view, where every keystroke is parsed.
+  test('a call with no args at all parses to empty slots rather than throwing', () => {
+    const bare: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      select: [{ expr: { type: QueryExprType.Fn, name: 'lower' } as never }],
+    };
+
+    expect(parseQuery(bare, [], TEST_FUNCTIONS).select[0].args).toEqual([{ field: '' }]);
+  });
+
+  test('the projection round-trips instead of losing the function column', () => {
+    const original = rowQuery('baggage');
+
+    expect(buildQuery(parseQuery(original, [], TEST_FUNCTIONS))).toMatchObject({ select: original.select });
+  });
+});
+
+describe('parseQuery — function filter operands', () => {
+  const filter = {
+    op: QueryOperator.Ico,
+    args: [
+      {
+        type: QueryExprType.Fn,
+        name: 'json_extract_string',
+        args: [
+          { type: QueryExprType.Field, name: 'request_tags' },
+          { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'baggage' },
+        ],
+      },
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'eval.run.id' },
+    ],
+  } as QueryPredicate;
+
+  const withFilter: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row, filter };
+
+  test("a function left operand becomes the condition's function and arguments", () => {
+    const state = parseQuery(withFilter, [], TEST_FUNCTIONS);
+
+    expect(state.filter.children[0]).toMatchObject({
+      fn: 'json_extract_string',
+      field: '',
+      args: [{ field: 'request_tags' }, { literal: 'baggage' }],
+      value: 'eval.run.id',
+    });
+  });
+
+  test('the predicate round-trips instead of being dropped', () => {
+    expect(buildQuery(parseQuery(withFilter, [], TEST_FUNCTIONS))).toMatchObject({
+      filter: { op: QueryLogicalOperator.And, args: [filter] },
+    });
+  });
+});
+
+describe('isBuilderRepresentable — function calls', () => {
+  const query = (expr: StructuredQuery['select']): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Row,
+    select: expr,
+  });
+
+  const call = (name: string, args: unknown[]) => query([{ expr: { type: QueryExprType.Fn, name, args } as never }]);
+
+  const lowerOfField = call('lower', [{ type: QueryExprType.Field, name: 'project_id' }]);
+
+  test('a served function whose arguments match the catalog is representable', () => {
+    expect(isBuilderRepresentable(lowerOfField, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a function the catalog does not name is not representable', () => {
+    expect(isBuilderRepresentable(call('regexp_extract', []), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  // The catalog marks some arguments variadic; the builder has one slot per declared argument, so a
+  // call carrying more would come back truncated.
+  test('more arguments than the catalog declares is not representable', () => {
+    const path = call('json_extract_string', [
+      { type: QueryExprType.Field, name: 'request_body' },
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'params' },
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'temperature' },
+    ]);
+
+    expect(isBuilderRepresentable(path, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  // width_bucket declares its bounds as expressions; the argument editor offers only a column for
+  // those, so a query passing constants there cannot be shown without losing them.
+  test('a literal where the catalog declares an expression is not representable', () => {
+    const bucketed = call('width_bucket', [
+      { type: QueryExprType.Field, name: 'total_tokens' },
+      { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '0' },
+      { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '1000' },
+      { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '10' },
+    ]);
+
+    expect(isBuilderRepresentable(bucketed, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a condition operand is judged the same way', () => {
+    const unserved: QueryFilterNode = {
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Fn, name: 'regexp_extract', args: [] },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'x' },
+      ],
+    } as QueryPredicate;
+
+    expect(isBuilderRepresentable({ entity: 'e', mode: QueryMode.Row, filter: unserved }, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  // Aggregate mode rebuilds its group-by keys from the select entries, so a key the select does not
+  // carry would be dropped on hydration — and projecting it instead would add a result column the
+  // author never asked for.
+  test('a group-by key the select does not carry is not representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      group_by: ['deployment'],
+      select: [{ expr: { type: QueryExprType.Fn, name: 'count', args: [] } }],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a group-by key projected as a field is representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      group_by: ['deployment'],
+      select: [
+        { expr: { type: QueryExprType.Field, name: 'deployment' } },
+        { expr: { type: QueryExprType.Fn, name: 'count', args: [] } },
+      ],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a group-by key naming a computed column alias is representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      group_by: ['bucket'],
+      select: [
+        {
+          expr: {
+            type: QueryExprType.Fn,
+            name: 'lower',
+            args: [{ type: QueryExprType.Field, name: 'deployment' }],
+          },
+          as: 'bucket',
+        },
+      ],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a group-by key in row mode is not representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      group_by: ['deployment'],
+      select: [{ expr: { type: QueryExprType.Field, name: 'deployment' } }],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  // The saved-queries grid labels a query's editor without loading the catalog.
+  test('with no catalog given, a function call is taken at face value', () => {
+    expect(isBuilderRepresentable(call('regexp_extract', []), null)).toBe(true);
+  });
+
+  test('an empty catalog leaves no function query representable', () => {
+    expect(isBuilderRepresentable(lowerOfField, [])).toBe(false);
+  });
+});
+
+describe('function right operands and nested calls', () => {
+  const nowCall: QueryFnExpr = { type: QueryExprType.Fn, name: 'now', args: [] };
+
+  const relativeCall = (unit: string, amount: string, inner: QueryExpr = nowCall): QueryFnExpr => ({
+    type: QueryExprType.Fn,
+    name: 'date_sub',
+    args: [
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: unit },
+      { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: amount },
+      inner,
+    ],
+  });
+
+  // Wrapped in the root AND group the builder always holds, so a round trip compares like for like.
+  const relativeQuery = (right: QueryExpr): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Row,
+    filter: {
+      op: QueryLogicalOperator.And,
+      args: [{ op: QueryOperator.Ge, args: [{ type: QueryExprType.Field, name: 'request_time' }, right] }],
+    },
+  });
+
+  test('a bound relative to the current instant is representable', () => {
+    expect(isBuilderRepresentable(relativeQuery(relativeCall('minute', '30')), TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a relative bound hydrates into the condition with both calls intact', () => {
+    const state = parseQuery(relativeQuery(relativeCall('minute', '30')), [], TEST_FUNCTIONS);
+    const condition = state.filter.children[0] as FilterPredicateNode;
+
+    expect(condition.field).toBe('request_time');
+    expect(condition.rightKind).toBe(FilterOperandKind.Function);
+    expect(condition.rightFn).toBe('date_sub');
+    expect(condition.rightArgs).toEqual([{ literal: 'minute' }, { literal: '30' }, { call: { fn: 'now', args: [] } }]);
+  });
+
+  test('a relative bound round-trips through the builder unchanged', () => {
+    const original = relativeQuery(relativeCall('day', '2'));
+    const reparsed = buildQuery(parseQuery(original, [], TEST_FUNCTIONS));
+
+    expect(reparsed.filter).toEqual(original.filter);
+  });
+
+  test('a call nested two levels deep is not representable', () => {
+    const twoDeep = relativeCall('minute', '30', relativeCall('hour', '1'));
+
+    expect(isBuilderRepresentable(relativeQuery(twoDeep), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a right-hand call the catalog does not serve is not representable', () => {
+    const unserved: QueryFnExpr = { type: QueryExprType.Fn, name: 'unserved', args: [] };
+
+    expect(isBuilderRepresentable(relativeQuery(unserved), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a call on the right of in is not representable', () => {
+    const query = relativeQuery(relativeCall('minute', '30'));
+    const filter = query.filter as { args: { op: QueryOperator }[] };
+    filter.args[0].op = QueryOperator.In;
+
+    expect(isBuilderRepresentable(query, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a column on the right is not representable', () => {
+    const column: QueryExpr = { type: QueryExprType.Field, name: 'response_time' };
+
+    expect(isBuilderRepresentable(relativeQuery(column), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a nested call in a projected column hydrates too', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      select: [{ expr: { type: QueryExprType.Fn, name: 'length', args: [relativeCall('hour', '1')] }, as: 'since' }],
+    };
+    const state = parseQuery(query, [], TEST_FUNCTIONS);
+
+    expect(state.select[0].args).toEqual([
+      { call: { fn: 'date_sub', args: [{ literal: 'hour' }, { literal: '1' }, { call: { fn: 'now', args: [] } }] } },
+    ]);
+  });
+});
+
+// Each shape here passed the check before and then hydrated with part of it gone. The representable
+// neighbours prove the check is not simply wider: they come back from the builder unchanged.
+describe('isBuilderRepresentable — shapes the builder would drop', () => {
+  const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
+  const text = (value: string) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value }) as const;
+  const row = (patch: Partial<StructuredQuery>): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Row,
+    ...patch,
+  });
+  // Wrapped in the root group the builder always emits, so a round trip compares like with like.
+  const where = (predicate: QueryFilterNode) => row({ filter: { op: QueryLogicalOperator.And, args: [predicate] } });
+  const comesBackUnchanged = (query: StructuredQuery) =>
+    expect(buildQuery(parseQuery(query, [], TEST_FUNCTIONS))).toEqual(query);
+
+  test('a plain column renamed with AS is not representable, one under its own name is', () => {
+    expect(isBuilderRepresentable(row({ select: [{ expr: field('model'), as: 'm' }] }), TEST_FUNCTIONS)).toBe(false);
+    expect(
+      isBuilderRepresentable(
+        { ...row({ select: [{ expr: field('model'), as: 'm' }] }), mode: QueryMode.Aggregate, group_by: ['m'] },
+        TEST_FUNCTIONS,
+      ),
+    ).toBe(false);
+    expect(isBuilderRepresentable(row({ select: [{ expr: field('model'), as: 'model' }] }), TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('distinct is representable only on an aggregate metric', () => {
+    const distinctCall = (name: string): QueryFnExpr => ({
+      type: QueryExprType.Fn,
+      name,
+      args: [field('project_id')],
+      distinct: true,
+    });
+    const aggregate = (name: string): StructuredQuery => ({
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: distinctCall(name), as: 'n' }],
+    });
+
+    expect(isBuilderRepresentable(aggregate('count'), TEST_FUNCTIONS)).toBe(true);
+    comesBackUnchanged(aggregate('count'));
+    expect(isBuilderRepresentable(aggregate('lower'), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(row({ select: [{ expr: distinctCall('lower'), as: 'n' }] }), TEST_FUNCTIONS)).toBe(
+      false,
+    );
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.Eq, args: [distinctCall('lower'), text('x')] }), TEST_FUNCTIONS),
+    ).toBe(false);
+  });
+
+  test('a predicate with other than two operands is not representable', () => {
+    expect(isBuilderRepresentable(where({ op: QueryOperator.Eq, args: [field('model')] }), TEST_FUNCTIONS)).toBe(false);
+    expect(
+      isBuilderRepresentable(
+        where({ op: QueryOperator.Eq, args: [field('model'), text('a'), text('b')] }),
+        TEST_FUNCTIONS,
+      ),
+    ).toBe(false);
+  });
+
+  test('a list is representable only under `in` and only with items its text editor keeps', () => {
+    const list = (...values: string[]): QueryExpr => ({ type: QueryExprType.Array, items: values.map(text) });
+    const inList = (items: QueryExpr) => where({ op: QueryOperator.In, args: [field('model'), items] });
+
+    expect(isBuilderRepresentable(inList(list('a', 'b')), TEST_FUNCTIONS)).toBe(true);
+    comesBackUnchanged(inList(list('a', 'b')));
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.Eq, args: [field('model'), list('a')] }), TEST_FUNCTIONS),
+    ).toBe(false);
+    expect(isBuilderRepresentable(inList(list('a,b')), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(inList(list(' a')), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(inList(list('')), TEST_FUNCTIONS)).toBe(false);
+    const mixed: QueryExpr = {
+      type: QueryExprType.Array,
+      items: [text('a'), { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '1' }],
+    };
+    expect(isBuilderRepresentable(inList(mixed), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('under `in` only a list is representable, and a list item that is not a string value does not throw', () => {
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.In, args: [field('model'), text('a,b')] }), TEST_FUNCTIONS),
+    ).toBe(false);
+    const numeric = {
+      type: QueryExprType.Array,
+      items: [{ type: QueryExprType.Value, value_type: QueryValueType.Integer, value: 1 }],
+    } as never;
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.In, args: [field('model'), numeric] }), TEST_FUNCTIONS),
+    ).toBe(false);
+  });
+
+  test('a blank literal argument is not representable', () => {
+    const extract = (key: string) =>
+      row({
+        select: [
+          {
+            expr: { type: QueryExprType.Fn, name: 'json_extract_string', args: [field('request_tags'), text(key)] },
+            as: 'x',
+          },
+        ],
+      });
+
+    expect(isBuilderRepresentable(extract(''), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(extract(' '), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(extract('baggage'), TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a having tree in row mode is not representable', () => {
+    expect(
+      isBuilderRepresentable(
+        row({ having: { op: QueryOperator.Eq, args: [field('model'), text('a')] } }),
+        TEST_FUNCTIONS,
+      ),
+    ).toBe(false);
+  });
+
+  test('without a catalog an aggregate-mode distinct is taken at face value', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [
+        { expr: { type: QueryExprType.Fn, name: 'count', args: [field('project_id')], distinct: true }, as: 'n' },
+      ],
+    };
+
+    expect(isBuilderRepresentable(query, null)).toBe(true);
+  });
+});
+
+describe('isBuilderRepresentable — aggregate select and group_by agree', () => {
+  const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
+  const call = (name: string, args: QueryExpr[]): QueryExpr => ({ type: QueryExprType.Fn, name, args });
+  const aggregate = (patch: Partial<StructuredQuery>): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Aggregate,
+    ...patch,
+  });
+
+  // Regression: the builder files every scalar call under Group by, so `round(avg(x))` came back as a
+  // grouping key and the rebuilt query put an aggregate into GROUP BY.
+  test('a scalar call that is not a group-by key is not representable', () => {
+    const query = aggregate({
+      select: [{ expr: field('model') }, { expr: call('abs', [call('avg', [field('latency')])]), as: 'a' }],
+      group_by: ['model'],
+    });
+
+    expect(isBuilderRepresentable(query, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a plain column that is not a group-by key is not representable', () => {
+    expect(isBuilderRepresentable(aggregate({ select: [{ expr: field('model') }] }), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(aggregate({ select: [{ expr: field('model') }] }), null)).toBe(false);
+  });
+
+  test('an unaliased scalar key is found under the name the service gives it', () => {
+    const query = aggregate({
+      select: [{ expr: call('lower', [field('model')]) }, { expr: call('count', []), as: 'n' }],
+      group_by: ['lower'],
+    });
+
+    expect(isBuilderRepresentable(query, TEST_FUNCTIONS)).toBe(true);
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+    expect(rebuilt.group_by).toEqual([rebuilt.select?.[0].as]);
+  });
+});
+
+describe('parseQuery — references to an unaliased call', () => {
+  const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
+  const countAll: QueryExpr = { type: QueryExprType.Fn, name: 'count', args: [] };
+
+  // The query sorts by the service's name for the column; the builder names it itself, so the sort
+  // key has to follow or the rebuilt query orders by a column it no longer emits.
+  test('a sort key naming the service name of an unaliased call follows the alias the builder gives it', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: field('model') }, { expr: countAll }],
+      group_by: ['model'],
+      sort: [{ field: 'count', dir: QuerySortDirection.Desc }],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+
+    expect(rebuilt.sort).toEqual([{ field: rebuilt.select?.[1].as, dir: QuerySortDirection.Desc }]);
+  });
+
+  test('a having condition on it follows the alias too, while a plain column keeps its name', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: field('model') }, { expr: countAll }],
+      group_by: ['model'],
+      having: {
+        op: QueryLogicalOperator.And,
+        args: [
+          {
+            op: QueryOperator.Gt,
+            args: [field('count'), { type: QueryExprType.Value, value_type: QueryValueType.Long, value: '5' }],
+          },
+        ],
+      },
+      sort: [{ field: 'model', dir: QuerySortDirection.Asc }],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+    const condition = (rebuilt.having as { args: QueryPredicate[] }).args[0];
+
+    expect(condition.args[0]).toEqual(field(rebuilt.select?.[1].as ?? ''));
+    expect(rebuilt.sort).toEqual([{ field: 'model', dir: QuerySortDirection.Asc }]);
+  });
+
+  test('a repeated function takes the service suffix, so each reference follows its own column', () => {
+    const lower = (name: string): QueryExpr => ({ type: QueryExprType.Fn, name: 'lower', args: [field(name)] });
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      select: [{ expr: lower('model') }, { expr: lower('project_id') }],
+      sort: [{ field: 'lower_1', dir: QuerySortDirection.Asc }],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+
+    expect(rebuilt.sort).toEqual([{ field: rebuilt.select?.[1].as, dir: QuerySortDirection.Asc }]);
+  });
+
+  // The service reserves explicit aliases first, so an unaliased `count` yields its name to an alias
+  // spelled `count` and takes `count_1` — the name a sort written against the query uses.
+  test('an explicit alias claims its name before a derived one, as the service assigns them', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [
+        { expr: field('model') },
+        { expr: countAll },
+        { expr: { type: QueryExprType.Fn, name: 'sum', args: [field('total_tokens')] }, as: 'count' },
+      ],
+      group_by: ['model'],
+      sort: [
+        { field: 'count_1', dir: QuerySortDirection.Desc },
+        { field: 'count', dir: QuerySortDirection.Asc },
+      ],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+
+    expect(rebuilt.sort).toEqual([
+      { field: rebuilt.select?.[1].as, dir: QuerySortDirection.Desc },
+      { field: 'count', dir: QuerySortDirection.Asc },
+    ]);
   });
 });

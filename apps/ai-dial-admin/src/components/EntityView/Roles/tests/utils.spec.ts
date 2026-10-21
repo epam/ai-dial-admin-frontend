@@ -1,6 +1,7 @@
 import {
   getRolesGridData,
   isDisableRole,
+  isAssetUnavailable,
   getNoAvailableTitle,
   isResetAvailable,
   isLimitSameAsDefault,
@@ -26,6 +27,36 @@ describe('getNoAvailableTitle', () => {
 
   test('returns NotAvailableApplication for Toolsets view', () => {
     expect(getNoAvailableTitle(ApplicationRoute.Toolsets)).toBe(RolesI18nKey.NotAvailableToolSet);
+  });
+
+  test('returns NotAvailableModel for AssetsModels view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.PlatformModels)).toBe(RolesI18nKey.NotAvailableModel);
+  });
+
+  test('returns NotAvailableRoute for AssetsRoutes view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.PlatformRoutes)).toBe(RolesI18nKey.NotAvailableRoute);
+  });
+
+  test('returns NotAvailableApplication for AssetsApplications view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.AssetsApplications)).toBe(RolesI18nKey.NotAvailableApplication);
+  });
+});
+
+describe('isAssetUnavailable', () => {
+  test('returns true for an empty array', () => {
+    expect(isAssetUnavailable([])).toBe(true);
+  });
+
+  test('returns false for a populated array', () => {
+    expect(isAssetUnavailable(['role'])).toBe(false);
+  });
+
+  test('returns false for undefined', () => {
+    expect(isAssetUnavailable(undefined)).toBe(false);
+  });
+
+  test('returns false for null', () => {
+    expect(isAssetUnavailable(null)).toBe(false);
   });
 });
 
@@ -103,7 +134,7 @@ describe('isDisableRole', () => {
   });
 
   test('returns false if roleLimits is not empty and isPublic is falsy', () => {
-    const entity = { roleLimits: { admin: { minute: 1 } }, isPublic: false };
+    const entity = { roleLimits: { admin: { minute: '1' } }, isPublic: false };
     expect(isDisableRole(entity)).toBe(false);
   });
 
@@ -113,7 +144,7 @@ describe('isDisableRole', () => {
   });
 
   test('returns false if isPublic is true and roleLimits is not empty', () => {
-    const entity = { roleLimits: { admin: { minute: 1 } }, isPublic: true };
+    const entity = { roleLimits: { admin: { minute: '1' } }, isPublic: true };
     expect(isDisableRole(entity)).toBe(false);
   });
 });

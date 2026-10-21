@@ -1,3 +1,7 @@
+import { ComponentProps, ReactNode } from 'react';
+
+import { DialAnalyticsCard } from '@epam/ai-dial-ui-kit';
+
 /** Dual-run statistic card for the Distribution section. */
 export interface CompareMetricStatCard {
   name: string;
@@ -13,3 +17,14 @@ export interface CompareBarGroup {
   description?: string;
   barDescriptions?: Record<string, string>;
 }
+
+/** One run's line in a DualRunField; the list is already in display order. */
+export interface DualRunFieldEntry {
+  key: string;
+  runName: string;
+  value: string;
+  postfix?: ReactNode;
+}
+
+/** The two-slot `compareValues` shape DialAnalyticsCard takes. */
+export type CompareCardItems = NonNullable<ComponentProps<typeof DialAnalyticsCard>['compareValues']>;

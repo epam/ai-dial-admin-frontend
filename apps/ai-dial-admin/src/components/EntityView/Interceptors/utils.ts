@@ -3,26 +3,73 @@ import { ColDef } from 'ag-grid-community';
 import { ACTION_COLUMN, DRAGGABLE_COL_DEF, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { withSourceColumn } from '@/src/utils/config-entities/source-column';
+import { AssetInterceptorOrigin, InterceptorOption } from './models';
 
-export const getInterceptorsGridData = (
-  interceptors?: BaseEntity[],
+/** Generic over the option shape: this matches on `name` alone, and the two populations differ. */
+export const getInterceptorsGridData = <T extends { name?: string }>(
+  interceptors?: T[],
   interceptorNames?: string[] | null,
-): BaseEntity[] => {
+): T[] => {
   return (
     interceptorNames
-      ?.map((name) => interceptors?.find((interceptor) => interceptor.name === name) as BaseEntity)
+      ?.map((name) => interceptors?.find((interceptor) => interceptor.name === name) as T)
       .filter(Boolean) || []
   );
 };
+
+/**
+ * Merges the admin-BE-tracked interceptor population with the `Assets > Interceptors` population
+ * into one option list, each option tagged with `AssetInterceptorOrigin`. A name present in both
+ * populations yields two distinguishable rows rather than one option silently shadowing the other.
+ */
+export const mergeInterceptorOrigins = (
+  entityInterceptors: DialInterceptor[],
+  assetInterceptors: DialInterceptorResource[],
+): InterceptorOption[] => [
+  ...entityInterceptors.map((interceptor) => ({
+    ...interceptor,
+    assetOrigin: AssetInterceptorOrigin.Entity,
+  })),
+  ...assetInterceptors.map((interceptor) => ({
+    ...interceptor,
+    assetOrigin: AssetInterceptorOrigin.Asset,
+  })),
+];
+
+const ASSET_ORIGIN_LABEL: Record<AssetInterceptorOrigin, string> = {
+  [AssetInterceptorOrigin.Entity]: 'Entity',
+  [AssetInterceptorOrigin.Asset]: 'Asset',
+};
+
+const ASSET_SOURCE_COLUMN_ID = 'assetOrigin';
+
+const ASSET_SOURCE_COLUMN: ColDef = {
+  field: ASSET_SOURCE_COLUMN_ID,
+  colId: ASSET_SOURCE_COLUMN_ID,
+  headerName: 'Source',
+  hide: false,
+  maxWidth: 180,
+  valueGetter: ({ data }) => ASSET_ORIGIN_LABEL[data?.[ASSET_SOURCE_COLUMN_ID] as AssetInterceptorOrigin] ?? '',
+};
+
+/** Whether a row set carries `assetOrigin` — driven by the data, like `hasConfigEntityOrigin`. */
+export const hasAssetInterceptorOrigin = <T>(rows?: T[] | null): boolean =>
+  !!rows?.some((row) => !!(row as Record<string, unknown>)?.[ASSET_SOURCE_COLUMN_ID]);
+
+export const withAssetSourceColumn = (columns: ColDef[], rows?: unknown[] | null): ColDef[] =>
+  hasAssetInterceptorOrigin(rows) ? [...columns, ASSET_SOURCE_COLUMN] : columns;
 
 export const getInterceptorsColumnDefs = (
   /** Omitted on Core-sourced surfaces, where no admin-BE detail page exists to open. */
   open: ((entity?: BaseEntity) => void) | undefined,
   remove?: (entity?: BaseEntity, index?: number) => void,
   startIndex?: number,
-  rows?: BaseEntity[] | null,
+  /** Only probed for an origin tag by the two source-column helpers, never read field by field. */
+  rows?: unknown[] | null,
 ): ColDef[] => {
   const actions = open ? [getOpenInNewTabOperation(open)] : [];
   if (remove) {
@@ -41,7 +88,7 @@ export const getInterceptorsColumnDefs = (
       floatingFilter: false,
     },
     DISPLAY_NAME_COLUMN,
-    ...withSourceColumn([DESCRIPTION_COLUMN], rows),
+    ...withAssetSourceColumn(withSourceColumn([DESCRIPTION_COLUMN], rows), rows),
     ACTION_COLUMN(actions),
   ];
 

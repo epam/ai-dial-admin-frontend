@@ -147,7 +147,8 @@ const groupToFilter = (
   id: uuidv4(),
   field: fieldName,
   displayName: fieldDisplayName(fieldName, options),
-  isArray: fieldIsArray(fieldName, options) || predicates.length > 1,
+  // isArray must reflect field type only — multi-predicate merges are not arrays
+  isArray: fieldIsArray(fieldName, options),
   logicalOp,
   predicates,
 });

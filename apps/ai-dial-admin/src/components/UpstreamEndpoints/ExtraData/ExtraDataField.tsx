@@ -4,6 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialRadioGroupPopupField, DialTextarea, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { isNull } from 'lodash';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
@@ -13,12 +14,12 @@ import { JSONEditorError } from '@/src/types/editor';
 import { NONE_ID, SECRET_VALUE_PLACEHOLDER, USE_JSON_ID, USE_STRING_ID } from './constants';
 
 interface Props {
-  value?: DialEndpointExtraData;
+  value?: DialEndpointExtraData | null;
   label?: string;
   disabled?: boolean;
   isSecret?: boolean;
   containerClassName?: string;
-  onChange: (extraData: DialEndpointExtraData) => void;
+  onChange: (extraData: DialEndpointExtraData | undefined | null) => void;
 }
 
 const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, containerClassName, onChange }) => {
@@ -30,7 +31,7 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
   const [radioFieldId, setRadioFieldId] = useState(NONE_ID);
 
   useEffect(() => {
-    if (typeof value === 'object') {
+    if (typeof value === 'object' && !isNull(value)) {
       try {
         setJsonValue(JSON.stringify(value, null, 2));
         setRadioFieldId(USE_JSON_ID);
@@ -94,7 +95,7 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
   const onApply = useCallback(() => {
     switch (radioFieldId) {
       case NONE_ID:
-        onChange('');
+        onChange(null);
         break;
       case USE_STRING_ID:
         onChange(String(stringValue ?? ''));

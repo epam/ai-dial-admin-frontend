@@ -1,8 +1,12 @@
-## mcp-registry-images
+# mcp-registry-images Specification
+
+## Purpose
 
 UI flow for creating image definitions from the MCP Registry, including registry browsing, server selection, and automatic image source configuration. Gated behind `MCP_REGISTRY_ENABLED` feature flag.
 
-### Feature flag gates image MCP Registry flow
+## Requirements
+
+### Requirement: Feature flag gates image MCP Registry flow
 
 The entire image MCP Registry flow SHALL be gated behind the existing `MCP_REGISTRY_ENABLED` feature flag. When disabled, the Images page SHALL show only the existing "Add" button (no dropdown).
 
@@ -14,7 +18,7 @@ The entire image MCP Registry flow SHALL be gated behind the existing `MCP_REGIS
 - **WHEN** `MCP_REGISTRY_ENABLED` is `false`
 - **THEN** the Images page SHALL show only the existing single "Add" button
 
-### Images page entry point as dropdown
+### Requirement: Images page entry point as dropdown
 
 The Images page "Add" button SHALL become a `DialButtonDropdown` when the feature flag is enabled. Dropdown items are always both present — the dropdown itself is conditionally rendered based on the flag.
 
@@ -26,7 +30,7 @@ The Images page "Add" button SHALL become a `DialButtonDropdown` when the featur
 - **WHEN** user clicks "From MCP Registry" from the dropdown
 - **THEN** the `ImageAdd` modal SHALL open with `isRegistry=true`
 
-### Reuse ImageAdd modal with isRegistry flag
+### Requirement: Reuse ImageAdd modal with isRegistry flag
 
 The existing `ImageAdd` modal SHALL accept an `isRegistry?: boolean` prop. When true, it SHALL initialize with `getImageTemplate(true)` which sets `source.$type=CODE` with `externalRegistryRef`. The modal uses `ImageFields` which renders `ImageSource` — detecting `externalRegistryRef` and showing `McpServerNameField` instead of source fields.
 
@@ -41,7 +45,7 @@ Branch, SHA, and BaseDirectory fields SHALL NOT be shown in the modal when `exte
 - **WHEN** the `ImageAdd` modal opens without `isRegistry`
 - **THEN** the modal SHALL display the standard image creation fields
 
-### Purpose-specific API method for images
+### Requirement: Purpose-specific API method for images
 
 `McpRegistryApi` SHALL expose a `getImageMcpServers()` method that uses `IMAGE_MCP_REGISTRY_REPO_FILTER` and `IMAGE_MCP_REGISTRY_OCI_FILTER` from constants and sends POST requests to `/api/v1/mcp-registry/servers/list`.
 
@@ -49,12 +53,12 @@ Branch, SHA, and BaseDirectory fields SHALL NOT be shown in the modal when `exte
 - **WHEN** `getImageMcpServers({ search: 'github' })` is called
 - **THEN** two parallel POST requests SHALL be sent — one with `IMAGE_MCP_REGISTRY_REPO_FILTER` and one with `IMAGE_MCP_REGISTRY_OCI_FILTER`
 
-### Purpose-specific server action for images
+### Requirement: Purpose-specific server action for images
 
-The `getImageMcpServers()` server action SHALL make two parallel POST requests — one with `{ repositoryExists: true }` and one with `{ packageRegistryTypes: ["oci"] }` — and merge and deduplicate results by `name + version`. The action SHALL support `minResults` accumulation.
+The `getImageMcpServers()` server action SHALL make two parallel POST requests — one with `{ repositoryExists: true }` and one with `{ packageRegistryTypes: ["oci"] }` — and merge and deduplicate results by `name + version`. The action SHALL make one such pair of requests per call and SHALL NOT accumulate results across BE pages.
 
 #### Scenario: Merged results from two filters
-- **WHEN** `getImageMcpServers({ limit: 100, minResults: 100 })` is called
+- **WHEN** `getImageMcpServers({ limit: 30 })` is called
 - **THEN** the action SHALL make two parallel requests with different filters
 - **AND** merge results, deduplicating servers that appear in both by `name + version`
 
@@ -62,7 +66,7 @@ The `getImageMcpServers()` server action SHALL make two parallel POST requests �
 - **WHEN** a server has both a repository and an OCI package
 - **THEN** it SHALL appear once in the merged results with its full data (both repository and packages)
 
-### Image on-server-selection populates source fields
+### Requirement: Image on-server-selection populates source fields
 
 When an MCP server is selected for an image (via `ImageMcpRegistry`), the source fields SHALL be populated based on the server's capabilities:
 
@@ -80,7 +84,7 @@ When an MCP server is selected for an image (via `ImageMcpRegistry`), the source
 - **THEN** source SHALL default to DOCKER with `source.imageUri` from first OCI package's `identifier`
 - **AND** `transportType` SHALL be mapped from the package transport type
 
-### ImageMcpRegistry component
+### Requirement: ImageMcpRegistry component
 
 A new `ImageMcpRegistry` component (`ImageSource/ImageMcpRegistry.tsx`) SHALL wrap `McpServerNameField` and own all MCP registry logic for images:
 - Server selection -> calls `onServerChange(server)` and prefills image source
@@ -104,7 +108,7 @@ The parent (`ImageSource`) SHALL hold `registryServer` state and pass it to both
 - **THEN** `ImageMcpRegistry` SHALL fetch the server from the registry
 - **AND** call `onServerChange(server)` to populate capabilities
 
-### Version ownership
+### Requirement: Version ownership
 
 Only `McpServerNameField` (via `ImageMcpRegistry.onServerSelect`) and the modal SHALL set `externalRegistryRef.version`. Source type switch SHALL never modify name or version — it SHALL pass through the existing `externalRegistryRef` untouched.
 
@@ -120,7 +124,7 @@ Only `McpServerNameField` (via `ImageMcpRegistry.onServerSelect`) and the modal 
 - **WHEN** user switches source type in the dropdown
 - **THEN** `externalRegistryRef.name` and `externalRegistryRef.version` SHALL NOT change
 
-### ImageSource simplified layout
+### Requirement: ImageSource simplified layout
 
 `ImageSource` SHALL only handle layout and shared state. When `externalRegistryRef` exists:
 - Render `ImageMcpRegistry` (MCP server field)
@@ -138,7 +142,7 @@ Only `McpServerNameField` (via `ImageMcpRegistry.onServerSelect`) and the modal 
 - **THEN** render `ImageMcpRegistry` + `SourceType` (always, disabled if single capability)
 - **AND** URL/Docker URI shown disabled, Branch/SHA shown editable
 
-### SourceType source type switch with registryServer
+### Requirement: SourceType source type switch with registryServer
 
 When `SourceType` receives `registryServer` prop and user switches source type:
 
@@ -162,7 +166,7 @@ Source objects SHALL be built clean (no `...image.source` spread) to prevent fie
 - **THEN** source SHALL contain only `$type`, `url`, `branchName`, `sha`, `baseDirectory`, `externalRegistryRef`
 - **AND** SHALL NOT contain stale `imageUri` field
 
-### ImageSource type includes externalRegistryRef
+### Requirement: ImageSource type includes externalRegistryRef
 
 The `ImageSource` interface SHALL include an optional `externalRegistryRef?: ExternalRegistryRef` field, imported from `types/deployments/mcp-registry`.
 
@@ -170,7 +174,7 @@ The `ImageSource` interface SHALL include an optional `externalRegistryRef?: Ext
 - **WHEN** an existing image has no `externalRegistryRef`
 - **THEN** the field SHALL be `undefined` and no behavior SHALL change
 
-### Image template factory functions
+### Requirement: Image template factory functions
 
 `getImageSource(isRegistry?)` and `getImageTemplate(isRegistry?)` SHALL be defined in `utils/deployments/images.tsx`. When `isRegistry` is true, the source SHALL be `{ $type: CODE, url: '', externalRegistryRef: { $type: 'mcp-registry', packageName: '' } }`.
 
@@ -182,7 +186,7 @@ The `ImageSource` interface SHALL include an optional `externalRegistryRef?: Ext
 - **WHEN** `getImageTemplate(true)` is called
 - **THEN** source SHALL include `externalRegistryRef`
 
-### Image transport type mapping utility
+### Requirement: Image transport type mapping utility
 
 `utils/deployments/mcp-registry.ts` SHALL export `mapImageTransportType(transportType: string): IMAGE_TRANSPORT_TYPE` that maps:
 - `stdio` -> `IMAGE_TRANSPORT_TYPE.LOCAL`
@@ -197,7 +201,7 @@ The `ImageSource` interface SHALL include an optional `externalRegistryRef?: Ext
 - **WHEN** `mapImageTransportType('streamable-http')` is called
 - **THEN** it SHALL return `IMAGE_TRANSPORT_TYPE.REMOTE`
 
-### hasRepoAndOci utility
+### Requirement: hasRepoAndOci utility
 
 `utils/deployments/mcp-registry.ts` SHALL export `hasRepoAndOci(server: McpServer): boolean` that returns true when server has both `repository.url` and at least one package with `registryType === 'oci'`.
 
@@ -209,7 +213,7 @@ The `ImageSource` interface SHALL include an optional `externalRegistryRef?: Ext
 - **WHEN** server has repository but no OCI packages
 - **THEN** `hasRepoAndOci` SHALL return `false`
 
-### Grid preselection requires version
+### Requirement: Grid preselection requires version
 
 The grid radio button SHALL require both `name` AND `version` match for preselection. When `selectedServer.version` is empty/missing, no row SHALL be preselected.
 
@@ -221,7 +225,7 @@ The grid radio button SHALL require both `name` AND `version` match for preselec
 - **WHEN** `selectedServer` has `name: 'org/server'` and `version: ''`
 - **THEN** no grid rows SHALL be preselected
 
-### CodeURL and DockerURI accept disabled prop
+### Requirement: CodeURL and DockerURI accept disabled prop
 
 `CodeURL` and `DockerURI` components SHALL accept an optional `disabled?: boolean` prop. When true, the input field SHALL be disabled (in addition to the existing `isReadOnlyAdmin` check).
 

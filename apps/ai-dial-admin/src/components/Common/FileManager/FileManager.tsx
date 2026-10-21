@@ -11,7 +11,7 @@ import {
   DialUploadFileItem,
   FileManagerColumnKey,
   FileManagerGridRow,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { AgGridEvent, ColDef, GridApi } from 'ag-grid-community';
 
 import {
@@ -23,16 +23,18 @@ import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/ut
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getRootFolder } from '@/src/utils/files/root-folder';
+import { getRootFolder, getRootFolders, isFileRootPath, isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
@@ -51,7 +53,7 @@ interface Props {
   view: ApplicationRoute;
   label: string;
   columnDefs: ColDef[];
-  getContext: () => AssetsFolderContext;
+  getContext: () => AssetsFolderContextReader<AssetListItem>;
   onCreateFolder?: (
     file: DialUploadFileItem | undefined,
     folderPath: string,
@@ -105,6 +107,7 @@ const FileManager: FC<Props> = ({
 
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { featureFlags } = useAppContext();
   const { showNotification } = useNotification();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
@@ -137,16 +140,24 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      fetchFiles(`${getRootFolder(view)}/`);
-      setLoadedPaths(new Set([`${getRootFolder(view)}/`]));
+      const rootPaths = getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`);
+      fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
+      setLoadedPaths(new Set(rootPaths));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
 
-  const managerLabel = useMemo(
-    () => <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>,
-    [label],
-  );
+  // Applications is the one view with two top-level buckets (`platform`/`public` — see
+  // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
+  // wrapper instead of reusing one bucket's own node as the tree's virtual root.
+  const isMultiRootView = getRootFolders(view, featureFlags.catalogEnabled).length > 1;
+  // Conversations and the flat platform views have no folder concept for their rows — the row
+  // context menu and bulk toolbar already hide "Move to" for them (`Assets/utils.ts`,
+  // `FileManager/utils.ts`), but `onMoveToFiles` also drives drag-and-drop independently of those
+  // menus, so it must be withheld here too rather than left to resolve as a silent no-op with a
+  // false success toast (`handleMoveToFiles` reports success on an empty promise list).
+  const isMoveSupported = !isFlatPlatformView(view) && view !== ApplicationRoute.Conversations;
+  const isFileRootActive = isFileRootPath(filePath);
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);
@@ -168,20 +179,25 @@ const FileManager: FC<Props> = ({
 
   // TODO: move common functions into context files
 
-  const handleCreateFolder = useCallback(
-    async (_: DialUploadFileItem | undefined, folderPath: string) => {
+  /**
+   * `isOpenCreatedFolder` is false for the move-destination popup: its own `DialFileManager` reads
+   * the same items, so the refetch is what makes the new folder appear there — but navigating the
+   * list underneath an open modal is not wanted.
+   */
+  const createFolder = useCallback(
+    async (_: DialUploadFileItem | undefined, folderPath: string, isOpenCreatedFolder: boolean) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
-      onCreateFolder?.(_, folderPath).then((res) => {
+      // Awaited, not fire-and-forget: ui-kit awaits this before tearing down the inline editor, so
+      // dropping the promise made every create look instantly successful — including the ones Core
+      // rejected.
+      await onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {
           const parentPath = getParentPathByFullPath(newPath) || `${getRootFolder(view)}/`;
 
           fetchFiles(parentPath);
-
-          const newExpanded = new Set(expandedFolders.add(parentPath).add(newPath));
-          setExpandedFolders(newExpanded);
-          setFilePath(newPath);
           setLoadedPaths((prev) => new Set(prev).add(newPath));
+
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(view)).toLowerCase();
           showNotification(
@@ -192,7 +208,11 @@ const FileManager: FC<Props> = ({
           );
           getImportResults(results, getFolderName(filePath) as string, translatedType, t);
 
-          scrollToNewFolder();
+          if (isOpenCreatedFolder) {
+            setExpandedFolders(new Set(expandedFolders.add(parentPath).add(newPath)));
+            setFilePath(newPath);
+            scrollToNewFolder();
+          }
         }
       });
     },
@@ -208,6 +228,16 @@ const FileManager: FC<Props> = ({
       t,
       view,
     ],
+  );
+
+  const handleCreateFolder = useCallback(
+    (file: DialUploadFileItem | undefined, folderPath: string) => createFolder(file, folderPath, true),
+    [createFolder],
+  );
+
+  const handleDestinationFolderCreate = useCallback(
+    (file: DialUploadFileItem | undefined, folderPath: string) => createFolder(file, folderPath, false),
+    [createFolder],
   );
 
   const handleOnPathChange = useCallback(
@@ -383,7 +413,7 @@ const FileManager: FC<Props> = ({
   );
 
   const gridOptions = useMemo(() => {
-    const base = getGridOptions(view, isReadOnlyAdmin, columnDefs, t);
+    const base = getGridOptions(view, isReadOnlyAdmin, columnDefs, t, undefined, filePath);
     return {
       ...base,
       additionalGridOptions: {
@@ -391,21 +421,26 @@ const FileManager: FC<Props> = ({
         onFilterChanged: handleGridFilterChanged,
       },
     };
-  }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged]);
+    // Applications and Toolsets are the only views whose action set depends on `filePath` (which
+    // bucket is being browsed — see `isPlatformDualBucketView`); every other view keeps the same
+    // options regardless of path, so this dependency is a no-op for them.
+  }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged, filePath]);
 
   return (
     <>
       <DialFileManager
-        managerLabel={managerLabel}
-        className="bg-layer-2 py-4 px-6"
+        className="bg-layer-2 pb-4 pl-2 pr-6"
         path={filePath}
         defaultPath={`${getRootFolder(view)}/`}
         items={filteredFiles as []}
-        rootItem={filteredFiles?.[0] as DialRootFolder}
+        rootItem={isMultiRootView ? ({ label } as DialRootFolder) : (filteredFiles?.[0] as DialRootFolder)}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
-        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t)}
-        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
+        contentHeaderClassName="justify-end"
+        navigationPanelOptions={{ searchable: false }}
+        sortOptions={{ sortable: false }}
+        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
+        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t, filePath)}
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,
@@ -414,31 +449,39 @@ const FileManager: FC<Props> = ({
           view,
           setExpandedFolders,
           t,
+          filePath,
+          label,
         )}
         gridOptions={gridOptions}
         onGridApiChange={handleGridApiChange}
         onPathChange={handleOnPathChange}
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
-        onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
-        onDownloadFiles={handleDownloadFiles}
+        {...props}
+        onCreateFolder={isReadOnlyAdmin || isFileRootActive ? undefined : handleCreateFolder}
+        onDownloadFiles={isFileRootActive ? undefined : handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
         onRenameValidate={handleCreateFolderValidate}
-        onDeleteFiles={isReadOnlyAdmin ? undefined : handleDeleteFileNodes}
-        onMoveToFiles={isReadOnlyAdmin ? undefined : handleMoveToFiles}
+        onDeleteFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDeleteFileNodes}
+        onMoveToFiles={isReadOnlyAdmin || isFileRootActive || !isMoveSupported ? undefined : handleMoveToFiles}
         onFolderPopupPathChange={handleFolderPopupPathChange}
-        onManagePermissions={isReadOnlyAdmin ? undefined : handleManagePermissions}
-        onPreview={handlePreviewFile}
-        onUploadFiles={isReadOnlyAdmin ? undefined : handleDragAndDropFiles}
+        onManagePermissions={isReadOnlyAdmin || isFileRootActive ? undefined : handleManagePermissions}
+        onPreview={isFileRootActive ? undefined : handlePreviewFile}
+        onUploadFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDragAndDropFiles}
         folderCreationValidationMessages={getValidationMessages(t)}
         renameValidationMessages={getValidationMessages(t)}
-        destinationFolderPopupOptions={getDestinationFolderPopupOptions(view, t, handleFolderNestingDepthExceeded)}
+        destinationFolderPopupOptions={getDestinationFolderPopupOptions(
+          view,
+          t,
+          handleFolderNestingDepthExceeded,
+          isReadOnlyAdmin || isFileRootActive ? undefined : handleDestinationFolderCreate,
+        )}
         isRenameFileAvailable={false}
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
         customUploadFileAction={customUploadFileAction}
         maxNewFolderDepth={MAX_FOLDER_NESTING_DEPTH + 1}
         onNewFolderDepthExceeded={handleFolderNestingDepthExceeded}
-        {...props}
+        contentClassName="gap-0 px-0 pb-0"
       />
       <MoveItemsModal
         isModalOpen={isMoveModalOpen}

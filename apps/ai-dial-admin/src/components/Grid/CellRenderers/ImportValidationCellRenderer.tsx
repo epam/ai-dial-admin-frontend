@@ -1,6 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconInfoCircle, IconX } from '@tabler/icons-react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -23,14 +23,14 @@ const ImportValidationCellRenderer = (params: ICellRendererParams) => {
 
   return (
     <div className="flex items-center gap-2 py-3 px-2 w-full">
-      <DialTooltip triggerClassName="grow" tooltip={label}>
+      <Tooltip triggerClassName="grow" tooltip={label}>
         <div className="flex items-center gap-2">
           <StateIcon {...BASE_BUTTON_ICON_PROPS} className={isFailed ? 'text-error' : 'text-success'} />
           <div>{label}</div>
         </div>
-      </DialTooltip>
+      </Tooltip>
       {isFailed && (
-        <DialTooltip
+        <Tooltip
           tooltip={
             <div className="flex flex-col gap-1">
               {meta.validationErrors.map((e, i) => (
@@ -40,7 +40,7 @@ const ImportValidationCellRenderer = (params: ICellRendererParams) => {
           }
         >
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" aria-label={label} />
-        </DialTooltip>
+        </Tooltip>
       )}
     </div>
   );

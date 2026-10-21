@@ -20,7 +20,9 @@ import {
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { LocalizedText } from '@/src/models/dial/localized';
 import { ApplicationRoute } from '@/src/types/routes';
+import { resolveLocalizedText } from '@/src/utils/entities/localized-value';
 import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './utils';
 
 interface Props<T> {
@@ -30,7 +32,7 @@ interface Props<T> {
   disabled?: boolean;
 }
 
-const ForwardAuthTokenField = <T extends { displayName?: string; forwardAuthToken?: boolean }>({
+const ForwardAuthTokenField = <T extends { displayName?: LocalizedText; forwardAuthToken?: boolean }>({
   view,
   entity,
   onChangeEntity,
@@ -57,7 +59,7 @@ const ForwardAuthTokenField = <T extends { displayName?: string; forwardAuthToke
     (id: string) => {
       const isForwardToken = id === USE_ID;
       setForwardToken(isForwardToken);
-      setIsValid(!isForwardToken || confirmName.trim() === entity.displayName);
+      setIsValid(!isForwardToken || confirmName.trim() === resolveLocalizedText(entity.displayName));
     },
     [entity.displayName, confirmName],
   );

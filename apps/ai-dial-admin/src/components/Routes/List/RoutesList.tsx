@@ -3,8 +3,8 @@
 import { FC } from 'react';
 
 import { createRoute, removeRoute } from '@/src/app/[lang]/routes/actions';
-import { ROUTES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
+import { ROUTES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 

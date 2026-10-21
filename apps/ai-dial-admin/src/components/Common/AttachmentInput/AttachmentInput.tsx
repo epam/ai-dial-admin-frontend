@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
@@ -27,10 +27,17 @@ export interface Props {
   label?: string;
   id?: string;
   required?: boolean;
-  onChange?: (values?: string[]) => void;
+  onChange?: (values?: string[], type?: AttachmentType) => void;
 }
 
 const ALL_ATTACHMENTS_VALUE = [{ label: ALL_ATTACHMENTS, value: ALL_ATTACHMENTS }];
+
+const computeSelectedRadio = (values: MultiValueOption[]): AttachmentType => {
+  if (values.length === 0) {
+    return AttachmentType.NONE;
+  }
+  return isEqual(values, ALL_ATTACHMENTS_VALUE) ? AttachmentType.ALL : AttachmentType.SPECIFIC;
+};
 
 const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, placeholder, id, required, onChange }) => {
   const t = useI18n();
@@ -42,13 +49,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
     return initialValues.map((val) => ({ label: val, value: val }));
   }, [initialValues]);
 
-  const selectedRadio = useMemo(() => {
-    if (!initialValues) {
-      return AttachmentType.NONE;
-    } else {
-      return isEqual(selected, ALL_ATTACHMENTS_VALUE) ? AttachmentType.ALL : AttachmentType.SPECIFIC;
-    }
-  }, [initialValues, selected]);
+  const [selectedRadio, setSelectedRadio] = useState<AttachmentType>(() => computeSelectedRadio(selected));
 
   const attachmentTypesError = useMemo(
     () =>
@@ -68,20 +69,21 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
   }, [dispatch, selected.length, selectedRadio]);
 
   const fireChange = useCallback(
-    (items?: MultiValueOption[]) => {
-      onChange?.(items ? items.map((i) => i.value) : void 0);
+    (items?: MultiValueOption[], type?: AttachmentType) => {
+      onChange?.(items ? items.map((i) => i.value) : void 0, type);
     },
     [onChange],
   );
 
   const handleRadioChange = useCallback(
     (option: AttachmentType) => {
+      setSelectedRadio(option);
       if (option === AttachmentType.NONE) {
-        fireChange(void 0);
+        fireChange([], AttachmentType.NONE);
       } else if (option === AttachmentType.SPECIFIC) {
-        fireChange([]);
+        fireChange([], AttachmentType.SPECIFIC);
       } else if (option === AttachmentType.ALL) {
-        fireChange(ALL_ATTACHMENTS_VALUE);
+        fireChange(ALL_ATTACHMENTS_VALUE, AttachmentType.ALL);
       }
     },
     [fireChange],

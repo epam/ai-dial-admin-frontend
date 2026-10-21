@@ -2,7 +2,8 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { coreUtilityApi, interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { CoreVersions } from '@/src/models/core-version';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -10,11 +11,16 @@ export async function checkIsUniqueDeploymentName(name: string): Promise<boolean
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   const [deploymentResponse, interceptorResponse] = await Promise.all([
-    utilityApi.checkDeploymentByName(name, token),
-    interceptorsApi.checkInterceptorByName(name, token),
+    coreUtilityApi.checkDeploymentByName(name, token),
+    !process.env.DIAL_ADMIN_API_URL ? Promise.resolve<null>(null) : interceptorsApi.checkInterceptorByName(name, token),
   ]);
 
   return deploymentResponse === null && interceptorResponse === null;
+}
+
+export async function getBeVersion() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return utilityApi.getBeVersion(token);
 }
 
 export async function getAppProcessStatus() {
@@ -24,7 +30,13 @@ export async function getAppProcessStatus() {
 
 export async function getCoreVersions() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return utilityApi.getCoreVersion(token);
+  if (process.env.DIAL_ADMIN_API_URL) {
+    return utilityApi.getCoreVersion(token);
+  }
+
+  const version = await coreUtilityApi.getCoreVersion(token);
+  const response: CoreVersions = version ? { autoDetectedVersion: version } : {};
+  return { success: true, response };
 }
 
 export async function setCoreVersion(version?: string) {

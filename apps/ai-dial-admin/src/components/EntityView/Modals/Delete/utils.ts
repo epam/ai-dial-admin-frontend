@@ -19,13 +19,19 @@ import { isAssetView, isDeploymentManagerView, isEvaluationView } from '@/src/ut
 
 const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
-  [ApplicationRoute.AssetsModels]: DeleteI18nKey.Model,
-  [ApplicationRoute.AssetsAppRunners]: DeleteI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformModels]: DeleteI18nKey.Model,
+  [ApplicationRoute.PlatformAppRunners]: DeleteI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformCatalogSchemas]: DeleteI18nKey.CatalogSchema,
+  [ApplicationRoute.PlatformInterceptors]: DeleteI18nKey.Interceptor,
+  [ApplicationRoute.PlatformTranslators]: DeleteI18nKey.Translator,
+  [ApplicationRoute.PlatformRoutes]: DeleteI18nKey.Route,
+  [ApplicationRoute.PlatformRoles]: DeleteI18nKey.Role,
+  [ApplicationRoute.PlatformKeys]: DeleteI18nKey.Key,
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
   [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolset,
-  [ApplicationRoute.AssetsSkills]: DeleteI18nKey.Skill,
+  [ApplicationRoute.Skills]: DeleteI18nKey.Skill,
   [ApplicationRoute.Interceptors]: DeleteI18nKey.Interceptor,
   [ApplicationRoute.Routes]: DeleteI18nKey.Route,
   [ApplicationRoute.ApplicationRunners]: DeleteI18nKey.ApplicationRunner,
@@ -53,8 +59,13 @@ const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompts,
-  [ApplicationRoute.AssetsModels]: DeleteI18nKey.Models,
-  [ApplicationRoute.AssetsAppRunners]: DeleteI18nKey.ApplicationRunners,
+  [ApplicationRoute.PlatformModels]: DeleteI18nKey.Models,
+  [ApplicationRoute.PlatformAppRunners]: DeleteI18nKey.ApplicationRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: DeleteI18nKey.CatalogSchemas,
+  [ApplicationRoute.PlatformInterceptors]: DeleteI18nKey.Interceptors,
+  [ApplicationRoute.PlatformTranslators]: DeleteI18nKey.Translators,
+  [ApplicationRoute.PlatformRoutes]: DeleteI18nKey.Routes,
+  [ApplicationRoute.PlatformRoles]: DeleteI18nKey.Roles,
 };
 
 export const getBulkNotificationTitle = (

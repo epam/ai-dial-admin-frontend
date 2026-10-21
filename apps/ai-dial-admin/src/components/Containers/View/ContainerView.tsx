@@ -10,6 +10,7 @@ import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHe
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ApiRoute } from '@/src/constants/api-routes';
+import { useHelpRoute } from '@/src/context/HelpTopicContext';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import { CONTAINER_IGNORED_FIELDS } from '@/src/constants/editor';
 import { ContainersI18nKey, DeploymentsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
@@ -21,7 +22,6 @@ import { Image } from '@/src/models/deployments/images';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
-import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
@@ -41,7 +41,6 @@ interface Props {
   route: ApplicationRoute;
   names: string[];
   createEntity?: (entity: DialModel | Toolset | DialInterceptor | DialApplication) => Promise<ServerActionResponse>;
-  createEntityAsAsset?: (entity: DialToolsetResource) => Promise<ServerActionResponse>;
   createToolset?: (entity: Toolset) => Promise<ServerActionResponse>;
   entityNames?: string[];
   toolsetNames?: string[];
@@ -52,7 +51,6 @@ const ContainerView: FC<Props> = ({
   image,
   route,
   createEntity,
-  createEntityAsAsset,
   createToolset,
   entityNames,
   toolsetNames,
@@ -61,12 +59,14 @@ const ContainerView: FC<Props> = ({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { disableDeploymentsJSONEditor } = useAppContext();
+  const { disableDeploymentsJSONEditor, featureFlags } = useAppContext();
+
+  useHelpRoute(route);
 
   const imageNotInstalled = isImageNotInstalled(image);
 
   const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
+    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled, featureFlags),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
@@ -79,8 +79,10 @@ const ContainerView: FC<Props> = ({
   const [pods, setPods] = useState<Pod[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled));
-  }, [container.allowedDomains, container.status, imageNotInstalled, route, t]);
+    setTabs(
+      getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled, featureFlags),
+    );
+  }, [container.allowedDomains, container.status, imageNotInstalled, route, t, featureFlags]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -304,7 +306,6 @@ const ContainerView: FC<Props> = ({
           onDiscard={onDiscard}
           jsonConfiguration={jsonConfiguration}
           createEntity={createEntity}
-          createEntityAsAsset={createEntityAsAsset}
           createToolset={createToolset}
           entityNames={entityNames}
           toolsetNames={toolsetNames}

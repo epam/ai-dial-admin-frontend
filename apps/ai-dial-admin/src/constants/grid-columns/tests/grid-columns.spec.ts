@@ -10,6 +10,9 @@ import {
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
   APPLICATIONS_COLUMNS,
+  TOOLSETS_COLUMNS,
+  INTERCEPTORS_COLUMNS,
+  ROUTES_COLUMNS,
   ACTIVITY_AUDIT_COLUMNS,
   IMAGE_DEPENDENCIES_COLUMNS,
   IMAGES_LIST_COLUMNS,
@@ -22,11 +25,30 @@ import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
+  TEST_SUITES_COLUMN,
+  RUNS_COLUMN,
+  SUITE_RUNS_COLUMN,
+  COMPARE_RUN_PICKER_COLUMN,
+  DATASETS_COLUMN,
+  METRICS_COLUMN,
 } from '../grid-columns';
+import {
+  ASSET_NAME_COLUMN,
+  DISPLAY_NAME_COLUMN,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  NAME_COLUMN,
+  NAME_COLUMN_WITH_SORT,
+} from '../base-columns';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
+import { GridFilterType } from '@/src/types/grid-filter';
+import { AUDIT_ENUM_VALUES_FILTER } from '@/src/components/ActivityAudit/List/audit-filter-components';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -43,6 +65,58 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.cacheRead' && c.hide)).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
+  });
+
+  test('MODELS_COLUMNS format pricing rate cells and leave the tooltip to the cell renderer', () => {
+    const t = (s: string) => s;
+    const cols = MODELS_COLUMNS(t);
+    const promptColumn = cols.find((c) => c.field === 'pricing.prompt')!;
+    const completionColumn = cols.find((c) => c.field === 'pricing.completion')!;
+    const cacheReadColumn = cols.find((c) => c.field === 'pricing.cacheRead')!;
+    const cacheWriteColumn = cols.find((c) => c.field === 'pricing.cacheWrite')!;
+    const value = (column: ColDef, pricing: Record<string, unknown>) => {
+      const valueFormatter = column.valueFormatter;
+      if (typeof valueFormatter !== 'function') {
+        throw new Error('Expected a value formatter');
+      }
+      return valueFormatter({ data: { pricing } } as never);
+    };
+    const flatCacheRead = { unit: 'token', cacheRead: '0.0000002' };
+    expect(value(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
+
+    const tree = {
+      test: { field: 'ttl', operator: '==', value: '1h' },
+      ifTrue: '0.000006',
+      ifFalse: '0.00000375',
+    };
+    const promptPricing = { unit: 'token', prompt: tree };
+    const completionPricing = { unit: undefined, completion: tree };
+    const cacheReadPricing = { unit: 'token', cacheRead: tree };
+    const cacheWritePricing = { unit: 'token', cacheWrite: tree };
+
+    expect(value(promptColumn, promptPricing)).toBe('ttl == 1h ? 6 : 3.75');
+    expect(value(completionColumn, completionPricing)).toBe('ttl == 1h ? 0.000006 : 0.00000375');
+    expect(value(cacheReadColumn, cacheReadPricing)).toBe('ttl == 1h ? 6 : 3.75');
+    expect(value(cacheWriteColumn, cacheWritePricing)).toBe('ttl == 1h ? 6 : 3.75');
+
+    [promptColumn, completionColumn, cacheReadColumn, cacheWriteColumn].forEach((column) => {
+      expect(column.tooltipValueGetter).toBeUndefined();
+    });
+  });
+
+  test('entity list columns never repeat their cell text in an AG Grid tooltip', () => {
+    const t = (s: string) => s;
+    const entityColumns = [
+      ...MODELS_COLUMNS(t),
+      ...APPLICATIONS_COLUMNS(t),
+      ...TOOLSETS_COLUMNS(t),
+      ...INTERCEPTORS_COLUMNS(t),
+      ...ROUTES_COLUMNS,
+    ];
+
+    entityColumns.forEach((column) => {
+      expect(column.tooltipValueGetter).toBeUndefined();
+    });
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {
@@ -91,6 +165,55 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'version')).toBe(false);
   });
 
+  describe('ACTIVITY_AUDIT_COLUMNS filters', () => {
+    const t = (s: string) => s;
+    const columnOf = (view: ActivityAuditView, field: string) =>
+      ACTIVITY_AUDIT_COLUMNS(t, view).find((c) => c.field === field);
+    const valuesOf = (field: string) =>
+      (columnOf(ActivityAuditView.Analytics, field)?.filterParams as { values: { value: string }[] }).values.map(
+        ({ value }) => value,
+      );
+
+    test('Activity type is picked from the three values the analytics backend defines', () => {
+      expect(columnOf(ActivityAuditView.Analytics, 'activityType')?.filter).toBe(AUDIT_ENUM_VALUES_FILTER);
+      expect(valuesOf('activityType')).toEqual(['Create', 'Update', 'Delete']);
+    });
+
+    test('Resource type is picked from the four resource types the analytics backend defines', () => {
+      expect(columnOf(ActivityAuditView.Analytics, 'resourceType')?.filter).toBe(AUDIT_ENUM_VALUES_FILTER);
+      expect(valuesOf('resourceType')).toEqual(['Table', 'TableColumn', 'Pipeline', 'SavedQuery']);
+    });
+
+    test.each(['activityId', 'parentActivityId'])(
+      '%s offers only equals and not-equal in the Analytics view',
+      (field) => {
+        expect(columnOf(ActivityAuditView.Analytics, field)?.filterParams).toMatchObject({
+          filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL],
+          defaultOption: GridFilterType.EQUALS,
+        });
+      },
+    );
+
+    test('Resource identifier keeps its text operators in the Analytics view', () => {
+      expect(columnOf(ActivityAuditView.Analytics, 'resourceId')?.filterParams).toMatchObject({
+        filterOptions: expect.arrayContaining([GridFilterType.CONTAINS]),
+      });
+    });
+
+    test.each([ActivityAuditView.Config, ActivityAuditView.Deployments])(
+      'keeps the text operators on the enum and identifier columns in the %s view',
+      (view) => {
+        ['activityType', 'resourceType', 'activityId', 'parentActivityId'].forEach((field) => {
+          const column = columnOf(view, field);
+          expect(column?.filter).not.toBe(AUDIT_ENUM_VALUES_FILTER);
+          expect(column?.filterParams).toMatchObject({
+            filterOptions: expect.arrayContaining([GridFilterType.CONTAINS, GridFilterType.NOT_CONTAINS]),
+          });
+        });
+      },
+    );
+  });
+
   test('ACTIVITY_AUDIT_COLUMNS returns expected columns for embedded (single-entity) Config view', () => {
     const t = (s: string) => s;
     const cols = ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config, true);
@@ -119,6 +242,15 @@ describe('Constants :: grid columns', () => {
       'parentActivityId',
     ]);
     expect(cols.some((c) => c.field === 'expanderColumn')).toBe(false);
+  });
+
+  test('ACTIVITY_AUDIT_COLUMNS adds the expander to the Analytics view only when asked', () => {
+    const t = (s: string) => s;
+
+    expect(ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, false, true)[0].field).toBe('expanderColumn');
+    expect(ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics).some((c) => c.field === 'expanderColumn')).toBe(
+      false,
+    );
   });
 
   test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {
@@ -162,6 +294,47 @@ describe('Constants :: grid columns', () => {
     expect(cols1.some((c) => c.field === 'displayName')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
     expect(cols1.some((c) => c.field === 'topics')).toBe(true);
+  });
+
+  describe('CONTAINERS_COLUMNS on the unified containers list', () => {
+    const t = (s: string) => s;
+    const cols = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.Containers);
+    const find = (colId: string) => cols.find((c) => c.field === colId) as ColDef;
+    const format = (col: ColDef, data: unknown) =>
+      (col.valueFormatter as (params: { data: unknown; value: unknown }) => string)({ data, value: undefined });
+
+    test('adds a Type column that is absent from the model-servings columns', () => {
+      expect(find('$type')?.headerName).toBe('Type');
+      expect(
+        CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelServings).find((c) => c.headerName === 'Type'),
+      ).toBeUndefined();
+    });
+
+    test('formats the Type cell from the row type', () => {
+      expect(format(find('$type'), { $type: CONTAINER_TYPE.MCP })).toBe(EntitiesI18nKey.MCP);
+      expect(format(find('$type'), { $type: CONTAINER_TYPE.ADAPTER })).toBe(EntitiesI18nKey.Adapter);
+    });
+
+    test('formats the Source type cell as text, not an object', () => {
+      const data = {
+        $type: CONTAINER_TYPE.MCP,
+        source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img' },
+      };
+
+      expect(format(find('source.$type'), data)).toBe(SourceI18nKey.InternalImage);
+      expect(format(find('source'), data)).toBe('img');
+    });
+
+    test('formats the time cells as local date-time text, not raw timestamps', () => {
+      const timestamp = Date.UTC(2026, 9, 12, 10, 30);
+      const created = find('createdAt');
+      const updated = find('updatedAt');
+      const formatValue = (col: ColDef) =>
+        (col.valueFormatter as (params: { value: unknown }) => string)({ value: timestamp });
+
+      expect(formatValue(created)).toBe(new Date(timestamp).toLocaleString());
+      expect(formatValue(updated)).toBe(new Date(timestamp).toLocaleString());
+    });
   });
 
   describe('CONTAINERS_COLUMNS resource columns', () => {
@@ -306,7 +479,13 @@ describe('Constants :: grid columns', () => {
     const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.Prompts);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'name')).toBe(true);
-    expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(true);
+    // Prompts are versionless — no Version column, unlike the deployment-asset views.
+    expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(false);
+  });
+
+  test('EXPORT_COLUMNS keeps the Version column for the versioned asset views', () => {
+    const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.AssetsApplications);
+    expect(cols.some((c) => c.field === 'version')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for files', () => {
@@ -385,6 +564,34 @@ describe('Constants :: grid columns', () => {
     assertUsageLogColumnSet(USAGE_LOG_TOOLSET_TRACES_COLUMNS);
   });
 
+  test('TEST_SUITES_COLUMN default-sorts on createdAt descending', () => {
+    const createdAt = TEST_SUITES_COLUMN.find((c) => c.field === 'createdAt');
+    expect(createdAt?.sort).toBe('desc');
+    expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
+  });
+
+  test('TEST_SUITES_COLUMN displays an unprefixed platform route in the Application column', () => {
+    const application = TEST_SUITES_COLUMN.find((column) => column.field === 'application');
+    const valueGetter = application?.valueGetter;
+
+    expect(typeof valueGetter).toBe('function');
+    expect(
+      (valueGetter as (params: never) => unknown)({
+        data: { routesRef: { name: 'routes/platform/search-route' } },
+      } as never),
+    ).toBe('search-route');
+  });
+
+  test('Created By offers Equals, Does not equal, and Contains', () => {
+    const createdBy = TEST_SUITES_COLUMN.find((c) => c.field === 'createdBy');
+
+    expect((createdBy?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
     expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
@@ -395,5 +602,244 @@ describe('Constants :: grid columns', () => {
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'parameters')).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'tags')).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'datasets')).toBe(true);
+  });
+
+  test('RUNS_COLUMN right-aligns the numeric run/test-case count columns', () => {
+    const numberOfRuns = RUNS_COLUMN.find((c) => c.field === 'runConfig.numberOfRuns');
+    const numberOfTestCases = RUNS_COLUMN.find((c) => c.field === 'numberOfTestCases');
+
+    expect(numberOfRuns).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(numberOfTestCases).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+  });
+});
+
+const RUNS_COLUMN_ORDER = [
+  'status',
+  'testRunName',
+  'runConfig.numberOfRuns',
+  'numberOfTestCases',
+  'testSuiteId',
+  'target',
+  'metrics',
+  'startedAt',
+  'completedAt',
+  'duration',
+  'cost',
+  'overallScore',
+];
+
+/**
+ * Neither sortable nor filterable: Duration/Cost/Overall score are not raw query-API fields (Duration
+ * is derived client-side, Cost/Overall score are appended to a row after the query runs). The two
+ * counts are real, sortable fields and are asserted separately below.
+ */
+const DERIVED_COL_IDS = ['duration', 'cost', 'overallScore'];
+
+/** Columns capped narrower than `defaultColDef`'s `minWidth` in `AgGridWrapper`. */
+describe('name column sizing', () => {
+  const SIZING = { width: 400, minWidth: 260 };
+  const colById = (columns: ColDef[], colId: string) => columns.find((col) => col.colId === colId)!;
+
+  test('the shared ID and Display Name columns open wide, without flex', () => {
+    [NAME_COLUMN, NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, ASSET_NAME_COLUMN].forEach(
+      (col) => {
+        expect(col).toMatchObject(SIZING);
+        expect(col.flex).toBeUndefined();
+      },
+    );
+  });
+
+  test('lists built from the shared columns inherit the sizing', () => {
+    expect(MODELS_COLUMNS((s) => s)[0]).toMatchObject(SIZING);
+    expect(INTERCEPTORS_COLUMNS((s) => s)[0]).toMatchObject(SIZING);
+    expect(DEPLOYMENT_ASSETS_COLUMNS[0]).toMatchObject(SIZING);
+    expect(NON_DEPLOYMENT_ASSETS_COLUMNS[0]).toMatchObject(SIZING);
+  });
+
+  test('the test suite, dataset and metric name columns open wide, without flex', () => {
+    [
+      colById(TEST_SUITES_COLUMN, 'name'),
+      colById(TEST_SUITES_COLUMN, 'id'),
+      colById(DATASETS_COLUMN, 'name'),
+      colById(METRICS_COLUMN, 'id'),
+      colById(METRICS_COLUMN, 'name'),
+    ].forEach((col) => {
+      expect(col).toMatchObject(SIZING);
+      expect(col.flex).toBeUndefined();
+    });
+  });
+
+  test('leaves the Runs columns unsized', () => {
+    expect(RUNS_COLUMN.some((col) => col.width === SIZING.width && col.minWidth === SIZING.minWidth)).toBe(false);
+  });
+});
+
+const GRID_DEFAULT_MIN_WIDTH = 150;
+const CAPPED_COL_IDS = ['runConfig.numberOfRuns', 'numberOfTestCases', 'duration', 'cost', 'overallScore'];
+
+const colIdsOf = (columns: ColDef[]) => columns.map((col) => col.colId);
+
+describe('RUNS_COLUMN', () => {
+  test('lists the runs columns in the order the list is specified to show them', () => {
+    expect(colIdsOf(RUNS_COLUMN)).toEqual(RUNS_COLUMN_ORDER);
+  });
+
+  test('no longer carries a created date column', () => {
+    expect(RUNS_COLUMN.some((col) => col.field === 'createdAt')).toBe(false);
+  });
+
+  test('offers neither a sort control nor a filter where the endpoint can do neither', () => {
+    const derived = RUNS_COLUMN.filter((col) => DERIVED_COL_IDS.includes(col.colId ?? ''));
+
+    expect(derived).toHaveLength(DERIVED_COL_IDS.length);
+    derived.forEach((col) => {
+      expect(col.sortable).toBe(false);
+      expect(col.filter).toBe(false);
+    });
+  });
+
+  test('the two counts are sortable against their real query-API fields, but offer no filter', () => {
+    const runs = RUNS_COLUMN.find((col) => col.colId === 'runConfig.numberOfRuns');
+    const testCases = RUNS_COLUMN.find((col) => col.colId === 'numberOfTestCases');
+
+    // Left to the grid default (sortable), since both map to a real, single query-API field.
+    expect(runs?.sortable).toBeUndefined();
+    expect(testCases?.sortable).toBeUndefined();
+    expect(runs?.filter).toBe(false);
+    expect(testCases?.filter).toBe(false);
+  });
+
+  test('gives the run name column a header tooltip, so the header stays readable once it is truncated', () => {
+    const runName = RUNS_COLUMN.find((col) => col.colId === 'testRunName');
+
+    expect(runName?.headerTooltip).toBe(runName?.headerName);
+  });
+
+  test('gives the flexible columns a floor below the grid default, so a full suite Runs row fits the page', () => {
+    const flexible = ['testRunName', 'testSuiteId', 'metrics'].map((colId) =>
+      RUNS_COLUMN.find((col) => col.colId === colId),
+    );
+
+    flexible.forEach((col) => {
+      expect(col?.minWidth).toBeLessThan(GRID_DEFAULT_MIN_WIDTH);
+    });
+  });
+
+  test('caps the narrow columns, so the grid-wide flex cannot stretch them to the default width', () => {
+    const capped = RUNS_COLUMN.filter((col) => CAPPED_COL_IDS.includes(col.colId ?? ''));
+
+    expect(capped).toHaveLength(CAPPED_COL_IDS.length);
+    capped.forEach((col) => {
+      expect(col.maxWidth).toBeLessThan(GRID_DEFAULT_MIN_WIDTH);
+    });
+  });
+
+  test('gives every column a field, so column state and the column panel can address it', () => {
+    RUNS_COLUMN.forEach((col) => {
+      expect(col.field).toBeTruthy();
+    });
+  });
+
+  test('keeps the status header visible and sortable, with a fixed-value multiselect filter', () => {
+    const status = RUNS_COLUMN.find((col) => col.colId === 'status');
+
+    expect(status?.headerName).toBe('Status');
+    // No header component overriding the default, so the label and the sort control both render.
+    expect(status?.headerComponent).toBeUndefined();
+    // Left to the grid default: sorting on.
+    expect(status?.sortable).toBeUndefined();
+    // A status is a fixed value: the only filter offered is the checkbox-list multiselect, never a
+    // free-text or operator-based entry.
+    expect(status?.filter).toBe(RUN_STATUS_VALUE_FILTER);
+    expect(status?.floatingFilter).toBeUndefined();
+    // An empty filter body leaves the filter row with the button alone, no search input.
+    expect(status?.floatingFilterComponent).toBe(EmptyFloatingFilter);
+  });
+
+  test('pins the status column to the indicator width, whatever its header and filter row hold', () => {
+    const status = RUNS_COLUMN.find((col) => col.colId === 'status');
+
+    expect(status?.width).toBe(65);
+    expect(status?.minWidth).toBe(65);
+    expect(status?.maxWidth).toBe(65);
+  });
+
+  test('Target is both filterable and sortable, though sort only approximates its two-field OR shape', () => {
+    const target = RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    // Left to the grid default (sortable): `buildRunsSort` approximates it by the deployment name alone.
+    expect(target?.sortable).toBeUndefined();
+    expect(target?.filter).toBeUndefined();
+    expect((target?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
+  test('Metrics is both sortable and filterable against the real metric_names field', () => {
+    const metrics = RUNS_COLUMN.find((col) => col.colId === 'metrics');
+
+    // Left to the grid default (sortable), since `metric_names` is a real, single query-API field.
+    expect(metrics?.sortable).toBeUndefined();
+    expect((metrics?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.CONTAINS,
+    ]);
+  });
+});
+
+describe('SUITE_RUNS_COLUMN', () => {
+  test('omits the test suite id, which every row of a suite-scoped list would repeat', () => {
+    expect(colIdsOf(SUITE_RUNS_COLUMN)).not.toContain('testSuiteId');
+  });
+
+  test('keeps the remaining columns in the same relative order as the full list', () => {
+    expect(colIdsOf(SUITE_RUNS_COLUMN)).toEqual(RUNS_COLUMN_ORDER.filter((colId) => colId !== 'testSuiteId'));
+  });
+
+  test('hides Target by default, reachable again from the columns panel', () => {
+    const target = SUITE_RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    expect(target?.hide).toBe(true);
+    expect(target?.field).toBeTruthy();
+    expect(target?.headerName).toBeTruthy();
+    expect(target?.suppressColumnsToolPanel).toBeFalsy();
+  });
+
+  test('does not leak the hidden Target default onto the unscoped list', () => {
+    const target = RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    expect(target?.hide).toBe(false);
+  });
+});
+
+describe('COMPARE_RUN_PICKER_COLUMN', () => {
+  test('carries exactly the requested columns, in the requested order', () => {
+    expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
+      'testSuiteName',
+      'testRunName',
+      'numberOfTestCases',
+      'testSuiteId',
+      'metrics',
+      'startedAt',
+      'completedAt',
+      'duration',
+      'cost',
+      'overallScore',
+    ]);
+  });
+
+  test('lets the test cases column shrink below the kit default so the picker fits without horizontal scroll', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'numberOfTestCases');
+
+    expect(column?.minWidth).toBeLessThan(column?.maxWidth ?? 0);
+  });
+
+  test('names the suite of each run, falling back to its id', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'testSuiteName');
+    const getValue = (data: object) => (column?.valueGetter as (params: { data: object }) => unknown)({ data });
+
+    expect(getValue({ testSuiteId: 'suite-1', testSuiteName: 'Suite One' })).toBe('Suite One');
+    expect(getValue({ testSuiteId: 'suite-1' })).toBe('suite-1');
   });
 });

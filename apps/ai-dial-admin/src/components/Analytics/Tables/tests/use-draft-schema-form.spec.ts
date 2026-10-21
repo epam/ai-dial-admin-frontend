@@ -2,8 +2,16 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
+import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableType, Cardinality, PartitionGranularity } from '@/src/models/analytics/table';
+import {
+  AnalyticsTable,
+  AnalyticsTableType,
+  Cardinality,
+  PartitionGranularity,
+  TableStatus,
+} from '@/src/models/analytics/table';
+import { ColumnRow } from '@/src/models/analytics/tables-ui';
 
 const t = (key: string) => key;
 
@@ -352,5 +360,233 @@ describe('useDraftSchemaForm enrichment', () => {
       grain_key: 'order_id',
       cardinality: Cardinality.ZeroOrOne,
     });
+  });
+});
+
+describe('useDraftSchemaForm — key selections', () => {
+  const setColumns = (result: { current: ReturnType<typeof useDraftSchemaForm> }, rows: Partial<ColumnRow>[]) =>
+    act(() =>
+      result.current.update(
+        'columns',
+        rows.map((r) => ({ ...createColumnRow(), ...r })),
+      ),
+    );
+
+  test('each key select offers only the columns its backend rule accepts', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [
+      { source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid },
+      { source_name: 'maybe', name: 'maybe', type: AnalyticsFieldType.String, nullable: true },
+      { source_name: 'payload', name: 'payload', type: AnalyticsFieldType.Object },
+      { source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp },
+      { source_name: 'closed_at', name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true },
+    ]);
+
+    expect(result.current.orderingOptions.map((o) => o.value)).toEqual(['id', 'seen_at']);
+    expect(result.current.partitionNames).toEqual(['seen_at']);
+  });
+
+  test('a stale ordering key is never submitted, even when it bypassed the form update', () => {
+    const stored: AnalyticsTable = {
+      ...source,
+      columns: [{ source_name: 'maybe', name: 'maybe', type: AnalyticsFieldType.String, nullable: true }],
+      ordering_key: ['maybe'],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(stored, null, t));
+
+    expect(result.current.canMaterialize).toBe(false);
+    expect(result.current.buildDto()).not.toHaveProperty('ordering_key');
+  });
+
+  test('flipping a chosen ordering key column to nullable removes it from the selection', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [{ source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid }]);
+    act(() => result.current.update('orderingKey', ['id']));
+
+    act(() => result.current.update('columns', [{ ...result.current.form.columns[0], nullable: true }]));
+
+    expect(result.current.form.orderingKey).toEqual([]);
+  });
+
+  test('renaming a column carries the ordering key and partition column to the new name', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }]);
+    act(() => {
+      result.current.update('orderingKey', ['seen_at']);
+      result.current.update('partitionColumn', 'seen_at');
+      result.current.update('granularity', PartitionGranularity.Month);
+    });
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'seen_on', name: 'seen_on' },
+      ]),
+    );
+
+    expect(result.current.form.orderingKey).toEqual(['seen_on']);
+    expect(result.current.form.partitionColumn).toBe('seen_on');
+    expect(result.current.form.granularity).toBe(PartitionGranularity.Month);
+  });
+
+  test('the Identity column is not offered as Version, and the Version column not as Identity', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [
+      { source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid },
+      { source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp },
+      { source_name: 'saved_at', name: 'saved_at', type: AnalyticsFieldType.Timestamp },
+    ]);
+
+    act(() => result.current.update('identityColumn', 'seen_at'));
+    expect(result.current.versionNames).toEqual(['saved_at']);
+    expect(result.current.identityNames).toEqual(['id', 'seen_at', 'saved_at']);
+
+    act(() => result.current.update('identityColumn', ''));
+    expect(result.current.versionNames).toEqual(['seen_at', 'saved_at']);
+
+    act(() => result.current.update('versionColumn', 'saved_at'));
+    expect(result.current.identityNames).toEqual(['id', 'seen_at']);
+  });
+});
+
+describe('useDraftSchemaForm enrichment grain key', () => {
+  test('offers the source table columns except Object ones', () => {
+    const src: AnalyticsTable = {
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      status: TableStatus.Active,
+      columns: [
+        { source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid },
+        { source_name: 'payload', name: 'payload', type: AnalyticsFieldType.Object },
+      ],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(enrichment, src, t));
+
+    expect(result.current.grainOptions).toEqual([{ value: 'id', label: 'id' }]);
+  });
+});
+
+describe('useDraftSchemaForm — changed state', () => {
+  test('reports unchanged on a fresh PENDING source', () => {
+    const pendingSource: AnalyticsTable = { ...source, status: TableStatus.Pending };
+    const { result } = renderHook(() => useDraftSchemaForm(pendingSource, null, t));
+
+    expect(result.current.isChanged).toBe(false);
+  });
+
+  test('reports unchanged on a fresh PENDING enrichment', () => {
+    const pendingEnrichment: AnalyticsTable = { ...enrichment, status: TableStatus.Pending };
+    const { result } = renderHook(() => useDraftSchemaForm(pendingEnrichment, null, t));
+
+    expect(result.current.isChanged).toBe(false);
+  });
+
+  test('reports unchanged on a FAILED table seeded from its stored columns, ordering key and scan pair', () => {
+    const failedSource: AnalyticsTable = {
+      ...source,
+      status: TableStatus.Failed,
+      columns: [
+        { source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp },
+        { source_name: 'order_id', name: 'order_id', type: AnalyticsFieldType.Uuid },
+      ],
+      ordering_key: ['seen_at'],
+      identity_column: 'order_id',
+      version_column: 'seen_at',
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(failedSource, null, t));
+
+    expect(result.current.isChanged).toBe(false);
+  });
+
+  test('reports changed once a valid column is set on a fresh source', () => {
+    const pendingSource: AnalyticsTable = { ...source, status: TableStatus.Pending };
+    const { result } = renderHook(() => useDraftSchemaForm(pendingSource, null, t));
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
+      ]),
+    );
+
+    expect(result.current.isChanged).toBe(true);
+  });
+
+  test('reports changed once an ordering key is set, even with the columns unchanged', () => {
+    const storedSource: AnalyticsTable = {
+      ...source,
+      status: TableStatus.Failed,
+      columns: [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(storedSource, null, t));
+    expect(result.current.isChanged).toBe(false);
+
+    act(() => result.current.update('orderingKey', ['seen_at']));
+
+    expect(result.current.isChanged).toBe(true);
+  });
+
+  test('reports changed once a grain key is set on a fresh enrichment', () => {
+    const pendingEnrichment: AnalyticsTable = { ...enrichment, status: TableStatus.Pending };
+    const { result } = renderHook(() => useDraftSchemaForm(pendingEnrichment, null, t));
+
+    act(() => result.current.update('grainKey', 'order_id'));
+
+    expect(result.current.isChanged).toBe(true);
+  });
+
+  test('reset returns isChanged to false and restores the form to the stored definition', () => {
+    const storedSource: AnalyticsTable = {
+      ...source,
+      status: TableStatus.Failed,
+      columns: [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }],
+      ordering_key: ['seen_at'],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(storedSource, null, t));
+    expect(result.current.isChanged).toBe(false);
+
+    act(() =>
+      result.current.update('columns', [
+        ...result.current.form.columns,
+        {
+          ...result.current.form.columns[0],
+          id: 'extra',
+          source_name: 'order_id',
+          name: 'order_id',
+          type: AnalyticsFieldType.Uuid,
+        },
+      ]),
+    );
+    act(() => result.current.update('orderingKey', []));
+    expect(result.current.isChanged).toBe(true);
+
+    act(() => result.current.reset());
+
+    expect(result.current.isChanged).toBe(false);
+    expect(result.current.form.columns).toHaveLength(1);
+    expect(result.current.form.columns[0].source_name).toBe('seen_at');
+    expect(result.current.form.orderingKey).toEqual(['seen_at']);
+  });
+
+  test('baselineDto reflects the stored definition, unaffected by live form edits', () => {
+    const storedSource: AnalyticsTable = {
+      ...source,
+      status: TableStatus.Failed,
+      columns: [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }],
+      ordering_key: ['seen_at'],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(storedSource, null, t));
+
+    const initialBaseline = result.current.baselineDto;
+    expect(initialBaseline).toEqual({
+      columns: [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp, nullable: false }],
+      ordering_key: ['seen_at'],
+    });
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'renamed', name: 'renamed' },
+      ]),
+    );
+
+    expect(result.current.baselineDto).toEqual(initialBaseline);
   });
 });

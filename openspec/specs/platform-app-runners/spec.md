@@ -1,0 +1,785 @@
+# assets-app-runners Specification
+
+## Purpose
+The `Assets > App Runners` surface: menu entry, flat list with create/delete/bulk-delete, and a five-tab detail view (Properties, Features, Parameters, AppRoutes, Interceptors) over DIAL Core's own app-runner config resources — created by archiving change `add-app-runner-asset-resource`. Covers the `$id`-as-resource-name identity and the URI-shaped-name exceptions the shared asset list needs, the client-side meta-schema validation that substitutes for Core's absent write-time checks, and the merged application-source runner picker that lets an asset application reference either population. Every option list the surface offers — interceptors, global interceptors and per-route roles — is read from DIAL Core as the union of its API-written and configuration-file populations, so no admin-backend request is required to view or configure a runner; the topics control offers no catalogue here because Core has no topic registry. Deliberately has no Audit tab, revisions, rollback, Core-sync banner, versioning, publications, sharing, move, or import/export — DIAL Core exposes none of those for config resources.
+## Requirements
+### Requirement: Assets > App Runners menu entry
+
+The system SHALL add an `App Runners` menu item to the Assets section of the admin menu, directly after `Models`, linking to a new `/assets-app-runners` route.
+
+#### Scenario: App Runners follows Models in the Assets section
+
+- **WHEN** the Assets section of the menu renders
+- **THEN** `App Runners` appears immediately after `Models` and before the remaining Assets entries
+
+### Requirement: App-runner asset list is flat with create and delete actions
+
+The system SHALL render the Platform App Runner list as a single, non-nested list of entries under the `platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
+
+#### Scenario: List shows entries without a folder tree
+
+- **WHEN** a user opens `/platform-app-runners`
+- **THEN** all app-runner resources are shown as direct entries with no folder-expand affordance
+
+#### Scenario: No create-folder or move action is present
+
+- **WHEN** a user opens the app-runner list toolbar and row actions
+- **THEN** neither a create-folder action nor a move-to-folder action is offered
+
+#### Scenario: The folder tree offers no folder actions
+
+- **WHEN** a user opens the context menu on the app-runner folder tree's root
+- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered
+
+#### Scenario: Create action requests both identities
+
+- **WHEN** a user activates the create action in the list toolbar
+- **THEN** a modal requests required storage `name`, declared `$id`, and display name fields
+- **AND** submitting valid values creates the resource and navigates to its detail view
+
+#### Scenario: Metadata-only row shows the storage name
+
+- **WHEN** the list renders an App Runner whose Core storage name differs from its declared body `$id`
+- **THEN** the `Name` column shows the decoded storage name
+- **AND** no content request is made merely to display the declared `$id`
+
+#### Scenario: Bulk delete removes the selected runners
+
+- **WHEN** a user selects several runners and confirms bulk delete
+- **THEN** each selected runner is deleted and the list refreshes without them
+
+### Requirement: App-runner asset list columns are metadata-only
+
+The system SHALL show `$id`, author, created-at, and updated-at columns for app-runner assets, all sourced from Core's resource metadata, and SHALL NOT fetch each row's content to populate the list. Display name, description, and topics are therefore not list columns — they live in the resource body, which a metadata listing does not return, and fetching them would cost one content request per row.
+
+#### Scenario: Listing issues no per-row content request
+
+- **WHEN** the app-runner list loads
+- **THEN** only metadata requests are issued, with no content request per row
+
+#### Scenario: Timestamps come from Core metadata
+
+- **WHEN** the app-runner list renders
+- **THEN** the created-at and updated-at columns are populated from the Core metadata node's `createdAt` and `updatedAt` fields
+
+#### Scenario: Both timestamp columns render as localized dates
+
+- **WHEN** the app-runner list renders its created-at and updated-at columns
+- **THEN** each shows a locale-formatted date, not the raw epoch-milliseconds value Core returns
+
+#### Scenario: The id column shows the decoded `$id`
+
+- **WHEN** the app-runner list renders a row whose Core resource name is a percent-encoded `$id`
+- **THEN** the column shows the decoded `$id`, not the encoded resource name
+
+### Requirement: A URI-shaped `$id` is a valid, fully usable row name
+
+Because the row name is the runner's `$id`, it contains characters the shared asset list treats as illegal in a filename — notably `:` and `/`. The system SHALL present such a row as ordinary and fully usable for this view: rendered in the normal text style with no invalid-name indication, opening on click, and offering its row actions. Views whose names are filenames SHALL keep the stricter default. The row's own encoded path, not its displayed name, is what addresses the resource, so the name's shape has no bearing on correctness.
+
+#### Scenario: A URI-shaped name is not flagged as invalid
+
+- **WHEN** the list renders a runner whose `$id` is a URI such as `http://example.com/schema`
+- **THEN** the name is shown in the normal style with no forbidden-character indication or rename prompt
+
+#### Scenario: A URI-shaped name opens on click
+
+- **WHEN** a user clicks a row whose name contains `:` and `/`
+- **THEN** the detail view opens, navigating by the row's encoded path
+
+#### Scenario: Row and bulk actions stay enabled
+
+- **WHEN** a user opens the row context menu or selects runners for bulk delete
+- **THEN** the delete action is enabled rather than disabled on account of the name's characters
+
+#### Scenario: Filename-shaped views keep the stricter rule
+
+- **WHEN** any other asset view renders a name containing `/` or `%`
+- **THEN** that view's existing invalid-name treatment is unchanged
+
+### Requirement: App-runner asset detail view tab set
+
+The system SHALL render an app-runner asset's detail view with exactly five tabs — `Properties`, `Features`,
+`Parameters`, `AppRoutes`, and `Interceptors` — and SHALL NOT include an `Applications` tab, an `Audit` tab, or a
+Core-sync status banner.
+
+The detail header SHALL offer one outbound create action, `Create Assets Application`, which opens the shared
+asset-application create modal with the runner being viewed pre-selected as the new application's source. It SHALL
+NOT offer an equivalent action for `Entities > Applications`: that reference is a foreign key into the admin
+backend's own runner table, so an asset runner has no row to point at and the created application could only reopen
+with an unresolvable source. Because a single valid target does not warrant a menu, the action SHALL be a single
+button rather than the two-item dropdown `Entities > Application Runners` offers.
+
+The create modal SHALL offer both of the applications view's bucket roots — `platform` and `public` — as
+destinations in its folder sidebar (the `platform` root only when the Catalog menu group is enabled), and its form
+SHALL follow the destination bucket's shape: no version field when the `platform` bucket is selected, the version
+field shown and required when the `public` bucket is selected. A create into the `platform` bucket SHALL be
+submitted through the platform-bucket create action — writing the flat, unversioned `platform/{name}` resource —
+and SHALL navigate to the new application's detail view at the bare `/assets-applications/{name}` route, which
+SHALL resolve without a 404. A create into the `public` bucket is unchanged.
+
+#### Scenario: Detail view renders exactly five tabs
+
+- **WHEN** a user opens an app-runner asset's detail view
+- **THEN** the tab list contains exactly `Properties`, `Features`, `Parameters`, `AppRoutes`, and `Interceptors`
+
+#### Scenario: No Applications tab
+
+- **WHEN** a user opens an app-runner asset's detail view
+- **THEN** there is no `Applications` tab, unlike `Entities > Application Runners`
+
+#### Scenario: No Audit tab or sync banner
+
+- **WHEN** a user opens an app-runner asset's detail view
+- **THEN** no `Audit` tab is present and no Core-sync status banner is rendered in the header
+
+#### Scenario: No outbound create-application actions
+
+Scoped to the entity variant. This scenario once prohibited both outbound create actions; the asset variant became
+valid once asset runners were selectable from `Assets > Applications`, and is required by the scenarios below. The
+heading is retained because a scenario's name is the identity a delta rewrites content under.
+
+- **WHEN** a user opens an app-runner asset's detail view header
+- **THEN** no action creating an entity `Application` is offered, since an asset runner is not addressable as an
+  entity application's `application_type_schema_id`
+- **AND** no `Create` dropdown is present offering an `Application` item, as `Entities > Application Runners` has
+
+#### Scenario: The header offers a create-asset-application action
+
+- **WHEN** a user opens an app-runner asset's detail view header
+- **THEN** a `Create Assets Application` action is offered alongside `Delete`
+- **AND** it is a single button, not a dropdown
+
+#### Scenario: The create modal opens with the runner as a fixed source
+
+- **WHEN** a user activates `Create Assets Application`
+- **THEN** the shared asset-application create modal opens, requesting name, display name, description, and — only
+  while the `public` bucket is the selected destination — a version
+- **AND** no source field is offered, since the source is the runner the action was started from
+
+#### Scenario: The create modal offers both bucket roots as destinations
+
+- **WHEN** the create modal opens with the Catalog menu group enabled
+- **THEN** the folder sidebar lists the `platform` root and the `public` root, without requiring a prior visit to
+  the Assets Applications view in the same session
+- **AND** when the Catalog menu group is disabled, only the `public` root is listed
+
+#### Scenario: The version field follows the selected destination bucket
+
+- **WHEN** the user selects the `platform` bucket in the create modal's folder sidebar
+- **THEN** no version field is shown and the form can be submitted without one
+- **AND** when the user selects the `public` bucket, the version field is shown and required, unchanged from
+  current behavior
+
+#### Scenario: The new application references the runner by its Core resource name
+
+- **WHEN** a user creates an asset application from a runner whose `$id` is `http://asdqwe`
+- **THEN** the application's `application_type_schema_id` is `schemas/platform/http%3A%2F%2Fasdqwe`, the same
+  reference form the `Assets > Applications` picker writes for an asset runner
+- **AND** reopening that application shows the runner as its selected App Runner rather than a blank field
+
+#### Scenario: Parameter defaults come from Core's resolved schema
+
+- **WHEN** the create action seeds the new application's `applicationProperties`
+- **THEN** the defaults are derived from DIAL Core's resolved-schema read for that runner, not the admin backend's
+- **AND** if that read fails, the defaults are derived from the runner resource as loaded, so the modal still opens
+
+#### Scenario: Creation reports its outcome and navigates to the new application
+
+- **WHEN** the create request succeeds
+- **THEN** a success notification naming the created asset application is shown and the browser navigates to that
+  application's detail view
+- **AND** when the request fails, an error notification carrying the server's message is shown and the modal stays
+  open
+
+#### Scenario: A platform-bucket create navigates to a resolving detail view
+
+- **WHEN** a user submits the create modal with the `platform` bucket selected
+- **THEN** the application is created at the flat, unversioned `platform/{name}` path, and the browser navigates to
+  `/assets-applications/{name}` — no `path` query parameter — which opens the new application's platform-bucket
+  detail view on its Property tab rather than a 404 page
+
+#### Scenario: The action follows the header's existing gating
+
+- **WHEN** the viewer is a read-only admin, or the runner has unsaved changes, or the JSON editor is open
+- **THEN** the create action is not offered, exactly as `Delete` is not, rather than being offered in a disabled state
+
+### Requirement: `$id` is displayed as the runner identity and is immutable after creation
+
+The system SHALL preserve and display the `$id` declared in an App Runner's stored schema body. Core storage `name` and `_metadata.path` SHALL address the resource's route, update, and deletion; the declared `$id` SHALL be used for resolved-schema reads and application `application_type_schema_id` references. The system SHALL allow entering both values only on creation and SHALL reject any attempt to change an existing runner's declared `$id`, including through raw JSON editing.
+
+#### Scenario: Create keeps name and id separate
+
+- **WHEN** a user creates a runner with storage name `quickapps2` and `$id` `https://dial.example.com/custom_application_schemas/quickapps2`
+- **THEN** Core receives the create at the encoded `quickapps2` storage address
+- **AND** the stored runner body carries the typed URI as `$id`
+
+#### Scenario: Migrated runner preserves declared id
+
+- **WHEN** a runner stored under `quickapps2` declares `$id` `https://dial.example.com/custom_application_schemas/quickapps2`
+- **THEN** its detail view and JSON editor show the declared URI rather than `quickapps2`
+- **AND** resolved-schema reads and application references use the URI
+
+#### Scenario: Existing runner writes to its original storage path
+
+- **WHEN** an admin edits and saves a runner whose storage name differs from its declared `$id`
+- **THEN** the update addresses the resource's loaded `_metadata.path`
+- **AND** the request preserves its original declared `$id`
+
+#### Scenario: Existing runner deletes at its original storage path
+
+- **WHEN** an admin deletes a runner whose storage name differs from its declared `$id`
+- **THEN** the delete addresses the loaded storage path rather than a path reconstructed from `$id`
+
+#### Scenario: Raw JSON cannot change the declared id
+
+- **WHEN** an admin changes an existing runner's `$id` in the raw JSON editor and saves
+- **THEN** the save is blocked before a Core write
+- **AND** the edited JSON remains available for correction
+
+#### Scenario: Core conflicts are visible on create
+
+- **WHEN** Core rejects a create because either the storage name or declared `$id` is already registered
+- **THEN** the modal remains open and shows Core's conflict message
+
+### Requirement: Properties tab content
+
+The system SHALL render the app-runner Properties tab with display name, description, icon, title, viewer URL, editor URL, bucket-copy selection, topics, and the runner source field.
+
+#### Scenario: Topics are editable and persisted
+
+- **WHEN** a user edits topics on the Properties tab and saves
+- **THEN** the topics are stored on the runner resource and appear in the list's topics column
+
+### Requirement: Features tab content
+
+The system SHALL render the app-runner Features tab with the same controls the entity-side runner Features tab provides: configuration, rate, tokenize, and truncate-prompt endpoint fields, plus switches for `dial:appendApplicationPropertiesHeader`, `dial:applicationTypePlaybackSupport`, and `dial:applicationTypeAssistantAttachmentsInRequestSupported`.
+
+#### Scenario: Endpoint fields and switches are present
+
+- **WHEN** a user opens an app-runner asset's Features tab
+- **THEN** the four endpoint fields and the three switches listed above are shown
+
+### Requirement: Client-side validation replaces Core's absent write-time checks
+
+Because DIAL Core performs no validation when writing this resource kind, the system SHALL block a save that violates the app-runner meta-schema and SHALL surface the reason to the user. The enforced rules are: a non-empty `dial:applicationTypeDisplayName`; every route key matching `^[a-zA-Z0-9_]+$`; every route carrying non-empty `dial:paths`, non-empty `dial:methods`, and `dial:upstreams`; every method within `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `PATCH`; every upstream carrying `dial:endpoint`; a present `dial:response` carrying both `dial:status` and `dial:body`; and every top-level parameter carrying `dial:meta` with both `dial:propertyOrder` and `dial:propertyKind`, whether or not the parameter is required.
+
+#### Scenario: Missing display name blocks save
+
+- **WHEN** a user attempts to save a runner with an empty display name
+- **THEN** the save action is disabled or rejected and no request reaches Core
+
+#### Scenario: An invalid route key blocks save
+
+- **WHEN** a route's name contains a character outside `^[a-zA-Z0-9_]+$`, such as a dot or a dash
+- **THEN** the save is blocked with a message identifying the offending route
+
+#### Scenario: A route missing required fields blocks save
+
+- **WHEN** a route has no paths, no methods, or no upstreams and no response
+- **THEN** the save is blocked with a message identifying the offending route
+
+#### Scenario: An unsupported HTTP method blocks save
+
+- **WHEN** a route declares a method outside the supported set
+- **THEN** the save is blocked with a message identifying the offending method
+
+#### Scenario: A parameter without an order or kind blocks save
+
+- **WHEN** a top-level parameter, required or optional, has no `dial:propertyOrder` or no `dial:propertyKind`
+- **THEN** the save is blocked with a message naming the parameter and the missing key
+- **AND** the Parameters tab marks that parameter's empty Order cell as invalid
+
+### Requirement: `$id` constraint violations are reported at the create form
+
+The system SHALL disable save when `$id` is absent. The platform create form SHALL additionally
+reject any `$id` containing characters Core cannot store (`!`, `~`, `*`, `'`, `(`, `)`) with an
+inline client-side error as the user types, preventing a round-trip rejection for identifiers Core
+will refuse regardless.
+
+#### Scenario: An absent id is reported as missing
+
+- **WHEN** a write is attempted with no `$id`
+- **THEN** the save button is disabled with the id field shown as required, not as forbidden characters
+
+#### Scenario: A forbidden character surfaces while typing
+
+- **WHEN** a user types an `$id` containing any of `!`, `~`, `*`, `'`, `(`, `)` into the platform
+  create form
+- **THEN** an inline error is shown immediately, before any save attempt
+
+### Requirement: Platform App Runner creation checks the declared ID with Core
+
+When the user activates Create for an otherwise locally valid Platform App Runner form, the system SHALL call `getResolvedRunnerSchema` with the proposed declared `$id` before invoking the existing Core-backed create callback.
+
+If the resolved-schema request returns a schema, the system SHALL treat the declared `$id` as existing, show the standard existing-ID error inline under ID, keep the Create modal open, and SHALL NOT invoke the Core-backed create callback. This error SHALL participate in the form validity state and SHALL clear when the user edits ID.
+
+If the request does not return a schema or if resolution fails, the system SHALL invoke the existing Core-backed create callback. The normal Core success or error result, including a write-time conflict response, SHALL remain visible.
+
+#### Scenario: Core-resolved ID blocks Platform App Runner creation
+
+- **WHEN** a user activates Create for a valid Platform App Runner form and Core returns a schema for the proposed `$id`
+- **THEN** the Create modal shows the standard existing-ID error under ID
+- **AND** Create is disabled
+- **AND** the Core-backed create callback is not invoked
+
+#### Scenario: Editing an occupied Platform App Runner ID restores creation
+
+- **WHEN** the Create modal displays the resolved existing-ID error
+- **AND** the user changes ID to a locally valid value
+- **THEN** the resolved existing-ID error is removed
+- **AND** Create is enabled when Name and Display Name are also valid
+
+#### Scenario: An unresolved or unavailable Platform App Runner ID uses the normal create flow
+
+- **WHEN** a user activates Create for a valid Platform App Runner form and the resolved-schema request returns no schema or fails
+- **THEN** the system invokes the existing Core-backed create callback with the edited Name, ID, and Display Name
+- **AND** the normal Core success or error result remains visible
+
+### Requirement: Parameters tab shows the Core-resolved schema
+
+The system SHALL populate the app-runner Parameters tab from DIAL Core's resolved-schema read, which already performs the external-schema download declared by `dial:applicationTypeSchemaEndpoint`.
+
+Editing a runner's parameters SHALL preserve every schema declaration the tab does not itself render.
+The app-runner meta-schema lets a property carry a file-valued declaration, the encoded-file format
+that accompanies it, and per-property metadata at any nesting depth; the tab exposes only a subset of
+these as editable fields. A declaration the tab cannot edit is data the runner's author put there —
+losing it on save silently breaks the behavior that depended on it, so it SHALL survive an edit
+untouched.
+
+#### Scenario: Parameters reflect a resolved external schema
+
+- **WHEN** a runner declares `dial:applicationTypeSchemaEndpoint` and its Parameters tab is opened
+- **THEN** the properties contributed by the external schema are shown alongside the runner's own properties
+
+#### Scenario: Resolution failure is reported
+
+- **WHEN** Core cannot download the declared external schema
+- **THEN** the Parameters tab surfaces an error rather than rendering an empty parameter set silently
+
+#### Scenario: A file-valued property survives an unrelated edit
+
+- **WHEN** a user edits one property of a runner whose schema declares another property file-valued,
+  and saves
+- **THEN** that property is still declared file-valued, with its format intact
+- **AND** DIAL Core still resolves it as a file reference when the runner is published or shared
+
+#### Scenario: Nested per-property metadata survives an edit
+
+- **WHEN** a user edits a runner whose schema carries per-property metadata below the first level of
+  `properties`, and saves
+- **THEN** that nested metadata is unchanged in the saved schema
+
+### Requirement: Entities > Application Runners is unaffected
+
+The system SHALL leave the admin-BE-backed `Entities > Application Runners` surface — its route, list, detail view, seven tabs, Audit tab, revision and rollback wiring, Core-sync banner, and server actions — unchanged by this capability.
+
+Reference-data consumers of the admin-BE runner list SHALL continue to read it. `Assets > Applications` additionally reads the Core asset-runner list in order to offer both populations in its picker; every other consumer reads the admin-BE list alone.
+
+#### Scenario: Entity runner view keeps all of its tabs
+
+- **WHEN** a user opens an entity-side application runner
+- **THEN** its Properties, Features, Parameters, Interceptors, Applications, AppRoutes, and Audit tabs are all still present
+
+#### Scenario: Entity runner reference data still resolves
+
+- **WHEN** any page that lists application runners for reference (applications, asset applications, interceptors, application publications, export config) loads
+- **THEN** it still reads the admin-BE runner list, unchanged
+
+#### Scenario: Only asset applications read the second list
+
+- **WHEN** the runner picker is rendered on `Entities > Applications`
+- **THEN** it offers admin-BE runners only, and no asset runner is selectable there
+
+### Requirement: Asset runners are selectable from asset applications
+
+The system SHALL offer app runners created through `Assets > App Runners` as source options in the App Runner picker on `Assets > Applications`, alongside the admin-BE-backed runners already offered there. The two populations SHALL be presented in a single flat grid distinguished by a `Source` column reading `Configuration file` or `API`, and each option SHALL carry an explicit origin discriminator rather than one inferred from the shape of its value.
+
+The asset half SHALL be read through the Core app-runner resource path, and its rows SHALL be identified by the runner's `$id`, matching the `Assets > App Runners` list.
+
+The picker's columns SHALL be limited to `ID`, `Source`, `Author`, and `Updated time` — a set both populations can fill from data already loaded. Columns whose values live in the runner's content body (`Display Name`, `Description`, `Topics`) SHALL NOT appear, since populating them for asset rows would require one Core content read per runner on every render. This column set is specific to the picker; the standalone `Entities > Application Runners` list and the config import/export, audit-rollback, and import-preview grids keep their own unchanged column sets.
+
+A runner SHALL be labelled by its `$id` consistently across the picker — the grid's `ID` column, the dropdown options, and the collapsed field showing the current selection — so the name a user selects by is the name they see afterwards. The runner's display name SHALL NOT be surfaced in the merged picker, because an asset runner has none without a content read and a label absent from the grid would not be recognizable.
+
+The merged picker SHALL be a dedicated component (`AppRunnersResource`) used only where both populations are offered; the admin-BE picker (`AppRunners`) SHALL carry no merged-mode, origin, or `$id`-labelling behaviour. Every other consumer — `Entities > Applications` included — SHALL keep the display-name label and the standalone runner column set unchanged, since all of its runners are admin-BE-backed and carry a display name.
+
+A failure to read the asset runner list SHALL degrade to the admin-BE-only list rather than failing the page.
+
+#### Scenario: Both populations appear in the picker
+
+- **WHEN** a user opens the App Runner picker on an asset application and runners exist in both `Entities > Application Runners` and `Assets > App Runners`
+- **THEN** both are listed in one grid
+- **AND** each row's `Source` column reads `Configuration file` or `API` accordingly
+
+#### Scenario: Asset rows are identified by `$id`
+
+- **WHEN** an asset runner with `$id` `http://asdqwe` appears in the picker
+- **THEN** its `ID` cell reads `http://asdqwe`
+
+#### Scenario: The picker shows no content-backed columns
+
+- **WHEN** the picker grid renders
+- **THEN** its columns are exactly `ID`, `Source`, `Author`, and `Updated time`
+- **AND** no `Display Name`, `Description`, or `Topics` column is present
+
+#### Scenario: The selected runner reads the same as the row that was picked
+
+- **WHEN** a user selects any runner, of either origin
+- **THEN** the collapsed field shows that runner's `$id`, the same value its grid row showed
+- **AND** no display name is shown in its place
+
+#### Scenario: Entities > Applications keeps its own presentation and source
+
+- **WHEN** the runner picker renders on `Entities > Applications`
+- **THEN** it labels runners by their display name and shows the standalone runner column set
+- **AND** it offers admin-BE runners only
+
+#### Scenario: Asset rows show their metadata
+
+- **WHEN** an asset runner appears in the picker
+- **THEN** its author and updated time cells are populated from the Core metadata node
+- **AND** the updated time renders as a localized date, not raw epoch milliseconds
+
+#### Scenario: Every runner in the bucket is offered
+
+- **WHEN** the picker is opened and the `platform` bucket holds more runners than one metadata page
+- **THEN** all of them appear in the grid
+
+#### Scenario: Core read failure leaves the entity list usable
+
+- **WHEN** the asset runner list cannot be read
+- **THEN** the picker still lists the admin-BE runners
+- **AND** the page renders rather than erroring
+
+#### Scenario: The admin-BE picker never renders the merged presentation
+
+- **WHEN** `AppRunners` renders for any view, including a view whose runner list contains Platform-origin options
+- **THEN** it labels runners by display name and shows the standalone runner column set
+- **AND** it opens the standalone `Entities > Application Runners` page in a new tab
+
+### Requirement: An asset runner reference is stored as its Core resource name
+
+The system SHALL write `schemas/platform/{encodeURIComponent($id)}` into an asset application's `application_type_schema_id` when the selected runner comes from `Assets > App Runners`, and SHALL continue to write the plain `$id` when it comes from `Entities > Application Runners`. Resolution of a stored reference back to a runner SHALL accept both forms, so an asset application reopens with its selection intact.
+
+#### Scenario: Selecting an asset runner stores the canonical resource name
+
+- **WHEN** a user selects an asset runner whose `$id` is `http://asdqwe`
+- **THEN** the application's `application_type_schema_id` is set to `schemas/platform/http%3A%2F%2Fasdqwe`
+
+#### Scenario: Selecting an entity runner is unchanged
+
+- **WHEN** a user selects a runner from `Entities > Application Runners`
+- **THEN** the application's `application_type_schema_id` is set to that runner's `$id`, with no prefix or encoding applied
+
+#### Scenario: A saved asset-runner reference reopens as selected
+
+- **WHEN** an asset application referencing `schemas/platform/http%3A%2F%2Fasdqwe` is reopened
+- **THEN** the App Runner field shows that runner as selected rather than blank
+- **AND** any behaviour keyed on resolving the referenced runner, such as the Responses defaults section, behaves as it does for an entity runner
+
+### Requirement: Runner origin drives schema resolution and navigation
+
+The system SHALL derive an asset runner's default `applicationProperties` from DIAL Core's resolved-schema read, and an entity runner's from the admin BE's, selecting between them by the option's origin. The picker's open-in-new-tab action SHALL likewise navigate to `/assets-app-runners/{path}` for an asset runner and `/application-runners/{$id}` for an entity runner.
+
+#### Scenario: Selecting an asset runner resolves against Core
+
+- **WHEN** a user selects an asset runner
+- **THEN** the resolved schema is read from Core's `application_type_schemas/schema` route, not the admin BE's `resolvedSchema`
+- **AND** the derived `applicationProperties` defaults are applied to the application
+
+#### Scenario: Open navigates to the runner's own surface
+
+- **WHEN** a user opens the selected runner in a new tab
+- **THEN** an asset runner opens under `/assets-app-runners/`
+- **AND** an entity runner opens under `/application-runners/`
+
+### Requirement: Interceptors tab options are sourced from DIAL Core
+The system SHALL render the app-runner Interceptors tab using the existing shared interceptors component, populating the selectable interceptors from DIAL Core as the union of its two populations, and storing the selection in the runner's `dial:applicationTypeInterceptors` field.
+
+#### Scenario: Selectable interceptors come from Core, both populations
+- **WHEN** the app-runner detail page loads
+- **THEN** the available interceptors are read from DIAL Core, including both those written through its API and those defined in its configuration files, and no admin-backend request contributes to the list
+
+#### Scenario: Selection round-trips on the runner resource
+- **WHEN** a user selects interceptors and saves
+- **THEN** their references are persisted in `dial:applicationTypeInterceptors` and reappear on reload
+
+#### Scenario: An option Core would reject is not offered
+- **WHEN** the interceptor options are built
+- **THEN** every offered option resolves in Core's merged configuration, so selecting one cannot produce a write rejected for an unresolvable reference
+
+### Requirement: Global interceptors are read from DIAL Core
+The Interceptors tab displays the globally configured interceptors alongside the runner's own. The system SHALL read that list from DIAL Core rather than the admin backend, and SHALL scope the change to this surface so the admin-backend-backed entity surfaces are unaffected.
+
+#### Scenario: Global interceptors come from Core on this surface
+- **WHEN** the app-runner Interceptors tab renders
+- **THEN** the global interceptor list is read from DIAL Core
+
+#### Scenario: Entity surfaces keep their existing source
+- **WHEN** an admin-backend-backed entity surface renders the same shared interceptors component
+- **THEN** its global interceptor list is read exactly as before
+
+### Requirement: Per-route role options are sourced from DIAL Core
+The AppRoutes tab lets a user grant roles per route, choosing from a list of available roles. The system SHALL populate that list from DIAL Core as the union of its two role populations, replacing the admin-backend role list this surface reads today.
+
+#### Scenario: Route role options come from Core, both populations
+- **WHEN** a user opens the role picker on an app route
+- **THEN** the available roles are read from DIAL Core, including both API-written and configuration-file-defined roles, with no admin-backend request
+
+#### Scenario: A granted role round-trips on the route
+- **WHEN** a user grants a role to a route and saves
+- **THEN** the grant persists on the runner resource and reappears on reload
+
+#### Scenario: A role already granted but absent from the option list is still shown
+- **WHEN** a route grants a role that the option list does not contain, whether because a read failed or because the role is no longer defined
+- **THEN** the granted role is still displayed, rather than the tab presenting the route as ungranted
+
+### Requirement: The topics control offers no catalogue on this surface
+DIAL Core has no registry of topics — a deployment's topics are a free list of strings it stores verbatim — so there is no Core equivalent of the admin backend's topic catalogue. The system SHALL therefore not request a topic catalogue on this surface, and SHALL leave topics fully editable by typed entry.
+
+#### Scenario: No catalogue is requested
+- **WHEN** a user opens the topics control on an app-runner asset
+- **THEN** no topic catalogue is fetched, and no suggestion list is presented beyond the topics the runner already carries
+
+#### Scenario: Topics remain addable and persist
+- **WHEN** a user types a new topic and applies it
+- **THEN** it is added to the runner and persists across save and reopen
+
+#### Scenario: Other surfaces keep their catalogue
+- **WHEN** the same shared topics control renders on a surface backed by the admin backend
+- **THEN** its topic catalogue is still requested, unchanged
+
+### Requirement: Configuring an app runner requires no admin-backend call
+Every field this surface reads or writes is owned by DIAL Core. The system SHALL NOT require any admin-backend request in order to view or configure an app runner, so the surface remains usable when that service is unavailable.
+
+#### Scenario: The surface is configurable without the admin backend
+- **WHEN** a user opens an app-runner asset and edits any field the surface exposes, including interceptors, per-route roles and topics
+- **THEN** no admin-backend request is required for the edit to be made or saved
+
+#### Scenario: The claim is stated with its scope
+- **WHEN** the capability describes itself as Core-direct
+- **THEN** it states what holds — that the runner resource and every option list it offers are read from Core — rather than implying the surface has no other dependency
+
+### Requirement: Duplicating a runner navigates to the new runner, not a 404
+
+Because `$id` is always a URI (it always contains characters `encodeURIComponent` must escape), the post-duplicate redirect for `Catalog > App Runners` SHALL apply exactly the same single URL-encoding to the new `$id` that row-click navigation applies to an existing runner's decoded name, so both entry points resolve to the same URL segment.
+
+#### Scenario: Duplicating a runner with a URI-shaped id lands on the new runner
+
+- **WHEN** a user duplicates a runner whose `$id` requires URL-encoding (e.g. contains `:` or `/`) and submits the Duplicate modal
+- **THEN** the runner is created
+- **AND** the browser navigates to the new runner's detail page, not a 404
+
+#### Scenario: The post-duplicate redirect URL matches the row-click URL
+
+- **WHEN** the redirect URL for a freshly duplicated runner is computed from its `$id`
+- **THEN** it is identical to the URL that clicking that same runner's row in the list would produce, once both exist as list rows
+
+### Requirement: Viewing an application's Parameters tab resolves an Asset-origin runner's scheme through Core
+
+The Parameters tab SHALL resolve the currently-selected App Runner's scheme through the shared origin-aware resolver whenever it loads or reloads the scheme. An Asset-origin runner (one created through `Assets > App Runners`) SHALL read its Core resource content by metadata storage path and resolve through Core's `getResolvedRunnerSchema` using the content's declared `$id`, regardless of `DIAL_ADMIN_API_URL`. A Config-origin runner, or a runner without an explicit origin, SHALL resolve through the Admin Backend's `getResolvedApplicationScheme` when `DIAL_ADMIN_API_URL` is configured and through Core's `getResolvedRunnerSchema` when that variable is absent or empty.
+
+#### Scenario: Generated form renders for an Asset-origin runner's application
+
+- **WHEN** a user opens the Parameters tab of an application whose selected App Runner was created through `Assets > App Runners` and declares a configuration schema
+- **AND** selects the "Generated form" view
+- **THEN** the configuration form renders using that runner's resolved schema, instead of showing "No Configuration Scheme"
+
+#### Scenario: Asset-origin runner resolution ignores Admin Backend availability
+
+- **WHEN** the Parameters tab loads an Asset-origin runner while `DIAL_ADMIN_API_URL` is configured or absent
+- **THEN** it reads the runner content and resolves the schema through Core
+- **AND** it does not require an Admin Backend request
+
+#### Scenario: Config-origin runner uses the Admin Backend when available
+
+- **WHEN** the Parameters tab loads an application whose selected App Runner comes from `Entities > Application Runners` while `DIAL_ADMIN_API_URL` is configured
+- **THEN** the scheme is resolved through the Admin Backend's resolved-schema read
+
+#### Scenario: Config-origin runner falls back to Core without the Admin Backend
+
+- **WHEN** the Parameters tab loads an application whose selected Config-origin App Runner has a configuration schema while `DIAL_ADMIN_API_URL` is absent or empty
+- **THEN** the scheme is resolved through Core's resolved-schema read
+- **AND** the generated configuration form can use the returned schema
+
+#### Scenario: Failed selected resolver retains the unresolved runner fallback
+
+- **WHEN** the resolver selected by runner origin and `DIAL_ADMIN_API_URL` availability fails while the Parameters tab loads
+- **THEN** the Parameters tab uses the unresolved runner as its schema fallback
+
+### Requirement: Catalog > App Runners menu entry
+
+The system SHALL add an `App Runners` menu item to the Catalog section of the admin menu, directly before `Catalog Schemas`, linking to `/platform-app-runners`.
+
+#### Scenario: App Runners is reachable in the Catalog section
+
+- **WHEN** the Catalog section of the menu renders
+- **THEN** `App Runners` appears before `Catalog Schemas`
+- **AND** selecting it opens `/<lang>/platform-app-runners`
+
+### Requirement: Platform App Runner storage name is visible but immutable after creation
+
+The detail view SHALL show the loaded Core storage name separately from declared `$id` and SHALL not offer a rename control for either identity.
+
+#### Scenario: Existing runner exposes both identities
+
+- **WHEN** an admin opens an API-written Platform App Runner whose storage name differs from `$id`
+- **THEN** the Properties view shows both values distinctly
+- **AND** neither value is editable
+
+### Requirement: Core-owned route maps use a separate object-native editor
+
+The system SHALL retain `ApplicationAppRoutes` and `EntityRoutes` as the array-only App Routes UI for `/applications` and `/application-runners`. It SHALL render `/assets-applications` and `/platform-app-runners` through a separate object-native App Routes component whose input and output are keyed route objects. The object-native component SHALL identify each route by its object key and SHALL support adding, editing, renaming, and deleting object entries without converting the route collection to an array.
+
+#### Scenario: Admin-backend route arrays remain on the existing editor
+
+- **WHEN** an application or Application Runner loads routes from the admin backend
+- **THEN** it continues to render through `ApplicationAppRoutes` and `EntityRoutes` with the returned route array unchanged
+- **AND** no Core-owned object editor is used
+
+#### Scenario: Asset application uses the object-native editor
+
+- **WHEN** an asset application opens its App Routes tab
+- **THEN** it renders through the object-native App Routes component
+- **AND** the component receives and emits the application's keyed `routes` object rather than a route array
+
+#### Scenario: Platform App Runner uses the object-native editor
+
+- **WHEN** a Platform App Runner opens its App Routes tab
+- **THEN** it renders through the object-native App Routes component
+- **AND** the component receives and emits the runner's keyed `dial:applicationTypeRoutes` object rather than a route array
+
+### Requirement: Object-native editor supports both Core-owned route field contracts
+
+The object-native App Routes component SHALL support an unprefixed Asset Application route entry and a `dial:`-prefixed Core App Runner route entry. It SHALL read and write each route, upstream, response, attachment-path, role, and permission field using the selected contract's field names, preserving the original object contract in parent state and in the JSON editor.
+
+#### Scenario: Asset application route remains unprefixed
+
+- **WHEN** an administrator edits an asset application route stored as `{ "health": { "paths": ["/health"] } }`
+- **THEN** the edited `routes` object remains keyed by the route name and uses unprefixed route fields
+
+#### Scenario: Platform App Runner route remains Core-shaped
+
+- **WHEN** an administrator edits a Platform App Runner route stored in `dial:applicationTypeRoutes`
+- **THEN** the edited object remains keyed by the route name and uses Core `dial:`-prefixed route and nested fields
+- **AND** its JSON editor displays that same Core-shaped object
+
+#### Scenario: Renaming an object route updates its key
+
+- **WHEN** an administrator renames a route through the object-native editor
+- **THEN** the updated route object uses the new route name as its key
+- **AND** the prior key is absent
+
+### Requirement: Asset applications inherit raw Core App Runner route maps by source origin
+
+When an asset application requires details of its selected App Runner, the system SHALL choose the Core read by the option's explicit origin. A Platform-origin runner SHALL continue to load through the platform resource action using its storage path. A Config-origin runner SHALL load through DIAL Core's config-file `schemas` population using its declared `$id`, or its name when no `$id` is available. Both reads SHALL expose the original Core `dial:applicationTypeRoutes` object, interceptors, and application feature details to asset-application consumers.
+
+#### Scenario: Sourced asset application renders the inherited Core map read-only
+
+- **WHEN** an asset application selects a Platform-origin or Config-origin App Runner whose `dial:applicationTypeRoutes` is a Core keyed `dial:` route map
+- **THEN** the object-native App Routes component renders that map through the Core App Runner field contract
+- **AND** the routes remain read-only on the asset application
+
+#### Scenario: Configuration-file runner supplies inherited interceptor and feature details
+
+- **WHEN** an asset application selects a Config-origin App Runner whose complete config-file schema declares interceptors or application feature flags absent from its picker option
+- **THEN** the Interceptors and Features surfaces use those loaded declarations as inherited runner details
+
+#### Scenario: Detail read failure is not treated as an empty route set
+
+- **WHEN** a selected runner has an addressable origin-specific identifier but its detail read fails
+- **THEN** the App Routes tab renders its existing resolved-schema failure state
+- **AND** it does not render the route editor as though the runner declares no routes
+
+### Requirement: Platform App Runner validation and writes preserve Core route objects
+
+The system SHALL validate a Platform App Runner's raw `dial:applicationTypeRoutes` object before save, including Core route keys and Core-prefixed nested fields. A malformed object entered through the JSON editor SHALL produce a validation error rather than a runtime failure. A successful Platform App Runner write SHALL preserve the validated `dial:applicationTypeRoutes` object without array-to-object or object-to-array conversion.
+
+#### Scenario: Invalid Core route object blocks save
+
+- **WHEN** an administrator enters an invalid `dial:applicationTypeRoutes` map in the Platform App Runner JSON editor
+- **THEN** save is blocked with validation feedback identifying the invalid route map or entry
+- **AND** no write reaches Core
+
+#### Scenario: Valid Core route object writes unchanged
+
+- **WHEN** an administrator saves a valid Platform App Runner with a Core-shaped `dial:applicationTypeRoutes` object
+- **THEN** the Core write payload retains that keyed `dial:` object
+- **AND** no collection-level array-to-object conversion is applied
+
+### Requirement: Platform App Runner duplication validates Core storage name and declared ID
+
+The `Assets > App Runners` duplicate modal SHALL render required Name, ID, and Display Name fields for Platform App Runners. Name SHALL be the Core resource storage `name`, remain distinct from the schema body's declared `$id`, and initialize as the source storage name with a `-copy` suffix.
+
+The Name field SHALL validate inline with the standard required, length, character, and existing-name rules against the Platform App Runner storage names supplied to the modal. A missing or existing Name SHALL show an inline error and SHALL disable Duplicate until corrected. This additional Name field SHALL NOT be rendered for other platform asset types that use the shared duplicate modal.
+
+#### Scenario: Duplicate starts with a copied Core storage name
+
+- **WHEN** a user opens Duplicate for the Platform App Runner with storage name `quickapps2`
+- **THEN** the form shows Name `quickapps2-copy` together with the cloned ID and Display Name
+- **AND** submitting valid values passes `name: "quickapps2-copy"` to the existing Core-backed create flow
+
+#### Scenario: Existing Core storage name blocks duplication inline
+
+- **WHEN** the user enters a Name already used by a Platform App Runner
+- **THEN** the modal shows an inline existing-name error under Name
+- **AND** Duplicate is disabled until the user supplies a valid unused Name
+
+#### Scenario: Other platform asset duplicate forms are unchanged
+
+- **WHEN** a user duplicates a Model, Route, Role, Interceptor, platform Application, or Toolset
+- **THEN** that form retains its current fields and duplication behavior
+
+### Requirement: Platform App Runner duplicate checks the declared ID with Core
+
+When the user activates Duplicate for an otherwise valid Platform App Runner form, the system SHALL call `getResolvedRunnerSchema` with the proposed declared `$id` before invoking the existing Core-backed create flow.
+
+If the resolved-schema request returns a schema, the system SHALL treat the declared `$id` as existing, show the existing-ID error inline under ID, and SHALL NOT invoke the create callback. This error SHALL disable Duplicate and SHALL clear when the user changes ID. If the request does not return a schema, the system SHALL proceed with the existing Core create behavior.
+
+#### Scenario: Core-resolved ID blocks the create callback
+
+- **WHEN** a user activates Duplicate for a valid Platform App Runner form and Core returns a schema for the proposed `$id`
+- **THEN** the modal shows “This ID already exists.” under ID
+- **AND** Duplicate is disabled
+- **AND** the Core-backed create callback is not invoked
+
+#### Scenario: Editing an existing declared ID restores duplication
+
+- **WHEN** the modal displays the Core-resolved existing-ID error
+- **AND** the user changes ID to a locally valid value
+- **THEN** the error is removed
+- **AND** Duplicate is enabled when Name and Display Name are also valid
+
+#### Scenario: Unresolved declared ID uses the normal Core create flow
+
+- **WHEN** a user activates Duplicate for a valid Platform App Runner form and the resolved-schema request does not return a schema
+- **THEN** the system invokes the existing Core-backed create callback with the edited Name, ID, and Display Name
+- **AND** the normal success or error result of the Core create flow remains visible
+
+### Requirement: A stored runner id that is not in the picker's list is still shown
+
+A Platform runner's option `$id` is the runner's `$id` as of creation, while an application stores the runner's current content `$id`. When the two differ — the runner's `$id` was edited after creation — the stored id matches no option. The merged picker SHALL still show the stored id as the field's value rather than rendering it blank. It SHALL NOT match the id to a runner: the picker opens with no selected row, and the open-in-new-tab control SHALL NOT be offered. Choosing a runner in the picker replaces the stored id and restores normal behaviour.
+
+#### Scenario: A runner whose `$id` was edited after creation is still shown
+
+- **WHEN** the properties tab opens an asset application whose `application_type_schema_id` is `http://asdqwe/edited` and no listed option carries that `$id`
+- **THEN** the field shows `http://asdqwe/edited` as its value
+- **AND** no open-in-new-tab control is offered
+
+#### Scenario: Choosing a runner replaces the unmatched id
+
+- **WHEN** the user selects a listed runner while an unmatched stored id is shown
+- **THEN** the field shows the selected runner and the open-in-new-tab control is offered for it
+
+### Requirement: The merged picker opens the selected runner on its own detail page
+
+The merged picker's open-in-new-tab control SHALL open the selected runner on the `Assets > App Runners` detail page, using the same URL the `Assets > App Runners` list builds for the matching row. A `Platform`-origin runner SHALL open at its storage path. A `Config`-origin runner SHALL open at its `$id` with the `configFile=true` query, so the page reads it from Core's configuration file; this works whether or not an admin backend is configured. The control SHALL NOT point at `Entities > Application Runners`.
+
+#### Scenario: A Platform runner opens by storage path
+
+- **WHEN** the selected runner is a Platform option with path `http%3A%2F%2Fasdqwe`
+- **THEN** Open navigates to `/{locale}/platform-app-runners/http%253A%252F%252Fasdqwe` in a new tab
+
+#### Scenario: A configuration-file runner opens in config-file mode
+
+- **WHEN** the selected runner is a Config-origin option with `$id` `urn:runner:entity`
+- **THEN** Open navigates to `/{locale}/platform-app-runners/urn%3Arunner%3Aentity?configFile=true` in a new tab

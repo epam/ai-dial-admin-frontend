@@ -4,7 +4,6 @@ import { FC, useCallback } from 'react';
 
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
@@ -15,7 +14,6 @@ interface Props {
 }
 
 const Tabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onChangeActiveTab }) => {
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const onChange = useCallback(
     (tab: string) => {
       if (tab !== activeTab) {
@@ -25,7 +23,7 @@ const Tabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onChangeAct
     [activeTab, onChangeActiveTab],
   );
 
-  const showTabs = isReadOnlyAdmin || !isEditorEnabled;
+  const showTabs = !isEditorEnabled;
 
   return (
     showTabs && (

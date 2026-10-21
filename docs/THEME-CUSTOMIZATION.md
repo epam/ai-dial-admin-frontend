@@ -1,6 +1,6 @@
 # Theme Customization
 
-You can tailor the appearance of your application using **themes** - a collection of static resources including images, fonts, and colors. AI DIAL Admin provides two pre-set themes - dark (which is the default theme) and light. However, you can deploy a specific service that allows you to modify the default themes or create and configure your own custom themes. This independent service allows you to alter themes without having to rebuild the the application Docker image.
+You can tailor the appearance of your application using **themes** - a collection of static resources including images, fonts, and colors. AI DIAL Admin provides two pre-set themes - light (which is the default theme) and dark. However, you can deploy a specific service that allows you to modify the default themes or create and configure your own custom themes. This independent service allows you to alter themes without having to rebuild the the application Docker image.
 
 **Note**: after making changes into themes, it is necessary to restart the application to apply changes.
 
@@ -17,5 +17,7 @@ THEMES_CONFIG_URL=https://your-config-host.com
 ```
 
 After setting the `THEMES_CONFIG_URL` environment variable, you can [add and customize themes](https://github.com/epam/ai-dial-chat-themes/blob/development/static/config.json).
+
+Every theme in a custom config must define both color token sets: the legacy one (`bg-layer-0`…`bg-layer-4`, `controls-*`) and the ui-kit 2.0 one (`bg-layer-base`, `bg-layer-raised`, `bg-layer-sunken`, `bg-control-*`, `text-control-*`, `stroke-*`, `bg-gradient-*`, `shadow-*`). A token the config leaves out falls back to a value compiled into the app or into ui-kit, and ui-kit's fallbacks are light, so a dark theme missing the 2.0 set shows light controls.
 
 > Please note that after making modifications, you need to redeploy the server with themes for the changes to take effect. There is a default cache period of 24 hours, after which the new settings will be applied automatically.
