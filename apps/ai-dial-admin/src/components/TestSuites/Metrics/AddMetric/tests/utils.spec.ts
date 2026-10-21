@@ -264,4 +264,54 @@ describe('hasInputTypeMismatch', () => {
 
     expect(hasInputTypeMismatch(bindings, inputSchema, testCaseSchema)).toBe(false);
   });
+
+  describe('multi-type and untyped inputs', () => {
+    const arrayColumns: TestCaseSchema[] = [
+      { name: 'items', type: TestCaseItemType.ARRAY, required: false, description: '' },
+      { name: 'flag', type: TestCaseItemType.BOOLEAN, required: false, description: '' },
+    ];
+    const bindArray = [testCaseBinding('actual', 'items')];
+    const responseArray = (property: string): MetricBinding[] => [
+      { property, source: { $type: MetricBindingType.Response, columnName: 'answer' } },
+    ];
+
+    test('accepts any column for a property with no type', () => {
+      const schema: JSONSchema7 = { type: 'object', properties: { actual: { description: 'Any value' } } };
+
+      expect(hasInputTypeMismatch(bindArray, schema, arrayColumns)).toBe(false);
+    });
+
+    test('accepts every type listed in a union', () => {
+      const schema: JSONSchema7 = {
+        type: 'object',
+        properties: {
+          actual: { anyOf: [{ type: 'string' }, { type: 'boolean' }, { type: 'number' }, { type: 'array' }] },
+        },
+      };
+      const responseColumns = [{ name: 'answer', displayName: 'Answer', expression: '', type: 'array' }];
+
+      expect(hasInputTypeMismatch(bindArray, schema, arrayColumns)).toBe(false);
+      expect(hasInputTypeMismatch(responseArray('actual'), schema, arrayColumns, responseColumns)).toBe(false);
+    });
+
+    test('accepts every type in a type list and resolves $ref variants', () => {
+      const schema: JSONSchema7 = {
+        type: 'object',
+        properties: { actual: { type: ['string', 'array', 'null'] }, other: { oneOf: [{ $ref: '#/$defs/list' }] } },
+        $defs: { list: { type: 'array' } },
+      };
+
+      expect(hasInputTypeMismatch(bindArray, schema, arrayColumns)).toBe(false);
+      expect(hasInputTypeMismatch([testCaseBinding('other', 'items')], schema, arrayColumns)).toBe(false);
+    });
+
+    test('still rejects a type outside the union', () => {
+      const schema: JSONSchema7 = {
+        type: 'object',
+        properties: { actual: { anyOf: [{ type: 'string' }, { type: 'array' }, { type: 'null' }] } },
+      };
+
+      expect(hasInputTypeMismatch([testCaseBinding('actual', 'flag')], schema, arrayColumns)).toBe(true);
+    });
+  });
 });
