@@ -1,8 +1,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-ui-kit';
+import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-react-file-manager';
 
-import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
+import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Artifacts/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
@@ -98,28 +98,35 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
   );
 
   return (
-    <DialFileManager
-      className="p-0 gap-0 bg-layer-3"
-      gridClassName="p-3"
-      path={filePath}
-      items={files as []}
-      filesLoading={isFetchingFiles}
-      showNavigationPanel={false}
-      treeOptions={getTreeOptions(
-        isReadOnlyAdmin,
-        isFetchingFiles,
-        value ? expandedFolders : loadedPaths,
-        expandedFolders,
-        ApplicationRoute.Files,
-        setExpandedFolders,
-        t,
-      )}
-      defaultSelectedPaths={value ? new Set([value]) : void 0}
-      gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
-      onPathChange={handleOnPathChange}
-      onFolderPopupPathChange={handleFolderPopupPathChange}
-      handleSelectionClick={handleSelectionClick}
-    />
+    <div className="size-full min-h-0">
+      <DialFileManager
+        className="p-0 gap-0 bg-layer-3 !grid-rows-1"
+        gridClassName="p-3"
+        // Library always mounts a h-[64px] content-header row; hide it when breadcrumb/toolbar are unused.
+        contentHeaderClassName="hidden"
+        contentClassName="!px-3 !gap-0 !pb-0"
+        path={filePath}
+        items={files as []}
+        filesLoading={isFetchingFiles}
+        showNavigationPanel={false}
+        navigationPanelOptions={{ searchable: false }}
+        sortOptions={{ sortable: false }}
+        treeOptions={getTreeOptions(
+          isReadOnlyAdmin,
+          isFetchingFiles,
+          value ? expandedFolders : loadedPaths,
+          expandedFolders,
+          ApplicationRoute.Files,
+          setExpandedFolders,
+          t,
+        )}
+        defaultSelectedPaths={value ? new Set([value]) : void 0}
+        gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
+        onPathChange={handleOnPathChange}
+        onFolderPopupPathChange={handleFolderPopupPathChange}
+        handleSelectionClick={handleSelectionClick}
+      />
+    </div>
   );
 };
 

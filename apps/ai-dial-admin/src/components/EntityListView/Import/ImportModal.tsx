@@ -6,15 +6,16 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
   determineFilesType,
+  getExistingFolderItems,
   getModalTitle,
   getMultipleImportStatus,
   isInvalidJson,
-  isLargeFile,
 } from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
-import type { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import type { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
@@ -24,33 +25,18 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 
 const MAX_FILES_COUNT = 30;
-const MAX_TOTAL_FILE_SIZE_MB = 64;
-const MAX_TOTAL_FILE_SIZE_BYTES = MAX_TOTAL_FILE_SIZE_MB * 1024 * 1024;
 
 interface Props {
   isModalOpen: boolean;
   route?: ApplicationRoute;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
   preselectedItems?: File[];
 }
-
-const getExistingFolderItems = (folderContext?: AssetsFolderContext) => {
-  if (!folderContext) {
-    return [];
-  }
-
-  const { filePath, fetchedFoldersData, data } = folderContext;
-  if (filePath != null && Object.hasOwn(fetchedFoldersData, filePath)) {
-    return fetchedFoldersData[filePath];
-  }
-
-  return data ?? [];
-};
 
 const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply, preselectedItems }) => {
   const folderContext = getAssetContext?.();
@@ -90,8 +76,8 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
     }
 
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    return totalSize > MAX_TOTAL_FILE_SIZE_BYTES;
-  }, [fileType, files]);
+    return totalSize > getImportSizeLimits(route).maxMultiFilesSizeMb * 1024 * 1024;
+  }, [fileType, files, route]);
 
   const onReadJsonFile = useCallback(
     (file: File | null, urlToRemove?: string) => {
@@ -178,8 +164,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         const newSeparateFileMap = new Map<string, FileImportMap>();
 
         sliced.forEach((file) => {
-          const isInvalid = isLargeFile(file, MAX_FILE_SIZE_MB);
-          newSeparateFileMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid });
+          newSeparateFileMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid: false });
         });
 
         setSeparateFileMap(newSeparateFileMap);

@@ -6,6 +6,7 @@ import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import ClientIdControl from '@/src/components/Toolsets/Auth/Controls/ClientIdControl';
 import ClientSecretControl from '@/src/components/Toolsets/Auth/Controls/ClientSecretControl';
+import { CLIENT_SECRET_MIN_LENGTH } from '@/src/components/Assets/Resources/Auth/constants';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
@@ -106,6 +107,8 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           clientSecret={authSettings?.client_secret}
           disabled={isAuthDisabled}
           isLoggedIn={isLoggedIn}
+          hasSecretHint={!!authSettings?.client_secret_hint}
+          minLength={CLIENT_SECRET_MIN_LENGTH}
           onChange={(client_secret) => onChange?.({ ...(authSettings || {}), client_secret })}
         />
         <Multiselect

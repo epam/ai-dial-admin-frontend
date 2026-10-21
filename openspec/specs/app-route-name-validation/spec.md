@@ -1,4 +1,10 @@
-## ADDED Requirements
+# app-route-name-validation Specification
+
+## Purpose
+
+Validation of an App Route's Display Name: allowed characters, duplicate and length checks, in both create and edit flows.
+
+## Requirements
 
 ### Requirement: App Route Display Name restricted to alphanumeric and underscore
 The Display Name field for App Routes SHALL only accept characters matching `^[a-zA-Z0-9_]+$` (uppercase and lowercase letters, digits, and underscore). Any other character is forbidden.

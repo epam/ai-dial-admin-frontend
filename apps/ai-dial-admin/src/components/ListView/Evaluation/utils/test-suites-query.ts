@@ -1,5 +1,4 @@
 import {
-  ComparisonOp,
   FilterNode,
   SortDir,
   StructuredQuery,
@@ -8,13 +7,14 @@ import {
 } from '@/src/models/evaluation/structured-query';
 import {
   McpDeploymentRef,
+  RoutesRef,
   SuiteType,
   TestSuite,
   TestSuiteDeploymentRef,
   TestSuiteEndpointRef,
 } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
-import { FilterOperatorDto, SortDirectionDto } from '@/src/types/request';
+import { SortDirectionDto } from '@/src/types/request';
 import { and, col, compare, field, offsetPage, or, rowQuery, sortItem } from '@/src/utils/structured-query/build';
 
 import {
@@ -22,22 +22,12 @@ import {
   DATE_DSL_FIELDS,
   DEPLOYMENT_REF_NAME_FIELD,
   MCP_DEPLOYMENT_REF_NAME_FIELD,
+  ROUTES_REF_NAME_FIELD,
+  OPERATOR_TO_COMPARISON,
   TEST_SUITE_COLUMN_TO_DSL_FIELD,
   TEST_SUITE_SELECT_FIELDS,
   TEST_SUITES_ENTITY,
 } from './constants';
-
-const OPERATOR_TO_COMPARISON: Record<FilterOperatorDto, ComparisonOp | undefined> = {
-  [FilterOperatorDto.EQUALS]: ComparisonOp.Eq,
-  [FilterOperatorDto.NOT_EQUAL]: ComparisonOp.Ne,
-  [FilterOperatorDto.CONTAINS]: ComparisonOp.Co,
-  [FilterOperatorDto.NOT_CONTAINS]: ComparisonOp.Nc,
-  [FilterOperatorDto.GREATER_THAN]: ComparisonOp.Gt,
-  [FilterOperatorDto.GREATER_THAN_OR_EQUAL]: ComparisonOp.Ge,
-  [FilterOperatorDto.LESS_THAN]: ComparisonOp.Lt,
-  [FilterOperatorDto.LESS_THAN_OR_EQUAL]: ComparisonOp.Le,
-  [FilterOperatorDto.INCLUDES]: ComparisonOp.In,
-};
 
 const valueTypeForField = (dslField: string): ValueType => {
   if (dslField === 'id') {
@@ -69,6 +59,7 @@ const buildApplicationFilter = (filter: FilterDto): FilterNode | null => {
   return or([
     compare(op, DEPLOYMENT_REF_NAME_FIELD, valueType, val),
     compare(op, MCP_DEPLOYMENT_REF_NAME_FIELD, valueType, val),
+    compare(op, ROUTES_REF_NAME_FIELD, valueType, val),
   ]);
 };
 
@@ -152,7 +143,9 @@ export const mapTestSuiteRow = (row: Record<string, unknown>): TestSuite => ({
   datasetId: row.dataset_id != null ? String(row.dataset_id) : undefined,
   deploymentRef: asObject<TestSuiteDeploymentRef>(row.deployment_ref),
   mcpDeploymentRef: asObject<McpDeploymentRef>(row.mcp_deployment_ref),
+  routesRef: asObject<RoutesRef>(row.routes_ref),
   endpointRef: asObject<TestSuiteEndpointRef>(row.endpoint_ref),
+  testCaseFilter: asObject<FilterNode>(row.test_case_filter) ?? null,
 });
 
 export const mapTestSuitesQueryResult = (

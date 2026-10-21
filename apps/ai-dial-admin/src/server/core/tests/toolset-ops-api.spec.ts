@@ -27,6 +27,21 @@ describe('Server :: Core :: ToolsetOpsApi', () => {
     expect(result.response).toEqual({ tools: [] });
   });
 
+  // Regression (Issue #4445): Core's `DeploymentService.findDeployment` resolves a platform-bucket
+  // toolset by bare name via the merged config store — the resource-type prefix and `platform/`
+  // bucket segment must be stripped, not sent, or Core can't find (or is forbidden from) the
+  // deployment.
+  test('discoveredTools calls GET v1/toolset/{name}/tools for a platform-bucket toolset (bare name, no prefix)', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ tools: [] }), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.discoveredTools(TOKEN_MOCK, 'platform/my-toolset');
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/toolset/my-toolset/tools');
+    expect(calledUrl).not.toContain('toolsets');
+    expect(result.success).toBe(true);
+  });
+
   test('discoveredTools calls GET v1/toolset/{prefixed-path}/tools for an application', async () => {
     fetch.mockResponseOnce(JSON.stringify({ tools: [] }), { headers: { 'content-type': 'application/json' } });
 
@@ -37,6 +52,17 @@ describe('Server :: Core :: ToolsetOpsApi', () => {
     expect(options?.method).toBe('GET');
     expect(result.success).toBe(true);
     expect(result.response).toEqual({ tools: [] });
+  });
+
+  test('discoveredTools calls GET v1/toolset/{name}/tools for a platform-bucket application (bare name, no prefix)', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ tools: [] }), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.discoveredTools(TOKEN_MOCK, 'platform/my-app', ResourceType.APPLICATION);
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/toolset/my-app/tools');
+    expect(calledUrl).not.toContain('applications');
+    expect(result.success).toBe(true);
   });
 
   test('signIn calls POST v1/ops/toolset/signin with the given body', async () => {

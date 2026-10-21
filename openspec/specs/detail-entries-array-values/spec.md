@@ -1,4 +1,10 @@
-## ADDED Requirements
+# detail-entries-array-values Specification
+
+## Purpose
+
+How detail panels carry and render string-array values in key-value entries.
+
+## Requirements
 
 ### Requirement: getDetailEntries preserves string-array values
 

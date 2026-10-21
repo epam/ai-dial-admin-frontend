@@ -1,10 +1,15 @@
 import { describe, test, expect } from 'vitest';
 import {
+  buildTurnEffectiveData,
   convertVariableIntoInitialRequest,
+  convertVariablesIntoInitialRequests,
   generateInputBindingsRowData,
   generateVariablesRowData,
+  hasIncompleteInputBindings,
+  perTurnFieldNames,
+  resolveVariablesForTurn,
 } from '../template-variables';
-import { InputBinding, TemplateVariable } from '@/src/models/evaluation/test-suite';
+import { InputBinding, TemplateVariable, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
@@ -14,6 +19,99 @@ const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable
   hasDefault: false,
   sources: ['body'],
   ...overrides,
+});
+
+describe('buildTurnEffectiveData', () => {
+  test('takes shared fields from data and per-turn fields from turnData only', () => {
+    const result = buildTurnEffectiveData(
+      { persona: 'shared', prompt: 'wrong-side' },
+      { prompt: 'turn-prompt', persona: 'wrong-side' },
+      new Set(['prompt']),
+    );
+
+    expect(result).toEqual({ persona: 'shared', prompt: 'turn-prompt' });
+  });
+
+  test('returns empty object when both maps are missing', () => {
+    expect(buildTurnEffectiveData(undefined, undefined, new Set(['prompt']))).toEqual({});
+  });
+});
+
+describe('convertVariablesIntoInitialRequests', () => {
+  test('seeds one entry per chain request from that request own variables', () => {
+    const result = convertVariablesIntoInitialRequests({
+      '0': [createVariable({ name: 'first', defaultValue: 'a', hasDefault: true })],
+      '1': [createVariable({ name: 'second', defaultValue: 'b', hasDefault: true })],
+    });
+
+    expect(result).toEqual({ '0': { first: 'a' }, '1': { second: 'b' } });
+  });
+
+  test('keeps an entry for a request that declares no variables', () => {
+    expect(convertVariablesIntoInitialRequests({ '0': [createVariable({ name: 'first' })], '1': [] })).toEqual({
+      '0': { first: '' },
+      '1': {},
+    });
+  });
+
+  test('omits a request the response does not mention, so no out-of-range index is sent', () => {
+    expect(convertVariablesIntoInitialRequests({ '0': [createVariable({ name: 'first' })] })).toEqual({
+      '0': { first: '' },
+    });
+  });
+
+  test('returns an empty body for an empty response', () => {
+    expect(convertVariablesIntoInitialRequests({})).toEqual({});
+  });
+});
+
+describe('perTurnFieldNames', () => {
+  test('collects names of fields flagged perTurn', () => {
+    const schema: TestCaseSchema[] = [
+      { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
+      { name: 'persona', type: TestCaseItemType.STRING, required: false, description: '' },
+    ];
+
+    expect(perTurnFieldNames(schema)).toEqual(new Set(['prompt']));
+  });
+
+  test('returns an empty set when schema is undefined', () => {
+    expect(perTurnFieldNames(undefined)).toEqual(new Set());
+  });
+});
+
+describe('resolveVariablesForTurn', () => {
+  test('prefers constantValue over dataField', () => {
+    const variables = [createVariable({ name: 'model' })];
+    const bindings: InputBinding[] = [{ templateVariable: 'model', constantValue: 'gpt-4', dataField: 'model_field' }];
+
+    const result = resolveVariablesForTurn(variables, bindings, { model_field: 'ignored' });
+
+    expect(result[0].resolvedValue).toBe('gpt-4');
+  });
+
+  test('resolves dataField from effective data', () => {
+    const variables = [createVariable({ name: 'prompt' })];
+    const bindings: InputBinding[] = [{ templateVariable: 'prompt', dataField: 'user_prompt' }];
+
+    const result = resolveVariablesForTurn(variables, bindings, { user_prompt: 'Hello' });
+
+    expect(result[0].resolvedValue).toBe('Hello');
+  });
+
+  test('falls back to variable name lookup then default then null', () => {
+    const withName = resolveVariablesForTurn([createVariable({ name: 'q' })], [], { q: 'from-name' });
+    const withDefault = resolveVariablesForTurn(
+      [createVariable({ name: 'q', hasDefault: true, defaultValue: 'fallback' })],
+      [],
+      {},
+    );
+    const unbound = resolveVariablesForTurn([createVariable({ name: 'q' })], [], {});
+
+    expect(withName[0].resolvedValue).toBe('from-name');
+    expect(withDefault[0].resolvedValue).toBe('fallback');
+    expect(unbound[0].resolvedValue).toBeNull();
+  });
 });
 
 describe('generateInputBindingsRowData', () => {
@@ -533,5 +631,42 @@ describe('convertVariableIntoInitialRequest', () => {
 
     expect(result).toEqual({ dup: '' });
     expect(Object.keys(result)).toHaveLength(1);
+  });
+});
+
+describe('hasIncompleteInputBindings', () => {
+  const suite = (overrides?: Partial<TestSuite>): TestSuite => ({ id: 'suite-1', ...overrides });
+
+  test('returns false when there are no bindings', () => {
+    expect(hasIncompleteInputBindings(suite())).toBe(false);
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [] }))).toBe(false);
+  });
+
+  test('returns false for a constant or a selected attribute', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', constantValue: '' }] }))).toBe(
+      false,
+    );
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', dataField: 'col' }] }))).toBe(
+      false,
+    );
+  });
+
+  test('returns true for Attribute mode with an empty dataField', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', dataField: '' }] }))).toBe(true);
+  });
+
+  test('returns true when neither dataField nor constantValue is set', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a' }] }))).toBe(true);
+  });
+
+  test('returns true when an additional request has an incomplete binding', () => {
+    expect(
+      hasIncompleteInputBindings(
+        suite({
+          inputBindings: [{ templateVariable: 'ok', constantValue: 'x' }],
+          additionalRequests: [{ inputBindings: [{ templateVariable: 'followUp', dataField: '' }] }],
+        }),
+      ),
+    ).toBe(true);
   });
 });

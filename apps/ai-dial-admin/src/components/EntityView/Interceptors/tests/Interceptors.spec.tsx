@@ -10,9 +10,16 @@ describe('EntityInterceptors', () => {
     const interceptors = [{ name: 'int1' }, { name: 'int2' }];
     const onChangeEntity = vi.fn();
 
-    render(<EntityInterceptors entity={entity} interceptors={interceptors} onChangeEntity={onChangeEntity} />);
+    render(
+      <EntityInterceptors
+        view={ApplicationRoute.Adapters}
+        entity={entity}
+        interceptors={interceptors}
+        onChangeEntity={onChangeEntity}
+      />,
+    );
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('opens add modal when Add button is clicked', () => {
@@ -20,7 +27,14 @@ describe('EntityInterceptors', () => {
     const interceptors = [{ name: 'int3' }];
     const onChangeEntity = vi.fn();
 
-    render(<EntityInterceptors entity={entity} interceptors={interceptors} onChangeEntity={onChangeEntity} />);
+    render(
+      <EntityInterceptors
+        view={ApplicationRoute.Adapters}
+        entity={entity}
+        interceptors={interceptors}
+        onChangeEntity={onChangeEntity}
+      />,
+    );
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Add));
     expect(screen.getByText(InterceptorsI18nKey.Add)).toBeInTheDocument();
@@ -41,7 +55,7 @@ describe('EntityInterceptors :: runner field selection', () => {
     render(<EntityInterceptors entity={entity} interceptors={interceptors} onChangeEntity={vi.fn()} view={view} />);
   };
 
-  test.each([ApplicationRoute.ApplicationRunners, ApplicationRoute.AssetsAppRunners])(
+  test.each([ApplicationRoute.ApplicationRunners, ApplicationRoute.PlatformAppRunners])(
     'Should count dial:applicationTypeInterceptors for %s',
     (view) => {
       renderFor(view, { 'dial:applicationTypeInterceptors': ['runner-int'] });
@@ -51,7 +65,7 @@ describe('EntityInterceptors :: runner field selection', () => {
   );
 
   test('Should ignore the generic interceptors field on the asset runner view', () => {
-    renderFor(ApplicationRoute.AssetsAppRunners, { interceptors: ['runner-int', 'other'] });
+    renderFor(ApplicationRoute.PlatformAppRunners, { interceptors: ['runner-int', 'other'] });
 
     expect(screen.queryByText(`${InterceptorsI18nKey.Local}: 2`)).not.toBeInTheDocument();
   });

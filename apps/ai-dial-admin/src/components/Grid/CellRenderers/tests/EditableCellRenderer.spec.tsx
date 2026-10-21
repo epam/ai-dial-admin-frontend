@@ -1,3 +1,4 @@
+import { ICellRendererParams } from 'ag-grid-community';
 import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import EditableCellRenderer from '../EditableCellRenderer';
@@ -7,10 +8,14 @@ vi.mock('@/public/images/icons/cell-triangle.svg', () => ({
   default: () => <span>triangle</span>,
 }));
 
+// The renderer reads only the props each case sets; ag-grid's other cell params come from one
+// typed fake.
+const cellParams = {} as ICellRendererParams;
+
 describe('EditableCellRenderer', () => {
   const placeholder = 'Enter value';
   test('renders input with value and placeholder', () => {
-    render(<EditableCellRenderer value="test" placeholder={placeholder} colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value="test" placeholder={placeholder} colDef={{}} data={{}} />);
     const input = screen.getByPlaceholderText(placeholder);
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue('test');
@@ -21,6 +26,7 @@ describe('EditableCellRenderer', () => {
     const onChange = vi.fn();
     render(
       <EditableCellRenderer
+        {...cellParams}
         value="old"
         colDef={{ field: 'col1' }}
         data={{ foo: 1 }}
@@ -37,7 +43,7 @@ describe('EditableCellRenderer', () => {
 
   test('uses valueFormatter if provided', () => {
     const valueFormatter = vi.fn((v) => `f:${v}`);
-    render(<EditableCellRenderer value="abc" valueFormatter={valueFormatter} colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value="abc" valueFormatter={valueFormatter} colDef={{}} data={{}} />);
     expect(valueFormatter).toHaveBeenCalledWith('abc');
     expect(screen.getByDisplayValue('f:abc')).toBeInTheDocument();
   });
@@ -45,9 +51,10 @@ describe('EditableCellRenderer', () => {
   test('calls setValue and onChange with formatted value', () => {
     const setValue = vi.fn();
     const onChange = vi.fn();
-    const valueFormatter = (v: string) => `f:${v}`;
+    const valueFormatter = (v: number | string) => `f:${v}`;
     render(
       <EditableCellRenderer
+        {...cellParams}
         value="abc"
         valueFormatter={valueFormatter}
         setValue={setValue}
@@ -63,24 +70,34 @@ describe('EditableCellRenderer', () => {
   });
 
   test('shows triangle icon if defaultValue is set and not equal to value', () => {
-    render(<EditableCellRenderer value="abc" defaultValue={123} colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value="abc" defaultValue={123} colDef={{}} data={{}} />);
     expect(screen.getByText('triangle')).toBeInTheDocument();
   });
 
   test('does not show triangle icon if defaultValue equals value', () => {
-    render(<EditableCellRenderer value={123} defaultValue={123} colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value={123} defaultValue={123} colDef={{}} data={{}} />);
     expect(screen.queryByText('triangle')).toBeNull();
   });
 
   test('renders with null values with placeholder', () => {
-    render(<EditableCellRenderer value={null} defaultValue={123} colDef={{}} data={{}} placeholder={placeholder} />);
+    render(
+      <EditableCellRenderer
+        {...cellParams}
+        {...cellParams}
+        value={null}
+        defaultValue={123}
+        colDef={{}}
+        data={{}}
+        placeholder={placeholder}
+      />,
+    );
     const input = screen.getByPlaceholderText(placeholder);
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue(placeholder);
   });
 
   test('stopPropagation is called on Ctrl+A keydown', () => {
-    render(<EditableCellRenderer value="hello" colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value="hello" colDef={{}} data={{}} />);
     const input = screen.getByRole('textbox');
     const event = createEvent.keyDown(input, { key: 'a', ctrlKey: true });
     const spy = vi.spyOn(event, 'stopPropagation');
@@ -89,7 +106,7 @@ describe('EditableCellRenderer', () => {
   });
 
   test('stopPropagation is called on Cmd+A keydown', () => {
-    render(<EditableCellRenderer value="hello" colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value="hello" colDef={{}} data={{}} />);
     const input = screen.getByRole('textbox');
     const event = createEvent.keyDown(input, { key: 'a', metaKey: true });
     const spy = vi.spyOn(event, 'stopPropagation');
@@ -98,11 +115,100 @@ describe('EditableCellRenderer', () => {
   });
 
   test('stopPropagation is NOT called on plain keydown', () => {
-    render(<EditableCellRenderer value="hello" colDef={{}} data={{}} />);
+    render(<EditableCellRenderer {...cellParams} value="hello" colDef={{}} data={{}} />);
     const input = screen.getByRole('textbox');
     const event = createEvent.keyDown(input, { key: 'a' });
     const spy = vi.spyOn(event, 'stopPropagation');
     fireEvent(input, event);
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  test('right-aligns the input when isRightAligned is set', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isRightAligned />);
+    expect(screen.getByRole('textbox')).toHaveClass('text-right');
+  });
+
+  test('does not right-align the input by default', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} />);
+    expect(screen.getByRole('textbox')).not.toHaveClass('text-right');
+  });
+
+  test('right-aligns the read-only value when isRightAligned is set', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly isRightAligned />);
+    expect(screen.getByText('42')).toHaveClass('text-right');
+  });
+
+  test('does not right-align the read-only value by default', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly />);
+    expect(screen.getByText('42')).not.toHaveClass('text-right');
+  });
+
+  test('passes inputProps to the input', () => {
+    render(
+      <EditableCellRenderer {...cellParams} value="" colDef={{}} data={{}} inputProps={{ maxLength: 5, min: 1 }} />,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveAttribute('maxlength', '5');
+    expect(input).toHaveAttribute('min', '1');
+  });
+
+  test('keeps its own value and change handling over inputProps', () => {
+    const onChange = vi.fn();
+    const foreignOnChange = vi.fn();
+    render(
+      <EditableCellRenderer
+        {...cellParams}
+        value="own"
+        colDef={{ field: 'col1' }}
+        data={{}}
+        onChange={onChange}
+        // A cast stands in for a caller that slips a grid-owned attribute past the type.
+        inputProps={{ value: 'foreign', onChange: foreignOnChange } as object}
+      />,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('own');
+    fireEvent.change(input, { target: { value: 'next' } });
+    expect(onChange).toHaveBeenCalled();
+    expect(foreignOnChange).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    { scrollWidth: 80, clientWidth: 120, state: 'idle' },
+    { scrollWidth: 300, clientWidth: 100, state: 'armed' },
+  ])(
+    'sets the overflow tooltip to $state for scrollWidth $scrollWidth in a $clientWidth field',
+    ({ scrollWidth, clientWidth, state }) => {
+      const scrollSpy = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(scrollWidth);
+      const clientSpy = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(clientWidth);
+
+      render(<EditableCellRenderer {...cellParams} value="a test value" colDef={{}} data={{}} />);
+
+      expect(screen.getByRole('textbox').closest('[data-overflow-tooltip]')).toHaveAttribute(
+        'data-overflow-tooltip',
+        state,
+      );
+      scrollSpy.mockRestore();
+      clientSpy.mockRestore();
+    },
+  );
+
+  test('falls back to the inputProps placeholder only when it has none of its own', () => {
+    const { rerender } = render(
+      <EditableCellRenderer {...cellParams} value="" colDef={{}} data={{}} inputProps={{ placeholder: 'fallback' }} />,
+    );
+    expect(screen.getByPlaceholderText('fallback')).toBeInTheDocument();
+
+    rerender(
+      <EditableCellRenderer
+        {...cellParams}
+        value=""
+        placeholder="own"
+        colDef={{}}
+        data={{}}
+        inputProps={{ placeholder: 'fallback' }}
+      />,
+    );
+    expect(screen.getByPlaceholderText('own')).toBeInTheDocument();
   });
 });

@@ -1,52 +1,34 @@
 'use client';
 
+import { Grid, GridColorScheme } from '@epam/ai-dial-ui-kit';
 import {
   AgGridEvent,
-  CellApiModule,
-  CellContextMenuEvent,
-  CellStyleModule,
-  CheckboxEditorModule,
-  ClientSideRowModelApiModule,
-  ClientSideRowModelModule,
   ColDef,
-  colorSchemeDark,
-  ColumnApiModule,
-  ColumnAutoSizeModule,
+  ColGroupDef,
+  ColumnResizedEvent,
   ColumnState,
-  DateFilterModule,
-  EventApiModule,
   GetRowIdParams,
+  DisplayedColumnsChangedEvent,
   GridApi,
+  GridColumnsChangedEvent,
   GridOptions,
   GridReadyEvent,
-  GridStateModule,
-  InfiniteRowModelModule,
-  ITextFilterParams,
-  ITooltipParams,
-  ModuleRegistry,
-  NumberFilterModule,
-  PinnedRowModule,
-  RenderApiModule,
-  RowApiModule,
-  RowAutoHeightModule,
-  RowDragModule,
-  RowSelectionModule,
-  RowStyleModule,
-  ScrollApiModule,
+  GridSizeChangedEvent,
   SuppressKeyboardEventParams,
-  TextFilterModule,
-  themeBalham,
-  TooltipModule,
 } from 'ag-grid-community';
-import { AgGridReact } from 'ag-grid-react';
 import { debounce } from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import CellContextMenu, { ContextMenuPosition } from './CellContextMenu/CellContextMenu';
-import { baseColumnComparator } from './comparators/base-column-comparator';
-import { ROW_HEIGHT } from './constants';
+import { useTheme } from '@/src/context/ThemeContext';
+import { EDITOR_THEMES } from '@/src/types/editor';
+
+import DisplayNameCellRenderer from './CellRenderers/DisplayNameCellRenderer';
+import FormattedValueCellRenderer from './CellRenderers/FormattedValueCellRenderer';
+import RadioNameCellRenderer from './CellRenderers/RadioNameCellRenderer';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
-import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './utils';
+import { HEADER_HEIGHT, ICON_ROW_HEIGHT } from './constants';
+import { useCellContextMenu } from './hooks/use-cell-context-menu';
+import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage, toColumnLeaves } from './utils';
 
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
@@ -62,71 +44,80 @@ export interface AgGridProps<T> {
   getHref?: (data: unknown) => string | undefined;
 }
 
-ModuleRegistry.registerModules([
-  ClientSideRowModelModule,
-  ClientSideRowModelApiModule,
-  ColumnAutoSizeModule,
-  CellStyleModule,
-  TextFilterModule,
-  NumberFilterModule,
-  TooltipModule,
-  RowSelectionModule,
-  GridStateModule,
-  RowApiModule,
-  RenderApiModule,
-  RowAutoHeightModule,
-  RowDragModule,
-  ColumnApiModule,
-  CellApiModule,
-  InfiniteRowModelModule,
-  RowStyleModule,
-  EventApiModule,
-  ScrollApiModule,
-  CheckboxEditorModule,
-  PinnedRowModule,
-  DateFilterModule,
-]);
+const GRID_SIZED_RESIZE_SOURCES: ColumnResizedEvent['source'][] = ['autosizeColumns', 'sizeColumnsToFit'];
+
+const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 
 const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
-  columnDefs?.filter((col) => col.sort).map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState) ?? [];
+  toColumnLeaves(columnDefs ?? [])
+    .filter((col) => col.sort)
+    .map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState);
 
 const loadPersistedModel = (storageKey: string | undefined, defaultSorts: ColumnState[]): GridModel | null =>
   storageKey ? getColumnsStateFromStorage(storageKey, defaultSorts) : null;
 
+const withoutStoredWidth = ({ width: __width, ...column }: ColumnState): ColumnState => column;
+
+const columnStateToStore = (columns: ColumnState[], sizedColIds: ReadonlySet<string>): ColumnState[] =>
+  columns.map((column) => (column.colId && sizedColIds.has(column.colId) ? column : withoutStoredWidth(column)));
+
+const columnStateToApply = (model: GridModel): ColumnState[] => {
+  const sized = new Set(model.sizedColIds ?? []);
+  return model.columns.map((column) => (column.colId && sized.has(column.colId) ? column : withoutStoredWidth(column)));
+};
+
 const applyGridState = (gridApi: GridApi, model: GridModel | null, defaultSorts: ColumnState[]) => {
   if (model) {
     gridApi.setFilterModel(model.filters);
-    gridApi.applyColumnState({ state: model.columns });
+    gridApi.applyColumnState({ state: columnStateToApply(model) });
   } else {
     gridApi.applyColumnState({ state: defaultSorts });
   }
 };
 
-const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[]): ColDef[] =>
+const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[], sizedColIds: string[]): ColDef[] => {
+  const sized = new Set(sizedColIds);
+  return columnDefs.map((col) => {
+    const colId = col.colId ?? col.field;
+    const fromStorage = stored?.find((s) => s.colId === colId);
+    if (!fromStorage) return { ...col, sort: undefined };
+    const { width, ...stateWithoutWidth } = fromStorage;
+    const keepWidth = typeof width === 'number' && sized.has(fromStorage.colId);
+    return {
+      ...stateWithoutWidth,
+      ...col,
+      sort: undefined,
+      ...(keepWidth ? { suppressSizeToFit: true, width } : {}),
+    };
+  });
+};
+
+const suppressArrowKeys = (params: SuppressKeyboardEventParams) => ARROW_KEYS.includes(params.event.key);
+
+// The built-in floating filter waits for Enter when a filter includes an Apply button.
+const DEFAULT_COL_DEF: ColDef = {
+  floatingFilterComponent: FloatingFilter,
+  suppressKeyboardEvent: suppressArrowKeys,
+};
+
+const withFormattedValueRenderer = (columnDefs: ColDef[]): ColDef[] =>
   columnDefs.map((col) => {
-    const fromStorage = stored?.find((s) => s.colId === col.colId) ?? {};
-    return { ...fromStorage, ...col, sort: undefined };
+    const children = (col as ColGroupDef).children;
+    if (Array.isArray(children)) {
+      return { ...col, children: withFormattedValueRenderer(children as ColDef[]) } as ColDef;
+    }
+    return col.valueFormatter && !col.cellRenderer ? { ...col, cellRenderer: FormattedValueCellRenderer } : col;
   });
 
-const GRID_THEME_COLORS = {
-  accentColor: 'var(--controls-bg-solid-primary, #3664E2)',
-  backgroundColor: 'var(--bg-layer-3, #1D2439)',
-  borderColor: 'var(--bg-layer-4, #242C42)',
-  borderRadius: 3,
-  browserColorScheme: 'dark',
-  chromeBackgroundColor: 'var(--bg-layer-1, #0C101D)',
-  foregroundColor: 'var(--text-primary, #EEF1F7)',
-  headerFontSize: 14,
-  headerFontWeight: 600,
-  headerTextColor: 'var(--text-secondary, #7F8792)',
-  oddRowBackgroundColor: 'var(--bg-layer-3, #1D2439)',
-  spacing: 4,
-  wrapperBorderRadius: 3,
-  fontSize: 14,
-  fontFamily: {
-    googleFont: 'var(--theme-font, var(--font-inter))',
-  },
-};
+const ICON_NAME_RENDERERS: ColDef['cellRenderer'][] = [DisplayNameCellRenderer, RadioNameCellRenderer];
+
+const hasIconNameRenderer = (col: ColDef): boolean => ICON_NAME_RENDERERS.includes(col.cellRenderer);
+
+const hasIconNameColumn = (columnDefs: ColDef[] | undefined): boolean =>
+  (columnDefs ?? []).some((col) => {
+    const children = (col as ColGroupDef).children;
+    return Array.isArray(children) ? (children as ColDef[]).some(hasIconNameRenderer) : hasIconNameRenderer(col);
+  });
 
 const AgGridWrapper = <T extends object>({
   columnDefs,
@@ -139,16 +130,20 @@ const AgGridWrapper = <T extends object>({
   getHref,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
-  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
+  const sizedColIdsRef = useRef<Set<string>>(new Set());
+  const { currentTheme } = useTheme();
+  const { onCellContextMenu, getContextMenuItems } = useCellContextMenu<T>(getHref);
+  const colorScheme = currentTheme === EDITOR_THEMES.dark ? GridColorScheme.Dark : GridColorScheme.Light;
 
   const onStateChanged = useCallback(
     (e: AgGridEvent) => {
       if (storageKey) {
-        const columns = e.api.getColumnState();
-        const filters = e.api.getFilterModel();
+        const sizedColIds = [...sizedColIdsRef.current];
+        const columns = columnStateToStore(e.api.getColumnState(), sizedColIdsRef.current);
         const model: GridModel = {
           columns,
-          filters,
+          filters: e.api.getFilterModel(),
+          sizedColIds,
         };
         saveColumnsStateToStorage(storageKey, model);
       }
@@ -156,96 +151,31 @@ const AgGridWrapper = <T extends object>({
     [storageKey],
   );
 
-  const setGridColumnsState = useCallback(
-    (defaultSorts: ColumnState[]) => {
-      if (!gridApi) return;
-      const model = loadPersistedModel(storageKey, defaultSorts);
-      const columns = model && columnDefs ? mergeStoredColumnDefs(columnDefs, model.columns) : columnDefs;
-      gridApi.updateGridOptions({ columnDefs: columns, rowData });
-      applyGridState(gridApi, model, defaultSorts);
+  const onGridApiChange = useCallback(
+    (api: GridApi) => {
+      setGridApi(api);
+      gridReadyCb?.({ api, type: 'gridReady', context: api.getGridOption('context') } as GridReadyEvent);
     },
-    [columnDefs, gridApi, rowData, storageKey],
+    [gridReadyCb],
   );
 
-  const onGridReady = (event: GridReadyEvent) => {
-    setGridApi(event.api);
-
-    gridReadyCb?.(event);
-  };
-
-  useEffect(() => {
-    if (isLiveData || !columnDefs) return;
-    setGridColumnsState(getDefaultSorts(columnDefs));
-  }, [columnDefs, gridApi, rowData, setGridColumnsState, storageKey, isLiveData]);
+  const gridColumnDefs = useMemo(() => {
+    if (!columnDefs) return columnDefs;
+    const renderable = withFormattedValueRenderer(columnDefs);
+    if (isLiveData || !storageKey || typeof window === 'undefined') return renderable;
+    const model = loadPersistedModel(storageKey, getDefaultSorts(columnDefs));
+    return model ? mergeStoredColumnDefs(renderable, model.columns, model.sizedColIds ?? []) : renderable;
+  }, [columnDefs, isLiveData, storageKey]);
 
   useEffect(() => {
-    if (!isLiveData || !columnDefs || !gridApi) return;
+    sizedColIdsRef.current = new Set(storageKey ? (loadPersistedModel(storageKey, [])?.sizedColIds ?? []) : []);
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!columnDefs || !gridApi) return;
     const defaultSorts = getDefaultSorts(columnDefs);
     applyGridState(gridApi, loadPersistedModel(storageKey, defaultSorts), defaultSorts);
-  }, [columnDefs, gridApi, storageKey, isLiveData]);
-
-  const tooltipRenderer = (params: { value: string }) => {
-    if (typeof params.value !== 'string') {
-      return null;
-    }
-    return (
-      <div className="tooltip relative break-words">
-        {params.value}
-        <div className="absolute left-1/2 top-[-6px]">
-          <div className="tooltip-arrow"></div>
-        </div>
-      </div>
-    );
-  };
-
-  const defaultColDef: ColDef = useMemo(() => {
-    return {
-      minWidth: 150,
-      floatingFilter: true,
-      floatingFilterComponent: FloatingFilter,
-      resizable: true,
-      flex: 1,
-      filter: 'agTextColumnFilter',
-      filterParams: {
-        filterPlaceholder: 'Enter value',
-        buttons: ['reset'],
-      } as ITextFilterParams,
-      comparator: baseColumnComparator.bind(this),
-      tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
-      tooltipComponent: tooltipRenderer,
-      suppressKeyboardEvent: (params: SuppressKeyboardEventParams) => {
-        const event = params.event;
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-          return true;
-        }
-        return false;
-      },
-    };
-  }, []);
-
-  const onCellContextMenu = useCallback(
-    (event: CellContextMenuEvent) => {
-      const mouseEvent = event.event as MouseEvent;
-      mouseEvent.preventDefault();
-      const formattedValue = event.api.getCellValue({
-        rowNode: event.node!,
-        colKey: event.column,
-        useFormatter: true,
-      });
-      const displayValue = formattedValue ?? event.value;
-      setContextMenu({
-        x: mouseEvent.clientX,
-        y: mouseEvent.clientY,
-        value: displayValue != null ? String(displayValue) : '',
-        href: getHref?.(event.data),
-      });
-    },
-    [getHref],
-  );
-
-  const closeContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
+  }, [columnDefs, gridApi, storageKey]);
 
   const handleStateUpdated = useMemo(
     () =>
@@ -255,33 +185,77 @@ const AgGridWrapper = <T extends object>({
     [onStateChanged],
   );
 
-  const liveDataProps = isLiveData ? { rowData, columnDefs, animateRows: false, getRowId } : {};
+  // Autosize and fit-grid-width dispatch columnResized too; persisting those would store a width
+  // the operator never chose and freeze the first render's measurements on every later visit.
+  const handleColumnResized = useCallback(
+    (e: ColumnResizedEvent) => {
+      if (GRID_SIZED_RESIZE_SOURCES.includes(e.source)) {
+        return;
+      }
+      e.columns?.forEach((column) => {
+        column.getColDef().suppressSizeToFit = true;
+        const id = column.getColId();
+        if (id) sizedColIdsRef.current.add(id);
+      });
+      handleStateUpdated(e);
+      if (e.finished && e.source === 'uiColumnResized') {
+        e.api.sizeColumnsToFit();
+      }
+    },
+    [handleStateUpdated],
+  );
+
+  const getRowIdFromRow = useCallback((row: T) => getRowId!({ data: row } as GetRowIdParams<T>), [getRowId]);
+
+  // Drop the kit's fitGridWidth strategy so that automatic fit is not stored as an operator width.
+  // Refit on size change the same way the kit does; a column the operator dragged stays put.
+  const persistedWidthOptions: GridOptions = storageKey
+    ? {
+        autoSizeStrategy: undefined,
+        onGridSizeChanged: (event: GridSizeChangedEvent) => {
+          event.api.sizeColumnsToFit();
+        },
+      }
+    : {};
+
+  const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
+  const { defaultColDef: additionalDefaultColDef, ...gridOptionOverrides } = additionalGridOptions ?? {};
+  // A new object on every render is a defaultColDef change, and ag-Grid rebuilds the
+  // columns from the definitions, which puts a drag back where it started.
+  const defaultColDef = useMemo(() => ({ ...DEFAULT_COL_DEF, ...additionalDefaultColDef }), [additionalDefaultColDef]);
+
+  const gridOptions: GridOptions = {
+    headerHeight: HEADER_HEIGHT,
+    ...(hasIconName ? { rowHeight: ICON_ROW_HEIGHT } : {}),
+    onFilterChanged: onStateChanged,
+    onSortChanged: onStateChanged,
+    onColumnMoved: handleStateUpdated,
+    onColumnVisible: handleStateUpdated,
+    onColumnResized: handleColumnResized,
+    onCellContextMenu,
+    preventDefaultOnContextMenu: true,
+    ...(isLiveData ? { animateRows: false } : {}),
+    onGridColumnsChanged: (event: GridColumnsChangedEvent) => {
+      event.api.sizeColumnsToFit();
+    },
+    onDisplayedColumnsChanged: (event: DisplayedColumnsChangedEvent) => {
+      event.api.sizeColumnsToFit();
+    },
+    ...persistedWidthOptions,
+    ...gridOptionOverrides,
+    defaultColDef,
+  };
 
   return (
-    <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
-      <AgGridReact
-        rowModelType="clientSide"
-        headerHeight={30}
-        rowHeight={ROW_HEIGHT}
-        cellSelection={false}
-        theme={themeBalham.withPart(colorSchemeDark).withParams({ ...GRID_THEME_COLORS })}
-        autoSizeStrategy={!storageKey ? { type: 'fitGridWidth' } : void 0}
-        tooltipShowDelay={500}
-        suppressDragLeaveHidesColumns={true}
-        defaultColDef={defaultColDef}
-        onFilterChanged={onStateChanged}
-        onSortChanged={onStateChanged}
-        onGridReady={onGridReady}
-        onColumnMoved={handleStateUpdated}
-        onColumnVisible={handleStateUpdated}
-        onColumnResized={handleStateUpdated}
-        onCellContextMenu={onCellContextMenu}
-        preventDefaultOnContextMenu={true}
-        {...liveDataProps}
-        {...additionalGridOptions}
-      />
-      <CellContextMenu position={contextMenu} onClose={closeContextMenu} />
-    </div>
+    <Grid<T>
+      columnDefs={gridColumnDefs}
+      rowData={rowData ?? undefined}
+      getRowId={isLiveData && getRowId ? getRowIdFromRow : undefined}
+      getContextMenuItems={getContextMenuItems}
+      onGridApiChange={onGridApiChange}
+      additionalGridOptions={gridOptions}
+      colorScheme={colorScheme}
+    />
   );
 };
 

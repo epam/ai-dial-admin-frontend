@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
@@ -6,6 +6,8 @@ import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import EntityAudit from '../EntityAudit';
 import { TabsI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_TIME_PERIOD, SINCE_CREATION_PERIOD_ID } from '@/src/constants/global-time-filter';
+import { useAppContext } from '@/src/context/AppContext';
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => {
@@ -22,9 +24,38 @@ vi.mock('@/src/components/ActivityAudit/List/List', () => ({
   },
 }));
 
+const dashboardPropsSpy = vi.fn();
+vi.mock('@/src/components/Telemetry/Dashboard', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    dashboardPropsSpy(props);
+    return <div role="dashboards" />;
+  },
+}));
+
+const usageDashboardPropsSpy = vi.fn();
+vi.mock('@/src/components/Analytics/Usage/EntityUsageDashboard', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    usageDashboardPropsSpy(props);
+    return <section aria-label="usage dashboard" />;
+  },
+}));
+
+const usageLogPropsSpy = vi.fn();
+vi.mock('@/src/components/UsageLog/UsageLog', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    usageLogPropsSpy(props);
+    return <div role="usage-log" />;
+  },
+}));
+
 describe('EntityAudit', () => {
   beforeEach(() => {
     listPropsSpy.mockClear();
+    dashboardPropsSpy.mockClear();
+    usageLogPropsSpy.mockClear();
   });
 
   test('renders audit tab with Activities and Dashboards', () => {
@@ -48,8 +79,8 @@ describe('EntityAudit', () => {
     expect(screen.getByRole('activities')).toBeInTheDocument();
   });
 
-  test('forwards container audit type via resolveEntityAuditType for a NIM Model Serving', () => {
-    const container = { name: 'gpt-4-turbo', $type: CONTAINER_TYPE.NIM };
+  test('forwards container audit type via resolveEntityAuditType for an Inference Model Serving', () => {
+    const container = { name: 'gpt-4-turbo', $type: CONTAINER_TYPE.HF };
 
     render(
       <EntityAudit entity={container} view={ApplicationRoute.ModelServings} viewMode={ActivityAuditView.Deployments} />,
@@ -57,7 +88,7 @@ describe('EntityAudit', () => {
 
     expect(listPropsSpy).toHaveBeenCalled();
     const props = listPropsSpy.mock.calls[listPropsSpy.mock.calls.length - 1][0];
-    expect(props.entityType).toBe(ActivityAuditResourceType.NIM_DEPLOYMENT);
+    expect(props.entityType).toBe(ActivityAuditResourceType.INFERENCE_DEPLOYMENT);
     expect(props.viewMode).toBe(ActivityAuditView.Deployments);
     expect(props.entity).toBe(container);
   });
@@ -72,5 +103,74 @@ describe('EntityAudit', () => {
     const props = listPropsSpy.mock.calls[listPropsSpy.mock.calls.length - 1][0];
     expect(props.entityType).toBe(ActivityAuditResourceType.MODEL);
     expect(props.viewMode).toBeUndefined();
+  });
+
+  test('gives Dashboard and both UsageLog tabs the default preset while Activities keeps Since Creation', () => {
+    const entity = { name: 'Test Entity', id: '123' };
+
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Activities }));
+    const { onTimeFilterChange } = listPropsSpy.mock.calls.at(-1)?.[0] as {
+      onTimeFilterChange: (value: string) => void;
+    };
+    act(() => {
+      onTimeFilterChange(SINCE_CREATION_PERIOD_ID);
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Dashboard }));
+    expect(dashboardPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: DEFAULT_TIME_PERIOD });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Traces }));
+    expect(usageLogPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: DEFAULT_TIME_PERIOD });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Conversations }));
+    expect(usageLogPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: DEFAULT_TIME_PERIOD });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Activities }));
+    expect(listPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: SINCE_CREATION_PERIOD_ID });
+  });
+});
+
+describe('EntityAudit behind the analytics flags', () => {
+  beforeEach(() => {
+    dashboardPropsSpy.mockClear();
+    usageDashboardPropsSpy.mockClear();
+    vi.mocked(useAppContext).mockReturnValue({
+      featureFlags: { dashboardEnabled: true, analyticsUsageEnabled: true },
+    } as unknown as ReturnType<typeof useAppContext>);
+  });
+
+  test("serves the usage dashboard on a model's Dashboard tab, with the shared period", () => {
+    const entity = { name: 'gpt-4o' };
+
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
+
+    expect(screen.getByRole('region', { name: 'usage dashboard' })).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ entity, route: ApplicationRoute.Models, defaultTimeFilter: DEFAULT_TIME_PERIOD }),
+    );
+    expect(dashboardPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test("serves the usage dashboard on an application's Dashboard tab too", () => {
+    render(<EntityAudit entity={{ name: 'rag' }} view={ApplicationRoute.Applications} />);
+
+    expect(screen.getByRole('region', { name: 'usage dashboard' })).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ route: ApplicationRoute.Applications }),
+    );
+    expect(dashboardPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test('keeps the telemetry dashboard with the usage flag off', () => {
+    vi.mocked(useAppContext).mockReturnValue({
+      featureFlags: { dashboardEnabled: true, analyticsUsageEnabled: false },
+    } as unknown as ReturnType<typeof useAppContext>);
+
+    render(<EntityAudit entity={{ name: 'gpt-4o' }} view={ApplicationRoute.Models} />);
+
+    expect(screen.getByRole('dashboards')).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).not.toHaveBeenCalled();
   });
 });

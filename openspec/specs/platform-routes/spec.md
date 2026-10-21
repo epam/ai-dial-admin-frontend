@@ -1,0 +1,301 @@
+## Purpose
+
+The `Assets > Routes` admin surface: a flat, unversioned list and Properties-only detail view over
+DIAL Core's `routes/platform` config resources — a first-class, server-validated Core resource type —
+read and written directly through Core rather than the admin backend. Unlike an interceptor, no
+entity surface attaches a route to itself by name, so this capability introduces no attach-picker
+widening.
+
+## Requirements
+
+### Requirement: Assets > Routes menu entry
+The system SHALL add a `Routes` menu item to the Assets section of the admin menu, directly after
+`Interceptors`, linking to a new `/assets-routes` route.
+
+#### Scenario: Routes follows Interceptors in the Assets section
+- **WHEN** the Assets section of the menu renders
+- **THEN** `Routes` appears immediately after `Interceptors`
+
+### Requirement: Route asset list is flat with create and delete actions
+The system SHALL render the route asset list as a single, non-nested list of entries under the
+`platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and
+no folder-create, rename-folder, or move-into-folder controls.
+
+#### Scenario: List shows entries without a folder tree
+- **WHEN** a user opens `/platform-routes`
+- **THEN** all route resources are shown as direct entries with no folder-expand affordance
+
+#### Scenario: No create-folder or move action is present
+- **WHEN** a user opens the route asset list toolbar and row actions
+- **THEN** neither a create-folder action nor a move-to-folder action is offered
+
+#### Scenario: Create action opens the route create modal
+- **WHEN** a user activates the create action in the list toolbar
+- **THEN** a modal opens requesting the route's name and one required Path, with no Display Name or Description field
+- **AND** the Path input uses the existing route-path validation and shows its inline validation error when empty or invalid
+- **AND** Create remains unavailable until both the name and Path are valid
+
+#### Scenario: A valid initial path is persisted when creating a route
+- **WHEN** a user submits the create modal with a valid name and Path
+- **THEN** the system creates the resource with the entered Path as the sole initial item in its `paths` array
+- **AND** the existing success notification is shown and the user is navigated to the route detail view
+
+#### Scenario: Bulk delete removes the selected routes
+- **WHEN** a user selects several routes and confirms bulk delete
+- **THEN** each selected route is deleted and the list refreshes without them
+
+#### Scenario: A read-only admin is offered no mutating actions
+- **WHEN** a read-only admin opens the route asset list
+- **THEN** no create, delete, or bulk-delete action is offered
+
+### Requirement: Route asset list columns are metadata-only
+The system SHALL show name, author, created-at, and updated-at columns for route assets, all sourced
+from Core's resource metadata, and SHALL NOT fetch each row's content to populate the list.
+
+#### Scenario: Listing issues no per-row content request
+- **WHEN** the route asset list loads
+- **THEN** only metadata requests are issued, with no content request per row
+
+#### Scenario: Timestamps come from Core metadata
+- **WHEN** the route asset list renders
+- **THEN** the created-at and updated-at columns are populated from the Core metadata node's
+  `createdAt` and `updatedAt` fields, each rendered as a localized date rather than raw epoch
+  milliseconds
+
+### Requirement: Route names follow Core's plain entity-name rule
+The system SHALL treat a route's name as a plain Core entity name — using the same shared name field
+and validation the `Assets > Models` create form already uses — and SHALL NOT apply any URI-encoding
+or `$id`-style handling to it.
+
+#### Scenario: The create form uses the shared name field
+- **WHEN** a user opens the route create form
+- **THEN** the same name field and validation `Assets > Models`/`Assets > Interceptors` use is shown,
+  with no display-name or description field alongside it, since `Route` has neither
+
+#### Scenario: A valid name creates the resource
+- **WHEN** a user submits a valid name
+- **THEN** the resource is created under `routes/platform/{name}` and the list/detail view address it
+  by that plain name
+
+### Requirement: Route asset detail view tab set
+The system SHALL render a route asset's detail view with exactly two tabs, `Properties` and `Roles`, and SHALL NOT
+include a `Features` or `Configuration` tab, a Core-sync status banner, or any
+reverse-index tab showing which other entities reference this route.
+
+#### Scenario: Detail view renders exactly Properties and Roles
+- **WHEN** a user opens a route asset's detail view
+- **THEN** the tab list contains exactly `Properties` and `Roles`
+
+#### Scenario: No Features or Configuration tab
+- **WHEN** a user opens a route asset's detail view
+- **THEN** no `Features` or `Configuration` tab is shown
+
+### Requirement: Roles tab
+The system SHALL provide a Roles tab on the route asset detail view, matching the layout of the
+config-entity Roles tab (`EntityRoles`/`RolesGrid`): a title with a live count of granted roles, a
+"Make available to specific roles" toggle, and an Add-role control styled as a primary button. The
+tab SHALL edit the resource's `userRoles` (membership only — no per-role limits, matching every other
+Core-direct asset surface's Roles tab), with the selectable roles read from DIAL Core's own role
+population (the union of its API-written and configuration-file-declared roles).
+
+`userRoles` SHALL be interpreted as three distinct states: an empty array means the route is
+available to no user; a populated array means the route is available only to the listed roles;
+`undefined` or `null` means the route is available to all users. The toggle SHALL reflect and drive
+this: switching it on (from `undefined`/`null`) SHALL set `userRoles` to an empty array; switching it
+off (from any array) SHALL clear `userRoles` to `undefined`.
+
+When the grid has no granted roles, it SHALL show "No Roles" as its empty state, rather than a
+warning message. When the route is available to no user (`userRoles` is an empty array), a
+notification SHALL be shown below the grid stating the route is not available to any end-users; this
+notification SHALL NOT be shown when `userRoles` is `undefined`/`null` or non-empty.
+
+#### Scenario: Roles selection round-trips on the route resource
+- **WHEN** a user selects roles on a route asset and saves
+- **THEN** the selection persists to the resource's `userRoles` and is rendered as selected when the view is reopened
+
+#### Scenario: A role granted directly on the resource but absent from the fetched list is still shown
+- **WHEN** a route asset's `userRoles` names a role the fetched role list does not contain
+- **THEN** that role is still shown as granted, rather than being silently dropped from the display
+
+#### Scenario: An option-list read failure is reported, not silently emptied
+- **WHEN** the Roles tab's option population read fails or is partial
+- **THEN** the tab still renders with whatever population it could read, and the incomplete-list warning already used elsewhere is shown
+
+#### Scenario: The header shows a live role count
+- **WHEN** a user grants or revokes a role on a route asset's Roles tab
+- **THEN** the header's count updates immediately to match the number of currently granted roles
+
+#### Scenario: Toggling availability on narrows to no one
+- **WHEN** a user switches "Make available to specific roles" on for a route whose `userRoles` was `undefined` or `null`
+- **THEN** `userRoles` becomes an empty array and the roles grid is available to start adding roles
+
+#### Scenario: Toggling availability off restores available-to-all
+- **WHEN** a user switches "Make available to specific roles" off for a route with any `userRoles` array
+- **THEN** `userRoles` becomes `undefined` and, on save, the request body carries no `userRoles` property
+
+#### Scenario: Empty roles grid shows "No Roles"
+- **WHEN** a route asset's Roles tab has no granted roles
+- **THEN** the grid's empty state reads "No Roles"
+
+#### Scenario: Unavailable-to-all notification appears only when genuinely empty
+- **WHEN** a route asset's `userRoles` is an empty array
+- **THEN** a notification below the grid states the route is not available to any end-users
+
+#### Scenario: No notification when available to all
+- **WHEN** a route asset's `userRoles` is `undefined` or `null`
+- **THEN** no "not available" notification is shown
+
+### Requirement: New platform route defaults to unavailable
+The system SHALL initialize a newly created route asset's `userRoles` to an empty array, so it is
+unavailable to any end-user until roles are explicitly granted, rather than defaulting to available
+to all by omission.
+
+#### Scenario: A freshly created route starts with no granted roles
+- **WHEN** a user creates a new route asset and opens its Roles tab before granting any role
+- **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
+
+### Requirement: Properties tab content
+The system SHALL render the route asset's Properties tab with paths, rewrite-path, methods, a
+response/upstreams output choice (status and body when response is selected, upstream endpoints
+otherwise), max-retry-attempts, order, and request/response attachment paths, composed from the same
+individual controls `Entities > Routes`' Properties tab uses.
+
+For each upstream shown on this Assets > Routes surface, the system SHALL expose an authentication-type selector with `API_KEY` and `BEARER` values. An absent `authType` value SHALL render as `API_KEY` and remain eligible to be omitted from the write payload, relying on DIAL Core's default. The selector SHALL NOT be enabled by this requirement on other consumers of the shared upstream editor.
+
+A new Bearer upstream, or an existing upstream whose authentication type changes from `API_KEY`/unset to `BEARER`, SHALL require a newly entered key before the route can be saved. An existing Bearer upstream that retains its authentication type SHALL remain saveable with an empty displayed key, because Core withholds that stored secret on read and restores an omitted secret during the write.
+
+#### Scenario: Properties are editable and persist
+- **WHEN** a user edits a Properties field and saves
+- **THEN** the value is stored on the route resource and reappears on reload
+
+#### Scenario: Output choice governs which fields are shown
+- **WHEN** a user selects the "Response" output on a route
+- **THEN** the status and body fields are shown and the upstream endpoints editor is hidden
+
+#### Scenario: Upstream endpoints are shown when output is Upstreams
+- **WHEN** a user selects the "Upstreams" output on a route
+- **THEN** the upstream endpoints editor is shown and the status/body fields are hidden
+
+#### Scenario: An absent authentication type uses Core's API-key default
+- **WHEN** an administrator opens a platform route upstream with no stored `authType`
+- **THEN** the authentication selector shows `API_KEY`
+- **AND** saving without changing the selection does not require the field to be sent
+
+#### Scenario: A route upstream can use Bearer authentication
+- **WHEN** an administrator selects `BEARER` for a platform route upstream and supplies a key
+- **THEN** saving writes `authType: "BEARER"` and the supplied key for that upstream
+
+#### Scenario: A new Bearer upstream requires a key
+- **WHEN** an administrator selects `BEARER` for a newly added platform route upstream without entering a key
+- **THEN** the route cannot be saved and the key input reports its required validation error
+
+#### Scenario: Changing an existing API-key upstream to Bearer requires a replacement key
+- **WHEN** an administrator changes an existing upstream from `API_KEY` or an absent authentication type to `BEARER` without entering a key
+- **THEN** the route cannot be saved and the key input reports its required validation error
+
+#### Scenario: An unchanged Bearer upstream remains editable without revealing its key
+- **WHEN** an administrator saves an existing platform route upstream that remains `BEARER` and whose key is blank because Core withheld it
+- **THEN** the save is permitted without displaying or requiring the stored key
+
+### Requirement: Platform-route writes preserve omitted upstream secrets
+The system SHALL omit empty or unset upstream `key` and `secretExtraData` properties from every Assets > Routes create and update payload. It SHALL retain a non-empty key explicitly supplied while duplicating a Bearer-authenticated route. This preserves Core's stored write-only secret when an existing route is saved without re-entering it.
+
+#### Scenario: An unchanged hidden Bearer key is omitted from an update
+- **WHEN** an administrator saves an existing platform route whose Bearer upstream key is blank in the editor because Core omitted it from the read response
+- **THEN** the route write payload contains no `key` property for that upstream
+
+#### Scenario: A duplicate key is retained in the create payload
+- **WHEN** an administrator supplies a replacement key for a Bearer upstream while duplicating a platform route
+- **THEN** the route create payload contains that non-empty `key` value for the corresponding upstream
+
+### Requirement: Editing an upstream endpoint without its secret warns before save
+The system SHALL warn a user when an edit to a route's upstream endpoint would drop its previously
+stored secret, using the same detection and warning `Assets > Models` already applies to its own
+upstream endpoints, since a route's `upstreams` field is the same shape as a model's.
+
+#### Scenario: Changing an upstream endpoint without re-entering its secret warns
+- **WHEN** a user changes an upstream's endpoint URL without re-entering its authentication secret
+- **THEN** a warning names the affected endpoint before the change is saved
+
+### Requirement: Core validates a write; the client adds no meta-schema layer
+The system SHALL rely on Core's own server-side validation — Core deserializes a route write into its
+`Route` entity class and rejects an invalid one itself — rather than adding a client-side
+meta-schema-validation layer, and SHALL surface Core's rejection message to the user verbatim.
+
+#### Scenario: A rejected write surfaces Core's message
+- **WHEN** a save is rejected by Core
+- **THEN** an error notification shows Core's error message rather than a generic failure
+
+### Requirement: Configuring a route asset requires no admin-backend call
+Every field this surface reads or writes is owned by DIAL Core. The system SHALL NOT require any
+admin-backend request in order to view, create, edit, or delete a route asset.
+
+#### Scenario: The surface is configurable without the admin backend
+- **WHEN** a user opens a route asset and edits any field this surface exposes
+- **THEN** no admin-backend request is required for the edit to be made or saved
+
+### Requirement: Entities > Routes is unaffected
+The system SHALL leave the admin-BE-backed `Entities > Routes` surface — its route, storage, Roles and
+Audit tabs, and the existing Admin/CORE-format toggle — unchanged by this capability.
+
+#### Scenario: Entity route view keeps all of its tabs and behavior
+- **WHEN** a user opens an entity-side route
+- **THEN** its Properties, Roles, and Audit tabs, and the Admin/CORE-format toggle, all behave exactly
+  as before
+
+### Requirement: No route-attach picker widening
+The system SHALL leave every existing entity-attach picker unchanged, introducing no route-origin
+dimension or widened picker as part of this capability. Unlike an interceptor, no entity surface
+attaches a route to itself by name: DIAL Core resolves a route by matching a request's path and method
+against its global `routes` map rather than through a per-entity reference list.
+
+#### Scenario: No existing picker changes behavior
+- **WHEN** any existing entity-attach picker in the admin console renders
+- **THEN** its option list and columns are unaffected by the existence of `Assets > Routes`
+
+### Requirement: Route asset list offers a duplicate action
+
+The system SHALL offer a `duplicate` row action for route assets. Activating it SHALL open the
+shared `DuplicatePlatformAsset` modal, which for routes collects the new name and replacement keys for every `BEARER` upstream. It SHALL create a copy of the selected route under the new name without revealing or copying a stored source credential.
+
+#### Scenario: Duplicate action opens a name-only modal
+
+- **WHEN** a user activates the duplicate row action on a route
+- **THEN** a modal opens with only a name field (pre-filled with a copy-suffixed name) and no Display
+  Name field
+
+#### Scenario: Submitting creates the copy under the new name
+
+- **WHEN** a user enters a valid name and submits the duplicate modal for a route without Bearer upstreams
+- **THEN** a new route resource is created as a copy of the original under the new name, and the list
+  refreshes to include it
+
+#### Scenario: Bearer upstreams require replacement keys in the duplicate modal
+
+- **WHEN** a user activates duplicate for a route containing one or more `BEARER` upstreams
+- **THEN** the modal shows one labelled password input for each affected upstream
+- **AND** the source keys are not displayed or pre-filled
+- **AND** the Duplicate action remains unavailable until every replacement key is non-empty
+
+#### Scenario: Submitting creates a valid Bearer-route copy
+
+- **WHEN** a user enters a valid name and replacement key for every Bearer upstream and submits the duplicate modal
+- **THEN** a new route resource is created with the copied `authType` values and the newly entered Bearer keys
+- **AND** the list refreshes to include it
+- **AND** the system shows the existing creation-success notification and opens the created route detail view
+
+#### Scenario: A failed duplicate remains on the list
+
+- **WHEN** Core rejects a route duplicate request
+- **THEN** the system shows Core's returned error notification
+- **AND** the system does not navigate to the duplicate route detail URL
+
+#### Scenario: Save is blocked until the name field is non-empty
+
+- **WHEN** the duplicate modal opens with an empty name field
+- **THEN** the submit button is disabled until the user enters a valid name
+
+#### Scenario: A read-only admin is not offered the duplicate action
+
+- **WHEN** a read-only admin views the route asset list
+- **THEN** no duplicate action is offered in row menus

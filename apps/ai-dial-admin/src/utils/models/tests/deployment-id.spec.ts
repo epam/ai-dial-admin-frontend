@@ -5,12 +5,12 @@ import { isEntitiesWithDisplayVersion } from '@/src/utils/is-view';
 import { getModelDeploymentId } from '../deployment-id';
 
 describe('Models Utils :: getModelDeploymentId', () => {
-  test('Should prefix the resource name with the platform bucket', () => {
-    expect(getModelDeploymentId('gpt-4')).toBe('models/platform/gpt-4');
+  test('Should return the bare resource name, since Core keys models by short name', () => {
+    expect(getModelDeploymentId('gpt-4')).toBe('gpt-4');
   });
 
   test('Should not alter a name that already contains dots or dashes', () => {
-    expect(getModelDeploymentId('gpt-4.1-mini')).toBe('models/platform/gpt-4.1-mini');
+    expect(getModelDeploymentId('gpt-4.1-mini')).toBe('gpt-4.1-mini');
   });
 
   test.each([undefined, ''])('Should return an empty string for %s rather than a bare prefix', (name) => {
@@ -25,7 +25,7 @@ describe('Models Utils :: getModelDeploymentId', () => {
  */
 describe('Model asset :: display identity is not the entity uniqueness rule', () => {
   test('Should not classify the model asset view as display-version-identified', () => {
-    expect(isEntitiesWithDisplayVersion(ApplicationRoute.AssetsModels)).toBe(false);
+    expect(isEntitiesWithDisplayVersion(ApplicationRoute.PlatformModels)).toBe(false);
   });
 
   test.each([ApplicationRoute.Models, ApplicationRoute.Applications])(

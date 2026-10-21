@@ -1,4 +1,5 @@
 import { ExportRequest } from '@/src/models/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -41,19 +42,16 @@ describe('Server :: UtilityApi', () => {
   });
 
   test('should preview export config', async () => {
-    const exportRequest: ExportRequest = { configIds: ['id1'] };
+    const exportRequest: ExportRequest = {
+      $type: ExportType.Custom,
+      exportFormat: ExportFormat.ADMIN,
+      componentTypes: [],
+      components: [],
+    };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
     const res = await instance.previewExportConfig(exportRequest, TOKEN_MOCK);
     expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
-  });
-
-  test('should check deployment by name', async () => {
-    fetch.mockResponseOnce('', { status: 200 });
-
-    await instance.checkDeploymentByName('my-app', TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/deployments/my-app'), expect.anything());
   });
 
   test('should get app process status', async () => {
@@ -61,20 +59,6 @@ describe('Server :: UtilityApi', () => {
 
     const result = await instance.getAppProcessStatus(TOKEN_MOCK);
     expect(result.response).toEqual(JSON.stringify({ running: true }));
-  });
-
-  test('should get system properties', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
-
-    const result = await instance.getSystemProperties(TOKEN_MOCK, 'etag');
-    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
-  });
-
-  test('should update system properties', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
-
-    const result = await instance.updateSystemProperties({ globalInterceptors: ['global'] }, TOKEN_MOCK, 'etag');
-    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
   });
 
   test('should get core versions', async () => {

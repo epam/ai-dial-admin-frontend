@@ -1,0 +1,103 @@
+# run-status-display Specification
+
+## Purpose
+
+Defines how a test suite run's status is presented wherever a run appears — list rows, the run detail
+header, and any other surface showing a run — so that every status value the backend can report is
+legible, including a status added to the backend after a UI release.
+
+## Requirements
+
+### Requirement: Run status presentation
+The system SHALL present a run's status with a visual indicator wherever a run status appears, and SHALL
+make the status label available alongside it — visibly on a run's own detail surfaces, and on hover and
+keyboard focus in a dense list row where the indicator stands alone in a column sized for it. A run in a
+transitional status SHALL be indicated as in-progress in the same manner as a `RUNNING` run, so that a
+user can tell an unsettled run from a settled one at a glance.
+
+On a run's detail view the status SHALL be a status badge in the header status row, above the run id, and
+SHALL NOT also be repeated as a field of the Summary tab. A list row's indicator SHALL take its colour and
+its in-progress state from the same status definition as the badge, so the two cannot disagree.
+
+The status SHALL map to the badge as follows:
+
+| Run status | Label | Tone | Leading |
+|---|---|---|---|
+| `PENDING` | Pending | `neutral` | dot |
+| `RUNNING` | Running | `info` | spinner |
+| `CANCELLING` | Stopping | `info` | spinner |
+| `COMPLETED` | Completed | `success` | dot |
+| `CANCELLED` | Stopped | `neutral` | dot |
+| `FAILED` | Failed | `error` | dot |
+
+A `FAILED` run's badge SHALL carry the run's error message as its hint when the run has one, and no hint
+(and so no info icon) when it has none.
+
+The label SHALL always be part of the status's accessible name, in every presentation. An indicator whose
+meaning is carried only by colour or shape is not a status presentation: colour alone fails the contrast
+and non-text-content requirements in `.claude/rules/a11y.md`, and a tooltip is not an accessible name.
+
+#### Scenario: Run is pending
+- **WHEN** a run with status `PENDING` is displayed
+- **THEN** a settled-style indicator is shown (no in-progress animation) with the label for `PENDING`
+  available the same way
+- **THEN** it is not presented as in-progress — a run that has not yet started is not a run that is
+  actively doing something
+
+#### Scenario: Run is running
+- **WHEN** a run with status `RUNNING` is displayed
+- **THEN** an in-progress indicator is shown
+- **AND** the label for `RUNNING` is available: shown as text on a detail surface, and on hover and
+  keyboard focus in a list row
+
+#### Scenario: Run is cancelling
+- **WHEN** a run with status `CANCELLING` is displayed
+- **THEN** an in-progress indicator is shown with the label "Stopping" available the same way
+- **THEN** it is not presented as a settled status
+
+#### Scenario: Run is in a settled status
+- **WHEN** a run with status `COMPLETED`, `FAILED`, or `CANCELLED` is displayed
+- **THEN** a settled-status indicator is shown with the label for that status available the same way
+
+#### Scenario: Status on the run detail view
+- **WHEN** a run's detail view opens
+- **THEN** the run's status badge is shown above the run id
+- **THEN** the Summary tab does not show a separate Status field
+
+#### Scenario: Failed run with an error message
+- **WHEN** a `FAILED` run that has an error message is shown in the detail header
+- **THEN** an info icon follows the "Failed" badge
+- **WHEN** the user hovers or focuses the icon
+- **THEN** a tooltip shows the error message
+
+#### Scenario: Failed run without an error message
+- **WHEN** a `FAILED` run with no error message is shown in the detail header
+- **THEN** the "Failed" badge is shown with no info icon
+
+#### Scenario: Status updates in the header
+- **WHEN** the run's status changes while its detail view is open (for example it is stopped)
+- **THEN** the badge reflects the new status
+
+#### Scenario: List row matches the badge
+- **WHEN** a run is shown in a list row and on its detail view
+- **THEN** the row's indicator and the badge use the same tone and the same in-progress state
+
+#### Scenario: Status in a list row is readable without a mouse
+- **WHEN** a run status is presented as an indicator alone in a list row
+- **THEN** the status label is part of the cell's accessible name
+- **AND** the label is reachable by keyboard, not only on hover
+
+### Requirement: Unrecognized status is still legible
+When a run's status is a value the system does not recognize, it SHALL display that raw status value
+rather than rendering an empty status. A status the UI has no label for MUST NOT result in a blank status
+with no indicator and no text, because that is indistinguishable from a rendering failure.
+
+#### Scenario: Backend reports a status the UI does not know
+- **WHEN** a run is displayed whose status is a value the system has no label for
+- **THEN** the raw status value is shown as its status text
+- **THEN** the status is not blank
+
+#### Scenario: Run has no status
+- **WHEN** a run is displayed that has no status value at all
+- **THEN** no status text is shown
+- **THEN** no placeholder standing in for a missing value is shown

@@ -1,10 +1,19 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { TryOutCoreResponse, TryOutResponse } from '@/src/models/evaluation/test-suite';
 import {
   TEST_SUITES_TRYOUT_STORAGE_KEY,
   getTryoutResponseFromStorage,
   removeTryoutResponseFromStorage,
   saveTryoutResponseToStorage,
 } from '../tryout-storage';
+
+// The stored value is a whole try-out response, so the saved fixtures carry its required halves;
+// the values already in storage stay raw JSON, which is what the util actually parses.
+const tryOutResponse = (response: Partial<TryOutCoreResponse> = {}): TryOutResponse => ({
+  resolvedRequest: {},
+  response: { statusCode: 200, ...response },
+});
 
 describe('saveTryoutResponseToStorage', () => {
   let localStorageMock: Record<string, string>;
@@ -32,15 +41,15 @@ describe('saveTryoutResponseToStorage', () => {
   });
 
   test('should store response under testSuiteId in new map', () => {
-    saveTryoutResponseToStorage('suite-1', { statusCode: 200, data: 'ok' });
+    const saved = tryOutResponse({ body: 'ok' });
+
+    saveTryoutResponseToStorage('suite-1', saved);
 
     expect(localStorage.setItem).toHaveBeenCalledWith(
       TEST_SUITES_TRYOUT_STORAGE_KEY,
-      JSON.stringify({ 'suite-1': { statusCode: 200, data: 'ok' } }),
+      JSON.stringify({ 'suite-1': saved }),
     );
-    expect(localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY]).toBe(
-      JSON.stringify({ 'suite-1': { statusCode: 200, data: 'ok' } }),
-    );
+    expect(localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY]).toBe(JSON.stringify({ 'suite-1': saved }));
   });
 
   test('should store undefined response (key omitted in JSON)', () => {
@@ -54,12 +63,14 @@ describe('saveTryoutResponseToStorage', () => {
       'suite-a': { statusCode: 201 },
     });
 
-    saveTryoutResponseToStorage('suite-b', { statusCode: 200 });
+    const saved = tryOutResponse();
+
+    saveTryoutResponseToStorage('suite-b', saved);
 
     expect(localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY]).toBe(
       JSON.stringify({
         'suite-a': { statusCode: 201 },
-        'suite-b': { statusCode: 200 },
+        'suite-b': saved,
       }),
     );
   });
@@ -69,18 +80,18 @@ describe('saveTryoutResponseToStorage', () => {
       'suite-1': { statusCode: 500, error: 'old' },
     });
 
-    saveTryoutResponseToStorage('suite-1', { statusCode: 200, data: 'new' });
+    const saved = tryOutResponse({ body: 'new' });
 
-    expect(localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY]).toBe(
-      JSON.stringify({ 'suite-1': { statusCode: 200, data: 'new' } }),
-    );
+    saveTryoutResponseToStorage('suite-1', saved);
+
+    expect(localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY]).toBe(JSON.stringify({ 'suite-1': saved }));
   });
 
   test('should not throw when getItem returns invalid JSON', () => {
     localStorageMock[TEST_SUITES_TRYOUT_STORAGE_KEY] = 'not valid json';
 
     expect(() => {
-      saveTryoutResponseToStorage('suite-1', { statusCode: 200 });
+      saveTryoutResponseToStorage('suite-1', tryOutResponse());
     }).not.toThrow();
   });
 
@@ -90,7 +101,7 @@ describe('saveTryoutResponseToStorage', () => {
     });
 
     expect(() => {
-      saveTryoutResponseToStorage('suite-1', { statusCode: 200 });
+      saveTryoutResponseToStorage('suite-1', tryOutResponse());
     }).not.toThrow();
   });
 });

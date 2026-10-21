@@ -13,7 +13,13 @@ describe('DuplicateScheme', () => {
     const onDuplicate = vi.fn();
     const onClose = vi.fn();
     render(
-      <DuplicateScheme isModalOpen={true} onDuplicate={onDuplicate} onClose={onClose} entity={baseEntity as any} />,
+      <DuplicateScheme
+        isModalOpen={true}
+        names={[]}
+        onDuplicate={onDuplicate}
+        onClose={onClose}
+        entity={baseEntity as any}
+      />,
     );
     fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'new-id' } });
     fireEvent.change(screen.getAllByRole('textbox')[1], { target: { value: 'New Name' } });
@@ -25,7 +31,13 @@ describe('DuplicateScheme', () => {
     const onDuplicate = vi.fn();
     const onClose = vi.fn();
     render(
-      <DuplicateScheme isModalOpen={true} onDuplicate={onDuplicate} onClose={onClose} entity={baseEntity as any} />,
+      <DuplicateScheme
+        isModalOpen={true}
+        names={[]}
+        onDuplicate={onDuplicate}
+        onClose={onClose}
+        entity={baseEntity as any}
+      />,
     );
     fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
     expect(onClose).toHaveBeenCalled();

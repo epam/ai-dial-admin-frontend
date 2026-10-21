@@ -3,8 +3,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Models]: DuplicateI18nKey.Model,
-  [ApplicationRoute.AssetsModels]: DuplicateI18nKey.Model,
-  [ApplicationRoute.AssetsAppRunners]: DuplicateI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformModels]: DuplicateI18nKey.Model,
+  [ApplicationRoute.PlatformAppRunners]: DuplicateI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformInterceptors]: DuplicateI18nKey.Interceptor,
+  [ApplicationRoute.PlatformRoutes]: DuplicateI18nKey.Route,
+  [ApplicationRoute.PlatformTranslators]: DuplicateI18nKey.Translator,
   [ApplicationRoute.Applications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DuplicateI18nKey.Toolset,
@@ -20,6 +23,7 @@ export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.InterceptorTemplates]: DuplicateI18nKey.InterceptorTemplate,
   [ApplicationRoute.TestSuites]: DuplicateI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: DuplicateI18nKey.Dataset,
+  [ApplicationRoute.AnalyticsQueries]: DuplicateI18nKey.Query,
 };
 
 export const duplicateModalDescriptionMap: Record<string, DuplicateI18nKey> = {

@@ -1,76 +1,206 @@
-### Requirement: Row click in compare mode opens the bottom drawer
-When the Analytics tab is in run-compare mode (a second run is selected via the Compare With dropdown), clicking a grid row SHALL open the bottom drawer instead of the sidebar, regardless of the current detail mode (sidebar or drawer).
+# run-compare-row-details Specification
 
-#### Scenario: Click row while sidebar is active
-- **WHEN** the user is in run-compare mode and detail mode is set to sidebar
-- **THEN** the bottom drawer opens with the clicked row's data
-- **AND** the sidebar does NOT open
+## Purpose
+The row-detail panel of the Run Comparison page's Execution Results tab: which surface a row click
+opens (bottom pivot by default, right sidebar on request) and how that choice survives a close, how a
+cell click scrolls to the field its column maps to, how a truncated pivot cell opens both runs' values,
+and which display settings the panel keeps between openings.
+## Requirements
+### Requirement: Compare page row click opens bottom detail by default
 
-#### Scenario: Click row while drawer is already open
-- **WHEN** the user is in run-compare mode and the bottom drawer is already open
-- **THEN** the drawer content updates to reflect the newly clicked row
-- **AND** the drawer remains open
+On the dedicated Run Comparison page Execution Results tab, clicking a grid row SHALL open the row-detail panel at the bottom (pivot) by default. Closing the panel SHALL preserve bottom mode so the next row click reopens the bottom panel. The user MAY switch to the right sidebar (table) and back via the panel header.
 
-#### Scenario: Click same row again
-- **WHEN** the user is in run-compare mode and clicks a row that is already active in the drawer
-- **THEN** the drawer remains open and its content does not change
+#### Scenario: First row click opens bottom panel
+- **WHEN** no row detail is open and the user clicks a compare grid row
+- **THEN** the bottom detail panel opens with that row’s comparison data in pivot view
+
+#### Scenario: Close preserves bottom mode
+- **WHEN** the bottom panel is open and the user closes it
+- **THEN** the panel hides and the next row click reopens the bottom panel (not the right sidebar)
+
+#### Scenario: Switch to sidebar then back
+- **WHEN** the bottom panel is open and the user chooses Switch to Sidebar
+- **THEN** the right sidebar shows the same row in table view
+- **AND** Switch to Bottom returns to pivot in the bottom panel
+
+#### Scenario: Toggle same row closed
+- **WHEN** a row is selected and the user clicks the same row again
+- **THEN** the detail panel closes
+
+### Requirement: Grid cell click scrolls to related pivot field
+
+When the user clicks a cell in the Compare Execution Results grid whose column maps to a detail field, the system SHALL open the current-mode detail panel for that row (if needed) and scroll so the related field is visible: horizontally in the bottom pivot, vertically in the right sidebar table. Mapping SHALL preserve underscored metric leaf keys (for example `exact_match` from `Exact Match_exact_match`). Unmapped columns SHALL still open the panel without scrolling to a specific field.
+
+#### Scenario: Cell click scrolls to field
+- **WHEN** the user clicks an `http` or `cmp_http` cell for a row
+- **THEN** the detail panel shows that row and scrolls to the HTTP pivot column
+
+#### Scenario: Underscored metric leaf scrolls to field
+- **WHEN** the user clicks an `exact_match` metric cell (`Exact Match_exact_match` or `cmp_Exact Match_exact_match`)
+- **THEN** the detail panel shows that row and scrolls to the `exact_match` field
+
+#### Scenario: Cell click scrolls sidebar table to field
+- **WHEN** the row detail is in right-sidebar mode and the user clicks an `answer` or `score` cell
+- **THEN** the sidebar opens (if needed) and scrolls vertically to that field
+
+#### Scenario: Unmapped column still opens panel
+- **WHEN** the user clicks the test case name column
+- **THEN** the detail panel opens for that row without scrolling to a specific field
+
+### Requirement: Compare pivot cells truncate and open a dual-run popup
+
+Compare pivot value cells SHALL be capped to a fixed cell height and SHALL scroll vertically within that height when content does not fit, instead of expanding the row. Each cell's scroll is independent — scrolling one primary or secondary cell SHALL NOT move any other cell's scroll position. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a popup titled with the field label that shows both the primary and compared run values for that field (side-by-side), not only the clicked cell’s value. Delta-row cells SHALL remain non-clickable.
+
+#### Scenario: Truncate long value
+- **WHEN** a primary or secondary field value is taller than the cell's fixed height
+- **THEN** the cell shows an internal vertical scrollbar and the row height does not grow to fit the value
+
+#### Scenario: Scrolling one cell does not affect its row neighbor
+- **WHEN** the user scrolls a primary cell that has overflowing content
+- **THEN** the corresponding secondary cell's scroll position is unaffected, and vice versa
+
+#### Scenario: Short value shows no scroll
+- **WHEN** a primary or secondary field value fits within the cell's fixed height
+- **THEN** the cell shows no scrollbar and renders exactly as before
+
+#### Scenario: Hover shows open-popup icon
+- **WHEN** the user hovers a value cell
+- **THEN** an open-in-popup icon appears at the bottom-right of the cell
+
+#### Scenario: Click opens dual-run popup
+- **WHEN** the user clicks a primary or secondary value cell
+- **THEN** a popup opens with the field label as title
+- **AND** both the primary and compared run values for that field are shown
+
+### Requirement: Display has no table/pivot switcher
+
+Row-detail Display SHALL control field visibility/order and diff toggles only. View mode SHALL be determined solely by panel position: bottom → pivot, right → table.
+
+#### Scenario: Display omits view-mode control
+- **WHEN** the user opens Display on the compare row-detail panel
+- **THEN** no table/pivot segmented control is shown
+- **AND** columns tree and diff toggles remain available
+
+#### Scenario: Position implies view
+- **WHEN** the panel is at the bottom
+- **THEN** the body shows the pivot view
+- **WHEN** the panel is on the right
+- **THEN** the body shows the table view
+
+### Requirement: Display settings survive close and reopen
+
+Closing and reopening the compare row-detail panel within the same comparison session SHALL preserve Display field visibility, order, and diff toggles. Changing either compared run SHALL reset Display to defaults.
+
+#### Scenario: Display settings survive close and reopen
+- **WHEN** the user changes Display visibility or diff toggles, closes the panel, and opens it again on the same comparison
+- **THEN** the previously chosen field visibility, order, and diff toggles are still applied
+
+#### Scenario: Changing compared runs resets Display
+- **WHEN** the user changes the primary or compared run
+- **THEN** Display field visibility and diff toggles reset to defaults
 
 ### Requirement: Drawer displays two-run comparison for the clicked row
-In run-compare mode, the bottom drawer SHALL display a side-by-side comparison between the current run's result and the compared run's result for the clicked test case, using the existing comparison UI (table and pivot views, field selector, diff highlights).
+
+The compare row-detail panel SHALL display a side-by-side comparison between the primary and compared run results for the selected test case, including diff highlighting and counts. The Diff counts SHALL cover only the fields the panel currently shows, and SHALL be recalculated whenever the shown fields change in Display > Rows.
 
 #### Scenario: Both runs have a matching result
-- **WHEN** the user clicks a row where both the current and compared run have a result
-- **THEN** the drawer shows the current run's result on the active side
-- **AND** the drawer shows the compared run's result on the compared side
-- **AND** diff count and diff highlighting are computed between the two sides
-
-#### Scenario: Clicking a different row replaces both sides
-- **WHEN** the drawer is open in run-compare mode and the user clicks a different grid row
-- **THEN** both the active side and the compared side update to the new row's results
-- **AND** diff highlighting is recomputed for the new pair
-
-### Requirement: Drawer toolbar shows run names as column labels
-In run-compare mode, the drawer toolbar SHALL display the run names (format: `{testRunName} · {startedAt}`, matching the Compare With dropdown label) as column headers instead of the test case name chips used in within-run comparison.
-
-#### Scenario: Toolbar labels in run-compare mode
-- **WHEN** the bottom drawer is open in run-compare mode
-- **THEN** the active column label shows the current run's name
-- **AND** the compared column label shows the compared run's name
-
-### Requirement: Pin/unpin and sidebar-switch controls hidden in run-compare mode
-In run-compare mode, the drawer toolbar SHALL hide the pin button, unpin button, and the "switch to sidebar" button. The comparison is locked to the two selected runs and cannot be modified by the user.
-
-#### Scenario: Toolbar controls in run-compare mode
-- **WHEN** the bottom drawer is open in run-compare mode
-- **THEN** the pin button is not visible
-- **AND** the unpin button is not visible
-- **AND** the switch-to-sidebar button is not visible
-
-### Requirement: Compared run result missing shows a placeholder
-When the clicked row has no matching result in the compared run, the bottom drawer SHALL still open and display the current run's result normally, with a "No matching test case in compared run" message shown in place of the compared side's content.
+- **WHEN** the user opens a row where both runs have a result
+- **THEN** the panel shows primary and compared values
+- **AND** diff count and highlighting are computed between the two sides
 
 #### Scenario: No match in compared run
-- **WHEN** the user clicks a row whose `_compared` field is null
-- **THEN** the drawer opens and shows the current run's result on the active side
-- **AND** a placeholder message is shown on the compared side indicating no match was found
-- **AND** the toolbar shows "No matching test case in compared run" as the compared column label
+- **WHEN** the user opens a row whose `_compared` field is null
+- **THEN** the panel opens and shows the primary result
+- **AND** a placeholder indicates no match on the compared side
 
-### Requirement: Exiting run-compare mode closes the drawer
-When the user clears the Compare With selection while the bottom drawer is open in run-compare mode, the drawer SHALL close and the selected row highlight SHALL be removed.
+#### Scenario: Diff counter follows Display > Rows
+- **WHEN** the user opens a row with differing values in several metric groups and, in Display > Rows, leaves only one group enabled
+- **THEN** the panel shows only that group
+- **AND** the Diff counter counts only the differing fields of that group
 
-#### Scenario: User clears the compare dropdown
-- **WHEN** the drawer is open in run-compare mode and the user clicks the clear (×) button on the Compare With dropdown
-- **THEN** the bottom drawer closes
-- **AND** no row in the grid remains highlighted as active
+#### Scenario: Diff counter recalculates when a group is re-enabled
+- **WHEN** the user enables another group in Display > Rows
+- **THEN** the Diff counter increases by the differing fields of that group
+
+#### Scenario: Diff counter is consistent in both panel positions
+- **WHEN** the same Display > Rows selection is applied in the bottom panel and in the side panel
+- **THEN** both panels show the same Diff counter
+
+### Requirement: Pivot metric and extracted order matches the Execution Results grid
+
+The compare row-detail pivot SHALL order metric groups and extracted fields to match the Execution Results grid: metric groups follow the grid column-group order, and extracted fields follow the run-wide first-seen schema rather than alphabetical order.
+
+#### Scenario: Metric groups follow the compare grid
+- **WHEN** the Execution Results grid shows DeepEval: Answer Relevancy before Exact Match
+- **THEN** the bottom pivot shows those metric sections in the same order
+
+#### Scenario: Extracted fields follow the grid schema
+- **WHEN** the Execution Results extracted columns are answer, history, last_question, verification
+- **THEN** the pivot Extracted columns appear in that same order
+
+### Requirement: Pivot includes run-wide fields with a dash for missing values
+
+The compare row-detail pivot SHALL include every Extracted and metric field that the Execution Results grid shows, even when the selected row has no value for that field. A missing, null, or absent value SHALL render as an em dash, matching the grid.
+
+#### Scenario: Metric present on other rows
+- **WHEN** the compare grid shows a metric column as an em dash for the selected row
+- **THEN** the bottom pivot still includes that metric column
+- **AND** the cell shows an em dash
+
+#### Scenario: Extracted column present on other rows
+- **WHEN** an extracted column exists on either compared run but the selected row has no value for it
+- **THEN** the pivot includes that column
+- **AND** the cell shows an em dash
 
 ### Requirement: Clicked row is highlighted in the grid
-In run-compare mode, the grid row corresponding to the currently active pair in the drawer SHALL be highlighted with the `ag-active-detail-row` class.
 
-#### Scenario: Row highlight on click
-- **WHEN** the user clicks a row in run-compare mode
+The grid row corresponding to the open detail SHALL be highlighted with the `ag-active-detail-row` class.
+
+#### Scenario: Row highlight on open
+- **WHEN** the user opens row detail for a compare row
 - **THEN** that row is highlighted with the active-detail styling
 - **AND** any previously highlighted row loses the highlight
 
-#### Scenario: Row highlight cleared on drawer close
-- **WHEN** the drawer closes (via Escape, close button, or exiting compare mode)
+#### Scenario: Row highlight cleared on close
+- **WHEN** the detail panel closes
 - **THEN** the previously highlighted row loses the active-detail styling
+
+### Requirement: Execution metadata fields are right-aligned in the row-detail panel
+
+In the compare row-detail panel — both the bottom pivot layout and the right-sidebar table layout —
+the `# Run number`, `HTTP`, and `execDurationMs` (Duration) fields SHALL render their primary and
+secondary values right-aligned. Every other field, except a metric field rendered as a `ScoreBar` (see
+the following requirement), keeps its existing (left) alignment.
+
+#### Scenario: Run number, HTTP, and Duration are right-aligned in the pivot panel
+
+- **WHEN** the bottom pivot panel shows the `# Run number`, `HTTP`, or `execDurationMs` field
+- **THEN** that field's primary and secondary values are right-aligned
+
+#### Scenario: Run number, HTTP, and Duration are right-aligned in the sidebar table
+
+- **WHEN** the right-sidebar table shows the `# Run number`, `HTTP`, or `execDurationMs` field
+- **THEN** that field's primary and secondary values are right-aligned
+
+#### Scenario: Other fields are unaffected
+
+- **WHEN** the panel shows a field other than `# Run number`, `HTTP`, `execDurationMs`, or a metric
+  field rendered as a `ScoreBar`
+- **THEN** that field's values keep their existing left alignment
+
+### Requirement: A metric field rendered as a ScoreBar is right-aligned in the row-detail panel
+
+In the compare row-detail panel — both the bottom pivot layout and the right-sidebar table layout — a
+metric field whose value renders as a `ScoreBar` (bar plus formatted number) SHALL right-align that
+bar-and-value pair within its cell, for both the primary and secondary values.
+
+#### Scenario: A ScoreBar metric field is right-aligned in the pivot panel
+
+- **WHEN** the bottom pivot panel shows a metric field whose value renders as a `ScoreBar`
+- **THEN** that field's primary and secondary bar-and-value pairs are right-aligned within their cells
+
+#### Scenario: A ScoreBar metric field is right-aligned in the sidebar table
+
+- **WHEN** the right-sidebar table shows a metric field whose value renders as a `ScoreBar`
+- **THEN** that field's primary and secondary bar-and-value pairs are right-aligned within their cells
+

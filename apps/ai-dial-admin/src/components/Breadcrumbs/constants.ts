@@ -52,18 +52,81 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
-  [ApplicationRoute.AssetsModels]: {
+  [ApplicationRoute.Skills]: {
     segments: [
-      { name: 'AssetsModels', i18nKey: MenuI18nKey.Models },
+      { name: 'Skills', i18nKey: MenuI18nKey.Skills, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsAppRunners]: {
+  [ApplicationRoute.PlatformModels]: {
     segments: [
-      { name: 'AssetsAppRunners', i18nKey: MenuI18nKey.AppRunners },
+      { name: 'PlatformModels', i18nKey: MenuI18nKey.Models },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformAppRunners]: {
+    segments: [
+      { name: 'PlatformAppRunners', i18nKey: MenuI18nKey.PlatformAppRunners },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformCatalogSchemas]: {
+    segments: [
+      { name: 'PlatformCatalogSchemas', i18nKey: MenuI18nKey.PlatformCatalogSchemas },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformInterceptors]: {
+    segments: [
+      { name: 'PlatformInterceptors', i18nKey: MenuI18nKey.PlatformInterceptors },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformTranslators]: {
+    segments: [
+      { name: 'PlatformTranslators', i18nKey: MenuI18nKey.PlatformTranslators },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformRoutes]: {
+    segments: [
+      { name: 'PlatformRoutes', i18nKey: MenuI18nKey.PlatformRoutes },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformRoles]: {
+    segments: [
+      { name: 'PlatformRoles', i18nKey: MenuI18nKey.PlatformRoles },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformKeys]: {
+    segments: [
+      { name: 'PlatformKeys', i18nKey: MenuI18nKey.PlatformKeys },
       {
         name: 'Id',
         href: false,
@@ -88,45 +151,9 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
-  [ApplicationRoute.PromptPublications]: {
+  [ApplicationRoute.Publications]: {
     segments: [
-      { name: 'PromptPublications', i18nKey: MenuI18nKey.PromptPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.ToolsetPublications]: {
-    segments: [
-      { name: 'ToolsetPublications', i18nKey: MenuI18nKey.ToolsetPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.FilePublications]: {
-    segments: [
-      { name: 'FilePublications', i18nKey: MenuI18nKey.FilePublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.ApplicationPublications]: {
-    segments: [
-      { name: 'ApplicationPublications', i18nKey: MenuI18nKey.ApplicationPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.ConversationPublications]: {
-    segments: [
-      { name: 'ConversationPublications', i18nKey: MenuI18nKey.ConversationPublications },
+      { name: 'Approvals', i18nKey: MenuI18nKey.Approvals },
       {
         name: 'Id',
         href: false,
@@ -164,6 +191,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
     'InterceptorTemplates',
     MenuI18nKey.InterceptorTemplates,
   ),
+  [ApplicationRoute.Containers]: auditSubIdBreadcrumb('Containers', MenuI18nKey.Containers),
   [ApplicationRoute.InterceptorContainers]: auditSubIdBreadcrumb(
     'InterceptorContainers',
     MenuI18nKey.InterceptorContainers,
@@ -181,6 +209,42 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       {
         name: 'Datasets',
         i18nKey: MenuI18nKey.Datasets,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.AnalyticsPipelines]: {
+    segments: [
+      {
+        name: 'Pipelines',
+        i18nKey: MenuI18nKey.Pipelines,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.AnalyticsQueries]: {
+    segments: [
+      {
+        name: 'Queries',
+        i18nKey: MenuI18nKey.Queries,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.AnalyticsTables]: {
+    segments: [
+      {
+        name: 'Tables',
+        i18nKey: MenuI18nKey.Tables,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.SessionsTrace]: {
+    segments: [
+      {
+        name: 'Sessions',
+        i18nKey: MenuI18nKey.AnalyticsSessions,
       },
       { name: 'Id', href: false },
     ],

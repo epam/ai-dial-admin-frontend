@@ -85,11 +85,10 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
 
   const onSelect = useCallback(
     (id?: string) => {
-      const selected = containers.find((c) => c.name === id);
-      onChange(buildContainerSelection(view, entity, id, selected));
+      onChange(buildContainerSelection(view, entity, id));
       onCloseModal();
     },
-    [containers, entity, onChange, onCloseModal, view],
+    [entity, onChange, onCloseModal, view],
   );
 
   const openContainer = useCallback(() => {

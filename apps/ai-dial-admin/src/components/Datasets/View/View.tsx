@@ -31,9 +31,10 @@ import DatasetTabsContent from './TabsContent';
 interface Props {
   originalDataset: Dataset;
   etag: string;
+  isSchemaReadOnly?: boolean;
 }
 
-const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
+const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaReadOnly = false }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification, removeNotification } = useNotification();
@@ -52,14 +53,18 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [nameExistsError, setNameExistsError] = useState<string>();
 
+  // A lock that appears while the editor is already open (a suite bound elsewhere) must not strand the user in it.
+  const isJsonEditorShown = isEditorEnabled && !isSchemaReadOnly;
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
-      isEditorEnabled,
+      isEditorEnabled: isJsonEditorShown,
+      isEditorDisabled: isSchemaReadOnly,
       onToggleEditor: () => {
         setIsEditorEnabled((prev) => !prev);
       },
     }),
-    [isEditorEnabled],
+    [isJsonEditorShown, isSchemaReadOnly],
   );
 
   useEffect(() => {
@@ -69,6 +74,8 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
 
   useEffect(() => {
     setSelectedDataset(structuredClone(originalDataset));
+    // The grid must pick up the freshly cloned rows, or its stale row objects no longer match the schema.
+    setIsSkipRefresh(false);
   }, [originalDataset]);
 
   useEffect(() => {
@@ -136,12 +143,12 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
               handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
               return;
             }
-            testCasesActionsRef.current?.clearDirtyAndRefresh();
+            testCasesActionsRef.current?.clearDirtyAndRefresh(selectedDataset.testCaseSchema);
             setHasTestCaseChanges(false);
             showSuccessAndRefresh();
           });
         } else {
-          testCasesActionsRef.current?.clearDirtyAndRefresh();
+          testCasesActionsRef.current?.clearDirtyAndRefresh(selectedDataset.testCaseSchema);
           setHasTestCaseChanges(false);
           showSuccessAndRefresh();
         }
@@ -201,6 +208,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
           activeTab={activeTab}
           onChangeActiveTab={setActiveTab}
           onRemove={removeDataset}
+          hasValidityBadge={false}
         >
           {!isPublic && (
             <DialNeutralButton label={t(DatasetsI18nKey.MakePublic)} onClick={() => setIsMakePublicOpen(true)} />
@@ -208,7 +216,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
         </SimpleEntityHeader>
 
         <div className="flex-1 overflow-auto min-h-0">
-          {isEditorEnabled ? (
+          {isJsonEditorShown ? (
             <EntityJsonEditor
               key={discardKey}
               entity={selectedDataset}
@@ -221,8 +229,10 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
               testCasesActionsRef={testCasesActionsRef}
               onTestCaseDirtyChange={setHasTestCaseChanges}
               isSkipRefresh={isSkipRefresh}
+              isSchemaReadOnly={isSchemaReadOnly}
               activeTab={activeTab}
               selectedDataset={selectedDataset}
+              savedSchema={originalDataset.testCaseSchema}
               onChange={onChangeDataset}
               nameExistsError={nameExistsError}
             />

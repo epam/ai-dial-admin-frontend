@@ -5,9 +5,14 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } fr
 import type { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { JsonEditorOwnedNotification } from '@/src/components/EntityTabs/JsonEditor/models';
 import { clearResolvedErrors, mergeWithIgnoredFields } from '@/src/components/EntityTabs/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import {
+  useJsonEditorValidation,
+  useSaveValidationContext,
+  ValidationActionType,
+} from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { JSONEditorError } from '@/src/types/editor';
 
@@ -34,6 +39,7 @@ const EntityJsonEditor = <T extends object>({
 }: Props<T>) => {
   const isTextControlled = text !== undefined;
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { editorId, setJsonErrors, removeEditor } = useJsonEditorValidation();
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -41,12 +47,33 @@ const EntityJsonEditor = <T extends object>({
   const [editorInstanceKey, setEditorInstanceKey] = useState(0);
   /** Avoid resetting Monaco text when `entity` updates from our own JSON parse — that resets the cursor. */
   const lastEntityFromEditorRef = useRef<T | null>(null);
+  const notificationsRef = useRef(jsonErrorNotifications);
+  notificationsRef.current = jsonErrorNotifications;
 
-  const setJsonErrors = useCallback(
-    (errors: JSONEditorError[]) => {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors });
+  /**
+   * Monaco reports no markers for a disposed model, so an editor that goes away — the JSONata toggle,
+   * a content-type switch, a tab change — would otherwise leave its last errors blocking every save,
+   * along with the notifications a blocked save raised for them.
+   */
+  useEffect(
+    () => () => {
+      removeEditor();
+
+      const ownedNotifications = notificationsRef.current as JsonEditorOwnedNotification[];
+      const own = (notification: JsonEditorOwnedNotification) => notification.editorId === editorId;
+      const ownNotifications = ownedNotifications.filter(own);
+
+      if (!ownNotifications.length) {
+        return;
+      }
+
+      ownNotifications.forEach((notification) => removeNotification(notification.id));
+      dispatch({
+        type: ValidationActionType.SetJsonEditorNotifications,
+        errors: ownedNotifications.filter((notification) => !own(notification)),
+      });
     },
-    [dispatch],
+    [removeEditor, dispatch, editorId, removeNotification],
   );
 
   useEffect(() => {

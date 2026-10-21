@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -9,7 +9,7 @@ import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/con
 import {
   createAggregate,
   createGroup,
-  createGroupByFn,
+  createFnRow,
   createInitialState,
   createPredicate,
   createSort,
@@ -85,7 +85,7 @@ describe('QueryBuilder :: Aggregates', () => {
 
 describe('QueryBuilder :: GroupBySection', () => {
   test('date_bin row renders amount (numeric), unit (select) and timestamp (field) editors', () => {
-    const row = { ...createGroupByFn(fnFixture('date_bin')), alias: 'bucket' };
+    const row = { ...createFnRow(fnFixture('date_bin')), alias: 'bucket' };
     renderWith(stateWith({ groupBy: [row] }), <GroupBySection />);
 
     expect(screen.getByLabelText('amount')).toBeInTheDocument();
@@ -94,12 +94,26 @@ describe('QueryBuilder :: GroupBySection', () => {
   });
 
   test('multi-arg scalar function (width_bucket) renders one field dropdown per expression arg', () => {
-    const row = { ...createGroupByFn(fnFixture('width_bucket')), alias: 'bkt' };
+    const row = { ...createFnRow(fnFixture('width_bucket')), alias: 'bkt' };
     renderWith(stateWith({ groupBy: [row] }), <GroupBySection />);
 
     ['operand', 'low', 'high', 'count'].forEach((name) => {
       expect(screen.getByRole('button', { name })).toBeInTheDocument();
     });
+  });
+
+  // A map column cannot key a group, so the plain-column list withholds it.
+  test('the column dropdown omits a map field', async () => {
+    const fields = [...FIELDS, { name: 'attributes', type: AnalyticsFieldType.Map, source: 'attributes' }];
+    renderWith(stateWith({ fields }), <GroupBySection />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.GroupBy: QueryBuilder.AddField' }));
+    const listbox = screen.getByRole('listbox', { name: 'QueryBuilder.GroupBy: QueryBuilder.AddField' });
+    await user.click(within(listbox).getByRole('button', { name: /QueryBuilder.Untagged/ }));
+
+    expect(within(listbox).getByRole('option', { name: /latency/ })).toBeInTheDocument();
+    expect(within(listbox).queryByRole('option', { name: /attributes/ })).not.toBeInTheDocument();
   });
 });
 

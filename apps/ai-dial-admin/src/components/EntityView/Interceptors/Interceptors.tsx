@@ -6,7 +6,9 @@ import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
 import { getProperties } from '@/src/app/[lang]/system-properties/actions';
+import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -15,16 +17,41 @@ import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } fro
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication } from '@/src/models/dial/application';
-import { getSchemaSourceId } from '@/src/utils/entities/application-source';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { hasConfigEntityOrigin } from '@/src/utils/config-entities/source-column';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
-import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
+import { AssetInterceptorOrigin, AssetInterceptorTagged, InterceptorOption } from './models';
+import {
+  getInterceptorsColumnDefs,
+  getInterceptorsGridData,
+  mergeInterceptorOrigins,
+  withAssetSourceColumn,
+} from './utils';
 
-const ADD_INTERCEPTOR_COLUMNS = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+/**
+ * The three entity surfaces whose interceptor-attach picker reads the admin-BE-only population today
+ * and therefore needs widening with the `Assets > Interceptors` population. An explicit allow-list
+ * rather than "every view but the Core-direct ones", and any future/unspecified `view` (including the
+ * component's own default-less tests) should not silently start fetching.
+ *
+ * `Assets > App Runners` and `Assets > Models` are deliberately excluded: both now read Core's own
+ * Api/ConfigFile-merged population directly (`assets-app-runners/[id]/page.tsx`,
+ * `assets-models/[id]/page.tsx`, via `readConfigEntities`/`ConfigFileEntityType.Interceptors`) — the
+ * `Api`-origin half of that population *is* `Assets > Interceptors`' own API-written population, so
+ * merging it in again here would double-count the same Core resources as two rows.
+ */
+const NEEDS_ASSET_MERGE_VIEWS: ApplicationRoute[] = [
+  ApplicationRoute.Applications,
+  ApplicationRoute.Models,
+  ApplicationRoute.ApplicationRunners,
+];
+
+const BASE_ADD_INTERCEPTOR_COLUMNS = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
 
 interface Props<T> {
   entity: T;
@@ -36,6 +63,7 @@ interface Props<T> {
    * reach the admin backend. When omitted, this component fetches it from the admin backend as before.
    */
   globalInterceptors?: string[];
+  appRunner?: DialApplicationScheme;
 }
 
 const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicationTypeInterceptors'?: string[] }>({
@@ -44,10 +72,12 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   onChangeEntity,
   view,
   globalInterceptors: providedGlobalInterceptors,
+  appRunner,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
+  const { interceptors: appRunnerInterceptors } = useAssetRunnerDetails(appRunner);
+  const [availableInterceptors, setAvailableInterceptors] = useState<(DialInterceptor | InterceptorOption)[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
   const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(providedGlobalInterceptors ?? null);
@@ -55,10 +85,10 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const isCollapsableView = useMemo(() => {
     return (
       view === ApplicationRoute.Models ||
-      view === ApplicationRoute.AssetsModels ||
+      view === ApplicationRoute.PlatformModels ||
       view === ApplicationRoute.Applications ||
       view === ApplicationRoute.ApplicationRunners ||
-      view === ApplicationRoute.AssetsAppRunners ||
+      view === ApplicationRoute.PlatformAppRunners ||
       view === ApplicationRoute.AssetsApplications
     );
   }, [view]);
@@ -66,7 +96,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   // Both runner surfaces hold their selection in `dial:applicationTypeInterceptors`. Missing the asset
   // route here reads and writes `interceptors` instead, which Core stores verbatim — permanently.
   const isAppRunnerView = useMemo(() => {
-    return view === ApplicationRoute.ApplicationRunners || view === ApplicationRoute.AssetsAppRunners;
+    return view === ApplicationRoute.ApplicationRunners || view === ApplicationRoute.PlatformAppRunners;
   }, [view]);
 
   const entityInterceptors = useMemo(() => {
@@ -74,6 +104,12 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   }, [entity, isAppRunnerView]);
 
   const interceptorsRef = useRef(entityInterceptors);
+
+  useEffect(() => {
+    if (appRunnerInterceptors) {
+      setRunnerInterceptors(appRunnerInterceptors);
+    }
+  }, [appRunnerInterceptors, appRunner, interceptors]);
 
   useEffect(() => {
     interceptorsRef.current = entityInterceptors;
@@ -102,12 +138,38 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     }
   }, [entity, globalInterceptors, providedGlobalInterceptors, runnerInterceptors]);
 
+  const needsAssetMerge = NEEDS_ASSET_MERGE_VIEWS.includes(view);
+
   useEffect(() => {
-    setAvailableInterceptors(interceptors);
-  }, [entity, interceptors]);
+    if (!needsAssetMerge) {
+      setAvailableInterceptors(interceptors);
+      return;
+    }
+
+    let isCancelled = false;
+    // A read failure degrades to the admin-BE-only list rather than failing the tab — the widened
+    // population is additive, not a replacement the surface depends on.
+    getInterceptors('')
+      .then((assetInterceptors) => {
+        if (!isCancelled) {
+          setAvailableInterceptors(
+            mergeInterceptorOrigins(interceptors, (assetInterceptors || []) as DialInterceptorResource[]),
+          );
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setAvailableInterceptors(interceptors);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [entity, interceptors, needsAssetMerge]);
 
   const onAddInterceptors = useCallback(
-    (interceptors: DialInterceptor[]) => {
+    (interceptors: (DialInterceptor | InterceptorOption)[]) => {
       if (isAppRunnerView) {
         onChangeEntity({
           ...entity,
@@ -147,20 +209,31 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     [entity, isAppRunnerView, onChangeEntity],
   );
 
-  // Rows read from Core carry a Core reference in `name`, and `getEntityPath` has no case for
-  // interceptors, so its default branch would build an admin-BE URL for an entity that service need
-  // not hold at all. Offer the link only on surfaces whose rows came from the admin backend.
+  // Rows read from Core's Api/ConfigFile-merged population (App Runner asset surfaces) carry a Core
+  // reference in `name`, and `getEntityPath` has no case for those, so its default branch would build
+  // an admin-BE URL for an entity that service need not hold at all — offer no link there. A row
+  // tagged `AssetInterceptorOrigin.Asset` (from this component's own widening) does have a real
+  // detail view, just under `Assets > Interceptors` instead of `Entities > Interceptors`.
   const onOpen = useMemo(
     () =>
       hasConfigEntityOrigin(interceptors)
         ? void 0
-        : (interceptor?: DialInterceptor) => {
-            onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
+        : (interceptor?: DialInterceptor & Partial<AssetInterceptorTagged>) => {
+            const route =
+              interceptor?.assetOrigin === AssetInterceptorOrigin.Asset
+                ? ApplicationRoute.PlatformInterceptors
+                : ApplicationRoute.Interceptors;
+            onOpenInNewTab(route, interceptor);
           },
     [interceptors],
   );
 
-  const rowData = getInterceptorsGridData(interceptors, entityInterceptors);
+  const rowData = getInterceptorsGridData(availableInterceptors, entityInterceptors);
+
+  const addInterceptorColumns = useMemo(
+    () => withAssetSourceColumn(BASE_ADD_INTERCEPTOR_COLUMNS, availableInterceptors),
+    [availableInterceptors],
+  );
 
   const globalColumns = getInterceptorsColumnDefs(onOpen);
 
@@ -255,7 +328,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
             entities={availableInterceptors}
             onClose={() => setIsModalOpen(false)}
             onApply={onAddInterceptors}
-            columnDefs={ADD_INTERCEPTOR_COLUMNS}
+            columnDefs={addInterceptorColumns}
           />,
           document.body,
         )}

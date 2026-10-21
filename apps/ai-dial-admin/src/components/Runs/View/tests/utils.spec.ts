@@ -1,3 +1,4 @@
+import { ColDef, ColGroupDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -12,6 +13,9 @@ import {
   RESULT_FILTERS,
   getTestCaseStatusClass,
   getAnalyticsColumns,
+  getMetricGroupOrder,
+  getRowDetailFieldSchema,
+  createEmptyComparePrimaryRow,
   getDetailEntries,
   getDetailNestedEntries,
   getFormattedDuration,
@@ -22,6 +26,12 @@ import {
   mergeByTestCaseId,
   snapshotsToBindingsMap,
 } from '../utils';
+
+const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
+  responseStatusCode: 200,
+  runIndex: 0,
+  ...overrides,
+});
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -92,17 +102,21 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(accuracyChildren).toHaveLength(1);
     expect(accuracyChildren[0]).toEqual(
       expect.objectContaining({
-        field: 'accuracy',
+        field: 'Accuracy_accuracy',
+        colId: 'Accuracy_accuracy',
         headerName: 'accuracy',
         cellRenderer: expect.any(Function),
         filter: 'agNumberColumnFilter',
         floatingFilter: true,
         width: METRIC_COLUMN_WIDTH,
+        cellClass: 'p-0',
+        headerClass: 'align-right',
       }),
     );
     expect(accuracyChildren[0].cellStyle).toBeUndefined();
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: { accuracy: 0.95 } } } })).toBe(0.95);
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: {} } } })).toBe('—');
+    expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: { accuracy: null } } } })).toBe('—');
 
     const statusChildren = (columns[0] as any).children;
     expect(statusChildren[0]).toEqual(
@@ -136,12 +150,70 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const inputBindingsChildren = (columns[4] as any).children;
     expect(inputBindingsChildren).toHaveLength(1);
     expect(inputBindingsChildren[0]).toEqual(expect.objectContaining({ field: 'prompt', hide: true }));
+    expect(inputBindingsChildren[0].valueGetter({ data: { testCaseData: { prompt: null } } })).toBe('—');
 
     const extractedChildren = (columns[5] as any).children;
     expect(extractedChildren).toHaveLength(1);
     expect(extractedChildren[0]).toEqual(
       expect.objectContaining({ field: 'score', headerName: 'score', minWidth: 120, flex: 1 }),
     );
+    expect(extractedChildren[0].valueGetter({ data: { extractedColumns: { score: null } } })).toBe('—');
+  });
+
+  test('getRowDetailFieldSchema unions metric, test-case, and extracted keys across rows', () => {
+    const schema = getRowDetailFieldSchema([
+      makeResult({
+        metricValues: { 'Exact Match': { exact_match: 1 } },
+        testCaseData: { prompt: 'hello' },
+        extractedColumns: { answer: 'Hi' },
+      }),
+      makeResult({
+        testCaseData: { prompt: 'hello', language: 'fr' },
+        extractedColumns: { verification: 'Yes' },
+      }),
+    ]);
+
+    expect(schema.metricValues).toEqual({ 'Exact Match': { exact_match: 1 } });
+    expect(schema.testCaseData).toEqual({ prompt: 'hello', language: 'fr' });
+    expect(schema.extractedColumns).toEqual({ answer: 'Hi', verification: 'Yes' });
+  });
+
+  test('Should merge extracted column keys from all rows, so a request chain shows every column', () => {
+    const results = [
+      { requestIndex: 0, extractedColumns: { answer: 'Hello!' } },
+      { requestIndex: 1, extractedColumns: { answer2: 'Bonjour !' } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const extracted = columns.find((column: any) => column.headerName === 'Extracted') as any;
+
+    expect(extracted.children.map((child: any) => child.field)).toEqual(['answer', 'answer2']);
+  });
+
+  test('Should read each merged extracted column from its own row', () => {
+    const results = [
+      { requestIndex: 0, extractedColumns: { answer: 'Hello!' } },
+      { requestIndex: 1, extractedColumns: { answer2: 'Bonjour !' } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const extracted = columns.find((column: any) => column.headerName === 'Extracted') as any;
+    const answer2Column = extracted.children.find((child: any) => child.field === 'answer2');
+
+    expect(answer2Column.valueGetter({ data: results[1] })).toBe('Bonjour !');
+    expect(answer2Column.valueGetter({ data: results[0] })).toBe('—');
+  });
+
+  test('Should merge input binding keys from all rows', () => {
+    const results = [
+      { testCaseData: { prompt: 'hello' } },
+      { testCaseData: { prompt: 'hello', language: 'fr' } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const inputBindings = columns.find((column: any) => column.headerName === 'INPUT BINDINGS') as any;
+
+    expect(inputBindings.children.map((child: any) => child.field)).toEqual(['prompt', 'language']);
   });
 
   test('Should merge metric keys from all rows into column groups', () => {
@@ -155,12 +227,59 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
     const groupB = columns.find((c: any) => c.headerName === 'GroupB') as any;
 
-    expect(groupA.children.map((c: any) => c.field)).toEqual(['a', 'b', 'c']);
-    expect(groupB.children.map((c: any) => c.field)).toEqual(['x']);
+    expect(groupA.children.map((c: any) => c.field)).toEqual(['GroupA_a', 'GroupA_b', 'GroupA_c']);
+    expect(groupB.children.map((c: any) => c.field)).toEqual(['GroupB_x']);
 
-    const bCol = groupA.children.find((c: any) => c.field === 'b');
+    const bCol = groupA.children.find((c: any) => c.field === 'GroupA_b');
     expect(bCol.valueGetter({ data: { metricValues: { GroupA: { a: 1 } } } })).toBe('—');
     expect(bCol.valueGetter({ data: { metricValues: { GroupA: { b: 2 } } } })).toBe(2);
+  });
+
+  test('Should assign unique colIds when multiple metrics share the same leaf key', () => {
+    const results = [
+      {
+        metricValues: {
+          'correct-capital1': { score: 1 },
+          'answer-conciseness': { score: 0.5 },
+          'instruction-following': { score: 0.8 },
+        },
+      },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const metricGroups = columns.filter((c) =>
+      ['correct-capital1', 'answer-conciseness', 'instruction-following'].includes(c.headerName ?? ''),
+    );
+
+    expect(metricGroups.map((g) => (g as { children?: { colId?: string }[] }).children?.[0]?.colId)).toEqual([
+      'correct-capital1_score',
+      'answer-conciseness_score',
+      'instruction-following_score',
+    ]);
+  });
+
+  test('getMetricGroupOrder skips unnamed groups and non-metric headers', () => {
+    expect(
+      getMetricGroupOrder([
+        { headerName: '', children: [{ field: 'status' }] },
+        { headerName: 'Execution', children: [{ field: 'http' }] },
+        { headerName: 'Exact Match', children: [{ field: 'exact_match' }] },
+        { headerName: 'Extracted', children: [{ field: 'answer' }] },
+      ]),
+    ).toEqual(['Exact Match']);
+  });
+
+  test('getMetricGroupOrder returns metric headers in grid column order', () => {
+    const columns = getAnalyticsColumns([
+      {
+        metricValues: {
+          'DeepEval: Answer Relevancy': { score: 0.8 },
+          'Exact Match': { exact_match: 1 },
+        },
+      },
+    ] as any);
+
+    expect(getMetricGroupOrder(columns)).toEqual(['DeepEval: Answer Relevancy', 'Exact Match']);
   });
 
   test('Should handle empty results', () => {
@@ -178,7 +297,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
     const columns = getAnalyticsColumns(results as any);
     const accuracyColumn = columns.find((column: any) => column.headerName === 'Accuracy') as any;
-    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'score');
+    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'Accuracy_score');
 
     const missingMetricRow = { data: { metricValues: { Accuracy: { score: null } } } };
     const validMetricRow = { data: { metricValues: { Accuracy: { score: 0.8 } } } };
@@ -191,7 +310,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
     const columns = getAnalyticsColumns(results as any);
     const accuracyColumn = columns.find((column: any) => column.headerName === 'Accuracy') as any;
-    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'score');
+    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'Accuracy_score');
 
     const lowerValueRow = { data: { metricValues: { Accuracy: { score: 0.5 } } } };
     const higherValueRow = { data: { metricValues: { Accuracy: { score: 0.9 } } } };
@@ -206,7 +325,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
 
     const columns = getAnalyticsColumns(results as any);
     const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
-    const aCol = groupA.children.find((c: any) => c.field === 'a');
+    const aCol = groupA.children.find((c: any) => c.field === 'GroupA_a');
 
     expect(() => aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).not.toThrow();
     expect(aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).toBe('—');
@@ -608,6 +727,20 @@ const getExecutionColumn = (colId: string, results = [] as any[]) => {
 describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   const getRunIndexCol = (results = [] as any[]) => getExecutionColumn('runIndex', results);
 
+  test('Should retain the native sortable header around the ellipsis content', () => {
+    const col = getRunIndexCol();
+    expect(col).toEqual(
+      expect.objectContaining({
+        sortable: true,
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
+      }),
+    );
+    expect(col.headerComponent).toBeUndefined();
+  });
+
   test('Should display 1-based index (backend runIndex is 0-based)', () => {
     const col = getRunIndexCol();
     expect(col.valueGetter({ data: { runIndex: 0 } })).toBe(1);
@@ -631,12 +764,96 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   });
 });
 
+describe('Runs View :: executionColumns Request valueGetter', () => {
+  const getRequestCol = (results = [] as any[]) => getExecutionColumn('requestIndex', results);
+
+  test('Should build a Request column headed "Request"', () => {
+    const col = getRequestCol();
+    expect(col).toEqual(
+      expect.objectContaining({
+        field: 'requestIndex',
+        headerName: 'Request',
+        colId: 'requestIndex',
+        sortable: true,
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
+      }),
+    );
+    expect(col.headerComponent).toBeUndefined();
+  });
+
+  test('Should display 1-based request number for a 0-based requestIndex', () => {
+    const col = getRequestCol();
+    expect(col.valueGetter({ data: { requestIndex: 0 } })).toBe(1);
+    expect(col.valueGetter({ data: { requestIndex: 1 } })).toBe(2);
+    expect(col.valueGetter({ data: { requestIndex: 4 } })).toBe(5);
+  });
+
+  test('Should render requestIndex 0 as 1, not blank', () => {
+    const col = getRequestCol();
+    expect(col.valueGetter({ data: { requestIndex: 0 } })).toBe(1);
+  });
+
+  test('Should return null when requestIndex is absent (single-request run)', () => {
+    const col = getRequestCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should return null when data is null or undefined', () => {
+    const col = getRequestCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
+  });
+});
+
+describe('Runs View :: executionColumns Total requests valueGetter', () => {
+  const getTotalRequestsCol = (results = [] as any[]) => getExecutionColumn('totalRequests', results);
+
+  test('Should build a Total requests column headed "Total requests"', () => {
+    const col = getTotalRequestsCol();
+    expect(col).toEqual(
+      expect.objectContaining({ field: 'totalRequests', headerName: 'Total requests', colId: 'totalRequests' }),
+    );
+  });
+
+  test('Should pass totalRequests through unchanged', () => {
+    const col = getTotalRequestsCol();
+    expect(col.valueGetter({ data: { totalRequests: 3 } })).toBe(3);
+    expect(col.valueGetter({ data: { totalRequests: 1 } })).toBe(1);
+  });
+
+  test('Should return null when totalRequests is absent (single-request run)', () => {
+    const col = getTotalRequestsCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should return null when data is null or undefined', () => {
+    const col = getTotalRequestsCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
+  });
+});
+
 describe('Runs View :: executionColumns Turn valueGetter', () => {
   const getTurnCol = (results = [] as any[]) => getExecutionColumn('turnIndex', results);
 
   test('Should build a Turn column headed "Turn"', () => {
     const col = getTurnCol();
-    expect(col).toEqual(expect.objectContaining({ field: 'turnIndex', headerName: 'Turn', colId: 'turnIndex' }));
+    expect(col).toEqual(
+      expect.objectContaining({
+        field: 'turnIndex',
+        headerName: 'Turn',
+        colId: 'turnIndex',
+        sortable: true,
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
+      }),
+    );
+    expect(col.headerComponent).toBeUndefined();
   });
 
   test('Should display 1-based turn number for a 0-based turnIndex', () => {
@@ -691,10 +908,56 @@ describe('Runs View :: executionColumns Total turns valueGetter', () => {
   });
 });
 
-const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
-  responseStatusCode: 200,
-  runIndex: 0,
-  ...overrides,
+describe('Runs View :: executionColumns are right-aligned', () => {
+  test.each(['runIndex', 'requestIndex', 'totalRequests', 'turnIndex', 'totalTurns'])(
+    '%s carries the align-right cell and header classes',
+    (colId) => {
+      const col = getExecutionColumn(colId);
+      expect(col).toEqual(expect.objectContaining({ cellClass: 'align-right', headerClass: 'align-right' }));
+    },
+  );
+
+  test('HTTP column keeps its status coloring and adds align-right', () => {
+    const col = getExecutionColumn('http');
+    expect(col.headerClass).toBe('align-right');
+    expect(col.cellClass({ data: { responseStatusCode: 404 } })).toBe('align-right text-warning');
+    expect(col.cellClass({ data: {} })).toBe('align-right');
+  });
+
+  test('Duration column keeps its status coloring and adds align-right', () => {
+    const col = getExecutionColumn('duration');
+    expect(col.headerClass).toBe('align-right');
+    expect(col.cellClass({ data: { responseStatusCode: 500 } })).toBe('align-right text-error');
+    expect(col.cellClass({ data: {} })).toBe('align-right');
+  });
+});
+
+describe('Runs View :: createEmptyComparePrimaryRow', () => {
+  test('carries request/turn identity fields from the source row', () => {
+    const row = createEmptyComparePrimaryRow(
+      makeResult({ testCaseId: 'tc1', runIndex: 1, requestIndex: 2, totalRequests: 3, turnIndex: 4, totalTurns: 5 }),
+    );
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        testCaseId: 'tc1',
+        runIndex: 1,
+        requestIndex: 2,
+        totalRequests: 3,
+        turnIndex: 4,
+        totalTurns: 5,
+      }),
+    );
+  });
+
+  test('leaves identity fields undefined when absent on the source row', () => {
+    const row = createEmptyComparePrimaryRow(makeResult({ testCaseId: 'tc1' }));
+
+    expect(row.requestIndex).toBeUndefined();
+    expect(row.totalRequests).toBeUndefined();
+    expect(row.turnIndex).toBeUndefined();
+    expect(row.totalTurns).toBeUndefined();
+  });
 });
 
 describe('Runs View :: getCompareRowSelectionId', () => {
@@ -869,6 +1132,101 @@ describe('Runs View :: mergeByTestCaseId', () => {
     expect(result[0]._compared?.testCaseName).toBe('Original');
   });
 
+  test('does not merge rows sharing testCaseId + runIndex but differing turnIndex (multi-turn chain)', () => {
+    const current = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 0, responseStatusCode: 200 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 1, responseStatusCode: 201 }),
+    ];
+    const compared = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 0, responseStatusCode: 400 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 1, responseStatusCode: 401 }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(2);
+    const turn0 = result.find((row) => row.turnIndex === 0);
+    const turn1 = result.find((row) => row.turnIndex === 1);
+    expect(turn0?._compared?.responseStatusCode).toBe(400);
+    expect(turn1?._compared?.responseStatusCode).toBe(401);
+  });
+
+  test('does not merge rows sharing testCaseId + runIndex but differing requestIndex (request chain)', () => {
+    const current = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 0, responseStatusCode: 200 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 1, responseStatusCode: 201 }),
+    ];
+    const compared = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 0, responseStatusCode: 400 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 1, responseStatusCode: 401 }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(2);
+    const request0 = result.find((row) => row.requestIndex === 0);
+    const request1 = result.find((row) => row.requestIndex === 1);
+    expect(request0?._compared?.responseStatusCode).toBe(400);
+    expect(request1?._compared?.responseStatusCode).toBe(401);
+  });
+
+  test('falls back to testCaseName + runIndex + requestIndex + turnIndex when testCaseId differs', () => {
+    const current = [
+      makeResult({
+        testCaseId: 'public',
+        testCaseName: 'A',
+        runIndex: 0,
+        requestIndex: 1,
+        turnIndex: 0,
+        responseStatusCode: 200,
+      }),
+    ];
+    const compared = [
+      makeResult({
+        testCaseId: 'private',
+        testCaseName: 'A',
+        runIndex: 0,
+        requestIndex: 0,
+        turnIndex: 0,
+        responseStatusCode: 400,
+      }),
+      makeResult({
+        testCaseId: 'private-2',
+        testCaseName: 'A',
+        runIndex: 0,
+        requestIndex: 1,
+        turnIndex: 0,
+        responseStatusCode: 401,
+      }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(2);
+    const matched = result.find((row) => row.testCaseId === 'public');
+    expect(matched?._compared?.responseStatusCode).toBe(401);
+  });
+
+  test('compared-only row keeps its request/turn identity fields on the primary row', () => {
+    const compared = [
+      makeResult({
+        testCaseId: 'tc1',
+        testCaseName: 'A',
+        runIndex: 0,
+        requestIndex: 1,
+        totalRequests: 2,
+        turnIndex: 2,
+        totalTurns: 3,
+        responseStatusCode: 404,
+      }),
+    ];
+    const result = mergeByTestCaseId([], compared);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].requestIndex).toBe(1);
+    expect(result[0].totalRequests).toBe(2);
+    expect(result[0].turnIndex).toBe(2);
+    expect(result[0].totalTurns).toBe(3);
+    expect(result[0]._compared?.responseStatusCode).toBe(404);
+  });
+
   test('matches multi-turn rows by testCaseId, runIndex, and turnIndex', () => {
     const current = [
       makeResult({
@@ -937,6 +1295,18 @@ describe('Runs View :: mergeByTestCaseId', () => {
     expect(result[2]._compared?.id).toBe('c-t2');
   });
 
+  test('orders chained rows by requestIndex before turnIndex', () => {
+    const current = [
+      makeResult({ id: 'r1t0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 1, turnIndex: 0 }),
+      makeResult({ id: 'r0t1', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 0, turnIndex: 1 }),
+      makeResult({ id: 'r1t1', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 1, turnIndex: 1 }),
+      makeResult({ id: 'r0t0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 0, turnIndex: 0 }),
+    ];
+    const result = mergeByTestCaseId(current, []);
+
+    expect(result.map((row) => row.id)).toEqual(['r0t0', 'r0t1', 'r1t0', 'r1t1']);
+  });
+
   test('does not reuse one compared turn across multiple primary turns', () => {
     const current = [
       makeResult({ id: 'p0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 0, totalTurns: 2 }),
@@ -949,5 +1319,79 @@ describe('Runs View :: mergeByTestCaseId', () => {
 
     expect(result.find((row) => row.id === 'p0')?._compared).toBeNull();
     expect(result.find((row) => row.id === 'p1')?._compared?.id).toBe('c1');
+  });
+});
+
+describe('Runs View :: getAnalyticsColumns default column visibility', () => {
+  const groupOf = (results: AnalyticsResult[], headerName: string): ColDef[] =>
+    ((getAnalyticsColumns(results).find((col) => (col as ColGroupDef).headerName === headerName) as ColGroupDef)
+      ?.children ?? []) as ColDef[];
+
+  const visibleExecutionColIds = (results: AnalyticsResult[]): (string | undefined)[] =>
+    groupOf(results, 'Execution')
+      .filter((col) => !col.hide)
+      .map((col) => col.colId);
+
+  test('hides every index column of a single-request, single-turn run', () => {
+    const visible = visibleExecutionColIds([makeResult(), makeResult()]);
+
+    expect(visible).toEqual(['http', 'duration']);
+  });
+
+  test('keeps the turn column, but not its total, when the run spans several turns', () => {
+    const visible = visibleExecutionColIds([
+      makeResult({ turnIndex: 0, totalTurns: 2 }),
+      makeResult({ turnIndex: 1, totalTurns: 2 }),
+    ]);
+
+    expect(visible).toContain('turnIndex');
+    expect(visible).not.toContain('totalTurns');
+  });
+
+  test('keeps the request column, but not its total, when the run spans several requests', () => {
+    const visible = visibleExecutionColIds([
+      makeResult({ requestIndex: 0, totalRequests: 2 }),
+      makeResult({ requestIndex: 1, totalRequests: 2 }),
+    ]);
+
+    expect(visible).toContain('requestIndex');
+    expect(visible).not.toContain('totalRequests');
+  });
+
+  test('keeps the run-number column when a test case was run more than once', () => {
+    const visible = visibleExecutionColIds([makeResult({ runIndex: 0 }), makeResult({ runIndex: 1 })]);
+
+    expect(visible).toContain('runIndex');
+  });
+
+  test('hides the total columns even when their values differ between results', () => {
+    const visible = visibleExecutionColIds([makeResult({ totalTurns: 2 }), makeResult({ totalTurns: 5 })]);
+
+    expect(visible).not.toContain('totalTurns');
+    expect(visible).not.toContain('totalRequests');
+  });
+
+  test('keeps HTTP and Duration visible even when every result carries the same status', () => {
+    const visible = visibleExecutionColIds([
+      makeResult({ responseStatusCode: 200 }),
+      makeResult({ responseStatusCode: 200 }),
+    ]);
+
+    expect(visible).toContain('http');
+    expect(visible).toContain('duration');
+  });
+
+  test('hides the totals but no index column before any result has loaded', () => {
+    const visible = visibleExecutionColIds([]);
+
+    expect(visible).toEqual(['runIndex', 'requestIndex', 'turnIndex', 'http', 'duration']);
+  });
+
+  test('leaves the other groups’ defaults untouched', () => {
+    const results = [makeResult({ testCaseData: { prompt: 'hello' }, extractedColumns: { answer: 'hi' } })];
+
+    expect(groupOf(results, 'INPUT BINDINGS').every((col) => col.hide)).toBe(true);
+    expect(groupOf(results, 'Extracted').some((col) => col.hide)).toBe(false);
+    expect(groupOf(results, ' ').some((col) => col.hide)).toBe(false);
   });
 });

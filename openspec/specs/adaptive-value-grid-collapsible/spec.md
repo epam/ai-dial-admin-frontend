@@ -1,4 +1,10 @@
-## ADDED Requirements
+# adaptive-value-grid-collapsible Specification
+
+## Purpose
+
+How AdaptiveValueGrid collapses its content, so long key-value lists stay compact until expanded.
+
+## Requirements
 
 ### Requirement: AdaptiveValueGrid is always collapsible
 

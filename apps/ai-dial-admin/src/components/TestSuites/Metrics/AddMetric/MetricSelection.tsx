@@ -1,59 +1,104 @@
 'use client';
 
-import { FC, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
+import { ColumnMovedEvent, FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 
-import Search from '@/src/components/Common/Search/Search';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { TWO_LINE_ROW_HEIGHT } from '@/src/components/Grid/constants';
+import GridView from '@/src/components/Grid/GridView/GridView';
+import { applyColumnStateOrderToColDefs } from '@/src/components/Grid/utils';
+import { SINGLE_ROW_SELECTION_NO_CHECKBOX } from '@/src/constants/ag-grid';
+import { METRIC_SELECTION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 
 interface Props {
   selectedMetricId?: string;
   metrics: Metric[];
+  columnOrder?: string[];
   onSelectMetric?: (metricId: string) => void;
+  onChangeColumnOrder?: (columnOrder: string[]) => void;
 }
 
-const MetricSelection: FC<Props> = ({ metrics, selectedMetricId, onSelectMetric }) => {
+const MetricSelection: FC<Props> = ({
+  metrics,
+  selectedMetricId,
+  columnOrder,
+  onSelectMetric,
+  onChangeColumnOrder,
+}) => {
   const t = useI18n();
 
-  const [pattern, setPattern] = useState('');
+  const columnDefs = useMemo(() => {
+    const defs = METRIC_SELECTION_COLUMNS(t);
 
-  const filteredMetrics = useMemo(() => {
-    const patternLower = pattern.toLowerCase();
-    return metrics?.filter((metric) => metric?.displayName?.toLowerCase().includes(patternLower)) || [];
-  }, [metrics, pattern]);
+    return columnOrder?.length
+      ? applyColumnStateOrderToColDefs(
+          defs,
+          columnOrder.map((colId) => ({ colId })),
+        )
+      : defs;
+  }, [t, columnOrder]);
+
+  const onColumnMoved = useCallback(
+    (event: ColumnMovedEvent<Metric>) => {
+      if (!event.finished) {
+        return;
+      }
+
+      onChangeColumnOrder?.(event.api.getColumnState().map(({ colId }) => colId));
+    },
+    [onChangeColumnOrder],
+  );
+
+  const onRowSelected = useCallback(
+    (event: RowSelectedEvent<Metric>) => {
+      event.api.refreshCells({ rowNodes: [event.node], columns: ['displayName'], force: true });
+
+      if (event.node.isSelected() && event.data) {
+        onSelectMetric?.(event.data.id ?? '');
+      }
+    },
+    [onSelectMetric],
+  );
+
+  const onFirstDataRendered = useCallback(
+    (event: FirstDataRenderedEvent<Metric>) => {
+      if (!selectedMetricId) {
+        return;
+      }
+
+      event.api.forEachNode((node) => {
+        if (node.data?.id === selectedMetricId) {
+          node.setSelected(true);
+          event.api.ensureNodeVisible(node, 'middle');
+        }
+      });
+    },
+    [selectedMetricId],
+  );
+
+  const additionalGridOptions: GridOptions = useMemo(
+    () => ({
+      ...SINGLE_ROW_SELECTION_NO_CHECKBOX,
+      rowHeight: TWO_LINE_ROW_HEIGHT,
+      onRowSelected,
+      onFirstDataRendered,
+      onColumnMoved,
+    }),
+    [onRowSelected, onFirstDataRendered, onColumnMoved],
+  );
 
   return (
-    <div className="h-full flex flex-col gap-2">
-      <div className="flex flex-row justify-between items-center mb-3">
-        <p className="dial-body-semi">{t(TabsI18nKey.Metrics)}</p>
-
-        <Search onChange={(search) => setPattern(search)} />
-      </div>
-
-      <div className="flex-1 min-h-0 overflow-auto">
-        {filteredMetrics.length ? (
-          <div className="grid grid-cols-3 gap-4">
-            {filteredMetrics.map((metric) => (
-              <div
-                key={metric.id}
-                className={classNames(
-                  'px-4 py-3 border border-primary rounded flex flex-col cursor-pointer hover:bg-accent-primary-alpha',
-                  metric.id === selectedMetricId && 'bg-accent-primary-alpha border-l-accent-primary border-l-2',
-                )}
-                onClick={() => onSelectMetric?.(metric.id ?? '')}
-              >
-                <p className="dial-small-semi mb-4">{metric.displayName}</p>
-                <span className="dial-tiny-text text-secondary line-clamp-2">{metric.description}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
-        )}
+    <div className="h-full flex flex-col gap-3">
+      <div className="flex-1 min-h-0">
+        <GridView
+          columnDefs={columnDefs}
+          rowData={metrics}
+          additionalGridOptions={additionalGridOptions}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoMetrics) }}
+        />
       </div>
     </div>
   );

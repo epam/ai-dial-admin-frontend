@@ -1,10 +1,10 @@
 'use client';
 
-import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback } from 'react';
+import { DialLabel, DialSegmentedControl, DialSelect, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { ResponseColumn, TestCaseSchema } from '@/src/models/evaluation/test-suite';
@@ -22,20 +22,25 @@ export interface Props {
 
 const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, responseColumns, metrics, onChange }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
 
   const elementId = `functionParameter-${labelKey}`;
-  const tabs = [
-    { label: t(TabsI18nKey.TestCases), id: FunctionParameterSourceType.TestCase },
-    { label: t(TestSuitesI18nKey.ResponseColumn), id: FunctionParameterSourceType.Response },
-    { label: t(TestSuitesI18nKey.Metric), id: FunctionParameterSourceType.Metric },
-  ];
+  const bindingTypeOptions = useMemo<SegmentedControlOption<FunctionParameterSourceType>[]>(
+    () => [
+      { value: FunctionParameterSourceType.TestCase, label: t(TestSuitesI18nKey.TestCase) },
+      { value: FunctionParameterSourceType.Response, label: t(TestSuitesI18nKey.ResponseColumn) },
+      { value: FunctionParameterSourceType.Metric, label: t(TestSuitesI18nKey.Metric) },
+    ],
+    [t],
+  );
 
   const metricOptions = getMetricOutputOptions(metrics);
   const metricValue = source.metricName ? `${source.metricName}::${source.outputField}` : undefined;
+  const selectPlaceholder = t(TestSuitesI18nKey.OverallScoreSelectParameterValue);
 
   const onTabChange = useCallback(
-    (tabId: string) => {
-      onChange({ $type: tabId as FunctionParameterSourceType });
+    (tabId: FunctionParameterSourceType) => {
+      onChange({ $type: tabId });
     },
     [onChange],
   );
@@ -64,18 +69,43 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
     [metricOptions, onChange],
   );
 
+  useEffect(() => {
+    const isValid = !!(source.metricName || source.columnName);
+
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: `specific_function_${labelKey}`,
+      isValid,
+    });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: `specific_function_${labelKey}` });
+    };
+  }, [dispatch, labelKey, source.columnName, source.metricName]);
+
   return (
-    <div className="flex flex-col gap-1">
-      <DialLabel label={t(labelKey)} />
-      <TabSelector tabs={tabs} activeTab={source.$type} onChange={onTabChange} />
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <DialLabel label={t(labelKey)} required />
+        <div className="w-fit">
+          <DialSegmentedControl
+            ariaLabel={t(labelKey)}
+            options={bindingTypeOptions}
+            value={source.$type}
+            onChange={onTabChange}
+          />
+        </div>
+      </div>
 
       {source.$type === FunctionParameterSourceType.TestCase && (
         <DialSelect
           elementId={elementId}
           options={testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
           value={source.columnName}
+          placeholder={selectPlaceholder}
           searchable
           onChange={(v) => onColumnChange(v as string)}
+          invalid={!source.columnName}
         />
       )}
 
@@ -84,8 +114,10 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
           elementId={elementId}
           options={responseColumns?.map((item) => ({ label: item.displayName, value: item.name })) || []}
           value={source.columnName}
+          placeholder={selectPlaceholder}
           searchable
           onChange={(v) => onColumnChange(v as string)}
+          invalid={!source.columnName}
         />
       )}
 
@@ -103,8 +135,10 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
             ),
           }))}
           value={metricValue}
+          placeholder={selectPlaceholder}
           searchable
           onChange={(v) => onMetricChange(v as string)}
+          invalid={!metricValue}
         />
       )}
     </div>

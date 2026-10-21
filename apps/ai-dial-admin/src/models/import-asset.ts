@@ -11,7 +11,8 @@ export interface ParsedAssets {
 
 export interface AssetImportGridData {
   name: string;
-  version: string;
+  /** Versioned imports only (apps/toolsets) — a versionless prompt row carries no version. */
+  version?: string;
   assetName: string;
   existingNames?: string[];
   index: number;

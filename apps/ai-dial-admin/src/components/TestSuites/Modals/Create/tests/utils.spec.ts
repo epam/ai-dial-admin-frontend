@@ -1,13 +1,21 @@
 import { describe, expect, test } from 'vitest';
 
+import { CREATE_MESSAGE_METHOD } from '@/src/components/TestSuites/constants/anthropic-messages-method';
+import { CREATE_RESPONSE_METHOD } from '@/src/components/TestSuites/constants/responses-method';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { SuiteType } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TargetTab } from '../types';
-import { buildDeploymentUpdate, buildMcpDeploymentUpdate, getInitialTab } from '../utils';
+import {
+  applyTargetSelection,
+  buildDeploymentUpdate,
+  buildMcpDeploymentUpdate,
+  buildRouteUpdate,
+  getInitialTab,
+} from '../utils';
 
 describe('Target utils', () => {
   describe('buildDeploymentUpdate', () => {
-    test('should build deployment update with correct fields', () => {
+    test('builds a deployment update and clears the previous route target', () => {
       const deployment: Deployment = {
         $type: 'dial-application',
         deploymentId: 'app-1',
@@ -25,16 +33,30 @@ describe('Target utils', () => {
           version: '1.0',
           type: 'dial-application',
         },
-        endpointRef: void 0,
         mcpDeploymentRef: void 0,
+        routesRef: void 0,
         toolRef: void 0,
         argumentTemplate: void 0,
       });
+      expect(result).toHaveProperty('routesRef', undefined);
+    });
+
+    test('does not clear endpointRef or requestTemplate', () => {
+      const deployment: Deployment = {
+        $type: 'dial-application',
+        deploymentId: 'app-1',
+        displayName: 'My App',
+      };
+
+      const result = buildDeploymentUpdate(deployment);
+
+      expect(result).not.toHaveProperty('endpointRef');
+      expect(result).not.toHaveProperty('requestTemplate');
     });
   });
 
   describe('buildMcpDeploymentUpdate', () => {
-    test('should build MCP deployment update with correct fields', () => {
+    test('builds an MCP deployment update and clears the previous route target', () => {
       const deployment: Deployment = {
         $type: 'dial-toolset',
         deploymentId: 'mcp-1',
@@ -51,10 +73,12 @@ describe('Target utils', () => {
           name: 'My Toolset',
         },
         deploymentRef: void 0,
+        routesRef: void 0,
         endpointRef: void 0,
         requestTemplate: void 0,
         toolRef: void 0,
       });
+      expect(result).toHaveProperty('routesRef', undefined);
     });
 
     test('should fallback to deploymentId when displayName is missing', () => {
@@ -69,6 +93,116 @@ describe('Target utils', () => {
     });
   });
 
+  describe('applyTargetSelection', () => {
+    const deployment: Deployment = {
+      $type: 'dial-model',
+      deploymentId: 'new-model',
+      displayName: 'New model',
+    };
+
+    test('updates the deployment and reseeds matching requests throughout the chain', () => {
+      const suite = {
+        endpointRef: CREATE_RESPONSE_METHOD,
+        requestTemplate: { body: { content: { model: 'old-model', input: 'hello', store: true } } },
+        additionalRequests: [
+          {
+            name: 'anthropic',
+            endpointRef: CREATE_MESSAGE_METHOD,
+            requestTemplate: {
+              body: { content: { model: 'old-model', max_tokens: 1024, messages: [] } },
+            },
+          },
+          {
+            name: 'route',
+            endpointRef: { method: 'POST', relativeUrlPattern: '/custom' },
+            requestTemplate: { body: { content: { model: 'custom-model' } } },
+          },
+        ],
+      } as TestSuite;
+
+      const result = applyTargetSelection(suite, deployment, TargetTab.Models);
+
+      expect(result.deploymentRef).toEqual({
+        id: 'new-model',
+        name: 'New model',
+        version: undefined,
+        type: 'dial-model',
+      });
+      expect(result.requestTemplate?.body?.content).toEqual({ model: 'new-model', input: 'hello', store: true });
+      expect(result.additionalRequests?.[0].requestTemplate?.body?.content).toEqual({
+        model: 'new-model',
+        max_tokens: 1024,
+        messages: [],
+      });
+      expect(result.additionalRequests?.[1].requestTemplate?.body?.content).toEqual({ model: 'custom-model' });
+    });
+
+    test('leaves unrelated request bodies unchanged', () => {
+      const suite = {
+        endpointRef: { method: 'POST', relativeUrlPattern: '/chat/completions' },
+        requestTemplate: { body: { content: { model: 'hand-edited', messages: [] } } },
+      } as TestSuite;
+
+      const result = applyTargetSelection(suite, deployment, TargetTab.Applications);
+
+      expect(result.requestTemplate).toBe(suite.requestTemplate);
+    });
+
+    test('uses the existing MCP transition without reseeding HTTP requests', () => {
+      const suite = {
+        endpointRef: CREATE_RESPONSE_METHOD,
+        requestTemplate: { body: { content: { model: 'old-model', input: 'hello' } } },
+        additionalRequests: [{ endpointRef: CREATE_MESSAGE_METHOD }],
+      } as TestSuite;
+      const mcpDeployment: Deployment = {
+        $type: 'dial-toolset',
+        deploymentId: 'mcp-1',
+        displayName: 'MCP target',
+      };
+
+      const result = applyTargetSelection(suite, mcpDeployment, TargetTab.Mcp);
+
+      expect(result).toMatchObject({
+        suiteType: SuiteType.McpTool,
+        mcpDeploymentRef: { id: 'mcp-1', name: 'MCP target', type: 'dial-toolset' },
+        deploymentRef: undefined,
+        endpointRef: undefined,
+        requestTemplate: undefined,
+      });
+      expect(result.additionalRequests).toBe(suite.additionalRequests);
+    });
+
+    test.each([TargetTab.Applications, TargetTab.Models, TargetTab.Mcp])(
+      'clears the route reference when a target is selected from %s',
+      (targetTab) => {
+        const suite = {
+          suiteType: SuiteType.Route,
+          routesRef: { name: 'routes/platform/search-route' },
+        } as TestSuite;
+
+        const result = applyTargetSelection(suite, deployment, targetTab);
+
+        expect(result.routesRef).toBeUndefined();
+        expect(result.suiteType).toBe(targetTab === TargetTab.Mcp ? SuiteType.McpTool : SuiteType.Deployment);
+      },
+    );
+  });
+
+  describe('buildRouteUpdate', () => {
+    test('builds a Route suite target and clears incompatible target fields', () => {
+      expect(buildRouteUpdate({ name: 'search-route' })).toEqual({
+        suiteType: SuiteType.Route,
+        routesRef: { name: 'routes/platform/search-route' },
+        deploymentRef: undefined,
+        mcpDeploymentRef: undefined,
+        toolRef: undefined,
+        argumentTemplate: undefined,
+        endpointRef: undefined,
+        requestTemplate: undefined,
+      });
+    });
+  });
+
   describe('getInitialTab', () => {
     test('should return Mcp tab for MCP_TOOL suite type', () => {
       expect(getInitialTab(SuiteType.McpTool)).toBe(TargetTab.Mcp);
@@ -80,6 +214,10 @@ describe('Target utils', () => {
 
     test('should return Applications tab when suite type is undefined', () => {
       expect(getInitialTab(undefined)).toBe(TargetTab.Applications);
+    });
+
+    test('returns the Routes tab for a ROUTE suite type', () => {
+      expect(getInitialTab(SuiteType.Route)).toBe(TargetTab.Routes);
     });
   });
 });

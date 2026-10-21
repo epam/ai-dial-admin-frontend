@@ -7,8 +7,8 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import { resolveRunDeployment } from '@/src/components/Runs/Summary/resolve-run-deployment';
 import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
+import { useModelDeploymentRoute } from '@/src/components/Runs/Summary/use-model-deployment-route';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useUtilityDeployments } from '@/src/hooks/use-utility-deployments';
 import { SuiteSnapshot, TestSuite } from '@/src/models/evaluation/test-suite';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
@@ -17,12 +17,15 @@ interface Props {
 }
 
 const DeploymentExternalLink: FC<Props> = ({ suiteContext }) => {
-  const utilityDeployments = useUtilityDeployments();
-  const { deploymentType, isLoading } = useDeploymentType(suiteContext?.deploymentRef);
+  const { deploymentType, isLoading: isTypeLoading } = useDeploymentType(suiteContext?.deploymentRef);
+  const { modelRoute, isLoading: isModelRouteLoading } = useModelDeploymentRoute(
+    suiteContext?.deploymentRef?.id,
+    deploymentType,
+  );
 
   const deployment = useMemo(
-    () => resolveRunDeployment(suiteContext, deploymentType, utilityDeployments),
-    [suiteContext, deploymentType, utilityDeployments],
+    () => resolveRunDeployment(suiteContext, deploymentType, modelRoute),
+    [suiteContext, deploymentType, modelRoute],
   );
 
   if (deployment) {
@@ -35,7 +38,7 @@ const DeploymentExternalLink: FC<Props> = ({ suiteContext }) => {
     );
   }
 
-  if (isLoading) {
+  if (isTypeLoading || isModelRouteLoading) {
     return (
       <div className="flex size-[20px] items-center justify-center">
         <DialLoader fullWidth={false} size={16} className="text-secondary" />

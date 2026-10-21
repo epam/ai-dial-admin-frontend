@@ -1,24 +1,32 @@
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { PartitionGranularity } from '@/src/models/analytics/table';
+import { PartitionGranularity, TableWriteMode } from '@/src/models/analytics/table';
 
 export interface ColumnRow {
   id: string;
   source_name: string;
   name: string;
   type: AnalyticsFieldType;
-  // Required when `type` is Array; '' means not yet chosen (matches the `granularity: … | ''` pattern).
   element_type: AnalyticsFieldType | '';
+  // Always an array — empty for every type but Enum, so the editor never has to distinguish "no values
+  // collected" from "not an enum row".
+  enum_values: string[];
   tag: string;
+  display_name: string;
+  description: string;
   nullable: boolean;
   sensitive: boolean;
 }
 
-// Per-row validation messages for a ColumnRow; an absent key means that field is valid.
 export interface ColumnRowError {
   source_name?: string;
   name?: string;
   tag?: string;
+  display_name?: string;
+  description?: string;
   element_type?: string;
+  // One message for the list as a whole: the popup renders its own per-entry messages, and this is what
+  // labels the collapsed field and disables Save.
+  enum_values?: string;
 }
 
 // Names already declared on the table an "Add columns" patch targets; new rows must not collide with
@@ -40,12 +48,20 @@ export interface CreateTableForm {
   name: string;
   description: string;
   sourceTable: string;
+  // Seeded for both kinds and read only on the source branch — an enrichment's discipline is implied by
+  // its kind (see TableWriteMode).
+  write: TableWriteMode;
 }
 
-export interface DraftSchemaForm {
-  columns: ColumnRow[];
+export interface KeySelections {
   orderingKey: string[];
   partitionColumn: string;
   granularity: PartitionGranularity | '';
+  identityColumn: string;
+  versionColumn: string;
+}
+
+export interface DraftSchemaForm extends KeySelections {
+  columns: ColumnRow[];
   grainKey: string;
 }

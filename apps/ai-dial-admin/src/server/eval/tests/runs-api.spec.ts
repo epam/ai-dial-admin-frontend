@@ -4,7 +4,7 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { RUN_RESULTS_URL, RUNS_URL, RUN_URL, RunsApi } from '../runs-api';
+import { RUN_CANCEL_URL, RUN_COSTS_URL, RUN_RESULTS_URL, RUNS_URL, RUN_URL, RunsApi } from '../runs-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -51,6 +51,20 @@ describe('Server :: RunsApi', () => {
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${RUN_URL(runId)}`, expect.objectContaining({ method: 'GET' }));
   });
 
+  test('Should call getRunCosts by id and return costs', async () => {
+    const costs = { avgTestCaseCost: 0.012, avgMetricEvalCost: null };
+    fetch.mockResponseOnce(JSON.stringify(costs), { headers: { 'Content-Type': 'application/json' } });
+
+    const runId = mockRun.id as string;
+    const result = await instance.getRunCosts(runId, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RUN_COSTS_URL(runId)}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(costs);
+  });
+
   test('Should call removeRun with DELETE method and return response', async () => {
     const successResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(successResponse));
@@ -59,6 +73,20 @@ describe('Server :: RunsApi', () => {
     const result = await instance.removeRun(runId, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${RUN_URL(runId)}`, expect.objectContaining({ method: 'DELETE' }));
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+  });
+
+  test('Should call cancelRun with POST method to the cancel endpoint and return response', async () => {
+    const successResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(successResponse));
+
+    const runId = mockRun.id as string;
+    const result = await instance.cancelRun(runId, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${RUN_CANCEL_URL(runId)}`,
+      expect.objectContaining({ method: 'POST' }),
+    );
     expect(result).toEqual(expect.objectContaining({ success: true }));
   });
 

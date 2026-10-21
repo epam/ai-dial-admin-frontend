@@ -23,6 +23,18 @@ describe('Utils :: menu items :: getActualMenuItems', () => {
 
     expect(getActualMenuItems(config as any, [])).toEqual(config);
   });
+
+  test('Should remove an entire group when its key is in disableItems', () => {
+    const res = getActualMenuItems(
+      [
+        { key: 'i18n.Assets', items: [{ key: 'i18n.Models' }] as any[] },
+        { key: 'i18n.Catalog', items: [{ key: 'i18n.Roles' }] as any[] },
+      ] as any,
+      ['catalog'],
+    );
+
+    expect(res).toEqual([{ key: 'i18n.Assets', items: [{ key: 'i18n.Models' }] as any[] }]);
+  });
 });
 
 describe('Utils :: menu items :: getMenuItems', () => {

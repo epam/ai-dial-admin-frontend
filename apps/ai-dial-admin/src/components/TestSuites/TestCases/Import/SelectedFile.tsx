@@ -7,6 +7,8 @@ import { IconEdit } from '@tabler/icons-react';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { TEST_CASES_IMPORT_ACCEPT_TYPES } from './constants';
 
 interface Props {
   file: File | null;
@@ -16,6 +18,7 @@ interface Props {
 const SelectedFile: FC<Props> = ({ file, onChangeFile }) => {
   const t = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const extension = getNameExtensionFromFile(file?.name || '').extension || '.csv';
 
   const onFileChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -30,7 +33,7 @@ const SelectedFile: FC<Props> = ({ file, onChangeFile }) => {
   return (
     <div className="flex flex-row justify-between items-center bg-layer-2 px-3 py-0.5">
       <div className="flex items-center gap-x-2">
-        <DialFileIcon extension=".csv" className="text-secondary" />
+        <DialFileIcon extension={extension} className="text-secondary" />
         <span className="text-primary dial-small-text">{file?.name}</span>
       </div>
 
@@ -43,7 +46,14 @@ const SelectedFile: FC<Props> = ({ file, onChangeFile }) => {
             onClick={() => fileInputRef.current?.click()}
           />
         </label>
-        <input id="file" type="file" ref={fileInputRef} hidden accept="text/csv" onChange={onFileChange} />
+        <input
+          id="file"
+          type="file"
+          ref={fileInputRef}
+          hidden
+          accept={TEST_CASES_IMPORT_ACCEPT_TYPES}
+          onChange={onFileChange}
+        />
       </div>
     </div>
   );

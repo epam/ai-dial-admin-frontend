@@ -1,10 +1,9 @@
 'use client';
 
-import { MouseEvent, useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconPlus } from '@tabler/icons-react';
-import { GridApi } from 'ag-grid-community';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
@@ -13,16 +12,17 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
-import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { useImportProgress } from '@/src/hooks/use-import-progress';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ImportResult } from '@/src/models/import';
@@ -31,7 +31,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
+import { getErrorNotification } from '@/src/utils/notification';
 import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 
 interface Props<T> {
@@ -40,11 +40,8 @@ interface Props<T> {
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
-  showColumnsButton?: boolean;
-  gridApi?: GridApi | null;
-  toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext;
+  context?: () => AssetsFolderContextReader<AssetListItem>;
   isReadOnlyAdmin?: boolean;
 }
 
@@ -54,15 +51,13 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   versionsMap,
   runners,
   route,
-  showColumnsButton,
-  gridApi,
-  toggleColumnsPanel,
   createEntity,
   context,
   isReadOnlyAdmin,
 }: Props<T>) => {
   const t = useI18n();
-  const { showNotification, removeNotification } = useNotification();
+  const { showNotification } = useNotification();
+  const runImport = useImportProgress();
   const getReqRef = useRef(useProtectedRequest());
 
   const folderContext = context?.();
@@ -97,28 +92,21 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         route,
       );
       const folderName = getFolderName(path) || '';
-      const prepareNotificationId = showNotification(
-        getPrepareNotification(
-          t(ImportI18nKey.PrepareTitle, { folder: folderName }),
-          t(ImportI18nKey.PrepareDescription, { folder: folderName }),
-        ),
-      );
 
       const importFunction = getImportFunction(route);
       const translatedType = t(getImportTitle(route)).toLowerCase();
       if (!importFunction) return;
 
-      if (fileSize > MAX_FILE_SIZE_MB * (1024 * 1024)) {
-        removeNotification(prepareNotificationId);
+      const { maxFileSizeMb } = getImportSizeLimits(route);
+      if (fileSize > maxFileSizeMb * (1024 * 1024)) {
         showNotification(
           getErrorNotification(
             t(ImportI18nKey.FileSizeErrorHeader),
-            t(ImportI18nKey.FileSizeErrorDescription, { size: `${MAX_FILE_SIZE_MB} MB` }),
+            t(ImportI18nKey.FileSizeErrorDescription, { size: `${maxFileSizeMb} MB` }),
           ),
         );
       } else {
-        getReqRef.current(importFunction, body, fileType).then((res) => {
-          removeNotification(prepareNotificationId);
+        runImport(folderName, () => getReqRef.current(importFunction, body, fileType)).then((res) => {
           if (res.success) {
             const error = (res.response as { error: string })?.error;
             if (error) {
@@ -136,16 +124,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
       handleModalClose();
     },
-    [folderContext, handleModalClose, removeNotification, route, showNotification, t],
-  );
-
-  const onToggleColumnsPanel = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-
-      toggleColumnsPanel();
-    },
-    [toggleColumnsPanel],
+    [folderContext, handleModalClose, route, runImport, showNotification, t],
   );
 
   const getCreateModal = () => {
@@ -187,14 +166,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
   return (
     <div className="flex gap-4">
-      <ResetFiltersButton gridApi={gridApi} />
-      {showColumnsButton && (
-        <DialGhostButton
-          label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onToggleColumnsPanel}
-        />
-      )}
       {!isReadOnlyAdmin && (
         <>
           {!!createEntity && (

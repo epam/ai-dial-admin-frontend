@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { ComponentProps } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import Analytics from '../Analytics';
 
 const executeStructuredQueryMock = vi.fn();
@@ -17,11 +18,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
-    DialAnalyticsCard: ({ title, compareValues, delta, deltaPositive }: any) => (
+    DialAnalyticsCard: ({ title, compareValues, delta, deltaPositive, deltaUnit }: any) => (
       <div role="region" aria-label={typeof title === 'string' ? title : undefined}>
         <div>{title}</div>
         {delta != null && <span>delta:{delta}</span>}
         {deltaPositive === false && <span>delta-inverted</span>}
+        {deltaUnit != null && <span>delta-unit:{deltaUnit}</span>}
         {(compareValues || []).map((item: any, index: number) => (
           <div key={index}>
             <span>{item.title}</span>
@@ -35,31 +37,36 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 const STATUS_ROWS = {
   rows: [
-    { execution_status: 'SUCCESS', count: 48 },
-    { execution_status: 'FAILED', count: 2 },
+    { execution_status: 'SUCCESS', passed: true, count: 48 },
+    { execution_status: 'FAILED', passed: null, count: 2 },
   ],
 };
 const COMPARED_STATUS_ROWS = {
   rows: [
-    { execution_status: 'SUCCESS', count: 45 },
-    { execution_status: 'FAILED', count: 0 },
+    { execution_status: 'SUCCESS', passed: true, count: 45 },
+    { execution_status: 'FAILED', passed: null, count: 0 },
   ],
 };
 const AVG_ROWS = { rows: [{ avg_duration_ms: 241000 }] };
 const COMPARED_AVG_ROWS = { rows: [{ avg_duration_ms: 351000 }] };
+const AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 291123.6 }] };
+const COMPARED_AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 120456.4 }] };
 
 const MATCHED_PRIMARY: RunAnalyticsSlice = {
   statusCounts: { passed: 338, failed: 8, error: 4, total: 350 },
   avgRunTimeMs: 1240.5,
+  avgMetricEvalDurationMs: 291123.6,
 };
 const MATCHED_COMPARED: RunAnalyticsSlice = {
   statusCounts: { passed: 320, failed: 20, error: 10, total: 350 },
   avgRunTimeMs: 1500,
+  avgMetricEvalDurationMs: 120456.4,
 };
 
 const mockQueries = () => {
   let statusCall = 0;
   let avgCall = 0;
+  let avgMetricEvalCall = 0;
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
     if (query.group_by) {
       statusCall += 1;
@@ -70,20 +77,28 @@ const mockQueries = () => {
       avgCall += 1;
       return Promise.resolve(avgCall === 1 ? AVG_ROWS : COMPARED_AVG_ROWS);
     }
+    if (alias === 'avg_metric_eval_duration_ms') {
+      avgMetricEvalCall += 1;
+      return Promise.resolve(avgMetricEvalCall === 1 ? AVG_METRIC_EVAL_ROWS : COMPARED_AVG_METRIC_EVAL_ROWS);
+    }
     return Promise.resolve({ rows: [] });
   });
 };
+
+const RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
+const REVERSED_RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }).reverse();
 
 const renderAnalytics = (overrides: Partial<ComponentProps<typeof Analytics>> = {}) =>
   render(
     <Analytics
       primaryRunId="run-1"
       comparedRunId="run-2"
-      primaryRunName="Run #316"
-      comparedRunName="Run #315"
+      runs={RUNS}
       onlyMatchingTestCases={false}
       primaryMatchedAnalytics={null}
       comparedMatchedAnalytics={null}
+      hasPrimaryThreshold
+      hasComparedThreshold
       {...overrides}
     />,
   );
@@ -94,7 +109,7 @@ describe('Compare Summary :: Analytics', () => {
     renderAnalytics();
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument());
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
   });
 
   test('renders dual overall score with delta when scores are present', async () => {
@@ -107,6 +122,13 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.getByText('delta:-0.547')).toBeInTheDocument();
   });
 
+  test('measures the overall score delta from the baseline, so swapping the runs negates it', async () => {
+    mockQueries();
+    renderAnalytics({ primaryOverallScore: 0.265, comparedOverallScore: 0.812 });
+
+    expect(await screen.findByText('delta:0.547')).toBeInTheDocument();
+  });
+
   test('hides overall score when both sides are null', async () => {
     mockQueries();
     renderAnalytics({ primaryOverallScore: null, comparedOverallScore: null });
@@ -115,14 +137,17 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.queryByText('Runs.OverallScore')).not.toBeInTheDocument();
   });
 
-  test('renders passed counts and runtime with inverted delta styling', async () => {
+  test('renders passed counts, runtime, and metric-eval latency with seconds delta units', async () => {
     mockQueries();
     renderAnalytics();
 
-    await screen.findByText('Runs.AvgTestCaseRunTime');
+    expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
+    expect(screen.getByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
     expect(screen.getByText('delta:-3')).toBeInTheDocument();
     expect(screen.getByText('delta:110')).toBeInTheDocument();
-    expect(screen.getByText('delta-inverted')).toBeInTheDocument();
+    expect(screen.getByText('delta:-170.6')).toBeInTheDocument();
+    expect(screen.getAllByText('delta-inverted')).toHaveLength(1);
+    expect(screen.getAllByText('delta-unit:Runs.Seconds')).toHaveLength(2);
   });
 
   test('shows status breakdown and uses matched analytics when onlyMatchingTestCases is on', async () => {
@@ -135,10 +160,42 @@ describe('Compare Summary :: Analytics', () => {
 
     await screen.findByText('Runs.TestCasesPassed');
     expect(screen.getAllByText('338').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('/350')).toHaveLength(2);
+    expect(screen.getAllByText('/ 350')).toHaveLength(2);
     expect(screen.getAllByText('Runs.Pass')).toHaveLength(2);
     expect(screen.getAllByText('Runs.Fail')).toHaveLength(2);
     expect(screen.getAllByText('Runs.ExecError')).toHaveLength(2);
+    expect(screen.getByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
+    expect(screen.getByText('delta:-170.6')).toBeInTheDocument();
     expect(executeStructuredQueryMock).not.toHaveBeenCalled();
+  });
+
+  test('hides the test cases passed card when neither run has a snapshotted threshold', async () => {
+    mockQueries();
+    renderAnalytics({ hasPrimaryThreshold: false, hasComparedThreshold: false });
+
+    expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
+  });
+
+  test('shows a dash for the side without a snapshotted threshold', async () => {
+    mockQueries();
+    renderAnalytics({ hasPrimaryThreshold: true, hasComparedThreshold: false });
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    const passedCard = screen.getByRole('region', { name: 'Runs.TestCasesPassed' });
+    expect(passedCard).toHaveTextContent('48');
+    expect(passedCard).toHaveTextContent('—');
+    expect(passedCard).not.toHaveTextContent('delta:-3');
+  });
+
+  test('lists the compared run first when displayed in reverse, keeping the delta measured against the baseline', async () => {
+    mockQueries();
+    renderAnalytics({ runs: REVERSED_RUNS, primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
+
+    const overallCard = await screen.findByRole('region', { name: 'Runs.OverallScore' });
+    const text = overallCard.textContent ?? '';
+    expect(text.indexOf('Run #315')).toBeLessThan(text.indexOf('Run #316'));
+    expect(text.indexOf('0.265')).toBeLessThan(text.indexOf('0.812'));
+    expect(within(overallCard).getByText('delta:-0.547')).toBeInTheDocument();
   });
 });

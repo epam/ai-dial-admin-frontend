@@ -7,7 +7,8 @@ export const isSimpleEntity = (view: ApplicationRoute) => {
     case ApplicationRoute.Toolsets:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.AssetsApplications:
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.Prompts:
       return false;
 

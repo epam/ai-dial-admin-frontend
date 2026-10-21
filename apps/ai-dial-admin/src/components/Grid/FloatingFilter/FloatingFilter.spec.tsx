@@ -23,6 +23,12 @@ describe('FloatingFilter', () => {
     expect(screen.getByDisplayValue('abc')).toBeInTheDocument();
   });
 
+  test('draws the search field with an 8px radius', () => {
+    const props = { parentFilterInstance: vi.fn(), currentParentModel: () => ({ filter: '' }) } as any;
+    render(<FloatingFilter {...props} />);
+    expect(screen.getByPlaceholderText(BasicI18nKey.Search).parentElement).toHaveClass('rounded-lg');
+  });
+
   test('calls parentFilterInstance only after the user stops typing', () => {
     const onFloatingFilterChanged = vi.fn();
     const parentFilterInstance = (cb: any) => cb({ onFloatingFilterChanged });
@@ -44,6 +50,40 @@ describe('FloatingFilter', () => {
 
     expect(onFloatingFilterChanged).toHaveBeenCalledTimes(1);
     expect(onFloatingFilterChanged).toHaveBeenCalledWith('contains', 'test');
+  });
+
+  test('sends the only operator a column declares, rather than the default contains', () => {
+    const onFloatingFilterChanged = vi.fn();
+    const props = {
+      parentFilterInstance: (cb: any) => cb({ onFloatingFilterChanged }),
+      currentParentModel: () => ({ filter: '' }),
+      filterParams: { filterOptions: ['equals'] },
+    } as any;
+    render(<FloatingFilter {...props} />);
+
+    fireEvent.change(screen.getByPlaceholderText(BasicI18nKey.Search), { target: { value: 'abc' } });
+    act(() => {
+      vi.advanceTimersByTime(FLOATING_FILTER_DEBOUNCE_MS);
+    });
+
+    expect(onFloatingFilterChanged).toHaveBeenCalledWith('equals', 'abc');
+  });
+
+  test('keeps contains where the column declares it alongside other operators', () => {
+    const onFloatingFilterChanged = vi.fn();
+    const props = {
+      parentFilterInstance: (cb: any) => cb({ onFloatingFilterChanged }),
+      currentParentModel: () => ({ filter: '' }),
+      filterParams: { filterOptions: ['equals', 'notEqual', 'contains'] },
+    } as any;
+    render(<FloatingFilter {...props} />);
+
+    fireEvent.change(screen.getByPlaceholderText(BasicI18nKey.Search), { target: { value: 'abc' } });
+    act(() => {
+      vi.advanceTimersByTime(FLOATING_FILTER_DEBOUNCE_MS);
+    });
+
+    expect(onFloatingFilterChanged).toHaveBeenCalledWith('contains', 'abc');
   });
 
   test('reflects each keystroke in the input immediately even while debouncing', () => {

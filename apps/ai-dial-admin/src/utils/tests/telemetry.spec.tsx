@@ -223,7 +223,8 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
       { $eq: { left: 'project_id', right: "'Project1'" } },
     ]);
   });
-  -test('returns $in operator for multiple values with Equal condition', () => {
+
+  test('returns $in operator for multiple values with Equal condition', () => {
     const filters = [
       { type: FILTER_TYPE.Entity, value: ['Entity1', 'Entity2', 'Entity3'], condition: FILTER_OPERATOR.Equal },
     ];
@@ -271,6 +272,28 @@ describe('Utils :: telemetry :: getEntityFilterName', () => {
   test('returns null when no entity is provided', () => {
     expect(getEntityFilterName(ApplicationRoute.AssetsToolsets, undefined)).toBeNull();
     expect(getEntityFilterName(ApplicationRoute.Toolsets, undefined)).toBeNull();
+  });
+
+  test('reads an asset toolset path from the merge metadata when the flat path is absent', () => {
+    const entity = {
+      name: 'als-api-key',
+      _metadata: { path: 'public/ALS toolsets/als-api-key__1' },
+    } as unknown as BaseEntity;
+    expect(getEntityFilterName(ApplicationRoute.AssetsToolsets, entity)).toEqual(
+      'toolsets/public/ALS%20toolsets/als-api-key__1',
+    );
+  });
+
+  test('prefixes an asset application path with its own kind', () => {
+    const entity = { name: 'My app', _metadata: { path: 'public/My app__1.0.0' } } as unknown as BaseEntity;
+    expect(getEntityFilterName(ApplicationRoute.AssetsApplications, entity)).toEqual(
+      'applications/public/My%20app__1.0.0',
+    );
+  });
+
+  test('returns the bare model name for a platform model asset, ignoring its path', () => {
+    const entity = { name: 'gpt-4', path: 'gpt-4' } as unknown as BaseEntity;
+    expect(getEntityFilterName(ApplicationRoute.PlatformModels, entity)).toEqual('gpt-4');
   });
 });
 

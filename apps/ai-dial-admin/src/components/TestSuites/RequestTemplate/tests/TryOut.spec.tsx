@@ -1,17 +1,26 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
-import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
-import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { getTestCaseTemplateVariables, tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { convertVariablesIntoInitialRequests } from '@/src/components/TestSuites/utils/template-variables';
+import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
+import {
+  SuiteType,
+  TemplateVariablesByRequest,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+  TryOutHistoryEntry,
+} from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
+import { getTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import TryOut from '../components/TryOut';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getTestSuiteTemplateVariables: vi.fn(() => Promise.resolve([])),
-  getTestCaseTemplateVariables: vi.fn(() => Promise.resolve([])),
+  getTestSuiteTemplateVariables: vi.fn(() => Promise.resolve({})),
+  getTestCaseTemplateVariables: vi.fn(() => Promise.resolve({})),
   tryOutTestSuite: vi.fn(() =>
     Promise.resolve({
       success: true,
@@ -24,6 +33,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   tryOutTestCase: vi.fn(() => Promise.resolve(null)),
 }));
 
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
+  getDatasetTestCase: vi.fn(() => Promise.resolve(null)),
+}));
+
 vi.mock('@/src/components/TestSuites/utils/tryout-storage', () => ({
   saveTryoutResponseToStorage: vi.fn(),
   getTryoutResponseFromStorage: vi.fn(() => ({
@@ -32,9 +45,13 @@ vi.mock('@/src/components/TestSuites/utils/tryout-storage', () => ({
   })),
 }));
 
-vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
-  convertVariableIntoInitialRequest: vi.fn(() => ({})),
-}));
+vi.mock('@/src/components/TestSuites/utils/template-variables', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/src/components/TestSuites/utils/template-variables')>();
+  return {
+    ...actual,
+    convertVariablesIntoInitialRequests: vi.fn(() => ({})),
+  };
+});
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: ({ entity }: { entity: unknown }) => <div>JsonEditor:{JSON.stringify(entity)}</div>,
@@ -128,46 +145,61 @@ const deploymentSuite: TestSuite = {
   endpointRef: { method: 'POST', relativeUrlPattern: '/api/search' },
 };
 
-const deploymentSuiteWithRequestColumn: TestSuite = {
-  ...deploymentSuite,
+const mcpSuiteWithRequestColumn: TestSuite = {
+  ...mcpSuite,
   responseColumns: [{ name: 'reqFoo', displayName: 'reqFoo', expression: '$request.foo', type: 'STRING' }],
+};
+
+const deploymentSuiteWithAnswerColumn: TestSuite = {
+  ...deploymentSuite,
+  responseColumns: [{ name: 'answer', displayName: 'answer', expression: 'output', type: 'STRING' }],
+};
+
+const multiRequestSchema: TestCaseSchema[] = [
+  { name: 'shared', type: TestCaseItemType.STRING, required: false, description: '', perTurn: false },
+];
+
+const multiRequestSuite: TestSuite = {
+  id: 'suite-mr',
+  suiteType: SuiteType.Deployment,
+  endpointRef: { method: 'POST', relativeUrlPattern: '/api/chat' },
+  inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }],
+  additionalRequests: [{ inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] }],
+};
+
+const multiRequestCase: TestCase = {
+  id: 'case-mr',
+  createdAt: 0,
+  data: { shared: 'value' },
 };
 
 describe('TryOut MCP branch', () => {
   test('shows Tool Arguments Preview label for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.ToolArgumentsPreview)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.ToolArgumentsPreview)).toBeInTheDocument();
   });
 
   test('shows TOOL CALL line for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('TOOL CALL My Toolset:search')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('TOOL CALL My Toolset:search')).toBeInTheDocument();
   });
 
   test('shows Request Body Preview label for DEPLOYMENT suite', async () => {
     render(<TryOut testSuite={deploymentSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.RequestBodyPreview)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.RequestBodyPreview)).toBeInTheDocument();
   });
 
   test('shows method/URL line for DEPLOYMENT suite', async () => {
     render(<TryOut testSuite={deploymentSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('POST /api/search')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('POST /api/search')).toBeInTheDocument();
   });
 
   test('wraps the bare request body into a request envelope on a failed send', async () => {
-    vi.mocked(convertVariableIntoInitialRequest).mockReturnValueOnce({ foo: 'bar' });
+    vi.mocked(convertVariablesIntoInitialRequests).mockReturnValueOnce({ '0': { foo: 'bar' } });
     vi.mocked(tryOutTestSuite).mockResolvedValueOnce({ success: false, errorMessage: 'boom' });
 
     const user = userEvent.setup();
@@ -176,14 +208,21 @@ describe('TryOut MCP branch', () => {
     const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
     await user.click(sendButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('JsonEditor:{"foo":"bar"}')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('JsonEditor:{"0":{"foo":"bar"}}')).toBeInTheDocument();
   });
 });
 
 describe('TryOut Columns tab request binding', () => {
-  test('binds $request to the request body, not the request envelope', async () => {
+  test('hides Response and Columns tabs until a request has been sent', async () => {
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Response })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Columns })).not.toBeInTheDocument();
+  });
+
+  test('binds $request to the request body, not the request envelope, for an MCP suite', async () => {
     vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
       success: true,
       response: {
@@ -193,7 +232,7 @@ describe('TryOut Columns tab request binding', () => {
     });
 
     const user = userEvent.setup();
-    render(<TryOut testSuite={deploymentSuiteWithRequestColumn} />);
+    render(<TryOut testSuite={mcpSuiteWithRequestColumn} />);
 
     const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
     await user.click(sendButton);
@@ -201,8 +240,239 @@ describe('TryOut Columns tab request binding', () => {
     const columnsTab = await screen.findByRole('tab', { name: TabsI18nKey.Columns });
     await user.click(columnsTab);
 
-    await waitFor(() => {
-      expect(screen.getByText('bar')).toBeInTheDocument();
+    expect(await screen.findByText('bar')).toBeInTheDocument();
+  });
+
+  test("renders the backend's reported extraction for a deployment suite", async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { url: '/openai/v1/responses', body: {} },
+        response: { statusCode: 200, body: { events: [] } },
+        extractedColumns: { answer: 'Hi there, friend!' },
+        extractionWarnings: [],
+      },
     });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    expect(await screen.findByText('Hi there, friend!')).toBeInTheDocument();
+    expect(screen.getByText(ValidityStatusI18nKey.Valid)).toBeInTheDocument();
+  });
+
+  test('reports not extracted when the invocation failed', async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { url: '/openai/v1/responses', body: {} },
+        response: { statusCode: 401, body: 'At least API-KEY or Authorization header must be provided' },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    expect(await screen.findByText(TestSuitesI18nKey.ColumnNotExtracted)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtractedRequestFailed)).toBeInTheDocument();
+    expect(screen.queryByText(ValidityStatusI18nKey.Invalid)).not.toBeInTheDocument();
+  });
+
+  test('a restored result shows the same extraction as the original', async () => {
+    vi.mocked(getTryoutResponseFromStorage).mockReturnValueOnce({
+      resolvedRequest: { url: '/openai/v1/responses', body: {} },
+      response: { statusCode: 200, body: { events: [] } },
+      extractedColumns: { answer: 'Hi there, friend!' },
+      extractionWarnings: [],
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    expect(await screen.findByText('Hi there, friend!')).toBeInTheDocument();
+  });
+
+  test('a restored result recorded before extraction was captured reports not extracted', async () => {
+    vi.mocked(getTryoutResponseFromStorage).mockReturnValueOnce({
+      resolvedRequest: { url: '/openai/v1/responses', body: {} },
+      response: { statusCode: 200, body: { events: [] } },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    expect(await screen.findByText(TestSuitesI18nKey.ColumnNotExtractedNoneReported)).toBeInTheDocument();
+  });
+});
+
+describe('TryOut request tabs', () => {
+  test('hides request tabs while preview variables are loading', async () => {
+    let resolveVariables: (value: TemplateVariablesByRequest | null) => void = () => undefined;
+    vi.mocked(getTestCaseTemplateVariables).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveVariables = resolve;
+        }),
+    );
+
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
+
+    resolveVariables({});
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+  });
+
+  test('shows request tabs for multi-request test case preview', async () => {
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '2. TestSuites.Request' })).toBeInTheDocument();
+  });
+
+  test('hides request tabs while sending a test case request', async () => {
+    let resolveTryOut:
+      | ((value: {
+          success: boolean;
+          response: {
+            resolvedRequest: { body: Record<string, unknown> };
+            response: { statusCode: number; body: Record<string, unknown> };
+            history: TryOutHistoryEntry[];
+          };
+        }) => void)
+      | undefined;
+    vi.mocked(tryOutTestCase).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveTryOut = resolve;
+        }),
+    );
+
+    const user = userEvent.setup();
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
+
+    resolveTryOut?.({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: { statusCode: 200, body: {} },
+        history: [
+          { resolvedRequest: { body: { req: 1 } }, response: { statusCode: 200, body: { out: 'a' } } },
+          { resolvedRequest: { body: { req: 2 } }, response: { statusCode: 200, body: { out: 'b' } } },
+        ],
+      },
+    });
+
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+  });
+
+  test('switches response content when selecting another request tab', async () => {
+    vi.mocked(tryOutTestCase).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: { statusCode: 200, body: {} },
+        history: [
+          { resolvedRequest: { body: { req: 1 } }, response: { statusCode: 200, body: { out: 'a' } } },
+          { resolvedRequest: { body: { req: 2 } }, response: { statusCode: 200, body: { out: 'b' } } },
+        ],
+      },
+    });
+
+    const user = userEvent.setup();
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    expect(await screen.findByText('JsonEditor:{"req":1}')).toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"req":2}')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: '2. TestSuites.Request' }));
+
+    expect(await screen.findByText('JsonEditor:{"req":2}')).toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"req":1}')).not.toBeInTheDocument();
+  });
+});
+
+describe('TryOut suite-level request chain', () => {
+  test('shows request tabs for a chained suite with no test case selected', async () => {
+    render(<TryOut testSuite={multiRequestSuite} />);
+
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+
+    expect(screen.getByRole('tab', { name: '2. TestSuites.Request' })).toBeInTheDocument();
+  });
+
+  test('keeps request tabs hidden for a single-request suite with no test case selected', async () => {
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+
+    expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
+  });
+
+  test('sends the entered values keyed by request index', async () => {
+    vi.mocked(convertVariablesIntoInitialRequests).mockReturnValueOnce({
+      '0': { shared: 'for-zero' },
+      '1': { shared: 'for-one' },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={multiRequestSuite} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    await vi.waitFor(() =>
+      expect(tryOutTestSuite).toHaveBeenCalledWith('suite-mr', {
+        '0': { shared: 'for-zero' },
+        '1': { shared: 'for-one' },
+      }),
+    );
   });
 });

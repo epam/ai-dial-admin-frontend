@@ -1,3 +1,4 @@
+import { TestCase } from '@/src/models/evaluation/test-suite';
 import { GridRowType } from '@/src/types/grid-row-type';
 import { TestCaseRow } from '@/src/types/test-case-row';
 
@@ -11,6 +12,13 @@ export interface TestCaseGroup {
   isMulti: boolean;
   testCaseName?: string;
   turns: TestCaseRow[];
+}
+
+// Grids consuming the shared validity column without the grouping projection (CSV import preview)
+// pass rows carrying neither field.
+export interface ValidityStatusRow extends TestCase {
+  rowType?: GridRowType;
+  isFlattened?: boolean;
 }
 
 export interface GroupedGridRow extends TestCaseRow {

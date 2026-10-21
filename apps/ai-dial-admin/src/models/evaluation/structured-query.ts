@@ -17,6 +17,7 @@ export enum ExprType {
   Fn = 'fn',
   Array = 'array',
   Param = 'param',
+  Subquery = 'subquery',
 }
 
 /** Allowlisted literal types governing how a {@link ValueExpr} string value is parsed. */
@@ -96,7 +97,12 @@ export interface ParamExpr {
   name: string;
 }
 
-export type Expr = FieldExpr | ValueExpr | FnExpr | ArrayExpr | ParamExpr;
+export interface SubqueryExpr {
+  type: ExprType.Subquery;
+  query: StructuredQuery;
+}
+
+export type Expr = FieldExpr | ValueExpr | FnExpr | ArrayExpr | ParamExpr | SubqueryExpr;
 
 export interface ComparisonNode {
   op: ComparisonOp;

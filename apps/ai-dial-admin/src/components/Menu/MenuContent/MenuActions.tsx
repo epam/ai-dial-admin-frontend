@@ -1,9 +1,9 @@
-import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, DialIconButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import { IconDotsVertical, IconDownload, IconUpload, IconWorldCog } from '@tabler/icons-react';
 
-import { MenuI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { MENU_ACTION_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -23,13 +23,13 @@ const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImpo
           {
             key: t(MenuI18nKey.ImportConfig),
             label: t(MenuI18nKey.ImportConfig),
-            icon: <IconDownload className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
+            icon: <IconDownload className="text-secondary" {...MENU_ACTION_ICON_PROPS} />,
             onClick: onImport,
           },
           {
             key: t(MenuI18nKey.ExportConfig),
             label: t(MenuI18nKey.ExportConfig),
-            icon: <IconUpload className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
+            icon: <IconUpload className="text-secondary" {...MENU_ACTION_ICON_PROPS} />,
             onClick: onExport,
           },
         ]
@@ -37,7 +37,7 @@ const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImpo
     {
       key: t(MenuI18nKey.SystemProperties),
       label: t(MenuI18nKey.SystemProperties),
-      icon: <IconWorldCog className="text-secondary" {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />,
+      icon: <IconWorldCog className="text-secondary" {...MENU_ACTION_ICON_PROPS} />,
       onClick: onOpenProperties,
     },
   ];
@@ -45,7 +45,11 @@ const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImpo
   return (
     <div>
       <DialDropdown items={dropdownItems} listClassName="w-[150px]">
-        <IconDotsVertical className="cursor-pointer" />
+        <DialIconButton
+          aria-label={t(ButtonsI18nKey.Actions)}
+          icon={<IconDotsVertical {...MENU_ACTION_ICON_PROPS} />}
+          className="cursor-pointer"
+        />
       </DialDropdown>
     </div>
   );

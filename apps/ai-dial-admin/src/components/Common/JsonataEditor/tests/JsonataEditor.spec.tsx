@@ -31,7 +31,7 @@ const buildCompletionMonaco = () => {
         capturedProvider = provider;
         return { dispose: vi.fn() };
       }),
-      CompletionItemKind: { Function: 1, Keyword: 2 },
+      CompletionItemKind: { Function: 1, Keyword: 2, Variable: 3 },
     },
   };
   return { monaco, getProvider: () => capturedProvider };
@@ -183,6 +183,73 @@ describe('JsonataEditor', () => {
 
       expect(applied).toBe('$sum');
       expect(applied.match(/\$/g)).toHaveLength(1);
+    });
+
+    test('offers the given variables ahead of the builtins, prefixed with a dollar sign', () => {
+      render(
+        <JsonataEditor
+          value=""
+          onChange={vi.fn()}
+          variables={[{ name: 'answer', description: 'Output of 1. Main request' }]}
+        />,
+      );
+      const { monaco, getProvider } = buildCompletionMonaco();
+      const editorInstance = { getModel: () => ({ id: 'model-1' }), onDidDispose: vi.fn() };
+      capturedProps.onEditorMount(editorInstance, monaco);
+
+      const ownModel = {
+        id: 'model-1',
+        getWordUntilPosition: vi.fn(() => ({ word: '', startColumn: 1, endColumn: 1 })),
+        getValueInRange: vi.fn(() => ''),
+      };
+
+      const result = getProvider().provideCompletionItems(ownModel, { lineNumber: 1, column: 1 });
+
+      expect(result.suggestions).toHaveLength(JSONATA_FUNCTIONS.length + JSONATA_KEYWORDS.length + 1);
+      expect(result.suggestions[0]).toMatchObject({
+        label: '$answer',
+        insertText: '$answer',
+        kind: 3,
+        detail: 'Output of 1. Main request',
+      });
+      expect(result.suggestions[0].sortText < '$sum').toBe(true);
+    });
+
+    test('offers only the builtins when no variables are given', () => {
+      render(<JsonataEditor value="" onChange={vi.fn()} />);
+      const { monaco, getProvider } = buildCompletionMonaco();
+      const editorInstance = { getModel: () => ({ id: 'model-1' }), onDidDispose: vi.fn() };
+      capturedProps.onEditorMount(editorInstance, monaco);
+
+      const ownModel = {
+        id: 'model-1',
+        getWordUntilPosition: vi.fn(() => ({ word: '', startColumn: 1, endColumn: 1 })),
+        getValueInRange: vi.fn(() => ''),
+      };
+
+      const result = getProvider().provideCompletionItems(ownModel, { lineNumber: 1, column: 1 });
+
+      expect(result.suggestions).toHaveLength(JSONATA_FUNCTIONS.length + JSONATA_KEYWORDS.length);
+    });
+
+    test('picks up variables added after the provider was registered', () => {
+      const { rerender } = render(<JsonataEditor value="" onChange={vi.fn()} />);
+      const { monaco, getProvider } = buildCompletionMonaco();
+      const editorInstance = { getModel: () => ({ id: 'model-1' }), onDidDispose: vi.fn() };
+      capturedProps.onEditorMount(editorInstance, monaco);
+
+      rerender(<JsonataEditor value="" onChange={vi.fn()} variables={[{ name: 'answer' }]} />);
+
+      const ownModel = {
+        id: 'model-1',
+        getWordUntilPosition: vi.fn(() => ({ word: '', startColumn: 1, endColumn: 1 })),
+        getValueInRange: vi.fn(() => ''),
+      };
+
+      const result = getProvider().provideCompletionItems(ownModel, { lineNumber: 1, column: 1 });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(result.suggestions.some((s: any) => s.label === '$answer')).toBe(true);
     });
 
     test('disposes the completion provider on unmount', () => {

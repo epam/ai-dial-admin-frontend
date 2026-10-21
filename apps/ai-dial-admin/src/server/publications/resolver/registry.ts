@@ -3,6 +3,7 @@ import {
   CONVERSATIONS_PREFIX,
   FILES_PREFIX,
   PROMPTS_PREFIX,
+  SKILLS_PREFIX,
   TOOLSETS_PREFIX,
 } from '@/src/constants/publications-core';
 import { ResourceType } from '@/src/types/resource-type';
@@ -57,5 +58,14 @@ export const PUBLICATION_TYPE_REGISTRY: Record<PublishableResourceType, Publicat
     hasFiles: false,
     notFoundMessage: 'File not found',
     alreadyExistsMessage: 'Target file already exists',
+  },
+  [ResourceType.SKILL]: {
+    resourceType: ResourceType.SKILL,
+    prefix: SKILLS_PREFIX,
+    resourceKey: 'skillResources',
+    assetKey: 'skillResource',
+    hasFiles: false,
+    notFoundMessage: 'Skill not found',
+    alreadyExistsMessage: 'Target skill already exists',
   },
 };

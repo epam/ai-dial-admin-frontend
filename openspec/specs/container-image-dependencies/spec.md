@@ -1,4 +1,10 @@
-## ADDED Requirements
+# container-image-dependencies Specification
+
+## Purpose
+
+The image dependency sidebar in the container Add modal.
+
+## Requirements
 
 ### Requirement: Container Add modal SHALL show image dependency sidebar
 The Add Entities modal for container entity types (MCP Container, Interceptor Container, Adapter Container) SHALL display a Dependencies sidebar showing the related image type as a checked, disabled checkbox. Dependencies are resolved via `getAllAvailableDependencies` using `DEPLOYMENT_IMAGE_DEP` constants.

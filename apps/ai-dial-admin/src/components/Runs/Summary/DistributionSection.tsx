@@ -17,6 +17,7 @@ import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
+import { DISTRIBUTION_STAT_CARD_CLASS, DISTRIBUTION_STAT_CARDS_GRID_CLASS } from './constants';
 import { MetricOption, MetricScoresData } from './models';
 import SummarySection from './SummarySection';
 import { buildDistributionQuery, getMetricStatCards, parseHistogramValues } from './utils';
@@ -33,7 +34,7 @@ interface Props {
   onSelectMetric: (name: string | null) => void;
 }
 
-const formatValue = (value: number): string => String(Math.round(value * 100) / 100);
+const formatValue = (value: number): string => value.toFixed(3);
 
 const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, selectedMetricName, onSelectMetric }) => {
   const t = useI18n();
@@ -94,7 +95,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.SelectMetricToSeeDistribution)}</p>;
     }
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 [&_[data-histogram-y-axis]]:min-w-4">
         <DialAnalyticsHistogram
           title=""
           values={histogramValues ?? []}
@@ -102,14 +103,14 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
           isLoading={isLoading || histogramValues === null}
         />
         {statCards.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className={DISTRIBUTION_STAT_CARDS_GRID_CLASS}>
             {statCards.map((card) => (
               <DialAnalyticsCard
                 key={card.name}
                 variant={AnalyticsCardVariant.Compact}
                 title={card.name}
                 value={formatValue(card.value)}
-                className="min-w-44"
+                className={DISTRIBUTION_STAT_CARD_CLASS}
               />
             ))}
           </div>

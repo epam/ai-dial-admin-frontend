@@ -1,4 +1,4 @@
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
 
 export interface CompareDiffCounts {
   improved: number;
@@ -9,12 +9,7 @@ export interface CompareDiffCounts {
 export interface CompareColumnsCompareOptions {
   hideHighlights?: boolean;
   metricsSchema?: Record<string, Record<string, unknown>>;
-  theme?: string;
-}
-
-export interface ComparePanelRunNames {
-  primary: string;
-  secondary: string;
+  runs?: CompareRun[];
 }
 
 export interface CompareRowDiffVisibility {
@@ -22,6 +17,8 @@ export interface CompareRowDiffVisibility {
 }
 
 export interface CompareColumnPanelContext {
+  /** Drag id for a panel row whose label repeats, e.g. a metric group split around another block. */
+  panelKey?: string;
   panelName?: string;
-  panelRunIndex?: typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
+  panelRunIndex?: CompareRunIndex;
 }

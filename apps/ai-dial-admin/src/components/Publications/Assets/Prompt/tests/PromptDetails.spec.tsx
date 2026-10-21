@@ -6,7 +6,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import PromptDetails from '../PromptDetails';
 import { ButtonsI18nKey } from '../../../../../constants/i18n';
 
-vi.mock('@/src/components/Assets/Prompts/View/Properties', () => ({
+vi.mock('@/src/components/Assets/Artifacts/Prompts/View/Properties', () => ({
   default: ({ prompt, onChangePrompt, isPublication }: any) => (
     <div role="region" aria-label="prompt-properties">
       <div>Prompt Name: {prompt.name}</div>
@@ -56,9 +56,8 @@ vi.mock('@tabler/icons-react', () => ({
 const mockPrompt: DialPrompt = {
   name: 'Test Prompt',
   content: 'Test content',
-  version: '1.0',
-  type: 'prompt',
   folderId: 'folder1',
+  path: 'folder1/prompt1',
   id: 'prompt1',
 };
 
@@ -109,7 +108,8 @@ describe('Publications :: PromptDetails', () => {
     const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1];
     expect(lastCall[0]).toHaveProperty('name');
     expect(lastCall[0]).toHaveProperty('content');
-    expect(lastCall[0]).toHaveProperty('version');
+    // Prompts are versionless — the changed payload never carries a version.
+    expect(lastCall[0]).not.toHaveProperty('version');
   });
 
   test('calls onRemove when delete button is clicked', async () => {
@@ -160,11 +160,10 @@ describe('Publications :: PromptDetails', () => {
     expect(titleInput).not.toBeDisabled();
   });
 
-  test('renders with different prompt versions', () => {
-    const promptWithVersion = { ...mockPrompt, version: '2.5' };
-    setup({ prompt: promptWithVersion });
+  test('renders a prompt whose name contains `__` verbatim — it is part of the name, not a version', () => {
+    setup({ prompt: { ...mockPrompt, name: 'Test Prompt__2.5' } });
 
     expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
-    expect(screen.getByText('Prompt Name: Test Prompt')).toBeInTheDocument();
+    expect(screen.getByText('Prompt Name: Test Prompt__2.5')).toBeInTheDocument();
   });
 });

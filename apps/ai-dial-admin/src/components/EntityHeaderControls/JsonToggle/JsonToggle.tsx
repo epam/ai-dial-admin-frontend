@@ -2,7 +2,7 @@
 
 import { FC, ReactNode, useEffect, useState } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -12,11 +12,14 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   isEditorEnabled?: boolean;
+  isEditorDisabled?: boolean;
   children?: ReactNode;
   onToggleEditor?: () => void;
+  /** Draws the 2.0 switch instead of the 1.0 one. Off by default; a page opts in with its own migration. */
+  isDesignSystem2?: boolean;
 }
 
-const JsonToggles: FC<Props> = ({ children, isEditorEnabled, onToggleEditor }) => {
+const JsonToggles: FC<Props> = ({ children, isEditorEnabled, isEditorDisabled, onToggleEditor, isDesignSystem2 }) => {
   const t = useI18n();
   const staticEditorClassName = 'flex flex-row gap-x-4';
   const isTablet = useIsOnlyTabletScreen();
@@ -38,12 +41,23 @@ const JsonToggles: FC<Props> = ({ children, isEditorEnabled, onToggleEditor }) =
       {children}
 
       <div className="h-auto">
-        <DialSwitch
-          isOn={isEditorEnabled}
-          label={t(EntitiesI18nKey.JSONEditor)}
-          switchId="jsonEditor"
-          onChange={onToggleEditor}
-        />
+        {isDesignSystem2 ? (
+          <Switch
+            id="jsonEditor"
+            isOn={isEditorEnabled}
+            labelProps={{ label: t(EntitiesI18nKey.JSONEditor) }}
+            disabled={isEditorDisabled}
+            onChange={onToggleEditor}
+          />
+        ) : (
+          <DialSwitch
+            isOn={isEditorEnabled}
+            label={t(EntitiesI18nKey.JSONEditor)}
+            switchId="jsonEditor"
+            disabled={isEditorDisabled}
+            onChange={onToggleEditor}
+          />
+        )}
       </div>
     </div>
   );

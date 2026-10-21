@@ -2,9 +2,7 @@
 
 ## Purpose
 App-runner-resource list, get, create, update, delete, and bulk-delete executed directly against DIAL Core's `ConfigResourceController`-backed `schemas/platform` routes, plus the FE-owned route array/object conversion and the Core-resolved parameters read — created by archiving change `add-app-runner-asset-resource`. This resource kind is flat, unversioned, and stores its request body verbatim (`WriteSpec.entityClass == null`), so Core performs no write-time validation and the frontend strips non-schema fields before every write. Its Core resource name is the runner's own `$id`, percent-encoded one extra layer so a URI survives Core's `ENTITY_NAME_PATTERN`. Distinct from the admin-BE-backed `Entities > Application Runners`, which is unchanged and shares no server actions with it.
-
 ## Requirements
-
 ### Requirement: App-runner resources served directly by DIAL Core
 
 The system SHALL route app-runner-resource list, get, create, update, delete, and bulk-delete operations to DIAL Core's `ConfigResourceController`-backed routes (`GET/PUT/DELETE /v1/schemas/platform/{name}`, list via `GET /v1/metadata/schemas/platform/`) unconditionally — there is no admin-BE fallback and no feature flag. This is a distinct resource kind from `Entities > Application Runners` (admin-BE-backed); the two SHALL NOT share server actions or API clients.
@@ -151,12 +149,15 @@ Core represents `dial:applicationTypeRoutes` as an object keyed by route name wh
 
 ### Requirement: Resolved parameters are read from DIAL Core
 
-The system SHALL read a runner's resolved parameter schema from DIAL Core's `GET /v1/application_type_schemas/schema?id={canonical id}`, passing the canonical ID `schemas/platform/{name}` as the `id` query parameter, instead of the admin BE's `resolvedSchema` endpoint. Core performs the external-schema download declared by `dial:applicationTypeSchemaEndpoint` and the merge itself.
+The system SHALL read a runner's resolved parameter schema from DIAL Core's `GET /v1/application_type_schemas/schema?id={$id}`, passing the runner's own `$id` (URL-encoded once for the query string) as the `id` query parameter. Core performs the external-schema download declared by `dial:applicationTypeSchemaEndpoint` and the merge itself.
 
-#### Scenario: Parameters read targets Core with the canonical id
+This replaces the previous behaviour where the `id` parameter was the canonical config-map key `schemas/platform/{name}` — DIAL Core PR #1813 changed the key to the schema's `$id` field.
 
-- **WHEN** the Parameters tab loads for an asset runner
-- **THEN** the request goes to Core's `application_type_schemas/schema` route with `id` set to `schemas/platform/{encoded $id}`, not to the admin BE
+#### Scenario: Parameters read targets Core with the runner's $id
+
+- **WHEN** the Parameters tab loads for an asset runner whose `$id` is `https://mydial.epam.com/custom_application_schemas/qq`
+- **THEN** the request goes to Core's `application_type_schemas/schema` route with `id` set to `https%3A%2F%2Fmydial.epam.com%2Fcustom_application_schemas%2Fqq` (the `$id` URL-encoded once)
+- **AND** the request does NOT use `schemas/platform/` as a prefix in the `id` parameter
 
 #### Scenario: External schema resolution is not reimplemented in the frontend
 
@@ -195,3 +196,4 @@ The system SHALL expose a list read that returns every app-runner resource in th
 
 - **WHEN** a runner is returned in the list
 - **THEN** its name is the fully decoded `$id` and its path is the singly-encoded form the CRUD calls address
+

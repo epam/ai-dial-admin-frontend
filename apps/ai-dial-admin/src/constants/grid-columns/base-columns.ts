@@ -14,7 +14,7 @@ import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRender
 import TelemetryFallbackCellRenderer from '@/src/components/Grid/CellRenderers/TelemetryFallbackCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { dateTimeColumn } from './configs';
+import { dateTimeColumn, nameColumnSizing } from './configs';
 import { getValidityStatus } from '@/src/components/Common/ValidityStatus/utils';
 
 export const CREATED_AT_COLUMN: ColDef = {
@@ -69,11 +69,12 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   cellRenderer: DisplayNameCellRenderer,
   filterValueGetter: ({ data }) => displayNameFilterValue(data),
   hide: false,
+  ...nameColumnSizing,
 };
 
 export const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
 
-export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
+export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false, ...nameColumnSizing };
 
 export const ASSET_NAME_COLUMN: ColDef = {
   field: 'name',
@@ -81,6 +82,7 @@ export const ASSET_NAME_COLUMN: ColDef = {
   headerName: 'Display Name',
   cellRenderer: DisplayNameCellRenderer,
   filterValueGetter: ({ data }) => displayNameFilterValue(data),
+  ...nameColumnSizing,
 };
 
 export const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
@@ -104,7 +106,6 @@ export const TOPICS_COLUMN: ColDef = {
     items: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
-  tooltipValueGetter: (params) => getTopics(params.data)?.join(', ') || null,
   hide: false,
 };
 
@@ -130,7 +131,6 @@ export const PATHS_COLUMN: ColDef = {
     items: params.data?.paths,
   }),
   filterValueGetter: (params) => params.data?.paths,
-  tooltipValueGetter: (params) => params.data?.paths?.join(', ') || null,
   hide: false,
 };
 
@@ -148,7 +148,6 @@ export const ATTACHMENT_COLUMN: ColDef = {
   hide: true,
   valueFormatter: ({ value }) => formatAttachment(value),
   filterValueGetter: (params) => formatAttachment(params.data[params.colDef.field || '']),
-  tooltipValueGetter: ({ value }) => formatAttachment(value),
 };
 
 export const SOURCE_TYPE_COLUMN = (
@@ -168,7 +167,6 @@ export const SOURCE_TYPE_COLUMN = (
       params.data,
       codeAppEditorUrl,
     ),
-  tooltipValueGetter: ({ value, data }) => sourceTypeFormatter(value, t, view, data, codeAppEditorUrl),
 });
 
 const SOURCE_VALUE_COLUMN = (view?: ApplicationRoute): ColDef => ({
@@ -177,7 +175,6 @@ const SOURCE_VALUE_COLUMN = (view?: ApplicationRoute): ColDef => ({
   hide: false,
   valueFormatter: ({ data, value }) => sourceValueFormatter(data, value, view) || '',
   filterValueGetter: ({ data, colDef }) => sourceValueFormatter(data, data[colDef.field || ''], view),
-  tooltipValueGetter: ({ data, value }) => sourceValueFormatter(data, value, view),
 });
 
 export const SOURCE_FIELD_COLUMNS = (
@@ -192,7 +189,6 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
     headerName: 'Entity type',
     valueFormatter: (params) => t(params.value),
     filterValueGetter: (params) => t(params.data[params.colDef.field || ''] as string),
-    tooltipValueGetter: (params) => t(params.value),
   };
 };
 

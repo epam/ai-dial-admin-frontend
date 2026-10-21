@@ -1,6 +1,7 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import {
   DEFAULT_COMPARE_DELTA_HEADER,
@@ -9,15 +10,26 @@ import {
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/ExecutionResults/models';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import {
   buildComparePanelColumnTree,
+  columnStateFromComparePanelTree,
+  deriveCompareGridColDefs,
   flattenComparePanelColumnTree,
+  haveSameComparePanelLayout,
+  orderComparePanelTree,
   preserveFlatColDefHideState,
   preservePanelHideState,
+  reconcileCompareColumns,
+  syncComparePanelFromColumnState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 
 const runNames = { primary: 'Run #316', secondary: 'Run #315' };
+const primaryRun = { id: 'run-316', name: runNames.primary };
+const comparedRun = { id: 'run-315', name: runNames.secondary };
+const runs = getCompareRuns(primaryRun, comparedRun);
+const reversedRuns = getCompareRuns(primaryRun, comparedRun).reverse();
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   responseStatusCode: 200,
@@ -51,7 +63,7 @@ const getColId = (col: ColDef): string | undefined => (col.colId ?? col.field) a
 
 describe('panel-columns', () => {
   test('buildComparePanelColumnTree nests execution fields under run leaves', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
     const httpGroup = getChildren(executionGroup).find((col) => col.headerName === 'HTTP') as ColDef;
     const httpLeaves = getChildren(httpGroup);
@@ -67,15 +79,35 @@ describe('panel-columns', () => {
   });
 
   test('buildComparePanelColumnTree hides execution leaves by default', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
     const executionLeaves = getChildren(executionGroup).flatMap((fieldGroup) => getChildren(fieldGroup));
 
     expect(executionLeaves.every((leaf) => leaf.hide === true)).toBe(true);
   });
 
+  test('buildComparePanelColumnTree exposes Request and Turn as execution field groups', () => {
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
+    const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
+    const fieldGroups = getChildren(executionGroup);
+
+    expect(fieldGroups.map((group) => group.headerName)).toEqual([
+      '# Run number',
+      'Request',
+      'Turn',
+      'HTTP',
+      'Duration',
+    ]);
+
+    const requestLeaves = getChildren(fieldGroups[1]);
+    const turnLeaves = getChildren(fieldGroups[2]);
+
+    expect(requestLeaves.map(getColId)).toEqual(['requestIndex', 'cmp_requestIndex']);
+    expect(turnLeaves.map(getColId)).toEqual(['turnIndex', 'cmp_turnIndex']);
+  });
+
   test('buildComparePanelColumnTree nests execution status and metric groups', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const statusGroup = panelTree[0] as ColDef;
     const metricGroup = panelTree.find((col) => col.headerName === 'Overall Accuracy') as ColDef;
     const precisionGroup = getChildren(metricGroup).find((col) => col.headerName === 'Precision') as ColDef;
@@ -89,7 +121,7 @@ describe('panel-columns', () => {
   });
 
   test('buildComparePanelColumnTree nests extracted fields under run leaves', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const extractedGroup = panelTree.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColDef;
     const answerGroup = getChildren(extractedGroup).find((col) => col.headerName === 'answer') as ColDef;
 
@@ -100,7 +132,7 @@ describe('panel-columns', () => {
 
   test('flatten roundtrip preserves flat grid colIds and order', () => {
     const flatDefs = getFlatDefs();
-    const panelTree = buildComparePanelColumnTree(flatDefs, runNames);
+    const panelTree = buildComparePanelColumnTree(flatDefs, runs);
     const flattened = flattenComparePanelColumnTree(panelTree);
 
     const collectColIds = (cols: ColDef[]): string[] =>
@@ -113,14 +145,38 @@ describe('panel-columns', () => {
         return collectColIds(children);
       });
 
-    expect(collectColIds(flattened)).toEqual(
-      collectColIds(flatDefs.filter((col) => getColId(col) !== 'compare_action')),
-    );
+    expect(collectColIds(flattened)).toEqual(collectColIds(flatDefs));
+  });
+
+  test('flatten keeps the metric level so the grid stays three levels deep', () => {
+    const flatDefs = getFlatDefs();
+    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(flatDefs, runs));
+    const metricGroup = flattened.find((col) => col.headerName === 'Overall Accuracy') as ColDef;
+    const precisionGroup = getChildren(metricGroup)[0];
+
+    expect(precisionGroup.headerName).toBe('Precision');
+    expect((precisionGroup as ColGroupDef).headerGroupComponent).toBe(EllipsisHeaderGroup);
+    expect(getChildren(precisionGroup).map(getColId)).toEqual([
+      'Overall Accuracy_Precision',
+      'cmp_Overall Accuracy_Precision',
+      'delta_Overall Accuracy_Precision',
+    ]);
+    expect(getChildren(precisionGroup).every((leaf) => leaf.context == null)).toBe(true);
+  });
+
+  test('flatten keeps the extracted field level so the grid stays three levels deep', () => {
+    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(getFlatDefs(), runs));
+    const extractedGroup = flattened.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColDef;
+    const answerGroup = getChildren(extractedGroup)[0];
+
+    expect(answerGroup.headerName).toBe('answer');
+    expect(getChildren(answerGroup).map(getColId)).toEqual(['extracted_answer', 'cmp_extracted_answer']);
+    expect(getChildren(answerGroup).every((leaf) => leaf.context == null)).toBe(true);
   });
 
   test('preservePanelHideState copies hide flags by colId', () => {
     const flatDefs = getFlatDefs();
-    const panelTree = buildComparePanelColumnTree(flatDefs, runNames);
+    const panelTree = buildComparePanelColumnTree(flatDefs, runs);
     const hiddenFlatDefs = flatDefs.map((col) => {
       const children = getChildren(col);
       if (children.length === 0) {
@@ -132,7 +188,7 @@ describe('panel-columns', () => {
         children: children.map((child) => (getColId(child) === 'http' ? { ...child, hide: true } : child)),
       };
     });
-    const hiddenPanelTree = buildComparePanelColumnTree(hiddenFlatDefs, runNames);
+    const hiddenPanelTree = buildComparePanelColumnTree(hiddenFlatDefs, runs);
     const mergedPanelTree = preservePanelHideState(panelTree, hiddenPanelTree);
 
     const flattened = flattenComparePanelColumnTree(mergedPanelTree);
@@ -155,7 +211,18 @@ describe('panel-columns', () => {
         return {
           ...col,
           children: children.map((child) =>
-            ['runIndex', 'cmp_runIndex', 'http', 'cmp_http', 'duration', 'cmp_duration'].includes(getColId(child) ?? '')
+            [
+              'runIndex',
+              'cmp_runIndex',
+              'requestIndex',
+              'cmp_requestIndex',
+              'turnIndex',
+              'cmp_turnIndex',
+              'http',
+              'cmp_http',
+              'duration',
+              'cmp_duration',
+            ].includes(getColId(child) ?? '')
               ? { ...child, hide: false }
               : child,
           ),
@@ -169,3 +236,364 @@ describe('panel-columns', () => {
     expect(executionLeaves.every((leaf) => leaf.hide !== true)).toBe(true);
   });
 });
+
+describe('Runs Compare :: buildComparePanelColumnTree run order', () => {
+  const getLeafPanelNames = (node: ColDef): (string | undefined)[] =>
+    ((node as ColGroupDef).children as ColDef[]).map((leaf) => (leaf.context as CompareColumnPanelContext)?.panelName);
+
+  test('lists the compared run before the primary run in every pair, keeping delta last', () => {
+    const tree = buildComparePanelColumnTree(getFlatDefs(), reversedRuns);
+    const metricGroup = tree.find((node) =>
+      ((node as ColGroupDef).children as ColGroupDef[])?.some((child) => child.headerName === 'Precision'),
+    ) as ColGroupDef;
+    const metric = (metricGroup.children as ColGroupDef[])[0];
+    const status = tree.find(
+      (node) => (node.context as CompareColumnPanelContext | undefined)?.panelName === EXECUTION_STATUS_GROUP_HEADER,
+    ) as ColDef;
+
+    expect(getLeafPanelNames(metric)).toEqual([runNames.secondary, runNames.primary, DEFAULT_COMPARE_DELTA_HEADER]);
+    expect(getLeafPanelNames(status)).toEqual([runNames.secondary, runNames.primary]);
+  });
+
+  test('flattening a reversed tree keeps the compared column first in the grid defs', () => {
+    const tree = buildComparePanelColumnTree(getFlatDefs(), reversedRuns);
+    const flat = flattenComparePanelColumnTree(tree);
+    const status = flat.find((node) => (node as ColGroupDef).children?.some((c) => (c as ColDef).colId === 'status'));
+
+    expect(((status as ColGroupDef).children as ColDef[]).map((leaf) => leaf.colId)).toEqual(['cmp_status', 'status']);
+  });
+
+  test('orderComparePanelTree keeps one metric group while its fields are adjacent', () => {
+    const tree = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+
+    const rows = orderComparePanelTree(tree, toState(leafIds(tree)));
+
+    expect(rows.map(rowSummary)).toContain('Set Comparison[precision|recall]');
+  });
+
+  test('orderComparePanelTree splits a metric group around a block placed between its fields', () => {
+    const tree = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+
+    const rows = orderComparePanelTree(tree, toState(recallAfterExtracted(tree)));
+    const summaries = rows.map(rowSummary);
+    const precisionIndex = summaries.indexOf('Set Comparison[precision]');
+    const extractedIndex = summaries.indexOf('Extracted[intents_array]');
+    const recallIndex = summaries.indexOf('Set Comparison[recall]');
+
+    expect(precisionIndex).toBeGreaterThan(-1);
+    expect(precisionIndex).toBeLessThan(extractedIndex);
+    expect(extractedIndex).toBeLessThan(recallIndex);
+    expect(rows[precisionIndex].headerName).toBe('Set Comparison');
+    expect(panelKey(rows[precisionIndex])).not.toBe(panelKey(rows[recallIndex]));
+  });
+
+  test('a panel move that puts the split pieces side by side joins them back', () => {
+    const initial = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const split = orderComparePanelTree(initial, toState(recallAfterExtracted(initial)));
+    const recallIndex = split.findIndex((row) => rowSummary(row) === 'Set Comparison[recall]');
+    const extractedIndex = split.findIndex((row) => rowSummary(row) === 'Extracted[intents_array]');
+    const moved = [...split];
+    const [recall] = moved.splice(recallIndex, 1);
+    moved.splice(extractedIndex, 0, recall);
+
+    const nextState = columnStateFromComparePanelTree(
+      moved,
+      leafIds(split).map((colId) => ({ colId, hide: false })),
+    );
+    const rows = orderComparePanelTree(moved, nextState);
+
+    expect(rows.map(rowSummary)).toContain('Set Comparison[precision|recall]');
+    expect(panelKey(rows.find((row) => row.headerName === 'Set Comparison') as ColDef)).toBeUndefined();
+  });
+
+  test('flattening a split panel tree keeps separate metric groups for the grid', () => {
+    const initial = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const split = orderComparePanelTree(initial, toState(recallAfterExtracted(initial)));
+
+    const flat = flattenComparePanelColumnTree(split);
+    const headers = flat.map((node) => node.headerName);
+
+    expect(headers.filter((name) => name === 'Set Comparison')).toHaveLength(2);
+    expect(headers.indexOf('Set Comparison')).toBeLessThan(headers.indexOf(EXTRACTED_GROUP_HEADER));
+    expect(headers.lastIndexOf('Set Comparison')).toBeGreaterThan(headers.indexOf(EXTRACTED_GROUP_HEADER));
+  });
+
+  test('reconcileCompareColumns keeps custom order when the schema rebuilds for hide highlights', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const customOrder = reverseMetricBlocks(panel);
+    const previous = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: panel,
+      columnState: toState(customOrder),
+    });
+
+    const next = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: previous.panelColDefs,
+      columnState: toState(customOrder),
+    });
+
+    expect(next.panelColDefs.map(rowSummary)).toEqual(previous.panelColDefs.map(rowSummary));
+    expect(flatHeaderOrder(deriveCompareGridColDefs(next.panelColDefs))).toEqual(
+      flatHeaderOrder(deriveCompareGridColDefs(previous.panelColDefs)),
+    );
+  });
+
+  test('reconcileCompareColumns keeps a split metric group across a hide-highlights rebuild', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const splitOrder = recallAfterExtracted(panel);
+    const previous = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: panel,
+      columnState: toState(splitOrder),
+    });
+
+    const next = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: previous.panelColDefs,
+      columnState: toState(splitOrder),
+    });
+
+    const summaries = next.panelColDefs.map(rowSummary);
+    expect(summaries.filter((summary) => summary.startsWith('Set Comparison'))).toHaveLength(2);
+    expect(summaries.indexOf('Set Comparison[precision]')).toBeLessThan(summaries.indexOf('Extracted[intents_array]'));
+    expect(summaries.indexOf('Extracted[intents_array]')).toBeLessThan(summaries.indexOf('Set Comparison[recall]'));
+    expect(
+      flatHeaderOrder(deriveCompareGridColDefs(next.panelColDefs)).filter((name) => name === 'Set Comparison'),
+    ).toHaveLength(2);
+  });
+
+  test('reconcileCompareColumns preserves hide across a hide-highlights rebuild', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const hidePrecision = (nodes: ColDef[]): ColDef[] =>
+      nodes.map((node) => {
+        const children = getChildren(node);
+        if (children.length) {
+          return { ...node, children: hidePrecision(children) } as ColDef;
+        }
+        return getColId(node)?.includes('precision') ? { ...node, hide: true } : node;
+      });
+    const collectHiddenLeafIds = (nodes: ColDef[]): string[] =>
+      nodes.flatMap((node) => {
+        const children = getChildren(node);
+        if (children.length) {
+          return collectHiddenLeafIds(children);
+        }
+        const colId = getColId(node);
+        return colId && node.hide === true ? [colId] : [];
+      });
+    const hiddenPanel = hidePrecision(panel);
+    const order = leafIds(hiddenPanel);
+    const columnState = toState(order).map((column) =>
+      column.colId.includes('precision') ? { ...column, hide: true } : column,
+    );
+    const previous = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: hiddenPanel,
+      columnState,
+    });
+
+    const next = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: previous.panelColDefs,
+      columnState,
+    });
+
+    const hiddenPanelLeaves = collectHiddenLeafIds(next.panelColDefs).filter((colId) => colId.includes('precision'));
+    const hiddenGridLeaves = collectHiddenLeafIds(deriveCompareGridColDefs(next.panelColDefs, columnState)).filter(
+      (colId) => colId.includes('precision'),
+    );
+    expect(hiddenPanelLeaves.length).toBeGreaterThan(0);
+    expect(hiddenGridLeaves.length).toBeGreaterThan(0);
+  });
+
+  test('deriveCompareGridColDefs flattens the panel tree and applies hide from columnState', () => {
+    const panel = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const order = leafIds(panel);
+    const precisionIds = order.filter((colId) => colId.includes('precision'));
+    expect(precisionIds.length).toBeGreaterThan(0);
+
+    const columnState = toState(order).map((column) =>
+      column.colId.includes('precision') ? { ...column, hide: true } : { ...column, hide: false },
+    );
+    const gridDefs = deriveCompareGridColDefs(panel, columnState);
+    const hiddenLeaves = collectHiddenLeafIdsFromTree(gridDefs).filter((colId) => colId.includes('precision'));
+
+    expect(flatHeaderOrder(gridDefs)).toEqual(flatHeaderOrder(flattenComparePanelColumnTree(panel) as ColDef[]));
+    expect(hiddenLeaves).toEqual(precisionIds);
+  });
+
+  test('deriveCompareGridColDefs returns an empty list when the panel tree is empty', () => {
+    expect(deriveCompareGridColDefs([], [{ colId: 'http', hide: true }])).toEqual([]);
+  });
+
+  test('deriveCompareGridColDefs overlays schema leaf props while keeping panel order', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const panel = buildComparePanelColumnTree(highlighted, runs);
+    const customOrder = reverseMetricBlocks(panel);
+    const orderedPanel = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: panel,
+      columnState: toState(customOrder),
+    }).panelColDefs;
+
+    const withHighlights = deriveCompareGridColDefs(orderedPanel, toState(customOrder), highlighted);
+    const withoutHighlights = deriveCompareGridColDefs(orderedPanel, toState(customOrder), muted);
+
+    expect(flatHeaderOrder(withHighlights)).toEqual(flatHeaderOrder(withoutHighlights));
+    expect(haveSameComparePanelLayout(orderedPanel, orderedPanel)).toBe(true);
+
+    const highlightedLeaf = findLeafWithCellClassRules(withHighlights);
+    expect(highlightedLeaf).toBeDefined();
+    const highlightedColId = getColId(highlightedLeaf!);
+    expect(highlightedColId).toBeTruthy();
+    const mutedLeaf = findLeafByColIdInTree(withoutHighlights, highlightedColId!);
+    expect(highlightedLeaf!.cellClassRules).toBeTruthy();
+    expect(mutedLeaf?.cellClassRules).toBeUndefined();
+  });
+
+  test('haveSameComparePanelLayout ignores renderer-only differences on leaves', () => {
+    const highlighted = getSetComparisonDefs({ hideHighlights: false });
+    const muted = getSetComparisonDefs({ hideHighlights: true });
+    const left = reconcileCompareColumns({
+      schemaColDefs: highlighted,
+      runs,
+      previousPanelColDefs: [],
+      columnState: null,
+    }).panelColDefs;
+    const right = reconcileCompareColumns({
+      schemaColDefs: muted,
+      runs,
+      previousPanelColDefs: left,
+      columnState: null,
+    }).panelColDefs;
+
+    expect(haveSameComparePanelLayout(left, right)).toBe(true);
+  });
+
+  test('syncComparePanelFromColumnState reorders the panel and applies hide', () => {
+    const panel = buildComparePanelColumnTree(getSetComparisonDefs(), runs);
+    const customOrder = reverseMetricBlocks(panel);
+    const columnState = toState(customOrder).map((column) =>
+      column.colId.includes('precision') ? { ...column, hide: true } : column,
+    );
+
+    const synced = syncComparePanelFromColumnState(panel, columnState);
+
+    expect(synced.map(rowSummary)).toEqual(orderComparePanelTree(panel, columnState).map(rowSummary));
+    expect(collectHiddenLeafIdsFromTree(synced).some((colId) => colId.includes('precision'))).toBe(true);
+  });
+});
+
+const getSetComparisonDefs = (options?: { hideHighlights?: boolean }) =>
+  getCompareColumnsCompare(
+    [
+      makeRow({
+        metricValues: { 'Set Comparison': { precision: 0.8, recall: 0.4 } },
+        extractedColumns: { intents_array: 'a' },
+        _compared: makeResult({
+          metricValues: { 'Set Comparison': { precision: 0.5, recall: 0.2 } },
+          extractedColumns: { intents_array: 'b' },
+        }),
+      }),
+    ],
+    undefined,
+    undefined,
+    { hideHighlights: options?.hideHighlights },
+  ) as ColDef[];
+
+const toState = (colIds: string[]) => colIds.map((colId) => ({ colId }));
+
+const recallAfterExtracted = (tree: ColDef[]): string[] => {
+  const recallIds = leafIdsUnder(tree, 'recall');
+  const extractedIds = leafIdsUnder(tree, 'intents_array');
+  const withoutRecall = leafIds(tree).filter((colId) => !recallIds.includes(colId));
+  const extractedEnd = withoutRecall.findLastIndex((colId) => extractedIds.includes(colId));
+
+  return [...withoutRecall.slice(0, extractedEnd + 1), ...recallIds, ...withoutRecall.slice(extractedEnd + 1)];
+};
+
+const reverseMetricBlocks = (tree: ColDef[]): string[] => {
+  const ids = leafIds(tree);
+  const setComparisonIds = leafIdsUnder(tree, 'Set Comparison');
+  const extractedIds = leafIdsUnder(tree, EXTRACTED_GROUP_HEADER);
+  const without = ids.filter((colId) => !setComparisonIds.includes(colId) && !extractedIds.includes(colId));
+  return [...without, ...extractedIds, ...setComparisonIds];
+};
+
+const flatHeaderOrder = (defs: ColDef[]): string[] => defs.map((node) => node.headerName ?? getColId(node) ?? '');
+
+const collectHiddenLeafIdsFromTree = (nodes: ColDef[]): string[] =>
+  nodes.flatMap((node) => {
+    const children = getChildren(node);
+    if (children.length) {
+      return collectHiddenLeafIdsFromTree(children);
+    }
+    const colId = getColId(node);
+    return colId && node.hide === true ? [colId] : [];
+  });
+
+const findLeafWithCellClassRules = (nodes: ColDef[]): ColDef | undefined => {
+  for (const node of nodes) {
+    const children = getChildren(node);
+    if (children.length) {
+      const found = findLeafWithCellClassRules(children);
+      if (found) return found;
+      continue;
+    }
+    if (node.cellClassRules) {
+      return node;
+    }
+  }
+  return undefined;
+};
+
+const findLeafByColIdInTree = (nodes: ColDef[], colId: string): ColDef | undefined => {
+  for (const node of nodes) {
+    const children = getChildren(node);
+    if (children.length) {
+      const found = findLeafByColIdInTree(children, colId);
+      if (found) return found;
+      continue;
+    }
+    if (getColId(node) === colId) {
+      return node;
+    }
+  }
+  return undefined;
+};
+
+const rowSummary = (row: ColDef): string =>
+  `${row.headerName}[${getChildren(row)
+    .map((child) => child.headerName)
+    .join('|')}]`;
+
+const panelKey = (row: ColDef): string | undefined => (row.context as CompareColumnPanelContext | undefined)?.panelKey;
+
+const leafIds = (nodes: ColDef[]): string[] =>
+  nodes.flatMap((node) => {
+    const children = getChildren(node);
+    return children.length === 0 ? [getColId(node) ?? ''] : leafIds(children);
+  });
+
+const leafIdsUnder = (nodes: ColDef[], headerName: string): string[] =>
+  nodes.flatMap((node) => {
+    if (node.headerName === headerName) {
+      return leafIds([node]);
+    }
+    return leafIdsUnder(getChildren(node), headerName);
+  });

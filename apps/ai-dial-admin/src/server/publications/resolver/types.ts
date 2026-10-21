@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { DialFile } from '@/src/models/dial/file';
+import { DialSkillResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 
@@ -9,20 +10,34 @@ export type PublicationResourceKey =
   | 'applicationResources'
   | 'conversations'
   | 'toolSetResources'
-  | 'files';
+  | 'files'
+  | 'skillResources';
 
 /** The field on a resource wrapper that holds the enriched asset body. */
-export type PublicationAssetKey = 'prompt' | 'applicationResource' | 'conversation' | 'toolSetResource' | 'file';
+export type PublicationAssetKey =
+  | 'prompt'
+  | 'applicationResource'
+  | 'conversation'
+  | 'toolSetResource'
+  | 'file'
+  | 'skillResource';
 
 /**
  * Resource types the publications workflow can carry. The `ConfigResourceController`-backed types
- * (models, app runners, interceptors, roles) have no publications support — Core has no sharing or
- * publication concept for them. Interceptors and roles are read-only reference data here, registered
+ * (models, app runners, catalog schemas, interceptors, roles) have no publications support — Core
+ * has no sharing or publication concept for them. Interceptors and roles are read-only reference data here, registered
  * only so their metadata listing can be read.
  */
 export type PublishableResourceType = Exclude<
   ResourceType,
-  ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA | ResourceType.INTERCEPTOR | ResourceType.ROLE
+  | ResourceType.MODEL
+  | ResourceType.APP_TYPE_SCHEMA
+  | ResourceType.CATALOG_SCHEMA
+  | ResourceType.INTERCEPTOR
+  | ResourceType.TRANSLATOR
+  | ResourceType.ROLE
+  | ResourceType.ROUTE
+  | ResourceType.PROJECT_KEY
 >;
 
 export interface PublicationTypeConfig {
@@ -48,4 +63,6 @@ export interface EnrichmentClients {
   getBucket: (token: Token) => Promise<{ bucket: string } | null>;
   getFileMetadata: (token: Token, path: string) => Promise<DialFile | null>;
   uploadFile: (token: Token, path: string, file: File) => Promise<ServerActionResponse>;
+  /** Folder-metadata-only lookup for a skill (`GET /v2/metadata/skills/{bucket}/{path}/`) — no ZIP/content fetch. */
+  getSkillMetadata: (token: Token, path: string) => Promise<DialSkillResource | null>;
 }

@@ -75,14 +75,14 @@ const EntityProperties: FC<Props> = ({
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
 
-      {view === ApplicationRoute.AssetsModels && (
+      {view === ApplicationRoute.PlatformModels && (
         <VersionControl
           title={t(EntityFieldsI18nKey.displayVersion)}
           version={(entity as DialModelResource).displayVersion}
           optional
           isFullWidth={!isEntityImmutable}
           enableSemanticValidation={false}
-          onChange={(displayVersion) => onChangeEntity({ ...entity, displayVersion } as DialModelResource)}
+          onChange={(displayVersion) => onChangeEntity({ ...entity, displayVersion } as unknown as BaseEntity)}
         />
       )}
 

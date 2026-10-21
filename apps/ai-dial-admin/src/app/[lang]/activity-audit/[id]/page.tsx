@@ -1,5 +1,7 @@
 import { cookies, headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+
+import { ApplicationRoute } from '@/src/types/routes';
 
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import SystemRollback from '@/src/components/ActivityAudit/Rollback/SystemRollback';
@@ -11,6 +13,9 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
+    redirect(ApplicationRoute.Home);
+  }
   const auditViewId = decodeURIComponent((await params.params).id);
   if (auditViewId === SYSTEM_ROLLBACK_ID) {
     return <SystemRollback />;

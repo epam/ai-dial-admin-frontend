@@ -3,8 +3,8 @@
 import { FC } from 'react';
 
 import { createRole, removeRole } from '@/src/app/[lang]/roles/actions';
-import { BASE_COLUMNS_WITH_TOPICS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
+import { BASE_COLUMNS_WITH_TOPICS } from '@/src/constants/grid-columns/grid-columns';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';

@@ -1,27 +1,33 @@
-import { ColDef, ColGroupDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ColumnState } from 'ag-grid-community';
 
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { applyColumnStateOrderToTreeColDefs } from '@/src/components/Grid/utils';
 import {
-  COMPARE_ACTION_COL_ID,
   DEFAULT_COMPARE_DELTA_HEADER,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
-import { CompareColumnPanelContext, ComparePanelRunNames } from '@/src/components/Runs/Compare/ExecutionResults/models';
-
-type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
+import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/ExecutionResults/models';
+import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
+import { getCompareRunColId } from '@/src/components/Runs/Compare/utils';
 
 const EXECUTION_FIELD_GROUPS = [
-  { fieldLabel: '# Run number', primaryColId: 'runIndex', secondaryColId: 'cmp_runIndex' },
-  { fieldLabel: 'HTTP', primaryColId: 'http', secondaryColId: 'cmp_http' },
-  { fieldLabel: 'Duration', primaryColId: 'duration', secondaryColId: 'cmp_duration' },
+  { fieldLabel: '# Run number', colId: 'runIndex' },
+  { fieldLabel: 'Request', colId: 'requestIndex' },
+  { fieldLabel: 'Turn', colId: 'turnIndex' },
+  { fieldLabel: 'HTTP', colId: 'http' },
+  { fieldLabel: 'Duration', colId: 'duration' },
 ] as const;
 
 const getColId = (col: ColDef): string | undefined => (col.colId ?? col.field) as string | undefined;
 
 const getChildren = (node: ColDef): ColDef[] =>
   'children' in node && node.children ? (node.children as ColDef[]) : [];
+
+const getLeaves = (node: ColDef): ColDef[] => {
+  const children = getChildren(node);
+  return children.length === 0 ? [node] : children.flatMap(getLeaves);
+};
 
 const findLeafByColId = (leaves: ColDef[], colId: string): ColDef | undefined =>
   leaves.find((leaf) => getColId(leaf) === colId);
@@ -51,35 +57,35 @@ const stripPanelContext = (col: ColDef): ColDef => {
   return { ...col, context: Object.keys(rest).length > 0 ? rest : undefined };
 };
 
+/** One panel leaf per run, in display order, for the column every run owns under `baseColId`. */
+const wrapRunLeaves = (leaves: ColDef[], baseColId: string, runs: CompareRun[]): ColDef[] =>
+  runs.map((run) =>
+    wrapPanelLeaf(findLeafByColId(leaves, getCompareRunColId(run.slot, baseColId)), run.name, run.index),
+  );
+
+const hasEveryRunColumn = (leaves: ColDef[], baseColId: string, runs: CompareRun[]): boolean =>
+  runs.every((run) => findLeafByColId(leaves, getCompareRunColId(run.slot, baseColId)));
+
 const nestPairedFieldGroup = (
   fieldLabel: string,
-  primaryColId: string,
-  secondaryColId: string,
+  baseColId: string,
   leaves: ColDef[],
-  runNames: ComparePanelRunNames,
+  runs: CompareRun[],
 ): ColGroupDef => {
-  const primary = findLeafByColId(leaves, primaryColId);
-  const secondary = findLeafByColId(leaves, secondaryColId);
-  if (!primary || !secondary) {
+  if (!hasEveryRunColumn(leaves, baseColId, runs)) {
     return { headerName: fieldLabel, children: [] };
   }
 
-  return {
-    headerName: fieldLabel,
-    children: [
-      wrapPanelLeaf(primary, runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-      wrapPanelLeaf(secondary, runNames.secondary, RUN_COMPARE_SECONDARY_INDEX),
-    ],
-  };
+  return { headerName: fieldLabel, children: wrapRunLeaves(leaves, baseColId, runs) };
 };
 
-const nestExecutionGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestExecutionGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const leaves = getChildren(group);
 
   return {
     headerName: EXECUTION_GROUP_HEADER,
-    children: EXECUTION_FIELD_GROUPS.map(({ fieldLabel, primaryColId, secondaryColId }) =>
-      nestPairedFieldGroup(fieldLabel, primaryColId, secondaryColId, leaves, runNames),
+    children: EXECUTION_FIELD_GROUPS.map(({ fieldLabel, colId }) =>
+      nestPairedFieldGroup(fieldLabel, colId, leaves, runs),
     ),
   };
 };
@@ -93,55 +99,42 @@ const isExecutionStatusGroup = (group: ColDef): boolean => {
   return getChildren(group).some((child) => getColId(child) === 'status');
 };
 
-const nestExecutionStatusGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestExecutionStatusGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const leaves = getChildren(group);
-  const primary = findLeafByColId(leaves, 'status');
-  const secondary = findLeafByColId(leaves, 'cmp_status');
-  if (!primary || !secondary) {
+  if (!hasEveryRunColumn(leaves, 'status', runs)) {
     return group;
   }
 
   return {
     headerName: '',
     context: { panelName: EXECUTION_STATUS_GROUP_HEADER },
-    children: [
-      wrapPanelLeaf(primary, runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-      wrapPanelLeaf(secondary, runNames.secondary, RUN_COMPARE_SECONDARY_INDEX),
-    ],
+    children: wrapRunLeaves(leaves, 'status', runs),
   };
 };
 
-const nestMetricGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestMetricGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const groupKey = group.headerName ?? '';
-  const leaves = getChildren(group);
-  const metricKeys = leaves
-    .map((leaf) => getColId(leaf))
-    .filter((colId): colId is string => colId?.startsWith(`delta_${groupKey}_`) ?? false)
-    .map((colId) => colId.slice(`delta_${groupKey}_`.length));
 
   return {
     headerName: groupKey,
-    children: metricKeys.map((metricKey) => {
-      const fieldChildren: ColDef[] = [
-        wrapPanelLeaf(findLeafByColId(leaves, `${groupKey}_${metricKey}`), runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-        wrapPanelLeaf(
-          findLeafByColId(leaves, `cmp_${groupKey}_${metricKey}`),
-          runNames.secondary,
-          RUN_COMPARE_SECONDARY_INDEX,
-        ),
-        wrapPanelLeaf(findLeafByColId(leaves, `delta_${groupKey}_${metricKey}`), DEFAULT_COMPARE_DELTA_HEADER),
-      ];
+    // Spreading the grid's metric level keeps its header renderer, which `flattenGroupedNode` hands back to the grid.
+    children: (group.children as ColGroupDef[]).map((metricGroup) => {
+      const leaves = getChildren(metricGroup);
+      const metricKey = metricGroup.headerName ?? '';
 
       return {
-        headerName: metricKey,
-        children: fieldChildren,
+        ...metricGroup,
+        children: [
+          ...wrapRunLeaves(leaves, `${groupKey}_${metricKey}`, runs),
+          wrapPanelLeaf(findLeafByColId(leaves, `delta_${groupKey}_${metricKey}`), DEFAULT_COMPARE_DELTA_HEADER),
+        ],
       };
     }),
   };
 };
 
-const nestExtractedGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
-  const leaves = getChildren(group);
+const nestExtractedGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
+  const leaves = getLeaves(group);
   const fieldKeys = leaves
     .map((leaf) => getColId(leaf))
     .filter((colId): colId is string => colId?.startsWith('extracted_') ?? false)
@@ -151,22 +144,14 @@ const nestExtractedGroup = (group: ColGroupDef, runNames: ComparePanelRunNames):
     headerName: EXTRACTED_GROUP_HEADER,
     children: fieldKeys.map((key) => ({
       headerName: key,
-      children: [
-        wrapPanelLeaf(findLeafByColId(leaves, `extracted_${key}`)!, runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-        wrapPanelLeaf(
-          findLeafByColId(leaves, `cmp_extracted_${key}`)!,
-          runNames.secondary,
-          RUN_COMPARE_SECONDARY_INDEX,
-        ),
-      ],
+      children: wrapRunLeaves(leaves, `extracted_${key}`, runs),
     })),
   };
 };
 
-const isMetricGroup = (group: ColDef): boolean =>
-  getChildren(group).some((child) => getColId(child)?.startsWith('delta_'));
+const isMetricGroup = (group: ColDef): boolean => getLeaves(group).some((leaf) => getColId(leaf)?.startsWith('delta_'));
 
-const nestTopLevelNode = (node: ColDef, runNames: ComparePanelRunNames): ColDef => {
+const nestTopLevelNode = (node: ColDef, runs: CompareRun[]): ColDef => {
   const children = getChildren(node);
   if (children.length === 0) {
     return node;
@@ -175,16 +160,16 @@ const nestTopLevelNode = (node: ColDef, runNames: ComparePanelRunNames): ColDef 
   const group = node as ColGroupDef;
 
   if (isExecutionStatusGroup(group)) {
-    return nestExecutionStatusGroup(group, runNames);
+    return nestExecutionStatusGroup(group, runs);
   }
   if (group.headerName === EXECUTION_GROUP_HEADER) {
-    return nestExecutionGroup(group, runNames);
+    return nestExecutionGroup(group, runs);
   }
   if (group.headerName === EXTRACTED_GROUP_HEADER) {
-    return nestExtractedGroup(group, runNames);
+    return nestExtractedGroup(group, runs);
   }
   if (isMetricGroup(group)) {
-    return nestMetricGroup(group, runNames);
+    return nestMetricGroup(group, runs);
   }
 
   return group;
@@ -194,6 +179,17 @@ const flattenGroupedNode = (node: ColDef): ColDef | ColGroupDef => {
   const children = getChildren(node);
   if (children.length === 0) {
     return stripPanelContext(node);
+  }
+
+  if (isMetricGroup(node) || node.headerName === EXTRACTED_GROUP_HEADER) {
+    // The grid keeps the per-field level, so only the panel-only leaf context is dropped.
+    return {
+      ...(node as ColGroupDef),
+      children: children.map((fieldGroup) => ({
+        ...fieldGroup,
+        children: getChildren(fieldGroup).map(stripPanelContext),
+      })),
+    } as ColGroupDef;
   }
 
   if (children.every((child) => getChildren(child).length > 0)) {
@@ -276,14 +272,238 @@ export const preserveFlatColDefHideState = (newDefs: ColDef[], oldDefs: ColDef[]
 
 export const buildComparePanelColumnTree = (
   flatDefs: ColDef[],
-  runNames: ComparePanelRunNames,
+  runs: CompareRun[],
   prevPanelTree?: ColDef[],
 ): ColDef[] => {
-  const panelDefs = flatDefs.filter((col) => getColId(col) !== COMPARE_ACTION_COL_ID);
-  const nestedTree = panelDefs.map((node) => nestTopLevelNode(node, runNames));
+  const nestedTree = flatDefs.map((node) => nestTopLevelNode(node, runs));
 
   return prevPanelTree ? preservePanelHideState(nestedTree, prevPanelTree) : nestedTree;
 };
 
 export const flattenComparePanelColumnTree = (panelTree: ColDef[]): (ColDef | ColGroupDef)[] =>
   panelTree.map((node) => flattenGroupedNode(node));
+
+const panelNodePosition = (node: ColDef, indexByColId: Map<string, number>): number => {
+  const children = getChildren(node);
+  if (children.length === 0) {
+    const colId = getColId(node);
+    return colId ? (indexByColId.get(colId) ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+  }
+
+  return Math.min(...children.map((child) => panelNodePosition(child, indexByColId)));
+};
+
+const isSplittablePanelGroup = (node: ColDef): boolean =>
+  isMetricGroup(node) || node.headerName === EXTRACTED_GROUP_HEADER;
+
+const withChildren = (node: ColDef, children: ColDef[]): ColDef => ({ ...node, children }) as ColGroupDef as ColDef;
+
+const withPanelKey = (node: ColDef, panelKey: string | undefined): ColDef => {
+  const { panelKey: __panelKey, ...context } = (node.context ?? {}) as CompareColumnPanelContext;
+  const nextContext = panelKey ? { ...context, panelKey } : context;
+  return { ...node, context: Object.keys(nextContext).length > 0 ? nextContext : undefined };
+};
+
+const isSameSplittableGroup = (left: ColDef | undefined, right: ColDef): boolean =>
+  !!left && isSplittablePanelGroup(left) && isSplittablePanelGroup(right) && left.headerName === right.headerName;
+
+/**
+ * Lists metric and extracted groups the way the grid draws them: one row while their fields are
+ * side by side, one row per run of adjacent fields once another block sits between them.
+ */
+export const orderComparePanelTree = (tree: ColDef[], columnState: ColumnState[]): ColDef[] => {
+  const indexByColId = new Map(columnState.map((column, index) => [column.colId, index]));
+  const byPosition = (left: ColDef, right: ColDef) =>
+    panelNodePosition(left, indexByColId) - panelNodePosition(right, indexByColId);
+
+  const sortedTree = applyColumnStateOrderToTreeColDefs(tree, columnState);
+  const blocks = sortedTree
+    .flatMap((node) =>
+      isSplittablePanelGroup(node) ? getChildren(node).map((child) => withChildren(node, [child])) : [node],
+    )
+    .sort(byPosition);
+
+  const rows: ColDef[] = [];
+  for (const block of blocks) {
+    const previous = rows[rows.length - 1];
+    if (isSameSplittableGroup(previous, block)) {
+      rows[rows.length - 1] = withChildren(previous, [...getChildren(previous), ...getChildren(block)]);
+    } else {
+      rows.push(block);
+    }
+  }
+
+  return rows.map((row) => {
+    if (!isSplittablePanelGroup(row)) {
+      return row;
+    }
+
+    const isSplit = rows.some((other) => other !== row && isSameSplittableGroup(other, row));
+    return withPanelKey(row, isSplit ? `${row.headerName ?? ''}#${getColId(getLeaves(row)[0]) ?? ''}` : undefined);
+  });
+};
+
+export const columnStateFromComparePanelTree = (tree: ColDef[], columnState: ColumnState[]): ColumnState[] => {
+  const leafOrder: string[] = [];
+  const visit = (nodes: ColDef[]) => {
+    for (const node of nodes) {
+      const children = getChildren(node);
+      if (children.length === 0) {
+        const colId = getColId(node);
+        if (colId) {
+          leafOrder.push(colId);
+        }
+        continue;
+      }
+      visit(children);
+    }
+  };
+  visit(tree);
+
+  const hideByColId = collectHideByColId(tree);
+  const byId = new Map(columnState.map((column) => [column.colId, column]));
+  const seen = new Set(leafOrder);
+
+  return [
+    ...leafOrder.flatMap((colId) => {
+      const column = byId.get(colId);
+      if (!column) {
+        return [];
+      }
+      return hideByColId.has(colId) ? [{ ...column, hide: hideByColId.get(colId) }] : [column];
+    }),
+    ...columnState.filter((column) => !seen.has(column.colId)),
+  ];
+};
+
+export interface ReconcileCompareColumnsInput {
+  schemaColDefs: ColDef[];
+  runs: CompareRun[];
+  previousPanelColDefs: ColDef[];
+  columnState: ColumnState[] | null | undefined;
+}
+
+export interface ReconcileCompareColumnsResult {
+  panelColDefs: ColDef[];
+}
+
+/**
+ * Turns a fresh compare schema into a panel tree while keeping the operator's layout.
+ * Ordering from flat columnState first is what keeps a split group apart when the grid
+ * later flattens that tree.
+ */
+export const reconcileCompareColumns = ({
+  schemaColDefs,
+  runs,
+  previousPanelColDefs,
+  columnState,
+}: ReconcileCompareColumnsInput): ReconcileCompareColumnsResult => {
+  const builtPanel = buildComparePanelColumnTree(schemaColDefs, runs, previousPanelColDefs);
+
+  if (!columnState?.length) {
+    return { panelColDefs: builtPanel };
+  }
+
+  return { panelColDefs: orderComparePanelTree(builtPanel, columnState) };
+};
+
+const hideMapFromColumnState = (columnState: ColumnState[]): Map<string, boolean> => {
+  const hideMap = new Map<string, boolean>();
+  for (const column of columnState) {
+    if (column.hide !== undefined && column.hide !== null) {
+      hideMap.set(column.colId, column.hide);
+    }
+  }
+  return hideMap;
+};
+
+const indexSchemaLeavesByColId = (nodes: ColDef[], map = new Map<string, ColDef>()): Map<string, ColDef> => {
+  for (const node of nodes) {
+    const children = getChildren(node);
+    if (children.length === 0) {
+      const colId = getColId(node);
+      if (colId) {
+        map.set(colId, node);
+      }
+      continue;
+    }
+    indexSchemaLeavesByColId(children, map);
+  }
+  return map;
+};
+
+/** Keeps layout order/structure; swaps in schema leaf props (renderers, value getters) by colId. */
+const overlaySchemaOntoTree = (nodes: ColDef[], schemaByColId: Map<string, ColDef>): ColDef[] =>
+  nodes.map((node) => {
+    const children = getChildren(node);
+    if (children.length === 0) {
+      const colId = getColId(node);
+      const schemaLeaf = colId ? schemaByColId.get(colId) : undefined;
+      if (!schemaLeaf) {
+        return node;
+      }
+      return { ...schemaLeaf, hide: node.hide };
+    }
+
+    return { ...node, children: overlaySchemaOntoTree(children, schemaByColId) } as ColDef;
+  });
+
+const comparePanelLayoutSignature = (nodes: ColDef[]): string => {
+  const parts: string[] = [];
+  const visit = (tree: ColDef[]) => {
+    for (const node of tree) {
+      const children = getChildren(node);
+      const panelKey = (node.context as CompareColumnPanelContext | undefined)?.panelKey ?? '';
+      if (children.length > 0) {
+        parts.push(`g:${node.headerName ?? ''}:${panelKey}`);
+        visit(children);
+        continue;
+      }
+      parts.push(`l:${getColId(node) ?? ''}:${node.hide === true ? '1' : '0'}`);
+    }
+  };
+  visit(nodes);
+  return parts.join('|');
+};
+
+/** True when leaf order, hide flags, and split panelKeys match — ignores renderers. */
+export const haveSameComparePanelLayout = (left: ColDef[], right: ColDef[]): boolean =>
+  comparePanelLayoutSignature(left) === comparePanelLayoutSignature(right);
+
+/**
+ * Reorders (and splits/joins) the panel tree from flat columnState and applies hide from that state.
+ */
+export const syncComparePanelFromColumnState = (
+  panelColDefs: ColDef[],
+  columnState: ColumnState[] | null | undefined,
+): ColDef[] => {
+  if (!panelColDefs.length || !columnState?.length) {
+    return panelColDefs;
+  }
+
+  return applyHideByColId(orderComparePanelTree(panelColDefs, columnState), hideMapFromColumnState(columnState));
+};
+
+/**
+ * Grid column defs are never stored: flatten the panel tree, apply hide from columnState,
+ * and optionally overlay fresh schema leaf props so Hide highlights updates without rewriting panel.
+ */
+export const deriveCompareGridColDefs = (
+  panelColDefs: ColDef[],
+  columnState?: ColumnState[] | null,
+  schemaColDefs?: ColDef[] | null,
+): ColDef[] => {
+  if (!panelColDefs.length) {
+    return [];
+  }
+
+  let flatDefs = flattenComparePanelColumnTree(panelColDefs) as ColDef[];
+  if (columnState?.length) {
+    flatDefs = applyHideByColId(flatDefs, hideMapFromColumnState(columnState));
+  }
+  if (schemaColDefs?.length) {
+    flatDefs = overlaySchemaOntoTree(flatDefs, indexSchemaLeavesByColId(schemaColDefs));
+  }
+
+  return flatDefs;
+};

@@ -1,0 +1,257 @@
+import { BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
+
+import { QueryFilterNode } from '@/src/models/analytics/query';
+import { TimeRange } from '@/src/models/time-range';
+
+export enum UsageView {
+  Llm = 'llm',
+  Mcp = 'mcp',
+  Routes = 'routes',
+}
+
+export enum ComparePeriod {
+  Off = 'off',
+  PreviousPeriod = 'previous-period',
+  PreviousMonth = 'previous-month',
+  PreviousYear = 'previous-year',
+}
+
+/** Which measure the share chart splits the window by. */
+export enum DonutMetric {
+  Calls = 'calls',
+  Cost = 'cost',
+}
+
+export enum BreakdownTab {
+  Models = 'models',
+  Applications = 'applications',
+  Projects = 'projects',
+  McpServers = 'mcp-servers',
+  Tools = 'tools',
+  Owners = 'owners',
+  Paths = 'paths',
+  Callers = 'callers',
+}
+
+/** Which of the two route mechanisms a Routes view row was served by. */
+export enum RouteKind {
+  Application = 'application',
+  Global = 'global',
+}
+
+export enum HeatmapMetric {
+  Calls = 'calls',
+  Cost = 'cost',
+}
+
+export enum CallerSource {
+  Principal = 'principal',
+  Reference = 'reference',
+  Hash = 'hash',
+  None = 'none',
+}
+
+export enum KpiMetric {
+  TotalSpend = 'total-spend',
+  Requests = 'requests',
+  Tokens = 'tokens',
+  CostPerMillionTokens = 'cost-per-million-tokens',
+  UniqueCallers = 'unique-callers',
+  ErrorRate = 'error-rate',
+  AvgLatency = 'avg-latency',
+}
+
+/**
+ * Which rows a block reads beyond its view and window. `own` is the entity's own rows — calls made
+ * to it. An application also has a call tree, read two ways: `made` is the priced model calls in it,
+ * `tools` the tool calls in it that the application does not serve itself. The page has none.
+ */
+export interface UsageScope {
+  own: QueryFilterNode[];
+  made?: QueryFilterNode[];
+  tools?: QueryFilterNode[];
+}
+
+/** The rows one request reads beyond its view and window. */
+export interface RowScope {
+  entityClauses: QueryFilterNode[];
+}
+
+/** Where a block reads each of its figures from. The page reads every row, as an empty scope. */
+export interface BlockReads {
+  /** Read every figure from the tool calls in the entity's call tree. */
+  isToolsOnly?: boolean;
+  /** Tabs ranked from the priced model calls in the entity's call tree. */
+  madeTabs?: BreakdownTab[];
+  /** Spend, tokens, cost per 1M and the spend plot come from those calls too. */
+  isMoneyFromMade?: boolean;
+}
+
+/** One block of an entity dashboard; `ENTITY_BLOCKS` says why a tab is hidden. */
+export interface EntityBlock extends BlockReads {
+  view: UsageView;
+  hiddenTab: BreakdownTab;
+  /** Rendered only for an entity that declares routes. */
+  isRoutesOnly?: boolean;
+}
+
+export interface RequestState<T> {
+  data: T | null;
+  isLoading: boolean;
+  hasFailed: boolean;
+}
+
+/** Measures over the current window and the one it is compared against. */
+export interface ComparedMeasures {
+  current: UsageMeasures | null;
+  previous: UsageMeasures | null;
+}
+
+/** The requests behind a `ComparedMeasures`. */
+export interface ComparedTotals {
+  current: RequestState<UsageMeasures | null>;
+  previous: RequestState<UsageMeasures | null>;
+}
+
+export interface ComparedWindows {
+  current: TimeRange;
+  previous?: TimeRange;
+}
+
+export interface WindowedValue {
+  current: number | null;
+  previous: number | null;
+}
+
+/** Every figure one aggregate row carries. Absent where the view does not report it. */
+export interface UsageMeasures {
+  calls: number;
+  callers: number;
+  failed: number;
+  avgLatencyMs: number | null;
+  spend: number | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  /** Only the bucketed request carries these; every other aggregate leaves them null. */
+  p50LatencyMs: number | null;
+  p95LatencyMs: number | null;
+}
+
+export interface BucketPoint {
+  bucketMs: number;
+  measures: UsageMeasures;
+}
+
+export enum TimeSeriesView {
+  Requests = 'requests',
+  ByDimension = 'by-dimension',
+  Cost = 'cost',
+  Latency = 'latency',
+}
+
+export interface SpendBucket {
+  bucketMs: number;
+  spend: number;
+}
+
+export interface DimensionBucketPoint {
+  bucketMs: number;
+  seriesId: string;
+  calls: number;
+}
+
+export interface BreakdownRow {
+  id: string;
+  label: string;
+  isFallbackLabel: boolean;
+  measures: UsageMeasures;
+  /** Deployments this row aggregates, capped; set only where its dimension does not name them. */
+  groupNames?: string[];
+  /** How many there are altogether, which a capped list cannot say. */
+  groupCount?: number | null;
+  /** The values of the tab's qualifier columns, in their order; set only on a qualified tab. */
+  qualifiers?: string[];
+}
+
+/**
+ * One slice as the ring and its legend both read it. The colour is carried rather than derived from
+ * a position, so a filtered legend still matches the ring it describes.
+ */
+export interface DonutSliceView {
+  id: string;
+  label: string;
+  value: number;
+  isOther: boolean;
+  /** The figure of the measure the ring is split by. */
+  valueLabel: string;
+  /**
+   * The other measure, stated beside it where there is room for both. The dialog fills these; the
+   * card leaves them out and states `valueLabel` alone.
+   */
+  callsLabel?: string;
+  costLabel?: string;
+  shareLabel: string | null;
+  color: string;
+}
+
+export interface KpiFigure {
+  metric: KpiMetric;
+  value: WindowedValue;
+  sparkline: number[];
+}
+
+export interface KpiCardModel {
+  metric: KpiMetric;
+  titleKey: string;
+  value: string | null;
+  unit?: string;
+  deltaRatio: number | null;
+  /** The previous window held nothing and this one does: a change with nothing to divide by. */
+  isNew: boolean;
+  footnote?: string;
+  sparkline: number[];
+}
+
+/**
+ * How each of a row's measures moved against the previous window, as a ratio of its own previous
+ * value. Null where there is nothing to divide by: no comparison, or a previous value of zero.
+ */
+export interface BreakdownDeltas {
+  calls: number | null;
+  errorRate: number | null;
+  avgLatencyMs: number | null;
+  spend: number | null;
+}
+
+export interface BreakdownRowModel {
+  id: string;
+  displayLabel: string;
+  isFallbackLabel: boolean;
+  fallbackTooltip?: string;
+  /** What the row's own name leaves out — which MCP server a tool was called on. */
+  subLabel?: string;
+  subLabelTooltip?: string;
+  calls: number;
+  /** Kept beside the rate: a rate rounded for the column cannot be read back into a count. */
+  failed: number;
+  share: number | null;
+  deltas: BreakdownDeltas;
+  isNewRow: boolean;
+  errorRate: number | null;
+  avgLatencyMs: number | null;
+  /** Null in the MCP view, where a row carries no price at all. */
+  spend: number | null;
+  /** Set only on the Routes view's tabs that state a row's kind. */
+  routeKind?: RouteKind;
+}
+
+export interface WidestFigures {
+  formats?: Record<string, (row: BreakdownRowModel) => string | null>;
+  key?: string;
+  widest: Record<string, string>;
+}
+
+export interface DeltaBadgeAppearance {
+  variant: BadgeVariant;
+  color?: BadgeColor;
+}

@@ -1,8 +1,3 @@
-import { IconCheck, IconCircleMinus, IconX } from '@tabler/icons-react';
-
-import { RunsI18nKey } from '@/src/constants/i18n';
-import { MetricStatistic } from './models';
-
 /** Structured-query entity + column names for the run analytics cards (backend `eval_summaries`). */
 export const EVAL_SUMMARIES_ENTITY = 'eval_summaries';
 
@@ -17,11 +12,15 @@ export const LATEST_COMPUTATION = 'latest';
 export const RUN_ID_FIELD = 'test_suite_run_id';
 export const COMPUTATION_ID_FIELD = 'computation_id';
 export const EXECUTION_STATUS_FIELD = 'execution_status';
+/** Per-test-case threshold outcome (`score >= snapshotted overallScoreThreshold`); read from `test_case_eval_scores`. */
+export const PASSED_FIELD = 'passed';
 export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
+export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
 
 /** Aggregate output aliases requested from the query. */
 export const COUNT_ALIAS = 'count';
 export const AVG_DURATION_ALIAS = 'avg_duration_ms';
+export const AVG_METRIC_EVAL_DURATION_ALIAS = 'avg_metric_eval_duration_ms';
 
 /** `metric_score_name` value for the run-level overall score; excluded from the Metric Scores segmented control. */
 export const OVERALL_METRIC_SCORE_NAME = 'overall';
@@ -44,30 +43,32 @@ export const DEFAULT_METRIC_SCORE_FIELD = 'score';
 /** Eval-summary row id field for matched-only distribution exclusion filters. */
 export const EVAL_SUMMARY_ID_FIELD = 'id';
 
+/** Structured-query entity for per-test-case eval score/passed/execution_status (backend `test_case_eval_scores`). */
+export const TEST_CASE_EVAL_SCORES_ENTITY = 'test_case_eval_scores';
+/** Test-case identity field on `test_case_eval_scores`, used for the matched-only exclusion filter. */
+export const TEST_CASE_ID_FIELD = 'test_case_id';
+
+export const METRIC_SCORES_GRID_CLASS = 'grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2';
+
+export const SUMMARY_PANELS_GRID_CLASS =
+  'grid min-h-0 min-w-0 flex-1 auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-h-[36rem]';
+
+export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
+
+export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-between';
+
+export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
+
 /**
- * Tailwind text-color tokens for the "Test Cases Passed" card status breakdown
- * (accent-secondary #37BABC, error #F76464, secondary #9FA6BD).
+ * Upper bound on how long `useRunCosts` keeps polling a run that never returns a figure. The
+ * endpoint cannot tell "still aggregating" from "this run can never have a cost" (e.g. the
+ * evaluated model has no pricing configured), so both look identical — a payload with no averages —
+ * for as long as the client keeps asking. Set well above the "usually under 10 min" copy promise so
+ * a genuinely slow aggregation still finishes inside the window; once it elapses the cards settle to
+ * an em dash instead of calculating forever.
  */
-export const STATUS_DOT_CLASSES = {
-  pass: 'text-accent-secondary',
-  fail: 'text-error',
-  error: 'text-secondary',
-} as const;
+export const COST_FETCH_MAX_WAIT_MS = 15 * 60 * 1_000;
 
-/** Icons for the "Test Cases Passed" card status breakdown. */
-export const STATUS_DOT_ICONS = {
-  pass: IconCheck,
-  fail: IconX,
-  error: IconCircleMinus,
-} as const;
+export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
-/** Metric Scores section description, per selected statistic. */
-export const METRIC_STATISTIC_DESCRIPTIONS: Record<MetricStatistic, RunsI18nKey> = {
-  [MetricStatistic.Avg]: RunsI18nKey.MetricScoresDescriptionAvg,
-  [MetricStatistic.P90]: RunsI18nKey.MetricScoresDescriptionP90,
-  [MetricStatistic.P10]: RunsI18nKey.MetricScoresDescriptionP10,
-  [MetricStatistic.Max]: RunsI18nKey.MetricScoresDescriptionMax,
-  [MetricStatistic.Min]: RunsI18nKey.MetricScoresDescriptionMin,
-  [MetricStatistic.Med]: RunsI18nKey.MetricScoresDescriptionMed,
-  [MetricStatistic.Count]: RunsI18nKey.MetricScoresDescriptionCount,
-};
+export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';

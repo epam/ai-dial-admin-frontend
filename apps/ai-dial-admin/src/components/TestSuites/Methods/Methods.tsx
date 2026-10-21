@@ -1,17 +1,31 @@
 'use client';
 
-import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Dispatch,
+  FC,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
-import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
-import { CHAT_COMPLETION_SUITE, DEFAULT_SUITE } from '@/src/components/TestSuites/constants/methods';
-import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
+import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
+import {
+  buildMethodGroups,
+  buildRouteMethodGroups,
+  flattenMethodGroups,
+} from '@/src/components/TestSuites/utils/method-groups';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
+import { DialRoute } from '@/src/models/dial/route';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import MethodInfo from './MethodInfo';
 import MethodItem from './MethodItem';
 
@@ -19,72 +33,123 @@ interface Props {
   testSuite: TestSuite;
   onChange: Dispatch<SetStateAction<TestSuite>>;
   selectedTarget?: Deployment | null;
+  selectedRoute?: DialRoute | null;
   isCreate?: boolean;
+  takenColumnNames?: string[];
   children?: ReactNode;
 }
 
-const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, children }) => {
+const Methods: FC<Props> = ({
+  testSuite,
+  selectedTarget,
+  selectedRoute,
+  onChange,
+  isCreate,
+  takenColumnNames = [],
+  children,
+}) => {
   const t = useI18n();
+  const groupHeadingId = useId();
 
   const [activeMethodIndex, setActiveMethodIndex] = useState<number | null>();
   const [fullApplication, setFullApplication] = useState<Deployment | null>();
-  const [methods, setMethods] = useState<TestSuiteEndpointRef[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!selectedRoute);
+
+  const buildGroupsFor = useCallback(
+    (deployment?: Deployment | null) =>
+      selectedRoute
+        ? buildRouteMethodGroups(selectedRoute)
+        : buildMethodGroups({ deployment, endpointRef: testSuite.endpointRef, takenColumnNames }),
+    // `takenColumnNames` is a fresh array each render; its contents are what matter here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedRoute, testSuite.endpointRef, takenColumnNames.join(',')],
+  );
+
+  const groups = useMemo(() => buildGroupsFor(fullApplication), [buildGroupsFor, fullApplication]);
+
+  const options = useMemo(() => flattenMethodGroups(groups), [groups]);
+
+  /** Each group's first index into `options`, so items stay addressable by a single flat index. */
+  const groupOffsets = useMemo(
+    () =>
+      groups.reduce<number[]>((offsets, group, groupIndex) => {
+        offsets.push(groupIndex === 0 ? 0 : offsets[groupIndex - 1] + groups[groupIndex - 1].options.length);
+        return offsets;
+      }, []),
+    [groups],
+  );
 
   const methodInfo = useMemo(() => {
     if (activeMethodIndex == null) return {};
-    if (activeMethodIndex === 0) return CHAT_COMPLETION_METHOD;
-    return methods[activeMethodIndex - 1] ?? {};
-  }, [activeMethodIndex, methods]);
+    return options[activeMethodIndex]?.ref ?? {};
+  }, [activeMethodIndex, options]);
 
   const onMethodClick = useCallback(
     (index: number) => {
-      setActiveMethodIndex(index);
-      if (index === 0) {
-        onChange((prev: TestSuite) => ({
-          ...prev,
-          ...CHAT_COMPLETION_SUITE,
-        }));
-      } else {
-        const route = methods[index - 1];
-        if (!route) return;
-        onChange((prev: TestSuite) => ({
-          ...prev,
-          ...DEFAULT_SUITE(route),
-        }));
+      if (index === activeMethodIndex) {
+        return;
       }
+
+      const option = options[index];
+      if (!option) return;
+
+      setActiveMethodIndex(index);
+      onChange((prev: TestSuite) => ({
+        ...prev,
+        ...option.seed,
+      }));
     },
-    [methods, onChange],
+    [activeMethodIndex, options, onChange],
   );
 
   useEffect(() => {
+    if (selectedRoute) {
+      const selectedIndex = options.findIndex(
+        ({ ref }) =>
+          ref.method === testSuite.endpointRef?.method &&
+          ref.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
+      );
+      if (selectedIndex !== -1) {
+        setActiveMethodIndex(selectedIndex);
+      } else if (isCreate) {
+        onMethodClick(0);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     if (!fullApplication && selectedTarget) {
-      const { deploymentId, $type } = selectedTarget;
-      getDeployment(deploymentId, $type)
+      const { deploymentId } = selectedTarget;
+      getDeploymentById(deploymentId)
         .then((data) => {
           setFullApplication(data);
-          const loadedMethods = generateMethodPathCombinations(data?.routes);
-          setMethods(loadedMethods);
 
-          const routeIndex = loadedMethods.findIndex(
-            (m) =>
-              m.method === testSuite.endpointRef?.method &&
-              m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
+          const loadedOptions = flattenMethodGroups(buildGroupsFor(data));
+          const selectedIndex = loadedOptions.findIndex(
+            ({ ref }) =>
+              ref.method === testSuite.endpointRef?.method &&
+              ref.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
           );
-          if (routeIndex === -1) {
-            if (isCreate) {
-              onMethodClick(0);
-            }
-          } else {
-            setActiveMethodIndex(routeIndex + 1);
+          if (selectedIndex !== -1) {
+            setActiveMethodIndex(selectedIndex);
+          } else if (isCreate) {
+            onMethodClick(0);
           }
         })
         .finally(() => {
           setIsLoading(false);
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullApplication, selectedTarget]);
+  }, [
+    fullApplication,
+    selectedTarget,
+    selectedRoute,
+    options,
+    testSuite.endpointRef,
+    isCreate,
+    onMethodClick,
+    buildGroupsFor,
+  ]);
 
   const [sidebarCurrentWidth, setSidebarCurrentWidth] = useState(400);
   const [isSidebarOpened, setIsSidebarOpened] = useState(true);
@@ -97,6 +162,7 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, chi
       });
     }
   };
+
   return isLoading ? (
     <DialLoader size={40} />
   ) : (
@@ -120,30 +186,40 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, chi
               onToggle={setIsSidebarOpened}
             >
               <div className="flex flex-col gap-y-4">
-                <div className="flex flex-col gap-y-1">
-                  <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.ChatInterface)}</span>
-                  <MethodItem
-                    key="chat-completion"
-                    item={CHAT_COMPLETION_METHOD}
-                    index={0}
-                    isActive={activeMethodIndex === 0}
-                    onClick={onMethodClick}
-                  />
-                </div>
-                <div className="flex flex-col gap-y-1">
-                  {!!methods.length && (
-                    <span className="dial-tiny text-secondary block">{t(TestSuitesI18nKey.Other)}</span>
-                  )}
-                  {methods.map((method, routeIndex) => (
-                    <MethodItem
-                      key={(method?.relativeUrlPattern || '') + method.method}
-                      item={method}
-                      index={routeIndex + 1}
-                      isActive={activeMethodIndex === routeIndex + 1}
-                      onClick={onMethodClick}
-                    />
-                  ))}
-                </div>
+                {groups.map((group, groupIndex) => {
+                  if (!group.options.length) {
+                    return null;
+                  }
+
+                  const headingId = `${groupHeadingId}-${group.titleKey}`;
+
+                  return (
+                    <div
+                      key={group.titleKey}
+                      className="flex flex-col gap-y-1"
+                      role="group"
+                      aria-labelledby={headingId}
+                    >
+                      <span id={headingId} className="dial-tiny text-secondary block">
+                        {t(group.titleKey)}
+                      </span>
+                      {group.options.map((option, optionIndex) => {
+                        const index = groupOffsets[groupIndex] + optionIndex;
+
+                        return (
+                          <MethodItem
+                            key={`${option.ref.method}-${option.displayUrl}`}
+                            item={option.ref}
+                            label={option.displayUrl}
+                            index={index}
+                            isActive={activeMethodIndex === index}
+                            onClick={onMethodClick}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </DialCollapsibleSidebar>
           </DialConditionalResizableContainer>

@@ -13,7 +13,7 @@ interface Props {
   ariaLabel: string;
   className?: string;
   // Dimmed label rendered before the value in the trigger, naming what the value controls
-  // (e.g. "Nulls:") when the options alone don't say it.
+  // (e.g. "Offset") when the options alone don't say it.
   prefix?: string;
 }
 

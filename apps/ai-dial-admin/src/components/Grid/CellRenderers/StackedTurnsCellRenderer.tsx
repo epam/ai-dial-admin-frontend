@@ -1,6 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { STACKED_LINE_HEIGHT, STACKED_ROW_PADDING } from '@/src/components/Grid/constants';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
@@ -19,7 +19,11 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
   const field = colDef?.field;
   const turns = data?.turns;
 
-  if (data?.expanded || !field || !turns || turns.length === 0) return null;
+  if (!field || !turns || turns.length === 0) return null;
+
+  if (data?.expanded) {
+    return <EllipsisTooltip className="tiny" text="—" />;
+  }
 
   return (
     <div
@@ -28,7 +32,7 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
     >
       {turns.map((turn, index) => (
         <div key={index} className="flex items-center" style={{ height: STACKED_LINE_HEIGHT }}>
-          <DialEllipsisTooltip className="tiny" text={formatTurnValue(turn, field)} />
+          <EllipsisTooltip className="tiny" text={formatTurnValue(turn, field)} />
         </div>
       ))}
     </div>

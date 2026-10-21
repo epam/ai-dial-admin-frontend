@@ -1,49 +1,111 @@
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import ToolsetView from '@/src/components/Assets/Toolsets/View/View';
+import PlatformToolsetView from '@/src/components/Assets/Platform/Toolsets/View';
+import ToolsetView from '@/src/components/Assets/Entities/Toolsets/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { DialRole } from '@/src/models/dial/role';
+import { readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
-import { getToolset, getToolsets } from '../actions';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
+import { getConfigFileToolset, getPlatformToolset, getToolset, getToolsets } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string; code?: string }>;
+  searchParams: Promise<{ path?: string; code?: string; configFile?: string }>;
 }) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+
   let oAuthCode = null;
   let etag = DEFAULT_ETAG;
 
   let toolsets: AssetToolset[] = [];
   let toolset: AssetToolset | null = null;
+  let roles: DialRole[] = [];
+  const optionWarnings: EntitiesI18nKey[] = [];
+
+  // See `isPlatformBucketDetailRoute` for the `?path=` URL contract this reads.
+  const searchParams = await params.searchParams;
+  oAuthCode = searchParams.code;
+  const rawPath = searchParams.path;
+  const isConfigFileMode = searchParams.configFile === 'true';
+  const isPlatformBucket = isPlatformBucketDetailRoute(rawPath);
+  const name = decodeURIComponent((await params.params).id);
 
   try {
-    const searchParams = await params.searchParams;
-    oAuthCode = searchParams.code;
-    const path = decodeURIComponent(searchParams.path);
-    const name = decodeURIComponent((await params.params).id);
+    if (isPlatformBucket) {
+      if (isConfigFileMode) {
+        const result = await getConfigFileToolset(name);
+        toolset = result.success ? (result.data as unknown as AssetToolset) : null;
+      } else {
+        const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
 
-    toolset = await getToolset(path, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as AssetToolset | null;
-    });
+        toolset = await getPlatformToolset(path, etag).then((res) => {
+          etag = res?.etag || DEFAULT_ETAG;
+          return (res?.response as unknown as AssetToolset) || null;
+        });
+      }
+    } else {
+      const path = decodeURIComponent(rawPath as string);
 
-    toolsets = ((await getToolsets(toolset?.folderId as string))?.filter(
-      (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
-    ) || []) as AssetToolset[];
+      toolset = await getToolset(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as unknown as AssetToolset | null;
+      });
+
+      toolsets = ((await getToolsets(toolset?.folderId || toolset?._metadata?.folderId || ''))?.filter(
+        (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
+      ) || []) as AssetToolset[];
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch toolset view data');
   }
+
+  // Deliberately outside the resource fetch's try, and unconditional on bucket, matching the
+  // interceptors read on the sibling assets-applications page — an option-list problem must not
+  // prevent the toolset from loading. Core-direct (`readConfigEntities`), not the admin-BE role list,
+  // which cannot see a role declared only in Core's configuration file.
+  const [rolesResult, catalogSchemas] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
+    readCatalogSchemaOptions(token),
+  ]);
+  roles = rolesResult;
+
   if (toolset == null) {
     notFound();
   }
 
   return (
     <SaveValidationContextProvider>
-      <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
+      {isPlatformBucket ? (
+        <PlatformToolsetView
+          oAuthCode={oAuthCode}
+          etag={etag}
+          originalToolset={toolset}
+          roles={roles}
+          catalogSchemas={catalogSchemas}
+          optionWarnings={optionWarnings}
+          isConfigFileSource={isConfigFileMode}
+        />
+      ) : (
+        <ToolsetView
+          oAuthCode={oAuthCode}
+          etag={etag}
+          originalToolset={toolset}
+          toolsets={toolsets || []}
+          catalogSchemas={catalogSchemas}
+        />
+      )}
     </SaveValidationContextProvider>
   );
 }

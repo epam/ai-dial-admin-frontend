@@ -1,13 +1,16 @@
-import { MetricBindings } from '@/src/models/evaluation/metric';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { describe, expect, it } from 'vitest';
 
-import { buildComparisonSections, countDiffs, valuesAreEqual } from '../utils';
+import { MetricBindings } from '@/src/models/evaluation/metric';
+import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
+
+import { buildComparisonSections, valuesAreEqual } from '../utils';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'r1',
   responseStatusCode: 200,
   runIndex: 0,
-  executionStatus: 'SUCCESS' as const,
+  executionStatus: ExtractionResultStatus.SUCCESS,
   execDurationMs: 1000,
   testCaseData: { input: 'hello' },
   extractedColumns: { answer: 'world' },
@@ -69,6 +72,64 @@ describe('buildComparisonSections', () => {
     expect(execution!.rows[0].values).toHaveLength(1);
   });
 
+  it('preserves schema key order instead of sorting alphabetically', () => {
+    const result = makeResult({ extractedColumns: { zebra: 'z' } });
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      undefined,
+      undefined,
+      { extractedColumns: { zebra: 'z', apple: 'a' } },
+    );
+
+    const ec = sections.find((s) => s.key === 'extractedColumns');
+    expect(ec!.rows.map((r) => r.fieldKey)).toEqual(['zebra', 'apple']);
+  });
+
+  it('includes schema keys missing from this row as null', () => {
+    const result = makeResult({ extractedColumns: { answer: 'world' } });
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      undefined,
+      undefined,
+      {
+        extractedColumns: { answer: 'world', verification: 'Yes' },
+      },
+    );
+
+    const ec = sections.find((s) => s.key === 'extractedColumns');
+    expect(ec!.rows.find((r) => r.fieldKey === 'verification')!.values[0].raw).toBeNull();
+    expect(ec!.rows.find((r) => r.fieldKey === 'answer')!.values[0].raw).toBe('world');
+  });
+
+  it('includes schema metric groups missing from this row as null', () => {
+    const result = makeResult({ metricValues: { Accuracy: { precision: 0.5 } } });
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      undefined,
+      undefined,
+      {
+        metricValues: { 'Exact Match': { exact_match: 1 }, Accuracy: { precision: 0.5 } },
+      },
+    );
+
+    const exactMatch = sections.find((s) => s.key === 'metric:Exact Match');
+    expect(exactMatch!.rows[0].fieldKey).toBe('exact_match');
+    expect(exactMatch!.rows[0].values[0].raw).toBeNull();
+    expect(exactMatch!.rows[0].isNumeric).toBe(true);
+  });
+
   it('handles null/missing values with union of keys', () => {
     const active = makeResult({ id: 'a', extractedColumns: { answer: 'x', extra: 'y' } });
     const pinned = makeResult({ id: 'b', extractedColumns: { answer: 'z' } });
@@ -80,6 +141,23 @@ describe('buildComparisonSections', () => {
     const extraRow = ec!.rows.find((r) => r.fieldKey === 'extra');
     expect(extraRow!.values[0].raw).toBe('y'); // active has 'extra'
     expect(extraRow!.values[1].raw).toBeNull(); // pinned doesn't have 'extra'
+  });
+
+  it('preserves metric group insertion order instead of sorting alphabetically', () => {
+    const result = makeResult({
+      metricValues: {
+        'correct-capital1': { score: 1 },
+        'answer-conciseness': { score: 0.5 },
+        'instruction-following': { score: 0.8 },
+      },
+    });
+    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
+
+    expect(sections.filter((s) => s.key.startsWith('metric:')).map((s) => s.key)).toEqual([
+      'metric:correct-capital1',
+      'metric:answer-conciseness',
+      'metric:instruction-following',
+    ]);
   });
 
   it('unions metric groups across results', () => {
@@ -144,8 +222,8 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       'eval.accuracy': {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
-        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -165,7 +243,7 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
         inputBindings: [],
       },
     };
@@ -188,7 +266,7 @@ describe('buildComparisonSections', () => {
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [],
-        inputBindings: [{ property: 'input', source: { $type: 'TestCase', columnName: 'Capital' } }],
+        inputBindings: [{ property: 'input', source: { $type: MetricBindingType.TestCase, columnName: 'Capital' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -209,7 +287,9 @@ describe('buildComparisonSections', () => {
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [],
-        inputBindings: [{ property: 'actual_output', source: { $type: 'Response', columnName: 'answer' } }],
+        inputBindings: [
+          { property: 'actual_output', source: { $type: MetricBindingType.Response, columnName: 'answer' } },
+        ],
       },
     };
     const sections = buildComparisonSections(
@@ -229,7 +309,7 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'rubric', source: { $type: 'Constant' } }],
+        configBindings: [{ property: 'rubric', source: { $type: MetricBindingType.Constant } }],
         inputBindings: [],
       },
     };
@@ -251,13 +331,13 @@ describe('buildComparisonSections', () => {
     const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.8 } } });
     const activeBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
         inputBindings: [],
       },
     };
     const pinnedBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-3.5' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-3.5' } }],
         inputBindings: [],
       },
     };
@@ -282,8 +362,8 @@ describe('buildComparisonSections', () => {
     const pinned = makeResult({ id: 'b', metricValues: {} });
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
-        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -309,8 +389,8 @@ describe('buildComparisonSections', () => {
     const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.9 } } });
     const pinnedBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
-        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -360,11 +440,11 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       zMetric: {
-        configBindings: [{ property: 'p', source: { $type: 'Constant', value: 'v' } }],
+        configBindings: [{ property: 'p', source: { $type: MetricBindingType.Constant, value: 'v' } }],
         inputBindings: [],
       },
       aMetric: {
-        configBindings: [{ property: 'p', source: { $type: 'Constant', value: 'v' } }],
+        configBindings: [{ property: 'p', source: { $type: MetricBindingType.Constant, value: 'v' } }],
         inputBindings: [],
       },
     };
@@ -387,8 +467,8 @@ describe('buildComparisonSections', () => {
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [
-          { property: 'model', source: { $type: 'Constant', value: 'gpt-4' } },
-          { property: 'threshold', source: { $type: 'Constant', value: '0.5' } },
+          { property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } },
+          { property: 'threshold', source: { $type: MetricBindingType.Constant, value: '0.5' } },
         ],
         inputBindings: [],
       },
@@ -405,7 +485,7 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
         inputBindings: [],
       },
     };
@@ -446,29 +526,5 @@ describe('valuesAreEqual', () => {
 
   it('returns false for different strings', () => {
     expect(valuesAreEqual('hello', 'world')).toBe(false);
-  });
-});
-
-describe('countDiffs', () => {
-  it('counts differing visible fields', () => {
-    const active = makeResult({ id: 'a', testCaseData: { input: 'x' } });
-    const pinned = makeResult({ id: 'b', testCaseData: { input: 'y' } });
-    const sections = buildComparisonSections(active, pinned, defaultVisibility, defaultOrder, defaultHidden);
-
-    const diffs = countDiffs(sections);
-    expect(diffs).toBeGreaterThan(0);
-  });
-
-  it('returns 0 when no pinned (single column)', () => {
-    const result = makeResult();
-    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
-    expect(countDiffs(sections)).toBe(0);
-  });
-
-  it('returns 0 when all values are equal', () => {
-    const result = makeResult({ id: 'a' });
-    const same = makeResult({ id: 'b' });
-    const sections = buildComparisonSections(result, same, defaultVisibility, defaultOrder, defaultHidden);
-    expect(countDiffs(sections)).toBe(0);
   });
 });

@@ -8,22 +8,24 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import CompareRowDetailDisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailDisplayPanel';
-import CompareRowDetailHeader from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailHeader';
+import RowDetailHeader from '@/src/components/Runs/Details/RowDetails/RowDetailHeader';
 import CompareRowDetailPivotTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPivotTable';
 import CompareRowDetailTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailTable';
-import { ROW_DETAIL_DISPLAY_PANEL_CLASS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
-import { RowDetailViewMode } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { DEFAULT_HIDDEN_ROW_DETAIL_FIELDS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
+import { ROW_DETAIL_DISPLAY_PANEL_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import {
   buildRowDetailSections,
   countRowDetailDiffs,
-  getCompareRowDetailTitle,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-sections';
+  getRowDetailTitle,
+} from '@/src/components/Runs/Details/RowDetails/utils/row-detail-sections';
 import {
   applyRowDetailDisplayTree,
   buildRowDetailDisplayTree,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-display-tree';
+} from '@/src/components/Runs/Details/RowDetails/utils/row-detail-display-tree';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { createEmptyComparePrimaryRow, getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -32,22 +34,40 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   row: CompareAnalyticsRow;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onClose: () => void;
   position: SidebarPosition;
   onSwitchDisplayMode: () => void;
   className?: string;
+  focusFieldKey?: string | null;
+  focusRequestId?: number;
+  fieldSchema?: RowDetailFieldSchema;
+  metricGroupOrder?: readonly string[];
+  initialDisplayTree?: ColDef[];
+  onDisplayTreeChange?: (tree: ColDef[]) => void;
+  initialViewDifferencesOnly?: boolean;
+  onViewDifferencesOnlyChange?: (value: boolean) => void;
+  initialHideHighlights?: boolean;
+  onHideHighlightsChange?: (value: boolean) => void;
 }
 
 const CompareRowDetailPanel: FC<Props> = ({
   row,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onClose,
   position,
   onSwitchDisplayMode,
   className,
+  focusFieldKey,
+  focusRequestId = 0,
+  fieldSchema,
+  metricGroupOrder = [],
+  initialDisplayTree,
+  onDisplayTreeChange,
+  initialViewDifferencesOnly,
+  onViewDifferencesOnlyChange,
+  initialHideHighlights,
+  onHideHighlightsChange,
 }) => {
   const t = useI18n();
   const [primaryDetail, setPrimaryDetail] = useState<AnalyticsResult | null>(null);
@@ -56,18 +76,16 @@ const CompareRowDetailPanel: FC<Props> = ({
   const [hasError, setHasError] = useState(false);
 
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
-  const [viewMode, setViewMode] = useState(
-    position === SidebarPosition.Bottom ? RowDetailViewMode.Pivot : RowDetailViewMode.Table,
-  );
-  const [viewDifferencesOnly, setViewDifferencesOnly] = useState(false);
-  const [hideHighlights, setHideHighlights] = useState(false);
-  const [displayTree, setDisplayTree] = useState<ColDef[]>([]);
+  const [viewDifferencesOnly, setViewDifferencesOnly] = useState(initialViewDifferencesOnly ?? false);
+  const [hideHighlights, setHideHighlights] = useState(initialHideHighlights ?? false);
+  const [displayTree, setDisplayTree] = useState<ColDef[]>(() => initialDisplayTree ?? []);
 
+  const isPivotView = position === SidebarPosition.Bottom;
   const comparedId = row._compared?.id ?? null;
   const isComparedOnly = !row.id && comparedId != null;
   const hasComparedMatch = comparedId != null;
   const rowSelectionId = getCompareRowSelectionId(row);
-  const title = getCompareRowDetailTitle(row);
+  const title = getRowDetailTitle(row);
 
   useEffect(() => {
     if (!row.id && !comparedId) {
@@ -123,26 +141,46 @@ const CompareRowDetailPanel: FC<Props> = ({
 
   const sections = useMemo(() => {
     if (!primaryDetail) return [];
-    return buildRowDetailSections(primaryDetail, comparedDetail);
-  }, [primaryDetail, comparedDetail]);
-
-  const counts = useMemo(() => countRowDetailDiffs(sections), [sections]);
+    return buildRowDetailSections(primaryDetail, comparedDetail, metricGroupOrder, fieldSchema);
+  }, [primaryDetail, comparedDetail, metricGroupOrder, fieldSchema]);
 
   useEffect(() => {
     if (sections.length === 0) {
       return;
     }
-    setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev));
+    setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev, DEFAULT_HIDDEN_ROW_DETAIL_FIELDS));
   }, [sections]);
 
+  useEffect(() => {
+    if (displayTree.length === 0) {
+      return;
+    }
+    onDisplayTreeChange?.(displayTree);
+  }, [displayTree, onDisplayTreeChange]);
+
   const displaySections = useMemo(() => applyRowDetailDisplayTree(sections, displayTree), [sections, displayTree]);
+  const counts = useMemo(() => countRowDetailDiffs(displaySections), [displaySections]);
 
   const onToggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
   const onCloseDisplayPanel = useCallback(() => setShowDisplayPanel(false), []);
+  const onViewDifferencesOnlyUpdate = useCallback(
+    (value: boolean) => {
+      setViewDifferencesOnly(value);
+      onViewDifferencesOnlyChange?.(value);
+    },
+    [onViewDifferencesOnlyChange],
+  );
+  const onHideHighlightsUpdate = useCallback(
+    (value: boolean) => {
+      setHideHighlights(value);
+      onHideHighlightsChange?.(value);
+    },
+    [onHideHighlightsChange],
+  );
 
   return (
     <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
-      <CompareRowDetailHeader
+      <RowDetailHeader
         title={title}
         onClose={onClose}
         onOpenDisplay={onToggleDisplayPanel}
@@ -160,25 +198,27 @@ const CompareRowDetailPanel: FC<Props> = ({
           <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>
         ) : (
           <>
-            {viewMode === RowDetailViewMode.Table ? (
-              <CompareRowDetailTable
-                key={rowSelectionId}
-                sections={displaySections}
-                primaryRunName={primaryRunName}
-                comparedRunName={comparedRunName}
-                hasComparedMatch={hasComparedMatch}
-                showDiffsOnly={viewDifferencesOnly}
-                hideHighlights={hideHighlights}
-              />
-            ) : (
+            {isPivotView ? (
               <CompareRowDetailPivotTable
                 key={rowSelectionId}
                 sections={displaySections}
-                primaryRunName={primaryRunName}
-                comparedRunName={comparedRunName}
+                runs={runs}
                 hasComparedMatch={hasComparedMatch}
                 showDiffsOnly={viewDifferencesOnly}
                 hideHighlights={hideHighlights}
+                focusFieldKey={focusFieldKey}
+                focusRequestId={focusRequestId}
+              />
+            ) : (
+              <CompareRowDetailTable
+                key={rowSelectionId}
+                sections={displaySections}
+                runs={runs}
+                hasComparedMatch={hasComparedMatch}
+                showDiffsOnly={viewDifferencesOnly}
+                hideHighlights={hideHighlights}
+                focusFieldKey={focusFieldKey}
+                focusRequestId={focusRequestId}
               />
             )}
             <DiffLegend counts={counts} className="shrink-0" />
@@ -193,12 +233,10 @@ const CompareRowDetailPanel: FC<Props> = ({
             onColumnsChange={setDisplayTree}
             onClose={onCloseDisplayPanel}
             panelClassName={ROW_DETAIL_DISPLAY_PANEL_CLASS}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
             viewDifferencesOnly={viewDifferencesOnly}
-            onViewDifferencesOnlyChange={setViewDifferencesOnly}
+            onViewDifferencesOnlyChange={onViewDifferencesOnlyUpdate}
             hideHighlights={hideHighlights}
-            onHideHighlightsChange={setHideHighlights}
+            onHideHighlightsChange={onHideHighlightsUpdate}
           />
         </div>
       )}

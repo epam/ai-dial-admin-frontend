@@ -5,7 +5,12 @@ import { describe, expect, test, vi } from 'vitest';
 import ContainersButtonsWrapper from '@/src/components/EntityHeaderControls/Wrappers/ContainersButtonsWrapper';
 import { CreateI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
-import { CONTAINER_STATUS, CONTAINER_TYPE, INFERENCE_TASK } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_SOURCE_TYPE,
+  CONTAINER_STATUS,
+  CONTAINER_TYPE,
+  INFERENCE_TASK,
+} from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
@@ -14,25 +19,26 @@ vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsOnlyTabletScreen: () =
 
 // Heavy children — assert on the wrapper's wiring, not their internals.
 vi.mock('@/src/components/EntityListView/CreateEntity/CreateEntity', () => ({
-  default: ({ route, createEntity }: any) => (
+  default: ({ route, createEntity, isModal }: any) => (
     <div>
       <span>modal-route:{route}</span>
+      <span>modal-is-modal:{String(!!isModal)}</span>
       <button onClick={() => createEntity({ name: 'x' })}>invoke-create</button>
     </div>
   ),
 }));
-vi.mock('@/src/components/Assets/Deployments/CreateAsset', () => ({ default: () => null }));
+vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({ default: () => null }));
 vi.mock('@/src/components/EntityView/Modals/Delete/Delete', () => ({ default: () => null }));
 
-const baseContainer = (inferenceTask?: INFERENCE_TASK): Container =>
-  ({
-    name: 'serving-1',
-    displayName: 'Serving 1',
-    $type: CONTAINER_TYPE.HF,
-    status: CONTAINER_STATUS.RUNNING,
-    metadata: { envs: [] },
-    inferenceTask,
-  }) as Container;
+const baseContainer = (inferenceTask?: INFERENCE_TASK): Container => ({
+  name: 'serving-1',
+  displayName: 'Serving 1',
+  $type: CONTAINER_TYPE.HF,
+  status: CONTAINER_STATUS.RUNNING,
+  source: { $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE },
+  metadata: { envs: [] },
+  inferenceTask,
+});
 
 const renderWrapper = (inferenceTask: INFERENCE_TASK | undefined, overrides = {}) => {
   const createEntity = vi.fn();
@@ -90,6 +96,15 @@ describe('ContainersButtonsWrapper capability branching', () => {
   test('NONE shows no create button', () => {
     renderWrapper(INFERENCE_TASK.NONE);
     expect(createButton()).not.toBeInTheDocument();
+  });
+
+  test('marks the create flow as a modal so view-only fields such as Intro stay out of the popup', async () => {
+    const user = userEvent.setup();
+    renderWrapper(INFERENCE_TASK.TEXT_GENERATION);
+
+    await user.click(createButton()!);
+
+    expect(screen.getByText('modal-is-modal:true')).toBeInTheDocument();
   });
 
   test('absent inferenceTask keeps the model create flow', async () => {

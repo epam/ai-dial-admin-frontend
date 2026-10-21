@@ -10,6 +10,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import CollapsableSection from './CollapsableSection';
 import { getInterceptorsGridData } from './utils';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 
 interface Props<T> {
   entity: T;
@@ -45,7 +46,8 @@ const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:appl
           rowData={getInterceptorsGridData(interceptors, globalInterceptors)}
         />
       </CollapsableSection>
-      {!!getSchemaSourceId((entity as DialApplication).source) && (
+      {(!!getSchemaSourceId((entity as DialApplication).source) ||
+        (entity as unknown as DialApplicationResource).application_type_schema_id) && (
         <CollapsableSection title={`${t(InterceptorsI18nKey.Runner)}: ${runnerInterceptors?.length || 0}`}>
           <GridView
             emptyDataProps={{ title: t(EntitiesI18nKey.NoRunnerInterceptors) }}

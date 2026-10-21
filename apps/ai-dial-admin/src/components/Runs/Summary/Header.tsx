@@ -6,9 +6,11 @@ import { DialIconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
 import DeploymentExternalLink from '@/src/components/Runs/Summary/DeploymentExternalLink';
-import { getSuiteApplicationName } from '@/src/components/Runs/Summary/resolve-run-deployment';
+import {
+  getSuiteApplicationName,
+  resolveSuiteContextForDeploymentLink,
+} from '@/src/components/Runs/Summary/resolve-run-deployment';
 import { EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
@@ -28,10 +30,12 @@ const Header: FC<Props> = ({ run, testSuite }) => {
   const startedAt = useLocalDateTimeString(run?.startedAt);
   const completedAt = useLocalDateTimeString(run?.completedAt);
   const suiteContext = run.suiteSnapshot ?? testSuite;
+  const deploymentLinkContext = resolveSuiteContextForDeploymentLink(run.suiteSnapshot, testSuite);
   const applicationName = getSuiteApplicationName(suiteContext);
+  const additionalRequestsCount = suiteContext?.additionalRequests?.length ?? 0;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+    <div className="flex flex-col sm:flex-row gap-8 pb-8">
       {!!run?.testRunName && <LabelledText label={t(EntityFieldsI18nKey.name)} text={run.testRunName} />}
 
       {!!run?.testSuiteId && (
@@ -52,17 +56,15 @@ const Header: FC<Props> = ({ run, testSuite }) => {
         <DialLabelledText
           label={t(RunsI18nKey.Application)}
           text={applicationName}
-          postfix={<DeploymentExternalLink suiteContext={suiteContext ?? null} />}
+          postfix={<DeploymentExternalLink suiteContext={deploymentLinkContext ?? null} />}
         />
       )}
 
       {!!run?.startedAt && <LabelledText label={t(RunsI18nKey.StartDate)} text={startedAt} />}
       {!!run?.completedAt && <LabelledText label={t(RunsI18nKey.EndDate)} text={completedAt} />}
 
-      {!!run?.status && (
-        <LabelledText label={t(EntityFieldsI18nKey.status)}>
-          <RunStatusComponent status={run.status} />
-        </LabelledText>
+      {additionalRequestsCount > 0 && (
+        <LabelledText label={t(RunsI18nKey.RequestsInChain)} text={String(additionalRequestsCount + 1)} />
       )}
     </div>
   );

@@ -87,7 +87,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
       </div>
 
       {isJsonView ? (
-        <JsonEditor entity={details} options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }} readonly={true} />
+        <JsonEditor entity={details} options={{ wordWrap: 'off' }} readonly={true} />
       ) : (
         <>
           {isLoading ? (

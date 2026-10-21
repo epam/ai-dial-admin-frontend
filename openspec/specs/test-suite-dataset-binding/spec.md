@@ -1,3 +1,11 @@
+# test-suite-dataset-binding Specification
+
+## Purpose
+
+Binding a test suite to a dataset: the unbound state, creating a private or picking a public dataset, and the dataset header on the Test Cases tab.
+
+## Requirements
+
 ### Requirement: Unbound suite shows dataset binding UI
 A TestSuite with `datasetId = null` SHALL display a dataset binding section in the Test Cases tab area instead of the test cases grid and schema tab. The binding section SHALL show two buttons: "Pick public dataset" and "Create private dataset". The Schema tab entry SHALL be hidden from the tab list.
 

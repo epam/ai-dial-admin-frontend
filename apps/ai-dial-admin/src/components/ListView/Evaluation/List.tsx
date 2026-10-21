@@ -15,16 +15,21 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { cloneDataset } from '@/src/app/[lang]/datasets/actions';
+import { cancelRun } from '@/src/app/[lang]/runs/actions';
 import { duplicateTestSuite, runTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
+import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
+import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
+import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  getCancelOperation,
   getCompareOperation,
   getDeleteOperation,
   getDuplicateOperation,
@@ -47,7 +52,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import { emptyDataTitleMap, listViewTitleMap } from '../constants';
+import { emptyDataTitleMap, listViewTitleMap, RUNS_LIST_STORAGE_KEY } from '../constants';
 import DuplicateDataset from './DuplicateDataset';
 import DuplicateTestSuite from './Duplicate';
 import HeaderButtons from './Header';
@@ -82,10 +87,17 @@ const EvaluationListView = <T extends object>({
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportRunId, setExportRunId] = useState<string | undefined>(undefined);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelRunEntity, setCancelRunEntity] = useState<Run | undefined>(undefined);
   const { showNotification } = useNotification();
+
+  const isRunsList = route === ApplicationRoute.Runs;
+
+  useCancellingRunsPoll(gridApi, isRunsList);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    ...(isRunsList ? { components: RUN_STATUS_FILTER_COMPONENTS } : {}),
     onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
   };
 
@@ -194,9 +206,31 @@ const EvaluationListView = <T extends object>({
     setIsExportModalOpen(false);
   }, []);
 
+  const onOpenCancelModal = useCallback((entity?: T) => {
+    setCancelRunEntity(entity as Run | undefined);
+    setIsCancelModalOpen(true);
+  }, []);
+
+  const onCloseCancelModal = useCallback(() => {
+    setCancelRunEntity(undefined);
+    setIsCancelModalOpen(false);
+  }, []);
+
+  const onCancelRunSuccess = useCallback(() => {
+    const id = cancelRunEntity?.id;
+    if (!id || !gridApi) {
+      return;
+    }
+    gridApi.forEachNode((node) => {
+      if ((node.data as { id?: string } | undefined)?.id === id) {
+        node.setData({ ...node.data, status: RunStatus.CANCELLING });
+      }
+    });
+  }, [cancelRunEntity, gridApi]);
+
   const onRun = useCallback(
     (num?: string | number) => {
-      runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
+      return runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
@@ -264,9 +298,10 @@ const EvaluationListView = <T extends object>({
     actionColumn.push(getDuplicateOperation(onOpenDuplicateModal));
   }
 
-  if (route === ApplicationRoute.Runs) {
-    actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING));
+  if (isRunsList) {
+    actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status !== RunStatus.COMPLETED));
     actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
+    actionColumn.push(getCancelOperation(onOpenCancelModal));
   }
 
   const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
@@ -280,7 +315,7 @@ const EvaluationListView = <T extends object>({
         emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
         isEnableColumnPanel
         isMainListView
-        storageKey={route}
+        storageKey={isRunsList ? RUNS_LIST_STORAGE_KEY : route}
         onGridReady={onGridReady}
         getHref={(data) => getUrnForEntity(route, data)}
       >
@@ -345,6 +380,17 @@ const EvaluationListView = <T extends object>({
       {isExportModalOpen &&
         exportRunId &&
         createPortal(<ExportRunModal runId={exportRunId} onClose={onCloseExportModal} />, document.body)}
+      {isCancelModalOpen &&
+        cancelRunEntity &&
+        createPortal(
+          <RunCancelModal
+            run={cancelRunEntity}
+            onClose={onCloseCancelModal}
+            onCancelRun={cancelRun}
+            onSuccess={onCancelRunSuccess}
+          />,
+          document.body,
+        )}
       {compareRunModal}
     </>
   );

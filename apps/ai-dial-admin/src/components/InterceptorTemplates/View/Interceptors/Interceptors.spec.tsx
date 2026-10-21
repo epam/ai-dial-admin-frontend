@@ -1,5 +1,5 @@
 import { describe, test, vi, expect, beforeEach, Mock } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 
@@ -38,8 +38,6 @@ describe('Interceptors', () => {
 
     render(<Interceptors interceptorList={['Interceptor-1']} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('table')).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 });

@@ -28,7 +28,7 @@ Core does not serve every type on this route family to every caller — reading 
 - **THEN** the client refuses without issuing the request, rather than surfacing Core's refusal as a generic error
 
 ### Requirement: The two Core populations of one entity type are read as a union
-DIAL Core keeps the entities of a given type in two places, and its merged runtime configuration is the union of both: entities written through its API, listed by the metadata route, and entities defined in configuration files, listed by the config-file route. Core validates a reference against that merged set. The system SHALL therefore compose both reads when offering an entity as a selectable option, so the offered set matches the set Core will accept.
+DIAL Core keeps the entities of a given type in two places, and its merged runtime configuration is the union of both: entities written through its API, listed by the metadata route, and entities defined in configuration files, listed by the config-file route. Core validates a reference against that merged set. The system SHALL compose both reads when offering an entity as a selectable option, so the offered set matches the set Core will accept. Both reads SHALL be issued independently of whether the admin backend is configured (`DIAL_ADMIN_API_URL` set or unset). The API-written read is unaffected by that flag and SHALL always be issued. An optional `showOnlyConfigFiles` parameter (default `false`) inverts this behaviour: when `true`, the API-written (metadata) read is skipped entirely and the config-file read is always issued.
 
 #### Scenario: Both populations appear as options
 - **WHEN** options of a given entity type are requested for a picker
@@ -46,6 +46,57 @@ DIAL Core keeps the entities of a given type in two places, and its merged runti
 - **WHEN** both reads fail
 - **THEN** the caller receives a failure rather than an empty option set
 
+#### Scenario: The config-file read runs without the admin backend
+- **WHEN** `DIAL_ADMIN_API_URL` is unset and options of any entity type are requested
+- **THEN** both the API-written and config-file reads are issued
+- **AND** the result includes any config-file population returned by DIAL Core
+
+#### Scenario: The config-file read runs with the admin backend configured
+- **WHEN** `DIAL_ADMIN_API_URL` is set and options of any entity type are requested
+- **THEN** both the API-written and config-file reads are issued
+
+#### Scenario: `showOnlyConfigFiles=true` skips the API-written read
+- **WHEN** options of a given entity type are requested with `showOnlyConfigFiles: true`
+- **THEN** the API-written (metadata) read is not issued, and the result contains only entries from the config-file population
+
+#### Scenario: `showOnlyConfigFiles=true` always issues the config-file read
+- **WHEN** options are requested with `showOnlyConfigFiles: true`
+- **THEN** the config-file read is issued regardless of whether `DIAL_ADMIN_API_URL` is configured
+- **AND** the API-written read is still skipped
+
+### Requirement: Config-file reads are available for Models, Routes, Applications, and Toolsets
+The system SHALL include `ConfigFileEntityType.Models`, `ConfigFileEntityType.Routes`,
+`ConfigFileEntityType.Applications`, `ConfigFileEntityType.Toolsets`, and `ConfigFileEntityType.Schemas`
+in `READABLE_CONFIG_FILE_TYPES`, making them accepted by `listNames` and `getEntity`.
+`ConfigFileEntityType.Keys` SHALL remain excluded from the allow-list.
+
+#### Scenario: Models, Routes, Applications, Toolsets, and Schemas are accepted
+- **WHEN** `listNames` or `getEntity` is called for Models, Routes, Applications, Toolsets, or Schemas
+- **THEN** the request proceeds normally
+
+#### Scenario: Keys is still refused
+- **WHEN** `listNames` or `getEntity` is called for the Keys type
+- **THEN** the client refuses without issuing any request
+
+### Requirement: A picker read can be scoped to config-file entities only
+The `getConfigEntityOptions` and `readConfigEntities` functions SHALL accept an optional
+`showOnlyConfigFiles: boolean` parameter (default `false`). When `true`, the function SHALL skip the
+API-written (asset-metadata) read and SHALL always issue the config-file read. When `false` (or absent),
+the function SHALL issue both the API-written and config-file reads regardless of whether
+`DIAL_ADMIN_API_URL` is set.
+
+#### Scenario: `showOnlyConfigFiles: true` skips the asset-metadata read
+- **WHEN** `getConfigEntityOptions` or `readConfigEntities` is called with `showOnlyConfigFiles: true`
+- **THEN** no asset-metadata (API-written) request is issued for that entity type
+
+#### Scenario: `showOnlyConfigFiles: true` issues the config-file read
+- **WHEN** `getConfigEntityOptions` is called with `showOnlyConfigFiles: true`
+- **THEN** the config-file read is issued regardless of whether `DIAL_ADMIN_API_URL` is configured
+
+#### Scenario: Omitting the parameter reads both Core populations
+- **WHEN** `getConfigEntityOptions` or `readConfigEntities` is called without the parameter
+- **THEN** both the asset-metadata and config-file reads are issued regardless of whether `DIAL_ADMIN_API_URL` is configured
+
 ### Requirement: The union normalises to the fields both populations provide
 The two populations do not carry the same data, and neither carries a description. The metadata route returns per-entry author and timestamps; the config-file listing returns a name and nothing else. The system SHALL normalise an option to the fields available from both — its name and its origin — rather than issuing a per-entity read to fill fields a listing omits.
 
@@ -62,27 +113,40 @@ The two populations do not carry the same data, and neither carries a descriptio
 - **THEN** that option's origin is visible, so the absence reads as a property of its source rather than as missing data
 
 ### Requirement: Each option carries its origin and the reference form that origin requires
-The two populations are referenced differently: a config-file entity by its bare name, an API-written entity by its canonical id (`{type}/platform/{name}`). The same display name may exist in both. The system SHALL attach an explicit origin discriminator to every option and SHALL derive the stored reference from that origin, rather than inferring either from the shape of a value.
+DIAL Core keys the five deployment/role entity types — models, interceptors, roles, applications, and toolsets — in its merged `Config` maps by their **bare short name**, for both the config-file and API-written (platform) populations alike (`MergedConfigStore.isShortNameKeyed` returns true for exactly those five). Core validates a reference with a plain `containsKey(ref)` against that one map. Routes and keys are not short-name-keyed: an API-written route is still referenced by its canonical id (`routes/<bucket>/<name>`) and an API-written key by `keys/<bucket>/<name>`, while their config-file entries keep bare names. The system SHALL attach an explicit origin discriminator to every option and SHALL derive the stored reference from the entity **type** (short-name form for the five short-name-keyed types; the existing origin-based form for routes and keys), rather than inferring either from the shape of a value.
 
-#### Scenario: A config-file entity is referenced by bare name
-- **WHEN** an option originating in the config-file population is selected
+#### Scenario: A short-name-keyed entity is referenced by bare name from either population
+- **WHEN** an option of a short-name-keyed type (model, interceptor, role, application, or toolset) is selected, regardless of whether it originated in the config-file or API-written population
 - **THEN** the value stored on the resource is that entity's bare name
 
-#### Scenario: An API-written entity is referenced by canonical id
-- **WHEN** an option originating in the API-written population is selected
-- **THEN** the value stored on the resource is that entity's canonical id
+#### Scenario: A route is referenced by its population-appropriate form
+- **WHEN** an option originating in the config-file route population is selected
+- **THEN** the value stored on the resource is that route's bare name
+- **AND WHEN** an option originating in the API-written route population is selected
+- **THEN** the value stored on the resource is that route's canonical id `routes/<bucket>/<name>`
+
+#### Scenario: A key is referenced by its population-appropriate form
+- **WHEN** an option originating in the config-file key population is selected
+- **THEN** the value stored on the resource is that key's bare name
+- **AND WHEN** an option originating in the API-written key population is selected
+- **THEN** the value stored on the resource is that key's canonical id `keys/<bucket>/<name>`
 
 #### Scenario: Origin is explicit, not inferred
 - **WHEN** an option is built
 - **THEN** it carries an origin discriminator as data, so a name that happens to contain a separator is never mistaken for a canonical id
 
-### Requirement: A name present in both populations is offered once per origin and distinguishable
-Because the same name can exist in both populations and the two are referenced differently, collapsing them would make the stored reference ambiguous. The system SHALL keep both entries and SHALL make their origin visible to the user.
+### Requirement: A name present in both populations is offered once, with the platform entry winning
+Because the five short-name-keyed types share one map key (the bare name) across both populations, a name present in both would yield two options with the same stored reference — a duplicate Core resolves by letting the blob (platform) entry supersede the file entry via ordinary `Map.put`. The system SHALL offer a name present in both populations as a single option, keeping the API-written (platform) option and dropping the config-file duplicate, and SHALL still carry the origin discriminator on the surviving option. Duplicates within a single population are still collapsed to one.
 
-#### Scenario: A name in both populations yields two distinguishable options
-- **WHEN** the same entity name exists in both the config-file and API-written populations
-- **THEN** both are offered, each showing which population it came from, and selecting one stores that population's reference form
+#### Scenario: A name in both populations yields one platform-origin option
+- **WHEN** the same entity name of a short-name-keyed type exists in both the config-file and API-written populations
+- **THEN** a single option is offered, carrying the `Api` (platform) origin, and selecting it stores the bare name
+- **AND** the config-file entry of that name is not offered as a separate option
 
 #### Scenario: Duplicates within one population are collapsed
 - **WHEN** the same name appears more than once within a single population
 - **THEN** it is offered once
+
+#### Scenario: A name present in only one population is offered from that population
+- **WHEN** an entity name exists in only the config-file or only the API-written population
+- **THEN** it is offered as one option carrying its actual origin

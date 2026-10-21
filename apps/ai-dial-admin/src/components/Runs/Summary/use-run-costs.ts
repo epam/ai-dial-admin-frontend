@@ -1,0 +1,125 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { getRunCosts } from '@/src/app/[lang]/runs/actions';
+import { COST_FETCH_MAX_WAIT_MS, COST_FETCH_POLL_INTERVAL_MS } from '@/src/components/Runs/Summary/constants';
+import { hasRunCostFigure } from '@/src/components/Runs/Summary/utils';
+import { RunCosts } from '@/src/models/evaluation/run';
+
+export interface UseRunCostsResult {
+  costs: RunCosts | null;
+  isPending: boolean;
+  unavailable: boolean;
+}
+
+/**
+ * Fetches run costs independently of the analytics structured-query slice so
+ * dial-adas failures do not blank the rest of the Summary KPI strip.
+ *
+ * The endpoint answers as soon as the run row exists, but the backend aggregates usage logs
+ * asynchronously, so a just-finished run gets an empty body or all-null averages back within
+ * milliseconds. That is "not computed yet", not a result: the hook keeps polling on
+ * `COST_FETCH_POLL_INTERVAL_MS` and stays pending for as long as the cards are mounted — up to
+ * `COST_FETCH_MAX_WAIT_MS`. A real figure or an endpoint error (null response or throw) settles the
+ * cards immediately; an Error badge over data that is still on its way would be worse than a spinner
+ * the user can walk away from. But the endpoint has no way to say "there will never be a figure" —
+ * e.g. the evaluated model has no pricing configured — so a figureless payload is indistinguishable
+ * from one that just hasn't aggregated yet, for as long as the client keeps asking. Once
+ * `COST_FETCH_MAX_WAIT_MS` elapses without a figure, the hook stops polling and settles the cards on
+ * the last figureless payload, which renders as an em dash rather than spinning forever.
+ *
+ * Because that wait can still run the full `COST_FETCH_MAX_WAIT_MS` window before giving up, the
+ * caller should say whether this run can produce a cost at all whenever it already knows the answer:
+ * `canHaveCosts` false skips the fetch entirely and reports idle, so a run that will never have
+ * figures shows a dash immediately instead of waiting out the window. The caller owns that judgement
+ * because the evidence for it — run status, result counts, suite type, metric snapshots — lives on
+ * the Summary tab, not behind `/costs`.
+ */
+export const useRunCosts = (runId: string | undefined, canHaveCosts = true): UseRunCostsResult => {
+  const [costs, setCosts] = useState<RunCosts | null>(null);
+  /** True whenever a fetch is due until the first effect flush — avoids an idle frame that paints as "—". */
+  const [isPending, setIsPending] = useState(() => Boolean(runId) && canHaveCosts);
+  const [unavailable, setUnavailable] = useState(false);
+
+  useEffect(() => {
+    if (!runId || !canHaveCosts) {
+      setCosts(null);
+      setIsPending(false);
+      setUnavailable(false);
+      return;
+    }
+
+    let cancelled = false;
+    /** True once a definitive outcome (figures / null / throw / gave-up) has been applied. */
+    let hasSettled = false;
+    let retryId = 0;
+    const startedAt = Date.now();
+
+    setCosts(null);
+    setIsPending(true);
+    setUnavailable(false);
+
+    const stopTimers = () => {
+      window.clearTimeout(retryId);
+    };
+
+    const settle = (result: RunCosts | null) => {
+      hasSettled = true;
+      stopTimers();
+      setCosts(result);
+      setUnavailable(result == null);
+      setIsPending(false);
+    };
+
+    const attempt = async () => {
+      try {
+        const result = await getRunCosts(runId);
+
+        if (cancelled || hasSettled) {
+          return;
+        }
+        if (result == null || hasRunCostFigure(result)) {
+          settle(result);
+          return;
+        }
+        if (Date.now() - startedAt >= COST_FETCH_MAX_WAIT_MS) {
+          // This run will never produce a figure — e.g. the evaluated model has no pricing
+          // configured — and the endpoint has no way to say so. Stop asking and settle on the last
+          // figureless payload, which renders as an em dash instead of calculating forever.
+          settle(result);
+          return;
+        }
+        // Costs are not aggregated yet — keep the calculating state and ask again.
+        retryId = window.setTimeout(() => void attempt(), COST_FETCH_POLL_INTERVAL_MS);
+      } catch {
+        if (cancelled || hasSettled) {
+          return;
+        }
+        settle(null);
+      }
+    };
+
+    void attempt();
+
+    return () => {
+      cancelled = true;
+      stopTimers();
+    };
+  }, [runId, canHaveCosts]);
+
+  /**
+   * `canHaveCosts` is allowed to start true on an optimistic guess — e.g. the analytics slice hasn't
+   * resolved yet, so "no results" can't be ruled in — and flip to false once better evidence lands.
+   * The effect above catches up and resets `unavailable`/`costs` on its own render pass, but that is
+   * one tick behind: on the render where `canHaveCosts` turns false, `unavailable` can still hold a
+   * settled outcome from the fetch that guess started. Gate the returned values on the current
+   * `canHaveCosts` directly so a caller never observes that stale outcome, without delaying the fetch
+   * itself for the case where the guess holds.
+   */
+  if (!canHaveCosts) {
+    return { costs: null, isPending: false, unavailable: false };
+  }
+
+  return { costs, isPending, unavailable };
+};

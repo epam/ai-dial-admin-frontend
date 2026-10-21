@@ -1,35 +1,65 @@
 'use client';
 
+import { ColDef } from 'ag-grid-community';
 import { FC } from 'react';
 
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
   row: CompareAnalyticsRow;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onClose: () => void;
   onSwitchToSidebar: () => void;
+  focusFieldKey?: string | null;
+  focusRequestId?: number;
+  fieldSchema?: RowDetailFieldSchema;
+  metricGroupOrder?: readonly string[];
+  initialDisplayTree?: ColDef[];
+  onDisplayTreeChange?: (tree: ColDef[]) => void;
+  initialViewDifferencesOnly?: boolean;
+  onViewDifferencesOnlyChange?: (value: boolean) => void;
+  initialHideHighlights?: boolean;
+  onHideHighlightsChange?: (value: boolean) => void;
 }
 
 const CompareRowDetailBottomPanel: FC<Props> = ({
   row,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onClose,
   onSwitchToSidebar,
+  focusFieldKey,
+  focusRequestId,
+  fieldSchema,
+  metricGroupOrder,
+  initialDisplayTree,
+  onDisplayTreeChange,
+  initialViewDifferencesOnly,
+  onViewDifferencesOnlyChange,
+  initialHideHighlights,
+  onHideHighlightsChange,
 }) => {
   return (
-    <div className="flex flex-col size-full bg-layer-0 overflow-hidden px-2">
+    <div className="flex flex-col size-full bg-layer-0 overflow-hidden">
       <CompareRowDetailPanel
         row={row}
-        primaryRunName={primaryRunName}
-        comparedRunName={comparedRunName}
+        runs={runs}
         onClose={onClose}
         position={SidebarPosition.Bottom}
         onSwitchDisplayMode={onSwitchToSidebar}
+        focusFieldKey={focusFieldKey}
+        focusRequestId={focusRequestId}
+        fieldSchema={fieldSchema}
+        metricGroupOrder={metricGroupOrder}
+        initialDisplayTree={initialDisplayTree}
+        onDisplayTreeChange={onDisplayTreeChange}
+        initialViewDifferencesOnly={initialViewDifferencesOnly}
+        onViewDifferencesOnlyChange={onViewDifferencesOnlyChange}
+        initialHideHighlights={initialHideHighlights}
+        onHideHighlightsChange={onHideHighlightsChange}
       />
     </div>
   );

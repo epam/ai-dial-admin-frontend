@@ -31,7 +31,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>
       </div>
       <div className={classNames(itemClassName, !description && !changed && 'hidden')}>
-        <span className={classNames(rectangleClassName, 'bg-info border-accent-primary')}>{changed}</span>
+        <span className={classNames(rectangleClassName, 'border-accent-primary')}>{changed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Update)}</span>
       </div>
       <div className={classNames(itemClassName, !description && !removed && 'hidden')}>

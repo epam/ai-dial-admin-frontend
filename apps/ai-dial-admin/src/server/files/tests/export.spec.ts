@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test, vi } from 'vitest';
+import { readZipEntries } from '@/src/server/zip/tests/zip-fixtures';
 
 import { buildFilesExportZip, resolveExportEntries, toExportArchivePath } from '../export';
 
@@ -112,20 +112,20 @@ describe('Server :: Files :: export :: resolveExportEntries', () => {
 });
 
 describe('Server :: Files :: export :: toExportArchivePath', () => {
-  test('a single selected file flattens to public/<filename>', () => {
-    expect(toExportArchivePath('bucket/folder/doc.txt', null)).toBe('public/doc.txt');
+  test('a single selected file flattens to <filename> with no bucket prefix', () => {
+    expect(toExportArchivePath('bucket/folder/doc.txt', null)).toBe('doc.txt');
   });
 
-  test('a folder selection is re-rooted under public/<lastSegment>/<relativePath>', () => {
-    expect(toExportArchivePath('bucket/folder/sub/doc.txt', 'bucket/folder/')).toBe('public/folder/sub/doc.txt');
+  test('a folder selection is re-rooted under <lastSegment>/<relativePath> with no bucket prefix', () => {
+    expect(toExportArchivePath('bucket/folder/sub/doc.txt', 'bucket/folder/')).toBe('folder/sub/doc.txt');
   });
 
   test('a direct child of the exported folder has no extra nesting', () => {
-    expect(toExportArchivePath('bucket/folder/doc.txt', 'bucket/folder/')).toBe('public/folder/doc.txt');
+    expect(toExportArchivePath('bucket/folder/doc.txt', 'bucket/folder/')).toBe('folder/doc.txt');
   });
 
   test('a deeply nested descendant preserves its full relative path', () => {
-    expect(toExportArchivePath('bucket/folder/a/b/c/deep.txt', 'bucket/folder/')).toBe('public/folder/a/b/c/deep.txt');
+    expect(toExportArchivePath('bucket/folder/a/b/c/deep.txt', 'bucket/folder/')).toBe('folder/a/b/c/deep.txt');
   });
 });
 
@@ -154,16 +154,8 @@ describe('Server :: Files :: export :: buildFilesExportZip', () => {
     expect(filesCoreApi.downloadFile).toHaveBeenCalledTimes(3);
     expect(result.fileName).toBe('files-export-2.zip');
 
-    const zip = await JSZip.loadAsync(result.blob);
-    const filePaths = Object.values(zip.files)
-      .filter((entry) => !entry.dir)
-      .map((entry) => entry.name)
-      .sort();
-    expect(filePaths).toEqual([
-      'files/public/folder/a.txt',
-      'files/public/folder/sub/b.txt',
-      'files/public/single.txt',
-    ]);
+    const filePaths = Object.keys(await readZipEntries(result.blob)).sort();
+    expect(filePaths).toEqual(['files/folder/a.txt', 'files/folder/sub/b.txt', 'files/single.txt']);
   });
 
   test('a single-item selection produces a name-derived filename', async () => {

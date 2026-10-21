@@ -2,17 +2,19 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import { assetApi, datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
 import {
   buildTestSuitesQuery,
   mapTestSuitesQueryResult,
 } from '@/src/components/ListView/Evaluation/utils/test-suites-query';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
+import { DialRouteResource } from '@/src/models/dial/resource';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { Metric } from '@/src/models/evaluation/metric';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
+import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -103,6 +105,21 @@ export async function getDeployment(id: string, type: string) {
   return testSuitesApi.getDeployment(id, type, token);
 }
 
+export async function getDeploymentById(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeploymentById(id, token);
+}
+
+export async function getRoutes() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.list(token, ResourceType.ROUTE, 'platform/');
+}
+
+export async function getRoute(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMerged<DialRouteResource>(token, ResourceType.ROUTE, name);
+}
+
 export async function getTestSuiteTemplateVariables(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuiteTemplateVariables(id, token);
@@ -113,7 +130,7 @@ export async function getTestCaseTemplateVariables(id: string, testCaseId: strin
   return testSuitesApi.getTestCaseTemplateVariables(id, testCaseId, token);
 }
 
-export async function tryOutTestSuite(id: string, requestBody: Record<string, unknown>) {
+export async function tryOutTestSuite(id: string, requestBody: TryOutVariablesByRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.tryOutTestSuite(id, requestBody, token);
 }
@@ -126,6 +143,11 @@ export async function tryOutTestCase(id: string, testCaseId: string) {
 export async function getMetricDeclarations(page: number, size: number) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getMetricDeclarations(page, size, token);
+}
+
+export async function getDetailedMetricDeclarations() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDetailedMetricDeclarations(token);
 }
 
 export async function getMetricLatestVersion(id: string) {
@@ -161,6 +183,11 @@ export async function getTestSuiteMetricDetails(id: string, metricId: string) {
 export async function getTestSuiteMetricDetailsWithSchema(id: string, metricId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuiteMetricDetailsWithSchema(id, metricId, token);
+}
+
+export async function getTestSuiteMetricsAggregated(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuiteMetricsAggregated(id, token);
 }
 
 export async function getTestSuiteFiles(id: string) {

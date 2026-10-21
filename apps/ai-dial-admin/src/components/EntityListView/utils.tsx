@@ -4,24 +4,26 @@ import { exportFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
-import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
+import DuplicateAsset from '@/src/components/Assets/Modals/DuplicateAsset';
 import DuplicatePopup from '@/src/components/EntityView/Modals/Duplicate/Duplicate';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import DuplicateToolset from '@/src/components/Toolsets/Modals/DuplicateToolset';
 import { MenuI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion, isToolsetRoute } from '@/src/utils/is-view';
+import { isAssetWithVersion, isToolsetRoute, isVersionlessAssetView } from '@/src/utils/is-view';
 import { RefObject } from 'react';
 import { prepareEntityForDuplicate } from './Components/utils';
 import { CreateAssetActionMap, getEmptyAsset } from '../Assets/BaseAssetList/utils';
-import { DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 
 export const getDuplicateModal = async <T extends object>(
   currentEntity: T | undefined,
@@ -33,7 +35,7 @@ export const getDuplicateModal = async <T extends object>(
   isModalOpen: boolean,
   handleModalClose: () => void,
   onDuplicate: (entity: BaseEntity) => Promise<ServerActionResponse>,
-  context?: () => AssetsFolderContext,
+  context?: () => AssetsFolderContextReader<AssetListItem>,
 ) => {
   if (!currentEntity) return null;
   const preparedEntity = (await prepareEntityForDuplicate(route, currentEntity, entityRef)) as T;
@@ -97,12 +99,12 @@ export const getDuplicateModal = async <T extends object>(
     );
   }
 
-  if (isAssetWithVersion(route)) {
+  if (isAssetWithVersion(route) || isVersionlessAssetView(route)) {
     return (
       <DuplicateAsset
         context={context}
         view={route}
-        entity={preparedEntity as AssetWithVersion}
+        entity={preparedEntity as AssetWithVersion | DialPrompt}
         versionsMap={versionsMap}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
@@ -135,7 +137,9 @@ export const getAssetCreateFolderHandler = (view: ApplicationRoute) => {
 
       const createAsset = CreateAssetActionMap[view];
 
-      return createAsset(emptyAsset);
+      // The map's single `AssetWithVersion` signature is the blurred boundary the prompt entry is
+      // already cast into — a prompt folder marker flows through as a plain name/folderId body.
+      return createAsset(emptyAsset as AssetWithVersion);
     };
     return callback;
   }

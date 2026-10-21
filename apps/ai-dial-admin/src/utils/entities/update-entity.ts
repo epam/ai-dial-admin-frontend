@@ -4,8 +4,14 @@ import { isAssetView, isEvaluationView } from '../is-view';
 
 const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Models]: UpdateI18nKey.Model,
-  [ApplicationRoute.AssetsModels]: UpdateI18nKey.Model,
-  [ApplicationRoute.AssetsAppRunners]: UpdateI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformModels]: UpdateI18nKey.Model,
+  [ApplicationRoute.PlatformAppRunners]: UpdateI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformCatalogSchemas]: UpdateI18nKey.CatalogSchema,
+  [ApplicationRoute.PlatformInterceptors]: UpdateI18nKey.Interceptor,
+  [ApplicationRoute.PlatformRoutes]: UpdateI18nKey.Route,
+  [ApplicationRoute.PlatformTranslators]: UpdateI18nKey.Translator,
+  [ApplicationRoute.PlatformRoles]: UpdateI18nKey.Role,
+  [ApplicationRoute.PlatformKeys]: UpdateI18nKey.Key,
   [ApplicationRoute.Applications]: UpdateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: UpdateI18nKey.Application,
   [ApplicationRoute.ApplicationRunners]: UpdateI18nKey.ApplicationRunner,
@@ -17,16 +23,19 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Adapters]: UpdateI18nKey.Adapter,
   [ApplicationRoute.Toolsets]: UpdateI18nKey.Toolset,
   [ApplicationRoute.AssetsToolsets]: UpdateI18nKey.Toolset,
+  [ApplicationRoute.Skills]: UpdateI18nKey.Skill,
   [ApplicationRoute.InterceptorTemplates]: UpdateI18nKey.InterceptorTemplate,
   [ApplicationRoute.SystemProperties]: UpdateI18nKey.SystemProperties,
   [ApplicationRoute.Files]: UpdateI18nKey.File,
   [ApplicationRoute.TestSuites]: UpdateI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: UpdateI18nKey.Dataset,
+  [ApplicationRoute.AnalyticsQueries]: UpdateI18nKey.Query,
   [ApplicationRoute.FilePublications]: UpdateI18nKey.Publication,
   [ApplicationRoute.PromptPublications]: UpdateI18nKey.Publication,
   [ApplicationRoute.ApplicationPublications]: UpdateI18nKey.Publication,
   [ApplicationRoute.ToolsetPublications]: UpdateI18nKey.Publication,
   [ApplicationRoute.ConversationPublications]: UpdateI18nKey.Publication,
+  [ApplicationRoute.SkillPublications]: UpdateI18nKey.Publication,
 };
 
 export const getUpdateNotificationTitle = (

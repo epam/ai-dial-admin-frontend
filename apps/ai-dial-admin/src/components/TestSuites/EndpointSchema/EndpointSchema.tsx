@@ -1,70 +1,59 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { DialSelect, DialTabs, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
-import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { CompareI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
-import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
+import { JsonataVariable } from '@/src/models/jsonata';
+import { findDuplicateResponseColumnName } from '@/src/utils/evaluation/request-chain';
 import Columns from './Columns/Columns';
+
+const COLUMN_UNIQUENESS_FIELD = 'columnUniqueness';
+
+// Stable fallbacks so a request with no columns/schema yet hands Columns the same reference on every
+// render, instead of a new empty array/object each time — the latter fed Columns' memoized grid props
+// a "changed" dependency every render, which (via its own effects) fed back into a re-render loop.
+const EMPTY_RESPONSE_COLUMNS: ResponseColumn[] = [];
+const EMPTY_RESPONSE_SCHEMA: JSONSchema7 = {};
 
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  jsonataVariables?: JsonataVariable[];
+  takenColumnNames?: string[];
 }
 
-const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh }) => {
+const EndpointSchema: FC<Props> = ({
+  testSuite,
+  onChangeTestSuite,
+  isSkipRefresh,
+  jsonataVariables,
+  takenColumnNames = [],
+}) => {
   const t = useI18n();
-  const tabs = getEndpointSchemaTabs(t);
-  const [activeSchemaTab, setActiveSchemaTab] = useState(tabs[0].id);
-  const [isJsonView, setIsJsonView] = useState(false);
+  const { dispatch } = useSaveValidationContext();
 
-  const viewOptions: SelectOption[] = [
-    { value: 'table', label: t(EntitiesI18nKey.Table) },
-    { value: 'json', label: 'JSON' },
-  ];
-
-  const onChangeSchemaTab = useCallback((id: string) => {
-    setActiveSchemaTab(id as string);
-    if (id === EntityViewTab.Columns) {
-      setIsJsonView(false);
-    }
-  }, []);
-
-  const onViewSelectChange = useCallback((value: string | string[]) => {
-    const v = Array.isArray(value) ? value[0] : value;
-    setIsJsonView(v === 'json');
-  }, []);
-
-  const currentSchema =
-    activeSchemaTab === EntityViewTab.RequestSchema
-      ? (testSuite.endpointRef?.requestBodySchema?.schema as unknown as JSONSchema7 | undefined) || {}
-      : (testSuite.endpointRef?.responseBodySchema as unknown as JSONSchema7 | undefined) || {};
-
-  const onChangeSchema = useCallback(
-    (schema: JSONSchema7, isSkipRefresh?: boolean) => {
-      const endpointRef = { ...testSuite.endpointRef };
-      if (activeSchemaTab === EntityViewTab.RequestSchema) {
-        endpointRef.requestBodySchema = {
-          ...endpointRef.requestBodySchema,
-          contentType: endpointRef.requestBodySchema?.contentType || APPLICATION_JSON_TYPE,
-          schema: schema as unknown as DialScheme,
-        };
-      } else {
-        endpointRef.responseBodySchema = schema as typeof endpointRef.responseBodySchema;
-      }
-      onChangeTestSuite({ ...testSuite, endpointRef }, isSkipRefresh);
-    },
-    [testSuite, activeSchemaTab, onChangeTestSuite],
+  const duplicateColumn = useMemo(
+    () => findDuplicateResponseColumnName(testSuite.responseColumns || [], takenColumnNames),
+    [testSuite.responseColumns, takenColumnNames],
   );
+
+  useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: COLUMN_UNIQUENESS_FIELD,
+      isValid: !duplicateColumn,
+    });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: COLUMN_UNIQUENESS_FIELD });
+    };
+  }, [dispatch, duplicateColumn]);
 
   const onChangeResponseColumns = useCallback(
     (responseColumns: ResponseColumn[], isSkipRefresh?: boolean) => {
@@ -74,47 +63,17 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
   );
 
   return (
-    <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
-      <div className="flex flex-row justify-between items-start mb-3">
-        <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
-        {activeSchemaTab !== EntityViewTab.Columns && (
-          <DialSelect
-            prefix={`${t(CompareI18nKey.View)}: `}
-            size={SelectSize.Sm}
-            variant={SelectVariant.Secondary}
-            options={viewOptions}
-            value={isJsonView ? 'json' : 'table'}
-            onChange={onViewSelectChange}
-          />
-        )}
-      </div>
+    <div className="flex flex-col size-full gap-4 border border-secondary rounded p-4">
+      <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
 
-      <div className="flex flex-row justify-between items-start mb-3">
-        <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />
-      </div>
-
-      {activeSchemaTab !== EntityViewTab.Columns ? (
-        isJsonView ? (
-          <div className="w-full h-[350px]">
-            <JsonEditor
-              entity={currentSchema as object}
-              options={{ stickyScroll: { enabled: false } }}
-              setSelectedEntity={onChangeSchema as Dispatch<SetStateAction<JSONSchema7>>}
-            />
-          </div>
-        ) : (
-          <div className="h-[500px]">
-            <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
-          </div>
-        )
-      ) : (
-        <Columns
-          responseColumns={testSuite.responseColumns || []}
-          onChangeResponseColumns={onChangeResponseColumns}
-          responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
-          isSkipRefresh={isSkipRefresh}
-        />
-      )}
+      <Columns
+        responseColumns={testSuite.responseColumns || EMPTY_RESPONSE_COLUMNS}
+        onChangeResponseColumns={onChangeResponseColumns}
+        responseSchema={(testSuite.endpointRef?.responseBodySchema || EMPTY_RESPONSE_SCHEMA) as JSONSchema7}
+        isSkipRefresh={isSkipRefresh}
+        jsonataVariables={jsonataVariables}
+        duplicateColumn={duplicateColumn}
+      />
     </div>
   );
 };

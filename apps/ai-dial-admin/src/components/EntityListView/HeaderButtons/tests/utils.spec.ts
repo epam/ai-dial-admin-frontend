@@ -3,7 +3,7 @@ import { getFormDataForImport, getImportFunction, getImportTitle } from '../util
 import { ApplicationRoute } from '@/src/types/routes';
 import { ImportFileType, ConflictResolutionPolicy } from '@/src/types/import';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 
 describe('getFormDataForImport', () => {
   test('returns FormData and fileSize for ARCHIVE', () => {
@@ -19,7 +19,6 @@ describe('getFormDataForImport', () => {
       {
         name: '1',
         id: 'prompts/public/1__1.0.0',
-        version: '1.0.0',
         nodeType: DialFileNodeType.ITEM,
         path: 'prompts/public/1__1.0.0',
         folderId: 'prompts/public/',

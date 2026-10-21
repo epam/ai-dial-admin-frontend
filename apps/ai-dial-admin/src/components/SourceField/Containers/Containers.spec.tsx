@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
@@ -43,7 +43,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
 const runningContainer: Container = {
   name: 'container-running',
   displayName: 'Running Container',
-  $type: CONTAINER_TYPE.NIM,
+  $type: CONTAINER_TYPE.HF,
   source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
   status: CONTAINER_STATUS.RUNNING,
   url: 'http://running.local',
@@ -53,7 +53,7 @@ const runningContainer: Container = {
 const stoppedContainer: Container = {
   name: 'container-stopped',
   displayName: 'Stopped Container',
-  $type: CONTAINER_TYPE.NIM,
+  $type: CONTAINER_TYPE.HF,
   source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
   status: CONTAINER_STATUS.STOPPED,
   url: '',
@@ -93,9 +93,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Stopped Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Stopped Container')).toBeInTheDocument();
   });
 
   test('displays running container name in edit view', async () => {
@@ -110,9 +108,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Running Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Running Container')).toBeInTheDocument();
   });
 
   test('shows empty state when container is not returned by API', async () => {
@@ -127,34 +123,10 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Entities.NoContainers')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Entities.NoContainers')).toBeInTheDocument();
   });
 
-  test('applies v1 prefix when a NIM container is selected', async () => {
-    const onChange = vi.fn();
-    const entity = createEntity('');
-
-    render(
-      <Containers
-        entity={entity}
-        onChange={onChange}
-        getContainers={mockGetContainers([runningContainer, hfContainer])}
-        view={ApplicationRoute.Models}
-        isModal
-      />,
-    );
-
-    const select = await screen.findByRole('combobox');
-    fireEvent.change(select, { target: { value: 'container-running' } });
-
-    const lastCall = onChange.mock.calls.at(-1)?.[0] as DialModel;
-    expect(lastCall.source?.completionEndpointPath?.startsWith('v1/')).toBe(true);
-    expect(lastCall.source?.completionEndpointPath?.startsWith('openai/')).toBe(false);
-  });
-
-  test('applies openai/v1 prefix when a non-NIM container is selected', async () => {
+  test('applies openai/v1 prefix when a container is selected', async () => {
     const onChange = vi.fn();
     const entity = createEntity('');
 
@@ -187,9 +159,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Stopped Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Stopped Container')).toBeInTheDocument();
     const visibleWarningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled.text-warning-icon');
     expect(visibleWarningIcon).not.toBeNull();
     expect(visibleWarningIcon?.getAttribute('class') ?? '').not.toContain('hidden');
@@ -207,9 +177,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Running Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Running Container')).toBeInTheDocument();
     const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
     // Icon node may exist but is hidden via the `hidden` class when warningText is undefined
     expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
@@ -227,9 +195,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Entities.NoContainers')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Entities.NoContainers')).toBeInTheDocument();
     const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
     expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
   });
@@ -265,7 +231,7 @@ describe('Containers component', () => {
         />,
       );
 
-    test('keeps TEXT_GENERATION and field-less (NIM) containers', async () => {
+    test('keeps TEXT_GENERATION and field-less containers', async () => {
       renderModelsPicker([textGeneration, runningContainer]);
       await screen.findByRole('combobox');
       expect(screen.getByRole('option', { name: 'Text Generation' })).toBeInTheDocument();

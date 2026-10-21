@@ -2,235 +2,139 @@
 
 ## Purpose
 
-Provides a resizable bottom drawer panel for the Analytics tab (Run Detail view) as an alternative
-to the existing right sidebar for inspecting a selected test case's run results. The drawer supports
-open/close/collapse/resize lifecycle, portal-based rendering, pinning a test case for side-by-side
-comparison, a Table/Pivot view toggle, and keyboard accessibility. It coordinates with the Analytics
-grid so row selection drives the drawer's active content, and with the detail-view-switcher so the
-drawer and the sidebar remain mutually exclusive.
+Provides the bottom detail panel for the Execution Result tab (Run Detail view) as an alternative
+to the right sidebar (`RunMetricDetailPanel`). The panel is a single-row pivot of the selected test
+case’s fields, shown via AppContext sidebar at `SidebarPosition.Bottom`. It supports Display-based
+field visibility/order, horizontal scroll-to-field from grid cell clicks, and a full-value popup.
 
 ## Requirements
 
-### Requirement: Bottom drawer displays when detail mode is "drawer"
+### Requirement: Bottom pivot panel displays when detail mode is drawer
 
-The system SHALL display the bottom drawer panel when the detail mode is "drawer" and a test case row is selected. The drawer SHALL NOT be visible when the detail mode is "sidebar".
+The system SHALL display the bottom pivot panel when the detail mode is "drawer" and a test case row is selected, via `sidebar.showSidebar` with `SidebarPosition.Bottom`. The panel SHALL NOT be visible when the detail mode is "sidebar".
 
-#### Scenario: Drawer visible in drawer mode
-- **WHEN** the detail mode is "drawer" and a row is selected in the analytics grid
-- **THEN** the bottom drawer is displayed at the bottom of the viewport with default height (`DEFAULT_DRAWER_HEIGHT = 380px`, defined as a named constant)
+#### Scenario: Panel visible in drawer mode
+- **WHEN** the detail mode is "drawer" and a row is selected in the Execution Result grid
+- **THEN** the bottom pivot panel is displayed in the bottom sidebar slot
 
-#### Scenario: Drawer hidden in sidebar mode
+#### Scenario: Panel hidden in sidebar mode
 - **WHEN** the detail mode is "sidebar"
-- **THEN** the bottom drawer is not rendered
+- **THEN** the bottom pivot panel is not shown
 
 #### Scenario: Row click in drawer mode updates active detail
-- **WHEN** the drawer is open and the user clicks a different row in the Analytics grid
-- **THEN** the drawer updates to show the newly selected test case's data without closing
+- **WHEN** the panel is open and the user clicks a different row in the grid
+- **THEN** the panel updates to show the newly selected test case's data without closing
 
-#### Scenario: Re-click same row in drawer mode closes drawer
-- **WHEN** the drawer is open showing a test case and the user clicks the same row again
-- **THEN** the drawer closes (pinned and field selector state are cleared), detail mode remains "drawer"
+### Requirement: Bottom panel shows a single-row pivot
 
-#### Scenario: Click the pinned row (not the active row) in drawer mode
-- **WHEN** the drawer is open with a pinned case "Row A" and an active case "Row B", and the user clicks "Row A" in the grid
-- **THEN** "Row A" becomes the active case (active === pinned, dedup shows single column); the drawer does NOT close
+The bottom panel body SHALL render a pivot with a section-header row, a field-label row, and exactly one value row for the selected test case. Execution columns SHALL appear as Execution Status → `# Run number` → HTTP (Duration available but hidden by default). Metric sections SHALL appear immediately after Execution. It SHALL NOT render a metric filter row, a sticky run-name column, a second run row, a delta row, a DiffMiniMap, or a table/pivot view toggle.
 
-### Requirement: Drawer shows loading state while fetching detail data
+#### Scenario: Pivot layout for one test case
+- **WHEN** the bottom panel opens for a test case with Execution, metric, and Extracted sections
+- **THEN** the pivot shows Execution then metric sections as column groups, and one value row of truncated cell values
 
-The system SHALL display a loading indicator inside the drawer body while `getTestCaseRunResultDetails()` (server action from `src/app/[lang]/runs/actions.ts`) is in progress. The toolbar SHALL remain visible during loading.
+#### Scenario: Metric section order matches the Extraction Result grid
+- **WHEN** the Extraction Result grid shows metric column groups in first-seen order (e.g. correct-capital1 before answer-conciseness)
+- **THEN** the bottom pivot metric sections appear in that same order, not alphabetically by group key
 
-#### Scenario: Loading on first open
-- **WHEN** the drawer opens for a newly selected row and detail data has not loaded yet
-- **THEN** the drawer body shows a `DialLoader` spinner; the toolbar is visible with the test case name
+#### Scenario: Metric sections stay grouped when switching rows
+- **WHEN** the bottom panel is open on a row with one metric and the user selects a row that has additional metric groups
+- **THEN** all metric sections appear together immediately after Execution, with no Test Case Data, Extracted, or Request / Response sections between them
 
-#### Scenario: Loading on row switch
-- **WHEN** the user clicks a different row while the drawer is open
-- **THEN** the comparison area shows a loading indicator while the new detail is fetched; previously loaded pinned data remains visible
+### Requirement: Pivot includes run-wide fields with a dash for missing values
 
-### Requirement: Drawer handles fetch errors gracefully
+The bottom pivot SHALL include every Test Case Data, Extracted, and metric field that the Extraction Result grid shows for the run, even when the selected row has no value for that field. A missing, null, or absent value SHALL render as an em dash, matching the grid.
 
-When `getTestCaseRunResultDetails()` returns `null` or the fetch fails, the system SHALL display an error state in the drawer body. The drawer SHALL remain open and functional (user can click another row or close).
+#### Scenario: Metric present on other rows
+- **WHEN** the Extraction Result grid shows a metric column as an em dash for the selected row
+- **THEN** the bottom pivot still includes that metric column
+- **AND** the cell shows an em dash
 
-#### Scenario: Detail fetch returns null
-- **WHEN** `getTestCaseRunResultDetails(resultId)` returns `null`
-- **THEN** the drawer body shows an error message indicating the result could not be loaded
+#### Scenario: Extracted column present on other rows
+- **WHEN** an extracted column exists on the run but the selected row has no value for it
+- **THEN** the pivot includes that column
+- **AND** the cell shows an em dash
 
-#### Scenario: Detail fetch for pinned case fails
-- **WHEN** the pinned case detail fetch fails but the active case loaded successfully
-- **THEN** the drawer shows only the active case column and displays a warning about the pinned case
+### Requirement: Display overlay controls field visibility and order
 
-### Requirement: Drawer is resizable via drag handle
+The panel header SHALL provide a Display control that opens an overlay `TreeColumnsPanel` for reordering and hiding fields/sections. By default, Execution Status, `# Run number`, HTTP, and Request / Response body fields SHALL be visible; Duration SHALL be hidden. Closing and reopening the panel within the same run session SHALL preserve Display field visibility and order. Navigating away from the run SHALL reset Display to those defaults.
 
-The system SHALL render a drag handle at the top edge of the drawer. The handle SHALL be a 6px-tall bar spanning the full drawer width with a centered 32px-wide grip indicator (3 horizontal lines). On hover, the bar SHALL show a `bg-layer-3` background and `cursor: ns-resize`. On focus, it SHALL show the app's standard `focus-visible` ring. The user SHALL be able to drag the handle vertically to resize the drawer between 200px minimum and `window.innerHeight - 100px` maximum. The resize handle SHALL also support keyboard-driven resize: Arrow Up/Down adjusts height by 20px, Shift+Arrow by 100px.
+#### Scenario: Display opens field tree
+- **WHEN** the user clicks Display
+- **THEN** an overlay tree of sections and fields is shown for visibility and order changes
 
-#### Scenario: User drags resize handle upward
-- **WHEN** the user presses and drags the resize handle upward
-- **THEN** the drawer height increases, the cursor changes to `ns-resize` during the drag, and the height transition is disabled during active drag (re-enabled on mouseup)
+#### Scenario: Default field visibility
+- **WHEN** the bottom panel opens for the first time in a run session
+- **THEN** Duration is hidden until shown via Display, and Request / Response body fields are visible
 
-#### Scenario: User drags below minimum height
-- **WHEN** the user drags the resize handle so the computed height would be below 200px
-- **THEN** the drawer height stays at 200px
+#### Scenario: Hide a field
+- **WHEN** the user hides a field in Display
+- **THEN** that field’s column is removed from the pivot until shown again
 
-#### Scenario: Resize via keyboard
-- **WHEN** the resize handle is focused and the user presses Arrow Up
-- **THEN** the drawer height increases by 20px (clamped to max). Arrow Up = handle moves up = drawer grows taller (follows the "drag the top edge" mental model)
+#### Scenario: Display settings survive close and reopen
+- **WHEN** the user changes Display visibility, closes the bottom panel, and opens it again on the same run
+- **THEN** the previously chosen field visibility and order are still applied
 
-#### Scenario: Resize via keyboard with Shift
-- **WHEN** the resize handle is focused and the user presses Shift+Arrow Down
-- **THEN** the drawer height decreases by 100px (clamped to min 200px)
+### Requirement: Grid cell click scrolls to the related pivot column
 
-#### Scenario: Browser window resizes while drawer is open
-- **WHEN** the browser window height decreases and the current drawer height exceeds `window.innerHeight - 100px`
-- **THEN** the drawer height is clamped to `window.innerHeight - 100px` to prevent overflow
+When the user clicks a cell in the main Execution Result grid whose column maps to a pivot field, the system SHALL open the bottom panel for that row (if needed) and horizontally scroll so the related pivot column is visible. Mapping SHALL preserve underscored metric leaf keys (for example `exact_match` from `Exact Match_exact_match`).
 
-### Requirement: Drawer can be collapsed and expanded
+#### Scenario: Cell click scrolls to field
+- **WHEN** the user clicks the HTTP column cell for a row while in drawer mode
+- **THEN** the bottom panel shows that row and scrolls to the HTTP pivot column
 
-The system SHALL provide a Collapse button in the drawer toolbar. Collapsing SHALL reduce the drawer to its toolbar bar only (approximately 34px) with a smooth height transition (150ms ease). Clicking the Collapse button again SHALL restore the previous height with the same transition.
+#### Scenario: Underscored metric leaf scrolls to field
+- **WHEN** the user clicks an `exact_match` metric cell while in drawer mode
+- **THEN** the bottom panel shows that row and scrolls to the `exact_match` pivot column
 
-#### Scenario: Collapse the drawer
-- **WHEN** the user clicks the Collapse button
-- **THEN** the drawer body and resize handle are hidden, leaving only the toolbar visible at ~34px height, with a smooth height transition
+#### Scenario: Unmapped column still opens panel
+- **WHEN** the user clicks a column that has no pivot mapping (e.g. test case name)
+- **THEN** the bottom panel opens for the row without scrolling to a specific field
 
-#### Scenario: Expand a collapsed drawer
-- **WHEN** the user clicks the Collapse button on a collapsed drawer
-- **THEN** the drawer restores to its previous height with body and resize handle visible, with a smooth height transition
+### Requirement: Pivot cells truncate and open a full-value popup
 
-### Requirement: Drawer can be closed
+Pivot value cells SHALL be capped to a fixed cell height and SHALL scroll vertically within that height when content does not fit, instead of expanding the row. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a `DialPopup` titled with the field label and showing the full value (not a two-pane diff viewer).
 
-The system SHALL provide a Close button (X) in the drawer toolbar. Closing SHALL hide the drawer and clear the pinned test case selection, but SHALL preserve the detail mode as "drawer" so the next row click reopens the drawer. Field selector state (visibility, order) SHALL also be reset on close.
+#### Scenario: Truncate long value
+- **WHEN** a field value is taller than the cell's fixed height
+- **THEN** the cell shows an internal vertical scrollbar and the row height does not grow to fit the value
 
-#### Scenario: Close the drawer
-- **WHEN** the user clicks the Close button
-- **THEN** the drawer is hidden, pinned ID and field selector state are cleared, but detail mode remains "drawer"
+#### Scenario: Short value shows no scroll
+- **WHEN** a field value fits within the cell's fixed height
+- **THEN** the cell shows no scrollbar and renders exactly as before
 
-### Requirement: Main grid adjusts available height for drawer
+#### Scenario: Hover shows open-popup icon
+- **WHEN** the user hovers a value cell
+- **THEN** an open-in-popup icon appears at the bottom-right of the cell
 
-The system SHALL reduce the analytics grid container's available height by the drawer's **current rendered height** when the drawer is open. This includes tracking collapsed state. Note: AG Grid manages its own virtual scroll viewport — the container's `height` or `max-height` must be reduced (not `padding-bottom`) so AG Grid recalculates row virtualization correctly.
+#### Scenario: Click opens full-value popup
+- **WHEN** the user clicks a value cell
+- **THEN** a popup opens with the field label as title and the full cell content
 
-#### Scenario: Drawer open at full height
-- **WHEN** the drawer is open with height 380px
-- **THEN** the analytics grid container height is reduced by 380px (e.g., `height: calc(100% - 380px)`)
+### Requirement: Panel shows loading and error states
 
-#### Scenario: Drawer collapsed
-- **WHEN** the drawer is collapsed to ~34px
-- **THEN** the analytics grid container height is reduced by 34px
+The system SHALL show a loading indicator while `getTestCaseRunResultDetails` is in progress and an error message when the fetch fails. The header SHALL remain usable (close / switch mode).
 
-#### Scenario: Drawer closed or sidebar mode
-- **WHEN** the drawer is closed or detail mode is "sidebar"
-- **THEN** the analytics grid container uses its full available height
+#### Scenario: Loading on open
+- **WHEN** the panel opens and detail data has not loaded yet
+- **THEN** the body shows a loader and the header shows the panel chrome
 
-### Requirement: Drawer renders via portal
+#### Scenario: Fetch returns null
+- **WHEN** `getTestCaseRunResultDetails(resultId)` returns null
+- **THEN** the body shows an error message and the panel remains open
 
-The system SHALL render the bottom drawer via `createPortal` to `document.body` to avoid layout conflicts with the existing grid and sidebar components.
+### Requirement: Panel can be closed
 
-#### Scenario: Drawer renders outside component tree
-- **WHEN** the drawer is open
-- **THEN** the drawer DOM node is a direct child of `document.body`, not nested inside the analytics grid, with `z-[35]` (below Header at `z-40`, notifications at `z-[100]`, and fullscreen modals at `z-50`)
+The system SHALL provide a Close button in the panel header. Closing SHALL hide the panel but preserve detail mode as "drawer" so the next row click reopens the bottom panel.
 
-### Requirement: Pin a test case for comparison
+#### Scenario: Close the panel
+- **WHEN** the user clicks Close
+- **THEN** the bottom panel is hidden and detail mode remains "drawer"
 
-The system SHALL provide a Pin button in the drawer toolbar. Pinning SHALL lock the current active test case as a reference column. After pinning, clicking another row adds it as a second comparison column alongside the pinned case.
+### Requirement: Panel cleans up on navigation away
 
-#### Scenario: Pin the active test case
-- **WHEN** the user clicks the Pin button and no test case is currently pinned
-- **THEN** the active test case becomes pinned, a badge shows the pinned case name, and the Pin button is replaced by the badge
+The system SHALL close the AppContext sidebar (including bottom slot content) when the Execution Result detail owner unmounts.
 
-#### Scenario: Unpin a test case
-- **WHEN** the user clicks the pinned case badge (with X)
-- **THEN** the pinned case is cleared and the Pin button reappears
-
-#### Scenario: Navigate with pinned case
-- **WHEN** a test case is pinned and the user clicks a different row in the grid
-- **THEN** the drawer shows the pinned case in the first column and the newly clicked case in the second column
-
-#### Scenario: Active and pinned are the same row
-- **WHEN** a test case is pinned and the user clicks the same row that is pinned
-- **THEN** the drawer shows only a single column for that test case (no duplicate columns)
-
-#### Scenario: Unpin returns to single-column view
-- **WHEN** a test case is pinned and the user unpins it
-- **THEN** the drawer shows only the active test case in a single column (no comparison)
-
-#### Scenario: Grid data refreshes while case is pinned
-- **WHEN** the analytics grid data refreshes (e.g., new computation) and the pinned result ID no longer exists
-- **THEN** the pinned case is automatically cleared and a single-column view of the active case is shown
-
-Note: `Analytics.tsx` triggers this by calling `useDrawerPanel.clearPinIfMissing(resultIds)` whenever the grid `results` state updates, passing the current array of valid result IDs. `clearPinIfMissing` must also clear the cached pinned `AnalyticsResult` ref to prevent stale data from being displayed.
-
-### Requirement: Diff count badge in toolbar
-
-When two test cases are displayed (pinned + active), the drawer toolbar SHALL show a badge with the total number of fields that have different values. The badge SHALL update whenever the active row or field visibility changes. When no pinned case exists, the badge SHALL not be rendered.
-
-#### Scenario: Diff count badge with differences
-- **WHEN** two test cases are compared and 12 out of 30 visible fields differ
-- **THEN** the toolbar shows a badge "12 diffs"
-
-#### Scenario: Diff count badge with no differences
-- **WHEN** two test cases are compared and all visible fields are equal
-- **THEN** the toolbar shows a badge "0 diffs"
-
-#### Scenario: No badge without pinned case
-- **WHEN** only one test case is displayed (no pinned case)
-- **THEN** no diff count badge is shown
-
-### Requirement: View toggle between Table and Pivot
-
-The system SHALL provide Table and Pivot toggle buttons in the drawer toolbar. The active view SHALL be visually distinguished. Switching views SHALL preserve the active and pinned selections.
-
-#### Scenario: Switch from Table to Pivot
-- **WHEN** the user clicks the Pivot button
-- **THEN** the comparison area switches to Pivot layout and the Pivot button shows as active
-
-#### Scenario: Switch from Pivot to Table
-- **WHEN** the user clicks the Table button
-- **THEN** the comparison area switches to Table layout and the Table button shows as active
-
-### Requirement: Drawer toolbar includes mode switcher
-
-The drawer toolbar SHALL include a "Switch to Sidebar" button that closes the drawer and triggers `sidebar.showSidebar()` with the current active test case's `resultId`.
-
-#### Scenario: Switch to sidebar from drawer
-- **WHEN** the user clicks the "Switch to Sidebar" button in the drawer toolbar
-- **THEN** the drawer closes and `sidebar.showSidebar()` is called with the active test case
-
-### Requirement: Keyboard accessibility
-
-The drawer toolbar buttons, view toggles, and close/collapse controls SHALL be keyboard-focusable and activatable via Enter/Space. The Escape key SHALL close the drawer when it has focus.
-
-#### Scenario: Close drawer with Escape
-- **WHEN** the drawer is open and the user presses Escape while focus is within the drawer and no inner overlay is open
-- **THEN** the drawer closes
-
-Note: The Escape handler uses a two-layer guard: (1) check `event.defaultPrevented` — if a child handler already called `event.preventDefault()`, skip the drawer close; (2) check whether `document.activeElement` is inside the drawer portal — if focus is on an element outside the drawer (e.g., AG Grid popup or external dropdown rendered to `document.body`), skip the drawer close. This is more robust than relying solely on `defaultPrevented`, since some third-party libraries may not call `preventDefault()` on their Escape handlers.
-
-#### Scenario: Toggle view with keyboard
-- **WHEN** the user focuses the Pivot button and presses Enter
-- **THEN** the view switches to Pivot mode
-
-### Requirement: Drawer shows empty state when all fields are hidden
-
-The system SHALL display an empty state message in the comparison area when all fields are hidden via the field selector.
-
-#### Scenario: All fields hidden
-- **WHEN** the user unchecks all fields or hides all sections via the field selector
-- **THEN** the comparison area displays a message: "No fields visible. Use the Fields panel to show fields."
-
-### Requirement: Drawer shows progressive loading for pinned data
-
-When the drawer has a pinned case and the user clicks a new row, the system SHALL show the pinned column data immediately while loading the new active case data.
-
-#### Scenario: Active case loading with pinned data visible
-- **WHEN** the user clicks a new row while a pinned case is loaded
-- **THEN** the pinned column displays its data, the active column shows a loading indicator, and the toolbar updates with the new case name
-
-### Requirement: Drawer cleans up on navigation away
-
-The system SHALL close the drawer and remove its portal DOM node when `Analytics.tsx` unmounts (e.g., user navigates to a different tab or page). The `useDetailMode` hook's cleanup effect SHALL handle both sidebar teardown (`sidebar.closeSidebar()`) and drawer teardown.
-
-#### Scenario: Navigate away while drawer is open
-- **WHEN** the drawer is open and the user navigates away from the Analytics tab
-- **THEN** the drawer portal is removed from `document.body` and no orphaned DOM nodes remain
-
-#### Scenario: Navigate away while drawer is collapsed
-- **WHEN** the drawer is collapsed and the user navigates away
-- **THEN** the collapsed drawer portal is also removed
+#### Scenario: Navigate away while panel is open
+- **WHEN** the bottom panel is open and the user navigates away from the Run view
+- **THEN** `sidebar.closeSidebar()` runs and no orphaned bottom-slot content remains

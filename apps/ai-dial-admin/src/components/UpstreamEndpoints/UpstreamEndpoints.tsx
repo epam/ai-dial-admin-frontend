@@ -8,7 +8,7 @@ import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModelEndpoint } from '@/src/models/dial/model';
+import { DialModelEndpoint, UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import Endpoint from './Endpoint/Endpoint';
 
@@ -21,6 +21,8 @@ interface Props<T> {
   view?: ApplicationRoute;
   withResponses?: boolean;
   collapsible?: boolean;
+  isAuthTypeSupported?: boolean;
+  originalUpstreams?: DialModelEndpoint[];
 }
 
 const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
@@ -32,6 +34,8 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
   view,
   withResponses,
   collapsible = true,
+  isAuthTypeSupported,
+  originalUpstreams,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -67,6 +71,10 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
   );
 
   const count = entity.upstreams?.length ?? 0;
+  // Always render the same array shape (real upstreams, or a single placeholder) so switching
+  // from 0 to 1 upstream never changes the JSX structure — that structural switch is what was
+  // remounting the input and dropping focus after the first keystroke.
+  const upstreams = count > 0 ? entity.upstreams! : [{}];
 
   return (
     <Accordion
@@ -75,35 +83,26 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
       collapsible={collapsible}
       collapsed={collapsible ? true : false}
     >
-      {entity.upstreams == null || entity.upstreams.length === 0 ? (
+      {upstreams.map((endpoint, index) => (
         <Endpoint
-          key={0}
           disabled={isDisabled}
-          endpoint={{}}
-          index={0}
+          key={index}
+          endpoint={endpoint}
+          index={index}
           isKeyOptional={isKeyOptional}
           required={required}
-          updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
+          isAuthTypeSupported={isAuthTypeSupported}
+          isBearerKeyRequired={
+            isAuthTypeSupported &&
+            endpoint.authType === UpstreamAuthType.BEARER &&
+            originalUpstreams?.[index]?.authType !== endpoint.authType
+          }
+          updateEndpoint={(point) => onUpdateEndPoint(point, index)}
           removeEndpoint={onRemoveEndpoint}
           view={view}
           withResponses={withResponses}
         />
-      ) : (
-        entity.upstreams?.map((endpoint, index) => (
-          <Endpoint
-            disabled={isDisabled}
-            key={index}
-            endpoint={endpoint}
-            index={index}
-            isKeyOptional={isKeyOptional}
-            required={required}
-            updateEndpoint={(point) => onUpdateEndPoint(point, index)}
-            removeEndpoint={onRemoveEndpoint}
-            view={view}
-            withResponses={withResponses}
-          />
-        ))
-      )}
+      ))}
       {!isDisabled && (
         <div>
           <DialGhostButton

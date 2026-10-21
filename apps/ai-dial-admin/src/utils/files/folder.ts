@@ -1,3 +1,4 @@
+import { DEFAULT_ROOT_FOLDER_PERMISSIONS } from '@/src/constants/file';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
@@ -15,6 +16,16 @@ export const getFolderName = (path: string): string | undefined => {
 };
 
 /**
+ * Keep only the leaf entries of a folder listing, dropping its sub-folders
+ *
+ * @template T - any listing row
+ * @param {T[]} list - folder listing
+ * @returns {T[]} - the rows whose node type is an item
+ */
+export const getFolderItems = <T extends { nodeType?: DialFileNodeType }>(list: T[]): T[] =>
+  list.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+
+/**
  * Modify files array by adding name as current folder name from file path
  *
  * @param {DialFile[]} files - array of DialFile
@@ -28,8 +39,7 @@ export const fillChildren = (files: DialFile[], existingChildren?: DialFile[]): 
         ...file,
         name: file?.name || getFolderName(file.path),
         parentPath: file.path.includes('/') ? `${file.path.replace(/\/[^/]+\/?$/, '')}/` : '',
-        // TODO: Remove When we get real permissions
-        permissions: ['WRITE', 'READ'],
+        permissions: DEFAULT_ROOT_FOLDER_PERMISSIONS,
         items: file.nodeType === DialFileNodeType.FOLDER ? items : void 0,
       };
     })
@@ -56,8 +66,7 @@ export const mergeFiles = <T extends DialFile>(
         name: getFolderName(targetPath),
         path: targetPath,
         nodeType: DialFileNodeType.FOLDER,
-        // TODO: Remove When we get real permissions
-        permissions: ['WRITE', 'READ'],
+        permissions: DEFAULT_ROOT_FOLDER_PERMISSIONS,
         items: fillChildren(newFiles as T[]),
       } as T,
     ];

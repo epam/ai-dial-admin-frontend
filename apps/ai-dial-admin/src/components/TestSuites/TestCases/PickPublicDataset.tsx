@@ -79,7 +79,10 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
       .finally(() => setIsLoadingDatasets(false));
   }, []);
 
-  const rawRows = useMemo(() => expandTestCasesToRows(testCasesData), [testCasesData]);
+  const rawRows = useMemo(
+    () => expandTestCasesToRows(testCasesData, previewDataset?.testCaseSchema),
+    [testCasesData, previewDataset],
+  );
 
   const { rowData, onToggleExpand, getRowId, getRowHeight, onFilterChanged } = useTurnGroupProjection({ rawRows });
 

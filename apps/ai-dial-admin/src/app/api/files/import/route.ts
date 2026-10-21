@@ -7,10 +7,12 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType, ConflictResolutionPolicy } from '@/src/types/import';
 import { FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD } from '@/src/server/files/circuit-breaker';
 import { importPlainFiles, importZipFile, InvalidImportZipError } from '@/src/server/files/import';
+import { UnsafeZipError } from '@/src/server/zip/zip-safety';
 
 interface ImportConfig {
   path: string;
   conflictResolutionStrategy: string;
+  flatImport?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -39,7 +41,13 @@ export async function POST(req: NextRequest) {
   try {
     const outcome =
       fileType === ImportFileType.ARCHIVE
-        ? await importZipFile(formData.get('file') as File, config.path, upload, FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD)
+        ? await importZipFile(
+            formData.get('file') as File,
+            config.path,
+            upload,
+            FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD,
+            config.flatImport,
+          )
         : await importPlainFiles(
             formData.getAll('files') as File[],
             config.path,
@@ -49,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, response: outcome });
   } catch (error) {
-    if (error instanceof InvalidImportZipError) {
+    if (error instanceof InvalidImportZipError || error instanceof UnsafeZipError) {
       return NextResponse.json(
         { success: false, errorHeader: 'Bad Request', errorMessage: error.message },
         { status: 400 },

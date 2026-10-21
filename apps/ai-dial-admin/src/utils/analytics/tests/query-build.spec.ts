@@ -14,15 +14,18 @@ import {
   aggregateQuery,
   and,
   col,
+  eq,
   field,
   fn,
   gt,
   ico,
   inValues,
   isNotNull,
+  isNull,
   le,
   ne,
   offsetPage,
+  rowQuery,
   or,
   sortItem,
   value,
@@ -93,6 +96,7 @@ describe('analytics query-build :: expressions', () => {
 
 describe('analytics query-build :: predicates', () => {
   test.each([
+    ['eq', eq, QueryOperator.Eq],
     ['gt', gt, QueryOperator.Gt],
     ['le', le, QueryOperator.Le],
     ['ne', ne, QueryOperator.Ne],
@@ -158,6 +162,26 @@ describe('analytics query-build :: predicates', () => {
     });
   });
 
+  test('isNull is an eq against a typed null literal', () => {
+    expect(isNull('core_parent_span_id')).toEqual({
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'core_parent_span_id' },
+        { type: QueryExprType.Value, value_type: QueryValueType.Null, value: null },
+      ],
+    });
+  });
+
+  // The two are not interchangeable: an unset identifier column is null, never '', so an empty-string
+  // comparison silently matches no rows and reads as a conversation with no entry hops.
+  test('isNull is not an empty-string comparison', () => {
+    const nullArg = isNull('core_parent_span_id').args[1] as QueryValueExpr;
+
+    expect(nullArg.value_type).toBe(QueryValueType.Null);
+    expect(nullArg.value).toBeNull();
+    expect(nullArg.value).not.toBe('');
+  });
+
   test('inValues builds an array expression of typed literals', () => {
     expect(inValues('chat_id', QueryValueType.String, ['a', 'b'])).toEqual({
       op: QueryOperator.In,
@@ -190,13 +214,18 @@ describe('analytics query-build :: sort and page', () => {
     });
   });
 
-  test('offsetPage never requests a total', () => {
+  test('offsetPage defaults to requesting no total', () => {
     expect(offsetPage(0, 20)).toEqual({
       type: QueryPageType.Offset,
       offset: 0,
       limit: 20,
       include_total: false,
     });
+  });
+
+  test('offsetPage carries the caller total request in both states', () => {
+    expect(offsetPage(40, 100, true).include_total).toBe(true);
+    expect(offsetPage(40, 100, false).include_total).toBe(false);
   });
 });
 
@@ -232,6 +261,46 @@ describe('analytics query-build :: aggregate envelope', () => {
     const page = offsetPage(0, 20);
 
     const query = aggregateQuery({ entity: 'dial_usage_log', groupBy: ['chat_id'], select, filter, sort, page });
+
+    expect(query.filter).toEqual(filter);
+    expect(query.sort).toEqual(sort);
+    expect(query.page).toEqual(page);
+  });
+
+  test('omits group_by when the caller groups by nothing', () => {
+    const query = aggregateQuery({ entity: 'conversations', select });
+
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toBeUndefined();
+  });
+});
+
+describe('analytics query-build :: row envelope', () => {
+  const select = [col(field('chat_id'))];
+
+  test('sets row mode explicitly and never groups', () => {
+    const query = rowQuery({ entity: 'conversations', select });
+
+    expect(query.mode).toBe(QueryMode.Row);
+    expect(query.entity).toBe('conversations');
+    expect(query.select).toEqual(select);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('omits optional sections that were not supplied', () => {
+    const query = rowQuery({ entity: 'conversations', select });
+
+    expect(query.filter).toBeUndefined();
+    expect(query.sort).toBeUndefined();
+    expect(query.page).toBeUndefined();
+  });
+
+  test('carries filter, sort and page when supplied', () => {
+    const filter = and([ne('chat_id', value(QueryValueType.String, ''))]);
+    const sort = [sortItem('chat_id', QuerySortDirection.Asc)];
+    const page = offsetPage(0, 100, true);
+
+    const query = rowQuery({ entity: 'conversations', select, filter, sort, page });
 
     expect(query.filter).toEqual(filter);
     expect(query.sort).toEqual(sort);

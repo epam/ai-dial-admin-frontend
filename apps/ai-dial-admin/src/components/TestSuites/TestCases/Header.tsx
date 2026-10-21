@@ -1,30 +1,24 @@
 'use client';
 
-import { FC, ReactNode, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  ButtonVariant,
-  DialButtonDropdown,
-  DialConfirmationPopup,
-  DialDangerButton,
-  DialGhostButton,
-  DialNeutralButton,
-  DropdownItem,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import {
   IconDatabaseExport,
   IconDatabaseImport,
   IconFileArrowLeft,
   IconFileArrowRight,
-  IconPencilMinus,
   IconPlus,
   IconSettings,
   IconTrashX,
-  IconUnlink,
 } from '@tabler/icons-react';
 
+import AdaptiveHeaderActions from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/AdaptiveHeaderActions';
+import {
+  AdaptiveHeaderAction,
+  AdaptiveHeaderActionsConfig,
+} from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -45,7 +39,7 @@ interface Props {
   isReadOnly?: boolean;
   onPublish?: (displayName: string, description?: string) => void;
   onAttachDataset?: (datasetId: string) => void;
-  onDetachDataset?: () => void;
+  onBeforeAttach?: () => boolean;
   datasetTag?: ReactNode;
 }
 
@@ -61,23 +55,16 @@ const HeaderButtons: FC<Props> = ({
   isReadOnly,
   onPublish,
   onAttachDataset,
-  onDetachDataset,
+  onBeforeAttach,
   datasetTag,
 }) => {
   const t = useI18n();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const [isDetachConfirmOpen, setIsDetachConfirmOpen] = useState(false);
 
   const moreItems: DropdownItem[] = useMemo(() => {
     return [
-      {
-        key: 'schema',
-        label: t(TestSuitesI18nKey.TestCaseSchema),
-        icon: <IconSettings {...BASE_BUTTON_ICON_PROPS} />,
-        onClick: () => onOpenSchemaModal?.(),
-      },
       {
         key: 'publish',
         label: t(TestSuitesI18nKey.PublishToDataset),
@@ -97,7 +84,7 @@ const HeaderButtons: FC<Props> = ({
         onClick: () => onExport?.(),
       },
     ];
-  }, [t, onOpenSchemaModal, onExport]);
+  }, [t, onExport]);
 
   const onPublishConfirm = (displayName: string, description?: string) => {
     setIsPublishModalOpen(false);
@@ -109,63 +96,73 @@ const HeaderButtons: FC<Props> = ({
     onAttachDataset?.(selectedDatasetId);
   };
 
+  const tryOpenAttachModal = useCallback(() => {
+    if (onBeforeAttach && !onBeforeAttach()) {
+      return;
+    }
+    setIsAttachModalOpen(true);
+  }, [onBeforeAttach]);
+
+  const adaptiveActions = useMemo((): AdaptiveHeaderActionsConfig => {
+    if (isReadOnly) {
+      return {};
+    }
+
+    const leading: AdaptiveHeaderAction[] = [
+      {
+        id: 'schema',
+        label: t(TestSuitesI18nKey.TestCaseSchema),
+        icon: <IconSettings {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => onOpenSchemaModal?.(),
+        appearance: 'ghost',
+      },
+      {
+        id: 'attach',
+        label: t(TestSuitesI18nKey.AttachDataset),
+        icon: <IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: tryOpenAttachModal,
+        appearance: 'ghost',
+      },
+      {
+        id: 'add',
+        label: t(ButtonsI18nKey.Add),
+        icon: <IconPlus {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => onAdd?.(),
+        appearance: 'primary',
+      },
+    ];
+    const trailing: AdaptiveHeaderAction[] = showBatchDelete
+      ? [
+          {
+            id: 'delete',
+            label: t(ButtonsI18nKey.Delete),
+            icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
+            onClick: () => onBatchDelete?.(),
+            appearance: 'danger',
+          },
+        ]
+      : [];
+    return { leading, trailing };
+  }, [isReadOnly, t, onOpenSchemaModal, tryOpenAttachModal, onAdd, showBatchDelete, onBatchDelete]);
+
   return (
-    <div className="flex gap-4 items-center">
-      {isReadOnly && (
-        <>
-          <DialGhostButton
-            label={t(ButtonsI18nKey.ExportCsv)}
-            iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onExport}
-          />
-          <div className="w-px h-5 bg-layer-4" />
-          <DialGhostButton
-            label={t(TestSuitesI18nKey.DetachFromDataset)}
-            iconBefore={<IconUnlink {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsDetachConfirmOpen(true)}
-          />
-          <DialGhostButton
-            label={t(TestSuitesI18nKey.ChangeDataset)}
-            iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsAttachModalOpen(true)}
-          />
-        </>
-      )}
-
+    <div className="flex gap-4 items-center min-w-0 flex-1 justify-end">
       {!isReadOnly && (
-        <>
-          <DialButtonDropdown
-            label={t(TestSuitesI18nKey.More)}
-            items={moreItems}
-            variant={ButtonVariant.Primary}
-            appearance={ButtonAppearance.Ghost}
-          />
-          <DialGhostButton
-            label={t(TestSuitesI18nKey.AttachDataset)}
-            iconBefore={<IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsAttachModalOpen(true)}
-          />
-        </>
-      )}
-
-      {!isReadOnly && (
-        <DialNeutralButton
-          label={t(ButtonsI18nKey.Add)}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onAdd}
+        <AdaptiveHeaderActions
+          actions={adaptiveActions}
+          prefix={
+            <DialButtonDropdown
+              label={t(TestSuitesI18nKey.More)}
+              items={moreItems}
+              variant={ButtonVariant.Primary}
+              appearance={ButtonAppearance.Ghost}
+              className="shrink-0"
+            />
+          }
         />
       )}
 
-      {showBatchDelete && (
-        <DialDangerButton
-          label={t(ButtonsI18nKey.Delete)}
-          appearance={ButtonAppearance.Outlined}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onBatchDelete}
-        />
-      )}
-
-      {datasetTag}
+      {datasetTag ? <div className="shrink-0">{datasetTag}</div> : null}
 
       {isImportModalOpen &&
         createPortal(
@@ -184,7 +181,7 @@ const HeaderButtons: FC<Props> = ({
           isOpen={isAttachModalOpen}
           onClose={() => setIsAttachModalOpen(false)}
           onConfirm={onChangeDatasetConfirm}
-          showWarning={!isReadOnly}
+          showWarning
         />
       )}
 
@@ -196,22 +193,6 @@ const HeaderButtons: FC<Props> = ({
           onConfirm={onPublishConfirm}
         />
       )}
-
-      {isDetachConfirmOpen &&
-        createPortal(
-          <DialConfirmationPopup
-            open={isDetachConfirmOpen}
-            header={t(TestSuitesI18nKey.DetachConfirmTitle)}
-            description={t(TestSuitesI18nKey.DetachConfirmDescription)}
-            confirmLabel={t(TestSuitesI18nKey.DetachFromDataset)}
-            onConfirm={() => {
-              setIsDetachConfirmOpen(false);
-              onDetachDataset?.();
-            }}
-            onClose={() => setIsDetachConfirmOpen(false)}
-          />,
-          document.body,
-        )}
     </div>
   );
 };

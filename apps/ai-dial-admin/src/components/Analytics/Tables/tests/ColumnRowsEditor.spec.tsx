@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 
@@ -12,10 +12,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialSelectField: ({ label, options, value, onChange, error }: any) => (
+    DialSelectField: ({ id, label, options, value, onChange, error }: any) => (
       <label>
         <span>{label}</span>
-        <select aria-label={label} value={value} onChange={(e: any) => onChange(e.target.value)}>
+        <select id={id} aria-label={label} value={value} onChange={(e: any) => onChange(e.target.value)}>
           {options.map((o: any) => (
             <option key={o.value} value={o.value}>
               {o.label}
@@ -42,6 +42,13 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 const row = (overrides?: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow(), ...overrides });
+
+// A label the user can actually read: the value list's own label is clipped (`sr-only` on its wrapper) in every
+// row but the first, because Multiselect always renders one and the editor labels that column itself.
+const visibleLabels = (container: HTMLElement, text: string) =>
+  Array.from(container.querySelectorAll('label')).filter(
+    (label) => label.textContent?.includes(text) && !label.parentElement?.className.includes('sr-only'),
+  );
 
 describe('ColumnRowsEditor', () => {
   test('a single Name field fills both source_name and name on the row', () => {
@@ -103,7 +110,52 @@ describe('ColumnRowsEditor', () => {
     expect(nullableSwitch).not.toBeChecked();
   });
 
-  test('the Nullable switch stays enabled for a non-Array row', () => {
+  test('the Nullable switch is disabled and forced off for an Object row, even if nullable was already true', () => {
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.Object, nullable: true })]} onChange={vi.fn()} />);
+
+    const nullableSwitch = screen.getByLabelText(AnalyticsTablesI18nKey.Nullable);
+    expect(nullableSwitch).toBeDisabled();
+    expect(nullableSwitch).not.toBeChecked();
+  });
+
+  test('retyping a nullable row to Object stores the flag off, so it does not return on a later retype', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.String, nullable: true })]} onChange={onChange} />);
+
+    await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.Object);
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ type: AnalyticsFieldType.Object, nullable: false }),
+    ]);
+  });
+
+  test('the Nullable switch is disabled and forced off for a Map row, even if nullable was already true', () => {
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.Map, nullable: true })]} onChange={vi.fn()} />);
+
+    const nullableSwitch = screen.getByLabelText(AnalyticsTablesI18nKey.Nullable);
+    expect(nullableSwitch).toBeDisabled();
+    expect(nullableSwitch).not.toBeChecked();
+  });
+
+  test('retyping a nullable row to Map stores the flag off and offers no element type', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.String, nullable: true })]} onChange={onChange} />);
+
+    await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.Map);
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ type: AnalyticsFieldType.Map, nullable: false, element_type: '' }),
+    ]);
+  });
+
+  test('does not render the element-type field for a Map row', () => {
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.Map })]} onChange={vi.fn()} />);
+    expect(screen.queryByLabelText(AnalyticsTablesI18nKey.ElementType)).not.toBeInTheDocument();
+  });
+
+  test('the Nullable switch stays enabled for a row that is neither Array nor Object', () => {
     render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
     expect(screen.getByLabelText(AnalyticsTablesI18nKey.Nullable)).toBeEnabled();
   });
@@ -117,5 +169,204 @@ describe('ColumnRowsEditor', () => {
       />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Required');
+  });
+
+  test('renders a Display name and a Description field on a row', () => {
+    render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
+
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toBeInTheDocument();
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toBeInTheDocument();
+  });
+
+  test('renders the two field labels on the first row only', () => {
+    const rows = [row(), row()];
+    const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+    expect(screen.getAllByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toHaveLength(1);
+    expect(screen.getAllByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toHaveLength(1);
+    // The second row still has both controls; only its labels are omitted, as for every other field here.
+    expect(container.querySelector(`#col-display-name-${rows[1].id}`)).toBeTruthy();
+    expect(container.querySelector(`#col-description-${rows[1].id}`)).toBeTruthy();
+  });
+
+  test('typing a display name patches only that field on the row', () => {
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row()]} onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false }), {
+      target: { value: 'Total tokens' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ display_name: 'Total tokens', description: '' })]);
+  });
+
+  test('typing a description patches only that field on the row', () => {
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row()]} onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false }), {
+      target: { value: 'Prompt plus completion tokens' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ description: 'Prompt plus completion tokens', display_name: '' }),
+    ]);
+  });
+
+  test('shows a length validation error on the display name and on the description', () => {
+    render(
+      <ColumnRowsEditor
+        rows={[row(), row()]}
+        errors={[{ display_name: ErrorI18nKey.Length }, { description: ErrorI18nKey.Length }]}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByText(ErrorI18nKey.Length)).toHaveLength(2);
+  });
+
+  // rowHasError drives the row's top-aligned layout; a row erroring only on one of the two new fields
+  // must trigger it too, or its labels fall out of line with its error-free siblings.
+  test('a row erroring only on the description still gets the top-aligned layout', () => {
+    const { container } = render(
+      <ColumnRowsEditor rows={[row()]} errors={[{ description: ErrorI18nKey.Length }]} onChange={vi.fn()} />,
+    );
+    expect(container.querySelector('.items-start')).toBeTruthy();
+    expect(container.querySelector('.items-end')).toBeNull();
+  });
+
+  test('a row with no errors keeps the bottom-aligned layout', () => {
+    const { container } = render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
+    expect(container.querySelector('.items-end')).toBeTruthy();
+    expect(container.querySelector('.items-start')).toBeNull();
+  });
+
+  describe('an Enum row', () => {
+    const enumRow = (overrides?: Partial<ColumnRow>) => row({ type: AnalyticsFieldType.Enum, ...overrides });
+
+    test('offers no value list until the type is Enum', () => {
+      const { container, rerender } = render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
+      const stringRow = container.querySelector('[id^="col-enum-values-"]');
+      expect(stringRow).toBeNull();
+
+      const enumRows = [enumRow()];
+      rerender(<ColumnRowsEditor rows={enumRows} onChange={vi.fn()} />);
+
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValues)).toBeInTheDocument();
+    });
+
+    test('does not offer the element-type field (that is the Array control)', () => {
+      render(<ColumnRowsEditor rows={[enumRow()]} onChange={vi.fn()} />);
+      expect(screen.queryByLabelText(AnalyticsTablesI18nKey.ElementType)).not.toBeInTheDocument();
+    });
+
+    // The same reason the element type is cleared: a domain carried across a retype would be submitted with
+    // a column that no longer has the type it belongs to.
+    test('retyping away from Enum clears the collected values', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(<ColumnRowsEditor rows={[enumRow({ enum_values: ['low', 'high'] })]} onChange={onChange} />);
+
+      await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.String);
+
+      expect(onChange).toHaveBeenCalledWith([
+        expect.objectContaining({ type: AnalyticsFieldType.String, enum_values: [] }),
+      ]);
+    });
+
+    test('retyping from Array to Enum clears the element type and starts an empty domain', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColumnRowsEditor
+          rows={[row({ type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String })]}
+          onChange={onChange}
+        />,
+      );
+
+      await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.Enum);
+
+      expect(onChange).toHaveBeenCalledWith([
+        expect.objectContaining({ type: AnalyticsFieldType.Enum, element_type: '' }),
+      ]);
+    });
+
+    test('states the declared-order consequence beneath each enum row, and not for other rows', () => {
+      render(<ColumnRowsEditor rows={[enumRow(), row(), enumRow()]} onChange={vi.fn()} />);
+
+      expect(screen.getAllByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toHaveLength(2);
+    });
+
+    test('states nothing about ordering when no row is an enum', () => {
+      render(<ColumnRowsEditor rows={[row(), row()]} onChange={vi.fn()} />);
+
+      expect(screen.queryByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toBeNull();
+    });
+
+    test('surfaces the value-list validation message', () => {
+      render(
+        <ColumnRowsEditor
+          rows={[enumRow()]}
+          errors={[{ enum_values: AnalyticsTablesI18nKey.EnumValuesRequired }]}
+          onChange={vi.fn()}
+        />,
+      );
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValuesRequired)).toBeInTheDocument();
+    });
+
+    // rowHasError drives the row's top-aligned layout; a row erroring only on its domain must trigger it too.
+    test('erroring only on the value list still gets the top-aligned layout', () => {
+      const { container } = render(
+        <ColumnRowsEditor
+          rows={[enumRow()]}
+          errors={[{ enum_values: AnalyticsTablesI18nKey.EnumValuesRequired }]}
+          onChange={vi.fn()}
+        />,
+      );
+      expect(container.querySelector('.items-start')).toBeTruthy();
+      expect(container.querySelector('.items-end')).toBeNull();
+    });
+  });
+
+  // A type-specific control is a column of the whole editor, not an extra field in the one row that has that
+  // type: once any row offers one, every row reserves its cell so the fields to its right keep their place, and
+  // the column's label stays with the other labels on the first row.
+  describe('the type-specific columns', () => {
+    test('holds the element-type control only in the Array row, and its label on the first row', () => {
+      const rows = [row(), row({ type: AnalyticsFieldType.Array })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      expect(container.querySelector(`#col-element-type-${rows[1].id}`)).toBeTruthy();
+      expect(container.querySelector(`#col-element-type-${rows[0].id}`)).toBeNull();
+      expect(visibleLabels(container, AnalyticsTablesI18nKey.ElementType)).toHaveLength(1);
+    });
+
+    test('labels the value column on the first row even when a later row is the enum row', () => {
+      const rows = [row(), row({ type: AnalyticsFieldType.Enum })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      expect(visibleLabels(container, AnalyticsTablesI18nKey.EnumValues)).toHaveLength(1);
+      // Only the enum row holds the value list itself — the first row's cell stays empty.
+      expect(
+        Array.from(container.querySelectorAll('label[for^="col-enum-values-"]')).map((label) =>
+          label.getAttribute('for'),
+        ),
+      ).toEqual([`col-enum-values-${rows[1].id}`]);
+    });
+
+    test('clips the value-list label of an enum row below the first', () => {
+      const rows = [row({ type: AnalyticsFieldType.Enum }), row({ type: AnalyticsFieldType.Enum })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      expect(container.querySelectorAll('label[for^="col-enum-values-"]')).toHaveLength(2);
+      expect(visibleLabels(container, AnalyticsTablesI18nKey.EnumValues)).toHaveLength(1);
+    });
+
+    test('lays out every row with the same cells once one row needs a type-specific control', () => {
+      const rows = [row(), row({ type: AnalyticsFieldType.Enum })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      const [firstRow, secondRow] = Array.from(container.firstElementChild?.children ?? []);
+      expect(firstRow.children).toHaveLength(secondRow.children.length);
+    });
   });
 });

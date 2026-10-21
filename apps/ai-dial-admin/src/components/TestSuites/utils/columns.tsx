@@ -1,4 +1,4 @@
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import {
   ColDef,
@@ -22,6 +22,7 @@ import {
   getGroupedIdColumn,
   getGroupedNameColumn,
   getGroupedSchemaColumn,
+  SchemaColumnContext,
   getTurnExpanderColumn,
 } from '@/src/components/Grid/columns/turn-columns';
 import IncludeInRunCellRenderer from '@/src/components/TestSuites/TestCases/RunCondition/IncludeInRunCellRenderer';
@@ -29,20 +30,19 @@ import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constan
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import {
-  InputBindingRowData,
-  ResponseColumn,
-  TestCase,
-  TestCaseSchema,
-  TestSuite,
-} from '@/src/models/evaluation/test-suite';
+import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
+import { InputBindingRowData, ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 import { OnCellChange } from '@/src/types/grid-cell';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { GridRowType } from '@/src/types/grid-row-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export interface TestCaseColumnsOptions {
   suite: TestSuite;
+  dataset?: Dataset | null;
   onCellChange: OnCellChange;
   onToggleExpand: (groupKey: string) => void;
   t?: (key: string) => string;
@@ -50,6 +50,12 @@ export interface TestCaseColumnsOptions {
   isReadOnly?: boolean;
   includedIds?: Set<string> | null | (() => Set<string> | null);
 }
+
+export const INCLUDED_IN_RUN_COLUMN_ID = 'includedInRun';
+export const VALIDITY_STATUS_COLUMN_ID = 'status';
+export const CONTENT_FIT_COLUMN_IDS = [INCLUDED_IN_RUN_COLUMN_ID, VALIDITY_STATUS_COLUMN_ID];
+
+const ID_COLUMN_MAX_WIDTH = 200;
 
 const getIncludeInRunFilterOptions = (
   allLabel: string,
@@ -77,20 +83,26 @@ const getIncludeInRunFilterOptions = (
 ];
 
 export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] => {
-  const { suite, onCellChange, onToggleExpand, t, schema, isReadOnly, includedIds } = options;
+  const { suite, dataset, onCellChange, onToggleExpand, t, schema, isReadOnly, includedIds } = options;
   const includedLabel = t?.(TestSuitesI18nKey.IncludedInRun) ?? 'Included';
   const excludedLabel = t?.(TestSuitesI18nKey.ExcludedFromRun) ?? 'Excluded';
   const allLabel = 'All';
   const resolvedSchema = schema ?? [];
   const resolveIncludedIds = () => (typeof includedIds === 'function' ? includedIds() : includedIds);
+  // A private dataset owns its files; otherwise they are stored on the suite.
+  const fileContext: SchemaColumnContext =
+    dataset?.visibility === DatasetVisibility.PRIVATE
+      ? { entityId: dataset.id, view: ApplicationRoute.Datasets }
+      : { entityId: suite.id, view: ApplicationRoute.TestSuites };
 
-  return [
+  const columns: ColDef[] = [
     getTurnExpanderColumn(onToggleExpand),
     {
       ...UTILITY_COLUMN,
       headerName: t?.(TestSuitesI18nKey.IncludeInRun) ?? 'Include in run',
       field: 'includedInRun',
-      colId: 'includedInRun',
+      colId: INCLUDED_IN_RUN_COLUMN_ID,
+      suppressSizeToFit: true,
       minWidth: 140,
       width: 140,
       maxWidth: 180,
@@ -106,6 +118,11 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
       sortable: true,
       editable: false,
       cellRenderer: IncludeInRunCellRenderer,
+      // Declared here (not only applied imperatively) so AgGridWrapper's own columnDefs/rowData sync
+      // re-derives this as the default sort on every grid remount or refresh — the imperative
+      // `applyColumnState` call in TestCasesList only re-fires when the run condition itself changes,
+      // not when the grid is torn down and recreated (e.g. switching tabs away and back).
+      sort: suite.testCaseFilter ? 'desc' : null,
       valueGetter: (params) => {
         const ids = resolveIncludedIds();
         if (ids == null) {
@@ -114,28 +131,37 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
         return ids.has(String(params.data?.id));
       },
     } as ColDef,
-    getGroupedIdColumn(),
+    // IDs are short and of a fairly uniform length, so a share of the available width would waste
+    // space next to a long schema/JSON column — grow with the rest of the grid, but never past a
+    // readable cap.
+    { ...getGroupedIdColumn(), maxWidth: ID_COLUMN_MAX_WIDTH },
     getGroupedNameColumn(onCellChange, isReadOnly),
-    ...resolvedSchema.map((param) =>
-      getGroupedSchemaColumn(
-        param,
-        onCellChange,
-        { entityId: suite.id, view: ApplicationRoute.TestSuites },
-        isReadOnly,
-      ),
-    ),
-    getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
+    ...resolvedSchema.map((param) => getGroupedSchemaColumn(param, onCellChange, fileContext, isReadOnly)),
+    {
+      ...getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
+      colId: VALIDITY_STATUS_COLUMN_ID,
+      // Fit to content (see CONTENT_FIT_COLUMN_IDS): a status dot plus a short label, occasionally an
+      // icon — min/max just keep it from collapsing or, on an unusually long label, overgrowing.
+      suppressSizeToFit: true,
+      minWidth: 70,
+      maxWidth: 180,
+    },
   ];
+
+  return columns;
 };
 
 export const getValidityStatusColumn = (label?: string): ColDef => {
   return {
     ...BASE_STATUS_COLUMN,
-    cellRenderer: (params: { data?: TestCase }) => {
-      return !params.data ? null : (
+    cellRenderer: ({ data }: { data?: ValidityStatusRow }) => {
+      // A flattened turn row has no group row above it to carry the status.
+      const isCoveredByGroupRow = data?.rowType === GridRowType.TURN && !data.isFlattened;
+
+      return !data || isCoveredByGroupRow ? null : (
         <ValidityStatus
-          valid={params.data?.valid}
-          message={params.data?.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
+          valid={data.valid}
+          message={data.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
           label={label}
         />
       );
@@ -246,9 +272,9 @@ export const getDynamicConfigurationsColumns = (
       cellRenderer: (params: ICellRendererParams<InputBindingRowData>) => {
         return params.data?.defaultValue != null ? (
           <div className="w-full cursor-pointer">
-            <DialTooltip tooltip={`Default value: ${params.data.defaultValue}`}>
+            <Tooltip tooltip={`Default value: ${params.data.defaultValue}`}>
               <IconInfoCircle size={20} />
-            </DialTooltip>
+            </Tooltip>
           </div>
         ) : null;
       },
@@ -449,6 +475,7 @@ export const getSchemaFieldGridColumns = (
   onChangeRequired: (value: boolean, data: TestCaseSchema) => void,
   onChangePerTurn: (value: boolean, data: TestCaseSchema) => void,
   t: (key: string) => string,
+  isReadOnly = false,
 ): ColDef<TestCaseSchema>[] => {
   return [
     {
@@ -461,6 +488,7 @@ export const getSchemaFieldGridColumns = (
       valueGetter: (params: ValueGetterParams) => params.data?.name ?? '',
       cellRendererParams: {
         onChange: onChangeEditable,
+        isReadonly: isReadOnly,
         hideTriangle: true,
         skipRequired: true,
         required: true,
@@ -478,6 +506,7 @@ export const getSchemaFieldGridColumns = (
       cellRendererParams: {
         items: TYPE_OPTIONS,
         onChange: onChangeSelect,
+        isReadonly: isReadOnly,
       },
       sortable: false,
       filter: false,
@@ -491,6 +520,7 @@ export const getSchemaFieldGridColumns = (
       cellRenderer: BooleanButtonCellRenderer,
       cellRendererParams: {
         onChange: onChangeRequired,
+        isReadonly: isReadOnly,
         trueLabel: t(BasicI18nKey.Required),
         falseLabel: t(BasicI18nKey.Optional),
       },
@@ -508,6 +538,7 @@ export const getSchemaFieldGridColumns = (
       cellRenderer: BooleanButtonCellRenderer,
       cellRendererParams: {
         onChange: onChangePerTurn,
+        isReadonly: isReadOnly,
         trueLabel: t(BasicI18nKey.PerTurn),
         falseLabel: t(BasicI18nKey.Shared),
       },
@@ -527,6 +558,7 @@ export const getSchemaFieldGridColumns = (
       valueGetter: (params: ValueGetterParams) => params.data?.description ?? '',
       cellRendererParams: {
         onChange: onChangeEditable,
+        isReadonly: isReadOnly,
         hideTriangle: true,
         skipRequired: true,
       },
@@ -546,6 +578,7 @@ export const getColumnsGridColumns = (
     column: string,
     index?: number,
   ) => void,
+  jsonataVariables?: JsonataVariable[],
 ): ColDef<ResponseColumn>[] => {
   return [
     {
@@ -560,9 +593,12 @@ export const getColumnsGridColumns = (
         onChange,
         hideTriangle: true,
       },
+      // Fixed start width so every request opens the same. No maxWidth, so it can still be dragged wider.
+      width: 200,
+      suppressSizeToFit: true,
     },
     {
-      headerName: 'JSONata Expression',
+      headerName: 'JSON Path',
       colId: 'expression',
       field: 'expression',
       sortable: false,
@@ -572,7 +608,11 @@ export const getColumnsGridColumns = (
       cellRendererParams: {
         responseSchema,
         onChange: onChangeExpression,
+        variables: jsonataVariables,
       },
+      tooltipValueGetter: () => undefined,
+      flex: 2,
+      minWidth: 200,
     },
     {
       headerName: 'Data type',
@@ -581,6 +621,9 @@ export const getColumnsGridColumns = (
       sortable: false,
       filter: false,
       floatingFilter: false,
+      width: 160,
+      maxWidth: 200,
+      suppressSizeToFit: true,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
         items: getSchemaTypes().map((type) => ({ value: type.toUpperCase(), label: type })),

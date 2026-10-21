@@ -1,12 +1,33 @@
+import { resolve } from 'node:path';
+import autoprefixer from 'autoprefixer';
+import tailwindcss from 'tailwindcss';
 import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config';
-
+import { InlineReporter } from './vitest-reporter';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+// `@vitejs/plugin-react` ships only an `exports` map — no `types`, no `main` — so the inherited
+// `moduleResolution: node` cannot reach its `dist/index.d.ts`. vite loads this file with bundler
+// resolution, where the specifier is valid; switching the whole spec project to `bundler` instead
+// would break `next-auth/providers` and the ui-kit deep imports that source files rely on.
+// @ts-expect-error -- unresolvable under node resolution only
 import react from '@vitejs/plugin-react';
+
+// A run that dies without reaching the end (the CI failures behind `scripts/run-tests.mjs`) leaves
+// the console reporter with nothing to print, so on GitHub Actions also write annotations and a
+// results file, and log each file's heap, so the log says which test was running and how big it got.
+const isCi = !!process.env.GITHUB_ACTIONS;
+const ciReporters = isCi
+  ? ['github-actions', ['json', { outputFile: '../../coverage/apps/ai-dial-admin/test-results.json' }]]
+  : [];
 
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/ai-dial-admin',
+  css: {
+    postcss: {
+      plugins: [tailwindcss({ config: resolve(__dirname, 'tailwind.config.js') }), autoprefixer()],
+    },
+  },
   plugins: [
     nxViteTsPaths(),
     react(),
@@ -14,7 +35,7 @@ export default defineConfig(() => ({
     {
       name: 'load-svg',
       enforce: 'pre',
-      transform(_, id) {
+      transform(_: string, id: string) {
         if (id.endsWith('.svg')) {
           return 'export default () => {}';
         }
@@ -25,13 +46,19 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: './test-setup.tsx',
-    threads: false,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
-    reporters: ['default'],
+    reporters: [new InlineReporter(), ...ciReporters],
+    logHeapUsage: isCi,
+    // The slowest component tests take 2.7–3.4 s on an idle machine against the 5 s default; CI runs them
+    // with less CPU than that. 15 s leaves ~4x headroom and a real hang still fails.
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
     coverage: {
       include: ['src/**/*.{ts,tsx}'],
-      reporter: ['text', 'html', 'clover', 'json'],
+      // 'text-summary' is six lines; 'text' is one row per source file (2 950 of them here).
+      // The machine-readable reporters are untouched, so CI artifacts and thresholds are the same.
+      reporter: ['text-summary', 'html', 'clover', 'json'],
       reportsDirectory: '../../coverage/apps/ai-dial-admin',
       provider: 'v8' as const,
       thresholds: {

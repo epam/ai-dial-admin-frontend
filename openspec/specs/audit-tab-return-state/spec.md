@@ -1,4 +1,10 @@
-## ADDED Requirements
+# audit-tab-return-state Specification
+
+## Purpose
+
+Saving and restoring an entity Audit tab's state across a visit to an activity detail page.
+
+## Requirements
 
 ### Requirement: Save audit tab state before navigating to activity detail
 

@@ -3,7 +3,8 @@ import { ReactNode } from 'react';
 export interface Notification {
   type: NotificationType;
   title: string;
-  description?: string;
+  // A node, not a string, so a body can carry a link; the `get*Notification` helpers still take a string.
+  description?: ReactNode;
   duration?: number | null;
   requestId?: string;
   onClose?: () => void;

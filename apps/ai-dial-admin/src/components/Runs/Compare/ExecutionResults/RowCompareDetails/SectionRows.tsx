@@ -5,22 +5,21 @@ import { FC } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 import DetailRow from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/DetailRow';
-import {
-  CompareRowDetailField,
-  CompareRowDetailSection,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 
 interface Props {
-  section: CompareRowDetailSection;
+  section: RowDetailSection;
   sectionLabel: string;
   isCollapsed: boolean;
   onToggle: () => void;
   hasComparedMatch: boolean;
   noMatchLabel: string;
   failedLabel: string;
-  onOpenDiff: (row: CompareRowDetailField) => void;
+  onOpenDiff: (row: RowDetailField) => void;
   openDiffLabel: string;
   hideHighlights: boolean;
+  runs: CompareRun[];
 }
 
 const SectionRows: FC<Props> = ({
@@ -34,18 +33,21 @@ const SectionRows: FC<Props> = ({
   onOpenDiff,
   openDiffLabel,
   hideHighlights,
+  runs,
 }) => (
   <>
-    <div
-      className="cursor-pointer hover:bg-layer-2 p-3 border-b border-tertiary bg-layer-3"
+    <button
+      type="button"
+      className="cursor-pointer hover:bg-layer-2 p-3 border-b border-tertiary bg-layer-3 text-left w-full"
       style={{ gridColumn: '1 / -1' }}
       onClick={onToggle}
+      aria-expanded={!isCollapsed}
     >
       <div className="flex items-center gap-1 dial-small-text text-secondary">
-        {isCollapsed ? <IconChevronRight size={12} /> : <IconChevronDown size={12} />}
+        {isCollapsed ? <IconChevronRight size={12} aria-hidden /> : <IconChevronDown size={12} aria-hidden />}
         {sectionLabel}
       </div>
-    </div>
+    </button>
     {!isCollapsed &&
       section.rows.map((row) => (
         <DetailRow
@@ -57,9 +59,9 @@ const SectionRows: FC<Props> = ({
           onOpenDiff={onOpenDiff}
           openDiffLabel={openDiffLabel}
           hideHighlights={hideHighlights}
+          runs={runs}
         />
       ))}
   </>
 );
-
 export default SectionRows;

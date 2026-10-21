@@ -46,6 +46,7 @@ const CORE_RESOURCE_TYPE_TO_RESOURCE_TYPE: Record<CoreResourceType, PublishableR
   [CoreResourceType.PROMPT]: ResourceType.PROMPT,
   [CoreResourceType.TOOL_SET]: ResourceType.TOOLSET,
   [CoreResourceType.FILE]: ResourceType.FILE,
+  [CoreResourceType.SKILL]: ResourceType.SKILL,
 };
 
 /** Priority order used to resolve a publication's primary type (mirrors `PublicationResourceTypeResolver`). */
@@ -55,6 +56,7 @@ const RESOLUTION_ORDER: CoreResourceType[] = [
   CoreResourceType.PROMPT,
   CoreResourceType.TOOL_SET,
   CoreResourceType.FILE,
+  CoreResourceType.SKILL,
 ];
 
 const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<PublishableResourceType, CoreResourceType> = {
@@ -63,6 +65,7 @@ const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<PublishableResourceType, CoreR
   [ResourceType.PROMPT]: CoreResourceType.PROMPT,
   [ResourceType.TOOLSET]: CoreResourceType.TOOL_SET,
   [ResourceType.FILE]: CoreResourceType.FILE,
+  [ResourceType.SKILL]: CoreResourceType.SKILL,
 };
 
 export const resourceTypeToCore = (type: PublishableResourceType): CoreResourceType => {

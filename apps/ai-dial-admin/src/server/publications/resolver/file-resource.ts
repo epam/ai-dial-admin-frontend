@@ -76,7 +76,7 @@ export const uploadStagedFiles = async (
   const uploaded: PublicationFile[] = [];
 
   for (const file of files) {
-    const sourcePath = sourceFolder + file.name;
+    const sourcePath = sourceFolder + encodeURIComponent(file.name);
     const result = await clients.uploadFile(token, sourcePath, file);
     if (!result.success) {
       throw new Error(`Publication files upload failed: ${result.errorMessage ?? file.name}`);
@@ -84,7 +84,7 @@ export const uploadStagedFiles = async (
     uploaded.push({
       action: ActionType.ADD_IF_ABSENT,
       sourceUrl: FILES_PREFIX + sourcePath,
-      targetUrl: FILES_PREFIX + ensureTrailingSlash(folderId) + file.name,
+      targetUrl: FILES_PREFIX + ensureTrailingSlash(folderId) + encodeURIComponent(file.name),
       reviewUrl: '',
       file: { name: file.name },
     });

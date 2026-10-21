@@ -1,0 +1,79 @@
+import { MenuItemMark } from '@epam/ai-dial-ui-kit';
+import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
+
+export const LATEST_VERSION = 'latest';
+
+export const CRON_PRESETS: { value: string; labelKey: AnalyticsPipelinesI18nKey }[] = [
+  { value: '0 */5 * * * *', labelKey: AnalyticsPipelinesI18nKey.CronEveryFiveMinutes },
+  { value: '0 0 * * * *', labelKey: AnalyticsPipelinesI18nKey.CronHourly },
+  { value: '0 0 0 * * *', labelKey: AnalyticsPipelinesI18nKey.CronDailyMidnight },
+];
+
+// The service's own ceiling on a group's member fetch (ENRICHMENT_GROUP_FETCH_MAX_ROWS). Not exposed on
+// any read endpoint, so this mirrors the documented default; a deployment configured lower rejects the
+// save and the service's message is surfaced.
+export const GROUP_FETCH_MAX_ROWS = 2000;
+
+// A numeric knob holds at most a few digits, so the input is sized to its value. Applied to the input
+// wrapper rather than the container, which also holds the caption — constraining that wraps it to a
+// column of two-word lines.
+export const NUMBER_INPUT_WIDTH = 'max-w-[150px]';
+
+// The five names a group-triggered pipeline's render supplies. `members` carries the group's rows and is
+// the one the service requires; the rest describe what the selection left out.
+export const MEMBERS_PLACEHOLDER = 'members';
+
+export const MEMBER_BUILT_IN_PLACEHOLDERS = [
+  MEMBERS_PLACEHOLDER,
+  'members_included',
+  'members_omitted',
+  'members_truncated',
+  'members_notice',
+];
+
+export const DURATION_CUSTOM_PRESET = 'custom';
+
+// Per-condition rather than one shared set: a group goes quiet in minutes, while a stale result is
+// re-evaluated on the order of a day.
+export const IDLE_PRESETS = ['10m', '30m', '2h'];
+
+export const MAX_STALENESS_PRESETS = ['6h', '24h', '7d'];
+
+// The provenance columns the service stamps itself, which it tags rather than names in one list: an
+// output writing one is refused, so they are not offered as a target column.
+export const SYSTEM_COLUMN_TAG = 'system';
+
+// The read-scope select's first entry. A reserved value rather than the followed table's name: following
+// omits `inputs` from the request and pinning sends it, and the service validates the two differently.
+export const FOLLOW_TARGET_SOURCE = '__follow_target__';
+
+/**
+ * What every select on the pipeline pages passes to the 2.0 `Select`, and why.
+ *
+ * `Check` rather than the list's default tint: the tint is a background token this deployment's theme
+ * does not define, so the chosen row came out indistinguishable from the rest. The list classes give
+ * the options room and stop them being squeezed — the list is a bounded flex column, so a long one
+ * shrank its rows instead of scrolling, and a select over every source table drew visibly tighter rows
+ * than one over four.
+ *
+ * Both are workarounds for something outside this repo. When the theme defines the tint and the kit
+ * pins its own option height, this constant goes away.
+ */
+export const PIPELINE_SELECT_DEFAULTS = {
+  selectedOptionMark: MenuItemMark.Check,
+  listClassName: '[&_[role="option"]]:shrink-0 [&_[role="option"]]:py-2',
+} as const;
+
+export const PIPELINES_STORAGE_KEY = 'analytics/pipelines';
+// The runtime column exists only once the runner answers, and the grid appends a column its saved state
+// does not know. A layout saved without it would push Runtime to the end for good, so each column set
+// keeps its own.
+export const PIPELINES_NO_RUNTIME_STORAGE_KEY = 'analytics/pipelines/no-runtime';
+
+/**
+ * Lets a service message wrap inside a section notification. `textClassName` replaces the kit's own, so the
+ * first four classes restate the kit's default section-message layout and only the last is ours: its items
+ * cannot break inside a word, so a request URL followed by a connection failure ran past the edge, and
+ * `anywhere` lowers the item's minimum width so it wraps instead. Re-check them against the kit on upgrade.
+ */
+export const NOTIFICATION_MESSAGE_WRAP_CLASS = 'flex-row flex-wrap items-baseline gap-x-1 [overflow-wrap:anywhere]';

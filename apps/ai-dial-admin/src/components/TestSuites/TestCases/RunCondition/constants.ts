@@ -7,7 +7,7 @@ import { createElement, ReactNode } from 'react';
 
 import { RunConditionLogicalOp, RunConditionOperator } from './models';
 
-export const RUN_CONDITION_OPERATOR_OPTIONS: {
+export const ARRAY_RUN_CONDITION_OPERATOR_OPTIONS: {
   value: RunConditionOperator;
   label: string;
   icon: ReactNode;
@@ -22,6 +22,14 @@ export const RUN_CONDITION_OPERATOR_OPTIONS: {
     label: TelemetryI18nKey.FilterConditionNotContain,
     icon: createElement(NotContains),
   },
+];
+
+export const RUN_CONDITION_OPERATOR_OPTIONS: {
+  value: RunConditionOperator;
+  label: string;
+  icon: ReactNode;
+}[] = [
+  ...ARRAY_RUN_CONDITION_OPERATOR_OPTIONS,
   {
     value: RunConditionOperator.Equal,
     label: TelemetryI18nKey.FilterConditionEqual,

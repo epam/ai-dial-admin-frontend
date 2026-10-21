@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test, vi } from 'vitest';
+import { ZipFixture } from '@/src/server/zip/tests/zip-fixtures';
 
 import { ServerActionResponse } from '@/src/models/server-action';
 import { importPlainFiles, importZipFile, InvalidImportZipError } from '../import';
@@ -67,9 +67,9 @@ describe('Server :: Files :: import :: importPlainFiles', () => {
 
 describe('Server :: Files :: import :: importZipFile', () => {
   const buildZip = async (entries: Record<string, string>) => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     Object.entries(entries).forEach(([path, content]) => zip.file(path, content));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
     return new File([buffer], 'archive.zip', { type: 'application/zip' });
   };
 
@@ -91,12 +91,35 @@ describe('Server :: Files :: import :: importZipFile', () => {
     expect(result.importResults).toHaveLength(2);
   });
 
+  test('reports a later entry mapping to an already-seen target path as a failure', async () => {
+    const upload = vi.fn().mockResolvedValue({ success: true } as ServerActionResponse);
+    const zipFile = await buildZip({ 'files/a/doc.txt': 'one', 'files/b/doc.txt': 'two' });
+
+    const result = await importZipFile(zipFile, 'folder/', upload, 5, true);
+
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(result.importResults.map((r) => r.status)).toEqual(['success', 'failure']);
+  });
+
   test('rejects an archive with no valid entries', async () => {
     const upload = vi.fn();
     const zipFile = await buildZip({ 'not-files/outside.txt': 'x' });
 
     await expect(importZipFile(zipFile, 'folder/', upload, 5)).rejects.toThrow(InvalidImportZipError);
     expect(upload).not.toHaveBeenCalled();
+  });
+
+  test('flattens nested archive paths into the destination folder when flatImport is true', async () => {
+    const upload = vi.fn().mockResolvedValue({ success: true } as ServerActionResponse);
+    const zipFile = await buildZip({
+      'files/doc.txt': 'hello',
+      'files/sub/report.pdf': 'pdf-bytes',
+    });
+
+    await importZipFile(zipFile, 'folder/', upload, 5, true);
+
+    const uploadedPaths = upload.mock.calls.map((call) => call[0]);
+    expect(uploadedPaths).toEqual(expect.arrayContaining(['folder/doc.txt', 'folder/report.pdf']));
   });
 
   test('a path-traversal entry inside the zip is silently excluded, not uploaded', async () => {

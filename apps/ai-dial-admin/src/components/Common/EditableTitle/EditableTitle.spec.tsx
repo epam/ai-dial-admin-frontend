@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import EditableTitle from './EditableTitle';
@@ -51,11 +51,9 @@ describe('Common components - EditableTitle', () => {
     await userEvent.click(screen.getByRole('heading', { level: 1 }));
 
     const input = screen.getByRole('textbox');
-    input.blur();
+    await act(async () => input.blur());
 
-    await waitFor(() => {
-      expect(screen.queryByRole('textbox')).toBeNull();
-    });
+    expect(screen.queryByRole('textbox')).toBeNull();
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 

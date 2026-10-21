@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
-import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTableType, CreateTableDto, TableWriteMode } from '@/src/models/analytics/table';
+import { TableBackfillState } from '@/src/models/analytics/table-backfill';
+import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
+import { ConfigEntityOrigin, ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -14,7 +18,12 @@ import {
   getTable,
   getTableAccess,
   getTables,
-  replaceTableAccess,
+  listTableBackfillRuns,
+  startTableBackfill,
+  updateTableAccess,
+  getRowPolicies,
+  putRowPolicy,
+  deleteRowPolicy,
   updateTable,
   updateTableSchema,
 } from '../actions';
@@ -22,6 +31,7 @@ import {
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
+vi.mock('@/src/server/config-entities/read-page-options');
 
 describe('Tables server actions', () => {
   beforeEach(() => {
@@ -47,8 +57,8 @@ describe('Tables server actions', () => {
     expect(analyticsDataApi.getTable).toHaveBeenCalledWith('events', TOKEN_MOCK);
   });
 
-  test('createTable passes the identity-only dto + token', async () => {
-    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source };
+  test('createTable passes the dto + token', async () => {
+    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, write: TableWriteMode.Append };
     (analyticsDataApi.createTable as any).mockResolvedValue({ success: true });
 
     await createTable(dto);
@@ -108,20 +118,115 @@ describe('Tables server actions', () => {
     expect(analyticsDataApi.getTableAccess).toHaveBeenCalledWith('events', TOKEN_MOCK);
   });
 
-  test('replaceTableAccess passes name, access + token', async () => {
-    const access = { write: ['w'], modify: ['m'] };
-    (analyticsDataApi.replaceTableAccess as any).mockResolvedValue({ success: true });
+  test('updateTableAccess passes name, the partial access + token', async () => {
+    const access = { write: ['w'] };
+    (analyticsDataApi.updateTableAccess as any).mockResolvedValue({ success: true });
 
-    await replaceTableAccess('events', access);
+    await updateTableAccess('events', access);
 
-    expect(analyticsDataApi.replaceTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
+    expect(analyticsDataApi.updateTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
   });
 
-  test('getRoles passes the token to the roles client', async () => {
-    (rolesApi.getRolesList as any).mockResolvedValue([{ name: 'Admin' }]);
+  test('getRowPolicies passes name + token', async () => {
+    (analyticsDataApi.getRowPolicies as any).mockResolvedValue({ success: true, response: { policies: {} } });
 
-    await getRoles();
+    await getRowPolicies('events');
 
-    expect(rolesApi.getRolesList).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(analyticsDataApi.getRowPolicies).toHaveBeenCalledWith('events', TOKEN_MOCK);
+  });
+
+  test('putRowPolicy passes name, role, policy + token', async () => {
+    const policy = { filter: { op: 'eq', args: [] } } as any;
+    (analyticsDataApi.putRowPolicy as any).mockResolvedValue({ success: true });
+
+    await putRowPolicy('events', 'team-x', policy);
+
+    expect(analyticsDataApi.putRowPolicy).toHaveBeenCalledWith('events', 'team-x', policy, TOKEN_MOCK);
+  });
+
+  test('deleteRowPolicy passes name, role + token', async () => {
+    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue({ success: true });
+
+    await deleteRowPolicy('events', 'team-x');
+
+    expect(analyticsDataApi.deleteRowPolicy).toHaveBeenCalledWith('events', 'team-x', TOKEN_MOCK);
+  });
+
+  test('deleteRowPolicy treats a 404 as success, because the policy is already gone', async () => {
+    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue({ success: false, status: 404 });
+
+    expect(await deleteRowPolicy('events', 'team-x')).toEqual({ success: true });
+  });
+
+  test('deleteRowPolicy reports any other failure', async () => {
+    const failure = { success: false, status: 500, errorMessage: 'boom' };
+    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue(failure);
+
+    expect(await deleteRowPolicy('events', 'team-x')).toEqual(failure);
+  });
+
+  test('getRoles reads the role catalog from Core, not from the admin backend', async () => {
+    (readConfigEntities as any).mockResolvedValue([
+      { name: 'analytics-writer', displayName: 'analytics-writer', origin: ConfigEntityOrigin.Api },
+    ]);
+
+    const catalog = await getRoles();
+
+    expect(readConfigEntities).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Roles, []);
+    expect(rolesApi.getRolesList).not.toHaveBeenCalled();
+    expect(catalog.roles).toEqual([
+      { name: 'analytics-writer', displayName: 'analytics-writer', origin: ConfigEntityOrigin.Api },
+    ]);
+  });
+
+  test('getRoles returns the warnings the Core read reported', async () => {
+    (readConfigEntities as any).mockImplementation(
+      async (_token: unknown, _type: unknown, warnings: EntitiesI18nKey[]) => {
+        warnings.push(EntitiesI18nKey.OptionListPartial);
+        return [];
+      },
+    );
+
+    const catalog = await getRoles();
+
+    expect(catalog).toEqual({ roles: [], warnings: [EntitiesI18nKey.OptionListPartial] });
+  });
+
+  describe('table backfill', () => {
+    test('startTableBackfill passes the dates, the re-ingest choice and the token to the client', async () => {
+      (analyticsDataApi.startTableBackfill as any).mockResolvedValue({ success: true });
+
+      await startTableBackfill('2026-09-01', '2026-09-30', true);
+
+      expect(analyticsDataApi.startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30', true, TOKEN_MOCK);
+    });
+
+    test('startTableBackfill carries a refusal through untouched', async () => {
+      (analyticsDataApi.startTableBackfill as any).mockResolvedValue({
+        success: false,
+        errorHeader: 'backfill_conflict',
+        errorMessage: 'A run is in progress',
+      });
+
+      const res = await startTableBackfill('2026-09-01', '2026-09-30', false);
+
+      expect(res).toEqual({ success: false, errorHeader: 'backfill_conflict', errorMessage: 'A run is in progress' });
+    });
+
+    test('listTableBackfillRuns reads every retained run when no state is given', async () => {
+      (analyticsDataApi.listTableBackfillRuns as any).mockResolvedValue({ success: true, response: [] });
+
+      await listTableBackfillRuns();
+
+      expect(analyticsDataApi.listTableBackfillRuns).toHaveBeenCalledWith(TOKEN_MOCK, undefined);
+    });
+
+    test('listTableBackfillRuns passes the state filter', async () => {
+      (analyticsDataApi.listTableBackfillRuns as any).mockResolvedValue({ success: true, response: [] });
+
+      await listTableBackfillRuns(TableBackfillState.Running);
+
+      expect(analyticsDataApi.listTableBackfillRuns).toHaveBeenCalledWith(TOKEN_MOCK, TableBackfillState.Running);
+    });
   });
 });

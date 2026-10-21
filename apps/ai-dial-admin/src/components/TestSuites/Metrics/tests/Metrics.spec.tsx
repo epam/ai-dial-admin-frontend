@@ -8,26 +8,27 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import Metrics from '../Metrics';
 import { MetricBindingType } from '../../../../types/evaluation';
 
+const mockGetTestSuiteMetricsAggregated = vi.fn();
 const mockGetTestSuiteMetrics = vi.fn();
-const mockGetMetricDeclarations = vi.fn();
+const mockGetDetailedMetricDeclarations = vi.fn();
 const mockCreateTestSuiteMetric = vi.fn();
 const mockDeleteTestSuiteMetric = vi.fn();
 const mockUpdateTestSuiteMetric = vi.fn();
-const mockGetTestSuiteMetricDetailsWithSchema = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+  getTestSuiteMetricsAggregated: (...args: unknown[]) => mockGetTestSuiteMetricsAggregated(...args),
   getTestSuiteMetrics: (...args: unknown[]) => mockGetTestSuiteMetrics(...args),
-  getMetricDeclarations: (...args: unknown[]) => mockGetMetricDeclarations(...args),
+  getDetailedMetricDeclarations: (...args: unknown[]) => mockGetDetailedMetricDeclarations(...args),
   createTestSuiteMetric: (...args: unknown[]) => mockCreateTestSuiteMetric(...args),
   deleteTestSuiteMetric: (...args: unknown[]) => mockDeleteTestSuiteMetric(...args),
   updateTestSuiteMetric: (...args: unknown[]) => mockUpdateTestSuiteMetric(...args),
-  getTestSuiteMetricDetailsWithSchema: (...args: unknown[]) => mockGetTestSuiteMetricDetailsWithSchema(...args),
 }));
 
 vi.mock('../AddMetric/AddMetricModal', () => ({
   default: ({ isModalOpen, onClose, onConfirm, editingMetric }: any) =>
     isModalOpen ? (
       <div role="dialog" aria-label={editingMetric ? 'Edit metric' : 'Add metric'}>
+        {editingMetric?.condition && <span>editing-condition:{editingMetric.condition}</span>}
         <button type="button" onClick={onClose}>
           Cancel
         </button>
@@ -59,22 +60,33 @@ vi.mock('../ScoreSettings/ScoreSettings', () => ({
   ),
 }));
 
-vi.mock('../MetricBindingsDisplay', () => ({
-  default: ({ title, bindings }: any) =>
-    bindings?.length ? (
-      <div role="region" aria-label="metric-bindings">
-        <span>{title}</span>
-        {bindings.map((binding: any) => (
-          <div key={binding.property}>
-            {binding.property}: {binding.source.value}
-          </div>
-        ))}
-      </div>
-    ) : null,
+vi.mock('../MetricCard', () => ({
+  default: ({ metric, onEdit, onDelete }: any) => (
+    <div role="article" aria-label={metric.name}>
+      <span>{metric.name}</span>
+      {metric.description ? <span>{metric.description}</span> : null}
+      <span>{metric.condition?.trim() || TestSuitesI18nKey.ConditionAlwaysRun}</span>
+      {metric.configBindings?.length ? (
+        <div role="region" aria-label="metric-bindings">
+          <span>{TestSuitesI18nKey.Configuration}</span>
+          {metric.configBindings.map((binding: any) => (
+            <div key={binding.property}>
+              {binding.property}: {binding.source.value}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <button type="button" onClick={onDelete}>
+        {ButtonsI18nKey.Delete}
+      </button>
+      <button type="button" onClick={onEdit}>
+        {ButtonsI18nKey.Edit}
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  ButtonAppearance: { Outlined: 'outlined' },
   DialLoader: () => <div role="progressbar" aria-label="loading" />,
   DialNoDataContent: ({ title }: any) => (
     <div role="status" aria-label={title}>
@@ -86,16 +98,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
-  DialNeutralButton: ({ label, onClick }: any) => (
-    <button type="button" onClick={onClick}>
-      {label}
-    </button>
-  ),
-  DialDangerButton: ({ label, onClick }: any) => (
-    <button type="button" onClick={onClick}>
-      {label}
-    </button>
-  ),
   DialConfirmationPopup: ({ open, onConfirm, confirmLabel }: any) =>
     open ? (
       <div role="dialog" aria-label="delete-metric-confirmation">
@@ -104,7 +106,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         </button>
       </div>
     ) : null,
-  ElementSize: { Small: 'small' },
 }));
 
 describe('Metrics', () => {
@@ -119,58 +120,86 @@ describe('Metrics', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [] });
-    mockGetMetricDeclarations.mockResolvedValue({ content: [] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([]);
+    mockGetTestSuiteMetrics.mockResolvedValue({ content: [], page: 0, size: 1000 });
+    mockGetDetailedMetricDeclarations.mockResolvedValue([]);
     mockCreateTestSuiteMetric.mockResolvedValue({ success: true, response: { id: 'created-metric' } });
     mockDeleteTestSuiteMetric.mockResolvedValue({ success: true });
     mockUpdateTestSuiteMetric.mockResolvedValue({ success: true });
-    mockGetTestSuiteMetricDetailsWithSchema.mockResolvedValue(null);
   });
 
-  test('loads metrics and shows empty state when list is empty', async () => {
+  test('loads metrics with the aggregated and plain-list requests and shows empty state when list is empty', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
-    });
-
+    expect(await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-1');
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
+    expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
     expect(screen.getByText(`${TabsI18nKey.Metrics}: 0`)).toBeInTheDocument();
-    expect(screen.getByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
   });
 
-  test('renders ScoreSettings column', async () => {
+  test('does not fetch metric declarations when the tab loads', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await screen.findByText('Metric One');
+
+    expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
+  });
+
+  test('hides Overall Score card when there are no metrics', async () => {
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
+
+    expect(screen.queryByRole('region', { name: 'score-settings' })).not.toBeInTheDocument();
+  });
+
+  test('shows Overall Score card when metrics exist', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
+
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
     });
 
     expect(screen.getByRole('region', { name: 'score-settings' })).toBeInTheDocument();
   });
 
-  test('merges fetched output schema when bound metric has no output properties', async () => {
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [{ ...metric, outputSchema: {} }] });
-    mockGetTestSuiteMetricDetailsWithSchema.mockResolvedValue({
-      metricDeclarationVersion: { outputSchema: { type: 'object', properties: { score: {}, latency: {} } } },
-    });
+  test('renders output schema from the aggregated response without a per-metric request', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([
+      {
+        ...metric,
+        outputSchema: { type: 'object', properties: { score: {}, latency: {} } },
+      },
+    ]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-1', 'metric-1');
-    });
+    expect(await screen.findByText('metric-1:score,latency')).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.getByText('metric-1:score,latency')).toBeInTheDocument();
-    });
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
+  });
+
+  test('takes output schema from the aggregated metric declaration version', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([
+      {
+        ...metric,
+        metricDeclarationVersion: { outputSchema: { type: 'object', properties: { accuracy: {}, recall: {} } } },
+      },
+    ]);
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    expect(await screen.findByText('metric-1:accuracy,recall')).toBeInTheDocument();
   });
 
   test('renders Add button with correct label', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
   });
@@ -180,25 +209,33 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(screen.getByRole('dialog', { name: 'Add metric' })).toBeInTheDocument();
   });
 
+  test('fetches metric declarations once the Add metric dialog opens', async () => {
+    const user = userEvent.setup();
+
+    render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
+
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
+
+    expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+
+    await vi.waitFor(() => expect(mockGetDetailedMetricDeclarations).toHaveBeenCalledOnce());
+  });
+
   test('renders metric card and bindings when metrics exist', async () => {
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
-    });
-
-    expect(screen.getByText('Metric One')).toBeInTheDocument();
+    expect(await screen.findByText('Metric One')).toBeInTheDocument();
     expect(screen.getByText('First metric')).toBeInTheDocument();
     const bindingsRegion = screen.getByRole('region', { name: 'metric-bindings' });
     expect(within(bindingsRegion).getByText(TestSuitesI18nKey.Configuration)).toBeInTheDocument();
@@ -210,27 +247,21 @@ describe('Metrics', () => {
 
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
-    });
+    await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
     await user.click(screen.getByRole('button', { name: 'Confirm modal' }));
 
-    await waitFor(() => {
-      expect(mockCreateTestSuiteMetric).toHaveBeenCalledWith('suite-1', { id: 'new-metric', name: 'New Metric' });
-    });
+    expect(mockCreateTestSuiteMetric).toHaveBeenCalledWith('suite-1', { id: 'new-metric', name: 'New Metric' });
   });
 
   test('deletes metric and refreshes list', async () => {
     const user = userEvent.setup();
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
 
@@ -240,34 +271,28 @@ describe('Metrics', () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');
-    });
-
-    expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
+    expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');
+    await vi.waitFor(() => expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledTimes(2));
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenLastCalledWith('suite-1');
   });
 
   test('opens edit modal and updates metric on confirmation', async () => {
     const user = userEvent.setup();
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
 
     expect(screen.getByRole('dialog', { name: 'Edit metric' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Confirm modal' }));
 
-    await waitFor(() => {
-      expect(mockUpdateTestSuiteMetric).toHaveBeenCalledWith(
-        'suite-1',
-        expect.objectContaining({ id: 'metric-1', name: 'Edited Metric' }),
-      );
-    });
+    expect(mockUpdateTestSuiteMetric).toHaveBeenCalledWith(
+      'suite-1',
+      expect.objectContaining({ id: 'metric-1', name: 'Edited Metric' }),
+    );
   });
 
   test('renders metric condition when present', async () => {
@@ -275,13 +300,11 @@ describe('Metrics', () => {
       ...metric,
       condition: 'turn.value > 0.5',
     };
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metricWithCondition] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metricWithCondition]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(screen.getByText('turn.value > 0.5')).toBeInTheDocument();
   });
@@ -291,14 +314,61 @@ describe('Metrics', () => {
       ...metric,
       condition: undefined,
     };
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metricWithoutCondition] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metricWithoutCondition]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Metric One')).toBeInTheDocument();
-    });
+    await screen.findByText('Metric One');
 
     expect(screen.getByText(TestSuitesI18nKey.ConditionAlwaysRun)).toBeInTheDocument();
+  });
+
+  test('backfills condition from the plain metrics list when the aggregated response omits it', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([{ ...metric, condition: undefined }]);
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: '$exists(data.expected)' }],
+      page: 0,
+      size: 1000,
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await screen.findByText('Metric One');
+
+    expect(screen.getByText('$exists(data.expected)')).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.ConditionAlwaysRun)).not.toBeInTheDocument();
+  });
+
+  test('prefers the aggregated response condition over the plain-list backfill when both are present', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([{ ...metric, condition: 'from-aggregated' }]);
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: 'from-plain-list' }],
+      page: 0,
+      size: 1000,
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await screen.findByText('Metric One');
+
+    expect(screen.getByText('from-aggregated')).toBeInTheDocument();
+  });
+
+  test('prefills the edit modal with the backfilled condition', async () => {
+    const user = userEvent.setup();
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([{ ...metric, condition: undefined }]);
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: '$exists(data.expected)' }],
+      page: 0,
+      size: 1000,
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await screen.findByText('Metric One');
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+
+    expect(screen.getByText('editing-condition:$exists(data.expected)')).toBeInTheDocument();
   });
 });

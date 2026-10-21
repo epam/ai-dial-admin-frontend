@@ -1,12 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { ExtractionResultTabUiState } from '../models';
 import ExtractionResultTab from '../ExtractionResult';
 import { createDefaultRunViewTabState } from '../use-run-view-tab-state';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();
@@ -62,32 +64,47 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
+    DialLoader: ({ size }: { size: number }) => <div aria-label={`loading-${size}`} />,
   };
 });
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ additionalGridOptions }: any) => (
+  default: ({ additionalGridOptions }: { additionalGridOptions: Record<string, (e: unknown) => void> }) => (
     <div role="grid" aria-label="Analytics grid">
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
+      <button
+        onClick={() =>
+          additionalGridOptions.onCellClicked({
+            data: { id: 'r1' },
+            column: { getColId: () => 'http' },
+            colDef: { colId: 'http' },
+          })
+        }
+      >
+        Cell HTTP
+      </button>
     </div>
   ),
 }));
 
 vi.mock('@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel', () => ({
-  default: ({ toggleColumnsPanel }: any) => (
+  default: ({ toggleColumnsPanel }: { toggleColumnsPanel: () => void }) => (
     <div role="dialog" aria-label="Columns panel">
       <button onClick={toggleColumnsPanel}>Close panel</button>
     </div>
   ),
 }));
 
+vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel', () => ({
+  default: () => <div data-testid="execution-row-detail-bottom-panel" />,
+}));
+
 const mockRun = {
   id: 'run-1',
   name: 'Test Run',
   testSuiteRunId: 'tsr-1',
-} as any;
+} as never;
 
 const ControlledExtractionResultTab: FC<{ initialState?: Partial<ExtractionResultTabUiState> }> = ({
   initialState,
@@ -117,18 +134,14 @@ describe('ExtractionResultTab', () => {
 
   test('renders grid after loading without Columns button in tab body', async () => {
     render(<ControlledExtractionResultTab />);
-    await waitFor(() => {
-      expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Columns panel' })).not.toBeInTheDocument();
   });
 
   test('shows Columns panel when showTreePanel is true', async () => {
     render(<ControlledExtractionResultTab initialState={{ showTreePanel: true }} />);
-    await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: 'Columns panel' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('dialog', { name: 'Columns panel' })).toBeInTheDocument();
   });
 
   test('does not refetch results when cached state is provided', async () => {
@@ -140,7 +153,7 @@ describe('ExtractionResultTab', () => {
               id: 'r1',
               responseStatusCode: 200,
               runIndex: 0,
-              executionStatus: 'SUCCESS',
+              executionStatus: ExtractionResultStatus.SUCCESS,
               testCaseName: 'Test Case 1',
             },
           ],
@@ -149,30 +162,25 @@ describe('ExtractionResultTab', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
 
     expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
   });
 
-  test('opens sidebar on row click in default mode', async () => {
+  test('opens bottom panel on row click by default', async () => {
     render(<ControlledExtractionResultTab />);
-    await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Row 1' }));
 
-    expect(mockShowSidebar).toHaveBeenCalledTimes(1);
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
-  test('toggles sidebar closed on same row click', async () => {
+  test('opens bottom panel with focus field on cell click', async () => {
     render(<ControlledExtractionResultTab />);
-    await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Cell HTTP' }));
 
-    expect(mockCloseSidebar).toHaveBeenCalled();
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
   test('calls closeSidebar on unmount', async () => {

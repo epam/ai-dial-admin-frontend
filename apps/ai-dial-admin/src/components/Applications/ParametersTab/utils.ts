@@ -9,15 +9,15 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BasicI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { UserSession } from '@/src/models/auth';
-import { getRunnerReference } from '@/src/components/SourceField/Application/utils';
 import { DialApplication, DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
-import { getSchemaSourceId } from '@/src/utils/entities/application-source';
-import { DialApplicationResource } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import { FrameConfig } from '@/src/models/frame-config';
 import { ParamsFields, ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { ApplicationPropertyRow } from './models';
 
 export const getFrameConfig = (
@@ -58,9 +58,11 @@ export const getTargetUrl = (
   frameConfig?: FrameConfig | null,
 ) => {
   const id =
-    view === ApplicationRoute.AssetsApplications ? `applications/${(application as AssetApp).path}` : application?.name;
+    view === ApplicationRoute.AssetsApplications && !isPlatformBucketPath((application as AssetApp)?._metadata?.path)
+      ? `applications/${(application as AssetApp)?._metadata?.path}`
+      : application?.name;
   try {
-    const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
+    const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}&applicationName=${encodeURIComponent(frameConfig?.name as string)}`;
     return new URL(iframeUrl);
   } catch (error) {
     if (error) {
@@ -72,22 +74,17 @@ export const getTargetUrl = (
 export const getAppRunner = (
   entity: DialApplication | DialApplicationResource,
   applicationSchemes?: DialApplicationScheme[] | null,
-  view?: ApplicationRoute,
 ): DialApplicationScheme | undefined => {
   if (!applicationSchemes) return entity as DialApplicationScheme;
 
   return applicationSchemes?.find((scheme) => {
-    const schemaSourceId =
-      view === ApplicationRoute.AssetsApplications
-        ? (entity as DialApplicationResource).application_type_schema_id
-        : getSchemaSourceId((entity as DialApplication).source);
-    const editorUrl =
-      view === ApplicationRoute.AssetsApplications
-        ? (entity as DialApplicationResource).editor_url
-        : (entity as DialApplication).editorUrl;
+    const resource = entity as DialApplicationResource;
+    const application = entity as DialApplication;
+    const schemaSourceId = resource.application_type_schema_id || getSchemaSourceId(application.source);
+    const editorUrl = resource.editor_url || application.editorUrl;
 
     return (
-      (schemaSourceId && getRunnerReference(scheme) === schemaSourceId) ||
+      (schemaSourceId && schemaSourceId === scheme.$id) ||
       (scheme['dial:applicationTypeEditorUrl'] && editorUrl && scheme['dial:applicationTypeEditorUrl'] === editorUrl)
     );
   });

@@ -1,9 +1,10 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
-import { DialLabel, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialLoader, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
 
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ReasoningEffortsInput from '@/src/components/EntityTabs/Features/ReasoningEffortsInput';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -27,6 +28,19 @@ interface Props {
 const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { features, isLoading } = useAssetRunnerDetails(appRunner);
+
+  const fullRunner = useMemo(() => {
+    if (features) {
+      return {
+        ...appRunner,
+        ...features,
+      };
+    }
+    return appRunner;
+  }, [appRunner, features]);
+
+  const isFeaturesLoading = isLoading && !!appRunner;
 
   const onSwitch = useCallback(
     (value: boolean, key: keyof DialApplicationResourceFeatures) => {
@@ -67,10 +81,18 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
     [onChangeEntity, entity],
   );
 
+  if (isFeaturesLoading) {
+    return (
+      <div className="flex flex-col size-full">
+        <DialLoader size={40} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-y-8">
       {resourceTextFeatures.map((key) => {
-        const { value, isReadonly } = getResourceReadOnlyValues(key, appRunner);
+        const { value, isReadonly } = getResourceReadOnlyValues(key, fullRunner);
         if (isReadonly && value != null) {
           return (
             <LabelledText
@@ -101,7 +123,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
         <div key={title} className="flex flex-col gap-y-3">
           <DialLabel label={t(title)} />
           {keys.map((key) => {
-            const { value, isReadonly } = getResourceReadOnlyValues(key, appRunner);
+            const { value, isReadonly } = getResourceReadOnlyValues(key, fullRunner);
             return (
               <DialTooltip
                 key={key}

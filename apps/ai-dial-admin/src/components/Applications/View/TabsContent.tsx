@@ -1,16 +1,21 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useMemo } from 'react';
+import { Dispatch, FC, Fragment, Ref, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
-import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties';
+import ApplicationAssetProperties from '@/src/components/Assets/Entities/Apps/Properties';
 import ResourceFeatures from '@/src/components/Assets/Resources/ResourceFeatures';
+import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
+import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';
+import { FrameCallbacks, FrameRendererHandle } from '@/src/components/FrameRenderer/models';
 import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
+import AssetApplicationAppRoutes from '@/src/components/Assets/ObjectAppRoutes/AssetApplicationAppRoutes';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
+import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import Tools from '@/src/components/Tools/Tools';
@@ -20,6 +25,8 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import Dependencies from './Dependencies/Dependencies';
@@ -32,6 +39,15 @@ interface Props {
   models: DialModel[] | null;
   roles?: DialRole[];
   interceptors: DialInterceptor[] | null;
+  /**
+   * Supplied by Core-direct asset surfaces (Assets > Applications), which resolve the global chain
+   * server-side and must not reach the admin backend. Omitted by the admin-BE Applications surface,
+   * where `EntityInterceptors` fetches it from the admin backend itself.
+   */
+  globalInterceptors?: string[];
+  translators?: ResourceInfo[];
+  /** Core-direct asset surface only: the admin-BE Applications view has no catalog section. */
+  catalogSchemas?: CatalogSchemaOptions;
   applicationSchemes: DialApplicationScheme[];
   selectedApplication: DialApplication;
   originalApplication?: DialApplication;
@@ -42,6 +58,8 @@ interface Props {
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   isChanged?: boolean;
+  frameRef?: Ref<FrameRendererHandle>;
+  frameCallbacks?: FrameCallbacks;
   onSave?: () => void;
   onChangeApplication: (application: DialApplication) => void;
 }
@@ -56,12 +74,17 @@ const TabsContent: FC<Props> = ({
   applications,
   names,
   interceptors,
+  globalInterceptors,
+  translators,
+  catalogSchemas,
   roles,
   models,
   isSkipRefresh,
   discardKey,
   isEditorEnabled,
   isChanged,
+  frameRef,
+  frameCallbacks,
   onSave,
   setIsChanged,
   setSelectedApplication,
@@ -69,18 +92,37 @@ const TabsContent: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const appRunner = useMemo(() => {
     if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
-      return getAppRunner(selectedApplication, applicationSchemes, view);
+      return getAppRunner(selectedApplication, applicationSchemes);
     }
   }, [applicationSchemes, selectedApplication, view]);
+
+  const catalogProperties = useCatalogProperties(
+    (selectedApplication as DialApplicationResource).catalog_schema_id,
+    (selectedApplication as DialApplicationResource).catalog_properties,
+  );
 
   const onChangeAsset = (application: DialApplicationResource) => {
     onChangeApplication(application as DialApplication);
   };
 
+  /**
+   * `AssetRoles` is generic over `{ userRoles?: string[] }`, but Core's `Application` class is
+   * `@JsonNaming(SnakeCaseStrategy)` and always serializes this field as `user_roles` (see
+   * `DialApplicationResource.user_roles`'s doc comment) — unlike `Model`/`Route`, which are plain
+   * camelCase. This adapts at the boundary rather than widening the shared component: presents
+   * `user_roles` under the `userRoles` key `AssetRoles` expects, and translates back on change,
+   * rebuilding from the current asset rather than spreading `AssetRoles`'s own output so no stray
+   * `userRoles` key reaches the write payload, which Core's strict platform-bucket deserializer
+   * would reject.
+   */
+  const onChangeAssetRoles = (updated: DialApplicationResource & { userRoles?: string[] }) => {
+    onChangeAsset({ ...(selectedApplication as DialApplicationResource), user_roles: updated.userRoles });
+  };
+
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <>
+        <Fragment key={discardKey}>
           {originalApplication?.source?.$type === SOURCE_TYPE.CONTAINER && originalApplication?.source?.containerId && (
             <ContainerStatusBanner
               view={ApplicationRoute.Applications}
@@ -91,6 +133,8 @@ const TabsContent: FC<Props> = ({
             <ApplicationAssetProperties
               asset={selectedApplication as DialApplicationResource}
               runners={applicationSchemes || []}
+              translators={translators}
+              catalogSchemas={catalogSchemas}
               onChange={onChangeAsset}
             />
           ) : (
@@ -102,11 +146,12 @@ const TabsContent: FC<Props> = ({
               onChange={onChangeApplication}
             />
           )}
-        </>
+        </Fragment>
       )}
 
       {activeTab === EntityViewTab.Tools && (
         <Tools
+          key={discardKey}
           disabled={isReadOnlyAdmin}
           isAsset={view === ApplicationRoute.AssetsApplications}
           originalEntity={originalApplication}
@@ -120,12 +165,14 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.Features &&
         (view === ApplicationRoute.AssetsApplications ? (
           <ResourceFeatures
+            key={discardKey}
             entity={selectedApplication as DialApplicationResource}
             appRunner={appRunner}
             onChangeEntity={onChangeAsset}
           />
         ) : (
           <EntityFeatures
+            key={discardKey}
             appRunner={appRunner}
             entity={selectedApplication}
             onChangeEntity={onChangeApplication}
@@ -133,6 +180,12 @@ const TabsContent: FC<Props> = ({
           />
         ))}
 
+      {/*
+        Not keyed by discardKey — Parameters keeps its own "Table vs Generated form" view-selector
+        state alive across Discard, and only remounts the specific field-editing surface internally
+        (see ParametersTab's own discardKey usage). Keying it here would blow away that view choice
+        even though nothing about it is unsaved data (Issue #4477).
+      */}
       {activeTab === EntityViewTab.Parameters && (
         <ParametersTab
           onSave={onSave}
@@ -142,47 +195,84 @@ const TabsContent: FC<Props> = ({
           applicationSchemes={applicationSchemes}
           isEditorEnabled={isEditorEnabled}
           discardKey={discardKey}
+          frameRef={frameRef}
+          frameCallbacks={frameCallbacks}
           onChange={onChangeApplication}
           setIsChanged={setIsChanged}
           setSelectedApplication={setSelectedApplication}
         />
       )}
+      {activeTab === EntityViewTab.Catalog && view === ApplicationRoute.AssetsApplications && (
+        <CatalogPropertiesEditor
+          {...catalogProperties}
+          schemaId={(selectedApplication as DialApplicationResource).catalog_schema_id}
+          values={(selectedApplication as DialApplicationResource).catalog_properties}
+          onChange={(catalog_properties) =>
+            onChangeAsset({ ...(selectedApplication as DialApplicationResource), catalog_properties })
+          }
+        />
+      )}
       {activeTab === EntityViewTab.Dependencies && (
         <Dependencies
+          key={discardKey}
           application={selectedApplication}
           applications={applications || []}
           models={models || []}
           onChange={onChangeApplication}
         />
       )}
-      {activeTab === EntityViewTab.AppRoutes && (
-        <ApplicationAppRoutes
-          view={view}
-          roles={roles}
-          applicationRunners={applicationSchemes || []}
-          selectedEntity={selectedApplication}
-          onChangeEntity={onChangeApplication}
-        />
-      )}
-      {activeTab === EntityViewTab.Roles && (
-        <EntityRoles
-          entity={selectedApplication}
-          view={view}
-          roles={roles || []}
-          onChangeEntity={onChangeApplication}
-          isSkipRefresh={isSkipRefresh}
-        />
-      )}
+      {activeTab === EntityViewTab.AppRoutes &&
+        (view === ApplicationRoute.AssetsApplications ? (
+          <AssetApplicationAppRoutes
+            key={discardKey}
+            roles={roles}
+            selectedEntity={selectedApplication as DialApplicationResource}
+            onChangeEntity={onChangeApplication}
+          />
+        ) : (
+          <ApplicationAppRoutes
+            key={discardKey}
+            roles={roles}
+            applicationRunners={applicationSchemes || []}
+            selectedEntity={selectedApplication}
+            onChangeEntity={onChangeApplication}
+          />
+        ))}
+      {activeTab === EntityViewTab.Roles &&
+        (view === ApplicationRoute.AssetsApplications ? (
+          <AssetRoles
+            key={discardKey}
+            view={view}
+            asset={{
+              ...(selectedApplication as DialApplicationResource),
+              userRoles: (selectedApplication as DialApplicationResource).user_roles,
+            }}
+            roles={roles || []}
+            onChange={onChangeAssetRoles}
+          />
+        ) : (
+          <EntityRoles
+            key={discardKey}
+            entity={selectedApplication}
+            view={view}
+            roles={roles || []}
+            onChangeEntity={onChangeApplication}
+            isSkipRefresh={isSkipRefresh}
+          />
+        ))}
       {activeTab === EntityViewTab.Interceptors && (
         <EntityInterceptors
+          key={discardKey}
+          appRunner={appRunner}
           entity={selectedApplication}
           interceptors={interceptors || []}
+          globalInterceptors={globalInterceptors}
           onChangeEntity={onChangeApplication}
           view={view}
         />
       )}
 
-      {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedApplication} view={view} />}
+      {activeTab === EntityViewTab.Audit && <EntityAudit key={discardKey} entity={selectedApplication} view={view} />}
     </>
   );
 };

@@ -1,0 +1,242 @@
+import { describe, expect, test } from 'vitest';
+
+import { DialRoleResource } from '@/src/models/dial/resource';
+import { PlatformRoleModelOption, PlatformSharingType } from '../models';
+import {
+  addModelLimits,
+  applySharingChange,
+  clearModelLimits,
+  getAssetSharingData,
+  getAvailableModels,
+  getDefaultPlaceholder,
+  getModelLimitRows,
+  isResetToDefaultHidden,
+  removeModelLimit,
+  toCoreShareField,
+  updateModelLimit,
+} from '../utils';
+
+// `DialRoleResource` also requires the identity fields; the tests only care about `share`, so the
+// factory supplies the rest once instead of a cast per fixture. A merged read carries its identity
+// under `_metadata` (the merge layer's graft), never flat.
+const roleWith = (share?: DialRoleResource['share']): DialRoleResource => ({
+  name: 'role',
+  _metadata: { name: 'role', path: 'public/role', folderId: 'public' },
+  share,
+});
+
+describe('toCoreShareField', () => {
+  test("maps invitationTtl to Core's snake_case invitation_ttl", () => {
+    expect(toCoreShareField('invitationTtl')).toBe('invitation_ttl');
+  });
+
+  test("maps maxAcceptedUsers to Core's snake_case max_accepted_users", () => {
+    expect(toCoreShareField('maxAcceptedUsers')).toBe('max_accepted_users');
+  });
+});
+
+describe('getAssetSharingData', () => {
+  test("reads invitation_ttl/max_accepted_users under Core's uppercase resource-type key", () => {
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { invitation_ttl: 24, max_accepted_users: 5 } });
+
+    const row = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.APPLICATION);
+
+    expect(row?.invitationTtl).toBe('24');
+    expect(row?.maxAcceptedUsers).toBe('5');
+  });
+
+  test('lists all seven sharing types, including Credentials and Skills, even when the role has no share entries', () => {
+    const rows = getAssetSharingData(roleWith());
+
+    expect(rows).toHaveLength(7);
+    expect(rows.map((row) => row.name)).toEqual(Object.values(PlatformSharingType));
+    expect(rows.every((row) => row.invitationTtl === undefined && row.maxAcceptedUsers === undefined)).toBe(true);
+  });
+
+  test('leaves a type with no share entry as undefined rather than "0"', () => {
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { invitation_ttl: 24 } });
+
+    const applicationRow = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.APPLICATION);
+    const toolsetRow = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.TOOL_SET);
+
+    expect(applicationRow?.maxAcceptedUsers).toBeUndefined();
+    expect(toolsetRow?.invitationTtl).toBeUndefined();
+  });
+
+  test('treats Core\'s -1 "not provided" sentinel as absent, not as a literal -1', () => {
+    const role = roleWith({ [PlatformSharingType.TOOL_SET]: { invitation_ttl: -1, max_accepted_users: -1 } });
+
+    const row = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.TOOL_SET);
+
+    expect(row?.invitationTtl).toBeUndefined();
+    expect(row?.maxAcceptedUsers).toBeUndefined();
+  });
+});
+
+describe('applySharingChange', () => {
+  test('writes the raw value to invitation_ttl with no ms<->hours conversion', () => {
+    const role = roleWith();
+
+    const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', 24);
+
+    // Not `24 * 60 * 60 * 1000` — Core's own field is already in hours.
+    expect(result.share?.[PlatformSharingType.APPLICATION]?.invitation_ttl).toBe(24);
+  });
+
+  test('writes the raw value to max_accepted_users', () => {
+    const role = roleWith();
+
+    const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'maxAcceptedUsers', 5);
+
+    expect(result.share?.[PlatformSharingType.APPLICATION]?.max_accepted_users).toBe(5);
+  });
+
+  test('preserves the other field on the same sharing type when only one is edited', () => {
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { max_accepted_users: 5 } });
+
+    const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', 24);
+
+    expect(result.share?.[PlatformSharingType.APPLICATION]).toEqual({ max_accepted_users: 5, invitation_ttl: 24 });
+  });
+
+  test('clearing a field removes it from the entry, leaving a sibling field intact', () => {
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { max_accepted_users: 5, invitation_ttl: 24 } });
+
+    const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', '' as unknown as number);
+
+    expect(result.share?.[PlatformSharingType.APPLICATION]).toEqual({ max_accepted_users: 5 });
+  });
+
+  test('drops the sharing type entry once every field on it is cleared', () => {
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { invitation_ttl: 24 } });
+
+    const cleared = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', '' as unknown as number);
+
+    expect(cleared.share?.[PlatformSharingType.APPLICATION]).toBeUndefined();
+  });
+
+  test('writes a literal 0 when the user enters it manually, rather than treating it as clearing the field', () => {
+    const role = roleWith();
+
+    const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'maxAcceptedUsers', 0);
+
+    expect(result.share?.[PlatformSharingType.APPLICATION]).toEqual({ max_accepted_users: 0 });
+  });
+
+  test('leaves other sharing types untouched', () => {
+    const role = roleWith({ [PlatformSharingType.CONVERSATION]: { invitation_ttl: 72 } });
+
+    const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', 24);
+
+    expect(result.share?.[PlatformSharingType.CONVERSATION]).toEqual({ invitation_ttl: 72 });
+  });
+});
+
+describe('getDefaultPlaceholder', () => {
+  test('returns 10 for toolsets, same as applications', () => {
+    const applicationPlaceholder = getDefaultPlaceholder(
+      { data: { name: PlatformSharingType.APPLICATION } } as never,
+      { field: 'maxAcceptedUsers' } as never,
+    );
+    const toolsetPlaceholder = getDefaultPlaceholder(
+      { data: { name: PlatformSharingType.TOOL_SET } } as never,
+      { field: 'maxAcceptedUsers' } as never,
+    );
+
+    expect(toolsetPlaceholder).toBe('10');
+    expect(toolsetPlaceholder).toBe(applicationPlaceholder);
+  });
+
+  test('returns 10 for the newly added Credentials and Skills types', () => {
+    expect(
+      getDefaultPlaceholder(
+        { data: { name: PlatformSharingType.CREDENTIALS } } as never,
+        {
+          field: 'maxAcceptedUsers',
+        } as never,
+      ),
+    ).toBe('10');
+    expect(
+      getDefaultPlaceholder(
+        { data: { name: PlatformSharingType.SKILL } } as never,
+        {
+          field: 'maxAcceptedUsers',
+        } as never,
+      ),
+    ).toBe('10');
+  });
+
+  test('returns 72 for invitation TTL regardless of type', () => {
+    expect(
+      getDefaultPlaceholder(
+        { data: { name: PlatformSharingType.FILE } } as never,
+        {
+          field: 'invitationTtl',
+        } as never,
+      ),
+    ).toBe('72');
+  });
+});
+
+describe('isResetToDefaultHidden', () => {
+  const buildApi = (invitationTtl: unknown, maxAcceptedUsers: unknown) => ({
+    getColumn: (key: string) => key,
+    getCellValue: ({ colKey }: { colKey: string }) => (colKey === 'invitationTtl' ? invitationTtl : maxAcceptedUsers),
+  });
+
+  test('is hidden when neither field has an override', () => {
+    expect(isResetToDefaultHidden(buildApi(undefined, undefined) as never, {} as never)).toBe(true);
+  });
+
+  test('is shown once either field has an override', () => {
+    expect(isResetToDefaultHidden(buildApi('24', undefined) as never, {} as never)).toBe(false);
+  });
+});
+
+const model = (name: string): PlatformRoleModelOption => ({
+  name,
+  displayName: name,
+  origin: 'Api' as PlatformRoleModelOption['origin'],
+});
+
+describe('Platform role model limits', () => {
+  test('maps every configured model to a row and leaves absent tokens undefined', () => {
+    expect(getModelLimitRows({ modelA: { minute: 10 }, modelB: {} })).toEqual([
+      { name: 'modelA', minute: 10 },
+      { name: 'modelB' },
+    ]);
+  });
+
+  test('stores 0 as a configured value instead of treating it as no limit', () => {
+    expect(updateModelLimit({}, 'modelA', 'day', 0)).toEqual({ modelA: { day: 0 } });
+  });
+
+  test('clearing one token removes only that token and keeps the empty attached-model entry', () => {
+    const limits = { modelA: { minute: 10, day: 20 } };
+
+    expect(updateModelLimit(limits, 'modelA', 'minute', undefined)).toEqual({ modelA: { day: 20 } });
+    expect(updateModelLimit({ modelA: { minute: 10 } }, 'modelA', 'minute', undefined)).toEqual({ modelA: {} });
+  });
+
+  test('excludes attached models and adds selected models with empty limits without overwriting existing values', () => {
+    const limits = { modelA: { minute: 10 } };
+    const models = [model('modelA'), model('modelB'), model('modelC')];
+
+    expect(getAvailableModels(models, limits)).toEqual([model('modelB'), model('modelC')]);
+    expect(addModelLimits(limits, [model('modelA'), model('modelB')])).toEqual({
+      modelA: { minute: 10 },
+      modelB: {},
+    });
+  });
+
+  test('clears all token limits while preserving the attached model and sibling models', () => {
+    expect(clearModelLimits({ modelA: { minute: 10, day: 20 }, modelB: { week: 30 } }, 'modelA')).toEqual({
+      modelA: {},
+      modelB: { week: 30 },
+    });
+  });
+
+  test('removes a model entry only when the user removes the model', () => {
+    expect(removeModelLimit({ modelA: {}, modelB: { week: 30 } }, 'modelA')).toEqual({ modelB: { week: 30 } });
+  });
+});

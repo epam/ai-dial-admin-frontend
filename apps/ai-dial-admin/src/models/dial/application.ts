@@ -47,6 +47,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
 
   applications?: string[];
   topics?: string[];
+  name?: string;
 }
 
 export interface ApplicationTypeMCP {

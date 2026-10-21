@@ -55,7 +55,7 @@ export class ContainersApi extends BaseApi {
   }
 
   getModelContainers(token: Token): Promise<ServerActionResponse> {
-    return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM,INFERENCE`, token);
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=INFERENCE`, token);
   }
 
   getImageContainers(imageId: string, token: Token): Promise<ServerActionResponse> {

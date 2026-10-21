@@ -9,6 +9,7 @@ import {
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import BodyTab, { BodyTabRef } from './BodyTab';
 import ParamsTab, { ParamsTabRef } from './ParamsTab';
@@ -21,10 +22,11 @@ interface Props {
   bodyText: string;
   onChangeBodyText: (text: string) => void;
   onChange: (testSuite: TestSuite) => void;
+  jsonataVariables?: JsonataVariable[];
 }
 
 const TabsContent = forwardRef<TabsContentRef, Props>(
-  ({ activeTab, bodyText, onChangeBodyText, onChange, selectedTestSuite }, ref) => {
+  ({ activeTab, bodyText, onChangeBodyText, onChange, selectedTestSuite, jsonataVariables }, ref) => {
     const t = useI18n();
 
     const onChangeTemplate = useCallback(
@@ -60,6 +62,7 @@ const TabsContent = forwardRef<TabsContentRef, Props>(
             bodyText={bodyText}
             onChangeBodyText={onChangeBodyText}
             changeTemplate={onChangeTemplate}
+            jsonataVariables={jsonataVariables}
           />
         )}
         {activeTab === EntityViewTab.Headers && (

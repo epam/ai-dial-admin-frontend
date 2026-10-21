@@ -20,7 +20,7 @@ import {
 
 describe('getAccuracyHeatCellStyle', () => {
   test('returns right and bottom accent borders for a scored value', () => {
-    const style = getAccuracyHeatCellStyle(0.85);
+    const style = getAccuracyHeatCellStyle(0.85, 'dark');
 
     expect(style).toEqual({
       backgroundColor: ACCURACY_COLOR_MAP[0.9].bg,
@@ -52,7 +52,7 @@ describe('getAccuracyHeatCellStyle', () => {
 
 describe('getAccuracyHeatCellStyleFromThreshold', () => {
   test('maps threshold directly to segment colors and borders', () => {
-    const style = getAccuracyHeatCellStyleFromThreshold(1.0);
+    const style = getAccuracyHeatCellStyleFromThreshold(1.0, 'dark');
 
     expect(style).toEqual({
       backgroundColor: ACCURACY_COLOR_MAP[1.0].bg,
@@ -75,13 +75,13 @@ describe('getDeltaColors', () => {
   });
 
   test('maps negative deltas to Figma red tiers', () => {
-    expect(getDeltaColors(-0.4)).toEqual(DELTA_NEGATIVE_COLOR_MAP[-0.5]);
-    expect(getDeltaColors(-1)).toEqual(DELTA_NEGATIVE_COLOR_MAP[-1.0]);
+    expect(getDeltaColors(-0.4, 'dark')).toEqual(DELTA_NEGATIVE_COLOR_MAP[-0.5]);
+    expect(getDeltaColors(-1, 'dark')).toEqual(DELTA_NEGATIVE_COLOR_MAP[-1.0]);
   });
 
   test('maps positive deltas to Figma green tiers', () => {
-    expect(getDeltaColors(0.4)).toEqual(DELTA_POSITIVE_COLOR_MAP[0.5]);
-    expect(getDeltaColors(1)).toEqual(DELTA_POSITIVE_COLOR_MAP[1.0]);
+    expect(getDeltaColors(0.4, 'dark')).toEqual(DELTA_POSITIVE_COLOR_MAP[0.5]);
+    expect(getDeltaColors(1, 'dark')).toEqual(DELTA_POSITIVE_COLOR_MAP[1.0]);
   });
 
   test('maps deltas to light-theme pastel tiers', () => {
@@ -110,7 +110,7 @@ describe('getDeltaHeatCellStyle', () => {
   });
 
   test('returns heat cell style for non-zero deltas', () => {
-    const style = getDeltaHeatCellStyle(-0.4);
+    const style = getDeltaHeatCellStyle(-0.4, 'dark');
 
     expect(style).toEqual({
       backgroundColor: DELTA_NEGATIVE_COLOR_MAP[-0.5].bg,

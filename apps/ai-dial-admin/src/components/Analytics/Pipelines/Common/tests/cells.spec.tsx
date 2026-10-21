@@ -1,0 +1,102 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
+import PipelineKindCell from '@/src/components/Analytics/Pipelines/Common/PipelineKindCell';
+import { TransformCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TransformCell';
+import TriggerCell from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
+import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
+import { PipelineListItem, TransformType, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+
+const baseRule: PipelineListItem = {
+  name: 'rule',
+  kind: PipelineKind.Enrich,
+  transform_type: TransformType.Llm,
+  target: 'turn_feedback',
+  trigger: { kind: TriggerKind.Schedule },
+  enabled: true,
+  generation: 5,
+  updated_at: '2026-08-21T09:37:29Z',
+};
+
+describe('Pipelines :: TriggerCell', () => {
+  test('shows the trigger kind alone, without its qualifier', () => {
+    render(<TriggerCell pipeline={{ ...baseRule, trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' } }} />);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TriggerSchedule)).toBeInTheDocument();
+    expect(screen.queryByText('0 0 * * * *')).not.toBeInTheDocument();
+  });
+
+  test('shows a group badge without its grouping column', () => {
+    render(<TriggerCell pipeline={{ ...baseRule, trigger: { kind: TriggerKind.Group, group_by: 'chat_id' } }} />);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TriggerGroup)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupedBy)).not.toBeInTheDocument();
+  });
+
+  test('states an absent trigger rather than leaving the cell blank', () => {
+    const { container } = render(<TriggerCell />);
+
+    expect(container).not.toBeEmptyDOMElement();
+    expect(container.textContent).toBe(UNAVAILABLE_VALUE);
+  });
+});
+
+describe('Pipelines :: TransformCell', () => {
+  const renderCell = (data?: PipelineListItem) =>
+    render(<TransformCellRenderer {...({ data } as Parameters<typeof TransformCellRenderer>[0])} />);
+
+  test('names the transform type the declaration carries', () => {
+    renderCell(baseRule);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TransformTypeLlm)).toBeInTheDocument();
+  });
+
+  test('names a sql transform by its own type', () => {
+    renderCell({ ...baseRule, transform_type: TransformType.Sql });
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TransformTypeSql)).toBeInTheDocument();
+  });
+
+  test('leaves the cell empty for a row carrying no transform', () => {
+    renderCell({ ...baseRule, kind: PipelineKind.Aggregate, transform_type: undefined });
+
+    expect(screen.getByText(UNAVAILABLE_VALUE)).toBeInTheDocument();
+  });
+});
+
+describe('Pipelines :: PipelineEnabledBadge', () => {
+  test('carries text rather than colour alone for an enabled rule', () => {
+    render(<PipelineEnabledBadge enabled />);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusEnabled)).toBeInTheDocument();
+  });
+
+  test('carries text for a disabled rule', () => {
+    render(<PipelineEnabledBadge enabled={false} />);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusDisabled)).toBeInTheDocument();
+  });
+
+  test('renders nothing when the flag is absent', () => {
+    const { container } = render(<PipelineEnabledBadge />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('Pipelines :: PipelineKindCell', () => {
+  test('names each kind rather than carrying it by colour alone', () => {
+    const { rerender } = render(<PipelineKindCell kind={PipelineKind.Enrich} />);
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.KindEnrich)).toBeInTheDocument();
+
+    rerender(<PipelineKindCell kind={PipelineKind.Aggregate} />);
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.KindAggregate)).toBeInTheDocument();
+  });
+
+  test('renders nothing when a row carries no kind', () => {
+    const { container } = render(<PipelineKindCell />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});

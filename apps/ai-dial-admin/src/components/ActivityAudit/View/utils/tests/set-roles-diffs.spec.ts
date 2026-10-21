@@ -1,17 +1,21 @@
 import { describe, expect, test } from 'vitest';
 import { mergeLimits } from '../set-roles-diffs';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
+import { DiffStatus } from '@/src/types/activity-audit';
 
 describe('Activity audit ::  mergeLimits', () => {
   test('should merge two arrays with the same parameter', () => {
     const arr1 = [{ parameter: 'myrole', value: 'minute: 1, day: 2, week: 3, month: 44' }];
 
-    const arr2 = [{ parameter: 'myrole', value: 'maxAcceptedUsers: 9, invitationTtl: 145', diffStatus: 'changed' }];
+    const arr2 = [
+      { parameter: 'myrole', value: 'maxAcceptedUsers: 9, invitationTtl: 145', diffStatus: DiffStatus.CHANGED },
+    ];
 
     const expected = [
       {
         parameter: 'myrole',
         value: 'minute: 1, day: 2, week: 3, month: 44, maxAcceptedUsers: 9, invitationTtl: 145',
-        diffStatus: 'changed',
+        diffStatus: DiffStatus.CHANGED,
       },
     ];
 
@@ -21,7 +25,9 @@ describe('Activity audit ::  mergeLimits', () => {
   test('should merge arrays with different parameters', () => {
     const arr1 = [{ parameter: 'myrole', value: 'minute: 1, day: 2, week: 3, month: 44' }];
 
-    const arr2 = [{ parameter: 'user', value: 'maxAcceptedUsers: 9, invitationTtl: 145', diffStatus: 'changed' }];
+    const arr2 = [
+      { parameter: 'user', value: 'maxAcceptedUsers: 9, invitationTtl: 145', diffStatus: DiffStatus.CHANGED },
+    ];
 
     const expected = [
       {
@@ -31,7 +37,7 @@ describe('Activity audit ::  mergeLimits', () => {
       {
         parameter: 'user',
         value: 'maxAcceptedUsers: 9, invitationTtl: 145',
-        diffStatus: 'changed',
+        diffStatus: DiffStatus.CHANGED,
       },
     ];
 
@@ -56,13 +62,13 @@ describe('Activity audit ::  mergeLimits', () => {
   test('should update status to "changed" if present in second array', () => {
     const arr1 = [{ parameter: 'myrole', value: 'minute: 1' }];
 
-    const arr2 = [{ parameter: 'myrole', value: 'day: 2, week: 3', diffStatus: 'changed' }];
+    const arr2 = [{ parameter: 'myrole', value: 'day: 2, week: 3', diffStatus: DiffStatus.CHANGED }];
 
     const expected = [
       {
         parameter: 'myrole',
         value: 'minute: 1, day: 2, week: 3',
-        diffStatus: 'changed',
+        diffStatus: DiffStatus.CHANGED,
       },
     ];
 
@@ -70,10 +76,10 @@ describe('Activity audit ::  mergeLimits', () => {
   });
 
   test('should handle empty arrays', () => {
-    const arr1 = [];
-    const arr2 = [];
+    const arr1: ActivityAuditDiff[] = [];
+    const arr2: ActivityAuditDiff[] = [];
 
-    const expected = [];
+    const expected: ActivityAuditDiff[] = [];
 
     expect(mergeLimits(arr1, arr2)).toEqual(expected);
   });
@@ -81,7 +87,7 @@ describe('Activity audit ::  mergeLimits', () => {
   test('should return an array with only the first array content if the second is empty', () => {
     const arr1 = [{ parameter: 'myrole', value: 'minute: 1' }];
 
-    const arr2 = [];
+    const arr2: ActivityAuditDiff[] = [];
 
     const expected = [
       {
@@ -94,14 +100,14 @@ describe('Activity audit ::  mergeLimits', () => {
   });
 
   test('should return an array with only the second array content if the first is empty', () => {
-    const arr1 = [];
-    const arr2 = [{ parameter: 'myrole', value: 'minute: 1', diffStatus: 'changed' }];
+    const arr1: ActivityAuditDiff[] = [];
+    const arr2 = [{ parameter: 'myrole', value: 'minute: 1', diffStatus: DiffStatus.CHANGED }];
 
     const expected = [
       {
         parameter: 'myrole',
         value: 'minute: 1',
-        diffStatus: 'changed',
+        diffStatus: DiffStatus.CHANGED,
       },
     ];
 

@@ -1,0 +1,199 @@
+# platform-keys Specification
+
+## Purpose
+
+The Assets > Keys surface: menu entry, listing, creation and the key detail view.
+
+## Requirements
+
+### Requirement: Menu entry under Assets section
+The system SHALL display a "Keys" menu item in the Assets navigation group, positioned after "Roles".
+The menu item SHALL be marked as preview (`isPreview: true`). It SHALL link to `/assets-keys`.
+
+#### Scenario: Keys visible in Assets menu
+- **WHEN** the user views the navigation sidebar
+- **THEN** "Keys" appears in the Assets section after "Roles" and before "Applications"
+
+### Requirement: Asset Keys listing page
+The system SHALL render a flat file-manager list at `/assets-keys` using `BaseAssetList` with the
+`platform` root folder. Keys are a flat platform-bucket resource — no folder creation, no nested
+navigation.
+
+#### Scenario: Listing displays keys from Core
+- **WHEN** the user navigates to `/assets-keys`
+- **THEN** the system fetches keys via `assetApi.list(token, ResourceType.PROJECT_KEY, path)` and
+  displays them in the file-manager grid with Name, Author, Created time, and Updated time columns
+
+#### Scenario: Empty state
+- **WHEN** no keys exist in the platform bucket
+- **THEN** the system displays an empty-state message
+
+### Requirement: Create a key
+The system SHALL allow creating a new key via the create modal. On creation, the system SHALL
+generate a cryptographically random key secret client-side and include it in the PUT payload.
+The generated key value SHALL be displayed to the user once (in the creation success flow) because
+Core never returns it on subsequent reads.
+
+#### Scenario: User creates a key
+- **WHEN** the user opens the create modal and provides a name
+- **THEN** the system generates a random secret, sends a PUT to Core with the `key` field populated,
+  and on success displays the generated key value to the user for copying
+
+#### Scenario: Key secret shown only at creation
+- **WHEN** a key is successfully created
+- **THEN** the generated key secret is shown to the user with a copy-to-clipboard action
+- **WHEN** the user navigates away and returns to the key detail
+- **THEN** the key secret is NOT displayed (Core does not return it on GET)
+
+### Requirement: Key detail view
+The system SHALL display a detail view at `/platform-keys/<encodedName>` fetched via
+`assetApi.getMergedWithEtag(token, ResourceType.PROJECT_KEY, path, etag)`. The view SHALL include
+a Properties tab and a Roles tab.
+
+#### Scenario: User opens a key detail
+- **WHEN** the user clicks a key row in the listing
+- **THEN** the system navigates to `/platform-keys/<encodedName>` and renders the key
+  detail with Properties and Roles tabs
+
+### Requirement: Key properties editing
+The Properties tab SHALL display and allow editing of:
+- `project` (text field)
+- `secured` (boolean toggle)
+- `allowedIpAddressRanges` (list of IP address range strings)
+
+The `key` field SHALL NOT be displayed in properties (it is write-only). The `expiresAt`,
+`keyGeneratedAt`, and `projectContactPoint` fields are dropped (not in Core's model).
+
+#### Scenario: Edit key properties
+- **WHEN** the user modifies the `project` or `secured` fields
+- **THEN** the Save button becomes enabled and the discard button appears
+
+#### Scenario: Save key properties
+- **WHEN** the user clicks Save after editing properties only
+- **THEN** the system sends a PUT via `assetApi.put` with the modified fields — the payload carries
+  no `key` because the client never holds one in this flow (Core does not return it on reads), and
+  Core's `mergePreservingOmittedSecrets` preserves the stored secret — and the system shows a
+  success notification
+
+### Requirement: Key roles editing
+The Roles tab SHALL display the `roles` field — the list of role names this key grants to its
+bearer when used for authentication. The user SHALL be able to add roles from the available roles
+list and remove existing ones.
+
+#### Scenario: View assigned roles
+- **WHEN** the user opens the Roles tab
+- **THEN** the system displays the key's `roles` array as a grid of role names
+
+#### Scenario: Add a role
+- **WHEN** the user clicks "Add" and selects one or more roles from the available roles modal
+- **THEN** the selected role names are appended to `roles` and the view reflects the change
+
+#### Scenario: Remove a role
+- **WHEN** the user removes a role from the list
+- **THEN** that role name is removed from `roles`
+
+### Requirement: Key rotation
+The system SHALL allow rotating a key's secret. Rotation generates a new random secret client-side
+and sends it via PUT. Core revokes the old secret and registers the new one atomically.
+
+#### Scenario: User rotates a key
+- **WHEN** the user clicks the "Rotate" button and confirms
+- **THEN** the system generates a new random secret, PUTs the key with the new `key` value, and
+  on success displays the new secret to the user for copying
+
+### Requirement: Delete a key
+The system SHALL allow deleting a single key via the detail view header and bulk-deleting keys
+from the listing.
+
+#### Scenario: Delete from detail view
+- **WHEN** the user clicks delete in the key detail header
+- **THEN** the system calls `assetApi.delete(token, ResourceType.PROJECT_KEY, path, etag)` and
+  navigates back to the listing on success
+
+#### Scenario: Bulk delete from listing
+- **WHEN** the user selects multiple keys and confirms bulk delete
+- **THEN** the system calls `bulkDeleteAssets` for all selected paths
+
+### Requirement: JSON editor
+The system SHALL provide a JSON editor toggle (standard `JsonConfiguration` without format
+switcher) that allows editing the raw key JSON, including the `key` field: a key value entered in
+raw JSON SHALL be included in the PUT payload as-is, making the JSON editor a manual alternative
+to the Rotate flow.
+
+#### Scenario: Toggle JSON editor
+- **WHEN** the user enables the JSON editor
+- **THEN** the properties/roles tabs are replaced by a Monaco JSON editor showing the key resource
+  (without a `key` entry, since Core never returns it)
+
+#### Scenario: Key value entered in raw JSON is sent on save
+- **WHEN** the user adds or edits `"key": "<value>"` in the JSON editor and clicks Save
+- **THEN** the PUT payload includes the entered `key` value, Core registers it as the new secret,
+  and the system shows the standard update success notification
+
+#### Scenario: No reveal step after a JSON-editor key save
+- **WHEN** a save that included a `key` value succeeds
+- **THEN** the system shows only the generic update notification — no reveal/copy step — because
+  the user entered the value themselves (unlike rotation, where the client generates it)
+
+#### Scenario: Null key in raw JSON is treated as absent
+- **WHEN** the user enters `"key": null` in the JSON editor and clicks Save
+- **THEN** the PUT payload carries no `key` property, and Core's
+  `mergePreservingOmittedSecrets` preserves the stored secret
+
+#### Scenario: Key disappears from the editor after save
+- **WHEN** a save that included a `key` value succeeds and the view refreshes
+- **THEN** the JSON editor reflects the re-read resource without a `key` entry (the field is
+  write-only)
+
+### Requirement: Payload sanitization on write
+On every PUT (create or update), the system SHALL strip the merge layer's `_metadata` object —
+which holds the read-only and derived fields `status`, `validationWarnings`, `path`, `folderId`,
+`author`, `createdAt`, `updatedAt` (see the `core-resource-entity-metadata` capability) — from the
+payload, and SHALL keep the existing `name`/`description` junk-field handling unchanged, since the
+generic create form seeds those fields although `Key.class` declares neither.
+
+#### Scenario: Read-only fields stripped
+- **WHEN** the system sends a PUT for a key whose fetched entity carries `_metadata`
+- **THEN** the payload does not contain `_metadata`, and none of `status`, `validationWarnings`,
+  `path`, `folderId`, `author`, `createdAt`, or `updatedAt` appears as a flat field on the payload
+
+### Requirement: Duplicate action in Catalog Keys context menu
+The Catalog Keys list (flat platform view at `/platform-keys`) SHALL expose a **Duplicate** item in each row's three-dot context menu alongside the existing Delete and Open-in-new-tab items.
+
+#### Scenario: Duplicate action is visible in the context menu
+- **WHEN** an admin right-clicks (or opens the three-dot menu) on a row in the Catalog Keys list
+- **THEN** the context menu includes a "Duplicate" option
+
+#### Scenario: Read-only admin sees no action items
+- **WHEN** the current user has read-only admin rights
+- **THEN** the context menu for Catalog Keys rows is empty (no Duplicate, no Delete)
+
+### Requirement: Duplicate modal — name step
+When the user selects Duplicate, a modal SHALL open that allows entering a new name for the clone.
+
+#### Scenario: Modal pre-fills a cloned name
+- **WHEN** the user opens the Duplicate modal for a key named `my-key`
+- **THEN** the Name field is pre-filled with a modified version of the source name (e.g., `my-key_copy`)
+
+#### Scenario: Submitting with a unique name proceeds
+- **WHEN** the user enters a name that does not conflict with any existing key name and submits
+- **THEN** the system creates the new key with a freshly generated value, copying `project` and `roles` from the source entity
+
+#### Scenario: Submitting with a duplicate name is blocked
+- **WHEN** the user enters a name already used by another key in the same folder
+- **THEN** the submit button remains disabled and a validation message is shown
+
+### Requirement: Duplicate modal — reveal step
+After the new key is successfully created, the modal SHALL display the generated key value so the user can copy it.
+
+#### Scenario: Reveal step shows the generated key
+- **WHEN** the create call succeeds
+- **THEN** the modal transitions to a Reveal step that shows the generated key value with a copy button
+
+#### Scenario: Closing the reveal step dismisses the modal
+- **WHEN** the user clicks Close on the Reveal step
+- **THEN** the modal closes and the list refreshes to show the new entry
+
+#### Scenario: Project and roles are silently copied
+- **WHEN** the new key is created via the Duplicate flow
+- **THEN** the `project` and `roles` values are identical to those of the source entity, without the user having to re-enter them

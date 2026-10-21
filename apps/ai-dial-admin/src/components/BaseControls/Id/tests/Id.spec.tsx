@@ -6,6 +6,22 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 
+const StatefulExternalErrorIdControl = () => {
+  const [entity, setEntity] = useState<{ name?: string }>({ name: 'existing-id' });
+  const [externalError, setExternalError] = useState<string | undefined>('ID already exists');
+
+  return (
+    <IdControl
+      entity={entity}
+      externalError={externalError}
+      onChangeEntity={(next) => {
+        setEntity(next);
+        setExternalError(void 0);
+      }}
+    />
+  );
+};
+
 const StatefulIdControl = ({ onChange }: { onChange: (name?: string) => void }) => {
   const [entity, setEntity] = useState<{ name?: string }>({ name: '' });
   return (
@@ -47,6 +63,28 @@ describe('IdControl', () => {
     render(<IdControl entity={{ name: 'valid-id' }} isDeploymentId />);
 
     expect(dispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'name',
+      isValid: true,
+    });
+  });
+
+  test('renders and clears an external validation error after the value changes', async () => {
+    const user = userEvent.setup();
+    render(<StatefulExternalErrorIdControl />);
+
+    expect(screen.getByText('ID already exists')).toBeInTheDocument();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'name',
+      isValid: false,
+    });
+
+    await user.clear(screen.getByRole('textbox'));
+    await user.type(screen.getByRole('textbox'), 'available-id');
+
+    expect(screen.queryByText('ID already exists')).toBeNull();
+    expect(dispatch).toHaveBeenLastCalledWith({
       type: ValidationActionType.SetField,
       field: 'name',
       isValid: true,

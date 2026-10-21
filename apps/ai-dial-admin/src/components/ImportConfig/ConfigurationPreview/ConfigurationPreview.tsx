@@ -10,6 +10,7 @@ import {
   previewJsonConfigs,
   previewZipConfig,
 } from '@/src/app/[lang]/import-config/actions';
+import AnalyticsImportPreview from '@/src/components/ImportConfig/ConfigurationPreview/AnalyticsImportPreview';
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
 import {
   getConfigurationPreview,
@@ -27,6 +28,9 @@ import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntityType } from '@/src/types/entity-type';
+import { CatalogImportResult } from '@/src/models/analytics/catalog-import';
+import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
+import { ExportComponentType } from '@/src/types/export';
 import { ImportFileType } from '@/src/types/import';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -36,7 +40,11 @@ interface Props {
   importBody: FormData;
   files: File[];
   fileType: ImportFileType;
-  isDeployments?: boolean;
+  configScope: ExportComponentType;
+  analyticsPolicy: CatalogResolutionPolicy;
+  analyticsResult?: CatalogImportResult;
+  isReusedNamesAcknowledged: boolean;
+  onChangeReusedNamesAcknowledged: (isAcknowledged: boolean) => void;
   onImportFile: () => void;
   onValidationChange?: (hasErrors: boolean) => void;
 }
@@ -48,7 +56,11 @@ const ConfigurationPreview: FC<Props> = ({
   files,
   importBody,
   fileType,
-  isDeployments,
+  configScope,
+  analyticsPolicy,
+  analyticsResult,
+  isReusedNamesAcknowledged,
+  onChangeReusedNamesAcknowledged,
   onImportFile,
   onValidationChange,
 }) => {
@@ -69,10 +81,14 @@ const ConfigurationPreview: FC<Props> = ({
   const [globalFirewall, setGlobalFirewall] = useState<FileComponentItem | null>(null);
   const [firewallErrorsByDomain, setFirewallErrorsByDomain] = useState<Record<string, string[]>>({});
   const [validationSummary, setValidationSummary] = useState<ValidationSummary>(EMPTY_VALIDATION_SUMMARY);
+  const [isAnalyticsImportBlocked, setIsAnalyticsImportBlocked] = useState(true);
+
+  const isDeployments = configScope === ExportComponentType.DEPLOYMENTS;
+  const isAnalytics = configScope === ExportComponentType.ANALYTICS;
 
   // Admin import preview
   useEffect(() => {
-    if (isDeployments) return;
+    if (configScope !== ExportComponentType.ADMIN) return;
     setIsLoading(true);
     (fileType == ImportFileType.ARCHIVE
       ? getReqRef.current(previewZipConfig, importBody)
@@ -92,7 +108,7 @@ const ConfigurationPreview: FC<Props> = ({
         showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [fileType, importBody, isDeployments, t]);
+  }, [fileType, importBody, configScope, t]);
 
   // Deployment import preview
   useEffect(() => {
@@ -133,16 +149,83 @@ const ConfigurationPreview: FC<Props> = ({
     });
   }, [importBody, isDeployments, t]);
 
-  const hasValidationErrors = !!isDeployments && validationSummary.totalFailed > 0;
-  const baseImportDisabled = isDeployments ? !files?.length : isLoading || !files;
-  const isImportDisabled = baseImportDisabled || hasValidationErrors;
+  const hasValidationErrors = isDeployments && validationSummary.totalFailed > 0;
+  const baseImportDisabled = isDeployments || isAnalytics ? !files?.length : isLoading || !files;
+  const isImportDisabled = baseImportDisabled || hasValidationErrors || (isAnalytics && isAnalyticsImportBlocked);
   const isErrorOnlyDisable = !baseImportDisabled && hasValidationErrors;
+  // A shown result also disables Import, but there is nothing left to resolve then.
+  const isAnalyticsBlockedByIssues = isAnalytics && !baseImportDisabled && isAnalyticsImportBlocked && !analyticsResult;
+  const blockedTooltip = isAnalytics
+    ? t(ImportI18nKey.AnalyticsImportBlockedTooltip)
+    : t(ImportI18nKey.ImportBlockedTooltip);
+
+  const importingOverlay = isImporting && (
+    <div className="size-full absolute bg-blackout z-10">
+      <DialLoader size={45} />
+    </div>
+  );
+
+  const renderBody = () => {
+    if (isAnalytics) {
+      return (
+        <div className="flex flex-col h-full relative">
+          {importingOverlay}
+          <AnalyticsImportPreview
+            importBody={importBody}
+            policy={analyticsPolicy}
+            result={analyticsResult}
+            isReusedNamesAcknowledged={isReusedNamesAcknowledged}
+            onChangeReusedNamesAcknowledged={onChangeReusedNamesAcknowledged}
+            onBlockedChange={setIsAnalyticsImportBlocked}
+          />
+        </div>
+      );
+    }
+    if (isLoading) {
+      return (
+        <div className="flex flex-col size-full justify-center items-center">
+          <DialLoader size={45} className="h-auto" />
+          <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col h-full relative">
+        {importingOverlay}
+        {hasValidationErrors && (
+          <div className="mb-3">
+            <ValidationBanner count={validationSummary.totalFailed} />
+          </div>
+        )}
+        <div className="mb-3">
+          <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+        </div>
+        {isDeployments ? (
+          <DeploymentConfigurationGrid
+            selectedTab={selectedTab}
+            tabData={data}
+            currentState={currentState}
+            prevState={prevState}
+            globalFirewall={globalFirewall}
+            firewallErrorsByDomain={firewallErrorsByDomain}
+          />
+        ) : (
+          <ConfigurationGrid
+            selectedTab={selectedTab as EntityType}
+            tabData={data}
+            currentState={currentState}
+            prevState={prevState}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary py-4 px-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <DialTooltip tooltip={t(ImportI18nKey.ImportBlockedTooltip)} hideTooltip={!isErrorOnlyDisable}>
+        <DialTooltip tooltip={blockedTooltip} hideTooltip={!isErrorOnlyDisable && !isAnalyticsBlockedByIssues}>
           <DialPrimaryButton
             label={t(ButtonsI18nKey.Import)}
             disabled={isImportDisabled || isImporting}
@@ -151,47 +234,7 @@ const ConfigurationPreview: FC<Props> = ({
           />
         </DialTooltip>
       </div>
-      <div className="flex-1 min-h-0">
-        {isLoading ? (
-          <div className="flex flex-col size-full justify-center items-center">
-            <DialLoader size={45} className="h-auto" />
-            <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col h-full relative">
-            {isImporting && (
-              <div className="size-full absolute bg-blackout z-10">
-                <DialLoader size={45} />
-              </div>
-            )}
-            {hasValidationErrors && (
-              <div className="mb-3">
-                <ValidationBanner count={validationSummary.totalFailed} />
-              </div>
-            )}
-            <div className="mb-3">
-              <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
-            </div>
-            {isDeployments ? (
-              <DeploymentConfigurationGrid
-                selectedTab={selectedTab}
-                tabData={data}
-                currentState={currentState}
-                prevState={prevState}
-                globalFirewall={globalFirewall}
-                firewallErrorsByDomain={firewallErrorsByDomain}
-              />
-            ) : (
-              <ConfigurationGrid
-                selectedTab={selectedTab as EntityType}
-                tabData={data}
-                currentState={currentState}
-                prevState={prevState}
-              />
-            )}
-          </div>
-        )}
-      </div>
+      <div className="flex-1 min-h-0">{renderBody()}</div>
     </div>
   );
 };

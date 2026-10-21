@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/toolsets/exim';
 import * as mcpClientModule from '@/src/server/toolsets/mcp-client';
 import * as zipEximModule from '@/src/server/toolsets/zip-exim';
@@ -21,10 +21,21 @@ import {
   importToolsets,
   exportToolsets,
   tryOutAssetTool,
+  bulkDeletePlatformToolsets,
+  createPlatformToolset,
+  getConfigFileToolset,
+  getConfigFileToolsets,
+  getPlatformToolset,
+  getPlatformToolsets,
+  removePlatformToolset,
+  updatePlatformToolset,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { DialPlatformToolsetResource } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
-import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialToolsetResource, ToolsetAuthCredentialLevel } from '@/src/models/dial/resource';
 import { ImportFileType } from '@/src/types/import';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -33,6 +44,47 @@ vi.mock('@/src/app/api/api');
 vi.mock('@/src/server/toolsets/exim');
 vi.mock('@/src/server/toolsets/mcp-client');
 vi.mock('@/src/server/toolsets/zip-exim');
+
+// `DialToolsetResource` requires the whole Core payload; these cases care about the path and the auth
+// call, so the factory carries the rest. A fetched entity carries its identity grafts under
+// `_metadata` (the merge layer's contract) while create/update flows resolve `folderId`/`version`
+// flat — the factory sets both spellings so either resolution path is exercised.
+const toolsetResource = (overrides: Partial<DialToolsetResource> = {}): DialToolsetResource => ({
+  created_at: 0,
+  updated_at: 0,
+  description: '',
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+  forward_per_request_key: false,
+  allowed_tools: [],
+  updatedAt: '0',
+  name: 'my-toolset',
+  folderId: 'public',
+  version: '1.0',
+  _metadata: {
+    name: 'my-toolset',
+    path: 'toolsets/public/my-toolset__1.0',
+    folderId: 'public',
+    version: '1.0',
+    nodeType: DialFileNodeType.ITEM,
+  },
+  ...overrides,
+});
+
+// The sign-in/out actions take the asset shape, not the Core resource — `nodeType` is even typed
+// differently on the two (`DialFileNodeType` vs `string`).
+const assetToolset = (overrides: Partial<AssetToolset> = {}): AssetToolset => ({
+  name: 'my-toolset',
+  path: 'toolsets/public/my-toolset',
+  folderId: 'public',
+  version: '1.0',
+  ...overrides,
+});
 
 describe('Assets Toolset :: server actions', () => {
   beforeEach(() => {
@@ -64,6 +116,7 @@ describe('Assets Toolset :: server actions', () => {
 
     const result = await updateToolset(
       {
+        name: 'my-toolset',
         folderId: 'public',
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
@@ -75,8 +128,9 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'test',
+      'publicmy-toolset__1.0',
       {
+        name: 'my-toolset',
         folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
         path: undefined,
@@ -86,6 +140,134 @@ describe('Assets Toolset :: server actions', () => {
       { etag: 'etag' },
     );
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('updateToolset sends no client_secret_hint or empty client_secret, so Core keeps the stored secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id' } }),
+      { etag: 'etag' },
+    );
+  });
+
+  test('updateToolset keeps a client secret the user typed', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', client_secret: 'typed-secret', client_secret_hint: 'cret' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id', client_secret: 'typed-secret' } }),
+      { etag: 'etag' },
+    );
+  });
+
+  test('createToolset sends no client_secret_hint or empty client_secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createToolset(
+      toolsetResource({ auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' } }),
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      expect.any(String),
+      expect.objectContaining({ auth_settings: { client_id: 'id' } }),
+    );
+  });
+
+  test('updateToolset resolves identity from _metadata when the flat fields are absent', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    // A merged detail read carries folderId/version only under `_metadata` (the View's row-shaped
+    // surface), so the action must resolve the write path from there.
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        path: 'toolsets/public/my-toolset__2.0',
+        _metadata: { name: 'my-toolset', path: 'toolsets/public/my-toolset__2.0', folderId: 'public/', version: '2.0' },
+      } as AssetToolset,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'public/my-toolset__2.0',
+      expect.objectContaining({ displayVersion: '2.0', folderId: undefined, version: undefined }),
+      { etag: 'etag' },
+    );
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'public/my-toolset__2.0',
+      expect.not.objectContaining({ _metadata: expect.anything() }),
+      { etag: 'etag' },
+    );
+  });
+
+  test('updateToolset recomputes a folder-qualified path from folderId + versioned name, matching createToolset', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'stale-path',
+        version: '2.0',
+      },
+      'etag',
+    );
+
+    const [, , path] = (assetApi.put as any).mock.calls[0];
+    expect(path).toBe('public/my-toolset__2.0');
+  });
+
+  test('updateToolset writes to the platform-prefixed path when folderId is the platform bucket', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'platform/',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'my-toolset',
+        version: '',
+      },
+      'etag-1',
+    );
+
+    const [, type, path, , options] = (assetApi.put as any).mock.calls[0];
+    expect(type).toBe(ResourceType.TOOLSET);
+    expect(path).toBe('platform/my-toolset');
+    expect(path).not.toContain('__');
+    expect(options).toEqual({ etag: 'etag-1' });
   });
 
   test('updateToolset without a concrete etag still passes it through', async () => {
@@ -103,22 +285,28 @@ describe('Assets Toolset :: server actions', () => {
   test('Should call createToolset action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createToolset({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createToolset(toolsetResource());
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'public__1.0', {
-      folderId: undefined,
-      nodeType: DialFileNodeType.FOLDER,
-      path: undefined,
-      version: undefined,
-      allowedTools: void 0,
-      transport: 'SSE',
-      displayVersion: '1.0',
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({
+        folderId: undefined,
+        version: undefined,
+        transport: 'SSE',
+        displayVersion: '1.0',
+      }),
+    );
+    // The whole `_metadata` graft — identity and `nodeType` alike — is deleted before Core sees the
+    // body. `objectContaining` treats an absent key as unequal to `undefined`, so absence is asserted
+    // with the negative matcher instead.
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -129,12 +317,7 @@ describe('Assets Toolset :: server actions', () => {
       errorMessage: 'Toolset already exists',
     });
 
-    const result = await createToolset({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createToolset(toolsetResource());
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toBe('Toolset already exists');
@@ -239,7 +422,7 @@ describe('Assets Toolset :: server actions', () => {
     (toolsetOpsApi.signIn as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await signInToolset(
-      { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, version: '1.0' },
+      assetToolset({ _metadata: { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, name: '' } }),
       ToolsetAuthCredentialLevel.GLOBAL,
       'https://redirect.example.com/callback',
       'key',
@@ -259,7 +442,7 @@ describe('Assets Toolset :: server actions', () => {
     (toolsetOpsApi.signOut as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await signOutToolset(
-      { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, version: '1.0' },
+      assetToolset({ _metadata: { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, name: '' } }),
       ToolsetAuthCredentialLevel.GLOBAL,
     );
     expect(getUserToken).toHaveBeenCalled();
@@ -339,6 +522,200 @@ describe('Assets Toolset :: server actions', () => {
     expect(mcpClientModule.buildApplicationMcpUrl).toHaveBeenCalledWith(expect.any(String), 'public/name__1.0');
     expect(mcpClientModule.buildToolsetMcpUrl).not.toHaveBeenCalled();
     expect(mcpClientModule.callToolViaMcp).toHaveBeenCalledWith(applicationUrl, TOKEN_MOCK, callToolRequest);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+});
+
+describe('Platform toolset server actions', () => {
+  // `path` no longer sits flat on a merged read — the fixture carries it under `_metadata`, the
+  // merge layer's graft — hence the double cast for the handful of members these cases care about.
+  const platformToolset = {
+    name: 'my-toolset',
+    folderId: 'platform/',
+    endpoint: 'http://mock',
+    _metadata: {
+      name: 'my-toolset',
+      path: 'platform/my-toolset',
+      folderId: 'platform/',
+    },
+  } as unknown as DialPlatformToolsetResource;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (assetApi.put as any).mockResolvedValue({ success: true, response: {} });
+    (assetApi.delete as any).mockResolvedValue({ success: true });
+    (assetApi.list as any).mockResolvedValue([]);
+    (assetApi.getMergedWithEtag as any).mockResolvedValue({
+      success: true,
+      response: platformToolset,
+      etag: 'etag-1',
+    });
+  });
+
+  test('createPlatformToolset writes to the bare platform-prefixed path, with no version suffix', async () => {
+    await createPlatformToolset(platformToolset);
+
+    expect(assetApi.put).toHaveBeenCalledOnce();
+    const [, type, path] = (assetApi.put as any).mock.calls[0];
+    expect(type).toBe(ResourceType.TOOLSET);
+    expect(path).toBe('platform/my-toolset');
+    expect(path).not.toContain('__');
+  });
+
+  test('updatePlatformToolset writes to the bare platform-prefixed path, with no version suffix', async () => {
+    await updatePlatformToolset(platformToolset, 'etag-1');
+
+    expect(assetApi.put).toHaveBeenCalledOnce();
+    const [, type, path, , options] = (assetApi.put as any).mock.calls[0];
+    expect(type).toBe(ResourceType.TOOLSET);
+    expect(path).toBe('platform/my-toolset');
+    expect(path).not.toContain('__');
+    expect(options).toEqual({ etag: 'etag-1' });
+  });
+
+  // ConfigResourceController (the platform bucket's write path) deserializes strictly
+  // (FAIL_ON_UNKNOWN_PROPERTIES) — read-only/derived fields the merge reader adds must not round-trip
+  // back onto a write, or Core rejects the whole body ("Failed to parse entity"). Identity, audit and
+  // the validity projections graft under `_metadata`; `createdAt`/`updatedAt`/`reference` stay flat
+  // (client-only or `ModifiedEntity`-typed) and are stripped by the payload builder.
+  test('createPlatformToolset strips read-only/derived fields before writing', async () => {
+    const toolsetWithExtras = {
+      ...platformToolset,
+      _metadata: {
+        ...platformToolset._metadata,
+        status: 'valid',
+        validationWarnings: [{ field: 'endpoint' }],
+        author: 'Yauheni Osipau',
+      },
+      createdAt: '1',
+      updatedAt: '2',
+      reference: 'b827783e-d894-467f-b790-d2e900cc8365',
+    } as unknown as DialPlatformToolsetResource;
+
+    await createPlatformToolset(toolsetWithExtras);
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('_metadata');
+    expect(body).not.toHaveProperty('status');
+    expect(body).not.toHaveProperty('validationWarnings');
+    expect(body).not.toHaveProperty('author');
+    expect(body).not.toHaveProperty('createdAt');
+    expect(body).not.toHaveProperty('updatedAt');
+    expect(body).not.toHaveProperty('reference');
+    expect(body).toMatchObject({ name: 'my-toolset', endpoint: 'http://mock' });
+  });
+
+  test.each([
+    ['create', (toolset: any) => createPlatformToolset(toolset)],
+    ['update', (toolset: any) => updatePlatformToolset(toolset, 'etag-1')],
+  ])('carries catalog_schema_id and catalog_properties through a %s', async (_label, action) => {
+    await action({
+      ...platformToolset,
+      catalog_schema_id: 'https://host/toolset-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalog_schema_id: 'https://host/toolset-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves a toolset carrying no catalog metadata untouched', async () => {
+    await updatePlatformToolset(platformToolset, 'etag-1');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalog_schema_id');
+    expect(body).not.toHaveProperty('catalog_properties');
+  });
+
+  test('updatePlatformToolset strips read-only/derived fields before writing', async () => {
+    const toolsetWithExtras = {
+      ...platformToolset,
+      _metadata: {
+        ...platformToolset._metadata,
+        status: 'valid',
+        validationWarnings: [{ field: 'endpoint' }],
+        author: 'Yauheni Osipau',
+      },
+      createdAt: '1',
+      updatedAt: '2',
+      reference: 'b827783e-d894-467f-b790-d2e900cc8365',
+    } as unknown as DialPlatformToolsetResource;
+
+    await updatePlatformToolset(toolsetWithExtras, 'etag-1');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('_metadata');
+    expect(body).not.toHaveProperty('status');
+    expect(body).not.toHaveProperty('validationWarnings');
+    expect(body).not.toHaveProperty('author');
+    expect(body).not.toHaveProperty('createdAt');
+    expect(body).not.toHaveProperty('updatedAt');
+    expect(body).not.toHaveProperty('reference');
+    expect(body).toMatchObject({ name: 'my-toolset', endpoint: 'http://mock' });
+  });
+
+  test('getPlatformToolset reads a platform-prefixed path with the caller-supplied etag', async () => {
+    await getPlatformToolset('platform/my-toolset', 'etag-1');
+
+    expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'platform/my-toolset',
+      'etag-1',
+    );
+  });
+
+  test('getPlatformToolsets lists a platform-prefixed path', async () => {
+    await getPlatformToolsets('platform/');
+
+    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'platform/');
+  });
+
+  test('removePlatformToolset sends If-Match when a concrete etag is supplied', async () => {
+    await removePlatformToolset('platform/my-toolset', 'etag-1');
+
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'platform/my-toolset', 'etag-1');
+  });
+
+  test('removePlatformToolset sends no conditional header when the etag is omitted', async () => {
+    await removePlatformToolset('platform/my-toolset');
+
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'platform/my-toolset', undefined);
+  });
+
+  test('bulkDeletePlatformToolsets deletes every path unconditionally', async () => {
+    const paths = [{ path: 'platform/toolset-1' }, { path: 'platform/toolset-2' }];
+
+    await bulkDeletePlatformToolsets(paths);
+
+    expect(assetApi.delete).toHaveBeenCalledTimes(2);
+    paths.forEach(({ path }) => {
+      expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, path);
+    });
+  });
+
+  test('Should call getConfigFileToolsets action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileToolsets();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileToolset action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileToolset('my-toolset');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets, 'my-toolset');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

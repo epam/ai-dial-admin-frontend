@@ -3,28 +3,17 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  DialConfirmationPopup,
-  DialDangerButton,
-  DialLoader,
-  DialNeutralButton,
-  DialNoDataContent,
-  DialPrimaryButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
-import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
+import { DialConfirmationPopup, DialLoader, DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
 import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
-  getMetricDeclarations,
-  getTestSuiteMetricDetailsWithSchema,
+  getDetailedMetricDeclarations,
   getTestSuiteMetrics,
+  getTestSuiteMetricsAggregated,
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
-import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
-import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import { ButtonsI18nKey, DeleteI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -34,9 +23,9 @@ import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AddMetricModal from './AddMetric/AddMetricModal';
-import MetricBindingsDisplay from './MetricBindingsDisplay';
+import MetricCard from './MetricCard';
 import ScoreSettings from './ScoreSettings/ScoreSettings';
-import { mergeMetricsWithDeclarations, mergeMetricsWithOutputSchemas } from './utils';
+import { stripMetricFromScoreWeights } from './ScoreSettings/utils';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -59,43 +48,45 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
   const loadMetrics = useCallback(() => {
     const testSuiteId = selectedTestSuite.id as string;
 
-    return Promise.all([getTestSuiteMetrics(testSuiteId, 0, 1000), getMetricDeclarations(0, 1000)]).then(
-      ([metricsResponse, declarationsResponse]) => {
-        const declarations = declarationsResponse?.content || [];
-        setMetricDeclarations(declarations);
+    // The aggregated endpoint doesn't serialize `condition` (same gap as the per-metric
+    // `.../aggregated` endpoint - see AddMetricModal.tsx), so it's backfilled from the plain list,
+    // which does. Remove this merge once the aggregated response carries `condition` itself.
+    return Promise.all([getTestSuiteMetricsAggregated(testSuiteId), getTestSuiteMetrics(testSuiteId, 0, 1000)]).then(
+      ([aggregatedMetrics, plainMetrics]) => {
+        const conditionByMetricId = new Map(plainMetrics?.content?.map((metric) => [metric.id, metric.condition]));
 
-        const metricsWithDescriptions = mergeMetricsWithDeclarations(metricsResponse?.content || [], declarations);
-        const metricIds = metricsWithDescriptions.map((metric) => metric.id).filter((id): id is string => !!id);
-
-        if (!metricIds.length) {
-          setMetrics(metricsWithDescriptions);
-          return;
-        }
-
-        return Promise.all(
-          metricIds.map((metricId) =>
-            getTestSuiteMetricDetailsWithSchema(testSuiteId, metricId).then(
-              (details) => [metricId, details?.metricDeclarationVersion?.outputSchema] as const,
-            ),
-          ),
-        ).then((entries) => {
-          setMetrics(mergeMetricsWithOutputSchemas(metricsWithDescriptions, new Map(entries)));
-        });
+        setMetrics(
+          aggregatedMetrics?.map((metric) => ({
+            ...metric,
+            condition: metric.condition ?? conditionByMetricId.get(metric.id),
+            description: metric.description ?? metric.metricDeclaration?.description,
+            outputSchema: metric.outputSchema ?? metric.metricDeclarationVersion?.outputSchema,
+          })) || [],
+        );
       },
     );
   }, [selectedTestSuite.id]);
 
   const onRemoveMetric = useCallback(
     (metricId: string) => {
+      const removedMetricName = metrics?.find((metric) => metric.id === metricId)?.name;
+
       deleteTestSuiteMetric(selectedTestSuite.id as string, metricId).then((response) => {
         setIsDeleteModalOpen(false);
         setMetricToEdit(undefined);
         if (response?.success) {
           loadMetrics();
+
+          if (removedMetricName) {
+            const nextSuite = stripMetricFromScoreWeights(selectedTestSuite, removedMetricName);
+            if (nextSuite !== selectedTestSuite) {
+              onChange(nextSuite);
+            }
+          }
         }
       });
     },
-    [loadMetrics, selectedTestSuite.id],
+    [loadMetrics, metrics, onChange, selectedTestSuite],
   );
 
   const onAddMetric = useCallback(
@@ -151,10 +142,20 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
     loadMetrics().finally(() => setIsMetricsLoading(false));
   }, [metrics, loadMetrics]);
 
+  useEffect(() => {
+    if (!isAddModalOpen || metricDeclarations) {
+      return;
+    }
+
+    getDetailedMetricDeclarations().then((declarations) => setMetricDeclarations(declarations || []));
+  }, [isAddModalOpen, metricDeclarations]);
+
+  const hasMetrics = Boolean(metrics?.length);
+
   return (
     <div className="h-full flex flex-col gap-6">
-      <div className="flex flex-row flex-1 min-w-0 min-h-0 gap-4">
-        <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-6">
+      <div className="flex flex-1 min-w-0 min-h-0 flex-row gap-4">
+        <div className="flex flex-1 min-w-0 min-h-0 flex-col gap-6">
           <div className="flex flex-row justify-between items-center">
             <h1 className="mb-4">
               {t(TabsI18nKey.Metrics)}: {metrics?.length || 0}
@@ -174,55 +175,21 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
             <DialLoader size={44} />
           ) : (
             <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
-              {metrics?.length ? (
+              {hasMetrics ? (
                 <div className="flex flex-col gap-4">
-                  {metrics.map((metric) => (
-                    <div key={metric.id} className="rounded border border-secondary p-4 flex flex-col gap-4">
-                      <div className="flex flex-row items-center justify-between">
-                        <span className="dial-body-semi">{metric.name}</span>
-
-                        <div className="flex flex-row items-center gap-3">
-                          <DialDangerButton
-                            size={ElementSize.Small}
-                            label={t(ButtonsI18nKey.Delete)}
-                            appearance={ButtonAppearance.Outlined}
-                            onClick={() => {
-                              setMetricToEdit(metric);
-                              setIsDeleteModalOpen(true);
-                            }}
-                            iconBefore={<IconTrash stroke={2} size={16} />}
-                          />
-                          <DialNeutralButton
-                            size={ElementSize.Small}
-                            label={t(ButtonsI18nKey.Edit)}
-                            onClick={() => {
-                              setMetricToEdit(metric);
-                              setIsAddModalOpen(true);
-                            }}
-                            iconBefore={<IconEdit stroke={2} size={16} />}
-                          />
-                        </div>
-                      </div>
-
-                      {metric.description && (
-                        <ExpandableText lines={2} className="dial-tiny-text text-secondary">
-                          <ContentWithLinks text={metric.description} />
-                        </ExpandableText>
-                      )}
-
-                      <div className="flex flex-row gap-3 items-start">
-                        <p className="dial-tiny-semi-text">{t(TestSuitesI18nKey.Condition)}:</p>
-                        <span className="dial-tiny-text break-all">
-                          {metric.condition?.trim() || t(TestSuitesI18nKey.ConditionAlwaysRun)}
-                        </span>
-                      </div>
-
-                      <MetricBindingsDisplay
-                        title={t(TestSuitesI18nKey.Configuration)}
-                        bindings={metric.configBindings}
-                      />
-                      <MetricBindingsDisplay title={t(TestSuitesI18nKey.Inputs)} bindings={metric.inputBindings} />
-                    </div>
+                  {metrics!.map((metric) => (
+                    <MetricCard
+                      key={metric.id}
+                      metric={metric}
+                      onDelete={() => {
+                        setMetricToEdit(metric);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      onEdit={() => {
+                        setMetricToEdit(metric);
+                        setIsAddModalOpen(true);
+                      }}
+                    />
                   ))}
                 </div>
               ) : (
@@ -233,16 +200,20 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         </div>
 
         {isMetricsLoading ? (
-          <div className="flex w-[516px] items-center justify-center rounded bg-layer-3 p-4">
+          <div className="flex w-[420px] shrink-0 items-center justify-center rounded bg-layer-3 p-4">
             <DialLoader size={44} />
           </div>
         ) : (
-          <ScoreSettings
-            selectedTestSuite={selectedTestSuite}
-            metrics={metrics}
-            testCaseSchema={dataset?.testCaseSchema}
-            onChange={onChange}
-          />
+          hasMetrics && (
+            <div className="w-[420px] shrink-0">
+              <ScoreSettings
+                selectedTestSuite={selectedTestSuite}
+                metrics={metrics}
+                testCaseSchema={dataset?.testCaseSchema}
+                onChange={onChange}
+              />
+            </div>
+          )
         )}
       </div>
 

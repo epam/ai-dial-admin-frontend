@@ -18,6 +18,8 @@ export const infiniteGridOptions: Partial<GridOptions> = {
 };
 
 export const NO_BORDER_CLASS = 'ag-grid-no-border';
+/** Marks a filter row whose body is empty, so `ag-grid.scss` can centre its filter button. */
+export const FILTER_BUTTON_ONLY_CLASS = 'ag-grid-filter-button-only';
 export const NO_CHECKBOX_CLASS = 'ag-grid-no-checkbox';
 
 export const ACTIONS_COLUMN_CEL_ID = 'actionsColumn';
@@ -115,6 +117,14 @@ export const SINGLE_ROW_SELECTION: Partial<GridOptions> = {
   },
   selectionColumnDef: {
     ...RADIO_BUTTON_COL_DEF,
+  },
+};
+
+export const SINGLE_ROW_SELECTION_NO_CHECKBOX: Partial<GridOptions> = {
+  rowSelection: {
+    mode: 'singleRow',
+    enableClickSelection: true,
+    checkboxes: false,
   },
 };
 

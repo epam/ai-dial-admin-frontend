@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialLoader,
@@ -20,12 +20,14 @@ import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import classNames from 'classnames';
+import { useAttributeSamples } from '@/src/components/TestSuites/View/use-attribute-samples';
 import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } from '../../utils/metric-bindings';
 import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
-import { isReservedSystemFunctionCondition, validateMetricBindings } from './utils';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { hasInputTypeMismatch, isReservedSystemFunctionCondition, validateMetricBindings } from './utils';
+import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
+import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
 
 interface Props {
   isModalOpen: boolean;
@@ -47,6 +49,8 @@ const AddMetricModal: FC<Props> = ({
   metricDeclarations,
 }) => {
   const t = useI18n();
+  const prevSelectedMetricIdRef = useRef<string>(undefined);
+  const attributeSamples = useAttributeSamples(dataset?.id, dataset?.testCaseSchema);
 
   const isEditMode = !!editingMetric;
   const [currentStepId, setCurrentStepId] = useState<string>(
@@ -61,6 +65,8 @@ const AddMetricModal: FC<Props> = ({
 
   const [metricName, setMetricName] = useState<string | undefined>('');
   const [condition, setCondition] = useState<string>('');
+
+  const [metricColumnOrder, setMetricColumnOrder] = useState<string[]>([]);
 
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
@@ -111,9 +117,18 @@ const AddMetricModal: FC<Props> = ({
     ? t(TestSuitesI18nKey.ConditionSystemFunctionUnavailable)
     : undefined;
 
+  const newMetricSelected =
+    currentStepId === MetricStep.AddMetric && prevSelectedMetricIdRef.current !== selectedMetricId;
+
+  const responseColumns = useMemo<ResponseColumn[]>(
+    () => (selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : []),
+    [selectedTestSuite],
+  );
+
   const isStep1Valid = !!selectedMetricId;
   const isStep2Valid =
     !conditionError &&
+    !newMetricSelected &&
     (isJsonView
       ? true
       : validateMetricBindings(
@@ -122,6 +137,12 @@ const AddMetricModal: FC<Props> = ({
           inputBindings,
           selectedMetricDetails?.configSchema,
           selectedMetricDetails?.inputSchema,
+        ) &&
+        !hasInputTypeMismatch(
+          inputBindings,
+          selectedMetricDetails?.inputSchema,
+          dataset?.testCaseSchema,
+          responseColumns,
         ));
 
   const steps: Step[] = useMemo(
@@ -149,6 +170,22 @@ const AddMetricModal: FC<Props> = ({
     }
   }, [condition, configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
+  const onMetricSelect = useCallback(
+    (metricId: string) => {
+      prevSelectedMetricIdRef.current = selectedMetricId;
+      setSelectedMetricId(metricId);
+    },
+    [selectedMetricId],
+  );
+
+  const onStepChange = useCallback(
+    (step: string) => {
+      if (step === MetricStep.Configuration) prevSelectedMetricIdRef.current = selectedMetricId;
+      setCurrentStepId(step);
+    },
+    [selectedMetricId],
+  );
+
   return (
     <DialPopup
       onClose={onClose}
@@ -156,7 +193,7 @@ const AddMetricModal: FC<Props> = ({
       portalId="AddMetricModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[800px]"
+      className="h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]"
       dividers
       footer={
         isEditMode ? (
@@ -168,7 +205,7 @@ const AddMetricModal: FC<Props> = ({
           <StepperModalButtons
             steps={steps}
             currentStep={steps.find((s) => s.id === currentStepId)}
-            onChangeStep={setCurrentStepId}
+            onChangeStep={onStepChange}
             onFinishClick={onFinishClick}
             onClose={onClose}
           />
@@ -176,13 +213,7 @@ const AddMetricModal: FC<Props> = ({
       }
     >
       <div className="h-full flex flex-col min-h-0 px-6 py-4">
-        {!isEditMode && (
-          <DialSteps
-            steps={steps}
-            currentStep={currentStepId}
-            onChangeStep={(step) => setCurrentStepId(step as MetricStep)}
-          />
-        )}
+        {!isEditMode && <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onStepChange} />}
 
         <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
           {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <DialLoader size={44} />}
@@ -191,7 +222,9 @@ const AddMetricModal: FC<Props> = ({
             <MetricSelection
               metrics={metricDeclarations || []}
               selectedMetricId={selectedMetricId}
-              onSelectMetric={setSelectedMetricId}
+              columnOrder={metricColumnOrder}
+              onSelectMetric={onMetricSelect}
+              onChangeColumnOrder={setMetricColumnOrder}
             />
           )}
 
@@ -204,6 +237,7 @@ const AddMetricModal: FC<Props> = ({
               onChangeName={setMetricName}
               selectedTestSuite={selectedTestSuite}
               testCaseSchema={dataset?.testCaseSchema}
+              samples={attributeSamples}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
               onChangeInputBindings={setInputBindings}

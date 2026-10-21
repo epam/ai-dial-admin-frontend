@@ -15,8 +15,13 @@ vi.mock('next-auth/react', () => ({
   }),
 }));
 
+// One shared router, like the real one: `Breadcrumbs` lists it as an effect dependency.
+const { router } = vi.hoisted(() => ({ router: { push: vi.fn() } }));
+
 vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => router),
   usePathname: vi.fn(() => '/en/models'),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
 describe('Header', () => {

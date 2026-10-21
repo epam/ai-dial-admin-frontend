@@ -1,0 +1,130 @@
+'use server';
+
+import { cookies, headers } from 'next/headers';
+
+import { appRunnerSchemaApi, assetApi, configFileApi } from '@/src/app/api/api';
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { stripMetadata } from '@/src/server/assets/exim';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
+import { ResourceType } from '@/src/types/resource-type';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
+import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+
+const MISSING_ID_ERROR: ServerActionResponse = {
+  success: false,
+  errorHeader: 'Missing application runner id',
+  errorMessage: 'An application runner needs a declared schema id.',
+};
+
+const MISSING_NAME_ERROR: ServerActionResponse = {
+  success: false,
+  errorHeader: 'Missing application runner name',
+  errorMessage: 'An application runner needs a storage name DIAL Core can address.',
+};
+
+const INVALID_ID_ERROR: ServerActionResponse = {
+  success: false,
+  errorHeader: 'Invalid application runner id',
+  errorMessage: `The id must not contain any of the characters ${CORE_UNENCODABLE_ID_CHARS.join(
+    ' ',
+  )}, which DIAL Core cannot store.`,
+};
+
+const checkRunnerId = (id?: string): ServerActionResponse | null => {
+  if (!id?.trim()) {
+    return MISSING_ID_ERROR;
+  }
+  return hasUnencodableSchemaIdChars(id) ? INVALID_ID_ERROR : null;
+};
+
+const checkRunnerName = (name?: string): ServerActionResponse | null => {
+  if (!name?.trim()) {
+    return MISSING_NAME_ERROR;
+  }
+  return hasUnencodableSchemaIdChars(name) ? INVALID_ID_ERROR : null;
+};
+
+/**
+ * Core stores this resource's body verbatim (`WriteSpec.entityClass == null`), so anything sent
+ * persists permanently in the stored schema — including the `name` and `status` Core itself injects
+ * on read, which would then break meta-schema conformance. `status` (with `validationWarnings`) and
+ * every other merge graft now nest under `_metadata`, which `stripMetadata` drops wholesale (see
+ * the `core-resource-entity-metadata` capability); `name` is additionally stripped because Core
+ * re-injects it flat on every read, and `createdAt`/`updatedAt` because `ModifiedEntity` types the
+ * pair. Everything not part of the schema is dropped here rather than relying on Core to filter it.
+ */
+function toRunnerPayload(runner: DialAppRunnerResource) {
+  const { name: __name, createdAt: __createdAt, updatedAt: __updatedAt, ...payload } = stripMetadata(runner);
+  return payload;
+}
+
+export async function getRunners(path: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.list(token, ResourceType.APP_TYPE_SCHEMA, path);
+}
+
+export async function getAllRunners() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.list(token, ResourceType.APP_TYPE_SCHEMA, '');
+}
+
+export async function createRunner(runner: DialAppRunnerResource): Promise<ServerActionResponse> {
+  const idError = checkRunnerId(runner.$id);
+  if (idError) {
+    return idError;
+  }
+  const nameError = checkRunnerName(runner.name);
+  if (nameError) {
+    return nameError;
+  }
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.put(token, ResourceType.APP_TYPE_SCHEMA, runner.name as string, toRunnerPayload(runner));
+}
+
+export async function getRunner(path: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMergedWithEtag<DialAppRunnerResource>(token, ResourceType.APP_TYPE_SCHEMA, path, etag);
+}
+
+export async function updateRunner(runner: DialAppRunnerResource, etag: string): Promise<ServerActionResponse> {
+  const idError = checkRunnerId(runner.$id);
+  if (idError) {
+    return idError;
+  }
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.put(token, ResourceType.APP_TYPE_SCHEMA, runner.name as string, toRunnerPayload(runner), {
+    etag,
+  });
+}
+
+export async function removeRunner(path: string, etag?: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.delete(token, ResourceType.APP_TYPE_SCHEMA, path, etag);
+}
+
+export async function bulkDeleteRunners(paths: { path: string }[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return bulkDeleteAssets(assetApi, token, ResourceType.APP_TYPE_SCHEMA, paths);
+}
+
+export async function getResolvedRunnerSchema(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return appRunnerSchemaApi.resolvedSchema(token, name);
+}
+
+/** `config-file-entity-views`: the App Runner names Core's config file declares (`schemas` type). */
+export async function getConfigFileAppRunners() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Schemas);
+}
+
+/** `config-file-entity-views`: reads an App Runner by id from Core's config-file `schemas` population directly. */
+export async function getConfigFileAppRunner(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, id);
+}

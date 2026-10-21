@@ -1,11 +1,13 @@
 import { getVersionedName } from '@/src/server/publications/path';
 
 /**
- * Shared by every versioned asset type's import (prompts/toolsets/applications): resolves
- * the destination path for an imported entity. `flatImport` drops the entity's original
- * intermediate folder segments, landing it directly under the destination root; otherwise
- * the original folder structure (relative to its own bucket root) is preserved under the
- * destination root.
+ * Shared by every asset type's import (prompts/toolsets/applications): resolves the
+ * destination path for an imported entity. Versioned types (application/toolset) pass the
+ * entity's parsed `version` so it is rejoined onto the name; versionless types (prompt/
+ * conversation) pass `undefined` and the name is used as-is. `flatImport` drops the entity's
+ * original intermediate folder segments, landing it directly under the destination root;
+ * otherwise the original folder structure (relative to its own bucket root) is preserved
+ * under the destination root.
  */
 export const resolveImportDestination = (
   destinationRoot: string,

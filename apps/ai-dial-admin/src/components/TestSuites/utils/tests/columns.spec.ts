@@ -1,9 +1,40 @@
+import { ColDef, ICellRendererParams, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
+import { ReactElement } from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { getTestCaseColumns, getSchemaFieldGridColumns } from '../columns';
+import {
+  CONTENT_FIT_COLUMN_IDS,
+  getTestCaseColumns,
+  getSchemaFieldGridColumns,
+  getValidityStatusColumn,
+  INCLUDED_IN_RUN_COLUMN_ID,
+  VALIDITY_STATUS_COLUMN_ID,
+} from '../columns';
+import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { ApplicationRoute } from '@/src/types/routes';
+import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
+import { ComparisonNode, ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
 import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { GridRowType } from '@/src/types/grid-row-type';
+
+const makeTestCaseFilter = (): ComparisonNode => ({
+  op: ComparisonOp.Ne,
+  args: [
+    { type: ExprType.Field, name: 'testCaseName' },
+    { type: ExprType.Value, value_type: ValueType.String, value: 'blr' },
+  ],
+});
+
+// `ColDef.valueGetter` is `string | ValueGetterFunc`, so it cannot be called through the union.
+const valueGetterOf = (column?: ColDef): ValueGetterFunc => {
+  const valueGetter = column?.valueGetter;
+  if (typeof valueGetter !== 'function') {
+    throw new Error(`column ${column?.field} has no valueGetter function`);
+  }
+  return valueGetter;
+};
 
 const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
   name,
@@ -129,8 +160,81 @@ describe('getTestCaseColumns', () => {
     const promptColumn = result.find((column) => column.field === 'prompt');
 
     expect(promptColumn).toBeDefined();
-    expect(promptColumn?.valueGetter?.({ data: { prompt: 'fallback value', data: undefined } } as never)).toBe(
-      'fallback value',
+    expect(
+      valueGetterOf(promptColumn)({ data: { prompt: 'fallback value', data: undefined } } as ValueGetterParams),
+    ).toBe('fallback value');
+  });
+
+  test('should default the includedInRun column to a descending sort when a run condition is active', () => {
+    const suite: TestSuite = { testCaseFilter: makeTestCaseFilter() };
+    const result = getTestCaseColumns({ suite, onCellChange, onToggleExpand: () => {}, schema: [] });
+    const includedInRunColumn = result.find((column) => column.colId === 'includedInRun');
+
+    // Declaring the sort on the colDef (not only applying it imperatively) is what lets it survive a
+    // grid remount, e.g. leaving the Test Cases tab and coming back — see TestCasesList's comment.
+    expect(includedInRunColumn?.sort).toBe('desc');
+  });
+
+  test('should not default-sort the includedInRun column when no run condition is active', () => {
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema: [] });
+    const includedInRunColumn = result.find((column) => column.colId === 'includedInRun');
+
+    expect(includedInRunColumn?.sort).toBeFalsy();
+  });
+
+  test('caps the ID column width instead of giving it a share of the available space', () => {
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema: [] });
+    const idColumn = result.find((column) => column.colId === 'id');
+
+    expect(idColumn?.maxWidth).toBe(200);
+  });
+
+  test('excludes includedInRun and status from fitGridWidth so they can be sized to their content', () => {
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema: [] });
+    const includedInRunColumn = result.find((column) => column.colId === INCLUDED_IN_RUN_COLUMN_ID);
+    const statusColumn = result.find((column) => column.colId === VALIDITY_STATUS_COLUMN_ID);
+
+    expect(includedInRunColumn?.suppressSizeToFit).toBe(true);
+    expect(statusColumn?.suppressSizeToFit).toBe(true);
+    expect(CONTENT_FIT_COLUMN_IDS).toEqual([INCLUDED_IN_RUN_COLUMN_ID, VALIDITY_STATUS_COLUMN_ID]);
+  });
+
+  test('leaves name and schema columns to stretch or shrink with the rest of the grid', () => {
+    const schema = [makeSchema('temperature')];
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema });
+    const nameColumn = result.find((column) => column.colId === 'testCaseName');
+    const schemaColumn = result.find((column) => column.field === 'temperature');
+
+    expect(nameColumn?.suppressSizeToFit).toBeFalsy();
+    expect(schemaColumn?.suppressSizeToFit).toBeFalsy();
+  });
+
+  describe('file field context', () => {
+    const fileSchema = [makeSchema('attachment', TestCaseItemType.FILE)];
+    const getFileParams = (dataset?: Dataset) => {
+      const [, , , , fileColumn] = getTestCaseColumns({
+        suite: { id: 'suite-1' },
+        dataset,
+        onCellChange,
+        onToggleExpand: () => {},
+        schema: fileSchema,
+      });
+      return fileColumn.cellRendererSelector?.({ data: {} } as ICellRendererParams)?.params;
+    };
+
+    test('should bind files to a private dataset', () => {
+      expect(getFileParams({ id: 'dataset-1', visibility: DatasetVisibility.PRIVATE })).toEqual(
+        expect.objectContaining({ id: 'dataset-1', view: ApplicationRoute.Datasets }),
+      );
+    });
+
+    test.each([undefined, { id: 'dataset-1', visibility: DatasetVisibility.PUBLIC }])(
+      'should bind files to the suite when dataset is %o',
+      (dataset) => {
+        expect(getFileParams(dataset)).toEqual(
+          expect.objectContaining({ id: 'suite-1', view: ApplicationRoute.TestSuites }),
+        );
+      },
     );
   });
 });
@@ -212,5 +316,84 @@ describe('getSchemaFieldGridColumns', () => {
       expect(col.filter).toBe(false);
       expect(col.floatingFilter).toBe(false);
     });
+  });
+});
+
+describe('getValidityStatusColumn', () => {
+  const label = 'Test case error';
+  const warning = { code: 'A', message: 'a', path: 'data.a', fieldName: 'a' };
+
+  const renderCell = (data?: ValidityStatusRow) => {
+    const renderer = getValidityStatusColumn(label).cellRenderer as (params: {
+      data?: ValidityStatusRow;
+    }) => ReactElement | null;
+
+    return renderer({ data });
+  };
+
+  test('should render nothing when there is no row data', () => {
+    expect(renderCell(undefined)).toBeNull();
+  });
+
+  test('should render the status of a group row', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.GROUP,
+      valid: false,
+      validationWarnings: [warning],
+    });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: false, message: 'a', label }));
+  });
+
+  test('should render nothing on a turn row of an expanded group', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.TURN,
+      isFlattened: false,
+      valid: false,
+      validationWarnings: [warning],
+    });
+
+    expect(element).toBeNull();
+  });
+
+  test('should render the status on a flattened turn row, which has no group row', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.TURN,
+      isFlattened: true,
+      valid: false,
+      validationWarnings: [warning],
+    });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: false, message: 'a' }));
+  });
+
+  test('should render the status of a single row', () => {
+    const element = renderCell({ id: 'case-1', createdAt: 0, rowType: GridRowType.SINGLE, valid: true });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: true, message: '' }));
+  });
+
+  test('should render the status of a row that has no row type', () => {
+    const element = renderCell({ id: 'case-1', createdAt: 0, valid: false, validationWarnings: [warning] });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: false, message: 'a' }));
+  });
+
+  test('should join multiple warning messages', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.GROUP,
+      valid: false,
+      validationWarnings: [warning, { code: 'B', message: 'b', path: 'data.b', fieldName: 'b' }],
+    });
+
+    expect(element?.props).toEqual(expect.objectContaining({ message: 'a, \nb' }));
   });
 });

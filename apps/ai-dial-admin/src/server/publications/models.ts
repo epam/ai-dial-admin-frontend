@@ -14,6 +14,7 @@ export enum CoreResourceType {
   PROMPT = 'PROMPT',
   TOOL_SET = 'TOOL_SET',
   FILE = 'FILE',
+  SKILL = 'SKILL',
 }
 
 /** A single resource entry within a DIAL Core publication (`PublicationResourceDto`). */

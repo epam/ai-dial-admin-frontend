@@ -7,21 +7,32 @@ import {
   createDraftSchemaForm,
   createTableForm,
   getColumnRowErrors,
+  getGrainKeyColumnNames,
+  getIdentityColumnNames,
+  getOrderingKeyColumnNames,
+  getPartitionColumnNames,
+  getVersionColumnNames,
   hasColumnRowErrors,
+  isDropRestrictedColumn,
+  isNullableLockedType,
   isRenameRestricted,
+  isScanMetadataColumn,
   parseRowsJson,
+  reconcileKeySelections,
   tableDetailHref,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
+import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsTable,
   AnalyticsTableColumn,
   AnalyticsTableType,
   PartitionGranularity,
+  TableWriteMode,
 } from '@/src/models/analytics/table';
-import { ColumnEditValues, ColumnRow } from '@/src/models/analytics/tables-ui';
+import { ColumnEditValues, ColumnRow, KeySelections } from '@/src/models/analytics/tables-ui';
 
 describe('createTableForm', () => {
   test('starts blank, defaulting the enrichment source table to the first source in the catalog', () => {
@@ -29,11 +40,21 @@ describe('createTableForm', () => {
       { name: 'events', type: AnalyticsTableType.Enrichment, source_table: 'orders' },
       { name: 'orders', type: AnalyticsTableType.Source },
     ];
-    expect(createTableForm(tables)).toEqual({ name: '', description: '', sourceTable: 'orders' });
+    expect(createTableForm(tables)).toEqual({
+      name: '',
+      description: '',
+      sourceTable: 'orders',
+      write: TableWriteMode.Append,
+    });
   });
 
   test('has no default source table when the catalog has none', () => {
-    expect(createTableForm([])).toEqual({ name: '', description: '', sourceTable: '' });
+    expect(createTableForm([])).toEqual({
+      name: '',
+      description: '',
+      sourceTable: '',
+      write: TableWriteMode.Append,
+    });
   });
 });
 
@@ -62,6 +83,287 @@ describe('createDraftSchemaForm', () => {
     expect(form.granularity).toBe(PartitionGranularity.Month);
     expect(form.grainKey).toBe('order_id');
   });
+
+  // A FAILED table is resubmitted from this seed, so metadata the user already authored must survive the
+  // round-trip rather than being silently dropped on retry.
+  test('seeds a column display name and description from an already-drafted table', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [
+        {
+          source_name: 'total_tokens',
+          name: 'total_tokens',
+          type: AnalyticsFieldType.Long,
+          display_name: 'Total tokens',
+          description: 'Prompt plus completion tokens',
+        },
+      ],
+    });
+    expect(form.columns[0]).toMatchObject({
+      display_name: 'Total tokens',
+      description: 'Prompt plus completion tokens',
+    });
+  });
+
+  test('seeds a column with no stored display name or description as blank strings', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [{ source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp }],
+    });
+    expect(form.columns[0]).toMatchObject({ display_name: '', description: '' });
+  });
+
+  test('seeds the scan-metadata pair, which a re-post cannot clear', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      identity_column: 'order_id',
+      version_column: 'seen_at',
+    });
+    expect(form.identityColumn).toBe('order_id');
+    expect(form.versionColumn).toBe('seen_at');
+  });
+
+  test('leaves the scan-metadata pair empty when the table declares neither', () => {
+    const form = createDraftSchemaForm({ name: 'orders', type: AnalyticsTableType.Source });
+    expect(form).toMatchObject({ identityColumn: '', versionColumn: '' });
+  });
+});
+
+const row = (overrides: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow(), ...overrides });
+
+describe('getIdentityColumnNames / getVersionColumnNames', () => {
+  const rows: ColumnRow[] = [
+    row({ source_name: 'order_id', name: 'order_id', type: AnalyticsFieldType.Uuid }),
+    row({ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+    row({ source_name: 'closed_at', name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true }),
+    row({ source_name: 'secret_at', name: 'secret_at', type: AnalyticsFieldType.Timestamp, sensitive: true }),
+    row({ source_name: 'event_date', name: 'event_date', type: AnalyticsFieldType.Date }),
+    row({ source_name: '  ', name: '  ', type: AnalyticsFieldType.String }),
+  ];
+
+  test('identity options exclude nullable, sensitive, and blank rows but allow any type', () => {
+    expect(getIdentityColumnNames(rows)).toEqual(['order_id', 'seen_at', 'event_date']);
+  });
+
+  test.each([AnalyticsFieldType.Array, AnalyticsFieldType.Object, AnalyticsFieldType.Map])(
+    'identity options exclude a %s column, which the backend refuses as a scan cursor',
+    (type) => {
+      const withRefused = [...rows, row({ source_name: 'refused', name: 'refused', type })];
+      expect(getIdentityColumnNames(withRefused)).toEqual(['order_id', 'seen_at', 'event_date']);
+    },
+  );
+
+  test('version options narrow the same set to Timestamp — a Date is rejected by the backend', () => {
+    expect(getVersionColumnNames(rows)).toEqual(['seen_at']);
+  });
+
+  test('both de-duplicate repeated source names and return empty for no rows', () => {
+    const dupes = [
+      row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+      row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+    ];
+    expect(getIdentityColumnNames(dupes)).toEqual(['seen_at']);
+    expect(getVersionColumnNames(dupes)).toEqual(['seen_at']);
+    expect(getIdentityColumnNames([])).toEqual([]);
+    expect(getVersionColumnNames([])).toEqual([]);
+  });
+});
+
+describe('key column eligibility', () => {
+  const rows: ColumnRow[] = [
+    row({ source_name: 'id', type: AnalyticsFieldType.Uuid }),
+    row({ source_name: 'maybe', type: AnalyticsFieldType.String, nullable: true }),
+    row({ source_name: 'payload', type: AnalyticsFieldType.Object }),
+    row({ source_name: 'attrs', type: AnalyticsFieldType.Map }),
+    row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+    row({ source_name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true }),
+    row({ source_name: 'secret_day', type: AnalyticsFieldType.Date, sensitive: true }),
+  ];
+
+  test('the ordering key excludes nullable, Object and Map columns', () => {
+    expect(getOrderingKeyColumnNames(rows)).toEqual(['id', 'seen_at', 'secret_day']);
+  });
+
+  test('the partition column offers only non-nullable Date and Timestamp columns, sensitive included', () => {
+    expect(getPartitionColumnNames(rows)).toEqual(['seen_at', 'secret_day']);
+  });
+
+  test('the grain key excludes Object and Map columns of the source table and keeps the rest', () => {
+    const column = (source_name: string, type: AnalyticsFieldType): AnalyticsTableColumn => ({
+      source_name,
+      name: source_name,
+      type,
+    });
+    expect(
+      getGrainKeyColumnNames([
+        column('id', AnalyticsFieldType.Uuid),
+        column('payload', AnalyticsFieldType.Object),
+        column('attrs', AnalyticsFieldType.Map),
+        column('maybe', AnalyticsFieldType.String),
+      ]),
+    ).toEqual(['id', 'maybe']);
+  });
+});
+
+describe('reconcileKeySelections', () => {
+  const selections: KeySelections = {
+    orderingKey: ['id', 'seen_at'],
+    partitionColumn: 'seen_at',
+    granularity: PartitionGranularity.Month,
+    identityColumn: 'id',
+    versionColumn: 'seen_at',
+  };
+  const id = row({ source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid });
+  const seenAt = row({ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp });
+  const prevRows = [id, seenAt];
+
+  test('leaves every selection alone when nothing it references changed', () => {
+    expect(reconcileKeySelections(prevRows, [{ ...id }, { ...seenAt }], selections)).toEqual(selections);
+  });
+
+  test('carries a renamed column to its new name in all four fields', () => {
+    const renamed = { ...seenAt, source_name: 'seen_on', name: 'seen_on' };
+    expect(reconcileKeySelections(prevRows, [id, renamed], selections)).toEqual({
+      orderingKey: ['id', 'seen_on'],
+      partitionColumn: 'seen_on',
+      granularity: PartitionGranularity.Month,
+      identityColumn: 'id',
+      versionColumn: 'seen_on',
+    });
+  });
+
+  test('clears the selections of a column renamed to a blank name, and the granularity with the partition', () => {
+    const blank = { ...seenAt, source_name: '', name: '' };
+    expect(reconcileKeySelections(prevRows, [id, blank], selections)).toEqual({
+      orderingKey: ['id'],
+      partitionColumn: '',
+      granularity: '',
+      identityColumn: 'id',
+      versionColumn: '',
+    });
+  });
+
+  test('does not follow a rename while another row still carries the old name', () => {
+    const renamed = { ...seenAt, source_name: 'seen_on', name: 'seen_on' };
+    const twin = row({ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp });
+    expect(reconcileKeySelections(prevRows, [id, renamed, twin], selections).partitionColumn).toBe('seen_at');
+  });
+
+  test('does not move a selection onto a name that another row already carries', () => {
+    const taken = row({ source_name: 'seen_on', name: 'seen_on', type: AnalyticsFieldType.Timestamp });
+    const renamed = { ...seenAt, source_name: 'seen_on', name: 'seen_on' };
+
+    expect(reconcileKeySelections([id, seenAt, taken], [id, renamed, taken], selections).partitionColumn).toBe('');
+  });
+
+  test('drops an ordering key or partition column flipped to nullable, and an ordering key and identity column retyped to Object', () => {
+    const nullable = { ...seenAt, nullable: true };
+    expect(reconcileKeySelections(prevRows, [id, nullable], selections)).toMatchObject({
+      orderingKey: ['id'],
+      partitionColumn: '',
+      granularity: '',
+    });
+    const asObject = { ...id, type: AnalyticsFieldType.Object };
+    expect(reconcileKeySelections(prevRows, [asObject, seenAt], selections)).toMatchObject({
+      orderingKey: ['seen_at'],
+      identityColumn: '',
+    });
+  });
+
+  test('drops an ordering key and an identity column retyped to Map', () => {
+    const asMap = { ...id, type: AnalyticsFieldType.Map };
+    expect(reconcileKeySelections(prevRows, [asMap, seenAt], selections)).toMatchObject({
+      orderingKey: ['seen_at'],
+      identityColumn: '',
+    });
+  });
+
+  test('drops a removed column from every field and keeps an empty granularity untouched', () => {
+    expect(reconcileKeySelections(prevRows, [id], { ...selections, granularity: '' })).toEqual({
+      orderingKey: ['id'],
+      partitionColumn: '',
+      granularity: '',
+      identityColumn: 'id',
+      versionColumn: '',
+    });
+  });
+
+  test('collapses two ordering-key entries that land on the same name', () => {
+    const other = row({ source_name: 'other', name: 'other', type: AnalyticsFieldType.String });
+    const renamed = { ...other, source_name: 'id', name: 'id' };
+    const two = { ...selections, orderingKey: ['id', 'other'] };
+    expect(reconcileKeySelections([id, other], [{ ...id, source_name: 'gone' }, renamed], two).orderingKey).toEqual([
+      'id',
+    ]);
+  });
+});
+
+describe('isNullableLockedType', () => {
+  test('locks the flag for Array, Object and Map, which the backend refuses as nullable', () => {
+    expect(isNullableLockedType(AnalyticsFieldType.Array)).toBe(true);
+    expect(isNullableLockedType(AnalyticsFieldType.Object)).toBe(true);
+    expect(isNullableLockedType(AnalyticsFieldType.Map)).toBe(true);
+  });
+
+  test('leaves the flag open for a scalar type', () => {
+    expect(isNullableLockedType(AnalyticsFieldType.String)).toBe(false);
+    expect(isNullableLockedType(AnalyticsFieldType.Enum)).toBe(false);
+  });
+});
+
+describe('column type options', () => {
+  test('the column-type picker offers Map, last, past the long-established Array', () => {
+    expect(COLUMN_TYPE_OPTIONS.map((option) => option.value).slice(-2)).toEqual([
+      AnalyticsFieldType.Array,
+      AnalyticsFieldType.Map,
+    ]);
+  });
+
+  test('an array element type cannot be a Map', () => {
+    const values = ELEMENT_TYPE_OPTIONS.map((option) => option.value);
+    expect(values).not.toContain(AnalyticsFieldType.Map);
+    expect(values).not.toContain(AnalyticsFieldType.Object);
+    expect(values).toContain(AnalyticsFieldType.String);
+  });
+});
+
+describe('isScanMetadataColumn', () => {
+  const table: AnalyticsTable = {
+    name: 'orders',
+    type: AnalyticsTableType.Source,
+    identity_column: 'order_id',
+    version_column: 'seen_at',
+  };
+  const column = (source_name: string, name = source_name): AnalyticsTableColumn => ({
+    source_name,
+    name,
+    type: AnalyticsFieldType.String,
+  });
+
+  test('matches either member of the pair', () => {
+    expect(isScanMetadataColumn(table, column('order_id'))).toBe(true);
+    expect(isScanMetadataColumn(table, column('seen_at'))).toBe(true);
+  });
+
+  test('does not match a column outside the pair', () => {
+    expect(isScanMetadataColumn(table, column('total'))).toBe(false);
+  });
+
+  test('matches on the physical source name, not the exposed name a rename diverged', () => {
+    // Renamed: exposed `identifier`, still physically `order_id` — the backend resolves its guards by the
+    // physical name, so this must still match.
+    expect(isScanMetadataColumn(table, column('order_id', 'identifier'))).toBe(true);
+    // The reverse: an unrelated column whose exposed name happens to read like the stored member.
+    expect(isScanMetadataColumn(table, column('total', 'order_id'))).toBe(false);
+  });
+
+  test('matches nothing when the table declares no pair', () => {
+    const bare: AnalyticsTable = { name: 'orders', type: AnalyticsTableType.Source };
+    expect(isScanMetadataColumn(bare, column('order_id'))).toBe(false);
+  });
 });
 
 describe('tableDetailHref', () => {
@@ -82,45 +384,85 @@ describe('createColumnRow', () => {
       type: AnalyticsFieldType.String,
       element_type: '',
       tag: '',
+      display_name: '',
+      description: '',
       nullable: false,
       sensitive: false,
     });
   });
 });
 
+describe('enum column row validation', () => {
+  const t = (key: string) => key;
+  const noExisting = { sourceNames: [], names: [] };
+
+  test('an Enum row with no declared values errors and blocks save', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'status', name: 'status', type: AnalyticsFieldType.Enum })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBe(AnalyticsTablesI18nKey.EnumValuesRequired);
+    expect(hasColumnRowErrors(errors)).toBe(true);
+  });
+
+  test('an Enum row with a valid domain has no error', () => {
+    const errors = getColumnRowErrors(
+      [
+        row({
+          source_name: 'status',
+          name: 'status',
+          type: AnalyticsFieldType.Enum,
+          enum_values: ['pending', 'failed'],
+        }),
+      ],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBeUndefined();
+    expect(hasColumnRowErrors(errors)).toBe(false);
+  });
+
+  test('a duplicate after trimming errors', () => {
+    const errors = getColumnRowErrors(
+      [
+        row({
+          source_name: 'status',
+          name: 'status',
+          type: AnalyticsFieldType.Enum,
+          enum_values: ['failed', 'failed '],
+        }),
+      ],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBe(AnalyticsTablesI18nKey.EnumValueDuplicate);
+  });
+
+  // The rule is required-iff-enum: an empty list on any other type is not an error.
+  test('a non-Enum row with no values is not checked', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'status', name: 'status', type: AnalyticsFieldType.String })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBeUndefined();
+    expect(hasColumnRowErrors(errors)).toBe(false);
+  });
+});
+
 describe('toTableColumns', () => {
   test('keeps only rows with both source_name and name, trims, and omits empty tag', () => {
     const rows = [
-      {
-        id: '1',
+      row({
         source_name: ' event_id ',
         name: ' event ',
         type: AnalyticsFieldType.Uuid,
-        element_type: '' as const,
         tag: ' identity ',
         nullable: true,
-        sensitive: false,
-      },
-      {
-        id: '2',
-        source_name: '',
-        name: 'skip',
-        type: AnalyticsFieldType.String,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
-      {
-        id: '3',
-        source_name: 'x',
-        name: 'x',
-        type: AnalyticsFieldType.Long,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
+      }),
+      row({ source_name: '', name: 'skip' }),
+      row({ source_name: 'x', name: 'x', type: AnalyticsFieldType.Long }),
     ];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid, nullable: true, tag: 'identity' },
@@ -128,28 +470,24 @@ describe('toTableColumns', () => {
     ]);
   });
 
+  test('an Array or Object row never carries nullable: true, whatever the stored flag says', () => {
+    const rows = [
+      row({
+        source_name: 'tags',
+        name: 'tags',
+        type: AnalyticsFieldType.Array,
+        element_type: AnalyticsFieldType.String,
+        nullable: true,
+      }),
+      row({ source_name: 'extra', name: 'extra', type: AnalyticsFieldType.Object, nullable: true }),
+    ];
+    expect(toTableColumns(rows).map((c) => c.nullable)).toEqual([false, false]);
+  });
+
   test('sensitive rows carry sensitive: true; non-sensitive rows omit the field', () => {
     const rows = [
-      {
-        id: '1',
-        source_name: 'email',
-        name: 'email',
-        type: AnalyticsFieldType.String,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: true,
-      },
-      {
-        id: '2',
-        source_name: 'total',
-        name: 'total',
-        type: AnalyticsFieldType.Decimal,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
+      row({ source_name: 'email', name: 'email', sensitive: true }),
+      row({ source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal }),
     ];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'email', name: 'email', type: AnalyticsFieldType.String, nullable: false, sensitive: true },
@@ -157,18 +495,45 @@ describe('toTableColumns', () => {
     ]);
   });
 
+  test('an Enum row carries its enum_values, trimmed and in the authored order', () => {
+    const rows = [
+      row({
+        source_name: 'status',
+        name: 'status',
+        type: AnalyticsFieldType.Enum,
+        enum_values: ['low', ' medium ', 'high'],
+      }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      {
+        source_name: 'status',
+        name: 'status',
+        type: AnalyticsFieldType.Enum,
+        nullable: false,
+        enum_values: ['low', 'medium', 'high'],
+      },
+    ]);
+  });
+
+  // Gated on the type, so a row retyped away from Enum cannot submit a domain it no longer has.
+  test('a non-Enum row omits enum_values even when the draft still holds some', () => {
+    const rows = [
+      row({ source_name: 'status', name: 'status', type: AnalyticsFieldType.String, enum_values: ['low', 'high'] }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'status', name: 'status', type: AnalyticsFieldType.String, nullable: false },
+    ]);
+  });
+
   test('an Array row carries its element_type and is forced non-nullable', () => {
     const rows = [
-      {
-        id: '1',
+      row({
         source_name: 'tags',
         name: 'tags',
         type: AnalyticsFieldType.Array,
         element_type: AnalyticsFieldType.String,
-        tag: '',
         nullable: true,
-        sensitive: false,
-      },
+      }),
     ];
     expect(toTableColumns(rows)).toEqual([
       {
@@ -182,20 +547,51 @@ describe('toTableColumns', () => {
   });
 
   test('an Array row with no element_type chosen yet omits the field rather than sending an empty value', () => {
-    const rows = [
-      {
-        id: '1',
-        source_name: 'tags',
-        name: 'tags',
-        type: AnalyticsFieldType.Array,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
-    ];
+    const rows = [row({ source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, element_type: '' })];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, nullable: false },
+    ]);
+  });
+
+  test('carries a filled display name and description, trimmed', () => {
+    const rows = [
+      row({
+        source_name: 'total_tokens',
+        name: 'total_tokens',
+        type: AnalyticsFieldType.Long,
+        display_name: '  Total tokens  ',
+        description: '  Prompt plus completion tokens  ',
+      }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      {
+        source_name: 'total_tokens',
+        name: 'total_tokens',
+        type: AnalyticsFieldType.Long,
+        nullable: false,
+        display_name: 'Total tokens',
+        description: 'Prompt plus completion tokens',
+      },
+    ]);
+  });
+
+  // Blank means "not set" at creation time, so the key is omitted rather than sent as an empty string —
+  // unlike the edit modal, where a blank value is the signal that clears a stored one.
+  test('omits a blank or whitespace-only display name and description', () => {
+    const rows = [
+      row({ source_name: 'a', name: 'a', display_name: '', description: '' }),
+      row({ source_name: 'b', name: 'b', display_name: '   ', description: '  ' }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'a', name: 'a', type: AnalyticsFieldType.String, nullable: false },
+      { source_name: 'b', name: 'b', type: AnalyticsFieldType.String, nullable: false },
+    ]);
+  });
+
+  test('carries one of the pair when only the other is blank', () => {
+    const rows = [row({ source_name: 'a', name: 'a', display_name: 'A value', description: '' })];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'a', name: 'a', type: AnalyticsFieldType.String, nullable: false, display_name: 'A value' },
     ]);
   });
 });
@@ -332,6 +728,35 @@ describe('getColumnRowErrors / hasColumnRowErrors', () => {
     expect(hasColumnRowErrors(errors)).toBe(true);
   });
 
+  test('flags a display name over its 128-char cap and a description over its 1024-char cap', () => {
+    const errors = getColumnRowErrors(
+      [row({ display_name: 'a'.repeat(129) }), row({ description: 'b'.repeat(1025) })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].display_name).toBe(ErrorI18nKey.Length);
+    expect(errors[1].description).toBe(ErrorI18nKey.Length);
+    expect(hasColumnRowErrors(errors)).toBe(true);
+  });
+
+  test('accepts a display name and description exactly at their caps', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'a', name: 'a', display_name: 'a'.repeat(128), description: 'b'.repeat(1024) })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].display_name).toBeUndefined();
+    expect(errors[0].description).toBeUndefined();
+    expect(hasColumnRowErrors(errors)).toBe(false);
+  });
+
+  // These two keys are the ones a boolean-OR gate silently forgets: an unlisted key reads as undefined,
+  // so the error is computed and then ignored, letting an over-cap value reach the backend as a 422.
+  test('reports an error carrying only a display name or only a description', () => {
+    expect(hasColumnRowErrors([{ display_name: ErrorI18nKey.Length }])).toBe(true);
+    expect(hasColumnRowErrors([{ description: ErrorI18nKey.Length }])).toBe(true);
+  });
+
   test('flags an Array row with no element_type chosen', () => {
     const errors = getColumnRowErrors([row({ type: AnalyticsFieldType.Array, element_type: '' })], noExisting, t);
     expect(errors[0].element_type).toBe(ErrorI18nKey.RequiredField);
@@ -371,8 +796,52 @@ describe('isRenameRestricted', () => {
     expect(isRenameRestricted(tableWith({ ordering_key: ['request_time'] }), column('request_time'))).toBe(true);
   });
 
+  test('a partition column is restricted', () => {
+    const partitioned = tableWith({ partition_by: { column: 'event_date', granularity: PartitionGranularity.Month } });
+    expect(isRenameRestricted(partitioned, column('event_date'))).toBe(true);
+  });
+
   test('ordinary columns are not restricted', () => {
     expect(isRenameRestricted(tableWith({ ordering_key: ['request_time'] }), column('total_money'))).toBe(false);
+  });
+});
+
+describe('isDropRestrictedColumn', () => {
+  const tableWith = (overrides?: Partial<AnalyticsTable>): AnalyticsTable => ({
+    name: 'events',
+    type: AnalyticsTableType.Source,
+    ordering_key: ['request_time'],
+    partition_by: { column: 'event_date', granularity: PartitionGranularity.Month },
+    identity_column: 'event_id',
+    version_column: 'ingested_at',
+    ...overrides,
+  });
+  const column = (source_name: string): AnalyticsTableColumn => ({
+    source_name,
+    name: source_name,
+    type: AnalyticsFieldType.String,
+  });
+
+  test.each(['request_time', 'event_date', 'event_id', 'ingested_at'])(
+    'the %s column, named by a key of the table, cannot be dropped',
+    (name) => {
+      expect(isDropRestrictedColumn(tableWith(), column(name))).toBe(true);
+    },
+  );
+
+  test('an ordinary column can be dropped, and so can every column of a table with no keys declared', () => {
+    expect(isDropRestrictedColumn(tableWith(), column('total_money'))).toBe(false);
+    expect(
+      isDropRestrictedColumn(
+        tableWith({
+          ordering_key: undefined,
+          partition_by: undefined,
+          identity_column: undefined,
+          version_column: undefined,
+        }),
+        column('request_time'),
+      ),
+    ).toBe(false);
   });
 });
 
@@ -386,6 +855,7 @@ describe('buildRowsTemplate', () => {
       { source_name: 'active', name: 'active', type: AnalyticsFieldType.Boolean },
       { source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
       { source_name: 'meta', name: 'meta', type: AnalyticsFieldType.Object },
+      { source_name: 'attrs', name: 'attrs', type: AnalyticsFieldType.Map },
       { source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String },
     ];
     expect(JSON.parse(buildRowsTemplate(columns))).toEqual([
@@ -397,6 +867,7 @@ describe('buildRowsTemplate', () => {
         active: false,
         ts: '',
         meta: {},
+        attrs: {},
         tags: [],
       },
     ]);

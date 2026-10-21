@@ -3,6 +3,7 @@ import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
 import { DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { GetItemError } from '@/src/models/error';
 
 interface Props {
   items: string[];
@@ -12,6 +13,7 @@ interface Props {
   filter?: string;
   addTitle?: string;
   addPlaceholder?: string;
+  getItemError?: GetItemError;
 }
 
 const CheckboxList: FC<Props> = ({
@@ -22,6 +24,7 @@ const CheckboxList: FC<Props> = ({
   filter,
   addTitle,
   addPlaceholder,
+  getItemError,
 }) => {
   const newItemsContainer = useRef<HTMLUListElement | null>(null);
 
@@ -112,6 +115,7 @@ const CheckboxList: FC<Props> = ({
               onRemoveItem={onRemoveNewItem}
               index={index}
               placeholder={addPlaceholder}
+              getItemError={getItemError}
             />
           );
         })}

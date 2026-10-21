@@ -2,20 +2,23 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import Analytics from '@/src/components/Runs/Compare/Summary/Analytics';
 import DistributionSection from '@/src/components/Runs/Compare/Summary/DistributionSection';
 import Header from '@/src/components/Runs/Compare/Summary/Header';
 import MetricScoresSection from '@/src/components/Runs/Compare/Summary/MetricScoresSection';
 import { useSummaryOverviewData } from '@/src/components/Runs/Compare/Summary/use-summary-overview-data';
-import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
+import { CompareRun, SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
+import { SUMMARY_PANELS_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
+import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   summaryState: SummaryOverviewTabUiState;
   setSummaryState: (patch: Partial<SummaryOverviewTabUiState>) => void;
@@ -24,16 +27,17 @@ interface Props {
 const SummaryOverviewTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onlyMatchingTestCases,
   summaryState,
   setSummaryState,
 }) => {
+  const t = useI18n();
   const {
     primaryRun,
     comparedRun,
-    testSuite,
+    primaryTestSuite,
+    comparedTestSuite,
     enrichedPrimaryScores,
     enrichedComparedScores,
     metricOptions,
@@ -41,6 +45,7 @@ const SummaryOverviewTab: FC<Props> = ({
     comparedMatchedAnalytics,
     primaryUnmatchedIds,
     comparedUnmatchedIds,
+    hasNoMatchingTestCases,
   } = useSummaryOverviewData({
     primaryRunId,
     comparedRunId,
@@ -69,47 +74,57 @@ const SummaryOverviewTab: FC<Props> = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
-      <Header
-        primaryRun={primaryRun}
-        comparedRun={comparedRun}
-        primaryRunName={primaryRunName}
-        comparedRunName={comparedRunName}
-        testSuite={testSuite}
-      />
-      <Analytics
-        primaryRunId={primaryRunId}
-        comparedRunId={comparedRunId}
-        primaryRunName={primaryRunName}
-        comparedRunName={comparedRunName}
-        onlyMatchingTestCases={onlyMatchingTestCases}
-        primaryMatchedAnalytics={primaryMatchedAnalytics}
-        comparedMatchedAnalytics={comparedMatchedAnalytics}
-        primaryOverallScore={enrichedPrimaryScores?.overallScore}
-        comparedOverallScore={enrichedComparedScores?.overallScore}
-      />
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
-        <MetricScoresSection
-          primaryData={enrichedPrimaryScores}
-          comparedData={enrichedComparedScores}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          selectedStatistic={summaryState.selectedStatistic}
-          onSelectStatistic={onSelectStatistic}
+      <div className="flex shrink-0 flex-col gap-8">
+        <Header
+          primaryRun={primaryRun}
+          comparedRun={comparedRun}
+          runs={runs}
+          primaryTestSuite={primaryTestSuite}
+          comparedTestSuite={comparedTestSuite}
         />
-        <DistributionSection
-          primaryRunId={primaryRunId}
-          comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          metricOptions={metricOptions}
-          primaryMetricScores={enrichedPrimaryScores}
-          comparedMetricScores={enrichedComparedScores}
-          selectedMetricName={summaryState.selectedDistributionMetricName}
-          onSelectMetric={onSelectDistributionMetric}
-          primaryExcludeEvalSummaryIds={primaryUnmatchedIds}
-          comparedExcludeEvalSummaryIds={comparedUnmatchedIds}
-        />
+        {!hasNoMatchingTestCases && (
+          <Analytics
+            primaryRunId={primaryRunId}
+            comparedRunId={comparedRunId}
+            runs={runs}
+            onlyMatchingTestCases={onlyMatchingTestCases}
+            primaryMatchedAnalytics={primaryMatchedAnalytics}
+            comparedMatchedAnalytics={comparedMatchedAnalytics}
+            primaryOverallScore={enrichedPrimaryScores?.overallScore}
+            comparedOverallScore={enrichedComparedScores?.overallScore}
+            hasPrimaryThreshold={hasOverallScoreThreshold(primaryRun.suiteSnapshot?.overallScoreThreshold)}
+            hasComparedThreshold={hasOverallScoreThreshold(comparedRun.suiteSnapshot?.overallScoreThreshold)}
+          />
+        )}
       </div>
+      {hasNoMatchingTestCases ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <DialNoDataContent title={t(EntitiesI18nKey.NoResults)} />
+        </div>
+      ) : (
+        <div className={SUMMARY_PANELS_GRID_CLASS}>
+          <MetricScoresSection
+            primaryData={enrichedPrimaryScores}
+            comparedData={enrichedComparedScores}
+            runs={runs}
+            selectedStatistic={summaryState.selectedStatistic}
+            onSelectStatistic={onSelectStatistic}
+            onSelectMetric={onSelectDistributionMetric}
+          />
+          <DistributionSection
+            primaryRunId={primaryRunId}
+            comparedRunId={comparedRunId}
+            runs={runs}
+            metricOptions={metricOptions}
+            primaryMetricScores={enrichedPrimaryScores}
+            comparedMetricScores={enrichedComparedScores}
+            selectedMetricName={summaryState.selectedDistributionMetricName}
+            onSelectMetric={onSelectDistributionMetric}
+            primaryExcludeEvalSummaryIds={primaryUnmatchedIds}
+            comparedExcludeEvalSummaryIds={comparedUnmatchedIds}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -104,6 +105,38 @@ describe('Endpoint', () => {
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, tier: 3 });
   });
 
+  test('renders base url field after expanding, alongside key', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.getByText(EntityFieldsI18nKey.baseUrl)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey)).toBeInTheDocument();
+  });
+
+  test('calls updateEndpoint on base url change after expanding, independently of endpoint', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    fireEvent.change(screen.getByLabelText(EntityFieldsI18nKey.baseUrl), {
+      target: { value: 'http://base' },
+    });
+    expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, baseUrl: 'http://base' });
+  });
+
   test('calls updateEndpoint on key change after expanding', () => {
     render(
       <Endpoint
@@ -193,17 +226,56 @@ describe('Endpoint', () => {
     expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.ResponsesEndpoint)).not.toBeInTheDocument();
   });
 
-  test('renders responses endpoint when withResponses is true', () => {
+  test('renders the authentication selector only when platform routes enable it', () => {
     render(
       <Endpoint
         index={0}
         disabled={false}
         endpoint={baseEndpoint as any}
-        withResponses={true}
+        view={ApplicationRoute.PlatformRoutes}
+        isAuthTypeSupported
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
       />,
     );
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ResponsesEndpoint)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.getByText('UpstreamEndpoints.AuthenticationType')).toBeInTheDocument();
+    expect(screen.getByText('UpstreamEndpoints.ApiKey')).toBeInTheDocument();
+  });
+
+  test('requires a replacement key for a newly configured Bearer upstream', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={{ endpoint: 'http://test', authType: UpstreamAuthType.BEARER } as any}
+        view={ApplicationRoute.PlatformRoutes}
+        isAuthTypeSupported
+        isBearerKeyRequired
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+  });
+
+  test('does not require the hidden key of an unchanged Bearer upstream', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={{ endpoint: 'http://test', authType: UpstreamAuthType.BEARER } as any}
+        view={ApplicationRoute.PlatformRoutes}
+        isAuthTypeSupported
+        isBearerKeyRequired={false}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).toBeNull();
   });
 });

@@ -1,37 +1,51 @@
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { Deployment } from '@/src/models/evaluation/deployment';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
-import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
+import {
+  CatalogDeploymentRecord,
+  resolveCatalogDeploymentNavigation,
+  resolveDeploymentNavigationTarget,
+} from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import {
+  isFileRootPath,
+  isFlatPlatformView,
+  isPlatformBucketRow,
+  isPlatformDualBucketView,
+} from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
-import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
+import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
+
+const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
+  '$type' in deployment && typeof deployment.$type === 'string';
 
 export const getAgentLinkForConversation = (
-  deployment: Record<string, string> | null,
+  deployment: CatalogDeploymentRecord | Deployment | null,
   currentLocale: string,
+  modelRoute?: ApplicationRoute,
 ): string => {
-  const target = resolveCatalogDeploymentNavigation(deployment);
+  if (!deployment) {
+    return '';
+  }
+
+  const target = isEvalDeployment(deployment)
+    ? resolveDeploymentNavigationTarget(
+        { id: deployment.deploymentId, name: deployment.displayName },
+        deployment.$type,
+        [],
+        { modelRoute },
+      )
+    : resolveCatalogDeploymentNavigation(deployment);
+
   if (!target) {
     return '';
   }
   return `/${currentLocale}${getUrnForEntity(target.route, target.entity)}`;
-};
-
-export const filterLatestVersions = (data: AssetWithVersion[]) => {
-  const latestVersions: Record<string, AssetWithVersion> = {};
-
-  data?.forEach((item) => {
-    const name = item.name as string;
-    if (!latestVersions[name] || compareVersions(item.version, latestVersions[name].version) > 0) {
-      latestVersions[name] = item as AssetWithVersion;
-    }
-  });
-
-  return Object.values(latestVersions);
 };
 
 export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) => {
@@ -53,24 +67,39 @@ export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) =>
   return versionsPerName;
 };
 
-export const getIsNeedToMove = (entity: AssetWithVersion, initialEntity?: AssetWithVersion) => {
-  return entity.folderId !== initialEntity?.folderId;
+// A merged detail entity carries its folder identity in `_metadata` (see `CoreResourceEntityMetadata`);
+// a create/new-version flow seeds it flat. Every identity read resolves flat-first to serve both.
+export const getIsNeedToMove = (
+  entity: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+  initialEntity?: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+) => {
+  return (
+    (entity.folderId ?? entity._metadata?.folderId) !== (initialEntity?.folderId ?? initialEntity?._metadata?.folderId)
+  );
 };
 
-export const getEntityForUpdate = (entity: AssetWithVersion, initialEntity?: AssetWithVersion) => {
+export const getEntityForUpdate = <
+  T extends { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+>(
+  entity: T,
+  initialEntity?: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+): T => {
   return {
     ...entity,
-    folderId: (initialEntity as AssetWithVersion)?.folderId,
+    folderId: initialEntity?.folderId ?? initialEntity?._metadata?.folderId,
   };
 };
 
 export const addNewVersion = (entity: AssetWithVersion, version: string) => {
-  const path = modifyNameVersionInAsset(entity.path, void 0, version);
+  const path = modifyNameVersionInAsset((entity.path || entity._metadata?.path) as string, void 0, version);
   delete (entity as AssetApp).reference;
   return {
     ...entity,
-    path,
-    version,
+    _metadata: {
+      ...entity._metadata,
+      path,
+      version,
+    },
   };
 };
 
@@ -82,14 +111,24 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
+  if (isFileRootPath(currentPath)) {
+    return allActionLabels.filter((item) => item.key === 'openInNewTab');
+  }
+
   switch (view) {
     case ApplicationRoute.Files:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
-    case ApplicationRoute.AssetsModels:
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformModels:
+    case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformCatalogSchemas:
+    case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformRoutes:
+    case ApplicationRoute.PlatformRoles:
+    case ApplicationRoute.PlatformKeys:
+    case ApplicationRoute.PlatformTranslators:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
@@ -97,9 +136,18 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
           );
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
+      if (isPlatformDualBucketView(view, currentPath)) {
+        return isReadOnlyAdmin
+          ? []
+          : allActionLabels.filter(
+              (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
+            );
+      }
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
+    case ApplicationRoute.Skills:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
@@ -108,8 +156,20 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
   }
 };
 
-export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
-  if (isFlatPlatformView(view)) {
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
+  if (isFileRootPath(currentPath)) {
+    return [];
+  }
+
+  if (isFlatPlatformView(view) || isPlatformDualBucketView(view, currentPath)) {
+    return [];
+  }
+
+  // Skills offers no folder-tree actions at all: creating/renaming/moving a folder isn't supported
+  // (no create/move on this surface — see design's Non-Goals), and folder delete isn't wired either
+  // (`getResourceTypeByRoute` deliberately has no SKILL case, since Skill has no `AssetApi`-shaped
+  // delete path), so offering it here would silently no-op.
+  if (view === ApplicationRoute.Skills) {
     return [];
   }
 
@@ -124,13 +184,19 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
       );
 };
 
-export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
-  if (isReadOnlyAdmin) return [];
+export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
+  if (isReadOnlyAdmin || isFileRootPath(currentPath)) return [];
+
+  if (isPlatformDualBucketView(view, currentPath)) {
+    const label =
+      view === ApplicationRoute.AssetsToolsets ? FileManagerI18nKey.Toolset : FileManagerI18nKey.Application;
+    return [{ key: 'newItem', label, icon: null }];
+  }
 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return [
         {
           key: 'newItem',
@@ -138,11 +204,59 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.CatalogSchema,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformModels:
       return [
         {
           key: 'newItem',
           label: FileManagerI18nKey.Model,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformInterceptors:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Interceptor,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformTranslators:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Translator,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformRoutes:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Route,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformRoles:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Role,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformKeys:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Key,
           icon: null,
         },
       ];
@@ -188,6 +302,15 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
+    case ApplicationRoute.Skills:
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Skill,
+          icon: null,
+        },
+      ];
     default:
       return [];
   }
@@ -221,17 +344,8 @@ export const getDeleteNotificationContent = (
 
   switch (view) {
     case ApplicationRoute.Conversations: {
-      if (isMultipleVersionsDelete) {
-        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
-        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
-          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(FileManagerI18nKey.Conversation),
-            name: `${nameWithPath}__${version}`,
-          }),
-        );
-
-        return descriptions?.map((description) => ({ title, description }));
-      }
+      // Conversations are versionless — each row is one stored resource, so the description shows
+      // its plain path and the multi-version delete branch never applies.
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
@@ -241,7 +355,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Conversation),
-            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+            name: nameWithPath,
           });
       return { title, description };
     }
@@ -260,17 +374,8 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.Prompts: {
-      if (isMultipleVersionsDelete) {
-        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
-        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
-          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(FileManagerI18nKey.Prompt),
-            name: `${nameWithPath}__${version}`,
-          }),
-        );
-
-        return descriptions?.map((description) => ({ title, description }));
-      }
+      // Prompts are versionless — each row is one stored resource, so the description shows its
+      // plain path and the multi-version delete branch never applies.
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
@@ -280,32 +385,58 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
-            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+            name: nameWithPath,
           });
       return { title, description };
     }
-    case ApplicationRoute.AssetsAppRunners:
-    case ApplicationRoute.AssetsModels: {
+    case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformCatalogSchemas:
+    case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformTranslators:
+    case ApplicationRoute.PlatformRoutes:
+    case ApplicationRoute.PlatformRoles:
+    case ApplicationRoute.PlatformKeys:
+    case ApplicationRoute.PlatformModels: {
+      const itemLabel = (() => {
+        if (view === ApplicationRoute.PlatformAppRunners) return FileManagerI18nKey.AppRunner;
+        if (view === ApplicationRoute.PlatformCatalogSchemas) return FileManagerI18nKey.CatalogSchema;
+        if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
+        if (view === ApplicationRoute.PlatformTranslators) return FileManagerI18nKey.Translator;
+        if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
+        if (view === ApplicationRoute.PlatformRoles) return FileManagerI18nKey.Role;
+        if (view === ApplicationRoute.PlatformKeys) return FileManagerI18nKey.Key;
+        return FileManagerI18nKey.Model;
+      })();
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
-        : t(FileManagerI18nKey.DeleteSuccessTitle, {
-            item: t(
-              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
-            ),
-          });
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(itemLabel) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
             count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(
-              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
-            ),
+            item: t(itemLabel),
             name: nameWithPath,
           });
       return { title, description };
     }
     case ApplicationRoute.AssetsApplications: {
+      // A platform-bucket row has no version to select or append — `isMultipleVersionsDelete`
+      // never applies there, and the description shows the bare name rather than a
+      // `folderId+name__version` path that carries no meaning for a flat, unversioned resource.
+      if (isPlatformBucketRow((fileNodes as DialFile[])?.[0]?.bucket, (fileNodes as DialFile[])?.[0]?.folderId)) {
+        const title = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+          : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+        const description = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+          : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Application),
+              name: (fileNodes as DialFile[])?.[0]?.name || '',
+            });
+        return { title, description };
+      }
+
       if (isMultipleVersionsDelete) {
         const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
@@ -332,6 +463,20 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsToolsets: {
+      // Same platform-bucket carve-out as AssetsApplications above.
+      if (isPlatformBucketRow((fileNodes as DialFile[])?.[0]?.bucket, (fileNodes as DialFile[])?.[0]?.folderId)) {
+        const title = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+          : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+        const description = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+          : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Toolset),
+              name: (fileNodes as DialFile[])?.[0]?.name || '',
+            });
+        return { title, description };
+      }
+
       if (isMultipleVersionsDelete) {
         const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
@@ -354,6 +499,18 @@ export const getDeleteNotificationContent = (
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Toolset),
             name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.Skills: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Skill) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Skill),
+            name: nameWithPath,
           });
       return { title, description };
     }
@@ -771,16 +928,4 @@ export const getImportNotificationContent = (
         skippedDescription: '',
       };
   }
-};
-
-export const getNameAndVersionByPath = (path: string): { name: string; version: string } => {
-  const nameWithVersion = path.split('/').pop() || '';
-  const lastUnderscoreIndex = nameWithVersion.lastIndexOf('__');
-  if (lastUnderscoreIndex === -1) {
-    return { name: nameWithVersion, version: '' };
-  }
-  return {
-    name: nameWithVersion.slice(0, lastUnderscoreIndex),
-    version: nameWithVersion.slice(lastUnderscoreIndex + 2),
-  };
 };

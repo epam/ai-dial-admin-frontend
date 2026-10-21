@@ -1,12 +1,15 @@
-## ADDED Requirements
+# container-source-field-layout Specification
 
+## Purpose
+How a container's source is presented on its Properties tab: the source type as a read-only label in the info header, and the source itself as a form field for every source type.
+## Requirements
 ### Requirement: Source type displayed as read-only label in the info header
 
-The container Properties tab info header SHALL display the container's source type as a read-only `DialLabelledText` whose label is `t(EntitiesI18nKey.SourceType)` and whose value is resolved via `getContainerSourceTypeLabel(container.source, route, t)`. This label SHALL be rendered for all container routes: MCP containers, Adapter containers, Interceptor containers, and Model Servings.
+The container Properties tab info header SHALL display the container's source type as a read-only `DialLabelledText` whose label is `t(EntitiesI18nKey.SourceType)` and whose value is resolved from the container source and the container type. This label SHALL be rendered for all container types (MCP, Adapter, Application, Interceptor) on `/containers/[id]`, and for Model Servings.
 
 #### Scenario: INTERNAL_IMAGE container shows "Internal {type} Image"
 
-- **WHEN** the container has `source.$type === 'internal_image'` and the active route is `/mcp-containers/[id]`
+- **WHEN** the container has `source.$type === 'internal_image'` and the container type is MCP
 - **THEN** the Properties info header SHALL display a labelled text `"Source type: Internal MCP Image"`
 
 #### Scenario: IMAGE_REFERENCE container shows "Docker Image"
@@ -14,22 +17,17 @@ The container Properties tab info header SHALL display the container's source ty
 - **WHEN** the container has `source.$type === 'image_reference'`
 - **THEN** the Properties info header SHALL display a labelled text `"Source type: Docker Image"`
 
-#### Scenario: NGC_REGISTRY container shows "NGC Registry"
-
-- **WHEN** the container has `source.$type === 'ngc_registry'`
-- **THEN** the Properties info header SHALL display a labelled text `"Source type: NGC Registry"`
-
 #### Scenario: HUGGINGFACE container shows "Hugging Face"
 
 - **WHEN** the container has `source.$type === 'huggingface'`
 - **THEN** the Properties info header SHALL display a labelled text `"Source type: Hugging Face"`
 
-#### Scenario: Per-route type substitution for internal image
+#### Scenario: Per-type substitution for internal image
 
-- **WHEN** an Adapter container has `source.$type === 'internal_image'` and the route is `/adapter-containers/[id]`
+- **WHEN** an Adapter container has `source.$type === 'internal_image'` and the container is on `/containers/[id]`
 - **THEN** the label value SHALL be `"Internal Adapter Image"`
 
-- **WHEN** an Interceptor container has `source.$type === 'internal_image'` and the route is `/interceptor-containers/[id]`
+- **WHEN** an Interceptor container has `source.$type === 'internal_image'` and the container is on `/containers/[id]`
 - **THEN** the label value SHALL be `"Internal Interceptor Image"`
 
 ### Requirement: Image moved from info header prefix to form body
@@ -55,11 +53,6 @@ The `<ContainerSource>` component inside `ContainerFields.tsx` SHALL render unco
 
 - **WHEN** a container has `source.$type === 'image_reference'`
 - **THEN** `ContainerSource` SHALL render either `McpServerNameField` (when `externalRegistryRef` is present) or the `imageReference` `DialInput` (otherwise)
-
-#### Scenario: NGC_REGISTRY still renders the imageRef input
-
-- **WHEN** a container has `source.$type === 'ngc_registry'`
-- **THEN** `ContainerSource` SHALL render the `imageRef` `DialInput`
 
 #### Scenario: HUGGINGFACE still renders HFModelNameField
 
@@ -128,11 +121,6 @@ A pure utility `getContainerSourceTypeLabel(source: ContainerSource | undefined,
 - **WHEN** called with `{ $type: 'image_reference' }`
 - **THEN** the utility SHALL return `"Docker Image"`
 
-#### Scenario: Returns NGC Registry for NGC source
-
-- **WHEN** called with `{ $type: 'ngc_registry' }`
-- **THEN** the utility SHALL return `"NGC Registry"`
-
 #### Scenario: Returns Hugging Face for HF source
 
 - **WHEN** called with `{ $type: 'huggingface' }`
@@ -156,3 +144,4 @@ A pure utility `getContainerSourceTypeLabel(source: ContainerSource | undefined,
 
 - **WHEN** `ContainerView` renders with `image === undefined` and `source.$type === 'internal_image'`
 - **THEN** `InternalImageField` SHALL render with an empty selected value and clicking the popup trigger SHALL NOT open the modal
+

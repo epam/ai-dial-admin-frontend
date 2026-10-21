@@ -96,7 +96,7 @@ describe('ContainerNodePool', () => {
     fireEvent.click(within(dialog).getByRole('radio', { name: /GPU pool/i }));
     fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Apply }));
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(setContainer).toHaveBeenCalledWith(
         expect.objectContaining({ nodePoolId: 'gpu-pool', nodePoolName: 'GPU pool' }),
       );
@@ -117,7 +117,7 @@ describe('ContainerNodePool', () => {
     fireEvent.click(within(dialog).getAllByRole('radio')[0]);
     fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Apply }));
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(setContainer).toHaveBeenCalledWith(expect.objectContaining({ nodePoolId: null, nodePoolName: null }));
     });
   });
@@ -132,9 +132,7 @@ describe('ContainerNodePool', () => {
     fireEvent.click(within(dialog).getByRole('radio', { name: /GPU pool/i }));
     fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Cancel }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(setContainer).not.toHaveBeenCalled();
   });
 
@@ -147,7 +145,7 @@ describe('ContainerNodePool', () => {
     });
     renderContainer();
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(showNotificationMock).toHaveBeenCalledWith(
         expect.objectContaining({
           type: NotificationType.error,
@@ -164,7 +162,7 @@ describe('ContainerNodePool', () => {
     getNodePoolsMock.mockResolvedValue({ success: false });
     renderContainer();
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(showNotificationMock).toHaveBeenCalledWith(
         expect.objectContaining({
           type: NotificationType.error,

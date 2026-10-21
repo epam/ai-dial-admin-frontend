@@ -1,8 +1,20 @@
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QueryFilterNode } from '@/src/models/analytics/query';
+import { ConfigEntityRow } from '@/src/models/dial/config-file';
 
 export enum AnalyticsTableType {
   Source = 'source',
   Enrichment = 'enrichment',
+}
+
+// A source table's write discipline, declared once at create and immutable afterwards: it selects the
+// storage engine, which is frozen when the table is materialized, so no later request changes it.
+// Source-only — an enrichment always collapses on its grain key, and the service rejects the member for
+// one (422).
+export enum TableWriteMode {
+  Append = 'append',
+  UpsertByKey = 'upsert_by_key',
 }
 
 export enum TableStatus {
@@ -27,8 +39,13 @@ export interface AnalyticsTableColumn {
   source_name: string;
   name: string;
   type: AnalyticsFieldType;
-  // Required when `type` is Array; the array's scalar value type (no nested array/object).
+  // Required when `type` is Array; the array's scalar value type (no nested array/object/map).
   element_type?: AnalyticsFieldType;
+  // Required when `type` is Enum, and rejected on a column of any other type; the closed value set in
+  // declared order (see AnalyticsFieldType.Enum). Immutable once the column exists — a schema patch
+  // `update` carrying it is rejected rather than ignored, so widening a domain means dropping the column
+  // and adding it again.
+  enum_values?: string[];
   nullable?: boolean;
   tag?: string;
   display_name?: string;
@@ -46,12 +63,16 @@ export interface AnalyticsTableGrain {
   cardinality?: Cardinality;
 }
 
-// The calling identity's effective per-table permissions, reported by the data-access service on the
-// table read surfaces: `write` — may insert rows; `modify` — may change schema/description. The two are
-// independent. A system table reports both false for every caller; in `none` security mode both are true.
+// The caller's effective per-table permissions, after implication (Read and Modify include Get). `sensitive`
+// is the clearance for sensitive columns, not a verb; `rows_restricted` says a row policy confines the caller.
+// A system table reports `write` and `modify` false for everyone.
 export interface TablePermissions {
+  get: boolean;
+  read: boolean;
+  sensitive: boolean;
   write: boolean;
   modify: boolean;
+  rows_restricted: boolean;
 }
 
 export interface AnalyticsTable {
@@ -67,23 +88,62 @@ export interface AnalyticsTable {
   grain?: AnalyticsTableGrain;
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
+  identity_column?: string;
+  version_column?: string;
   tag_order?: string[];
   permissions?: TablePermissions;
 }
 
-// A table's role-based access lists: raw provider role names permitted to write (insert rows) and to
-// modify (change schema/description). Managed via the admin-only access endpoint.
-export interface TableAccess {
-  write: string[];
-  modify: string[];
+export enum TableGrantKey {
+  Get = 'get',
+  Read = 'read',
+  Sensitive = 'sensitive',
+  Write = 'write',
+  Modify = 'modify',
 }
 
-// POST /v1/tables is identity-only: no columns, no physical keys. The physical schema is defined
-// afterwards via the draft-schema resource (see DraftSchemaDto below).
+// Raw provider role names per privilege. The access endpoint's PUT merges by key: a key left out is unchanged,
+// an empty list revokes.
+export type TableAccess = Record<TableGrantKey, string[]>;
+
+export enum IneffectiveGrantReason {
+  AlreadyGlobal = 'already_global',
+  EnrichmentReadInert = 'enrichment_read_inert',
+  SensitiveWithoutVerb = 'sensitive_without_verb',
+}
+
+export interface IneffectiveGrant {
+  role: string;
+  key: TableGrantKey;
+  reason: IneffectiveGrantReason;
+  message: string;
+}
+
+export interface TableAccessUpdateResult extends TableAccess {
+  permissions: TablePermissions;
+  ineffective_grants: IneffectiveGrant[];
+}
+
+export interface RowPolicy {
+  filter: QueryFilterNode;
+}
+
+export type RowPolicies = Record<string, RowPolicy>;
+
+export interface RowPoliciesResponse {
+  policies: RowPolicies;
+}
+
+export interface AnalyticsRoleCatalog {
+  roles: ConfigEntityRow[];
+  warnings: EntitiesI18nKey[];
+}
+
 export interface CreateSourceTableDto {
   name: string;
   type: AnalyticsTableType.Source;
   description?: string;
+  write: TableWriteMode;
 }
 
 export interface CreateEnrichmentTableDto {
@@ -101,6 +161,8 @@ export interface DraftSourceSchemaDto {
   columns: AnalyticsTableColumn[];
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
+  identity_column?: string;
+  version_column?: string;
 }
 
 export interface DraftEnrichmentSchemaDto {
@@ -110,6 +172,17 @@ export interface DraftEnrichmentSchemaDto {
 }
 
 export type DraftSchemaDto = DraftSourceSchemaDto | DraftEnrichmentSchemaDto;
+
+// The JSON-editor draft document (see draft-document.ts): the column form's schema DTO plus the
+// table's catalog metadata, widened with an index signature so a member this console does not read or
+// write — pasted from another environment's `GET /v1/tables/{name}` response — still type-checks. The
+// document itself is never sent as-is; `splitDraftDocument` carves each request body out of it as a
+// narrower subset (see design.md D3).
+export type DraftTableDocument = DraftSchemaDto & {
+  description?: string;
+  tag_order?: string[];
+  [key: string]: unknown;
+};
 
 // PUT /v1/tables/{name} — table catalog metadata merge-patch: absent/null leaves a field unchanged,
 // `tag_order: []` clears it, a non-empty `tag_order` replaces it.

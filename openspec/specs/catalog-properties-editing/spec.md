@@ -1,0 +1,323 @@
+# catalog-properties-editing Specification
+
+## Purpose
+
+The mechanism a deployment surface uses to point at a catalog schema and fill in the display metadata
+it describes: the schema picker, the values editor built by the shared schema renderer, the
+client-side validation that precedes every write, and the preservation of display fields that arrive
+as a locale map. The catalog meta-schema's presentation metadata is deliberately inert here — it is
+the shared renderer's to support, and this capability states the gap rather than working around it. Shared by the four Core-direct deployment
+surfaces — Catalog Models, Catalog Interceptors, platform-bucket Applications and Toolsets — so each
+of them contributes only its placement, never its own copy of this behavior.
+## Requirements
+### Requirement: A deployment can be pointed at a catalog schema
+
+The system SHALL let an admin select a Catalog Schema for a deployment, store the selected schema's declared raw `$id` as `catalog_schema_id`, and clear it again. A Core resource storage name or path SHALL be used only to retrieve or navigate to the schema, never as the deployment reference. The selection SHALL survive a save and reopen.
+
+Changing the selection — to another schema or to none — SHALL discard the deployment's `catalog_properties`, because values written for one schema mean nothing under another and would otherwise reappear in the values editor as fields the new schema does not declare. Re-picking the schema already selected is not a change and SHALL keep the values.
+
+#### Scenario: A schema is selected and persists
+
+- **WHEN** an admin selects a Catalog Schema stored under `agent-schema` with declared `$id` `https://dial.example.com/catalog_schemas/agent` and saves
+- **THEN** the deployment's `catalog_schema_id` is `https://dial.example.com/catalog_schemas/agent`
+- **AND** reopening the deployment shows the same schema as selected
+
+#### Scenario: The selection can be cleared
+
+- **WHEN** an admin clears the selected schema and saves
+- **THEN** the deployment carries no `catalog_schema_id`
+- **AND** the deployment carries no `catalog_properties`
+- **AND** the values editor is no longer offered
+
+#### Scenario: Switching the schema discards the previous schema's values
+
+- **WHEN** an admin fills in catalog values under one schema and then selects a different schema
+- **THEN** the values editor shows only the fields the newly selected schema declares, all empty
+- **AND** saving stores none of the previous schema's values in `catalog_properties`
+- **AND** switching back to the first schema before saving does not restore them
+
+#### Scenario: Re-picking the selected schema keeps the values
+
+- **WHEN** an admin applies the schema that is already selected
+- **THEN** the deployment's `catalog_properties` are unchanged
+
+#### Scenario: A read-only admin cannot change the selection
+
+- **WHEN** a read-only admin opens a deployment carrying a catalog schema
+- **THEN** the selection is shown but cannot be changed, and no values are editable
+
+#### Scenario: The selected schema is opened by storage address but identified by declared id
+
+- **WHEN** an admin opens the selected schema in a new tab
+- **THEN** the detail route addresses the schema's Core storage path
+- **AND** the opened detail view shows the schema's declared `$id`
+
+### Requirement: The schema picker filters to the deployment's entity kind
+
+The picker SHALL read every catalog schema DIAL Core resolves — those written through its API and
+those declared in its configuration file — in a single request, and SHALL present them in a
+single-select grid.
+
+The picker SHALL filter that set to the schemas whose declared `dial:catalogEntityType` matches the
+kind of deployment being edited: `model` on a model, `agent` on an application, `toolset` on a
+toolset, and `interceptor` on an interceptor. The filter SHALL apply to both halves of the picker —
+the inline selection field and the browse grid — so the two cannot list different sets.
+
+Two kinds of row SHALL NOT be hidden by the filter, because hiding either would make a legal
+configuration unreachable:
+
+- a schema declaring no entity kind at all, which Core's listing reports as absent rather than
+  omitting the schema; and
+- the schema the deployment currently points at, whatever kind it declares — a field SHALL NOT show a
+  value its own list denies.
+
+The browse grid SHALL offer a control that relaxes the filter and lists every schema Core resolved.
+DIAL Core never checks a deployment's own kind against the schema's `dial:catalogEntityType`, so a
+deliberate cross-kind pairing is legal and the picker SHALL keep it reachable rather than refusing a
+pairing Core accepts. The filter is a default, not a constraint.
+
+The two halves of the picker SHALL identify a schema differently, because they answer different
+questions. The browse grid in its filtered view SHALL show a single `$id` column. The inline selection
+SHALL label each option with the schema's display name and describe it with the `$id`, so a reader
+sees what the schema is called and which one it is. A schema with no display name SHALL appear once,
+labelled by its `$id`, with no description repeating it. Display names are not unique, which is why
+the `$id` SHALL accompany every named option: it is the stored reference and the only text that
+separates two schemas sharing a name. The entity kind is a constant under the filter and SHALL NOT be
+added to an option. When the filter is relaxed the grid SHALL present the display name and the entity
+kind alongside the `$id`, both of which carry information in that view.
+
+Author and updated-time columns SHALL NOT be offered in either view: the read that unions the two
+populations carries no resource metadata, and adding them would cost one metadata request per row for
+the API-written half and remain empty for the other.
+
+When nothing is left to pick the grid SHALL say so rather than render as bare column headers, which
+reads as a failed load. Where the filter is what emptied it, the message SHALL name the entity kind
+as the cause, so the relax control reads as the way out; where no schema exists at all, it SHALL
+report only that.
+
+#### Scenario: An empty filtered result names the kind as the cause
+
+- **WHEN** an admin opens the picker on a deployment whose kind no schema declares
+- **THEN** the grid reports that there are no catalog schemas for this entity kind
+- **AND** the control that relaxes the filter is still offered
+
+#### Scenario: Both populations appear, filtered to the deployment's kind
+
+- **WHEN** an admin opens the picker and schemas matching the deployment's kind exist in both
+  populations
+- **THEN** all of those are listed in one grid, whichever population each came from
+
+#### Scenario: The inline selection identifies each option by its id
+
+- **WHEN** an admin opens the inline catalog-schema selection
+- **THEN** each schema that has a display name is labelled with it and described by its `$id`
+- **AND** every option carries its `$id`, as that description or, with no display name, as the label
+
+#### Scenario: Two schemas sharing a display name stay distinguishable
+
+- **WHEN** two schemas declare the same display name and an admin opens the inline selection
+- **THEN** both options carry that name as their label
+- **AND** each shows its own `$id` as its description
+
+#### Scenario: A schema with no display name is listed once
+
+- **WHEN** a schema declares no display name and an admin opens the inline selection
+- **THEN** its option is labelled by its `$id`
+- **AND** the `$id` is not repeated as a description
+
+#### Scenario: The filtered grid shows the id alone
+
+- **WHEN** the picker grid renders with the filter in effect
+- **THEN** its only column is the schema id — no display-name and no entity-kind column
+- **AND** no author or updated-time column is present in either view
+
+#### Scenario: A schema written for another entity kind is still selectable
+
+- **WHEN** an admin opens the picker on a model and a schema declares the `agent` entity kind
+- **THEN** that schema is not listed by default
+- **AND** after the admin relaxes the filter it is listed with its kind visible and can be selected
+
+#### Scenario: Exactly one schema can be selected
+
+- **WHEN** an admin picks a row in the grid
+- **THEN** any previous selection is replaced rather than added to
+
+#### Scenario: A failed read is reported rather than shown as an empty catalogue
+
+- **WHEN** the schema list cannot be read
+- **THEN** the picker surfaces the failure instead of presenting an empty selectable list
+
+#### Scenario: The selected schema is reachable
+
+- **WHEN** an admin has a schema selected
+- **THEN** its own detail page can be opened from the field in a new tab
+
+### Requirement: A schema outside the deployment's kind stays visible once selected
+
+The picker SHALL continue to list the schema a deployment already points at even when its declared
+entity kind does not match the deployment's own, and SHALL do so without the filter being relaxed.
+
+This follows from DIAL Core accepting such a pairing: a deployment saved with a cross-kind schema is
+valid, so reopening it SHALL show its selection intact rather than presenting the field as empty or
+the selection as unavailable.
+
+A schema declaring no entity kind SHALL likewise remain listed for every deployment kind, selected or
+not.
+
+#### Scenario: A cross-kind selection survives a reopen
+
+- **WHEN** a deployment already points at a schema whose declared kind differs from the deployment's
+- **AND** an admin reopens the picker without relaxing the filter
+- **THEN** that schema is listed and shown as the current selection
+
+#### Scenario: A schema declaring no kind is always offered
+
+- **WHEN** a schema declares no entity kind
+- **THEN** it is listed for a deployment of any kind, with the filter in effect
+
+### Requirement: The values editor is the shared schema renderer
+
+The system SHALL render the editor for `catalog_properties` with the shared schema renderer the
+application parameters tab already uses, passing it the selected schema. Types, enumerations, nested
+objects, arrays and `oneOf`/`anyOf` are therefore supported exactly as they are there.
+
+The renderer does not read the catalog meta-schema's presentation metadata — `dial:tab`,
+`dial:section`, `dial:propertyOrder`, `dial:widget` — nor its `dial:file` marker. In this capability
+those declarations SHALL have no effect on the rendering, and that SHALL be a stated limitation
+rather than an unreported one: a file-valued property renders as a plain text field holding the file
+reference. Support for them is expected to arrive in the shared renderer itself, at which point this
+surface gains it without changing.
+
+#### Scenario: Values are edited and round-trip
+
+- **WHEN** an admin fills in the fields the selected schema declares and saves
+- **THEN** the values are stored in the deployment's `catalog_properties` and reappear on reload
+
+#### Scenario: Enumerations, objects and arrays behave as in the parameters tab
+
+- **WHEN** the selected schema declares an enumerated property, a nested object and an array
+- **THEN** each is edited with the same control the application parameters tab provides for it
+
+#### Scenario: A schema with no properties says so
+
+- **WHEN** the selected schema declares no properties
+- **THEN** the editor shows an empty state rather than a blank area
+
+#### Scenario: Presentation metadata is inert, and the surface does not pretend otherwise
+
+- **WHEN** the selected schema declares `dial:tab`, `dial:section`, `dial:propertyOrder` or
+  `dial:widget` on its properties
+- **THEN** the fields are still all editable, in the renderer's own layout
+- **AND** the declarations are preserved in the schema, which this surface never writes
+
+#### Scenario: A file-valued property is editable as a reference
+
+- **WHEN** the selected schema marks a property `dial:file`
+- **THEN** the property is editable as a text field carrying the file reference
+- **AND** a value already set elsewhere is shown and preserved rather than cleared
+
+#### Scenario: A raw JSON view is available for anything the form cannot express
+
+- **WHEN** an admin opens the catalog values of a deployment
+- **THEN** a raw JSON view of `catalog_properties` is reachable, so a value the form renders
+  awkwardly can still be entered exactly
+
+### Requirement: Catalog values are validated before the write
+
+The system SHALL validate `catalog_properties` against the selected schema before the write. DIAL Core
+validates the values itself, and what a failure costs
+depends on where the deployment lives: for a platform-bucket resource the rejection happens when Core
+assembles its merged configuration, taking the whole configuration down with it; for a user-bucket
+application or toolset Core rejects the write itself with a `400`. The system SHALL therefore validate
+the values against the selected schema before the write, in both cases, and SHALL surface the reason.
+
+The enforced rules are: every property the schema marks required is present, and each value matches
+its declared type and any declared enumeration. A value that arrived as a locale map SHALL be checked
+for the schema's own default locale (`dial:defaultLocale`, defaulting to `en`) rather than rejected
+for its shape — the form does not author such a value, but Core accepts one and rejects it later if
+that locale is missing.
+
+A value the schema does not declare SHALL block the write only when the schema sets
+`additionalProperties` to `false`. Core's catalog meta-schema imposes no such rule, so otherwise Core
+accepts the value and the system SHALL NOT refuse what Core accepts.
+
+#### Scenario: A missing required value blocks the save
+
+- **WHEN** a schema marks a property required and an admin leaves it empty
+- **THEN** the save is blocked with a message naming the property, and no request reaches Core
+
+#### Scenario: A value of the wrong type blocks the save
+
+- **WHEN** a value does not match the type its schema declares
+- **THEN** the save is blocked with a message naming the property
+
+#### Scenario: A platform-bucket write is gated locally
+
+- **WHEN** an admin saves invalid catalog values on a Catalog model or interceptor
+- **THEN** the save is blocked client-side rather than reaching Core, where it would be accepted and
+  then break the merged configuration
+
+#### Scenario: A user-bucket rejection from Core is surfaced
+
+- **WHEN** Core rejects catalog values on a user-bucket application or toolset with a `400`
+- **THEN** the error notification carries Core's own message
+
+### Requirement: Values the schema does not declare are surfaced, never silently kept or dropped
+
+The system SHALL tell an admin which stored catalog values the selected schema does not declare —
+typically a property renamed or removed in the schema after the values were saved. The values SHALL
+NOT be removed on opening: that would mark an untouched deployment as changed and lose a value the
+admin never saw go.
+
+Where the schema allows undeclared values, the system SHALL show a warning naming them and SHALL let
+the save proceed. Where the schema sets `additionalProperties` to `false`, the system SHALL show an
+error naming them with a control that removes them, and SHALL block the save until they are gone. The
+removal SHALL keep every declared value. A read-only admin SHALL see the error without the control.
+
+#### Scenario: A property renamed in the schema leaves its old value behind
+
+- **WHEN** a deployment saved a value under `field1` and its schema since renamed that property to `field_1`
+- **THEN** the values editor shows a warning naming `field1`
+- **AND** `field_1` is offered as an empty field in its declared place
+
+#### Scenario: An allowed undeclared value does not block the save
+
+- **WHEN** the schema does not set `additionalProperties` to `false` and an undeclared value is stored
+- **THEN** the save proceeds and the value is kept
+
+#### Scenario: A forbidden undeclared value blocks the save until removed
+
+- **WHEN** the schema sets `additionalProperties` to `false` and an undeclared value is stored
+- **THEN** an error names the value and the save is blocked
+- **AND** removing it from the error keeps every declared value and unblocks the save
+
+#### Scenario: Opening a deployment does not change it
+
+- **WHEN** a deployment with undeclared values is opened and nothing is edited
+- **THEN** the deployment is not marked as changed
+
+### Requirement: A locale-map display field is preserved rather than corrupted
+
+The system SHALL preserve a locale-map display field rather than corrupting it. DIAL Core accepts a deployment's `displayName`, `description`, and `intro` as either a plain string
+or a `locale -> value` map. The system SHALL preserve the map form through a read and a save, and
+SHALL NOT render it into a text input or overwrite it with the rendering.
+
+Authoring such a map is out of scope: the system SHALL continue to offer a single text field for the
+plain-string form.
+
+#### Scenario: A locale map survives an unrelated edit
+
+- **WHEN** a deployment whose `displayName` is a locale map is opened, another field is edited, and
+  the deployment is saved
+- **THEN** `displayName` is still the same locale map
+
+#### Scenario: A locale map is not rendered as text
+
+- **WHEN** a deployment whose display field is a locale map is opened
+- **THEN** the field does not show a serialized object, and does not present the map as editable text
+
+#### Scenario: A plain string behaves exactly as before
+
+- **WHEN** a deployment whose display fields are plain strings is opened and edited
+- **THEN** the fields behave as they do today, with no change in shape on save
+

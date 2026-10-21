@@ -1,0 +1,455 @@
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+
+import { IF_MATCH } from '@/src/constants/api-headers';
+import { SkillsCoreApi } from '../skills-core-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
+
+const jsonResponse = (body: unknown) => JSON.stringify(body);
+const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
+
+describe('Server :: Core :: SkillsCoreApi :: getSkillMetadata', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  // Both requests start together, so the mock answers by URL rather than by call order.
+  const mockCore = (own: { body: unknown; status?: number }) => {
+    fetch.mockResponse((req) => {
+      if (req.url.includes('/files')) {
+        return Promise.resolve(
+          jsonResponse({
+            items: [{ name: 'SKILL.md', url: 'skills/public/my-skill/files/SKILL.md', nodeType: 'ITEM' }],
+          }),
+        );
+      }
+      return Promise.resolve({ body: jsonResponse(own.body), status: own.status ?? 200 });
+    }, JSON_HEADERS);
+  };
+
+  test("reads the skill's own metadata path for author/dates/etag, with no parent listing or manifest fetch", async () => {
+    mockCore({
+      body: {
+        name: 'my-skill',
+        url: 'skills/public/my-skill/',
+        nodeType: 'ITEM',
+        author: 'author-1',
+        createdAt: 1000,
+        updatedAt: 2000,
+        etag: 'etag-1',
+      },
+    });
+
+    const skill = await instance.getSkillMetadata(TOKEN_MOCK, 'public/my-skill');
+
+    // Only two Core requests: the skill's own metadata and its files listing.
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const urls = fetch.mock.calls.map(([url]) => String(url));
+    expect(urls.some((url) => url.endsWith('/v2/metadata/skills/public/my-skill'))).toBe(true);
+    expect(urls.some((url) => url.includes('/v2/metadata/skills/public/my-skill/files'))).toBe(true);
+    expect(urls.some((url) => url.includes('/v2/metadata/skills/public/?'))).toBe(false);
+    expect(skill).toEqual({
+      name: 'my-skill',
+      path: 'public/my-skill',
+      folderId: 'public/',
+      // The trio nests under `_metadata` (epoch milliseconds stringified); `etag` stays a separate
+      // value, outside `_metadata`.
+      etag: 'etag-1',
+      _metadata: {
+        author: 'author-1',
+        createdAt: '1000',
+        updatedAt: '2000',
+      },
+      files: [{ name: 'SKILL.md' }],
+    });
+  });
+
+  test('returns null when Core answers the skill path with a 404', async () => {
+    mockCore({ body: { message: 'Not found' }, status: 404 });
+
+    const skill = await instance.getSkillMetadata(TOKEN_MOCK, 'public/missing');
+
+    expect(skill).toBeNull();
+  });
+
+  test('returns null when Core answers the path with a folder node instead of an item', async () => {
+    mockCore({ body: { name: 'public', url: 'skills/public/', nodeType: 'FOLDER', items: [] } });
+
+    const skill = await instance.getSkillMetadata(TOKEN_MOCK, 'public/sub');
+
+    expect(skill).toBeNull();
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: getSkillFiles', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('requests the files listing recursively', async () => {
+    fetch.mockResponseOnce(jsonResponse({ items: [] }), JSON_HEADERS);
+
+    await instance.getSkillFiles(TOKEN_MOCK, 'public/my-skill');
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/metadata/skills/public/my-skill/files');
+    expect(calledUrl).toContain('recursive=true');
+  });
+
+  test("derives each file's name relative to the skill root, including nested files", async () => {
+    fetch.mockResponseOnce(
+      jsonResponse({
+        items: [
+          { name: 'SKILL.md', url: 'skills/public/my-skill/files/SKILL.md', nodeType: 'ITEM' },
+          { name: 'run.sh', url: 'skills/public/my-skill/files/scripts/run.sh', nodeType: 'ITEM' },
+        ],
+      }),
+      JSON_HEADERS,
+    );
+
+    const files = await instance.getSkillFiles(TOKEN_MOCK, 'public/my-skill');
+
+    expect(files).toEqual([{ name: 'SKILL.md' }, { name: 'scripts/run.sh' }]);
+  });
+
+  test("derives a bare file name when the skill's path needs encoding (e.g. a folder with a space)", async () => {
+    // Core's listing `url` comes back encoded segment-by-segment (`%20` for the space); the prefix
+    // stripped from it must be built from the same encoding, or stripping silently fails and the
+    // file's "name" ends up as the entire, wrongly-decoded url instead of just `SKILL.md`.
+    fetch.mockResponseOnce(
+      jsonResponse({
+        items: [
+          {
+            name: 'SKILL.md',
+            url: 'skills/public/New%20folder%201/folder-s1/files/SKILL.md',
+            nodeType: 'ITEM',
+          },
+        ],
+      }),
+      JSON_HEADERS,
+    );
+
+    const files = await instance.getSkillFiles(TOKEN_MOCK, 'public/New folder 1/folder-s1');
+
+    expect(files).toEqual([{ name: 'SKILL.md' }]);
+  });
+
+  test('excludes grouping-folder entries, keeping only files', async () => {
+    fetch.mockResponseOnce(
+      jsonResponse({
+        items: [
+          { name: 'scripts', url: 'skills/public/my-skill/files/scripts', nodeType: 'FOLDER' },
+          { name: 'run.sh', url: 'skills/public/my-skill/files/scripts/run.sh', nodeType: 'ITEM' },
+        ],
+      }),
+      JSON_HEADERS,
+    );
+
+    const files = await instance.getSkillFiles(TOKEN_MOCK, 'public/my-skill');
+
+    expect(files).toEqual([{ name: 'scripts/run.sh' }]);
+  });
+
+  test('returns an empty list when the response has no items', async () => {
+    fetch.mockResponseOnce(jsonResponse({}), JSON_HEADERS);
+
+    const files = await instance.getSkillFiles(TOKEN_MOCK, 'public/my-skill');
+
+    expect(files).toEqual([]);
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: listSkillMetadata', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('lists the direct children of a skill folder without a per-child request', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        name: 'public',
+        nodeType: 'FOLDER',
+        items: [
+          { name: 'my-skill', url: 'skills/public/my-skill', nodeType: 'ITEM', author: 'a', updatedAt: 1 },
+          { name: 'sub-folder', url: 'skills/public/sub-folder/', nodeType: 'FOLDER' },
+        ],
+      }),
+      { headers: { 'content-type': 'application/json' } },
+    );
+
+    const node = await instance.listSkillMetadata(TOKEN_MOCK, 'public/');
+
+    expect(fetch).toHaveBeenCalledOnce();
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/metadata/skills/public/');
+    expect(calledUrl).toContain('recursive=false');
+    expect((init as RequestInit).method).toBe('GET');
+    expect(node?.items).toHaveLength(2);
+  });
+
+  test('sends the continuation token as `token` when paginating', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: 'public', nodeType: 'FOLDER', items: [] }), {
+      headers: { 'content-type': 'application/json' },
+    });
+
+    await instance.listSkillMetadata(TOKEN_MOCK, 'public/', { nextToken: 'page-2' });
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('token=page-2');
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: uploadSkillFile', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('PUTs multipart form data with a "file" part to the skill\'s per-file route', async () => {
+    fetch.mockResponseOnce(jsonResponse({ success: true }));
+    const file = new File(['data'], 'notes.md', { type: 'text/markdown' });
+
+    await instance.uploadSkillFile(TOKEN_MOCK, 'public/my-skill', 'notes.md', file);
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/notes.md');
+    expect((init as RequestInit).method).toBe('PUT');
+    expect((init as RequestInit).body).toBeInstanceOf(FormData);
+  });
+
+  test('defaults to overwrite semantics', async () => {
+    fetch.mockResponseOnce(jsonResponse({ success: true }));
+    const file = new File(['data'], 'notes.md');
+
+    await instance.uploadSkillFile(TOKEN_MOCK, 'public/my-skill', 'notes.md', file);
+
+    const [, init] = fetch.mock.calls[0];
+    expect((init as RequestInit).headers).not.toHaveProperty('If-None-Match');
+  });
+
+  test('supports a nested filePath', async () => {
+    fetch.mockResponseOnce(jsonResponse({ success: true }));
+    const file = new File(['data'], 'run.sh');
+
+    await instance.uploadSkillFile(TOKEN_MOCK, 'public/my-skill', 'scripts/run.sh', file);
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/scripts/run.sh');
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: createSkill', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  const readManifestPart = async (init: RequestInit) => {
+    const form = init.body as FormData;
+    const file = form.get('file') as File;
+    return file.text();
+  };
+
+  test('PUTs a single-part multipart request to the whole-bundle route', async () => {
+    fetch.mockResponseOnce(jsonResponse({ success: true }));
+
+    await instance.createSkill(TOKEN_MOCK, 'public/my-skill', 'my-skill', 'Does a thing');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill');
+    expect(calledUrl).not.toContain('/files/');
+    expect((init as RequestInit).method).toBe('PUT');
+    expect((init as RequestInit).body).toBeInstanceOf(FormData);
+  });
+
+  test('sends If-None-Match: * so an existing skill is not overwritten', async () => {
+    fetch.mockResponseOnce(jsonResponse({ success: true }));
+
+    await instance.createSkill(TOKEN_MOCK, 'public/my-skill', 'my-skill', 'Does a thing');
+
+    const [, init] = fetch.mock.calls[0];
+    expect((init as RequestInit).headers).toMatchObject({ 'If-None-Match': '*' });
+  });
+
+  test('writes a SKILL.md part with the given name and description', async () => {
+    fetch.mockResponseOnce(jsonResponse({ success: true }));
+
+    await instance.createSkill(TOKEN_MOCK, 'public/my-skill', 'my-skill', 'Does a thing');
+
+    const [, init] = fetch.mock.calls[0];
+    const content = await readManifestPart(init as RequestInit);
+    expect(content).toBe('---\nname: my-skill\ndescription: Does a thing\n---\n');
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: createSkillFolder', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('PUTs the trailing-slash folder route with no body', async () => {
+    fetch.mockResponseOnce('');
+
+    await instance.createSkillFolder(TOKEN_MOCK, 'public/new-folder');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/new-folder/');
+    expect((init as RequestInit).method).toBe('PUT');
+    expect((init as RequestInit).body).toBeUndefined();
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: downloadSkillFile / previewSkillFile', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test("downloadSkillFile GETs the skill's per-file route", async () => {
+    fetch.mockResponseOnce('file content');
+
+    await instance.downloadSkillFile(TOKEN_MOCK, 'public/my-skill', 'SKILL.md');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/SKILL.md');
+    expect((init as RequestInit).method).toBe('GET');
+  });
+
+  test('previewSkillFile GETs the same route', async () => {
+    fetch.mockResponseOnce('file content');
+
+    await instance.previewSkillFile(TOKEN_MOCK, 'public/my-skill', 'SKILL.md');
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/SKILL.md');
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: getSkillManifestContent', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test("GETs SKILL.md's own per-file route and returns its raw text", async () => {
+    fetch.mockResponseOnce('---\nname: my-skill\ndescription: Does a thing\n---\nBody.', {
+      headers: { 'content-type': 'text/markdown' },
+    });
+
+    const result = await instance.getSkillManifestContent(TOKEN_MOCK, 'public/my-skill');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/SKILL.md');
+    expect((init as RequestInit).method).toBe('GET');
+    expect(result).toEqual({
+      success: true,
+      response: '---\nname: my-skill\ndescription: Does a thing\n---\nBody.',
+      etag: undefined,
+    });
+  });
+
+  test('reports not-found rather than throwing when Core 404s', async () => {
+    fetch.mockResponseOnce('Not Found', { status: 404 });
+
+    const result = await instance.getSkillManifestContent(TOKEN_MOCK, 'public/missing');
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: deleteSkillFile', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test("DELETEs the skill's per-file route without requiring an etag", async () => {
+    fetch.mockResponseOnce('');
+
+    await instance.deleteSkillFile(TOKEN_MOCK, 'public/my-skill', 'notes.md');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/notes.md');
+    expect((init as RequestInit).method).toBe('DELETE');
+    expect((init as RequestInit).headers).not.toHaveProperty(IF_MATCH);
+  });
+
+  test('sends If-Match when an etag is supplied', async () => {
+    fetch.mockResponseOnce('');
+
+    await instance.deleteSkillFile(TOKEN_MOCK, 'public/my-skill', 'notes.md', 'etag-1');
+
+    const [, init] = fetch.mock.calls[0];
+    expect((init as RequestInit).headers).toMatchObject({ [IF_MATCH]: 'etag-1' });
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: deleteSkill', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('rejects before calling Core when the etag is missing', async () => {
+    await expect(instance.deleteSkill(TOKEN_MOCK, 'public/my-skill', '')).rejects.toThrow();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test('sends If-Match when a concrete etag is supplied', async () => {
+    fetch.mockResponseOnce('');
+
+    await instance.deleteSkill(TOKEN_MOCK, 'public/my-skill', 'etag-1');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill');
+    expect((init as RequestInit).method).toBe('DELETE');
+    expect((init as RequestInit).headers).toMatchObject({ [IF_MATCH]: 'etag-1' });
+  });
+});
+
+describe('Server :: Core :: SkillsCoreApi :: deleteSkillFolder', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('DELETEs the trailing-slash folder route, distinct from deleteSkill', async () => {
+    fetch.mockResponseOnce('');
+
+    // '*' is Core's own convention for "unconditional" — `createIfMatchHeaders` renders it as no
+    // `If-Match` header at all rather than a literal `If-Match: *`.
+    await instance.deleteSkillFolder(TOKEN_MOCK, 'public/archive', '*');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/archive/');
+    expect((init as RequestInit).method).toBe('DELETE');
+    expect((init as RequestInit).headers).not.toHaveProperty(IF_MATCH);
+  });
+
+  test('sends a concrete If-Match when a real etag is supplied', async () => {
+    fetch.mockResponseOnce('');
+
+    await instance.deleteSkillFolder(TOKEN_MOCK, 'public/archive', 'etag-1');
+
+    const [, init] = fetch.mock.calls[0];
+    expect((init as RequestInit).headers).toMatchObject({ [IF_MATCH]: 'etag-1' });
+  });
+});

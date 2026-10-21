@@ -1,11 +1,18 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
-import { generateQuery } from '@/src/app/[lang]/query-builder/actions';
+import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
+import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
+import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { QueryAssistantRole } from '@/src/models/analytics/query-assistant';
+import { generateQuery } from '@/src/app/[lang]/queries/actions';
 
-vi.mock('@/src/app/[lang]/query-builder/actions');
+vi.mock('@/src/app/[lang]/queries/actions');
 
 const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -20,9 +27,32 @@ const reply = (content: string) => ({
 const promptBox = () => screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' });
 const sendButton = () => screen.getByRole('button', { name: 'QueryBuilder.AiSend' });
 
-const renderPanel = (overrides: Partial<Parameters<typeof AiPanel>[0]> = {}) => {
+const FIELDS: AnalyticsEntityField[] = [
+  { name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' },
+  { name: 'project_id', type: AnalyticsFieldType.String, source: 'project_id', display_name: 'Project' },
+];
+
+// The panel reads nothing from the builder context any more; a state is still provided so a test can
+// prove the request ignores whichever source is selected.
+const builderState = (overrides?: Partial<QueryBuilderState>): QueryBuilderState => ({
+  ...createInitialState(TEST_FUNCTIONS),
+  entityName: 'dial_usage_log',
+  fields: FIELDS,
+  ...overrides,
+});
+
+type PanelProps = Omit<Parameters<typeof AiPanel>[0], 'conversation'>;
+
+// The conversation lives in the page; the harness plays that part so the panel is tested as mounted.
+const PanelWithConversation = (props: PanelProps) => <AiPanel conversation={useAiConversation()} {...props} />;
+
+const renderPanel = (overrides: Partial<PanelProps> = {}, state: QueryBuilderState = builderState()) => {
   const props = { onRunMessage: vi.fn(), loadedMessageIndex: null, runInFlight: false, ...overrides };
-  render(<AiPanel {...props} />);
+  render(
+    <QueryBuilderContext.Provider value={{ state, refresh: vi.fn(), patch: vi.fn() }}>
+      <PanelWithConversation {...props} />
+    </QueryBuilderContext.Provider>,
+  );
   return props;
 };
 
@@ -64,7 +94,6 @@ describe('AiPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
     expect(onRunMessage).toHaveBeenCalledWith('SELECT 1', 1);
-    expect(generateQuery).toHaveBeenCalledWith([{ role: 'user', content: 'cost by deployment' }]);
   });
 
   test('sending a message scrolls the new user message into view', async () => {
@@ -113,8 +142,8 @@ describe('AiPanel', () => {
     await user.type(promptBox(), 'cost');
     await user.click(sendButton());
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
-    expect(screen.getByText('cost')).toBeInTheDocument();
+    expect(await screen.findByText('cost')).toBeInTheDocument();
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
   });
 
   test('inline Run is disabled for the currently loaded message, and while a run is in flight', async () => {
@@ -139,5 +168,49 @@ describe('AiPanel', () => {
 
     await screen.findByText('SELECT 1');
     expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
+  });
+
+  test('sends the visible transcript and nothing else', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
+    renderPanel();
+
+    await user.type(promptBox(), 'cost by project');
+    await user.click(sendButton());
+
+    await vi.waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    expect(generateQuery).toHaveBeenCalledWith([{ role: QueryAssistantRole.User, content: 'cost by project' }]);
+  });
+
+  test('sends both earlier turns along with the new request on a second send', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('first answer') as never);
+    renderPanel();
+
+    await user.type(promptBox(), 'cost by project');
+    await user.click(sendButton());
+    await screen.findByText('first answer');
+
+    await user.type(promptBox(), 'now group by day');
+    await user.click(sendButton());
+
+    await vi.waitFor(() => expect(generateQuery).toHaveBeenCalledTimes(2));
+    expect(generateQuery).toHaveBeenLastCalledWith([
+      { role: QueryAssistantRole.User, content: 'cost by project' },
+      { role: QueryAssistantRole.Assistant, content: 'first answer' },
+      { role: QueryAssistantRole.User, content: 'now group by day' },
+    ]);
+  });
+
+  test('sends the same request whichever source the toolbar has selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
+    renderPanel({}, builderState({ entityName: 'other_table', fields: [] }));
+
+    await user.type(promptBox(), 'anything');
+    await user.click(sendButton());
+
+    await vi.waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    expect(generateQuery).toHaveBeenCalledWith([{ role: QueryAssistantRole.User, content: 'anything' }]);
   });
 });

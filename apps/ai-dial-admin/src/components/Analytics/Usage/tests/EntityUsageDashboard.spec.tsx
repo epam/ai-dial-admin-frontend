@@ -1,0 +1,284 @@
+import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { CallerSource } from '@/src/components/Analytics/Usage/models';
+import EntityUsageDashboard from '@/src/components/Analytics/Usage/EntityUsageDashboard';
+import { AnalyticsUsageI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { StructuredQuery } from '@/src/models/analytics/query';
+import { ApplicationRoute } from '@/src/types/routes';
+
+const runQueryMock = vi.fn();
+const RUNNER = { runQuery: (...args: unknown[]) => runQueryMock(...args), runSql: vi.fn() };
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
+}));
+
+const isForbiddenMock = vi.fn();
+const callerSourceMock = vi.fn();
+vi.mock('@/src/app/[lang]/dashboards/actions', () => ({
+  getIsAnalyticsForbidden: () => isForbiddenMock(),
+  getUsageCallerSource: () => callerSourceMock(),
+}));
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
+}));
+
+// AG Grid and ECharts are the heavy children; this spec is about the dashboard's wiring.
+vi.mock('@/src/components/Grid/GridView/GridView', () => ({ default: () => <div role="grid" /> }));
+vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({ default: () => <div role="grid" /> }));
+
+const queriesSent = (): StructuredQuery[] => runQueryMock.mock.calls.map(([query]) => query as StructuredQuery);
+
+const renderModel = () => render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{ name: 'gpt-4o' }} />);
+
+// Refresh is disabled while any of the dashboard's reads is in flight, so it coming back is the page
+// saying every read it started has landed.
+const settled = async () => {
+  await waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Refresh })).toBeEnabled());
+  await act(async () => {});
+};
+
+beforeEach(() => {
+  runQueryMock.mockReset();
+  runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } });
+  isForbiddenMock.mockReset();
+  isForbiddenMock.mockResolvedValue(false);
+  callerSourceMock.mockReset();
+  callerSourceMock.mockResolvedValue(CallerSource.Principal);
+});
+
+describe('EntityUsageDashboard', () => {
+  test("offers View by with a model's one view, as the page does", async () => {
+    const user = userEvent.setup();
+    renderModel();
+
+    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([AnalyticsUsageI18nKey.ViewLlm]);
+    expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel })).toBeTruthy();
+  });
+
+  test('leaves out the tab that would rank the model against itself', async () => {
+    renderModel();
+
+    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
+    expect(screen.getAllByText(AnalyticsUsageI18nKey.BreakdownTabApplications).length).toBeGreaterThan(0);
+  });
+
+  test("narrows every request to the model's own calls", async () => {
+    renderModel();
+
+    await settled();
+
+    expect(queriesSent().length).toBeGreaterThan(0);
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).toContain('"value":"gpt-4o"');
+    }
+  });
+
+  test('counts callers by the principal reference where the schema serves it', async () => {
+    renderModel();
+
+    await settled();
+
+    expect(queriesSent().some((query) => JSON.stringify(query.select).includes('usage_client_identity.user_ref'))).toBe(
+      true,
+    );
+  });
+
+  test('names no principal reference in any request where the schema lacks it', async () => {
+    callerSourceMock.mockResolvedValue(CallerSource.Hash);
+    renderModel();
+
+    await settled();
+
+    expect(queriesSent().length).toBeGreaterThan(0);
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query)).not.toContain('usage_client_identity.user_ref');
+    }
+  });
+
+  test('asks for no caller count and draws no caller card where the log serves neither column', async () => {
+    callerSourceMock.mockResolvedValue(CallerSource.None);
+    renderModel();
+
+    await settled();
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.KpiRequests)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiUniqueCallers)).toBeNull();
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query)).not.toContain('user_hash');
+    }
+  });
+
+  test('reads no call tree for a model, having none', async () => {
+    renderModel();
+
+    await settled();
+
+    expect(queriesSent().length).toBeGreaterThan(0);
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).not.toContain('"name":"execution_path"');
+    }
+  });
+
+  test('offers cost on its heatmap, whose hours count the calls its spend counts', async () => {
+    renderModel();
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeTruthy();
+  });
+
+  test('ranks its share chart by caller, never by the model it is scoped to', async () => {
+    renderModel();
+
+    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+
+    const groupings = queriesSent().flatMap((query) => query.group_by ?? []);
+    expect(groupings).toContain('parent_deployment');
+    expect(groupings).not.toContain('deployment');
+  });
+
+  test('starts from the shared Audit period and writes a new one back', async () => {
+    const user = userEvent.setup();
+    const onTimeFilterChange = vi.fn();
+    render(
+      <EntityUsageDashboard
+        route={ApplicationRoute.Models}
+        entity={{ name: 'gpt-4o' }}
+        defaultTimeFilter="7d"
+        onTimeFilterChange={onTimeFilterChange}
+      />,
+    );
+
+    await user.click(await screen.findByText(/Last 7d/i));
+    await user.click(screen.getByText(/Last 1h/i));
+
+    expect(onTimeFilterChange).toHaveBeenCalledWith('1h');
+  });
+
+  test('reads nothing until the access check has answered, and states a refusal', async () => {
+    isForbiddenMock.mockResolvedValue(true);
+    renderModel();
+
+    expect(await screen.findByText(ErrorI18nKey.AccessForbidden)).toBeTruthy();
+    expect(runQueryMock).not.toHaveBeenCalled();
+  });
+
+  test('reads nothing for an entity it cannot name', async () => {
+    render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{}} />);
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeTruthy();
+    expect(runQueryMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('EntityUsageDashboard on an application', () => {
+  const renderApplication = (routes?: unknown) =>
+    render(
+      <EntityUsageDashboard
+        route={ApplicationRoute.Applications}
+        entity={{ name: 'rag', routes } as unknown as Parameters<typeof EntityUsageDashboard>[0]['entity']}
+      />,
+    );
+
+  const optionsOf = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    return screen.getAllByRole('option').map((option) => option.textContent);
+  };
+
+  test('offers LLM and MCP, and Routes only for an application that declares routes', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderApplication();
+
+    expect(await optionsOf(user)).toEqual([AnalyticsUsageI18nKey.ViewLlm, AnalyticsUsageI18nKey.ViewMcp]);
+    unmount();
+
+    renderApplication([{ paths: ['/search'] }]);
+
+    expect(await optionsOf(user)).toEqual([
+      AnalyticsUsageI18nKey.ViewLlm,
+      AnalyticsUsageI18nKey.ViewMcp,
+      AnalyticsUsageI18nKey.ViewRoutes,
+    ]);
+  });
+
+  test('switches to the MCP view, reading the tool calls in its call tree', async () => {
+    const user = userEvent.setup();
+    renderApplication();
+
+    await optionsOf(user);
+    runQueryMock.mockClear();
+    await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
+
+    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).toContain('"name":"execution_path"');
+    }
+  });
+
+  test('reads its own calls and the priced model calls in its tree, and never a total price', async () => {
+    renderApplication();
+
+    await settled();
+    const sent = queriesSent().map((query) => JSON.stringify(query));
+
+    expect(
+      sent.some((query) => query.includes('"name":"execution_path"') && query.includes('"name":"deployment_price"')),
+    ).toBe(true);
+    expect(sent.some((query) => !query.includes('"name":"execution_path"'))).toBe(true);
+    expect(sent.some((query) => query.includes('total_price'))).toBe(false);
+  });
+
+  test('plots spend from the priced model calls in its tree, as its spend card counts', async () => {
+    const user = userEvent.setup();
+    renderApplication();
+
+    await user.click(await screen.findByText(AnalyticsUsageI18nKey.TimeSeriesTabCost));
+
+    await vi.waitFor(() =>
+      expect(
+        queriesSent().some(
+          (query) =>
+            query.select?.length === 2 &&
+            query.group_by?.join() === 'bucket' &&
+            JSON.stringify(query.filter).includes('"name":"execution_path"'),
+        ),
+      ).toBe(true),
+    );
+  });
+
+  test('offers no cost on its heatmap, whose hours count its own calls', async () => {
+    renderApplication();
+
+    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
+  });
+});
+
+describe('EntityUsageDashboard — an entity the log cannot name', () => {
+  test('states why it is empty instead of rendering nothing at all', async () => {
+    render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={{ name: 'a toolset' }} />);
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeTruthy();
+    expect(screen.getByText(AnalyticsUsageI18nKey.EntityUnmatchedHint)).toBeTruthy();
+    expect(queriesSent()).toEqual([]);
+  });
+
+  test('reads an asset toolset whose identity sits in the merge metadata', async () => {
+    const entity = { name: 'ignored', _metadata: { path: 'bucket/QA editor__0.0.1' } };
+
+    render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={entity as never} />);
+
+    expect(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeTruthy();
+    await settled();
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeNull();
+    expect(JSON.stringify(queriesSent())).toContain('toolsets/bucket/QA%20editor__0.0.1');
+  });
+});

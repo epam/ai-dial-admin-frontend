@@ -23,7 +23,7 @@ const ConversationHeader: FC<Props> = ({ children, tabs, activeTab, onChangeActi
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(false)}>
-        <ReadonlyId value={props.entity.name || ''} />
+        <ReadonlyId value={props.entity._metadata?.name || ''} />
         <ConversationButtonsWrapper {...props}>{children}</ConversationButtonsWrapper>
       </div>
       <Tabs isEditorEnabled={false} tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />

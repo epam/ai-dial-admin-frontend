@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, FC, useCallback, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
@@ -13,17 +13,21 @@ import {
   ROW_DETAIL_GRID_TEMPLATE_COLUMNS,
   ROW_DETAIL_HEADER_CELL_BASE,
   ROW_DETAIL_MINIMAP_COL_WIDTH,
+  ROW_DETAIL_TABLE_SCROLL_PADDING_TOP,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import {
-  CompareRowDetailField,
-  CompareRowDetailSection,
   RowDetailDeltaFilter,
   RowDetailFieldFilter,
+  RowDetailRunFilter,
   RowDetailValueFilter,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
+import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { getRowDetailRunValue } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import FullscreenDiffViewer from '@/src/components/Runs/Details/BottomDrawer/FullscreenDiffViewer';
 import { DiffViewState } from '@/src/components/Runs/Details/BottomDrawer/models';
@@ -31,31 +35,37 @@ import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  sections: CompareRowDetailSection[];
-  primaryRunName: string;
-  comparedRunName: string;
+  sections: RowDetailSection[];
+  runs: CompareRun[];
   hasComparedMatch: boolean;
   showDiffsOnly: boolean;
   hideHighlights: boolean;
+  focusFieldKey?: string | null;
+  focusRequestId?: number;
 }
 
 const CompareRowDetailTable: FC<Props> = ({
   sections,
-  primaryRunName,
-  comparedRunName,
+  runs,
   hasComparedMatch,
   showDiffsOnly,
   hideHighlights,
+  focusFieldKey,
+  focusRequestId = 0,
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [fieldFilter, setFieldFilter] = useState<RowDetailFieldFilter | null>(null);
-  const [primarySearchQuery, setPrimarySearchQuery] = useState('');
-  const [primaryValueFilter, setPrimaryValueFilter] = useState<RowDetailValueFilter | null>(null);
-  const [secondarySearchQuery, setSecondarySearchQuery] = useState('');
-  const [secondaryValueFilter, setSecondaryValueFilter] = useState<RowDetailValueFilter | null>(null);
+  const [valueSearchQueries, setValueSearchQueries] = useState<Record<CompareRunSlot, string>>({
+    [CompareRunSlot.Primary]: '',
+    [CompareRunSlot.Secondary]: '',
+  });
+  const [valueFilters, setValueFilters] = useState<Record<CompareRunSlot, RowDetailValueFilter | null>>({
+    [CompareRunSlot.Primary]: null,
+    [CompareRunSlot.Secondary]: null,
+  });
   const [deltaFilter, setDeltaFilter] = useState<RowDetailDeltaFilter | null>(null);
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
@@ -65,24 +75,18 @@ const CompareRowDetailTable: FC<Props> = ({
         searchQuery,
         showDiffsOnly,
         fieldFilter,
-        primarySearchQuery,
-        primaryValueFilter,
-        secondarySearchQuery,
-        secondaryValueFilter,
+        primarySearchQuery: valueSearchQueries[CompareRunSlot.Primary],
+        primaryValueFilter: valueFilters[CompareRunSlot.Primary],
+        secondarySearchQuery: valueSearchQueries[CompareRunSlot.Secondary],
+        secondaryValueFilter: valueFilters[CompareRunSlot.Secondary],
         deltaFilter,
       }),
-    [
-      sections,
-      searchQuery,
-      showDiffsOnly,
-      fieldFilter,
-      primarySearchQuery,
-      primaryValueFilter,
-      secondarySearchQuery,
-      secondaryValueFilter,
-      deltaFilter,
-    ],
+    [sections, searchQuery, showDiffsOnly, fieldFilter, valueSearchQueries, valueFilters, deltaFilter],
   );
+
+  useLayoutEffect(() => {
+    scrollPivotToField(scrollContainerRef.current, focusFieldKey);
+  }, [focusFieldKey, focusRequestId, filteredSections]);
 
   const onToggleSection = useCallback((key: string) => {
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -92,17 +96,32 @@ const CompareRowDetailTable: FC<Props> = ({
     setSearchQuery(event.target.value);
   }, []);
 
-  const onPrimarySearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setPrimarySearchQuery(event.target.value);
-  }, []);
+  const runFilters = useMemo<RowDetailRunFilter[]>(
+    () =>
+      runs.map(({ slot }) => ({
+        slot,
+        searchQuery: valueSearchQueries[slot],
+        onSearchChange: (event: ChangeEvent<HTMLInputElement>) =>
+          setValueSearchQueries((prev) => ({ ...prev, [slot]: event.target.value })),
+        filter: valueFilters[slot],
+        onFilterChange: (filter: RowDetailValueFilter | null) =>
+          setValueFilters((prev) => ({ ...prev, [slot]: filter })),
+      })),
+    [runs, valueSearchQueries, valueFilters],
+  );
 
-  const onSecondarySearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setSecondarySearchQuery(event.target.value);
-  }, []);
+  const getRunLabel = (run: CompareRun) =>
+    run.slot === CompareRunSlot.Secondary && !hasComparedMatch ? t(RunsI18nKey.RunCompareNoMatch) : run.name;
 
-  const onOpenDiff = useCallback((row: CompareRowDetailField) => {
-    setDiffView({ fieldLabel: row.label, original: row.primaryRaw ?? '', modified: row.secondaryRaw ?? '' });
-  }, []);
+  const onOpenDiff = useCallback(
+    (row: RowDetailField) => {
+      const [original, modified] = [runs[0], runs[runs.length - 1]].map(
+        (run) => getRowDetailRunValue(row, run.slot).raw ?? '',
+      );
+      setDiffView({ fieldLabel: row.label, original, modified });
+    },
+    [runs],
+  );
 
   const onCloseDiff = useCallback(() => setDiffView(null), []);
 
@@ -111,26 +130,20 @@ const CompareRowDetailTable: FC<Props> = ({
       <div
         ref={scrollContainerRef}
         className="flex-1 min-w-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ scrollPaddingTop: ROW_DETAIL_TABLE_SCROLL_PADDING_TOP }}
       >
         <div className="w-full dial-tiny-text grid" style={{ gridTemplateColumns: ROW_DETAIL_GRID_TEMPLATE_COLUMNS }}>
           <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text text-secondary')}>
             {t(RunsI18nKey.FieldColumn)}
           </div>
-          <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text min-w-0')}>
-            <div className="flex items-center gap-2 min-w-0">
-              <CompareRunIndexBadge runIndex={RUN_COMPARE_PRIMARY_INDEX} />
-              <DialEllipsisTooltip text={primaryRunName} className="text-secondary" />
+          {runs.map((run) => (
+            <div key={run.slot} className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text min-w-0')}>
+              <div className="flex items-center gap-2 min-w-0">
+                <CompareRunIndexBadge runIndex={run.index} />
+                <DialEllipsisTooltip text={getRunLabel(run)} className="text-secondary" />
+              </div>
             </div>
-          </div>
-          <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text min-w-0')}>
-            <div className="flex items-center gap-2 min-w-0">
-              <CompareRunIndexBadge runIndex={RUN_COMPARE_SECONDARY_INDEX} />
-              <DialEllipsisTooltip
-                text={hasComparedMatch ? comparedRunName : t(RunsI18nKey.RunCompareNoMatch)}
-                className="text-secondary"
-              />
-            </div>
-          </div>
+          ))}
           <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text text-secondary')}>
             {DEFAULT_COMPARE_DELTA_HEADER}
           </div>
@@ -142,14 +155,7 @@ const CompareRowDetailTable: FC<Props> = ({
             searchPlaceholder={t(BasicI18nKey.Search)}
             fieldFilter={fieldFilter}
             onFieldFilterChange={setFieldFilter}
-            primarySearchQuery={primarySearchQuery}
-            onPrimarySearchChange={onPrimarySearchChange}
-            primaryValueFilter={primaryValueFilter}
-            onPrimaryValueFilterChange={setPrimaryValueFilter}
-            secondarySearchQuery={secondarySearchQuery}
-            onSecondarySearchChange={onSecondarySearchChange}
-            secondaryValueFilter={secondaryValueFilter}
-            onSecondaryValueFilterChange={setSecondaryValueFilter}
+            runFilters={runFilters}
             deltaFilter={deltaFilter}
             onDeltaFilterChange={setDeltaFilter}
           />
@@ -172,6 +178,7 @@ const CompareRowDetailTable: FC<Props> = ({
                 onOpenDiff={onOpenDiff}
                 openDiffLabel={t(RunsI18nKey.CompareFullscreen)}
                 hideHighlights={hideHighlights}
+                runs={runs}
               />
             );
           })}
@@ -186,8 +193,8 @@ const CompareRowDetailTable: FC<Props> = ({
           fieldLabel={diffView.fieldLabel}
           original={diffView.original}
           modified={diffView.modified}
-          originalLabel={primaryRunName}
-          modifiedLabel={hasComparedMatch ? comparedRunName : t(RunsI18nKey.RunCompareNoMatch)}
+          originalLabel={getRunLabel(runs[0])}
+          modifiedLabel={getRunLabel(runs[runs.length - 1])}
           onClose={onCloseDiff}
         />
       )}

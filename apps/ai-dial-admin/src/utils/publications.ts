@@ -2,6 +2,7 @@ import { ActionType } from '@/src/models/dial/publications';
 import { ACTION_CLASS_NAME } from '@/src/constants/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
+import { ResourceType } from '@/src/types/resource-type';
 
 export function getActionClassName(action: ActionType): string {
   return ACTION_CLASS_NAME[action];
@@ -9,6 +10,47 @@ export function getActionClassName(action: ActionType): string {
 
 export function isAddAction(action: ActionType): boolean {
   return action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT;
+}
+
+const publicationEntityMap: Record<string, PublicationsI18nKey> = {
+  [ApplicationRoute.ApplicationPublications]: PublicationsI18nKey.ApplicationPublicationEntity,
+  [ApplicationRoute.ToolsetPublications]: PublicationsI18nKey.ToolsetPublicationEntity,
+  [ApplicationRoute.PromptPublications]: PublicationsI18nKey.PromptPublicationEntity,
+  [ApplicationRoute.FilePublications]: PublicationsI18nKey.FilePublicationEntity,
+  [ApplicationRoute.ConversationPublications]: PublicationsI18nKey.ConversationPublicationEntity,
+  [ApplicationRoute.SkillPublications]: PublicationsI18nKey.SkillPublicationEntity,
+};
+
+const publicationTypeRouteMap: Partial<Record<ResourceType, ApplicationRoute>> = {
+  [ResourceType.APPLICATION]: ApplicationRoute.ApplicationPublications,
+  [ResourceType.TOOLSET]: ApplicationRoute.ToolsetPublications,
+  [ResourceType.PROMPT]: ApplicationRoute.PromptPublications,
+  [ResourceType.FILE]: ApplicationRoute.FilePublications,
+  [ResourceType.CONVERSATION]: ApplicationRoute.ConversationPublications,
+  [ResourceType.SKILL]: ApplicationRoute.SkillPublications,
+};
+
+/** The `view` of a resource type's publication — undefined when the type has no publications. */
+export function getPublicationView(type?: string): ApplicationRoute | undefined {
+  return publicationTypeRouteMap[type as ResourceType];
+}
+
+const publicationTypeLabelMap: Partial<Record<ResourceType, PublicationsI18nKey>> = {
+  [ResourceType.APPLICATION]: PublicationsI18nKey.ApplicationType,
+  [ResourceType.TOOLSET]: PublicationsI18nKey.ToolsetType,
+  [ResourceType.PROMPT]: PublicationsI18nKey.PromptType,
+  [ResourceType.FILE]: PublicationsI18nKey.FileType,
+  [ResourceType.CONVERSATION]: PublicationsI18nKey.ConversationType,
+  [ResourceType.SKILL]: PublicationsI18nKey.SkillType,
+};
+
+export function getPublicationTypeLabel(type: ResourceType | undefined, t: (str: string) => string): string {
+  const key = type && publicationTypeLabelMap[type];
+  return key ? t(key) : '';
+}
+
+export function getPublicationEntityLabel(route: ApplicationRoute, t: (str: string) => string): string {
+  return t(publicationEntityMap[route]);
 }
 
 export function getModalsTranslations(route: ApplicationRoute, action: ActionType) {
@@ -59,6 +101,18 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
           ApproveModalTitle: PublicationsI18nKey.ConversationUnpublishApproveModalTitle,
           DeclineModalTitle: PublicationsI18nKey.ConversationUnpublishDeclineModalTitle,
           ApproveDescription: PublicationsI18nKey.ConversationUnpublishApproveDescription,
+        };
+  } else if (route === ApplicationRoute.SkillPublications) {
+    return isAddAction(action)
+      ? {
+          ApproveModalTitle: PublicationsI18nKey.SkillPublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.SkillPublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.SkillPublishApproveDescription,
+        }
+      : {
+          ApproveModalTitle: PublicationsI18nKey.SkillUnpublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.SkillUnpublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.SkillUnpublishApproveDescription,
         };
   }
 

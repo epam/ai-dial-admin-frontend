@@ -17,6 +17,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -48,8 +49,9 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+  const { featureFlags } = useAppContext();
 
-  const tabs = getInterceptorTemplateTabs(t);
+  const tabs = getInterceptorTemplateTabs(t, featureFlags);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({

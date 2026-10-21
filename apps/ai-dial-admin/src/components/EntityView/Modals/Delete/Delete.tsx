@@ -15,14 +15,17 @@ import { useRouter } from 'next/navigation';
 
 import { removeTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { DialResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
-import { hasRelatedArtefacts, isAssetView } from '@/src/utils/is-view';
+import { DUAL_BUCKET_VIEWS, isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { hasRelatedArtefacts, isAssetView, isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { AllVersionValue } from './constants';
@@ -36,6 +39,7 @@ interface Artefact {
   version?: string;
   $id?: string;
   'dial:applicationTypeDisplayName'?: string;
+  'dial:catalogDisplayName'?: string;
 }
 interface Props<T> {
   view: ApplicationRoute;
@@ -46,7 +50,7 @@ interface Props<T> {
   onResetEntity?: () => void;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
 }
 
 const DeleteConfirmationModal = <T extends Artefact>({
@@ -70,27 +74,41 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const getReqRef = useRef(useProtectedRequest());
   const modalSize = hasRelatedArtefacts(view) ? PopupSize.Md : PopupSize.Sm;
 
-  const [selectedVersion, setSelectedVersion] = useState(entity?.version);
+  const [selectedVersion, setSelectedVersion] = useState(
+    (entity as unknown as DialResource)?._metadata?.version || entity.version,
+  );
+  const [isRemoving, setIsRemoving] = useState(false);
+  const isRemovingRef = useRef(false);
+
+  const displayName = useMemo(() => {
+    return entity.displayName || entity['dial:applicationTypeDisplayName'] || entity['dial:catalogDisplayName'];
+  }, [entity]);
 
   const name = useMemo(() => {
-    if (view === ApplicationRoute.Datasets) return entity.name;
-    return entity.displayName || entity['dial:applicationTypeDisplayName'];
-  }, [entity, view]);
+    return entity.name;
+  }, [entity]);
+
   const id = useMemo(() => {
-    if (view === ApplicationRoute.Datasets) return (entity as { id?: string }).id;
     // App-runner assets carry `name` as the percent-encoded Core resource name, so `$id` is the only
     // readable identity for them.
-    if (view === ApplicationRoute.AssetsAppRunners) return entity.$id || entity.name;
-    return entity.name || entity.$id || (entity as { id?: string }).id;
+    if (view === ApplicationRoute.PlatformAppRunners || view === ApplicationRoute.PlatformCatalogSchemas)
+      return entity.$id || entity.name;
+    return (entity as { id?: string }).id;
   }, [entity, view]);
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
+      // For a platform-bucket application/toolset, `entityKey` is the full storage path
+      // (`platform/{name}`) the server action needs — Core has no lookup by bare name for these —
+      // but the notification should show the plain name, matching every other platform entity's
+      // flat, unversioned display (design.md's `platform-applications`/`platform-toolsets`).
+      const displayKey =
+        DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketPath(entityKey) ? entity?.name || entityKey : entityKey;
       showNotification(
-        getSuccessNotification(getNotificationTitle(view, t), getNotificationDescription(view, entityKey, t)),
+        getSuccessNotification(getNotificationTitle(view, t), getNotificationDescription(view, displayKey, t)),
       );
     },
-    [showNotification, t, view],
+    [showNotification, t, view, entity],
   );
 
   const existingVersionOptions = useMemo(() => {
@@ -108,6 +126,12 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, [existingVersions, t]);
 
   const onConfirmRemoving = useCallback(() => {
+    if (isRemovingRef.current) {
+      return;
+    }
+    isRemovingRef.current = true;
+    setIsRemoving(true);
+
     let entityKeys: string[];
 
     if (!selectedVersion) {
@@ -119,13 +143,16 @@ const DeleteConfirmationModal = <T extends Artefact>({
           : existingVersions?.map((version) => getEntityPath(view, entity, true, version)) || [];
     }
 
-    const promises = entityKeys.map((entityKey) =>
-      getReqRef.current(
-        onRemoveEntity,
-        entityKey,
-        getNameVersionFromAsset(entityKey).version === entity.version ? etag : undefined,
-      ),
-    );
+    const promises = entityKeys.map((entityKey) => {
+      // A `__` in a prompt/conversation name is part of the name — never split it to match a
+      // version; the etag applies as-is. Versioned types keep the version-matched etag.
+      const entityEtag = isVersionlessAssetView(view)
+        ? etag
+        : getNameVersionFromAsset(entityKey).version === entity.version
+          ? etag
+          : undefined;
+      return getReqRef.current(onRemoveEntity, entityKey, entityEtag);
+    });
 
     Promise.all(promises)
       .then((resArr) => {
@@ -134,8 +161,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
         resArr.forEach((res, index) => {
           if (res.success) {
             showSuccessNotification(entityKeys[index]);
-            if (view === ApplicationRoute.TestSuites && id) {
-              removeTryoutResponseFromStorage(id);
+            if (view === ApplicationRoute.TestSuites && name) {
+              removeTryoutResponseFromStorage(name);
             }
           } else {
             isAllSuccess = false;
@@ -154,26 +181,31 @@ const DeleteConfirmationModal = <T extends Artefact>({
             router.push(view);
           }
           router.refresh();
+        } else {
+          isRemovingRef.current = false;
+          setIsRemoving(false);
         }
       })
       .catch((error) => {
+        isRemovingRef.current = false;
+        setIsRemoving(false);
         showNotification(getErrorNotification(error.message));
       });
   }, [
+    selectedVersion,
     view,
     entity,
-    id,
+    existingVersions,
+    etag,
     onRemoveEntity,
+    showSuccessNotification,
+    name,
+    showNotification,
     onCloseModal,
     onResetEntity,
-    showSuccessNotification,
     isSelectedView,
     router,
     folderContext,
-    showNotification,
-    selectedVersion,
-    existingVersions,
-    etag,
   ]);
 
   const onVersionChange = useCallback((value: string) => {
@@ -189,20 +221,27 @@ const DeleteConfirmationModal = <T extends Artefact>({
       onClose={onCloseModal}
       size={modalSize}
       confirmLabel={t(ButtonsI18nKey.Delete)}
+      isLoading={isRemoving}
     >
       <div className="flex flex-col gap-y-4 px-6 py-2 size-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
         <div className="flex flex-col gap-y-2 bg-layer-4 rounded px-4 py-3">
+          {name && (
+            <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.name)}:</span>
+              <DialEllipsisTooltip text={name} />
+            </div>
+          )}
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
               <DialEllipsisTooltip text={id} />
             </div>
           )}
-          {name && (
+          {displayName && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
-              <DialEllipsisTooltip text={name} />
+              <DialEllipsisTooltip text={displayName} />
             </div>
           )}
           {existingVersions && existingVersions.length > 0 ? (

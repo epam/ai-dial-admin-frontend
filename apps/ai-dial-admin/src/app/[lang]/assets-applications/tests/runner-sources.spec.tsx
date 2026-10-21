@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 
@@ -8,15 +8,15 @@ vi.mock('@/src/app/api/api', () => ({
   applicationRunnersApi: { getApplicationSchemesList: vi.fn() },
 }));
 
-vi.mock('@/src/app/[lang]/assets-app-runners/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getAllRunners: vi.fn(),
 }));
 
 vi.mock('@/src/utils/auth/auth-request', () => ({ getUserToken: vi.fn().mockResolvedValue('token') }));
 vi.mock('@/src/utils/env/get-auth-toggle', () => ({ getIsEnableAuthToggle: () => false }));
-vi.mock('@/src/components/Assets/Apps/List', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/src/components/Assets/Entities/Apps/List', () => ({ __esModule: true, default: () => null }));
 
-import { getAllRunners } from '@/src/app/[lang]/assets-app-runners/actions';
+import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi } from '@/src/app/api/api';
 import Page from '../page';
 
@@ -29,6 +29,13 @@ const runnersPassedToList = (tree: any): AppRunnerOption[] => tree.props.childre
 describe('Assets > Applications :: runner sources', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // These cases exercise the admin-BE runner-schemes read itself, so the admin API is on here;
+    // the on/off gating of that read is covered separately in admin-api-gating.spec.tsx.
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'https://admin-be.example.com');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   test('merges both populations into the picker options', async () => {
@@ -37,7 +44,7 @@ describe('Assets > Applications :: runner sources', () => {
 
     const runners = runnersPassedToList(await Page());
 
-    expect(runners.map((r) => r.origin)).toEqual([AppRunnerOrigin.Entity, AppRunnerOrigin.Asset]);
+    expect(runners.map((r) => r.origin)).toEqual([AppRunnerOrigin.Config, AppRunnerOrigin.Platform]);
     expect(runners.map((r) => r.reference)).toEqual(['urn:runner:entity', 'schemas/platform/http%3A%2F%2Fasdqwe']);
   });
 
@@ -48,7 +55,7 @@ describe('Assets > Applications :: runner sources', () => {
     const runners = runnersPassedToList(await Page());
 
     expect(runners).toHaveLength(1);
-    expect(runners[0].origin).toBe(AppRunnerOrigin.Entity);
+    expect(runners[0].origin).toBe(AppRunnerOrigin.Config);
   });
 
   test('still offers asset runners when the admin-BE read fails', async () => {
@@ -58,7 +65,7 @@ describe('Assets > Applications :: runner sources', () => {
     const runners = runnersPassedToList(await Page());
 
     expect(runners).toHaveLength(1);
-    expect(runners[0].origin).toBe(AppRunnerOrigin.Asset);
+    expect(runners[0].origin).toBe(AppRunnerOrigin.Platform);
   });
 });
 

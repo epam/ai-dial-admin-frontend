@@ -49,7 +49,7 @@ export const QUERY_BUILDER_PALETTE: Record<QueryBuilderColor, QueryBuilderColorC
   },
 };
 
-// ECharts paints canvas and needs concrete colors (same rationale as Common/MetricCard CHART_COLOR):
+// ECharts paints canvas and needs concrete colors (same rationale as Common/MetricCard getChartColors):
 // these mirror the palette's token fallbacks (tailwind.config.js) plus the two Monaco hexes above.
 // Pie slices cycle through this list in FIELD_GROUP_COLOR_CYCLE order.
 export const CHART_SERIES_COLOR_CYCLE: string[] = [

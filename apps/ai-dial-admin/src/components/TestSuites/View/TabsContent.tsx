@@ -1,14 +1,14 @@
 'use client';
 
-import { FC, RefObject, useMemo } from 'react';
+import { FC, RefObject } from 'react';
 
-import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Metrics from '@/src/components/TestSuites/Metrics/Metrics';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import Runs from '@/src/components/TestSuites/Runs/Runs';
 import TestCases from '@/src/components/TestSuites/TestCases/TestCases';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
+import Trends from '@/src/components/TestSuites/Trends/Trends';
 import MethodTabContent from '@/src/components/TestSuites/View/MethodTabContent';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -27,6 +27,7 @@ interface Props {
   dataset?: Dataset | null;
   onChangeDataset?: (dataset: Dataset) => void;
   suiteEtag?: string;
+  onStartRun?: () => void;
 }
 
 const TabsContent: FC<Props> = ({
@@ -41,32 +42,22 @@ const TabsContent: FC<Props> = ({
   dataset,
   onChangeDataset,
   suiteEtag,
+  onStartRun,
 }) => {
-  const headerPostfix = useMemo(() => {
-    return (
-      <ValidityStatusLabel
-        valid={selectedTestSuite?.valid}
-        message={selectedTestSuite.validationWarnings
-          ?.map((warning) => `${warning.code}: ${warning.message}`)
-          .join(', \n')}
-      />
-    );
-  }, [selectedTestSuite.valid, selectedTestSuite.validationWarnings]);
-
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <PropertiesTabContent
-          headerPostfix={headerPostfix}
-          entity={selectedTestSuite}
-          view={ApplicationRoute.TestSuites}
-          id={selectedTestSuite.id}
-        >
+        <PropertiesTabContent entity={selectedTestSuite} view={ApplicationRoute.TestSuites} id={selectedTestSuite.id}>
           <TestSuiteProperties testSuite={selectedTestSuite} onChange={onChange} />
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.TestSuiteMethod && (
-        <MethodTabContent testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
+        <MethodTabContent
+          testSuite={selectedTestSuite}
+          onChange={onChange}
+          isSkipRefresh={isSkipRefresh}
+          dataset={dataset}
+        />
       )}
       {activeTab === EntityViewTab.TestCases && (
         <TestCases
@@ -81,6 +72,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
+      {activeTab === EntityViewTab.Trends && <Trends selectedTestSuite={selectedTestSuite} onStartRun={onStartRun} />}
       {activeTab === EntityViewTab.Metrics && (
         <Metrics selectedTestSuite={selectedTestSuite} dataset={dataset} onChange={onChange} />
       )}

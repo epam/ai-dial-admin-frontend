@@ -52,6 +52,11 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [discardKey, setDiscardKey] = useState(0);
   const [dataset, setDataset] = useState<Dataset | null>(null);
   const [datasetEtag, setDatasetEtag] = useState(DEFAULT_ETAG);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const isSavingRef = useRef(false);
+  /** Stays true after save until router.refresh() delivers a new etag/entity — prevents stale-etag retries. */
+  const awaitingRefreshRef = useRef(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -81,6 +86,15 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   }, [originalTestSuite]);
 
   useEffect(() => {
+    if (!awaitingRefreshRef.current) {
+      return;
+    }
+    awaitingRefreshRef.current = false;
+    isSavingRef.current = false;
+    setIsSaving(false);
+  }, [etag, originalTestSuite]);
+
+  useEffect(() => {
     if (!originalTestSuite.datasetId) {
       setDataset(null);
       setDatasetEtag(DEFAULT_ETAG);
@@ -102,9 +116,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           return;
         }
         loadDataset();
+        router.refresh();
       });
     },
-    [datasetEtag, showNotification, loadDataset],
+    [datasetEtag, showNotification, loadDataset, router],
   );
 
   const onDiscard = useCallback(() => {
@@ -117,7 +132,13 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     loadDataset();
   }, [loadDataset, originalTestSuite]);
 
-  const onSave = useCallback(() => {
+  const onSave = useCallback(async () => {
+    if (isSavingRef.current) {
+      return;
+    }
+    isSavingRef.current = true;
+    setIsSaving(true);
+
     const showSuccessAndRefresh = () => {
       showNotification(
         getSuccessNotification(
@@ -125,15 +146,18 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t),
         ),
       );
+      awaitingRefreshRef.current = true;
       router.refresh();
     };
 
     const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
       showNotification(getErrorNotification(header, message, requestId));
+      awaitingRefreshRef.current = true;
       router.refresh();
     };
 
-    updateTestSuite(selectedTestSuite, etag).then((suiteRes) => {
+    try {
+      const suiteRes = await updateTestSuite(selectedTestSuite, etag);
       if (!suiteRes.success) {
         handleError(suiteRes.errorHeader, suiteRes.errorMessage, suiteRes.requestId);
         return;
@@ -142,40 +166,24 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
       const datasetId = selectedTestSuite.datasetId;
 
-      const afterTestCases = () => {
-        if (dataset && datasetId) {
-          updateDataset(dataset, datasetEtag).then((datasetRes) => {
-            if (!datasetRes.success) {
-              handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
-              return;
-            }
-            if (datasetRes.etag) {
-              setDatasetEtag(datasetRes.etag);
-            }
-            showSuccessAndRefresh();
-          });
-        } else {
-          showSuccessAndRefresh();
-        }
-      };
-
       if (dirtyTestCases.length > 0 && datasetId) {
-        updateTestCases(datasetId, dirtyTestCases).then((testCasesRes) => {
-          if (!testCasesRes.success) {
-            handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
-            return;
-          }
-          testCasesActionsRef.current?.clearDirtyAndRefresh();
-          setHasTestCaseChanges(false);
-          afterTestCases();
-        });
-      } else {
-        testCasesActionsRef.current?.clearDirtyAndRefresh();
-        setHasTestCaseChanges(false);
-        afterTestCases();
+        const testCasesRes = await updateTestCases(datasetId, dirtyTestCases);
+        if (!testCasesRes.success) {
+          handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
+          return;
+        }
       }
-    });
-  }, [selectedTestSuite, etag, showNotification, t, router, dataset, datasetEtag]);
+      testCasesActionsRef.current?.clearDirtyAndRefresh();
+      setHasTestCaseChanges(false);
+
+      showSuccessAndRefresh();
+    } finally {
+      if (!awaitingRefreshRef.current) {
+        isSavingRef.current = false;
+        setIsSaving(false);
+      }
+    }
+  }, [selectedTestSuite, etag, showNotification, t, router]);
 
   const onStartRunTestSuite = useCallback(() => {
     setIsModalOpen(true);
@@ -183,7 +191,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
 
   const onRun = useCallback(
     (num?: string | number) => {
-      runTestSuite(selectedTestSuite.id, num).then((res) => {
+      return runTestSuite(selectedTestSuite.id, num).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
@@ -215,6 +223,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           view={ApplicationRoute.TestSuites}
           entity={selectedTestSuite}
           isChanged={isChanged}
+          isSaving={isSaving}
           onDiscard={onDiscard}
           onSave={onSave}
           tabs={tabs}
@@ -253,6 +262,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               dataset={dataset}
               onChangeDataset={onChangeDataset}
               suiteEtag={etag}
+              onStartRun={onStartRunTestSuite}
             />
           )}
         </div>

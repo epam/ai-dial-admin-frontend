@@ -1,4 +1,6 @@
-export type ActivityAuditEntity = Record<string, string | string[] | boolean | number | object>;
+// A snapshot member the service cleared comes back as a literal `null`, which the diff generators treat
+// differently from an absent key — `generate-diffs.spec.ts` covers both paths.
+export type ActivityAuditEntity = Record<string, string | string[] | boolean | number | object | null>;
 
 export enum DiffStatus {
   ADDED = 'added',
@@ -28,6 +30,7 @@ export enum ActivityAuditType {
 export enum ActivityAuditView {
   Config = 'Config',
   Deployments = 'Deployments',
+  Analytics = 'Analytics',
 }
 
 export enum ActivityAuditResourceType {
@@ -47,13 +50,16 @@ export enum ActivityAuditResourceType {
   APPLICATION_DEPLOYMENT = 'ApplicationDeployment',
   INTERCEPTOR_DEPLOYMENT = 'InterceptorDeployment',
   MCP_DEPLOYMENT = 'McpDeployment',
-  NIM_DEPLOYMENT = 'NimDeployment',
   INFERENCE_DEPLOYMENT = 'InferenceDeployment',
   ADAPTER_IMAGE_DEFINITION = 'AdapterImageDefinition',
   APPLICATION_IMAGE_DEFINITION = 'ApplicationImageDefinition',
   INTERCEPTOR_IMAGE_DEFINITION = 'InterceptorImageDefinition',
   MCP_IMAGE_DEFINITION = 'McpImageDefinition',
   IMAGE_BUILD_DOMAIN_WHITELIST = 'ImageBuildDomainWhitelist',
+  TABLE = 'Table',
+  TABLE_COLUMN = 'TableColumn',
+  PIPELINE = 'Pipeline',
+  SAVED_QUERY = 'SavedQuery',
 }
 
 const IMAGE_DEFINITION_RESOURCE_TYPES = new Set<string>([
@@ -68,15 +74,25 @@ const CONTAINER_DEPLOYMENT_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
   ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
   ActivityAuditResourceType.MCP_DEPLOYMENT,
-  ActivityAuditResourceType.NIM_DEPLOYMENT,
   ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
 ]);
+
+export const ANALYTICS_AUDIT_RESOURCE_TYPES = [
+  ActivityAuditResourceType.TABLE,
+  ActivityAuditResourceType.TABLE_COLUMN,
+  ActivityAuditResourceType.PIPELINE,
+  ActivityAuditResourceType.SAVED_QUERY,
+];
+
+const ANALYTICS_RESOURCE_TYPES = new Set<string>(ANALYTICS_AUDIT_RESOURCE_TYPES);
 
 const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
   ...IMAGE_DEFINITION_RESOURCE_TYPES,
   ...CONTAINER_DEPLOYMENT_RESOURCE_TYPES,
   ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
 ]);
+
+const PARENT_RESOURCE_TYPES = new Set<string>([ActivityAuditResourceType.TABLE]);
 
 export const isImageDefinitionResource = (type?: string): boolean =>
   !!type && IMAGE_DEFINITION_RESOURCE_TYPES.has(type);
@@ -89,3 +105,7 @@ export const isContainerDeploymentResource = (type?: string): boolean =>
 
 export const isDeploymentManagerResource = (type?: string): boolean =>
   !!type && DEPLOYMENT_MANAGER_RESOURCE_TYPES.has(type);
+
+export const isAnalyticsResource = (type?: string): boolean => !!type && ANALYTICS_RESOURCE_TYPES.has(type);
+
+export const hasChildResourceActivities = (type?: string): boolean => !!type && PARENT_RESOURCE_TYPES.has(type);

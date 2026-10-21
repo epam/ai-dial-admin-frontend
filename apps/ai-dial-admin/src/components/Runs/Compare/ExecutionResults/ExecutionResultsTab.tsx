@@ -1,36 +1,43 @@
 'use client';
 
-import { ColDef, FilterChangedEvent, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import {
+  ColDef,
+  CellClickedEvent,
+  CellKeyDownEvent,
+  FilterChangedEvent,
+  GridApi,
+  GridReadyEvent,
+  RowClassRules,
+  RowClickedEvent,
+} from 'ag-grid-community';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
-import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
 import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import {
-  buildComparePanelColumnTree,
   collectHiddenColIds,
-  flattenComparePanelColumnTree,
-  preserveFlatColDefHideState,
+  columnStateFromComparePanelTree,
+  deriveCompareGridColDefs,
+  haveSameComparePanelLayout,
+  reconcileCompareColumns,
+  syncComparePanelFromColumnState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 import {
   countCompareDiffs,
   hasCompareRowDiff,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import {
-  applyEyeCellRendererParams,
-  getCompareColumnsCompare,
-  mergeComparePanelColumns,
-  splitComparePanelColumns,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
-import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
+import { applyCompareColumnMove } from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-blocks';
+import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { CompareRun, ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import {
   getCompareRowSelectionId,
   isMatchedCompareRow,
@@ -38,20 +45,18 @@ import {
   RESULT_FILTERS,
 } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
-  onOpenRowDetail: (row: CompareAnalyticsRow) => void;
+  onOpenRowDetail: (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => void;
   executionResultsState: ExecutionResultsTabUiState;
   setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
 }
@@ -59,11 +64,18 @@ interface Props {
 const DISPLAY_PANEL_CLASS_NAME =
   'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
 
+const loadRunResults = async (runId: string) => {
+  const run = await getRun(runId);
+  if (!run) {
+    return null;
+  }
+  return getTestCaseRunResults(RESULT_FILTERS(run));
+};
+
 const ExecutionResultsTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onlyMatchingTestCases,
   showDisplayPanel,
   onToggleDisplayPanel,
@@ -73,33 +85,21 @@ const ExecutionResultsTab: FC<Props> = ({
   setExecutionResultsState,
 }) => {
   const t = useI18n();
-  const { currentTheme } = useTheme();
 
   const gridApiRef = useRef<GridApi | null>(null);
+  const cellClickHandledRef = useRef(false);
   const [isGridReady, setIsGridReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  const {
-    viewDifferencesOnly,
-    hideHighlights,
-    gridColDefs,
-    panelColDefs,
-    filterModel,
-    columnState,
-    results,
-    comparedResults,
-  } = executionResultsState;
+  const { viewDifferencesOnly, hideHighlights, panelColDefs, filterModel, columnState, results, comparedResults } =
+    executionResultsState;
 
   const panelColDefsRef = useRef(panelColDefs);
   panelColDefsRef.current = panelColDefs;
-  const gridColDefsRef = useRef(gridColDefs);
-  gridColDefsRef.current = gridColDefs;
+  const columnStateRef = useRef(columnState);
+  columnStateRef.current = columnState;
 
   const errorText = t(RunsI18nKey.MetricFailedText);
-  const runNames = useMemo(
-    () => ({ primary: primaryRunName, secondary: comparedRunName }),
-    [primaryRunName, comparedRunName],
-  );
 
   useEffect(() => {
     if (results !== null) {
@@ -109,17 +109,13 @@ const ExecutionResultsTab: FC<Props> = ({
     let isCancelled = false;
     setHasLoadError(false);
 
-    getRun(primaryRunId)
-      .then((runData) => {
+    loadRunResults(primaryRunId)
+      .then((resultsResponse) => {
         if (isCancelled) return;
-        if (!runData) {
+        if (resultsResponse === null) {
           setHasLoadError(true);
           return;
         }
-        return getTestCaseRunResults(RESULT_FILTERS(runData));
-      })
-      .then((resultsResponse) => {
-        if (isCancelled || resultsResponse === undefined) return;
         setExecutionResultsState({ results: resultsResponse?.content || [] });
       })
       .catch(() => {
@@ -140,14 +136,14 @@ const ExecutionResultsTab: FC<Props> = ({
 
     let isCancelled = false;
 
-    getRun(comparedRunId)
-      .then((comparedRun) => {
-        if (isCancelled || !comparedRun) return;
-        return getTestCaseRunResults(RESULT_FILTERS(comparedRun));
-      })
-      .then((res) => {
-        if (isCancelled || res === undefined) return;
-        setExecutionResultsState({ comparedResults: res?.content || [] });
+    loadRunResults(comparedRunId)
+      .then((resultsResponse) => {
+        if (isCancelled) return;
+        if (resultsResponse === null) {
+          setHasLoadError(true);
+          return;
+        }
+        setExecutionResultsState({ comparedResults: resultsResponse?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
@@ -180,43 +176,68 @@ const ExecutionResultsTab: FC<Props> = ({
     return getCompareColumnsCompare(mergedRowData, errorText, t(RunsI18nKey.RunCompareDelta), {
       hideHighlights,
       metricsSchema,
-      theme: currentTheme,
+      runs,
     });
-  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, currentTheme]);
+  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, runs]);
 
-  const eyeRendererParams = useMemo(
-    () => ({
-      onOpenRowDetail,
-      selectedRowId: selectedRow ? getCompareRowSelectionId(selectedRow) : null,
-      viewRowDetailsLabel: t(RunsI18nKey.RunCompareViewRowDetails),
-    }),
-    [onOpenRowDetail, selectedRow, t],
+  const onCellClicked = useCallback(
+    (event: CellClickedEvent<CompareAnalyticsRow>) => {
+      if (!event.data) return;
+      cellClickHandledRef.current = true;
+      const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
+      const mappedFieldKey = mapGridColToPivotField(colId);
+      onOpenRowDetail(event.data, { focusFieldKey: mappedFieldKey });
+    },
+    [onOpenRowDetail],
+  );
+
+  const onRowClicked = useCallback(
+    (event: RowClickedEvent<CompareAnalyticsRow>) => {
+      if (!event.data) return;
+      if (cellClickHandledRef.current) {
+        cellClickHandledRef.current = false;
+        return;
+      }
+      onOpenRowDetail(event.data);
+    },
+    [onOpenRowDetail],
+  );
+
+  const onCellKeyDown = useCallback(
+    (event: CellKeyDownEvent<CompareAnalyticsRow>) => {
+      if ((event.event as KeyboardEvent | undefined)?.key !== 'Enter' || !event.data) return;
+      onOpenRowDetail(event.data);
+    },
+    [onOpenRowDetail],
   );
 
   const displayColDefs = useMemo(() => {
-    const base = gridColDefs.length > 0 ? gridColDefs : computedColDefs;
-    if (!base.length) return base;
-    return applyEyeCellRendererParams(base as ColDef[], eyeRendererParams);
-  }, [gridColDefs, computedColDefs, eyeRendererParams]);
-
-  useEffect(() => {
-    if (!displayColDefs.length) return;
-    gridApiRef.current?.setGridOption('columnDefs', displayColDefs);
-  }, [displayColDefs]);
+    if (!panelColDefs.length) {
+      return computedColDefs;
+    }
+    return deriveCompareGridColDefs(panelColDefs, columnState, computedColDefs as ColDef[]);
+  }, [panelColDefs, columnState, computedColDefs]);
+  const displayColDefsRef = useRef(displayColDefs);
+  displayColDefsRef.current = displayColDefs;
 
   useEffect(() => {
     if (!computedColDefs.length) {
       return;
     }
 
-    const flatDefs = computedColDefs as ColDef[];
-    setExecutionResultsState({
-      panelColDefs: buildComparePanelColumnTree(flatDefs, runNames, panelColDefsRef.current),
-      gridColDefs: preserveFlatColDefHideState(flatDefs, gridColDefsRef.current),
+    const { panelColDefs: nextPanelColDefs } = reconcileCompareColumns({
+      schemaColDefs: computedColDefs as ColDef[],
+      runs,
+      previousPanelColDefs: panelColDefsRef.current,
+      columnState: columnStateRef.current,
     });
-  }, [computedColDefs, runNames, setExecutionResultsState]);
+    if (haveSameComparePanelLayout(panelColDefsRef.current, nextPanelColDefs)) {
+      return;
+    }
+    setExecutionResultsState({ panelColDefs: nextPanelColDefs });
+  }, [computedColDefs, runs, setExecutionResultsState]);
 
-  const hiddenColIds = useMemo(() => collectHiddenColIds(gridColDefs), [gridColDefs]);
+  const hiddenColIds = useMemo(() => collectHiddenColIds(displayColDefs), [displayColDefs]);
 
   const displayedRowData = useMemo(() => {
     if (mergedRowData === null) return null;
@@ -256,22 +277,39 @@ const ExecutionResultsTab: FC<Props> = ({
       ...compareGridOptions,
       rowHeight: 40,
       rowClassRules,
+      onCellClicked,
+      onRowClicked,
+      onCellKeyDown,
       onFilterChanged: (event: FilterChangedEvent) => {
         syncGridUiState(event.api);
       },
       onSortChanged: (event: { api: GridApi }) => {
         syncGridUiState(event.api);
       },
-      onColumnMoved: (event: { api: GridApi; finished?: boolean }) => {
-        if (event.finished !== false) {
-          syncGridUiState(event.api);
+      onColumnMoved: (event: {
+        api: GridApi;
+        finished?: boolean;
+        source?: string;
+        columns?: { getColId: () => string }[] | null;
+      }) => {
+        // A drag already leaves the grid in its new order. Re-saving orders that
+        // applyColumnState or a grid-option refresh emit feeds the restore effect
+        // and the two keep swapping the columns.
+        if (event.source === 'uiColumnMoved' && event.finished !== false) {
+          const movedIds = new Set((event.columns ?? []).map((column) => column.getColId()));
+          const nextColumnState = applyCompareColumnMove(event.api, displayColDefsRef.current, movedIds);
+          const nextPanelColDefs = syncComparePanelFromColumnState(panelColDefsRef.current, nextColumnState);
+          setExecutionResultsState({
+            columnState: nextColumnState,
+            panelColDefs: nextPanelColDefs,
+          });
         }
       },
       onColumnVisible: (event: { api: GridApi }) => {
         syncGridUiState(event.api);
       },
     }),
-    [rowClassRules, syncGridUiState],
+    [rowClassRules, syncGridUiState, onCellClicked, onRowClicked, onCellKeyDown, setExecutionResultsState],
   );
 
   useEffect(() => {
@@ -279,7 +317,7 @@ const ExecutionResultsTab: FC<Props> = ({
       return;
     }
 
-    const gridColumnState = gridApiRef.current?.getColumnState();
+    const gridColumnState = columnState?.length ? columnState : gridApiRef.current?.getColumnState();
     if (!gridColumnState?.length) {
       return;
     }
@@ -289,27 +327,35 @@ const ExecutionResultsTab: FC<Props> = ({
       return;
     }
 
-    const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevPanelColDefs, gridColumnState);
-    if (haveTreeColDefsSamePanelState(prevPanelColDefs, syncedColDefs)) {
+    const syncedColDefs = syncComparePanelFromColumnState(prevPanelColDefs, gridColumnState);
+    if (haveSameComparePanelLayout(prevPanelColDefs, syncedColDefs)) {
       return;
     }
 
     setExecutionResultsState({ panelColDefs: syncedColDefs });
-  }, [showDisplayPanel, computedColDefs, setExecutionResultsState]);
+  }, [showDisplayPanel, computedColDefs, columnState, isGridReady, setExecutionResultsState]);
 
   const onPanelColumnsChange = useCallback(
     (nestedPanelCols: ColDef[]) => {
-      const flatDefs = flattenComparePanelColumnTree(nestedPanelCols);
-      const { actionColumn } = splitComparePanelColumns(computedColDefs as ColDef[]);
-      const mergedGridDefs = mergeComparePanelColumns(flatDefs, actionColumn);
+      const current = gridApiRef.current?.getColumnState() ?? columnStateRef.current ?? [];
+      const nextColumnState = columnStateFromComparePanelTree(nestedPanelCols, current);
+      const nextPanelColDefs = nextColumnState.length
+        ? syncComparePanelFromColumnState(nestedPanelCols, nextColumnState)
+        : nestedPanelCols;
 
       setExecutionResultsState({
-        panelColDefs: nestedPanelCols,
-        gridColDefs: mergedGridDefs,
+        panelColDefs: nextPanelColDefs,
+        ...(nextColumnState.length ? { columnState: nextColumnState } : {}),
       });
-      requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
+      requestAnimationFrame(() => {
+        const api = gridApiRef.current;
+        if (!api || api.isDestroyed()) {
+          return;
+        }
+        api.sizeColumnsToFit();
+      });
     },
-    [computedColDefs, setExecutionResultsState],
+    [setExecutionResultsState],
   );
 
   const onGridReady = useCallback((event: GridReadyEvent) => {
@@ -320,6 +366,14 @@ const ExecutionResultsTab: FC<Props> = ({
   // Restore after AgGridWrapper's setGridColumnsState (child effect runs first).
   useEffect(() => {
     const api = gridApiRef.current;
+    // An empty result replaces the grid, so this ref still points at the destroyed API.
+    if (api?.isDestroyed()) {
+      gridApiRef.current = null;
+      if (isGridReady) {
+        setIsGridReady(false);
+      }
+      return;
+    }
     if (!isGridReady || !api) {
       return;
     }
@@ -334,10 +388,19 @@ const ExecutionResultsTab: FC<Props> = ({
       }
     }
 
-    if (columnState?.length) {
-      api.applyColumnState({ state: columnState, applyOrder: true });
+    const stateToRestore = columnStateRef.current;
+    if (stateToRestore?.length) {
+      const liveColumns = api.getColumnState();
+      if (!liveColumns) {
+        return;
+      }
+      const liveOrder = liveColumns.map((column) => column.colId).join(',');
+      const applyOrder = stateToRestore.map((column) => column.colId).join(',');
+      if (liveOrder !== applyOrder) {
+        api.applyColumnState({ state: stateToRestore, applyOrder: true });
+      }
     }
-  }, [isGridReady, filterModel, columnState, displayColDefs, displayedRowData]);
+  }, [isGridReady, filterModel, displayColDefs]);
 
   const isCompareDataReady = results !== null && comparedResults !== null;
 

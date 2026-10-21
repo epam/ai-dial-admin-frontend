@@ -9,7 +9,12 @@ const stream = pretty({
   translateTime: 'yyyy-mm-dd HH:MM:ss.l o',
 });
 
-const logger = pino(stream);
+const logger = pino(
+  {
+    level: process.env.NODE_ENV === 'test' ? 'silent' : 'info',
+  },
+  stream,
+);
 
 const otelLogger = logs.getLogger('otel-pino-logger');
 

@@ -9,9 +9,11 @@ import {
   createEmptyRunConditionFilter,
   deserializeRunConditionFilters,
   getRunConditionFieldOptions,
+  getRunConditionOperatorOptions,
   isRunConditionFilterComplete,
   parseIncludedIds,
   rowMatchesFilter,
+  sanitizeRunConditionOperator,
   serializeRunConditionFilters,
 } from '../utils';
 import { RunConditionLogicalOp, RunConditionOperator } from '../models';
@@ -29,6 +31,29 @@ describe('RunCondition utils', () => {
       { field: 'data::tags', displayName: 'tags', isArray: true },
       { field: 'data::filename', displayName: 'filename', isArray: false },
     ]);
+  });
+
+  test('getRunConditionOperatorOptions returns Contain and NotContains for array fields', () => {
+    expect(getRunConditionOperatorOptions(true).map((o) => o.value)).toEqual([
+      RunConditionOperator.Contain,
+      RunConditionOperator.NotContains,
+    ]);
+  });
+
+  test('getRunConditionOperatorOptions returns all four operators for scalar fields', () => {
+    expect(getRunConditionOperatorOptions(false).map((o) => o.value)).toEqual([
+      RunConditionOperator.Contain,
+      RunConditionOperator.NotContains,
+      RunConditionOperator.Equal,
+      RunConditionOperator.NotEqual,
+    ]);
+  });
+
+  test('sanitizeRunConditionOperator coerces Equal and NotEqual to Contain', () => {
+    expect(sanitizeRunConditionOperator(RunConditionOperator.Equal)).toBe(RunConditionOperator.Contain);
+    expect(sanitizeRunConditionOperator(RunConditionOperator.NotEqual)).toBe(RunConditionOperator.Contain);
+    expect(sanitizeRunConditionOperator(RunConditionOperator.NotContains)).toBe(RunConditionOperator.NotContains);
+    expect(sanitizeRunConditionOperator(RunConditionOperator.Contain)).toBe(RunConditionOperator.Contain);
   });
 
   test('serializeRunConditionFilters returns null for empty filters', () => {
@@ -118,6 +143,39 @@ describe('RunCondition utils', () => {
     expect(filters).toHaveLength(1);
     expect(filters[0].field).toBe('data::filename');
     expect(filters[0].predicates).toEqual([{ operator: RunConditionOperator.Contain, value: 'gpt' }]);
+  });
+
+  test('deserializeRunConditionFilters keeps isArray false when merging same scalar field', () => {
+    const original = serializeRunConditionFilters([
+      {
+        id: '1',
+        field: 'test_case_name',
+        displayName: 'Test case name',
+        isArray: false,
+        logicalOp: RunConditionLogicalOp.And,
+        predicates: [{ operator: RunConditionOperator.Contain, value: 'a' }],
+      },
+      {
+        id: '2',
+        field: 'test_case_name',
+        displayName: 'Test case name',
+        isArray: false,
+        logicalOp: RunConditionLogicalOp.And,
+        predicates: [{ operator: RunConditionOperator.Equal, value: 'b' }],
+      },
+    ]);
+
+    const filters = deserializeRunConditionFilters(original);
+
+    expect(filters).toHaveLength(1);
+    expect(filters[0].isArray).toBe(false);
+    expect(filters[0].predicates).toHaveLength(2);
+    expect(getRunConditionOperatorOptions(filters[0].isArray).map((o) => o.value)).toEqual([
+      RunConditionOperator.Contain,
+      RunConditionOperator.NotContains,
+      RunConditionOperator.Equal,
+      RunConditionOperator.NotEqual,
+    ]);
   });
 
   test('buildIncludedIdsQuery scopes by dataset_id and selects id', () => {
@@ -223,30 +281,28 @@ describe('RunCondition utils', () => {
     expect(filters[0].predicates).toEqual([{ operator: RunConditionOperator.Contain, value: 'With' }]);
   });
 
-  test('rowMatchesFilter matches substring within array elements', () => {
-    const filter: FilterNode = {
+  test('rowMatchesFilter matches exact array elements, not substrings', () => {
+    const containTe: FilterNode = {
       op: ComparisonOp.Co,
       args: [
-        { type: ExprType.Fn, name: 'lower', args: [{ type: ExprType.Field, name: 'data::fasts' }] },
-        { type: ExprType.Value, value_type: ValueType.String, value: 'With' },
+        { type: ExprType.Fn, name: 'lower', args: [{ type: ExprType.Field, name: 'data::array test' }] },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'te' },
       ],
     };
-    const schema = [{ name: 'fasts', type: TestCaseItemType.ARRAY, required: false, description: '' }];
+    const schema = [{ name: 'array test', type: TestCaseItemType.ARRAY, required: false, description: '' }];
 
+    expect(rowMatchesFilter({ id: '1', data: { 'array test': ['qwe'] } }, containTe, schema)).toBe(false);
+    expect(rowMatchesFilter({ id: '2', data: { 'array test': ['tee'] } }, containTe, schema)).toBe(false);
+    expect(rowMatchesFilter({ id: '3', data: { 'array test': ['[gh] [po]', '[111]', 'te'] } }, containTe, schema)).toBe(
+      true,
+    );
+    expect(rowMatchesFilter({ id: '4', data: { 'array test': ['TE'] } }, containTe, schema)).toBe(true);
+
+    const notContainTe: FilterNode = { ...containTe, op: ComparisonOp.Nc };
+    expect(rowMatchesFilter({ id: '1', data: { 'array test': ['qwe'] } }, notContainTe, schema)).toBe(true);
+    expect(rowMatchesFilter({ id: '2', data: { 'array test': ['tee'] } }, notContainTe, schema)).toBe(true);
     expect(
-      rowMatchesFilter(
-        {
-          id: '1',
-          data: {
-            fasts: ['With over 120 million visitors a year tourism is integral to the Alpine economy'],
-          },
-        },
-        filter,
-        schema,
-      ),
-    ).toBe(true);
-    expect(
-      rowMatchesFilter({ id: '2', data: { fasts: ['several new villages were built in France'] } }, filter, schema),
+      rowMatchesFilter({ id: '3', data: { 'array test': ['[gh] [po]', '[111]', 'te'] } }, notContainTe, schema),
     ).toBe(false);
   });
 

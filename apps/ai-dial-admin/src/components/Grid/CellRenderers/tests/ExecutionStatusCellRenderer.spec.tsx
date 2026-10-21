@@ -13,7 +13,7 @@ describe('ExecutionStatusCellRenderer', () => {
   test('renders success icon with success class', () => {
     const { container } = renderStatus({ executionInfo: { status: ExtractionResultStatus.SUCCESS } });
 
-    expect(container.querySelector('svg.text-success.shrink-0')).toBeInTheDocument();
+    expect(container.querySelector('svg.text-score-abs-11.shrink-0')).toBeInTheDocument();
   });
 
   test('renders failed icon with error class', () => {
@@ -48,7 +48,7 @@ describe('ExecutionStatusCellRenderer', () => {
   test('renders success icon from AnalyticsResult executionStatus', () => {
     const { container } = renderStatus({ executionStatus: ExtractionResultStatus.SUCCESS });
 
-    expect(container.querySelector('svg.text-success.shrink-0')).toBeInTheDocument();
+    expect(container.querySelector('svg.text-score-abs-11.shrink-0')).toBeInTheDocument();
   });
 
   test('renders failed icon from AnalyticsResult executionStatus', () => {

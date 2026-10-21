@@ -36,8 +36,8 @@ describe('getRollbackRedirectHref', () => {
   });
 
   test('returns deployment-manager entity detail hrefs', () => {
-    expect(getRollbackRedirectHref(ActivityAuditResourceType.MCP_DEPLOYMENT, 'svc')).toBe('/mcp-containers/svc');
-    expect(getRollbackRedirectHref(ActivityAuditResourceType.NIM_DEPLOYMENT, 'svc')).toBe('/model-servings/svc');
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.MCP_DEPLOYMENT, 'svc')).toBe('/containers/svc');
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.INFERENCE_DEPLOYMENT, 'svc')).toBe('/model-servings/svc');
     expect(getRollbackRedirectHref(ActivityAuditResourceType.MCP_IMAGE_DEFINITION, 'img-1')).toBe(
       '/deployment-images/img-1',
     );

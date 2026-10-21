@@ -4,14 +4,23 @@ import { FC, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { DialFormPopup, DialInput, DialSelectField, PopupSize } from '@epam/ai-dial-ui-kit';
+import {
+  DialFormPopup,
+  DialInput,
+  DialRadioGroup,
+  DialSelectField,
+  PopupSize,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import { createTable } from '@/src/app/[lang]/tables/actions';
 import { createTableForm, tableDetailHref } from '@/src/components/Analytics/Tables/utils';
+import { WRITE_MODE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsTable, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, CreateTableDto, TableWriteMode } from '@/src/models/analytics/table';
 import { CreateTableForm } from '@/src/models/analytics/tables-ui';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -34,6 +43,12 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
   const update = <K extends keyof CreateTableForm>(key: K, value: CreateTableForm[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
+  const writeModeRadios: RadioButtonWithContent[] = WRITE_MODE_OPTIONS.map((option) => ({
+    id: option.value,
+    name: t(option.labelKey),
+    caption: t(option.descriptionKey),
+  }));
+
   const sourceOptions = tables
     .filter((tbl) => tbl.type === AnalyticsTableType.Source)
     .map((tbl) => ({ value: tbl.name, label: tbl.name }));
@@ -52,6 +67,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           name: trimmed,
           type: AnalyticsTableType.Source,
           ...(form.description.trim() ? { description: form.description.trim() } : {}),
+          write: form.write,
         }
       : {
           name: trimmed,
@@ -103,6 +119,17 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           value={form.description}
           onChange={(v) => update('description', v ?? '')}
         />
+        {isSource && (
+          <DialRadioGroup
+            elementId="table-write-mode"
+            fieldTitle={t(AnalyticsTablesI18nKey.WriteMode)}
+            labelDescription={t(AnalyticsTablesI18nKey.WriteModeHint)}
+            orientation={RadioGroupOrientation.Column}
+            radioButtons={writeModeRadios}
+            activeRadioButton={form.write}
+            onChange={(id) => update('write', id as TableWriteMode)}
+          />
+        )}
         {!isSource && (
           <DialSelectField
             id="table-source"

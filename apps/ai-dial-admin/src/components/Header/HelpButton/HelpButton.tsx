@@ -5,6 +5,9 @@ import { IconHelpCircle } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
 
+import { HELP_DOCUMENTATION_LINKS } from '@/src/constants/help-documentation-links';
+import { useAppContext } from '@/src/context/AppContext';
+import { useHelpTopic } from '@/src/context/HelpTopicContext';
 import { getHelpUrl, isListView } from '@/src/utils/help/get-help-url';
 
 interface Props {
@@ -12,7 +15,10 @@ interface Props {
 }
 const HelpButton: FC<Props> = ({ docLink }) => {
   const pathname = usePathname();
-  const helpUrl = getHelpUrl(pathname ?? '');
+  const { featureFlags } = useAppContext();
+  const { helpRoute } = useHelpTopic();
+  // A page that knows its own topic (a container's type) overrides the URL-derived one.
+  const helpUrl = helpRoute ? HELP_DOCUMENTATION_LINKS[helpRoute] : getHelpUrl(pathname ?? '', featureFlags);
   const hasHelpLink = Boolean(helpUrl && docLink);
 
   const onClick = useCallback(() => {

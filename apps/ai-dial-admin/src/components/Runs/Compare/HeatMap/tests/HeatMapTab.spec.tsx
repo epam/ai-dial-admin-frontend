@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -6,6 +7,9 @@ import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { createDefaultCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
+
+const runs = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #317' });
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
@@ -58,8 +62,8 @@ const ControlledHeatMapTab: FC<{
       <HeatMapTab
         primaryRunId="run-1"
         comparedRunId="run-sibling"
-        primaryRunName="Run #316"
-        comparedRunName="Run #317"
+        onlyMatchingTestCases={false}
+        runs={runs}
         colorDisplayMode={colorDisplayMode}
         onColorDisplayModeChange={vi.fn()}
         selectedMetricGroups={selectedMetricGroups}
@@ -105,7 +109,7 @@ describe('HeatMapTab', () => {
             testCaseId: 'tc-1',
             responseStatusCode: 200,
             runIndex: 0,
-            executionStatus: 'SUCCESS',
+            executionStatus: ExtractionResultStatus.SUCCESS,
             testCaseName: 'Test Case 1',
             metricValues: {
               Accuracy: { precision: isPrimary ? 0.5 : 0.8 },
@@ -120,11 +124,8 @@ describe('HeatMapTab', () => {
   test('renders grid and compact color scale after data loads', async () => {
     renderHeatMapTab();
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
   });
@@ -132,11 +133,8 @@ describe('HeatMapTab', () => {
   test('renders delta color scale in delta mode', async () => {
     renderHeatMapTab(HeatMapColorDisplayMode.Delta);
 
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(screen.getByText('-1')).toBeInTheDocument();
     expect(screen.getByText('+1')).toBeInTheDocument();
   });
@@ -144,9 +142,7 @@ describe('HeatMapTab', () => {
   test('shows only selected metric groups in the grid', async () => {
     renderHeatMapTab(HeatMapColorDisplayMode.Absolute, new Set(['Accuracy']));
 
-    await waitFor(() => {
-      expect(screen.getByText('Accuracy')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Accuracy')).toBeInTheDocument();
 
     expect(screen.queryByText('Quality')).not.toBeInTheDocument();
   });
@@ -158,7 +154,7 @@ describe('HeatMapTab', () => {
         testCaseId: 'tc-1',
         responseStatusCode: 200,
         runIndex: 0,
-        executionStatus: 'SUCCESS',
+        executionStatus: ExtractionResultStatus.SUCCESS,
         testCaseName: 'Test Case 1',
         metricValues: {
           Accuracy: { precision: 0.5 },
@@ -195,8 +191,8 @@ describe('HeatMapTab', () => {
           <HeatMapTab
             primaryRunId="run-1"
             comparedRunId="run-sibling"
-            primaryRunName="Run #316"
-            comparedRunName="Run #317"
+            onlyMatchingTestCases={false}
+            runs={runs}
             colorDisplayMode={colorDisplayMode}
             onColorDisplayModeChange={vi.fn()}
             selectedMetricGroups={new Set(['Accuracy', 'Quality'])}
@@ -210,18 +206,14 @@ describe('HeatMapTab', () => {
 
     const { rerender } = render(<ModeSwitchHarness colorDisplayMode={HeatMapColorDisplayMode.Absolute} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Accuracy')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Accuracy')).toBeInTheDocument();
 
     expect(screen.getAllByText('precision').length).toBeGreaterThan(0);
     expect(screen.queryByText('score')).not.toBeInTheDocument();
 
     rerender(<ModeSwitchHarness colorDisplayMode={HeatMapColorDisplayMode.Delta} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Accuracy')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Accuracy')).toBeInTheDocument();
 
     expect(screen.getAllByText('precision').length).toBeGreaterThan(0);
     expect(screen.queryByText('score')).not.toBeInTheDocument();

@@ -21,7 +21,9 @@ export enum QueryFunctionReturnType {
   Integer = 'integer',
   Long = 'long',
   Numeric = 'numeric',
+  Boolean = 'boolean',
   Timestamp = 'timestamp',
+  Array = 'array',
   SameAsArgument = 'same_as_argument',
 }
 

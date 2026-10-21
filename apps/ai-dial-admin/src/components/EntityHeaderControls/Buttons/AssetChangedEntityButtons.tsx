@@ -20,6 +20,11 @@ interface Props {
   existingVersions?: Record<string, string[]>;
   isEditorEnabled?: boolean;
   isAddedVersion?: boolean;
+  /** Versionless views (prompt/conversation) have no save-as-new-version flow. */
+  isVersionlessView?: boolean;
+  isSaving?: boolean;
+  /** Disables Save only; Save as new version stays on the entity path and is unaffected. */
+  isSaveDisabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
@@ -31,6 +36,9 @@ const AssetChangedEntityButtons: FC<Props> = ({
   existingVersions,
   entityName,
   isAddedVersion,
+  isVersionlessView,
+  isSaving,
+  isSaveDisabled,
 }) => {
   const t = useI18n();
 
@@ -42,7 +50,10 @@ const AssetChangedEntityButtons: FC<Props> = ({
   const isMobile = useIsMobileScreen();
   const [buttonsClassName, setButtonsClassName] = useState('');
 
-  const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
+  const isDisableSave = useMemo(
+    () => (isEditorEnabled ? false : !isValid || !!isSaving),
+    [isEditorEnabled, isValid, isSaving],
+  );
 
   const onStartDiscard = useCallback(() => {
     dispatch({ type: ValidationActionType.Reset });
@@ -70,10 +81,10 @@ const AssetChangedEntityButtons: FC<Props> = ({
       <ChangedEntityButtons
         onDiscard={onStartDiscard}
         onSave={onTryToSave}
-        disableSave={isDisableSave}
+        disableSave={isDisableSave || !!isSaveDisabled}
         saveLabel={t(ButtonsI18nKey.Save)}
       >
-        {!isAddedVersion && (
+        {!isAddedVersion && !isVersionlessView && (
           <DialNeutralButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
@@ -84,6 +95,7 @@ const AssetChangedEntityButtons: FC<Props> = ({
       </ChangedEntityButtons>
 
       {isModalOpen &&
+        !isVersionlessView &&
         createPortal(
           <AddVersionModal
             header={t(PromptsI18nKey.NewVersionSave)}

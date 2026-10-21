@@ -21,7 +21,8 @@ describe('LabelledText', () => {
 
   test('renders copy button if copyButton is true', () => {
     render(<LabelledText label="Copy Label" text="Copy Text" copyable />);
-    expect(screen.getByLabelText('copy')).toBeInTheDocument();
+    // The control names the value it copies, so several of them in one view stay distinguishable.
+    expect(screen.getByLabelText('copy Copy Label')).toBeInTheDocument();
   });
 
   test('renders without text', () => {

@@ -35,7 +35,7 @@ const ExpanderCell = ({ data, value, onToggleExpand }: ExpanderCellParams) => {
             <IconChevronRight size={14} className={classNames('text-secondary', synthetic && 'opacity-40')} />
           )
         ) : (
-          <span className="size-1.5 rounded-full bg-tertiary" />
+          <span className="size-1.5 rounded-full bg-secondary" />
         )}
       </div>
       <span className={classNames(synthetic && 'italic')}>{value}</span>

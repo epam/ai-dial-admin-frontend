@@ -1,5 +1,6 @@
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ApplicationRoute } from '@/src/types/routes';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import Authentication from '../../Auth/Authentication';
@@ -16,29 +17,29 @@ const noneToolset: Toolset = {
 
 describe('Authentication', () => {
   test('renders field title', () => {
-    render(<Authentication toolset={baseToolset} />);
+    render(<Authentication view={ApplicationRoute.Toolsets} toolset={baseToolset} />);
     expect(screen.getByText(EntityFieldsI18nKey.authSettings)).toBeInTheDocument();
   });
 
   test('renders field title', () => {
-    render(<Authentication toolset={{}} />);
+    render(<Authentication view={ApplicationRoute.Toolsets} toolset={{}} />);
     expect(screen.getByText(EntityFieldsI18nKey.authSettings)).toBeInTheDocument();
   });
 
   test('renders all auth options', () => {
-    render(<Authentication toolset={noneToolset} />);
+    render(<Authentication view={ApplicationRoute.Toolsets} toolset={noneToolset} />);
     expect(screen.getByText(ToolsetI18nKey.OAuth)).toBeInTheDocument();
     expect(screen.getByText(ToolsetI18nKey.ApiKey)).toBeInTheDocument();
     expect(screen.getByText(ToolsetI18nKey.NoneAuth)).toBeInTheDocument();
   });
 
   test('shows selected state for correct option', () => {
-    render(<Authentication toolset={oauthToolset} />);
+    render(<Authentication view={ApplicationRoute.Toolsets} toolset={oauthToolset} />);
     expect(screen.getByText(ToolsetI18nKey.OAuth)).toBeInTheDocument();
   });
 
   test('shows disabled state when disabled', () => {
-    render(<Authentication toolset={baseToolset} disabled />);
+    render(<Authentication view={ApplicationRoute.Toolsets} toolset={baseToolset} disabled />);
     expect(screen.getByText(ToolsetI18nKey.ApiKey)).toBeInTheDocument();
   });
 });

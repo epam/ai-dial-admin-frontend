@@ -1,8 +1,34 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { CompareRunSlot, CompareViewTab } from '../constants';
-import { getCompareRunsPath, getCompareRunsUrn, getCompareViewTabs, getSelectableCompareRuns } from '../utils';
+import { CompareRunEdge, CompareRunSlot, CompareViewTab } from '../constants';
+import {
+  fetchCompareCandidateRuns,
+  getCompareRunsPath,
+  getCompareRunsUrn,
+  getCompareViewTabs,
+  getSelectableCompareRuns,
+  getCompareRowResult,
+  getCompareRunColId,
+  getCompareRunEdge,
+  getCompareRuns,
+} from '../utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
+
+const getRunsQueryMock = vi.fn();
+const getTestSuiteMock = vi.fn();
+const getDatasetTestSuitesMock = vi.fn();
+
+vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  getRunsQuery: (...args: unknown[]) => getRunsQueryMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+  getTestSuite: (...args: unknown[]) => getTestSuiteMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
+  getDatasetTestSuites: (...args: unknown[]) => getDatasetTestSuitesMock(...args),
+}));
 
 describe('Runs Compare :: getSelectableCompareRuns', () => {
   const suiteRuns = [
@@ -45,5 +71,121 @@ describe('Runs Compare :: getCompareViewTabs', () => {
       { id: CompareViewTab.HeatMap, label: RunsI18nKey.RunCompareTabHeatMap },
       { id: CompareViewTab.ExecutionResults, label: RunsI18nKey.RunCompareTabExecutionResults },
     ]);
+  });
+});
+
+describe('Runs Compare :: getCompareRuns', () => {
+  const primary = { id: 'run-1', name: 'Run #1' };
+  const compared = { id: 'run-2', name: 'Run #2' };
+
+  test('lists the baseline first by default', () => {
+    expect(getCompareRuns(primary, compared)).toEqual([
+      { ...primary, slot: CompareRunSlot.Primary, index: '1', isBaseline: true },
+      { ...compared, slot: CompareRunSlot.Secondary, index: '2', isBaseline: false },
+    ]);
+  });
+});
+
+describe('Runs Compare :: getCompareRowResult / getCompareRunColId / getCompareRunEdge', () => {
+  test('resolves the result a row holds for each slot', () => {
+    const compared = { id: 'cmp' };
+    const row = { id: 'primary', _compared: compared } as never;
+
+    expect(getCompareRowResult(row, CompareRunSlot.Primary)).toBe(row);
+    expect(getCompareRowResult(row, CompareRunSlot.Secondary)).toBe(compared);
+  });
+
+  test('prefixes secondary column ids only', () => {
+    expect(getCompareRunColId(CompareRunSlot.Primary, 'status')).toBe('status');
+    expect(getCompareRunColId(CompareRunSlot.Secondary, 'status')).toBe('cmp_status');
+  });
+
+  test('the first position is the start of the pair, later ones the end', () => {
+    expect(getCompareRunEdge(0)).toBe(CompareRunEdge.Start);
+    expect(getCompareRunEdge(1)).toBe(CompareRunEdge.End);
+  });
+});
+
+describe('Runs Compare :: fetchCompareCandidateRuns', () => {
+  beforeEach(() => {
+    getRunsQueryMock.mockReset();
+    getTestSuiteMock.mockReset();
+    getDatasetTestSuitesMock.mockReset();
+    getRunsQueryMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
+      const suiteIds = filters.find((filter) => filter.column === 'testSuiteId')?.value.split(',') ?? [];
+      return Promise.resolve({
+        content: suiteIds.map((suiteId) => ({ id: `run-of-${suiteId}`, testSuiteId: suiteId })),
+      });
+    });
+  });
+
+  test('lists the own suite first, then the other suites of the same dataset, each tagged with its suite name', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockResolvedValue({
+      response: [{ id: 'suite-2', name: 'Two' }, { id: 'suite-1', name: 'One' }, { name: 'no id' }],
+    });
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(runs.map(({ id, testSuiteName }) => [id, testSuiteName])).toEqual([
+      ['run-of-suite-1', 'One'],
+      ['run-of-suite-2', 'Two'],
+    ]);
+  });
+
+  test('keeps the own suite first even when the query returns a sibling run first', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockResolvedValue({ response: [{ id: 'suite-2', name: 'Two' }] });
+    getRunsQueryMock.mockResolvedValue({
+      content: [
+        { id: 'run-b', testSuiteId: 'suite-2' },
+        { id: 'run-a', testSuiteId: 'suite-1' },
+      ],
+    });
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(runs.map((run) => run.id)).toEqual(['run-a', 'run-b']);
+  });
+
+  test('requests the completed runs of every suite in a single query', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockResolvedValue({
+      response: [
+        { id: 'suite-2', name: 'Two' },
+        { id: 'suite-3', name: 'Three' },
+      ],
+    });
+
+    await fetchCompareCandidateRuns('suite-1');
+
+    expect(getRunsQueryMock).toHaveBeenCalledOnce();
+    expect(getRunsQueryMock).toHaveBeenCalledWith(
+      0,
+      300,
+      [],
+      expect.arrayContaining([
+        expect.objectContaining({ column: 'testSuiteId', operator: 'in', value: 'suite-1,suite-2,suite-3' }),
+        expect.objectContaining({ column: 'status', value: 'COMPLETED' }),
+      ]),
+    );
+  });
+
+  test('stays within the own suite when it has no dataset', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One' } });
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(getDatasetTestSuitesMock).not.toHaveBeenCalled();
+    expect(runs.map((run) => run.id)).toEqual(['run-of-suite-1']);
+  });
+
+  test('falls back to the own suite when the dataset lookup fails', async () => {
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'One', datasetId: 'ds-1' } });
+    getDatasetTestSuitesMock.mockRejectedValue(new Error('boom'));
+
+    const runs = await fetchCompareCandidateRuns('suite-1');
+
+    expect(runs.map(({ id, testSuiteName }) => [id, testSuiteName])).toEqual([['run-of-suite-1', 'One']]);
   });
 });

@@ -2,28 +2,36 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { getModelsList } from '@/src/app/[lang]/models/actions';
-import { getAllRunners } from '@/src/app/[lang]/assets-app-runners/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi } from '@/src/app/api/api';
-import AppView from '@/src/components/Assets/Apps/View';
+import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
+import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
+import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
+import AppView from '@/src/components/Assets/Entities/Apps/View';
+import PlatformApplicationView from '@/src/components/Assets/Platform/Applications/View';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { DialRole } from '@/src/models/dial/role';
+import { CatalogSchemaOptions, readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getApp, getApps } from '../actions';
+import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
+import { getApp, getApps, getConfigFileApplication, getPlatformApplication } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string }>;
+  searchParams: Promise<{ path?: string; configFile?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -37,35 +45,79 @@ export default async function Page(params: {
 
   let applicationSchemes: DialApplicationScheme[] | null = [];
   let assetRunners: ResourceInfo[] = [];
-  let interceptors: DialInterceptor[] | null = [];
+  let roles: DialRole[] = [];
+  let interceptors: DialInterceptor[] = [];
+  let globalInterceptors: string[] = [];
+  let translators: ResourceInfo[] = [];
+  const optionWarnings: EntitiesI18nKey[] = [];
+
+  // See `isPlatformBucketDetailRoute` for the `?path=` URL contract this reads.
+  const searchParams = await params.searchParams;
+  const rawPath = searchParams.path;
+  const isConfigFileMode = searchParams.configFile === 'true';
+  const isPlatformBucket = isPlatformBucketDetailRoute(rawPath);
+  const name = decodeURIComponent((await params.params).id);
 
   try {
-    const path = decodeURIComponent((await params.searchParams).path);
-    const name = decodeURIComponent((await params.params).id);
+    if (isPlatformBucket) {
+      if (isConfigFileMode) {
+        const result = await getConfigFileApplication(name);
+        app = result.success ? (result.data as unknown as AssetApp) : null;
+      } else {
+        const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
 
-    app = await getApp(path, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as AssetApp | null;
-    });
+        app = await getPlatformApplication(path, etag).then((res) => {
+          etag = res?.etag || DEFAULT_ETAG;
+          return (res?.response as unknown as AssetApp) || null;
+        });
+      }
+    } else {
+      const path = decodeURIComponent(rawPath as string);
 
-    apps = ((await getApps(app?.folderId as string))?.filter(
-      (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
-    ) || []) as AssetApp[];
+      app = await getApp(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as AssetApp | null;
+      });
 
-    models = await getModelsList();
-    applications = await applicationsApi.getApplicationsList(token);
+      apps = ((await getApps(app?.folderId || app?._metadata?.folderId || ''))?.filter(
+        (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
+      ) || []) as AssetApp[];
+    }
 
-    applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
-    interceptors = await interceptorsApi.getInterceptorsList(token);
+    assetRunners = await getAllRunners();
+    translators = (await getTranslators('')) || [];
+
+    // Admin-backend enrichment only: without DIAL_ADMIN_API_URL there is no host to call, so
+    // `applications`/`applicationSchemes` stay empty and the page renders on Core-direct data alone.
+    if (process.env.DIAL_ADMIN_API_URL) {
+      models = await getModelsList();
+      applications = await applicationsApi.getApplicationsList(token);
+      applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
+    } else {
+      [models, applications, applicationSchemes] = await Promise.all([
+        readConfigEntities<DialModel>(token, ConfigFileEntityType.Models, optionWarnings, true),
+        readConfigEntities<DialApplication>(token, ConfigFileEntityType.Applications, optionWarnings, true),
+        readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, optionWarnings, true),
+      ]);
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
   }
 
-  try {
-    assetRunners = await getAllRunners();
-  } catch (e) {
-    errorObjLog(e, 'Failed to fetch asset app runners');
-  }
+  // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
+  // not prevent the app from loading, and one list failing must not skip another. Core-direct —
+  // matching Assets > Models / Assets > App Runners — rather than the admin-BE list, which cannot see
+  // interceptors/roles declared in Core's configuration file, and which is a different population from
+  // `Assets > Interceptors`'/`Assets > Roles`' own API-written one. Read unconditionally for both
+  // buckets (not just the platform-bucket Roles tab that uses `roles`) to match the existing
+  // interceptors read here, which is likewise unconditional.
+  let catalogSchemas: CatalogSchemaOptions;
+  [roles, interceptors, globalInterceptors, catalogSchemas] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readGlobalInterceptors(token, optionWarnings),
+    readCatalogSchemaOptions(token),
+  ]);
 
   if (app == null) {
     notFound();
@@ -73,15 +125,36 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <AppView
-        etag={etag}
-        originalApp={app}
-        assets={apps || []}
-        models={models || []}
-        applications={applications || []}
-        schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
-        interceptors={interceptors || []}
-      />
+      {isPlatformBucket ? (
+        <PlatformApplicationView
+          etag={etag}
+          originalApp={app}
+          models={models || []}
+          applications={applications || []}
+          schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
+          roles={roles}
+          interceptors={interceptors}
+          globalInterceptors={globalInterceptors}
+          translators={translators}
+          catalogSchemas={catalogSchemas}
+          optionWarnings={optionWarnings}
+          isConfigFileSource={isConfigFileMode}
+        />
+      ) : (
+        <AppView
+          etag={etag}
+          originalApp={app}
+          assets={apps || []}
+          models={models || []}
+          applications={applications || []}
+          schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
+          interceptors={interceptors}
+          globalInterceptors={globalInterceptors}
+          translators={translators}
+          catalogSchemas={catalogSchemas}
+          optionWarnings={optionWarnings}
+        />
+      )}
     </SaveValidationContextProvider>
   );
 }

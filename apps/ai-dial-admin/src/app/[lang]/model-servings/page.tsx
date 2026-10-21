@@ -14,10 +14,9 @@ import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const nimEnabled = isValueTruthy(process.env.NIM_ENABLED);
   const hfEnabled = isValueTruthy(process.env.HF_ENABLED);
 
-  if (!nimEnabled && !hfEnabled) {
+  if (!hfEnabled) {
     redirect(ApplicationRoute.Home);
   }
 
@@ -33,9 +32,7 @@ export default async function Page() {
     notFound();
   }
   const allContainers = containersResponse.response || [];
-  const containers = allContainers.filter(
-    (container) => container.$type === CONTAINER_TYPE.NIM || container.$type === CONTAINER_TYPE.HF,
-  );
+  const containers = allContainers.filter((container) => container.$type === CONTAINER_TYPE.HF);
   const names = allContainers.map((container) => container.name || '');
 
   return (

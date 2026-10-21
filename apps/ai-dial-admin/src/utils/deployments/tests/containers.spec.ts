@@ -4,6 +4,7 @@ import {
   convertMilliCoresToCores,
   getContainerRedeploySnapshot,
   getContainerSourceTypeLabel,
+  getContainerKind,
   getContainersByView,
   getContainerTemplate,
   getContainerScaling,
@@ -52,10 +53,6 @@ describe('containers utils', () => {
   });
 
   describe('getContainerScaling', () => {
-    test('returns SERVING_SCALING for NIM', () => {
-      expect(getContainerScaling(CONTAINER_TYPE.NIM)).toEqual(SERVING_SCALING);
-    });
-
     test('returns SERVING_SCALING for HF', () => {
       expect(getContainerScaling(CONTAINER_TYPE.HF)).toEqual(SERVING_SCALING);
     });
@@ -74,12 +71,6 @@ describe('containers utils', () => {
   });
 
   describe('getContainerResources', () => {
-    test('includes GPU for NIM', () => {
-      const resources = getContainerResources(CONTAINER_TYPE.NIM);
-      expect(resources.requests?.['nvidia.com/gpu']).toBe('1');
-      expect(resources.limits?.['nvidia.com/gpu']).toBe('1');
-    });
-
     test('includes GPU for HF', () => {
       const resources = getContainerResources(CONTAINER_TYPE.HF);
       expect(resources.requests?.['nvidia.com/gpu']).toBe('1');
@@ -130,11 +121,6 @@ describe('containers utils', () => {
   });
 
   describe('getContainerSource', () => {
-    test('returns NGC_REGISTRY for NIM', () => {
-      const source = getContainerSource(CONTAINER_TYPE.NIM);
-      expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.NGC_REGISTRY);
-    });
-
     test('returns HUGGINGFACE for HF', () => {
       const source = getContainerSource(CONTAINER_TYPE.HF);
       expect(source.$type).toBe(CONTAINER_SOURCE_TYPE.HUGGINGFACE);
@@ -199,15 +185,6 @@ describe('containers utils', () => {
       const template = getContainerTemplate(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
       expect(template?.scaling).toEqual(DEFAULT_SCALING);
-    });
-
-    test('returns template for NIM with SERVING_SCALING', () => {
-      const template = getContainerTemplate(CONTAINER_TYPE.NIM);
-      expect(template?.$type).toBe(CONTAINER_TYPE.NIM);
-      expect(template?.scaling).toEqual(SERVING_SCALING);
-      expect(getContainerTemplate(CONTAINER_TYPE.NIM, { GPU_REQUEST: '2', GPU_LIMIT: '2' })?.$type).toBe(
-        CONTAINER_TYPE.NIM,
-      );
     });
 
     test('returns template for ADAPTER with DEFAULT_SCALING', () => {
@@ -302,7 +279,7 @@ describe('containers utils', () => {
 
   describe('getContainerRedeploySnapshot', () => {
     const baseContainer: Container = {
-      $type: CONTAINER_TYPE.NIM,
+      $type: CONTAINER_TYPE.HF,
       name: 'container-1',
       displayName: 'c1',
       source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img-1' },
@@ -660,16 +637,6 @@ describe('containers utils', () => {
       ).toBe(SourceI18nKey.DockerImage);
     });
 
-    test('returns NgcRegistry key for NGC_REGISTRY', () => {
-      expect(
-        getContainerSourceTypeLabel(
-          { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY, imageRef: 'foo' },
-          ApplicationRoute.ModelServings,
-          t,
-        ),
-      ).toBe(SourceI18nKey.NgcRegistry);
-    });
-
     test('returns HuggingFace key for HUGGINGFACE', () => {
       expect(
         getContainerSourceTypeLabel(
@@ -746,6 +713,7 @@ describe('containers utils', () => {
       $type: CONTAINER_TYPE.ADAPTER,
       source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
       status: CONTAINER_STATUS.RUNNING,
+      metadata: { envs: [] },
     };
 
     test('returns the container unchanged when it has no probe properties', () => {
@@ -769,5 +737,16 @@ describe('containers utils', () => {
       };
       expect(sanitizeContainerProbe(container)).toBe(container);
     });
+  });
+});
+
+describe('getContainerKind', () => {
+  test('maps a container type to its kind', () => {
+    expect(getContainerKind(CONTAINER_TYPE.MCP)).toBe(ApplicationRoute.McpContainers);
+  });
+
+  test('returns undefined for inference and a missing type', () => {
+    expect(getContainerKind(CONTAINER_TYPE.HF)).toBeUndefined();
+    expect(getContainerKind(undefined)).toBeUndefined();
   });
 });

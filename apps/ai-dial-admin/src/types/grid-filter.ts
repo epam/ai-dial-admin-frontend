@@ -7,4 +7,6 @@ export enum GridFilterType {
   GREATER_THAN_OR_EQUAL = 'greaterThanOrEqual',
   LESS_THAN = 'lessThan',
   LESS_THAN_OR_EQUAL = 'lessThanOrEqual',
+  // Matches any of a comma-joined set of values — backs a fixed-value multiselect filter.
+  INCLUDES = 'in',
 }

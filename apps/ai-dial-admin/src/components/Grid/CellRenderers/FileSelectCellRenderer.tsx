@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
 
@@ -23,16 +23,24 @@ const FileSelectCellRenderer: FC<FileSelectCellRendererParams> = ({
   setValue,
   isReadonly,
 }) => {
+  const incomingValue = value as string;
+  const [localValue, setLocalValue] = useState(incomingValue);
+
+  useEffect(() => {
+    setLocalValue(incomingValue);
+  }, [incomingValue, data]);
+
   const onChangeValue = (value: string) => {
+    setLocalValue(value);
     onChange?.(value, data, colDef?.field as string, node.rowIndex as number);
     setValue?.(value);
   };
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       <FileSelectInput
         view={view}
         id={id}
-        value={value as string}
+        value={localValue}
         onChangeValue={onChangeValue}
         inputClassName="h-8"
         disabled={isReadonly}

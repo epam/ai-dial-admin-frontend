@@ -1,5 +1,6 @@
-import { JWT } from 'next-auth/jwt';
 import { expect, test, describe, vi, beforeEach } from 'vitest';
+
+import { NextAuthToken } from '@/src/models/auth';
 
 import {
   streamRequest,
@@ -14,7 +15,12 @@ vi.mock('../send-request', () => ({
 }));
 
 describe('Utils :: api :: streamRequest', () => {
-  const mockToken: JWT = { access_token: 'token' };
+  const mockToken: NextAuthToken = {
+    access_token: 'token',
+    providerId: 'keycloak',
+    userId: 'user-1',
+    refreshToken: 'refresh',
+  };
   const mockUrl = 'https://example.com/file';
   const mockFileName = 'file.txt';
 
@@ -34,7 +40,7 @@ describe('Utils :: api :: streamRequest', () => {
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
 
-    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, mockFileName, mockToken, true);
 
@@ -48,7 +54,7 @@ describe('Utils :: api :: streamRequest', () => {
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
 
-    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, mockFileName, mockToken, false);
 
@@ -63,13 +69,40 @@ describe('Utils :: api :: streamRequest', () => {
     // try/catch swallowed into a promise that never resolves — hanging any caller awaiting it.
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
-    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, 'Brand™.txt', mockToken, false);
 
     expect(response.headers.get('Content-Disposition')).toBe(
       `attachment; filename="Brand_.txt"; filename*=UTF-8''Brand%E2%84%A2.txt`,
     );
+  });
+
+  test('uses the backend response filename over the caller-supplied fallback (e.g. ZIP export)', async () => {
+    const mockStream = createMockReadableStream();
+    const mockResponse = new Response(mockStream, {
+      headers: { 'Content-Disposition': 'attachment; filename="dataset_123_export.zip"' },
+    });
+
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
+
+    const response = await streamRequest(mockUrl, 'dataset_123_export.csv', mockToken, false);
+
+    expect(response.headers.get('Content-Disposition')).toBe(
+      `attachment; filename="dataset_123_export.zip"; filename*=UTF-8''dataset_123_export.zip`,
+    );
+    expect(response.headers.get('Content-Type')).toBe('application/zip');
+  });
+
+  test('forwards the backend response Content-Type as-is when present', async () => {
+    const mockStream = createMockReadableStream();
+    const mockResponse = new Response(mockStream, { headers: { 'Content-Type': 'application/zip' } });
+
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
+
+    const response = await streamRequest(mockUrl, mockFileName, mockToken, false);
+
+    expect(response.headers.get('Content-Type')).toBe('application/zip');
   });
 
   describe('getContentType', () => {
@@ -110,10 +143,10 @@ describe('Utils :: api :: streamRequest', () => {
 
   describe('streamRequest error handling', () => {
     test('returns promise resolving to null on error', async () => {
-      (sendRequest as vi.Mock).mockImplementation(() => {
+      vi.mocked(sendRequest).mockImplementation(() => {
         throw new Error('fail');
       });
-      const promise = streamRequest('url', 'file.txt', { access_token: 'token' }, true);
+      const promise = streamRequest('url', 'file.txt', mockToken, true);
       expect(promise).toBeInstanceOf(Promise);
     });
   });

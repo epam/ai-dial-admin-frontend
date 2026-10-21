@@ -18,8 +18,14 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Files,
   ApplicationRoute.AssetsApplications,
   ApplicationRoute.AssetsToolsets,
-  ApplicationRoute.AssetsModels,
-  ApplicationRoute.AssetsAppRunners,
+  ApplicationRoute.PlatformModels,
+  ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformCatalogSchemas,
+  ApplicationRoute.PlatformInterceptors,
+  ApplicationRoute.PlatformTranslators,
+  ApplicationRoute.PlatformRoutes,
+  ApplicationRoute.PlatformRoles,
+  ApplicationRoute.PlatformKeys,
   ApplicationRoute.TestSuites,
   ApplicationRoute.Datasets,
 ];
@@ -31,6 +37,7 @@ interface Props extends JsonConfiguration {
 const JsonToggleWithFormats: FC<Props> = ({
   view,
   isEditorEnabled,
+  isEditorDisabled,
   selectedFormat,
   onChangeSelectedFormat,
   onToggleEditor,
@@ -50,7 +57,7 @@ const JsonToggleWithFormats: FC<Props> = ({
   ];
 
   return (
-    <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor}>
+    <JsonToggles isEditorEnabled={isEditorEnabled} isEditorDisabled={isEditorDisabled} onToggleEditor={onToggleEditor}>
       {isEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) && !onHideFormatSelector?.() ? (
         <DialSelect
           size={SelectSize.Sm}

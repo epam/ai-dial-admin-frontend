@@ -1,7 +1,9 @@
+import { ITooltipParams } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import HeatMapCellTooltip from '@/src/components/Runs/Compare/HeatMap/HeatMapCellTooltip';
+import { HeatMapCellTooltipData, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
 const absoluteTooltip = {
@@ -11,8 +13,7 @@ const absoluteTooltip = {
   runLabel: '[2] Run#315',
   valueRow: {
     value: '8.120',
-    backgroundColor: '#32640b',
-    borderColor: '#30e070',
+    className: 'bg-score-abs-11 border-score-abs-11',
   },
   valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
 };
@@ -23,15 +24,18 @@ const deltaTooltip = {
   input: 'Equality check',
   valueRow: {
     value: '+0.950',
-    backgroundColor: '#32640b',
-    borderColor: '#30e070',
+    className: 'bg-score-delta-p4 border-score-delta-p4',
   },
   valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
 };
 
+// The renderer reads `value` only; the rest of ag-grid's tooltip params are never touched, so one
+// typed empty fake stands in for them instead of a `never` spread at every call site.
+const tooltipParams = {} as ITooltipParams<HeatMapRow, HeatMapCellTooltipData>;
+
 describe('HeatMapCellTooltip', () => {
   test('renders absolute tooltip rows with run and score', () => {
-    render(<HeatMapCellTooltip value={absoluteTooltip} {...({} as never)} />);
+    render(<HeatMapCellTooltip value={absoluteTooltip} {...tooltipParams} />);
 
     expect(screen.getByText(RunsI18nKey.RunCompareHeatMapTooltipTestCase)).toBeInTheDocument();
     expect(screen.getByText(RunsI18nKey.RunCompareHeatMapTooltipMetric)).toBeInTheDocument();
@@ -46,7 +50,7 @@ describe('HeatMapCellTooltip', () => {
   });
 
   test('renders delta tooltip without run row', () => {
-    render(<HeatMapCellTooltip value={deltaTooltip} {...({} as never)} />);
+    render(<HeatMapCellTooltip value={deltaTooltip} {...tooltipParams} />);
 
     expect(screen.getByText(RunsI18nKey.RunCompareHeatMapTooltipDelta)).toBeInTheDocument();
     expect(screen.getByText('Row 006')).toBeInTheDocument();
@@ -65,7 +69,7 @@ describe('HeatMapCellTooltip', () => {
           valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
           valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
         }}
-        {...({} as never)}
+        {...tooltipParams}
       />,
     );
 
@@ -84,11 +88,10 @@ describe('HeatMapCellTooltip', () => {
           valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
           valueRow: {
             value: '0',
-            backgroundColor: '#32640b',
-            borderColor: '#30e070',
+            className: 'bg-score-delta-p4 border-score-delta-p4',
           },
         }}
-        {...({} as never)}
+        {...tooltipParams}
       />,
     );
 
@@ -97,7 +100,7 @@ describe('HeatMapCellTooltip', () => {
   });
 
   test('renders nothing when value is missing', () => {
-    const { container } = render(<HeatMapCellTooltip value={undefined} {...({} as never)} />);
+    const { container } = render(<HeatMapCellTooltip value={undefined} {...tooltipParams} />);
 
     expect(container).toBeEmptyDOMElement();
   });

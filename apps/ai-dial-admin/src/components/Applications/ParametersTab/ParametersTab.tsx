@@ -1,10 +1,12 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, Ref, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
+
+import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import {
   convertJsonSchema,
   generateViewItems,
@@ -13,10 +15,10 @@ import {
   getInitialParamsView,
   getTargetUrl,
 } from '@/src/components/Applications/ParametersTab/utils';
-import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
+import { FrameCallbacks, FrameRendererHandle } from '@/src/components/FrameRenderer/models';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -25,13 +27,13 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   application?: DialApplication | DialApplicationResource;
@@ -40,6 +42,8 @@ interface Props {
   view?: ApplicationRoute;
   isChanged?: boolean;
   discardKey?: number;
+  frameRef?: Ref<FrameRendererHandle>;
+  frameCallbacks?: FrameCallbacks;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   onSave?: () => void;
@@ -54,6 +58,8 @@ const ParametersTab: FC<Props> = ({
   view,
   isChanged,
   discardKey,
+  frameRef,
+  frameCallbacks,
   onSave,
   setIsChanged,
   setSelectedApplication,
@@ -71,15 +77,12 @@ const ParametersTab: FC<Props> = ({
   const [isAddClicked, setIsAddClicked] = useState(false);
 
   useEffect(() => {
-    let scheme = undefined;
-    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes, view);
+    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
     setIsSchemeLoading(true);
-    getResolvedApplicationScheme(foundRunner?.$id ?? '').then((res) => {
-      if (res.success && (res.response as { schema?: DialApplicationScheme })?.schema) {
-        scheme = (res.response as { schema: DialApplicationScheme }).schema;
-      } else {
-        scheme = foundRunner ?? undefined;
-      }
+    resolveAppRunnerScheme(
+      foundRunner ?? { $id: (application as DialApplicationResource).application_type_schema_id },
+    ).then(({ runner: resolvedRunner, scheme: resolvedScheme }) => {
+      const scheme = resolvedScheme ?? resolvedRunner;
       setIsSchemeLoading(false);
       setScheme(scheme);
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
@@ -106,10 +109,12 @@ const ParametersTab: FC<Props> = ({
   }, [application, frameConfig, view]);
 
   const applicationProperties = useMemo(() => {
-    return view === ApplicationRoute.AssetsApplications
-      ? (application as DialApplicationResource)?.application_properties || {}
-      : (application as DialApplication)?.applicationProperties || {};
-  }, [application, view]);
+    return (
+      (application as DialApplicationResource)?.application_properties ||
+      (application as DialApplication)?.applicationProperties ||
+      {}
+    );
+  }, [application]);
 
   const jsonSchema = useMemo(
     () =>
@@ -225,7 +230,7 @@ const ParametersTab: FC<Props> = ({
                 {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
                   <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
                 ) : (
-                  <div className="flex-1 min-h-0 p-4 bg-layer-0">
+                  <div key={discardKey} className="flex-1 min-h-0 p-4 bg-layer-0">
                     <SchemaUiRenderer
                       schema={jsonSchema}
                       data={applicationProperties}
@@ -241,6 +246,8 @@ const ParametersTab: FC<Props> = ({
             )}
             {paramsView === ParamsView.UI && (
               <FrameRenderer
+                {...frameCallbacks}
+                ref={frameRef}
                 iframeUrl={targetUrl?.href ?? ''}
                 name={frameConfig?.name}
                 isJsonEditorEnabled={isEditorEnabled}

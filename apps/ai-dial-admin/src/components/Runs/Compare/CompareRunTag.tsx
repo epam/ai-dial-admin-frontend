@@ -7,24 +7,23 @@ import { FC } from 'react';
 import { DialTag } from '@epam/ai-dial-ui-kit';
 
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  runIndex: typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
-  name: string;
+  run: CompareRun;
   onEdit: () => void;
   isEditDisabled?: boolean;
 }
 
-const CompareRunTag: FC<Props> = ({ runIndex, name, onEdit, isEditDisabled }) => {
+const CompareRunTag: FC<Props> = ({ run, onEdit, isEditDisabled }) => {
   const t = useI18n();
-  const isPrimaryRun = runIndex === RUN_COMPARE_PRIMARY_INDEX;
-  const displayName = isPrimaryRun ? t(RunsI18nKey.RunComparePrimaryRunName, { name }) : name;
-  const ariaLabel = isPrimaryRun
-    ? t(RunsI18nKey.RunComparePrimaryTagAria, { index: runIndex, name })
-    : t(RunsI18nKey.RunCompareTagAria, { index: runIndex, name });
+  const { index, name, isBaseline } = run;
+  const displayName = isBaseline ? t(RunsI18nKey.RunComparePrimaryRunName, { name }) : name;
+  const ariaLabel = isBaseline
+    ? t(RunsI18nKey.RunComparePrimaryTagAria, { index, name })
+    : t(RunsI18nKey.RunCompareTagAria, { index, name });
 
   return (
     <DialTag
@@ -32,7 +31,7 @@ const CompareRunTag: FC<Props> = ({ runIndex, name, onEdit, isEditDisabled }) =>
       label=""
       icon={
         <span className={classNames('inline-flex items-center gap-1', isEditDisabled && 'opacity-50')}>
-          <CompareRunIndexBadge runIndex={runIndex} />
+          <CompareRunIndexBadge runIndex={index} />
           <span>{displayName}</span>
           <IconPencilMinus size={16} className="shrink-0 text-secondary" />
         </span>

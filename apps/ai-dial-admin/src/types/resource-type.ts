@@ -4,13 +4,17 @@ export enum ResourceType {
   APPLICATION = 'APPLICATION',
   TOOLSET = 'TOOL_SET',
   CONVERSATION = 'CONVERSATION',
+  SKILL = 'SKILL',
   MODEL = 'MODEL',
   APP_TYPE_SCHEMA = 'APP_TYPE_SCHEMA',
-  /**
-   * Read-only here: registered so the metadata route can list the API-written half of Core's
-   * interceptor and role populations. Neither has an asset surface — nothing writes them through
-   * `AssetApi`.
-   */
+  CATALOG_SCHEMA = 'CATALOG_SCHEMA',
   INTERCEPTOR = 'INTERCEPTOR',
+  TRANSLATOR = 'TRANSLATOR',
+  /**
+   * Read-only here: registered so the metadata route can list the API-written half of Core's role
+   * population. No asset surface writes it through `AssetApi`.
+   */
   ROLE = 'ROLE',
+  ROUTE = 'ROUTE',
+  PROJECT_KEY = 'PROJECT_KEY',
 }

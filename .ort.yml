@@ -1,45 +1,11 @@
 ---
+analyzer:
+  skip_excluded: true
 excludes:
   paths:
-    - pattern: 'package-lock.json'
-      reason: 'BUILD_TOOL_OF'
+    - pattern: "package-lock.json"
+      reason: "BUILD_TOOL_OF"
   scopes:
-    - pattern: 'devDependencies'
-      reason: 'DEV_DEPENDENCY_OF'
-      comment: 'Packages for development only.'
-resolutions:
-  rule_violations:
-    - message: "No license information is available for dependency \
-        'NPM::union:0\\.5\\.0'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'The dependency has MIT license in github repo'
-    - message: "No license information is available for dependency \
-        'NPM::ansi-color:0\\.2\\.1'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'No license'
-    - message: "No license information is available for dependency \
-        'NPM::process:0\\.10\\.1'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'The dependency has MIT license in github repo'
-    - message: "No license information is available for dependency \
-        'NPM::only:0\\.0\\.2'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'The dependency has MIT license in github repo'
-    - message: "No license information is available for dependency \
-        'NPM::rslog:1\\.2\\.3'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'The dependency has MIT license in github repo'
-    - message: "No license information is available for dependency \
-        'NPM::terser-webpack-plugin:5\\.3\\.14'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'The dependency has MIT license in github repo'
-    - message: "No license information is available for dependency \
-        'NPM::@vitest:ui:3\\.2\\.4'\\."
-      reason: 'CANT_FIX_EXCEPTION'
-      comment: 'The dependency has MIT license in github repo'
-license_choices:
-  package_license_choices:
-    - package_id: 'NPM::jszip:3.10.1'
-      license_choices:
-        - given: 'MIT OR GPL-3.0-or-later'
-          choice: 'MIT'
+    - pattern: "devDependencies"
+      reason: "DEV_DEPENDENCY_OF"
+      comment: "Packages for development only."

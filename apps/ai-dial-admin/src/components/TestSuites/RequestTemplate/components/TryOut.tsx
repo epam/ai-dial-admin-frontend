@@ -23,35 +23,97 @@ import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import {
+  SuiteType,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+  TryOutCoreResponse,
+  TryOutResponse,
+  TryOutVariablesByRequest,
+} from '@/src/models/evaluation/test-suite';
 import { columnsTab, EntityViewTab, responseTab } from '@/src/utils/tabs/utils';
+import {
+  normalizeResponseBodyForColumns,
+  unwrapJsonRequestBody,
+} from '@/src/components/TestSuites/utils/column-eval-context';
+import { TryOutInvocation } from '@/src/components/TestSuites/utils/models';
+import { getRequestTurnCounts, getTryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
 import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
 import TryOutRequestPreview from './TryOutRequestPreview';
+import TryOutRequestTabs from './TryOutRequestTabs';
 import TryOutResponsePreview from './TryOutResponse';
 
-export interface TryOutResponse {
-  statusCode: number;
-  [key: string]: unknown;
-}
 interface Props {
   testSuite: TestSuite;
   testCaseId?: string;
+  schema?: TestCaseSchema[];
+  initialTestCase?: TestCase;
 }
 
-const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
+const TryOutResponseBody: FC<{
+  response: TryOutCoreResponse | null;
+  isRequestSend: boolean;
+  growOnOpen: boolean;
+}> = ({ response, isRequestSend, growOnOpen }) => {
+  const t = useI18n();
+  const copyText = useMemo(() => (response?.body ? JSON.stringify(response.body, null, 2) : ''), [response]);
+
+  return (
+    <CollapsibleSection
+      title={t(BasicI18nKey.Response)}
+      fullViewContent={copyText}
+      headerIcon={<CopyButton value={copyText} valueLabel={t(BasicI18nKey.Response)} />}
+      growOnOpen={growOnOpen}
+    >
+      {isRequestSend ? (
+        <DialLoader />
+      ) : (
+        <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
+          <JsonEditor entity={response?.body as object} options={{ wordWrap: 'off' }} readonly={true} />
+        </div>
+      )}
+    </CollapsibleSection>
+  );
+};
+
+const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const tabs = [responseTab(t), columnsTab(t)];
   const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
-  const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
-  const [response, setResponse] = useState<TryOutResponse | null>(null);
-  const [resolvedRequest, setResolvedRequest] = useState<Record<string, unknown>>({});
+  const [requestBody, setRequestBody] = useState<TryOutVariablesByRequest>({});
+  const [tryOutResult, setTryOutResult] = useState<TryOutResponse | null>(null);
   const [isRequestSend, setIsRequestSend] = useState(false);
-  const [grafanaTraceUrl, setGrafanaTraceUrl] = useState<string | undefined>(undefined);
+  const [selectedRequestIndex, setSelectedRequestIndex] = useState(0);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(() => !!testCaseId);
 
-  const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
+  const response = tryOutResult?.response ?? null;
+  const resolvedRequest = tryOutResult?.resolvedRequest ?? {};
+  const history = tryOutResult?.history;
+  const grafanaTraceUrl = tryOutResult?.grafanaTraceUrl;
+
+  const invocation = useMemo<TryOutInvocation>(
+    () => ({
+      response: tryOutResult?.response,
+      extractedColumns: tryOutResult?.extractedColumns,
+      extractionWarnings: tryOutResult?.extractionWarnings,
+    }),
+    [tryOutResult],
+  );
+
+  const multiTurnLength = initialTestCase?.multiTurnData?.length ?? 0;
+  const turnCounts = useMemo(
+    () => getRequestTurnCounts(testSuite, schema, multiTurnLength),
+    [testSuite, schema, multiTurnLength],
+  );
+  const shape = useMemo(() => getTryOutSectionShape(turnCounts), [turnCounts]);
+  const showRequestTabs = turnCounts.length > 1 && (shape === 'requests' || shape === 'combined');
+  const renderRequestTabs = showRequestTabs && !isRequestSend && !isPreviewLoading && (!response || !!history?.length);
+
+  const onChangeRequestBody = useCallback((body: TryOutVariablesByRequest) => {
     setRequestBody(body);
   }, []);
 
@@ -72,60 +134,40 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
 
       const testSuiteId = testSuite.id || '';
       if (res?.success) {
-        const tryoutResponse = (res.response?.response as TryOutResponse) || null;
-        setResolvedRequest(res.response?.resolvedRequest || {});
-        setResponse(tryoutResponse);
-        setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
+        setTryOutResult(res.response ?? null);
         if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
-        const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
-        setResolvedRequest({ body: requestBody || {} });
-        setResponse(errorResponse.response);
-        if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
+        const errorResult: TryOutResponse = {
+          resolvedRequest: { body: requestBody || {} },
+          response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 },
+        };
+        setTryOutResult(errorResult);
+        if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResult);
       }
     } finally {
       setIsRequestSend(false);
     }
   }, [testSuite, testCaseId, requestBody]);
 
-  // todo: possible change this component to codeViewer
-  const responseBodyCopyText = useMemo(
-    () => (response?.body ? JSON.stringify(response?.body, null, 2) : ''),
-    [response],
-  );
-  const responseBody = useMemo(() => {
-    return (
-      <CollapsibleSection
-        title={t(BasicI18nKey.Response)}
-        fullViewContent={responseBodyCopyText}
-        headerIcon={<CopyButton value={responseBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
-        growOnOpen
-      >
-        {isRequestSend ? (
-          <DialLoader />
-        ) : (
-          <JsonEditor
-            entity={response?.body as object}
-            options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
-            readonly={true}
-          />
-        )}
-      </CollapsibleSection>
-    );
-  }, [t, responseBodyCopyText, isRequestSend, response]);
-
   useEffect(() => {
     if (!testCaseId) {
       const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
       if (responseFromStorage) {
-        setResponse(responseFromStorage.response as TryOutResponse);
-        setResolvedRequest(responseFromStorage.resolvedRequest || {});
-        setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
+        setTryOutResult(responseFromStorage);
       }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setSelectedRequestIndex(0);
+  }, [history]);
+
+  const responseBody = <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen />;
+  const columnsResponseBody = (
+    <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen={false} />
+  );
 
   return (
     <div className={classNames('flex flex-col gap-y-6 size-full min-h-0', !response && 'pb-4')}>
@@ -146,7 +188,10 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                     <DialNeutralButton
                       iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                       label={t(ButtonsI18nKey.Change)}
-                      onClick={() => setResponse(null)}
+                      onClick={() => {
+                        setTryOutResult(null);
+                        setActiveTab(EntityViewTab.Response);
+                      }}
                     />
                   )}
                 </div>
@@ -157,9 +202,18 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
           </div>
           <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
         </div>
-        <div className="flex">
-          <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
-        </div>
+        {response ? (
+          <div className="flex">
+            <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+          </div>
+        ) : null}
+        {renderRequestTabs ? (
+          <TryOutRequestTabs
+            testSuite={testSuite}
+            selectedIndex={selectedRequestIndex}
+            onSelect={setSelectedRequestIndex}
+          />
+        ) : null}
 
         {activeTab === EntityViewTab.Response && (
           <>
@@ -168,10 +222,14 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                 <TryOutRequestPreview
                   testSuite={testSuite}
                   testCaseId={testCaseId}
+                  schema={schema}
+                  initialTestCase={initialTestCase}
                   resolvedRequest={resolvedRequest}
                   isRequestSend={isRequestSend}
                   requestBody={requestBody}
                   onChangeRequestBody={onChangeRequestBody}
+                  selectedRequestIndex={renderRequestTabs ? selectedRequestIndex : undefined}
+                  onLoadingChange={setIsPreviewLoading}
                 />
               )}
 
@@ -179,10 +237,15 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                 <TryOutResponsePreview
                   response={response}
                   resolvedRequest={resolvedRequest}
+                  history={history}
                   grafanaTraceUrl={grafanaTraceUrl}
                   isRequestSend={isRequestSend}
                   responseBody={responseBody}
                   isMcp={isMcp}
+                  testSuite={testSuite}
+                  schema={schema}
+                  multiTurnData={initialTestCase?.multiTurnData}
+                  selectedRequestIndex={renderRequestTabs ? selectedRequestIndex : undefined}
                 />
               )}
             </div>
@@ -201,11 +264,17 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
 
         {activeTab === EntityViewTab.Columns && (
           <TryOutColumns
+            testSuite={testSuite}
+            history={history}
+            schema={schema}
+            multiTurnData={initialTestCase?.multiTurnData}
             columns={testSuite.responseColumns}
-            response={response?.body as Record<string, unknown>}
-            request={resolvedRequest.body as Record<string, unknown> | undefined}
+            invocation={invocation}
+            response={normalizeResponseBodyForColumns(response?.body as Record<string, unknown>)}
+            request={unwrapJsonRequestBody(resolvedRequest.body as Record<string, unknown> | undefined)}
             isLoading={isRequestSend}
-            responseBody={responseBody}
+            responseBody={columnsResponseBody}
+            selectedRequestIndex={renderRequestTabs ? selectedRequestIndex : undefined}
           />
         )}
       </>

@@ -12,6 +12,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.claude/commands/*.md|*.claude/rules/*.md|*.claude/skills/*.md|*.claude/settings.json|*.cursor/rules/*.mdc|*.mcp.json|*/AGENTS.md|*/CLAUDE.md|*openspec/config.yaml) node \"$CLAUDE_PROJECT_DIR/scripts/validate-agent-docs.mjs\" \"$f\" >/dev/null || exit 2 ;; esac",
+            "timeout": 30,
+            "statusMessage": "Validating agent configuration"
+          }
+        ]
+      }
     ]
   }
 }

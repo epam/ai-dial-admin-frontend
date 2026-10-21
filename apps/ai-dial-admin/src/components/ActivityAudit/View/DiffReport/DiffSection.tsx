@@ -1,8 +1,9 @@
 import { FC } from 'react';
 
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { CompareI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { ActivityAuditDiffSection } from '@/src/models/activity-audit';
+import { getAnalyticsColumnHeading } from '@/src/components/ActivityAudit/View/utils/analytics-diffs';
+import { AnalyticsTablesI18nKey, CompareI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditDiffSection, TranslateFn } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, CompareView, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { InlineTextDiffSide } from '@/src/utils/diff/models';
 import { filterNotEmptySections, getDiffCount } from '@/src/components/ActivityAudit/View/DiffReport/utils';
@@ -29,6 +30,27 @@ const CONTAINER_SECTION_TITLE_KEYS: Record<string, EntityFieldsI18nKey> = {
   [EntityParameterKeys.CONFIGURATION]: EntityFieldsI18nKey.Configuration,
 };
 
+const ANALYTICS_SECTION_TITLE_KEYS: Record<string, AnalyticsTablesI18nKey> = {
+  [EntityParameterKeys.COLUMNS]: AnalyticsTablesI18nKey.Columns,
+};
+
+const DIFF_STATUS_LABEL_KEYS: Partial<Record<DiffStatus, CompareI18nKey>> = {
+  [DiffStatus.ADDED]: CompareI18nKey.Added,
+  [DiffStatus.REMOVED]: CompareI18nKey.Removed,
+  [DiffStatus.CHANGED]: CompareI18nKey.Changed,
+};
+
+const getSectionTitle = (t: TranslateFn, name: string, type?: ActivityAuditResourceType): string => {
+  if (type === ActivityAuditResourceType.ROLE && name === EntityParameterKeys.ROLES) {
+    return t(EntityFieldsI18nKey.entities);
+  }
+  const sectionKey = CONTAINER_SECTION_TITLE_KEYS[name] ?? ANALYTICS_SECTION_TITLE_KEYS[name];
+  if (sectionKey) {
+    return t(sectionKey);
+  }
+  return t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey]);
+};
+
 const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView }) => {
   const t = useI18n();
 
@@ -40,13 +62,7 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
 
   if (validSections.length === 0) return null;
 
-  const containerSectionKey = CONTAINER_SECTION_TITLE_KEYS[name];
-  const title =
-    type === ActivityAuditResourceType.ROLE && name === EntityParameterKeys.ROLES
-      ? t(EntityFieldsI18nKey.entities)
-      : containerSectionKey
-        ? t(containerSectionKey)
-        : t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey]);
+  const title = getSectionTitle(t, name, type);
 
   return (
     <div
@@ -65,33 +81,45 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
           </div>
         }
       >
-        {validSections.map(({ index, currentData, compareData }) => {
-          const prefix = name === EntityParameterKeys.METADATA ? `Variable ${index + 1} ` : '';
+        {validSections.map(({ index, label, diffStatus, currentData, compareData }) => {
+          const groupHeading = getAnalyticsColumnHeading(t, label);
+          const inlinePrefix = !groupHeading && name === EntityParameterKeys.METADATA ? `Variable ${index + 1} ` : '';
+          const statusKey = diffStatus ? DIFF_STATUS_LABEL_KEYS[diffStatus] : void 0;
+          const status = statusKey ? t(statusKey) : '';
+          const groupLabel = [groupHeading ?? `${inlinePrefix}${title}`, status].filter(Boolean).join(', ');
           const compareLabel =
             compareView === CompareView.CURRENT ? t(CompareI18nKey.Current) : t(CompareI18nKey.After);
           return (
-            <div key={index} className="flex flex-row gap-8">
-              <div className="flex flex-col flex-1">
-                <h4 className="mb-2 text-secondary">{`${prefix}${t(CompareI18nKey.Before)}`}</h4>
-                <AuditEntityGrid
-                  data={currentData}
-                  parameter={name}
-                  type={type}
-                  index={index}
-                  diffView={diffView}
-                  diffSide={InlineTextDiffSide.Before}
-                />
-              </div>
-              <div className="flex flex-col flex-1">
-                <h4 className="mb-2 text-secondary">{`${prefix}${compareLabel}`}</h4>
-                <AuditEntityGrid
-                  data={compareData}
-                  parameter={name}
-                  type={type}
-                  index={index}
-                  diffView={diffView}
-                  diffSide={InlineTextDiffSide.After}
-                />
+            <div key={index} role="group" aria-label={groupLabel} className="flex flex-col">
+              {(groupHeading || status) && (
+                <div className="flex flex-row items-center gap-2 mb-2">
+                  {groupHeading && <h4>{groupHeading}</h4>}
+                  {status && <span className="text-secondary small">{status}</span>}
+                </div>
+              )}
+              <div className="flex flex-row gap-8">
+                <div className="flex flex-col flex-1">
+                  <h4 className="mb-2 text-secondary">{`${inlinePrefix}${t(CompareI18nKey.Before)}`}</h4>
+                  <AuditEntityGrid
+                    data={currentData}
+                    parameter={name}
+                    type={type}
+                    index={index}
+                    diffView={diffView}
+                    diffSide={InlineTextDiffSide.Before}
+                  />
+                </div>
+                <div className="flex flex-col flex-1">
+                  <h4 className="mb-2 text-secondary">{`${inlinePrefix}${compareLabel}`}</h4>
+                  <AuditEntityGrid
+                    data={compareData}
+                    parameter={name}
+                    type={type}
+                    index={index}
+                    diffView={diffView}
+                    diffSide={InlineTextDiffSide.After}
+                  />
+                </div>
               </div>
             </div>
           );

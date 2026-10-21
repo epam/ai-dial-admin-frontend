@@ -1,9 +1,9 @@
 ---
 # One canonical file, three consumers — each reads its own scoping key and ignores the others:
 #   Claude Code (.claude/rules/utils.md)                                  -> `paths`
-#   Cursor      (.cursor/rules/utils.mdc symlinks here)                   -> `globs` / `alwaysApply` / `description`
-#   Copilot     (.github/instructions/utils.instructions.md symlinks here) -> `applyTo`
-# Keep all three glob sets in sync. Editing the body updates every tool at once (the others are symlinks).
+#   Cursor      (.cursor/rules/utils.mdc stubs to here)             -> `globs` / `alwaysApply` / `description`
+#   Copilot     (.github/instructions/utils.instructions.md is a copy)     -> `applyTo`
+# Keep all three glob sets in sync. Edit only here — pre-commit regenerates both mirrors.
 description: Utility / pure-function authoring standards — purity, placement, determinism. Use when editing files under a utils/ directory.
 paths:
   - "**/utils/**/*.ts"

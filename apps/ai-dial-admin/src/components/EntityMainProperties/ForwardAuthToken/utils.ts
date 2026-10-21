@@ -15,7 +15,7 @@ export const isForwardTokenFalse = (value: string): boolean => {
 export const getAlertTitlePerView = (view: ApplicationRoute): string => {
   switch (view) {
     case ApplicationRoute.Models:
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return ForwardTokenI18nKey.UseForThisModel;
 
     case ApplicationRoute.Applications:
@@ -23,6 +23,7 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
       return ForwardTokenI18nKey.UseForThisApplication;
 
     case ApplicationRoute.Interceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return ForwardTokenI18nKey.UseForThisInterceptor;
 
     case ApplicationRoute.Toolsets:
@@ -37,7 +38,7 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
 export const getDisplayNamePerView = (view: ApplicationRoute): string => {
   switch (view) {
     case ApplicationRoute.Models:
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return EntitiesI18nKey.ModelDisplayName;
 
     case ApplicationRoute.Applications:
@@ -45,6 +46,7 @@ export const getDisplayNamePerView = (view: ApplicationRoute): string => {
       return EntitiesI18nKey.ApplicationDisplayName;
 
     case ApplicationRoute.Interceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return EntitiesI18nKey.InterceptorName;
 
     case ApplicationRoute.Toolsets:

@@ -20,10 +20,11 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetView, isBuildersView } from '@/src/utils/is-view';
@@ -60,7 +61,7 @@ interface Props<T> {
   onResetEntity?: () => void;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
 }
 
 const ImageDeleteConfirmationModal = <T extends Artefact>({

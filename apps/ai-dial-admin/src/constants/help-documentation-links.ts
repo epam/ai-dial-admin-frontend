@@ -71,6 +71,11 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
     title: 'How to manage Files',
   },
 
+  [ApplicationRoute.Publications]: {
+    listView: 'tutorials/admin/approvals-application-publications',
+    title: 'How to review Publication requests',
+  },
+
   [ApplicationRoute.ApplicationPublications]: {
     listView: 'tutorials/admin/approvals-application-publications',
     selectedView: 'tutorials/admin/approvals-application-publications#review-page',
@@ -96,6 +101,11 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
     listView: 'tutorials/admin/approvals-conversation-publications',
     selectedView: 'tutorials/admin/approvals-conversation-publications#review-page',
     title: 'How to review Conversation Publication requests',
+  },
+  [ApplicationRoute.SkillPublications]: {
+    listView: 'tutorials/admin/approvals-skill-publications',
+    selectedView: 'tutorials/admin/approvals-skill-publications#review-page',
+    title: 'How to review Skill Publication requests',
   },
   [ApplicationRoute.Roles]: {
     listView: 'tutorials/admin/access-management-roles',

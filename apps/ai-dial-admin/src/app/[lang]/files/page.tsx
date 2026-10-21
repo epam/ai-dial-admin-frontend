@@ -1,4 +1,4 @@
-import FilesList from '@/src/components/Assets/Files/List';
+import FilesList from '@/src/components/Assets/Artifacts/Files/List';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,7 +1,9 @@
 import { cookies, headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
-import { interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { ApplicationRoute } from '@/src/types/routes';
+
+import { interceptorsApi, settingsApi } from '@/src/app/api/api';
 import InterceptorsList from '@/src/components/Interceptors/List/List';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -14,6 +16,9 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
+  if (!process.env.DIAL_ADMIN_API_URL) {
+    redirect(ApplicationRoute.Home);
+  }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let data: DialInterceptor[] | null = null;
@@ -21,7 +26,7 @@ export default async function Page() {
 
   try {
     data = await interceptorsApi.getInterceptorsList(token);
-    global = (await utilityApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
+    global = (await settingsApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
     data =
       data?.map((item) => ({
         ...item,

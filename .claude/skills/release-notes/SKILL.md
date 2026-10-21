@@ -101,7 +101,7 @@ Rules in order of importance:
 2. **Drop the conventional prefix** (`feat:`, `fix:`, `chore:`, `feat(scope):`). Replace with prose.
 3. **Drop scope-as-noun repetition.** Don't start the bullet with the scope name — `feat(deployments): stop button` → `Stop button for deployments` not `Deployments — stop button`.
 4. **Use a `—` em-dash for the "why" clause**, not a hyphen or colon.
-5. **Backticks for code identifiers**: env vars (`NIM_ENABLED`), config keys, component names, API paths.
+5. **Backticks for code identifiers**: env vars (`HF_ENABLED`), config keys, component names, API paths.
 6. **Preserve issue + PR refs at the end** in `#<issue> (#<PR>)` order. For grouped entries list all PRs: `(#2927, #2986, #3034)`.
 7. **Prefix with `[Preview]`** for preview-gated features (eval framework, MCP registry, etc. when still gated by an env var).
 8. **Flag regressions explicitly**: `(regression fix)` for items restoring previously-working behavior.
@@ -173,8 +173,18 @@ Use the alert callout if the changes are critical:
 
 1. `git diff <prev-tag>..<tag> -- docs/INFRA-CHANGELOG.md` — what landed in the range.
 2. Read the relevant version block in `docs/INFRA-CHANGELOG.md` for variable names, defaults, and descriptions.
-3. If no `docs/upgrade-plans/<base-version>.md` exists yet, note in the editorial file that the upgrade plan is missing and describe what needs to go in `Deployment Changes` inline — the user will decide.
-4. Characterize severity: if all new env vars are optional and default-off, use plain text ("This release adds optional configuration flags"). If any is required or changes existing behavior, use `> [!IMPORTANT]`.
+3. If no `docs/upgrade-plans/<base-version>.md` exists yet, build the section inline instead of linking out: a table with columns `Variable | Required | Default | Description`, one row per env var that changed in the range. Pull `Required` from whether `docs/INFRA-CHANGELOG.md` marks the var `**required**` (or code shows no fallback), `Default` from the changelog's `(default: ...)` note, and `Description` from the changelog entry trimmed to one clause — don't repeat the `[Preview]` tag there, it belongs on the variable name.
+
+   ```markdown
+   ## Deployment Changes
+
+   | Variable | Required | Default | Description |
+   |---|---|---|---|
+   | `HF_ENABLED` | No | `false` | Enables the HF Model Serving option in Deployments |
+   | `DIAL_CORE_API_URL` | Yes | — | DIAL Core API url |
+   ```
+
+4. Characterize severity: if all new env vars are optional and default-off, use plain text ("This release adds optional configuration flags") ahead of the table. If any is required or changes existing behavior, use `> [!IMPORTANT]` ahead of the table.
 
 **What does not belong here:** Per-app feature configuration (things users configure in the UI, not operators in helm/env). `Deployment Changes` is strictly for env vars, behavioral shifts at the service level, and external system migrations.
 

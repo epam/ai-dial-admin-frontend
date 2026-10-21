@@ -1,7 +1,7 @@
-import DashboardView from '@/src/components/Telemetry/DashboardView';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+import { ApplicationRoute } from '@/src/types/routes';
 
-export default async function Page() {
-  return <DashboardView grafanaLink={process.env.GRAFANA_LINK} />;
+export default function Page() {
+  redirect(ApplicationRoute.Dashboard);
 }

@@ -1,4 +1,9 @@
-import { ToolsetAuthSettings, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
+import {
+  ToolsetAuthSettings,
+  ToolsetAuthStatus,
+  ToolsetAuthType,
+  ToolsetCodeChallengeMethod,
+} from '@/src/models/dial/toolset';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
@@ -29,7 +34,7 @@ describe('OAuthSection', () => {
       scopesSupported: ['scope1', 'scope2'],
       authorizationEndpoint: 'auth-endpoint',
       tokenEndpoint: 'token-endpoint',
-      codeChallengeMethod: 'S256',
+      codeChallengeMethod: ToolsetCodeChallengeMethod.S256,
     };
     render(<OAuthSection authSettings={authSettings} view={ApplicationRoute.Toolsets} />);
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientId)).toHaveValue('client-id');

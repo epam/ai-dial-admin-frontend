@@ -1,1 +1,60 @@
 npx lint-staged
+
+# Hard gate: never let broken agent configuration or an unknown project
+# breakpoint land. Relevant staged files trigger a full semantic validation.
+# Bypass in emergencies with `git commit --no-verify`.
+
+if ! command -v node >/dev/null 2>&1; then
+  nvm_dir=${NVM_DIR:-"$HOME/.nvm"}
+
+  if [ -s "$nvm_dir/nvm.sh" ]; then
+    # Git clients launched from macOS GUI apps do not inherit the interactive shell's NVM PATH.
+    # shellcheck disable=SC1090
+    . "$nvm_dir/nvm.sh"
+  fi
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: Node.js is required to validate staged agent configuration files." >&2
+  exit 1
+fi
+
+# `|| true` is load-bearing: husky runs this hook with `sh -e`, so a grep that
+# matches nothing exits 1 and would abort the commit. Without it, every commit
+# that does NOT touch agent config — i.e. most of them — fails here.
+agent_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E \
+  '^(\.claude/commands/.*\.md|\.claude/rules/.*\.md|\.claude/skills/.*|\.claude/settings\.json|\.cursor/(commands|rules|skills)/.*|\.github/(instructions|prompts|skills)/.*|\.mcp\.json|AGENTS\.md|CLAUDE\.md|openspec/config\.yaml|apps/.*\.(css|js|jsx|scss|ts|tsx))$' || true)
+
+# A mirrored rule or skill was staged, so regenerate its Cursor/Copilot copies
+# and stage exactly the ones that changed. Without this the validator below would
+# reject the commit for drift the author has no reason to expect — the whole point
+# of one canonical source is that you only ever edit that file. Same `|| true` as
+# above: a grep with no match would otherwise abort the commit.
+mirror_sources=$(echo "$agent_files" | grep -E '^\.claude/(rules|skills)/.*\.md$' || true)
+
+if [ -n "$mirror_sources" ]; then
+  # shellcheck disable=SC2086
+  changed_mirrors=$(node scripts/sync-agent-mirrors.mjs --print-changed $mirror_sources)
+
+  if [ -n "$changed_mirrors" ]; then
+    # Word splitting is intended — one path per line, and the manifest has none with spaces.
+    # shellcheck disable=SC2086
+    git add -- $changed_mirrors
+    echo "pre-commit: regenerated and staged $(echo "$changed_mirrors" | wc -l | tr -d ' ') agent mirror file(s)."
+  fi
+fi
+
+if [ -n "$agent_files" ]; then
+  node scripts/validate-agent-docs.mjs
+fi
+
+# Types are checked at commit time, not at push time: both projects run in ~2s once
+# `.tsbuildinfo` is warm (6.9s / 9.7s cold), so the feedback is worth the wait here.
+#
+# Both projects are hard gates and both are at zero errors. The spec project became one once the
+# fixture debt catalogued in
+# openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md reached zero — until
+# then it only printed a count, because a gate that always fails is not a gate. `git commit --no-verify`
+# is the escape hatch; the CI `typecheck` job is the backstop that cannot be skipped.
+npm run typecheck
+npm run typecheck:specs

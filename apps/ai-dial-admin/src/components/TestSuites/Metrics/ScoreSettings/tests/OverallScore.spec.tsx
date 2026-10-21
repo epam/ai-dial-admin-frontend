@@ -9,7 +9,18 @@ import { FunctionParameterSourceType, OverallScoreFunctionName } from '../models
 import { buildOverallScoreFunctionExpression } from '../utils';
 
 vi.mock('../WeightedMean', () => ({ default: () => <div>weighted-mean-panel</div> }));
-vi.mock('../SpecificFunction', () => ({ default: () => <div>specific-function-panel</div> }));
+vi.mock('../TestCaseOverallScore', () => ({ default: () => <div>test-case-overall-score</div> }));
+vi.mock('../SpecificFunction', () => ({
+  default: ({ responseColumns, testCaseScoreContent }: any) => (
+    <div>
+      specific-function-panel
+      {responseColumns?.map((column: any) => (
+        <span key={column.name}>{column.name}</span>
+      ))}
+      {testCaseScoreContent}
+    </div>
+  ),
+}));
 
 describe('OverallScore', () => {
   test('renders title, description and all radios', () => {
@@ -17,7 +28,7 @@ describe('OverallScore', () => {
 
     render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
-    expect(screen.getByText(TestSuitesI18nKey.OverallScore)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.OverallScoreCalculationMethod)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreDescription)).toBeInTheDocument();
     expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreMean)).toBeInTheDocument();
     expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightedMean)).toBeInTheDocument();
@@ -36,23 +47,30 @@ describe('OverallScore', () => {
     expect(onChange).toHaveBeenCalledWith({ ...selectedTestSuite, overallScore: { type: OverallScoreType.Mean } });
   });
 
-  test('selecting weighted mean calls onChange with empty weights and reveals the panel', async () => {
+  test('selecting weighted mean seeds the first metric output with weight 1 and reveals the panel', async () => {
     const onChange = vi.fn();
     const selectedTestSuite: TestSuite = { id: 'suite-1' };
+    const metrics = [{ name: 'A' }, { name: 'B' }];
 
-    render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={onChange} />);
+    render(<OverallScore selectedTestSuite={selectedTestSuite} metrics={metrics} onChange={onChange} />);
     await userEvent.click(screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightedMean));
 
     expect(onChange).toHaveBeenCalledWith({
       ...selectedTestSuite,
-      overallScore: { type: OverallScoreType.WeightedMean, weights: [] },
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'A', outputField: 'score', weight: 1 }],
+      },
     });
   });
 
   test('renders the weighted mean panel when already selected', () => {
     const selectedTestSuite: TestSuite = {
       id: 'suite-1',
-      overallScore: { type: OverallScoreType.WeightedMean, weights: [] },
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'A', outputField: 'score', weight: 1 }],
+      },
     };
 
     render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
@@ -76,10 +94,11 @@ describe('OverallScore', () => {
           { $type: FunctionParameterSourceType.Response },
         ]),
       },
+      testCaseOverallScore: { type: OverallScoreType.Mean },
     });
   });
 
-  test('renders the specific function panel when already selected', () => {
+  test('renders the specific function panel and nested test case score when already selected', () => {
     const selectedTestSuite: TestSuite = {
       id: 'suite-1',
       overallScore: {
@@ -94,5 +113,51 @@ describe('OverallScore', () => {
     render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     expect(screen.getByText('specific-function-panel')).toBeInTheDocument();
+    expect(screen.getByText('test-case-overall-score')).toBeInTheDocument();
+  });
+
+  test('selecting mean clears testCaseOverallScore', async () => {
+    const onChange = vi.fn();
+    const selectedTestSuite: TestSuite = {
+      id: 'suite-1',
+      overallScore: {
+        type: OverallScoreType.Function,
+        expression: buildOverallScoreFunctionExpression(OverallScoreFunctionName.RocAuc, [
+          { $type: FunctionParameterSourceType.TestCase },
+          { $type: FunctionParameterSourceType.Response },
+        ]),
+      },
+      testCaseOverallScore: { type: OverallScoreType.Mean },
+    };
+
+    render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={onChange} />);
+    await userEvent.click(screen.getByLabelText(TestSuitesI18nKey.OverallScoreMean));
+
+    expect(onChange).toHaveBeenCalledWith({
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
+    });
+  });
+
+  test('passes response columns from the whole request chain to the specific function panel', () => {
+    const selectedTestSuite: TestSuite = {
+      id: 'suite-1',
+      responseColumns: [{ name: 'answer', displayName: 'Answer', expression: '', type: 'string' }],
+      additionalRequests: [
+        { responseColumns: [{ name: 'follow_up', displayName: 'Follow up', expression: '', type: 'string' }] },
+      ],
+      overallScore: {
+        type: OverallScoreType.Function,
+        expression: buildOverallScoreFunctionExpression(OverallScoreFunctionName.RocAuc, [
+          { $type: FunctionParameterSourceType.TestCase },
+          { $type: FunctionParameterSourceType.Response },
+        ]),
+      },
+    };
+
+    render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    expect(screen.getByText('answer')).toBeInTheDocument();
+    expect(screen.getByText('follow_up')).toBeInTheDocument();
   });
 });

@@ -1,24 +1,7 @@
-import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import { ChangeEvent } from 'react';
+
 import { NumericGridFilter, TextGridFilter } from '@/src/components/Grid/Filter/models';
-
-export interface CompareRowDetailField {
-  fieldKey: string;
-  label: string;
-  primaryRaw: string | null;
-  secondaryRaw: string | null;
-  primaryFailed?: boolean;
-  secondaryFailed?: boolean;
-  diffKind: MetricDeltaKind;
-  isNumeric: boolean;
-  isScoreIndicator: boolean;
-  isMetric: boolean;
-}
-
-export interface CompareRowDetailSection {
-  key: string;
-  label: string;
-  rows: CompareRowDetailField[];
-}
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 
 export type RowDetailFieldFilter = TextGridFilter;
 
@@ -26,16 +9,11 @@ export type RowDetailValueFilter = TextGridFilter;
 
 export type RowDetailDeltaFilter = NumericGridFilter;
 
-export enum RowDetailViewMode {
-  Table = 'table',
-  Pivot = 'pivot',
-}
-
-export enum PivotColumnWidthTier {
-  Status = 'status',
-  RunNumber = 'runNumber',
-  Http = 'http',
-  Duration = 'duration',
-  Score = 'score',
-  Default = 'default',
+/** The value-column filter of one displayed run; the table keeps the state per slot so a filter stays with its run. */
+export interface RowDetailRunFilter {
+  slot: CompareRunSlot;
+  searchQuery: string;
+  onSearchChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  filter: RowDetailValueFilter | null;
+  onFilterChange: (filter: RowDetailValueFilter | null) => void;
 }

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ActionType, Publication } from '@/src/models/dial/publications';
-import { ApplicationRoute } from '@/src/types/routes';
+import { ResourceType } from '@/src/types/resource-type';
 import PublicationsList from './List';
 
 const mockData: Publication[] = [
@@ -14,6 +14,7 @@ const mockData: Publication[] = [
     status: 'status1',
     action: ActionType.ADD,
     folderId: 'folderId 1',
+    resourceType: ResourceType.PROMPT,
   },
   {
     path: 'path2',
@@ -23,18 +24,19 @@ const mockData: Publication[] = [
     status: 'status2',
     action: ActionType.ADD,
     folderId: 'folderId 2',
+    resourceType: ResourceType.SKILL,
   },
 ];
 
-describe('Components - BasePublicationsList', () => {
+describe('Components - PublicationsList', () => {
   test('Should render list view with data and titles', () => {
-    render(<PublicationsList data={mockData} route={ApplicationRoute.PromptPublications} />);
-    expect(screen.getByText(MenuI18nKey.PromptPublications)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    render(<PublicationsList data={mockData} />);
+    expect(screen.getByText(MenuI18nKey.Approvals)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('Should render empty list view', () => {
-    render(<PublicationsList data={[]} route={ApplicationRoute.PromptPublications} />);
+    render(<PublicationsList data={[]} />);
     expect(screen.getByText(EntitiesI18nKey.NoPublications)).toBeInTheDocument();
   });
 });

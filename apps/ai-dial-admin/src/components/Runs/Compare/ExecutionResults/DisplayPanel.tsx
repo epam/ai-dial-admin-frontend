@@ -6,10 +6,6 @@ import { FC, ReactNode, useCallback, useMemo } from 'react';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/ExecutionResults/models';
-import {
-  mergeComparePanelColumns,
-  splitComparePanelColumns,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { getCompareDiffSection } from '@/src/components/Runs/Compare/ExecutionResults/utils/diff-section';
 import { ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -40,14 +36,6 @@ const DisplayPanel: FC<Props> = ({
   diffSectionSwitchIdPrefix,
 }) => {
   const t = useI18n();
-  const { panelColumns, actionColumn } = useMemo(() => splitComparePanelColumns(columns), [columns]);
-
-  const handleColumnsChange = useCallback(
-    (newPanelColumns: ColDef[]) => {
-      onColumnsChange(mergeComparePanelColumns(newPanelColumns, actionColumn));
-    },
-    [actionColumn, onColumnsChange],
-  );
 
   const renderLabel = useCallback((node: ColDef, displayLabel: string): ReactNode => {
     const ctx = node.context as CompareColumnPanelContext | undefined;
@@ -87,8 +75,8 @@ const DisplayPanel: FC<Props> = ({
 
   return (
     <TreeColumnsPanel
-      columns={panelColumns}
-      onColumnsChange={handleColumnsChange}
+      columns={columns}
+      onColumnsChange={onColumnsChange}
       panelClassName={panelClassName}
       toggleColumnsPanel={onClose}
       title={t(RunsI18nKey.RunCompareDisplay)}

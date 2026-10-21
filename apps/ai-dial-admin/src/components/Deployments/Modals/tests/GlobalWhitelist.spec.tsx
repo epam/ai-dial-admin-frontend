@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -118,7 +118,7 @@ describe('GlobalWhitelist :: View in Activity Audit link', () => {
     const cancelBtn = await screen.findByText(ButtonsI18nKey.Cancel);
     fireEvent.click(cancelBtn);
 
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBeNull();
     expect(openSpy).not.toHaveBeenCalled();
   });

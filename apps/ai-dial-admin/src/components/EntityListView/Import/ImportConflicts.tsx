@@ -20,7 +20,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-view';
+import { isAssetWithVersion, isVersionlessAssetView } from '@/src/utils/is-view';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 
 interface Props {
@@ -46,7 +46,10 @@ const ImportConflicts: FC<Props> = ({
 }) => {
   const t = useI18n();
 
-  const isAssetWithVersionImport = isAssetWithVersion(route);
+  // Prompts are asset-shaped but versionless — they keep the asset import grid (name-only editing,
+  // no Version column) instead of dropping into the file-shaped branch.
+  const isVersionlessImport = isVersionlessAssetView(route);
+  const isAssetImport = isAssetWithVersion(route) || isVersionlessImport;
   const fileCount = [...filesMap.values()].reduce((total, value) => total + value.files.length, 0);
   const shouldShowPreview = fileCount > 0;
 
@@ -57,17 +60,17 @@ const ImportConflicts: FC<Props> = ({
     [route, setEditedFileMap],
   );
 
-  const rowData = isAssetWithVersionImport
-    ? generateAssetRowDataForImportGrid(filesMap, existing as DialPrompt[])
+  const rowData = isAssetImport
+    ? generateAssetRowDataForImportGrid(filesMap, existing as DialPrompt[], undefined, isVersionlessImport)
     : generateFileRowDataForImportGrid(filesMap, existing as DialFile[]);
 
-  const columnDefs: ColDef[] = isAssetWithVersionImport
-    ? generateAssetColumnsForImportGrid(changeFile)
+  const columnDefs: ColDef[] = isAssetImport
+    ? generateAssetColumnsForImportGrid(changeFile, undefined, undefined, isVersionlessImport)
     : generateFileColumnsForImportGrid(changeFile);
 
   const rowClassRules: RowClassRules = {
     'ag-error-row': (params) => {
-      return isAssetWithVersionImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
+      return isAssetImport ? isErrorPromptNode(params.data, isVersionlessImport) : isErrorFileNode(params.data);
     },
   };
   const onGridReady = (event: GridReadyEvent) => {

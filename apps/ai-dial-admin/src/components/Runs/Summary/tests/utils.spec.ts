@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
+import { RunCosts } from '@/src/models/evaluation/run';
 import {
   ComparisonOp,
   ExprType,
@@ -8,18 +9,31 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
+import {
+  AVG_DURATION_ALIAS,
+  AVG_METRIC_EVAL_DURATION_ALIAS,
+  COUNT_ALIAS,
+  EXECUTION_STATUS_FIELD,
+  PASSED_FIELD,
+} from '../constants';
 import { MetricScoresData } from '../models';
 import {
   attachMetricInfo,
+  buildAvgMetricEvalDurationQuery,
   buildAvgRunTimeQuery,
   buildDistributionQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
+  fillUnscoredMetricBars,
+  formatAvgRunTimeSeconds,
+  formatRunCost,
   getMetricFieldPath,
   getMetricOutputDescriptions,
   getMetricOutputFields,
   getMetricStatCards,
+  hasOverallScoreThreshold,
+  hasModelPricing,
+  hasRunCostFigure,
   parseAvgRunTimeMs,
   parseComparisonMetricScores,
   parseHistogramValues,
@@ -28,17 +42,17 @@ import {
   splitMetricName,
   toMetricInfoByName,
   toMetricOptions,
-  formatAvgRunTimeSeconds,
 } from '../utils';
 
 describe('Runs Summary :: query builders', () => {
-  test('buildTestCasesStatusQuery groups by execution_status and counts within the run', () => {
+  test('buildTestCasesStatusQuery groups by passed and execution_status and counts within the run', () => {
     const query = buildTestCasesStatusQuery('run-1');
 
-    expect(query.entity).toBe('eval_summaries');
+    expect(query.entity).toBe('test_case_eval_scores');
     expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual([EXECUTION_STATUS_FIELD]);
+    expect(query.group_by).toEqual([PASSED_FIELD, EXECUTION_STATUS_FIELD]);
     expect(query.select).toEqual([
+      { expr: { type: ExprType.Field, name: PASSED_FIELD } },
       { expr: { type: ExprType.Field, name: EXECUTION_STATUS_FIELD } },
       { expr: { type: ExprType.Fn, name: 'count', args: [] }, as: COUNT_ALIAS },
     ]);
@@ -52,7 +66,67 @@ describe('Runs Summary :: query builders', () => {
   });
 
   test('buildTestCasesStatusQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
-    const query = buildTestCasesStatusQuery('run-1', ['id-1', 'id-2']);
+    const query = buildTestCasesStatusQuery('run-1', ['case-1', 'case-2']);
+
+    expect(query.entity).toBe('test_case_eval_scores');
+    expect(query.filter).toEqual({
+      op: LogicalOp.And,
+      args: [
+        {
+          op: ComparisonOp.Eq,
+          args: [
+            { type: ExprType.Field, name: 'test_suite_run_id' },
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+          ],
+        },
+        {
+          op: LogicalOp.Not,
+          args: [
+            {
+              op: ComparisonOp.In,
+              args: [
+                { type: ExprType.Field, name: 'test_case_id' },
+                {
+                  type: ExprType.Array,
+                  items: [
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'case-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'case-2' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('buildAvgRunTimeQuery averages exec_duration_ms within the run', () => {
+    const query = buildAvgRunTimeQuery('run-1');
+
+    expect(query.select).toEqual([
+      {
+        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'exec_duration_ms' }] },
+        as: AVG_DURATION_ALIAS,
+      },
+    ]);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('buildAvgMetricEvalDurationQuery averages metric_eval_duration_ms within the run', () => {
+    const query = buildAvgMetricEvalDurationQuery('run-1');
+
+    expect(query.select).toEqual([
+      {
+        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'metric_eval_duration_ms' }] },
+        as: AVG_METRIC_EVAL_DURATION_ALIAS,
+      },
+    ]);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('buildAvgMetricEvalDurationQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
+    const query = buildAvgMetricEvalDurationQuery('run-1', ['id-1', 'id-2']);
 
     expect(query.filter).toEqual({
       op: LogicalOp.And,
@@ -85,18 +159,6 @@ describe('Runs Summary :: query builders', () => {
       ],
     });
   });
-
-  test('buildAvgRunTimeQuery averages exec_duration_ms within the run', () => {
-    const query = buildAvgRunTimeQuery('run-1');
-
-    expect(query.select).toEqual([
-      {
-        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'exec_duration_ms' }] },
-        as: AVG_DURATION_ALIAS,
-      },
-    ]);
-    expect(query.group_by).toBeUndefined();
-  });
 });
 
 describe('Runs Summary :: metric options', () => {
@@ -124,17 +186,27 @@ describe('Runs Summary :: metric options', () => {
 
     expect(options).toEqual([
       {
-        name: 'DeepEval: Answer Relevancy.score',
-        field: 'metric::DeepEval: Answer Relevancy::score',
-        computationId: 'comp-1',
-      },
-      {
         name: 'DeepEval: Answer Relevancy.reason',
         field: 'metric::DeepEval: Answer Relevancy::reason',
         computationId: 'comp-1',
       },
+      {
+        name: 'DeepEval: Answer Relevancy.score',
+        field: 'metric::DeepEval: Answer Relevancy::score',
+        computationId: 'comp-1',
+      },
       { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'comp-1' },
     ]);
+  });
+
+  test('toMetricOptions sorts options alphabetically by name', () => {
+    const options = toMetricOptions([
+      { tsmdName: 'zebra', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'alpha', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'middle', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+    ] as any);
+
+    expect(options.map((option) => option.name)).toEqual(['alpha.score', 'middle.score', 'zebra.score']);
   });
 
   test('toMetricOptions handles null', () => {
@@ -238,6 +310,50 @@ describe('Runs Summary :: metric info', () => {
 
     expect(attachMetricInfo(data, {})).toEqual(data);
   });
+
+  test('fillUnscoredMetricBars seeds AVG with null bars when a metric is configured but has no scores', () => {
+    const filled = fillUnscoredMetricBars({ overallScore: 0, statistics: [], byStatistic: {} }, [
+      { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'c1' },
+    ]);
+
+    expect(filled.statistics).toEqual(['AVG']);
+    expect(filled.byStatistic).toEqual({
+      AVG: [{ name: 'Exact Match', bars: { exact_match: null } }],
+    });
+    expect(filled.overallScore).toBe(0);
+  });
+
+  test('fillUnscoredMetricBars adds missing configured bars without overwriting existing scores', () => {
+    const filled = fillUnscoredMetricBars(
+      {
+        overallScore: 0.8,
+        statistics: ['AVG', 'P90'],
+        byStatistic: {
+          AVG: [{ name: 'Exact Match', bars: { exact_match: 1 } }],
+          P90: [{ name: 'Exact Match', bars: { exact_match: 1 } }],
+        },
+      },
+      [
+        { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'c1' },
+        { name: 'Ragas.faithfulness', field: 'metric::Ragas::faithfulness', computationId: 'c1' },
+      ],
+    );
+
+    expect(filled.byStatistic.AVG).toEqual([
+      { name: 'Exact Match', bars: { exact_match: 1 } },
+      { name: 'Ragas', bars: { faithfulness: null } },
+    ]);
+    expect(filled.byStatistic.P90).toEqual([
+      { name: 'Exact Match', bars: { exact_match: 1 } },
+      { name: 'Ragas', bars: { faithfulness: null } },
+    ]);
+  });
+
+  test('fillUnscoredMetricBars leaves data unchanged when there are no configured metrics', () => {
+    const data: MetricScoresData = { overallScore: null, statistics: [], byStatistic: {} };
+
+    expect(fillUnscoredMetricBars(data, [])).toEqual(data);
+  });
 });
 
 describe('Runs Summary :: metric scores', () => {
@@ -304,6 +420,36 @@ describe('Runs Summary :: metric scores', () => {
       ],
       P90: [{ name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.956 } }],
     });
+  });
+
+  test('parseMetricScores sorts metric groups alphabetically regardless of row order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'ragas.faithfulness.score', metric_score_name: 'AVG', value: 0.5 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.8 },
+        { metric_name: 'deepeval.answer_relevancy.score', metric_score_name: 'AVG', value: 0.7 },
+      ],
+    });
+
+    expect(parsed.byStatistic.AVG.map((group) => group.name)).toEqual([
+      'aidial_rag_eval.generation',
+      'deepeval.answer_relevancy',
+      'ragas.faithfulness',
+    ]);
+  });
+
+  test('parseMetricScores orders statistics by Metric Scores segmented-control order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'm.a', metric_score_name: 'MAX', value: 0.9 },
+        { metric_name: 'm.a', metric_score_name: 'MIN', value: 0.1 },
+        { metric_name: 'm.a', metric_score_name: 'MED', value: 0.5 },
+        { metric_name: 'm.a', metric_score_name: 'P90', value: 0.8 },
+        { metric_name: 'm.a', metric_score_name: 'AVG', value: 0.55 },
+      ],
+    });
+
+    expect(parsed.statistics).toEqual(['AVG', 'P90', 'MAX', 'MED', 'MIN']);
   });
 
   test('parseMetricScores extracts overall score and excludes it from statistics', () => {
@@ -438,22 +584,52 @@ describe('Runs Summary :: distribution', () => {
 });
 
 describe('Runs Summary :: result parsers', () => {
-  test('parseTestCaseStatusCounts buckets SUCCESS/ERROR/other and totals', () => {
+  test('parseTestCaseStatusCounts buckets threshold pass/fail and execution errors', () => {
     const counts = parseTestCaseStatusCounts({
       rows: [
-        { [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 37 },
-        { [EXECUTION_STATUS_FIELD]: 'FAILED', [COUNT_ALIAS]: 3 },
-        { [EXECUTION_STATUS_FIELD]: 'TIMEOUT', [COUNT_ALIAS]: 1 },
-        { [EXECUTION_STATUS_FIELD]: 'ERROR', [COUNT_ALIAS]: 2 },
+        { [PASSED_FIELD]: true, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 37 },
+        { [PASSED_FIELD]: false, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 3 },
+        { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'TIMEOUT', [COUNT_ALIAS]: 1 },
+        { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'ERROR', [COUNT_ALIAS]: 2 },
+        { [PASSED_FIELD]: true, [EXECUTION_STATUS_FIELD]: 'FAILED', [COUNT_ALIAS]: 1 },
       ],
     });
 
-    expect(counts).toEqual({ passed: 37, failed: 4, error: 2, total: 43 });
+    expect(counts).toEqual({ passed: 37, failed: 3, error: 4, total: 44 });
+  });
+
+  test('parseTestCaseStatusCounts treats SUCCESS with null passed as total-only', () => {
+    const counts = parseTestCaseStatusCounts({
+      rows: [
+        { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 5 },
+        { [PASSED_FIELD]: true, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 2 },
+      ],
+    });
+
+    expect(counts).toEqual({ passed: 2, failed: 0, error: 0, total: 7 });
+  });
+
+  test('parseTestCaseStatusCounts accepts string boolean passed values', () => {
+    const counts = parseTestCaseStatusCounts({
+      rows: [
+        { [PASSED_FIELD]: 'true', [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 4 },
+        { [PASSED_FIELD]: 'false', [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 1 },
+      ],
+    });
+
+    expect(counts).toEqual({ passed: 4, failed: 1, error: 0, total: 5 });
   });
 
   test('parseTestCaseStatusCounts returns zeros for empty/null results', () => {
     expect(parseTestCaseStatusCounts(null)).toEqual({ passed: 0, failed: 0, error: 0, total: 0 });
     expect(parseTestCaseStatusCounts({ rows: [] })).toEqual({ passed: 0, failed: 0, error: 0, total: 0 });
+  });
+
+  test('hasOverallScoreThreshold is true for 0 and false for null/undefined', () => {
+    expect(hasOverallScoreThreshold(0)).toBe(true);
+    expect(hasOverallScoreThreshold(0.5)).toBe(true);
+    expect(hasOverallScoreThreshold(null)).toBe(false);
+    expect(hasOverallScoreThreshold(undefined)).toBe(false);
   });
 
   test('parseAvgRunTimeMs rounds the average and handles missing data', () => {
@@ -463,8 +639,59 @@ describe('Runs Summary :: result parsers', () => {
     expect(parseAvgRunTimeMs(null)).toBeNull();
   });
 
+  test('parseAvgRunTimeMs supports reading a non-default alias', () => {
+    expect(
+      parseAvgRunTimeMs({ rows: [{ [AVG_METRIC_EVAL_DURATION_ALIAS]: 291123.6 }] }, AVG_METRIC_EVAL_DURATION_ALIAS),
+    ).toBe(291124);
+  });
+
   test('formatAvgRunTimeSeconds rounds ms to one decimal second', () => {
     expect(formatAvgRunTimeSeconds(199.6)).toBe(0.2);
     expect(formatAvgRunTimeSeconds(241000)).toBe(241);
+  });
+
+  test('formatRunCost returns null for missing or non-finite values', () => {
+    expect(formatRunCost(null)).toBeNull();
+    expect(formatRunCost(undefined)).toBeNull();
+    expect(formatRunCost(Number.NaN)).toBeNull();
+  });
+
+  test('formatRunCost formats zero and dollar amounts', () => {
+    expect(formatRunCost(0)).toBe('$0');
+    expect(formatRunCost(1.5)).toBe('$1.5');
+    expect(formatRunCost(12)).toBe('$12');
+  });
+
+  test('formatRunCost keeps sub-dollar significant digits', () => {
+    expect(formatRunCost(0.0004)).toBe('$0.0004');
+    expect(formatRunCost(0.0123)).toBe('$0.012');
+  });
+
+  test('hasRunCostFigure is true when either average is a number, including zero', () => {
+    expect(hasRunCostFigure({ avgTestCaseCost: 0.1, avgMetricEvalCost: 0.2 })).toBe(true);
+    expect(hasRunCostFigure({ avgTestCaseCost: null, avgMetricEvalCost: 0.2 })).toBe(true);
+    expect(hasRunCostFigure({ avgTestCaseCost: 0, avgMetricEvalCost: null })).toBe(true);
+  });
+
+  test('hasRunCostFigure is false for the shapes a not-yet-aggregated run returns', () => {
+    expect(hasRunCostFigure({ avgTestCaseCost: null, avgMetricEvalCost: null })).toBe(false);
+    expect(hasRunCostFigure({} as RunCosts)).toBe(false);
+    expect(hasRunCostFigure('' as unknown as RunCosts)).toBe(false);
+    expect(hasRunCostFigure(null)).toBe(false);
+    expect(hasRunCostFigure(undefined)).toBe(false);
+  });
+});
+
+describe('hasModelPricing', () => {
+  test('is true when either a prompt or a completion rate is set', () => {
+    expect(hasModelPricing({ prompt: '0.001' })).toBe(true);
+    expect(hasModelPricing({ completion: '0.002' })).toBe(true);
+    expect(hasModelPricing({ prompt: '0.001', completion: '0.002' })).toBe(true);
+  });
+
+  test('is false when neither rate is set, including an all-empty or absent pricing object', () => {
+    expect(hasModelPricing({})).toBe(false);
+    expect(hasModelPricing({ prompt: '', completion: '' })).toBe(false);
+    expect(hasModelPricing(undefined)).toBe(false);
   });
 });

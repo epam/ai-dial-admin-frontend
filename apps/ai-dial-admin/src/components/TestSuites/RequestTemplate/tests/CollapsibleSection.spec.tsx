@@ -152,4 +152,20 @@ describe('CollapsibleSection', () => {
 
     expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
   });
+
+  test('exposes aria-expanded on the title control', () => {
+    render(
+      <CollapsibleSection title={title} defaultOpen={false}>
+        <p>{childContent}</p>
+      </CollapsibleSection>,
+    );
+
+    const toggle = screen.getByRole('button', { name: title });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).not.toHaveAttribute('aria-controls');
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveAttribute('aria-controls');
+  });
 });

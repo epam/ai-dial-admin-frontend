@@ -10,8 +10,11 @@ import {
   valueTypeForArgKind,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import {
+  FilterGroupNode,
   FilterNode,
   FilterNodeKind,
+  FilterOperandKind,
+  FilterPredicateNode,
   FnArgValue,
   QueryBuilderState,
   QueryBuilderWarning,
@@ -21,7 +24,6 @@ import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
   QueryExpr,
   QueryExprType,
-  QueryFieldExpr,
   QueryFilterNode,
   QueryFnExpr,
   QueryGroup,
@@ -37,15 +39,16 @@ import {
 } from '@/src/models/analytics/query';
 
 // Build a function-call expression by walking the catalog function's ordered args against the row's
-// arg-value slots: an `expression` arg serializes as a field reference, a literal arg as a value of
-// the kind's type. An empty optional arg (e.g. count's) is omitted entirely.
-const fnExpr = (fn: QueryFunction, args: FnArgValue[]): QueryFnExpr => {
+// arg-value slots: an `expression` arg serializes as a field reference — or, when the slot holds a
+// call, as that call — and a literal arg as a value of the kind's type. An empty optional arg (e.g.
+// count's) is omitted entirely.
+const fnExpr = (fn: QueryFunction, args: FnArgValue[], functions: QueryFunction[]): QueryFnExpr => {
   const exprArgs: QueryExpr[] = [];
   fn.args.forEach((argDef, i) => {
     const value = args[i] ?? {};
-    if (argDef.optional && !isArgFilled(argDef, value)) return;
+    if (argDef.optional && !isArgFilled(argDef, value, functions)) return;
     if (isExpressionArg(argDef)) {
-      exprArgs.push({ type: QueryExprType.Field, name: value.field ?? '' });
+      exprArgs.push(expressionArg(value, functions));
     } else {
       exprArgs.push({
         type: QueryExprType.Value,
@@ -57,9 +60,50 @@ const fnExpr = (fn: QueryFunction, args: FnArgValue[]): QueryFnExpr => {
   return { type: QueryExprType.Fn, name: fn.name, args: exprArgs };
 };
 
-export const serializeNode = (node: FilterNode): QueryFilterNode | null => {
+// A call whose own function the catalog does not serve cannot be built, so the slot falls back to
+// its (empty) field reference — the enclosing row is already dropped for an unfilled required
+// argument.
+const expressionArg = (value: FnArgValue, functions: QueryFunction[]): QueryExpr => {
+  const nested = value.call ? functionByName(functions, value.call.fn) : undefined;
+  if (nested && value.call) return fnExpr(nested, value.call.args, functions);
+  return { type: QueryExprType.Field, name: value.field ?? '' };
+};
+
+// A function whose required arguments are not all filled has nothing to compare yet, so its condition
+// is dropped the same way a condition naming no column is.
+const leftOperand = (node: FilterPredicateNode, functions: QueryFunction[]): QueryExpr | null => {
+  if (!node.fn) return node.field ? { type: QueryExprType.Field, name: node.field } : null;
+  const fn = functionByName(functions, node.fn);
+  if (!fn || !requiredArgsFilled(fn, node.args, functions)) return null;
+  return fnExpr(fn, node.args, functions);
+};
+
+// A right-hand call that is not yet complete drops the condition, exactly as an incomplete
+// left-hand one does — serializing it half-built would send the service a call missing an argument
+// and take the whole query down.
+const rightOperand = (node: FilterPredicateNode, functions: QueryFunction[]): QueryExpr | null => {
+  if (node.rightKind === FilterOperandKind.Function) {
+    const fn = functionByName(functions, node.rightFn);
+    if (!fn || !requiredArgsFilled(fn, node.rightArgs, functions)) return null;
+    return fnExpr(fn, node.rightArgs, functions);
+  }
+  if (node.isNull) return { type: QueryExprType.Value, value_type: QueryValueType.Null, value: null };
+  if (node.op === QueryOperator.In) {
+    const items: QueryValueExpr[] = node.value
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v.length)
+      .map((v) => ({ type: QueryExprType.Value, value_type: node.valueType, value: v }));
+    return { type: QueryExprType.Array, items };
+  }
+  return { type: QueryExprType.Value, value_type: node.valueType, value: node.value };
+};
+
+export const serializeNode = (node: FilterNode, functions: QueryFunction[]): QueryFilterNode | null => {
   if (node.kind === FilterNodeKind.Group) {
-    const args = node.children.map(serializeNode).filter((n): n is QueryFilterNode => n !== null);
+    const args = node.children
+      .map((child) => serializeNode(child, functions))
+      .filter((n): n is QueryFilterNode => n !== null);
     if (node.op === QueryLogicalOperator.Not) {
       if (!args.length) return null;
       const inner: QueryFilterNode = args.length === 1 ? args[0] : { op: QueryLogicalOperator.And, args };
@@ -70,21 +114,10 @@ export const serializeNode = (node: FilterNode): QueryFilterNode | null => {
     return group;
   }
 
-  if (!node.field) return null;
-  const left: QueryFieldExpr = { type: QueryExprType.Field, name: node.field };
-  let right: QueryExpr;
-  if (node.isNull) {
-    right = { type: QueryExprType.Value, value_type: QueryValueType.Null, value: null };
-  } else if (node.op === QueryOperator.In) {
-    const items: QueryValueExpr[] = node.value
-      .split(',')
-      .map((v) => v.trim())
-      .filter((v) => v.length)
-      .map((v) => ({ type: QueryExprType.Value, value_type: node.valueType, value: v }));
-    right = { type: QueryExprType.Array, items };
-  } else {
-    right = { type: QueryExprType.Value, value_type: node.valueType, value: node.value };
-  }
+  const left = leftOperand(node, functions);
+  if (!left) return null;
+  const right = rightOperand(node, functions);
+  if (!right) return null;
   return { op: node.op, args: [left, right] };
 };
 
@@ -95,21 +128,34 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
 
   if (state.distinct) q.distinct = true;
 
-  let filter = serializeNode(state.filter);
-  if (timeBound) filter = withTimeBound(filter, timeBound);
+  let filter = serializeNode(state.filter, state.functions);
+  if (timeBound) filter = withTimeBound(filter, timeBound, state.functions);
   if (filter) q.filter = filter;
 
   if (state.mode === QueryMode.Row) {
-    if (state.select.length) {
-      q.select = state.select.map((name) => ({ expr: { type: QueryExprType.Field, name } }));
-    }
+    // A projected column is named by itself; a function column only by its alias, resolved through
+    // the shared name map so Sort offers it under exactly the name the query will carry. A function
+    // entry the map has no name for is one whose required arguments are unfilled.
+    const names = computedColumnNames(state);
+    const projection: QueryOutputColumn[] = [];
+    state.select.forEach((row) => {
+      if (!row.fn) {
+        if (row.field) projection.push({ expr: { type: QueryExprType.Field, name: row.field } });
+        return;
+      }
+      const fn = functionByName(state.functions, row.fn);
+      const alias = names.get(row.id);
+      if (!fn || !alias) return;
+      projection.push({ expr: fnExpr(fn, row.args, state.functions), as: alias });
+    });
+    if (projection.length) q.select = projection;
   } else {
     // A plain column is active once named; a function row once its required args are filled. In
     // group_by a function entry is addressable only through its alias, a plain column by name.
     const activeGroupBy = state.groupBy.filter((g) => {
       if (!g.fn) return !!g.field;
       const fn = functionByName(state.functions, g.fn);
-      return fn ? requiredArgsFilled(fn, g.args) : false;
+      return fn ? requiredArgsFilled(fn, g.args, state.functions) : false;
     });
 
     // A computed column's alias is its only name and the backend rejects a blank one, so names come
@@ -129,7 +175,7 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
       const alias = names.get(g.id);
       if (!fn || !alias) return;
       groupNames.push(alias);
-      selectEntries.push({ expr: fnExpr(fn, g.args), as: alias });
+      selectEntries.push({ expr: fnExpr(fn, g.args, state.functions), as: alias });
     });
     if (groupNames.length) q.group_by = groupNames;
 
@@ -137,7 +183,7 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
       const fn = functionByName(state.functions, a.fn);
       const alias = names.get(a.id);
       if (!fn || !alias) return;
-      const expr = fnExpr(fn, a.args);
+      const expr = fnExpr(fn, a.args, state.functions);
       if (a.distinct) expr.distinct = true;
       selectEntries.push({ expr, as: alias });
     });
@@ -155,7 +201,7 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
     }
     if (selectEntries.length) q.select = selectEntries;
 
-    const having = serializeNode(state.having);
+    const having = serializeNode(state.having, state.functions);
     if (having) q.having = having;
   }
 
@@ -187,15 +233,42 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
 
 // A missing alias is not among the warnings: every computed row is prefilled with one and a cleared
 // alias falls back to the derived value at serialization, so there is no state left to warn about.
+// A function entry the serializer emits nothing for: its function is not in the served catalog, or a
+// required argument is unfilled. Every section that can hold one has to say so — silently emitting
+// less than the user built is the failure mode all three share.
+export const isDroppedFunction = (fn: string | null, args: FnArgValue[], functions: QueryFunction[]): boolean => {
+  if (!fn) return false;
+  const resolved = functionByName(functions, fn);
+  return !resolved || !requiredArgsFilled(resolved, args, functions);
+};
+
+// A condition is dropped for a call on either side — the right-hand one only while that is the kind
+// in play, so a function left behind by a switch back to a literal does not warn about nothing. A
+// right operand switched to a function with none picked yet counts too: unlike a left operand left
+// unnamed, it is a condition the user started writing and the query silently runs wider without it.
+const isDroppedPredicate = (node: FilterPredicateNode, functions: QueryFunction[]): boolean => {
+  if (isDroppedFunction(node.fn, node.args, functions)) return true;
+  if (node.rightKind !== FilterOperandKind.Function) return false;
+  return !node.rightFn || isDroppedFunction(node.rightFn, node.rightArgs, functions);
+};
+
+// A dropped projection column returns a narrower result than was asked for; a dropped condition
+// returns a wider one, which is the more dangerous of the two — the query simply runs unfiltered.
+export const hasDroppedProjectionColumn = (state: QueryBuilderState): boolean =>
+  state.mode === QueryMode.Row && state.select.some((row) => isDroppedFunction(row.fn, row.args, state.functions));
+
+export const hasDroppedCondition = (node: FilterGroupNode, functions: QueryFunction[]): boolean =>
+  node.children.some((child) =>
+    child.kind === FilterNodeKind.Group ? hasDroppedCondition(child, functions) : isDroppedPredicate(child, functions),
+  );
+
 export const getAggregateWarnings = (state: QueryBuilderState): QueryBuilderWarning[] => {
   if (state.mode !== QueryMode.Aggregate) return [];
   const warnings: QueryBuilderWarning[] = [];
   const fnRows = state.groupBy.filter((g) => g.fn);
-  const rowComplete = (g: (typeof fnRows)[number]): boolean => {
-    const fn = functionByName(state.functions, g.fn);
-    return !!fn && requiredArgsFilled(fn, g.args);
-  };
-  if (fnRows.some((g) => !rowComplete(g))) warnings.push(QueryBuilderWarning.MissingGroupByField);
+  if (fnRows.some((g) => isDroppedFunction(g.fn, g.args, state.functions))) {
+    warnings.push(QueryBuilderWarning.MissingGroupByField);
+  }
   if (!state.groupBy.length && !state.aggregates.length) {
     warnings.push(QueryBuilderWarning.EmptyAggregate);
   }

@@ -1,10 +1,15 @@
+import { useCallback, useEffect, useState } from 'react';
+
+import { DialLabel, DialRadioButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconInfoCircle } from '@tabler/icons-react';
+
 import { KeysI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
-import { useCallback, useEffect, useState } from 'react';
 import RangeItems from './RangeItems';
 import { IpRange, IpRangeProperty, RestrictionType } from './types';
+
+const INFO_ICON_SIZE = 16;
 
 interface Props<T> {
   elementId?: string;
@@ -12,14 +17,22 @@ interface Props<T> {
   originalEntity?: T;
   onChange?: (allowedIpAddressRanges?: string[]) => void;
   disabled?: boolean;
+  /**
+   * Shows a tooltip next to the "Only selected ranges" option explaining that Core normalizes a
+   * range to its network address on save (host bits outside the prefix are dropped). Asset keys
+   * only — the legacy entity-key surface stores the raw CIDR and doesn't mask, so the notice would
+   * be misleading there.
+   */
+  showMaskNotice?: boolean;
 }
 
-const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>({
+const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | null }>({
   elementId,
   onChange,
   entity,
   originalEntity,
   disabled,
+  showMaskNotice,
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
@@ -28,29 +41,37 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   const [ipRanges, setIpRanges] = useState<IpRange[]>([]);
 
   const initialize = useCallback((entity: T) => {
-    if (!entity.allowedIpAddressRanges) {
+    // Core serializes a null `IpAddressRanges` as JSON `null` (no restriction configured), and the
+    // `IpAddressRanges` bean form is not a `string[]` — treat either as "allow all" rather than
+    // crashing on `.length`/`.map`. Only a real array of CIDR strings reaches the RANGES branch.
+    const ranges = entity.allowedIpAddressRanges;
+    if (!ranges || !Array.isArray(ranges)) {
       setSelectedRadio(RestrictionType.ALLOW_ALL);
       setIpRanges([]);
-    } else if (entity.allowedIpAddressRanges.length === 0) {
+    } else if (ranges.length === 0) {
       setSelectedRadio(RestrictionType.BLOCK_ALL);
       setIpRanges([]);
     } else {
       setSelectedRadio(RestrictionType.RANGES);
-      const ranges = entity.allowedIpAddressRanges.map((range) => {
+      const parsedRanges = ranges.map((range) => {
         const [ip, mask] = range.split('/');
         return {
           ip,
           mask: mask ? parseInt(mask) : undefined,
         };
       });
-      setIpRanges(ranges);
+      setIpRanges(parsedRanges);
     }
   }, []);
 
   useEffect(() => {
-    initialize(entity);
+    // On mount and whenever `originalEntity` changes (post-save refresh: Core returns masked
+    // ranges that replace the original), reinitialize from the original — it is the authoritative
+    // saved value, and reading it here avoids the race where `entity` (a clone the parent updates
+    // in a separate effect) is still the pre-refresh value on this render.
+    initialize(originalEntity ?? entity);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [originalEntity]);
 
   const handleRadioChange = useCallback(
     (option: RestrictionType) => {
@@ -109,7 +130,11 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
   }, [selectedRadio, ipRanges]);
 
   useEffect(() => {
-    // When discard need to reinitialize Field
+    // Reinitialize when the entity is reset back to the original (discard), or when the original
+    // itself changes (post-save refresh: Core returns masked ranges that replace `originalEntity`,
+    // and the parent clones it into `entity`). The referential equality check distinguishes a
+    // server/discard reset from an in-progress user edit, which must NOT reinit (it would wipe the
+    // fields the user is typing into).
     if (entity === originalEntity) {
       initialize(entity);
     }
@@ -140,15 +165,31 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] }>
           disabled={disabled}
         />
 
-        <DialRadioButton
-          inputId={`${elementId}-ranges`}
-          name={`${elementId}-restriction-options`}
-          value={RestrictionType.RANGES}
-          checked={selectedRadio === RestrictionType.RANGES}
-          onChange={() => handleRadioChange(RestrictionType.RANGES)}
-          label={t(KeysI18nKey.RangesRestriction)}
-          disabled={disabled}
-        />
+        <div className="flex items-center gap-1">
+          <DialRadioButton
+            inputId={`${elementId}-ranges`}
+            name={`${elementId}-restriction-options`}
+            value={RestrictionType.RANGES}
+            checked={selectedRadio === RestrictionType.RANGES}
+            onChange={() => handleRadioChange(RestrictionType.RANGES)}
+            label={t(KeysI18nKey.RangesRestriction)}
+            disabled={disabled}
+          />
+          {showMaskNotice && (
+            <DialTooltip
+              tooltip={<span>{t(KeysI18nKey.IpRangesMaskNotice)}</span>}
+              triggerClassName="flex items-center"
+            >
+              <button
+                type="button"
+                aria-label={t(KeysI18nKey.IpRangesMaskNotice)}
+                className="flex shrink-0 items-center text-secondary hover:text-accent-primary focus-visible:text-accent-primary"
+              >
+                <IconInfoCircle size={INFO_ICON_SIZE} aria-hidden />
+              </button>
+            </DialTooltip>
+          )}
+        </div>
       </div>
 
       {selectedRadio === RestrictionType.RANGES && (

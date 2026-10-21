@@ -4,8 +4,13 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
-import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
-import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import AppRunnerCreateProperties from '@/src/components/Assets/Platform/AppRunners/CreateProperties';
+import CatalogSchemaCreateProperties from '@/src/components/Assets/Platform/CatalogSchemas/CreateProperties';
+import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
+import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
+import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
+import SkillCreateProperties from '@/src/components/Assets/Artifacts/Skills/CreateProperties';
+import { DialAppRunnerResource, DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -16,10 +21,13 @@ interface Props<T> {
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   isUniqueNameError?: boolean;
+  externalIdError?: string;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: object) => void;
   initialValues?: Partial<T>;
   isModal?: boolean;
+  /** Applications only — omits the version field/validation for a platform-bucket create (flat, unversioned). */
+  hideVersionField?: boolean;
 }
 
 // TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views
@@ -34,12 +42,80 @@ const Properties = <T extends object>({
 }: Props<T>) => {
   // Ahead of `isSimpleEntity`, which defaults to `true` for unlisted routes — an app runner is
   // identified by `$id`, so the generic `name`-based form would silently drop its identity.
-  if (view === ApplicationRoute.AssetsAppRunners) {
+  if (view === ApplicationRoute.PlatformAppRunners) {
     return (
       <AppRunnerCreateProperties
         entity={entity as DialAppRunnerResource}
         names={props.names}
+        externalIdError={props.externalIdError}
         isModal={props.isModal}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as App Runner above: a catalog schema is
+  // identified by `$id`, and its display name lives under `dial:catalogDisplayName` rather than the
+  // generic `displayName` the shared form writes.
+  if (view === ApplicationRoute.PlatformCatalogSchemas) {
+    return (
+      <CatalogSchemaCreateProperties
+        entity={entity as DialCatalogSchemaResource}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        externalIdError={props.externalIdError}
+        isModal={props.isModal}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  if (view === ApplicationRoute.Skills) {
+    return (
+      <SkillCreateProperties
+        entity={entity as { name?: string; description?: string }}
+        names={props.names}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as App Runner above: the generic `EntityProperties`
+  // form always renders a display-name field and seeds a `description`, neither of which exists on
+  // `Route` (see `RouteCreateProperties`'s doc comment).
+  if (view === ApplicationRoute.PlatformRoutes) {
+    return (
+      <RouteCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as Route above: `Translator` is also a plain POJO
+  // with no `displayName`/`description` (see `TranslatorCreateProperties`'s doc comment).
+  if (view === ApplicationRoute.PlatformTranslators) {
+    return (
+      <TranslatorCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+        isModal={props.isModal}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as Route above: `Role` is a plain class with no
+  // `displayName`/`description`.
+  if (view === ApplicationRoute.PlatformRoles) {
+    return (
+      <RoleCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}
       />
     );
@@ -50,15 +126,7 @@ const Properties = <T extends object>({
   }
 
   if (isAssetView(view)) {
-    return (
-      <AssetProperties
-        view={view}
-        runners={runners}
-        versionsMap={versionsMap}
-        entity={entity as AssetWithVersion}
-        {...props}
-      />
-    );
+    return <AssetProperties view={view} versionsMap={versionsMap} entity={entity as AssetWithVersion} {...props} />;
   }
 
   return (

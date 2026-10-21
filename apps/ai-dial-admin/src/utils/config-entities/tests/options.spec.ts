@@ -12,26 +12,23 @@ const failed = (reason = ConfigFileFailureReason.RequestFailed): ConfigFileReadR
 });
 
 describe('unionConfigEntityOptions', () => {
-  test('offers both populations', () => {
+  test('offers both populations, platform options first', () => {
     const result = unionConfigEntityOptions(ok(['api-one']), ok(['file-one']));
 
     expect(result.success).toBe(true);
     expect(result.success && result.data.options).toEqual([
-      { name: 'file-one', origin: ConfigEntityOrigin.ConfigFile },
       { name: 'api-one', origin: ConfigEntityOrigin.Api },
+      { name: 'file-one', origin: ConfigEntityOrigin.ConfigFile },
     ]);
     expect(result.success && result.data.failures).toEqual([]);
   });
 
-  test('keeps a name present in both populations as two distinguishable options', () => {
+  test('collapses a name present in both populations to a single platform-origin option', () => {
     const result = unionConfigEntityOptions(ok(['shared']), ok(['shared']));
 
     const options = result.success ? result.data.options : [];
-    expect(options).toHaveLength(2);
-    expect(options.map((option) => option.origin)).toEqual([ConfigEntityOrigin.ConfigFile, ConfigEntityOrigin.Api]);
-    expect(
-      new Set(options.map((option) => getConfigEntityReference(option, ConfigFileEntityType.Interceptors))),
-    ).toEqual(new Set(['shared', 'interceptors/platform/shared']));
+    expect(options).toHaveLength(1);
+    expect(options[0]).toEqual({ name: 'shared', origin: ConfigEntityOrigin.Api });
   });
 
   test('collapses duplicates within a single population', () => {
@@ -68,25 +65,52 @@ describe('unionConfigEntityOptions', () => {
 describe('getConfigEntityReference', () => {
   // Asserted as literal strings on purpose: comparing against the helper that produced them would
   // pass for any consistent-but-wrong form, and a wrong form is a save Core rejects at write time.
-  test('references a config-file entity by bare name', () => {
+  test('references a short-name-keyed entity by bare name from either origin', () => {
     expect(
       getConfigEntityReference(
         { name: 'default', origin: ConfigEntityOrigin.ConfigFile },
         ConfigFileEntityType.Interceptors,
       ),
     ).toBe('default');
-  });
-
-  test('references an API-written entity by canonical id', () => {
     expect(
       getConfigEntityReference({ name: 'default', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Interceptors),
-    ).toBe('interceptors/platform/default');
+    ).toBe('default');
   });
 
-  test('uses the entity type in the canonical id', () => {
+  test('references every short-name-keyed type by bare name from the API population', () => {
+    expect(
+      getConfigEntityReference({ name: 'gpt-4', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Models),
+    ).toBe('gpt-4');
     expect(
       getConfigEntityReference({ name: 'admin', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Roles),
-    ).toBe('roles/platform/admin');
+    ).toBe('admin');
+    expect(
+      getConfigEntityReference({ name: 'my-app', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Applications),
+    ).toBe('my-app');
+    expect(
+      getConfigEntityReference({ name: 'my-toolset', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Toolsets),
+    ).toBe('my-toolset');
+  });
+
+  test('references a route by bare name from the config-file population and canonical id from the API population', () => {
+    expect(
+      getConfigEntityReference(
+        { name: 'my-route', origin: ConfigEntityOrigin.ConfigFile },
+        ConfigFileEntityType.Routes,
+      ),
+    ).toBe('my-route');
+    expect(
+      getConfigEntityReference({ name: 'my-route', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Routes),
+    ).toBe('routes/platform/my-route');
+  });
+
+  test('references a key by bare name from the config-file population and canonical id from the API population', () => {
+    expect(
+      getConfigEntityReference({ name: 'my-key', origin: ConfigEntityOrigin.ConfigFile }, ConfigFileEntityType.Keys),
+    ).toBe('my-key');
+    expect(
+      getConfigEntityReference({ name: 'my-key', origin: ConfigEntityOrigin.Api }, ConfigFileEntityType.Keys),
+    ).toBe('keys/platform/my-key');
   });
 });
 
@@ -97,18 +121,17 @@ describe('a name containing the canonical separator', () => {
     const options = result.success ? result.data.options : [];
 
     expect(options).toEqual([{ name: trap, origin: ConfigEntityOrigin.ConfigFile }]);
-    // Stored as the bare name it is, so it resolves to the config-file entity — not to an API-written
+    // Stored as the bare name it is, so it resolves to that config-file entity — not to an API-written
     // `looks-canonical` that may also exist.
     expect(getConfigEntityReference(options[0], ConfigFileEntityType.Interceptors)).toBe(trap);
   });
 
-  test('still yields two distinct references when the same name exists in both populations', () => {
+  test('collapses to a single reference when the same name exists in both populations', () => {
     const result = unionConfigEntityOptions(ok(['shared']), ok(['shared']));
     const options = result.success ? result.data.options : [];
 
     expect(options.map((option) => getConfigEntityReference(option, ConfigFileEntityType.Interceptors))).toEqual([
       'shared',
-      'interceptors/platform/shared',
     ]);
   });
 });

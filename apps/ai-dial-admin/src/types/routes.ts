@@ -16,33 +16,46 @@ export enum ApplicationRoute {
   ApplicationRunners = '/application-runners',
   InterceptorTemplates = '/interceptor-templates',
 
+  // Platform entities
+  PlatformModels = '/platform-models',
+  PlatformAppRunners = '/platform-app-runners',
+  PlatformCatalogSchemas = '/platform-catalog-schemas',
+  PlatformInterceptors = '/platform-interceptors',
+  PlatformTranslators = '/platform-translators',
+  PlatformRoutes = '/platform-routes',
+  PlatformRoles = '/platform-roles',
+  PlatformKeys = '/platform-keys',
   // Assets
-  AssetsModels = '/assets-models',
-  AssetsAppRunners = '/assets-app-runners',
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
   Conversations = '/conversations',
   Prompts = '/prompts',
   Files = '/files',
+  Skills = '/skills',
 
   // Publications
   FoldersStorage = '/folders-storage',
+  Publications = '/publications',
   ApplicationPublications = '/application-publications',
   ToolsetPublications = '/toolset-publications',
   PromptPublications = '/prompt-publications',
   FilePublications = '/file-publications',
   ConversationPublications = '/conversation-publications',
+  SkillPublications = '/skill-publications',
 
   // Access Management
   Roles = '/roles',
   Keys = '/keys',
 
   // Activity
-  Dashboard = '/dashboard',
+  Dashboard = '/dashboards',
   UsageLog = '/usage-log',
   ActivityAudit = '/activity-audit',
 
   // Deployments
+  Containers = '/containers',
+  // The four `*Containers` members below are container *kinds* (what helpers and the `route`/`view`
+  // props of the container views switch on), not URLs: every container URL is `Containers`.
   InterceptorContainers = '/interceptor-containers',
   ModelServings = '/model-servings',
   McpContainers = '/mcp-containers',
@@ -59,7 +72,8 @@ export enum ApplicationRoute {
   Metrics = '/metrics',
 
   // Analytics
-  AnalyticsQueryBuilder = '/query-builder',
+  AnalyticsQueries = '/queries',
   AnalyticsTables = '/tables',
-  ConversationsTrace = '/conversations-trace',
+  AnalyticsPipelines = '/pipelines',
+  SessionsTrace = '/sessions',
 }

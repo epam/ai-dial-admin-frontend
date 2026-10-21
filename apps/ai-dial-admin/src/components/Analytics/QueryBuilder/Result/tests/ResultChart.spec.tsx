@@ -21,6 +21,7 @@ const META: ExecutedQueryMeta = {
   dimensionColumns: ['deployment'],
   aggregateColumns: ['total', 'tokens'],
   columnLabels: { deployment: 'Deployment' },
+  columnValueClasses: {},
 };
 
 const renderChart = (config: ChartConfig = DEFAULT_CHART_CONFIG, result = RESULT, meta = META) => {
@@ -82,5 +83,40 @@ describe('QueryBuilder :: ResultChart', () => {
 
     expect(screen.queryByRole('tab', { name: 'Scatter' })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Pie' })).toBeInTheDocument();
+  });
+
+  // A fallback-classified SQL run puts its numeric columns in BOTH lists; counting them twice would
+  // offer scatter one column to plot against itself.
+  test('scatter stays hidden when a fallback meta repeats its only numeric column in both lists', () => {
+    const result: StructuredQueryResult = {
+      columns: ['deployment', 'total'],
+      rows: [
+        { deployment: 'gpt-4o', total: 120 },
+        { deployment: 'claude', total: 80 },
+      ],
+    };
+    renderChart(DEFAULT_CHART_CONFIG, result, {
+      ...META,
+      kind: QueryRequestKind.Sql,
+      mode: QueryMode.Row,
+      dimensionColumns: ['deployment', 'total'],
+      aggregateColumns: ['total'],
+    });
+
+    expect(screen.queryByRole('tab', { name: 'Scatter' })).not.toBeInTheDocument();
+  });
+
+  test('names the missing axis pick when a slot has no column to default to', () => {
+    const result: StructuredQueryResult = {
+      columns: ['deployment', 'total'],
+      rows: [{ deployment: 'gpt-4o', total: 120 }],
+    };
+    renderChart({ type: ChartType.Scatter, xField: null, yField: null }, result, {
+      ...META,
+      dimensionColumns: [],
+      aggregateColumns: [],
+    });
+
+    expect(screen.getByText('QueryBuilder.ChartNoAxisSelection')).toBeInTheDocument();
   });
 });

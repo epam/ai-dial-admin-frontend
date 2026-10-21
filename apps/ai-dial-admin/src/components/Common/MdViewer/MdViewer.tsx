@@ -3,14 +3,14 @@ import { FC } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import DOMPurify from 'dompurify';
-import matter from 'gray-matter';
+import { parseFrontmatter } from '@/src/utils/frontmatter';
 
 interface Props {
   content: string;
 }
 
 const MdViewer: FC<Props> = ({ content }) => {
-  const { content: markdown } = matter(content);
+  const { body: markdown } = parseFrontmatter(content);
   const clean = DOMPurify.sanitize(markdown);
 
   return (

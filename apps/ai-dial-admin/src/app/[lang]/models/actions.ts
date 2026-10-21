@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { modelsApi, adaptersApi } from '@/src/app/api/api';
+import { adaptersApi, modelsApi } from '@/src/app/api/api';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { getUserToken } from '@/src/utils/auth/auth-request';

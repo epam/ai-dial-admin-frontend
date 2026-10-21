@@ -3,10 +3,11 @@ import { FC, useCallback } from 'react';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import AppRunnerExtendedProperties from './ExtendedProperties';
-import AppRunnerSource from './AppRunnerSource';
 import { ApplicationRoute } from '@/src/types/routes';
+import AppRunnerSource from './AppRunnerSource';
+import AppRunnerExtendedProperties from './ExtendedProperties';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -16,6 +17,7 @@ interface Props {
   isModal?: boolean;
   /** Characters the `$id` may not contain. Only the asset surface constrains this — see `CORE_UNENCODABLE_ID_CHARS`. */
   idForbiddenChars?: readonly string[];
+  externalIdError?: string;
   onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
@@ -24,10 +26,12 @@ const SchemeProperties: FC<Props> = ({
   runner,
   isImmutable,
   idForbiddenChars,
+  externalIdError,
   onChangeRunner,
   isModal,
   view = ApplicationRoute.ApplicationRunners,
 }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const onChangeId = useCallback(
     (id?: string) => {
       onChangeRunner({
@@ -43,8 +47,11 @@ const SchemeProperties: FC<Props> = ({
       {!isImmutable && (
         <IdControl
           names={names}
+          inputId="id"
+          validationField="id"
           isUrlId
           forbiddenChars={idForbiddenChars}
+          externalError={externalIdError}
           entity={{ name: runner.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />
@@ -68,6 +75,7 @@ const SchemeProperties: FC<Props> = ({
           isEntityImmutable={isImmutable}
           isModal={isModal}
           view={ApplicationRoute.ApplicationRunners}
+          isReadOnlyAdmin={isReadOnlyAdmin}
         />
       )}
     </div>

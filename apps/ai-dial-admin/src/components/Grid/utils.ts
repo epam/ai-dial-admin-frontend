@@ -1,10 +1,12 @@
-import { ColDef, ColumnState, FilterModel } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ColumnState, FilterModel } from 'ag-grid-community';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { GRID_COLUMNS_KEY } from './constants';
 
 export interface GridModel {
   columns: ColumnState[];
   filters: FilterModel;
+  // Columns the operator dragged. Other stored widths are an automatic fit saved with a sort or filter.
+  sizedColIds?: string[];
 }
 
 export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;
@@ -16,7 +18,9 @@ export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) 
 export const getColumnsStateFromStorage = (storageKey: string, defaultSorts: ColumnState[]): GridModel => {
   const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const parsed = JSON.parse(model);
-  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: [] };
+  // `filters` must stay an object: `applyGridState` hands it straight to `setFilterModel`, which
+  // reads it as a colId -> model map.
+  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: {} };
 };
 
 export const applyColumnStateOrderToColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
@@ -56,29 +60,218 @@ const getFirstLeafColId = (col: ColDef): string | undefined => {
   return (col.colId ?? col.field) as string | undefined;
 };
 
+const groupChildren = (col: ColDef): ColDef[] | null => {
+  const children = (col as ColGroupDef).children;
+  return Array.isArray(children) ? (children as ColDef[]) : null;
+};
+
 export const applyColumnStateOrderToTreeColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
   const colIdToIndex = new Map(columnState.map((state, i) => [state.colId, i]));
 
-  const getPosition = (col: ColDef): number => {
-    const leafId = getFirstLeafColId(col);
-    return leafId !== undefined ? (colIdToIndex.get(leafId) ?? Infinity) : Infinity;
+  const leafPosition = (col: ColDef): number => {
+    const id = (col.colId ?? col.field) as string | undefined;
+    return id !== undefined ? (colIdToIndex.get(id) ?? Infinity) : Infinity;
   };
 
-  return [...columnDefs].sort((a, b) => getPosition(a) - getPosition(b));
+  const position = (col: ColDef): number => {
+    const children = groupChildren(col);
+    if (!children?.length) {
+      return leafPosition(col);
+    }
+
+    return Math.min(...children.map(position));
+  };
+
+  const sortLevel = (nodes: ColDef[]): ColDef[] => {
+    const withSortedChildren = nodes.map((node) => {
+      const children = groupChildren(node);
+      if (!children?.length) {
+        return node;
+      }
+
+      const sortedChildren = sortLevel(children);
+      const unchanged = sortedChildren.every((child, index) => child === children[index]);
+      return unchanged ? node : { ...node, children: sortedChildren };
+    });
+
+    return [...withSortedChildren].sort((a, b) => position(a) - position(b));
+  };
+
+  return sortLevel(columnDefs);
 };
 
-export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+const sameTreeOrder = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
   columnDefs.length === nextColumnDefs.length &&
-  columnDefs.every((col, index) => getFirstLeafColId(col) === getFirstLeafColId(nextColumnDefs[index]));
+  columnDefs.every((col, index) => {
+    const next = nextColumnDefs[index];
+    if (getFirstLeafColId(col) !== getFirstLeafColId(next)) {
+      return false;
+    }
 
-export const updateColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
+    const children = groupChildren(col);
+    const nextChildren = groupChildren(next);
+    if (!children?.length && !nextChildren?.length) {
+      return true;
+    }
+
+    return !!children?.length && !!nextChildren?.length && sameTreeOrder(children, nextChildren);
+  });
+
+export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+  sameTreeOrder(columnDefs, nextColumnDefs);
+
+export interface ColumnLeaf {
+  field: string;
+  headerName?: ColDef['headerName'];
+  hide?: ColDef['hide'];
+  sort?: ColDef['sort'];
+  groupId?: string;
+  groupName?: ColDef['headerName'];
+  suppressColumnsToolPanel?: ColDef['suppressColumnsToolPanel'];
+}
+
+const toLeaf = (col: ColDef, group?: ColGroupDef): ColumnLeaf => ({
+  field: (col.field ?? col.colId ?? '') as string,
+  headerName: col.headerName,
+  hide: col.hide,
+  sort: col.sort,
+  suppressColumnsToolPanel: col.suppressColumnsToolPanel,
+  ...(group?.groupId ? { groupId: group.groupId } : {}),
+  ...(group?.headerName ? { groupName: group.headerName } : {}),
+});
+
+export const isGroupedColDefs = (columnDefs: ColDef[] | undefined): boolean =>
+  !!columnDefs?.some((col) => groupChildren(col) !== null);
+
+export const toColumnLeaves = (columnDefs: ColDef[]): ColumnLeaf[] =>
+  columnDefs.flatMap((col) => {
+    const children = groupChildren(col);
+    return children ? children.map((child) => toLeaf(child, col as ColGroupDef)) : [toLeaf(col)];
+  });
+
+const mapLeafGroups = (columnDefs: ColDef[], transform: (children: ColDef[]) => ColDef[]): ColDef[] =>
+  columnDefs.map((col) => {
+    const children = groupChildren(col);
+    if (!children) {
+      const [next] = transform([col]);
+      return next ?? col;
+    }
+    const next = transform(children);
+    const isUnchanged = next.length === children.length && next.every((child, index) => child === children[index]);
+    return isUnchanged ? col : { ...col, children: next };
+  });
+
+export const withLeafVisibility = (columnDefs: ColDef[], field: string, hide: boolean): ColDef[] => {
+  if (!isGroupedColDefs(columnDefs)) {
+    return columnDefs.map((col) => (col.field === field ? { ...col, hide } : col));
+  }
+
+  return mapLeafGroups(columnDefs, (children) =>
+    children.map((child) => (child.field === field ? { ...child, hide } : child)),
+  );
+};
+
+const reorder = (items: ColDef[], from: number, to: number): ColDef[] => {
+  const next = [...items];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+};
+
+export const withLeafMoved = (columnDefs: ColDef[], field: string, atIndex: number): ColDef[] => {
+  const leaves = toColumnLeaves(columnDefs);
+  const from = leaves.findIndex((leaf) => leaf.field === field);
+  const target = leaves[atIndex];
+
+  if (from < 0 || !target || from === atIndex) {
+    return columnDefs;
+  }
+
+  if (!isGroupedColDefs(columnDefs)) {
+    return reorder(columnDefs, from, atIndex);
+  }
+
+  if (leaves[from].groupId !== target.groupId) {
+    return columnDefs;
+  }
+
+  return mapLeafGroups(columnDefs, (children) => {
+    const localFrom = children.findIndex((child) => child.field === field);
+    const localTo = children.findIndex((child) => child.field === target.field);
+    return localFrom < 0 || localTo < 0 ? children : reorder(children, localFrom, localTo);
+  });
+};
+
+export const applyColumnStateOrderToGroupedColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
+  const stateByColId = new Map(columnState.map((state) => [state.colId, state]));
+  const orderOf = new Map(columnState.map((state, index) => [state.colId, index]));
+
+  return mapLeafGroups(columnDefs, (children) =>
+    [...children]
+      .sort((a, b) => {
+        const aOrder = orderOf.get((a.field ?? a.colId) as string) ?? Infinity;
+        const bOrder = orderOf.get((b.field ?? b.colId) as string) ?? Infinity;
+        return aOrder - bOrder;
+      })
+      .map((child) => {
+        const state = stateByColId.get((child.field ?? child.colId) as string);
+        return state?.hide !== undefined ? { ...child, hide: state.hide } : child;
+      }),
+  );
+};
+
+export const haveGroupedColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean => {
+  const current = toColumnLeaves(columnDefs);
+  const next = toColumnLeaves(nextColumnDefs);
+
+  return (
+    current.length === next.length &&
+    current.every((leaf, index) => leaf.field === next[index].field && !!leaf.hide === !!next[index].hide)
+  );
+};
+
+// Stored entries that match a leaf are re-slotted into the leaves' order, and leaves the grid has not
+// saved yet are appended, so the panel's order survives even before the grid first writes its state.
+const withLeafOrderAndVisibility = (columns: ColumnState[], colDefs: ColDef[]): ColumnState[] => {
+  const leaves = toColumnLeaves(colDefs).filter((leaf) => leaf.field);
+  const leafIndex = new Map(leaves.map((leaf, index) => [leaf.field, index]));
+  const indexOf = (col: ColumnState) => leafIndex.get(col.colId) ?? -1;
+  const ordered = columns.filter((col) => indexOf(col) >= 0).sort((a, b) => indexOf(a) - indexOf(b));
+
+  let next = 0;
+  const slotted = columns.map((col) => {
+    if (indexOf(col) < 0) {
+      return col;
+    }
+    const target = ordered[next++];
+    return { ...target, hide: leaves[indexOf(target)].hide };
+  });
+
+  const storedIds = new Set(columns.map((col) => col.colId));
+  const unsaved = leaves
+    .filter((leaf) => !storedIds.has(leaf.field))
+    .map((leaf) => ({ colId: leaf.field, hide: leaf.hide }));
+
+  return [...slotted, ...unsaved];
+};
+
+export const updateColumnPanelStateInStorage = (storageKey: string, colDefs: ColDef[]) => {
   const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const model: GridModel = JSON.parse(stored);
-  const columns = (model.columns || []).map((col) => {
-    const def = colDefs.find((d) => d.field === col.colId);
-    return def ? { ...col, hide: def.hide } : col;
-  });
-  saveColumnsStateToStorage(storageKey, { ...model, columns });
+  const columns = withLeafOrderAndVisibility(model.columns || [], colDefs);
+  saveColumnsStateToStorage(storageKey, { ...model, filters: model.filters ?? {}, columns });
+};
+
+export const getGroupedColumnVisibilityFromGridState = (storageKey: string, columnDefs: ColDef[]): ColDef[] | null => {
+  const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`);
+  if (!stored) {
+    return null;
+  }
+  const model: GridModel = JSON.parse(stored);
+  if (!model.columns || model.columns.length === 0) {
+    return null;
+  }
+  return applyColumnStateOrderToGroupedColDefs(columnDefs, model.columns);
 };
 
 export const getColumnVisibilityFromGridState = (storageKey: string, columnDefs: ColDef[]): ColDef[] | null => {

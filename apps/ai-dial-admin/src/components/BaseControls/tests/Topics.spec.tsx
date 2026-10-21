@@ -40,11 +40,11 @@ describe('TopicsControl :: catalogue fetch by surface', () => {
   });
 
   test('offers no catalogue on Assets > App Runners', () => {
-    expect(renderTopics(ApplicationRoute.AssetsAppRunners).getItems).toBeUndefined();
+    expect(renderTopics(ApplicationRoute.PlatformAppRunners).getItems).toBeUndefined();
   });
 
   test('offers no catalogue on Assets > Models', () => {
-    expect(renderTopics(ApplicationRoute.AssetsModels).getItems).toBeUndefined();
+    expect(renderTopics(ApplicationRoute.PlatformModels).getItems).toBeUndefined();
   });
 
   // Positive controls — without these, the assertions above would pass even if the catalogue had
@@ -62,7 +62,7 @@ describe('TopicsControl :: catalogue fetch by surface', () => {
   });
 
   test('seeds the control from the resource so topics stay addable without a catalogue', () => {
-    const props = renderTopics(ApplicationRoute.AssetsAppRunners);
+    const props = renderTopics(ApplicationRoute.PlatformAppRunners);
 
     expect(props.selectedItems).toEqual(['existing']);
     expect(props.allItems).toEqual(['existing']);

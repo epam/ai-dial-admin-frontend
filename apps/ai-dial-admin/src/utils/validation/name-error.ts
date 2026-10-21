@@ -55,19 +55,23 @@ export const getErrorForName = (
   t?: (str: string) => string,
   isUniqueNameError?: boolean,
   checkForbiddenChars = true,
-  isDisplayName = false,
+  label?: string,
   isDeploymentId = false,
   checkEmptySymbols = true,
 ) => {
   const isIncludesName = name && names?.includes(name);
+  const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
   if (isIncludesName || isUniqueNameError) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(isDisplayName ? ErrorI18nKey.DisplayNameExists : ErrorI18nKey.NameExists) : '',
+      text: tWithArgs
+        ? label
+          ? tWithArgs(ErrorI18nKey.LabelExists, { label })
+          : tWithArgs(ErrorI18nKey.NameExists)
+        : '',
     };
   }
 
-  const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
   const isWrongLength = isWrongFieldLength(name || '', isDeploymentId);
   if (isWrongLength) {
     return {

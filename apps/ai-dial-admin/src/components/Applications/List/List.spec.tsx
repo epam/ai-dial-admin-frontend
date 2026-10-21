@@ -8,7 +8,7 @@ describe('ToolsetsList', () => {
     const data = [{ name: 'Toolset 1' }, { name: 'Toolset 2' }, { name: '' }];
     render(<ApplicationsList data={data} runners={[]} />);
     expect(screen.getByText(MenuI18nKey.Applications)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('renders EntityListView with empty data', () => {

@@ -1,21 +1,10 @@
-/** Known `metric_score_name` statistic values, each with its own Metric Scores section description. */
-export enum MetricStatistic {
-  Avg = 'AVG',
-  P90 = 'P90',
-  P10 = 'P10',
-  Max = 'MAX',
-  Min = 'MIN',
-  Med = 'MED',
-  Count = 'COUNT',
-}
+import { MetricStatistic } from '@/src/components/Common/MetricStatistics/models';
+import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
 
-/** Aggregated test-case execution outcome counts for a run, derived from `eval_summaries`. */
-export interface TestCaseStatusCounts {
-  passed: number;
-  failed: number;
-  error: number;
-  total: number;
-}
+export { MetricStatistic };
+
+/** Aggregated test-case execution outcome counts for a run, derived from `test_case_eval_scores`. */
+export type TestCaseStatusCounts = PassFailErrorCounts;
 
 /**
  * One bar group for a given statistic: the metric group name (the `metric_name` without its last
@@ -24,8 +13,8 @@ export interface TestCaseStatusCounts {
 export interface MetricScoreGroup {
   /** Metric group — `metric_name` up to the last `.`, e.g. `aidial_rag_eval.generation`. */
   name: string;
-  /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. */
-  bars: Record<string, number>;
+  /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. `null` when the metric was configured but produced no score. */
+  bars: Record<string, number | null>;
   /** The metric's own description, from its declaration; undefined until fetched. */
   description?: string;
   /** Leaf metric name (bar) → its output-field description, from the metric's `outputSchema`. */
@@ -42,7 +31,7 @@ export interface MetricInfo {
 export interface MetricScoresData {
   /** Run-level overall score from the `overall` statistic row, or null when absent. */
   overallScore: number | null;
-  /** Distinct `metric_score_name` values (AVG/P10/…) in first-seen order — the SegmentedControl options. */
+  /** Distinct `metric_score_name` values (AVG/P10/…) in canonical control order. */
   statistics: string[];
   /** Bar groups keyed by statistic name. */
   byStatistic: Record<string, MetricScoreGroup[]>;
@@ -68,4 +57,5 @@ export interface MetricOption {
 export interface RunAnalyticsSlice {
   statusCounts: TestCaseStatusCounts;
   avgRunTimeMs: number | null;
+  avgMetricEvalDurationMs: number | null;
 }

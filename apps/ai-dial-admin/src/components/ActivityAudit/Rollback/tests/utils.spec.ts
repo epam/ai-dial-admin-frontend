@@ -33,7 +33,7 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns BASE_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
-    expect(cols.length).toEqual(14);
+    expect(cols.length).toEqual(16);
   });
 
   test('returns BASE_COLUMNS for APPLICATION', () => {
@@ -58,7 +58,7 @@ describe('getSystemRollbackColumns', () => {
   });
 
   test('returns empty array for unknown type', () => {
-    const cols = getSystemRollbackColumns(ActivityAuditResourceType.UNKNOWN as any, t);
+    const cols = getSystemRollbackColumns('UnknownResourceType' as ActivityAuditResourceType, t);
     expect(cols).toEqual([]);
   });
 });

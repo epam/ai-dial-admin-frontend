@@ -1,9 +1,22 @@
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { describe, expect, test, vi } from 'vitest';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
-import { createEmptyFile, findFolderByPath, getEmptyFile, isItemNameValid, validateCreateFolder } from '../utils';
+import { ApplicationRoute } from '@/src/types/routes';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_MANAGER_GRID_CLASS, FILE_NAME_MAX_LENGTH } from '../constants';
+import {
+  createEmptyFile,
+  findFolderByPath,
+  getBulkActionsToolbarOptions,
+  getDestinationFolderPopupOptions,
+  getEmptyFile,
+  getGridOptions,
+  getValidationMessages,
+  isItemNameValid,
+  validateCreateFolder,
+} from '../utils';
+
+const translate = (key: string) => key;
 
 describe('FileManager', () => {
   describe('createEmptyFile', () => {
@@ -36,6 +49,27 @@ describe('FileManager', () => {
       expect(uploadFileItem.name).toBe(fileName);
       expect(uploadFileItem.fileContent.name).toBe(emptyFile.name);
       expect(uploadFileItem.fileContent.type).toBe(emptyFile.type);
+    });
+  });
+
+  describe('getValidationMessages', () => {
+    test('returns the dot message without the non-blocking warning prefix', () => {
+      const messages = getValidationMessages(translate);
+
+      expect(messages.hiddenItemWarning).toBe(FileManagerI18nKey.CreateFolderValidateFirstSymbol);
+      expect(messages.hiddenItemWarning.startsWith('warning__')).toBe(false);
+    });
+
+    test('passes the same validation messages to the destination folder popup', () => {
+      const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
+
+      expect(options.folderCreationValidationMessages).toEqual(getValidationMessages(translate));
+    });
+
+    test('should hide the sort control in the move popup', () => {
+      const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
+
+      expect(options.sortOptions).toEqual({ sortable: false });
     });
   });
 
@@ -214,5 +248,52 @@ describe('findFolderByPath', () => {
 
   test('should return undefined for empty items', () => {
     expect(findFolderByPath([], 'public/a/')).toBeUndefined();
+  });
+});
+
+describe('getBulkActionsToolbarOptions — Assets Applications bucket switch', () => {
+  test('restricts to delete-only while browsing the platform bucket', () => {
+    const { actionLabels } = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate, 'platform/');
+
+    expect(Object.keys(actionLabels)).toEqual(['delete']);
+  });
+
+  test('keeps the full bulk action set while browsing the public bucket', () => {
+    const withPublicPath = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate, 'public/');
+    const withoutPath = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate);
+
+    expect(Object.keys(withPublicPath.actionLabels).sort()).toEqual(['delete', 'download', 'move']);
+    expect(withPublicPath.actionLabels).toEqual(withoutPath.actionLabels);
+  });
+
+  test('is unaffected for other views regardless of the path argument', () => {
+    const withPath = getBulkActionsToolbarOptions(ApplicationRoute.PlatformKeys, translate, 'platform/');
+    const withoutPath = getBulkActionsToolbarOptions(ApplicationRoute.PlatformKeys, translate);
+
+    expect(withPath.actionLabels).toEqual(withoutPath.actionLabels);
+    expect(Object.keys(withPath.actionLabels)).toEqual(['delete']);
+  });
+});
+
+describe('getGridOptions — file manager grid design', () => {
+  const options = getGridOptions(ApplicationRoute.Files, false, [], translate);
+
+  test('scopes the grid with the file manager class', () => {
+    expect(options.containerClassName).toBe(FILE_MANAGER_GRID_CLASS);
+  });
+});
+
+describe('getGridOptions — row height', () => {
+  const getRowHeight = (view: ApplicationRoute) =>
+    getGridOptions(view, false, [], translate).additionalGridOptions?.rowHeight;
+
+  test('uses the 56px icon row height for Catalog lists', () => {
+    expect(getRowHeight(ApplicationRoute.PlatformModels)).toBe(56);
+    expect(getRowHeight(ApplicationRoute.PlatformKeys)).toBe(56);
+  });
+
+  test('keeps the 40px row height for Assets lists', () => {
+    expect(getRowHeight(ApplicationRoute.Files)).toBe(40);
+    expect(getRowHeight(ApplicationRoute.AssetsApplications)).toBe(40);
   });
 });

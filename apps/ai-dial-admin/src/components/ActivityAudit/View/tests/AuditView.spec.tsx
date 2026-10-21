@@ -81,7 +81,13 @@ const buildActivity = (
   revision: 42,
 });
 
-const rollbackButton = () => screen.getByText(RollbackI18nKey.Resource).closest('button');
+const rollbackButton = () => screen.getByRole('button', { name: RollbackI18nKey.Resource });
+const queryRollbackButton = () => screen.queryByRole('button', { name: RollbackI18nKey.Resource });
+
+const renderAuditView = (resourceType: ActivityAuditResourceType, resourceId?: string) =>
+  render(
+    <AuditView activity={buildActivity(resourceType, resourceId)} activityRevision={null} previousRevision={null} />,
+  );
 
 describe('AuditView :: Resource Rollback', () => {
   beforeEach(() => {
@@ -110,7 +116,7 @@ describe('AuditView :: Resource Rollback', () => {
         previousRevision={null}
       />,
     );
-    expect(screen.getByText(RollbackI18nKey.Resource)).toBeInTheDocument();
+    expect(rollbackButton()).toBeInTheDocument();
   });
 
   test('disables rollback while the image is building', async () => {
@@ -160,5 +166,37 @@ describe('AuditView :: Resource Rollback', () => {
     );
     expect(rollbackButton()).toBeEnabled();
     expect(getDeploymentEntityStateMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuditView :: Resource Rollback — analytics resources', () => {
+  beforeEach(() => {
+    getDeploymentEntityStateMock.mockReset();
+    getDeploymentEntityStateMock.mockResolvedValue(null);
+  });
+
+  test.each([
+    ActivityAuditResourceType.TABLE,
+    ActivityAuditResourceType.TABLE_COLUMN,
+    ActivityAuditResourceType.PIPELINE,
+    ActivityAuditResourceType.SAVED_QUERY,
+  ])('does not render the Resource Rollback button for a %s activity', (resourceType) => {
+    renderAuditView(resourceType);
+    expect(queryRollbackButton()).toBeNull();
+  });
+
+  test('renders no disabled control in place of the suppressed rollback button', () => {
+    renderAuditView(ActivityAuditResourceType.TABLE);
+    expect(screen.queryByText(RollbackI18nKey.Resource)).toBeNull();
+    const disabledControls = screen
+      .queryAllByRole('button')
+      .filter((button) => button.matches('[disabled], [aria-disabled="true"]'));
+    expect(disabledControls).toEqual([]);
+  });
+
+  test('keeps the Resource Rollback button unchanged for an admin activity', () => {
+    renderAuditView(ActivityAuditResourceType.MODEL);
+    expect(rollbackButton()).toBeEnabled();
+    expect(rollbackButton()).not.toHaveAttribute('title');
   });
 });

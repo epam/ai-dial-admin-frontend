@@ -59,18 +59,6 @@ describe('ContainerSource', () => {
     expect(screen.getByRole('textbox')).toBeTruthy();
   });
 
-  test('renders Image URI input for NGC_REGISTRY source', () => {
-    const container: Container = {
-      ...baseContainer,
-      $type: CONTAINER_TYPE.NIM,
-      source: { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY, imageRef: '' },
-    };
-
-    render(<ContainerSource container={container} setContainer={vi.fn()} route={ApplicationRoute.ModelServings} />);
-
-    expect(screen.getByRole('textbox')).toBeTruthy();
-  });
-
   test('renders InternalImageField for INTERNAL_IMAGE source and forwards image prop', () => {
     const image = { id: 'img-1', name: 'Github', version: '1.2.1' } as Image;
     const container: Container = {

@@ -5,7 +5,9 @@ import { FilterDto } from '@/src/models/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { FilterOperatorDto } from '@/src/types/request';
 import {
+  cancelRun,
   exportRunPreview,
   getRun,
   getRunResults,
@@ -65,10 +67,29 @@ describe('Runs :: server actions', () => {
     expect(result).toEqual(RESPONSE_MOCK);
   });
 
+  test('Should call cancelRun action and return server action response on success', async () => {
+    (runsApi.cancelRun as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await cancelRun('run-id');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(runsApi.cancelRun).toHaveBeenCalledWith('run-id', TOKEN_MOCK);
+    expect(result).toEqual(RESPONSE_MOCK);
+  });
+
+  test('Should call cancelRun action and propagate an error response', async () => {
+    const errorResponse = { success: false, errorHeader: 'Error', errorMessage: 'Run already completed' };
+    (runsApi.cancelRun as any).mockResolvedValue(errorResponse);
+
+    const result = await cancelRun('run-id');
+
+    expect(result).toEqual(errorResponse);
+  });
+
   test('Should call getRunResults action and return extraction results', async () => {
     const filters: FilterDto[] = [
-      { column: 'testSuite', value: 'suite-1' },
-      { column: 'status', value: 'PASSED' },
+      { column: 'testSuite', value: 'suite-1', operator: FilterOperatorDto.EQUALS },
+      { column: 'status', value: 'PASSED', operator: FilterOperatorDto.EQUALS },
     ];
     const extractionResults = [{ id: 'result-1' }];
     (runsApi.getRunResults as any).mockResolvedValue(extractionResults);
@@ -82,8 +103,8 @@ describe('Runs :: server actions', () => {
 
   test('Should call getTestCaseRunResults action and return analytics results', async () => {
     const filters: FilterDto[] = [
-      { column: 'testSuite', value: 'suite-1' },
-      { column: 'status', value: 'PASSED' },
+      { column: 'testSuite', value: 'suite-1', operator: FilterOperatorDto.EQUALS },
+      { column: 'status', value: 'PASSED', operator: FilterOperatorDto.EQUALS },
     ];
     const analyticsResults = { content: [{ id: 'analytics-1' }] };
     (analyticsApi.getTestCaseRunResults as any).mockResolvedValue(analyticsResults);
@@ -107,7 +128,7 @@ describe('Runs :: server actions', () => {
   });
 
   test('Should call getMetricSnapshots action and return snapshots', async () => {
-    const filters: FilterDto[] = [{ column: 'runId', value: 'run-1' }];
+    const filters: FilterDto[] = [{ column: 'runId', value: 'run-1', operator: FilterOperatorDto.EQUALS }];
     const snapshots = [{ id: 'snap-1', tsmdName: 'RAGAS Faithfulness' }];
     (analyticsApi.getMetricSnapshots as any).mockResolvedValue(snapshots);
 

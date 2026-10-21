@@ -10,7 +10,7 @@ Gate the Model-Serving (container) model creation flow by the backend inference 
 
 The `Container` model SHALL expose an optional `inferenceTask` field typed as an `INFERENCE_TASK` enum with values `TEXT_GENERATION`, `TEXT_CLASSIFICATION`, and `NONE`, mapping the read-only field returned by the deployment-manager backend for inference deployments.
 
-The field SHALL be optional: it is present only on containers of type inference (`$type: "inference"`) and absent on all other types (NIM, MCP, adapter, interceptor, application).
+The field SHALL be optional: it is present only on containers of type inference (`$type: "inference"`) and absent on all other types (MCP, adapter, interceptor, application).
 
 #### Scenario: Inference container exposes a capability value
 
@@ -19,12 +19,12 @@ The field SHALL be optional: it is present only on containers of type inference 
 
 #### Scenario: Non-inference container omits the field
 
-- **WHEN** the frontend receives a NIM container (`$type: "nim"`)
+- **WHEN** the frontend receives an MCP container (`$type: "mcp"`)
 - **THEN** the container's `inferenceTask` is `undefined`
 
 ### Requirement: Model-Serving source picker filters incompatible containers
 
-The Models create flow SHALL exclude from the Model-Serving container picker any container whose `inferenceTask` is an explicit `NONE` or `TEXT_CLASSIFICATION`, in addition to the existing "running status" filter. Containers without an `inferenceTask` value (e.g. NIM) SHALL remain selectable as today.
+The Models create flow SHALL exclude from the Model-Serving container picker any container whose `inferenceTask` is an explicit `NONE` or `TEXT_CLASSIFICATION`, in addition to the existing "running status" filter. Containers without an `inferenceTask` value SHALL remain selectable as today.
 
 #### Scenario: Text-generation container is selectable
 
@@ -38,7 +38,7 @@ The Models create flow SHALL exclude from the Model-Serving container picker any
 - **AND** a running container has `inferenceTask = NONE` or `inferenceTask = TEXT_CLASSIFICATION`
 - **THEN** that container does not appear in the picker
 
-#### Scenario: NIM container is unaffected
+#### Scenario: Container without an inferenceTask is unaffected
 
 - **WHEN** a user opens the Model-Serving source picker while creating a model
 - **AND** a running container has no `inferenceTask` value

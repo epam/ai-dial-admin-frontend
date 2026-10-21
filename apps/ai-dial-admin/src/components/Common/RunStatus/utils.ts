@@ -1,15 +1,40 @@
+import { INCOMPLETE_RUN_STATUSES, TRANSITIONAL_RUN_STATUSES } from '@/src/constants/runs';
 import { RunsI18nKey } from '@/src/constants/i18n';
-import { RunStatus } from '@/src/models/evaluation/run';
+import { Run, RunStatus } from '@/src/models/evaluation/run';
+import { RUN_STATUS_PRESENTATION, UNKNOWN_RUN_STATUS_PRESENTATION } from './constants';
+import { RunStatusPresentation } from './models';
 
-export const getStatusLabel = (status: RunStatus, t: (key: string) => string) => {
+/**
+ * Falls back to the raw status so a status the backend adds later stays legible instead of rendering
+ * as an empty cell.
+ */
+export const getStatusLabel = (status: RunStatus | string | undefined, t: (key: string) => string) => {
   switch (status) {
+    case RunStatus.PENDING:
+      return t(RunsI18nKey.Pending);
     case RunStatus.COMPLETED:
       return t(RunsI18nKey.Completed);
     case RunStatus.RUNNING:
       return t(RunsI18nKey.Running);
     case RunStatus.FAILED:
       return t(RunsI18nKey.Failed);
+    case RunStatus.CANCELLING:
+      return t(RunsI18nKey.Cancelling);
+    case RunStatus.CANCELLED:
+      return t(RunsI18nKey.Cancelled);
     default:
-      return '';
+      return status ?? '';
   }
 };
+
+export const isTransitionalRunStatus = (status?: RunStatus | string): boolean =>
+  TRANSITIONAL_RUN_STATUSES.some((transitionalStatus) => transitionalStatus === status);
+
+export const isIncompleteRunStatus = (status?: RunStatus | string): boolean =>
+  INCOMPLETE_RUN_STATUSES.some((incompleteStatus) => incompleteStatus === status);
+
+export const getRunStatusPresentation = (status?: RunStatus | string): RunStatusPresentation =>
+  RUN_STATUS_PRESENTATION[status as RunStatus] ?? UNKNOWN_RUN_STATUS_PRESENTATION;
+
+export const getRunErrorHint = (run: Run): string | undefined =>
+  run.status === RunStatus.FAILED ? run.errorMessage || run.errorDetails?.message || undefined : undefined;

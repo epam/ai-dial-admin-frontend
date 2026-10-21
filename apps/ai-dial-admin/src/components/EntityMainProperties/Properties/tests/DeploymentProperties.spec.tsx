@@ -56,4 +56,18 @@ describe('DeploymentProperties', () => {
 
     expect(screen.getByText(EntityFieldsI18nKey.intro)).toBeInTheDocument();
   });
+
+  test('hides the intro field in a create popup', () => {
+    render(
+      <DeploymentProperties
+        view={ApplicationRoute.Models}
+        entity={{ name: 'my-deployment-id', displayName: '', description: '', intro: '' }}
+        names={[]}
+        onChangeEntity={vi.fn()}
+        isModal
+      />,
+    );
+
+    expect(screen.queryByText(EntityFieldsI18nKey.intro)).not.toBeInTheDocument();
+  });
 });

@@ -5,20 +5,21 @@ import { FC, useEffect, useState } from 'react';
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
-import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { COMPARE_RUN_PICKER_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import { ButtonsI18nKey, EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Run } from '@/src/models/evaluation/run';
 
 interface Props {
   isModalOpen: boolean;
-  runs: Run[];
+  runs: CompareCandidateRun[];
   selectedRunId?: string;
+  isLoading?: boolean;
   onClose: () => void;
   onApply: (runId: string) => void;
 }
 
-const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, onClose, onApply }) => {
+const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, isLoading, onClose, onApply }) => {
   const t = useI18n();
   const [selectedRunIdState, setSelectedRunIdState] = useState<string | undefined>();
 
@@ -51,11 +52,12 @@ const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, on
       <div className="flex flex-col px-6 py-4 h-full min-h-0">
         <RadioSelectGrid
           data={runs}
-          columnDefs={RUNS_COLUMN}
+          columnDefs={COMPARE_RUN_PICKER_COLUMN}
           idField="id"
           selectedId={selectedRunIdState}
           onSelect={(run) => setSelectedRunIdState(run.id)}
           emptyTitle={t(EntitiesI18nKey.NoRuns)}
+          isLoading={isLoading}
         />
       </div>
     </DialFormPopup>

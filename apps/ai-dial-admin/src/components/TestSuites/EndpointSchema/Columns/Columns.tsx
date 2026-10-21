@@ -4,7 +4,13 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { ButtonAppearance, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonAppearance,
+  DialNeutralButton,
+  DialNotification,
+  DialPrimaryButton,
+  NotificationVariant,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
@@ -18,6 +24,8 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
+import { DuplicateResponseColumn } from '@/src/utils/evaluation/request-chain';
 import DocumentationModal from './DocumentationModal';
 
 interface ColumnsProps {
@@ -25,13 +33,23 @@ interface ColumnsProps {
   onChangeResponseColumns: (responseColumns: ResponseColumn[], isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
   responseSchema: JSONSchema7;
+  jsonataVariables?: JsonataVariable[];
+  duplicateColumn?: DuplicateResponseColumn;
 }
 
-const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, responseSchema, isSkipRefresh }) => {
+const Columns: FC<ColumnsProps> = ({
+  responseColumns,
+  onChangeResponseColumns,
+  responseSchema,
+  isSkipRefresh,
+  jsonataVariables,
+  duplicateColumn,
+}) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
   const columnsRef = useRef(responseColumns);
+  const onChangeResponseColumnsRef = useRef(onChangeResponseColumns);
   const gridApiRef = useRef<GridApi | null>(null);
 
   const [isDocumentationModalOpen, setIsDocumentationModalOpen] = useState(false);
@@ -40,39 +58,37 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
     columnsRef.current = responseColumns;
   }, [responseColumns]);
 
-  const onAddColumn = useCallback(() => {
-    const columns = [...columnsRef.current, { name: '', displayName: '', expression: '', type: '' }];
-    onChangeResponseColumns(columns);
+  useEffect(() => {
+    onChangeResponseColumnsRef.current = onChangeResponseColumns;
   }, [onChangeResponseColumns]);
 
-  const onRemoveColumn = useCallback(
-    (_?: ResponseColumn, index?: number) => {
-      if (index != null) {
-        const columns = [...columnsRef.current];
-        columns.splice(index, 1);
-        onChangeResponseColumns(columns);
-      }
-    },
-    [onChangeResponseColumns],
-  );
+  const onAddColumn = useCallback(() => {
+    const columns = [...columnsRef.current, { name: '', displayName: '', expression: '', type: '' }];
+    onChangeResponseColumnsRef.current(columns);
+  }, []);
 
-  const onChangeColumn = useCallback(
-    (value: string, _data: ResponseColumn, column: string, index?: number) => {
+  const onRemoveColumn = useCallback((_?: ResponseColumn, index?: number) => {
+    if (index != null) {
       const columns = [...columnsRef.current];
-      const columnToUpdate = columns[index || 0];
-      if (columnToUpdate) {
-        if (column === 'displayName') {
-          columnToUpdate.displayName = value;
-          columnToUpdate.name = value;
-          onChangeResponseColumns(columns, true);
-        } else if (column === 'type') {
-          columnToUpdate.type = value;
-          onChangeResponseColumns(columns);
-        }
+      columns.splice(index, 1);
+      onChangeResponseColumnsRef.current(columns);
+    }
+  }, []);
+
+  const onChangeColumn = useCallback((value: string, _data: ResponseColumn, column: string, index?: number) => {
+    const columns = [...columnsRef.current];
+    const columnToUpdate = columns[index || 0];
+    if (columnToUpdate) {
+      if (column === 'displayName') {
+        columnToUpdate.displayName = value;
+        columnToUpdate.name = value;
+        onChangeResponseColumnsRef.current(columns, true);
+      } else if (column === 'type') {
+        columnToUpdate.type = value;
+        onChangeResponseColumnsRef.current(columns);
       }
-    },
-    [onChangeResponseColumns],
-  );
+    }
+  }, []);
 
   const onChangeExpression = useCallback(
     (value: { expression: string; type?: string }, _data: ResponseColumn, column: string, index?: number) => {
@@ -80,24 +96,24 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
       const columnToUpdate = columns[index || 0];
       if (columnToUpdate) {
         columnToUpdate.expression = value.expression;
-        columnToUpdate.type = value.type || columnToUpdate.type;
-        onChangeResponseColumns(columns);
+        columnToUpdate.type = value.type?.toUpperCase() || columnToUpdate.type;
+        onChangeResponseColumnsRef.current(columns);
       }
     },
-    [onChangeResponseColumns],
+    [],
   );
 
   const rowData = useMemo(() => responseColumns, [responseColumns]);
 
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression),
+      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression, jsonataVariables),
       {
         ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveColumn, void 0, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema],
+    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema, jsonataVariables],
   );
 
   const onGridReady = useCallback(
@@ -109,6 +125,12 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
   );
 
   useEffect(() => {
+    if (!gridApiRef.current?.isDestroyed()) {
+      gridApiRef.current?.updateGridOptions({ columnDefs });
+    }
+  }, [columnDefs]);
+
+  useEffect(() => {
     if (!isSkipRefresh && !gridApiRef.current?.isDestroyed()) {
       gridApiRef.current?.updateGridOptions({ rowData });
       const error = rowData.some((c) => !c.name || !c.displayName || !c.expression || !c.type);
@@ -118,8 +140,18 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
     }
   }, [dispatch, isSkipRefresh, rowData]);
 
+  const duplicateMessage = duplicateColumn
+    ? t(
+        duplicateColumn.inPreviousRequest
+          ? TestSuitesI18nKey.DuplicateResponseColumnNameInPreviousRequest
+          : TestSuitesI18nKey.DuplicateResponseColumnName,
+        { name: duplicateColumn.name },
+      )
+    : undefined;
+
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
+      {duplicateMessage && <DialNotification variant={NotificationVariant.Error} message={duplicateMessage} />}
       <div className="flex flex-row justify-between items-center">
         <span className="text-secondary small">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
         <div className="flex flex-row gap-2">

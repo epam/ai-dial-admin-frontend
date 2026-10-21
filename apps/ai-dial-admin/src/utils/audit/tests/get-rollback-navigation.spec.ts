@@ -22,7 +22,7 @@ describe('getRollbackNavigation', () => {
   test('Create from entity tab → entity list', () => {
     const nav = getRollbackNavigation(ActivityAuditType.Create, CONTAINER, 'svc', true);
     expect(nav.target).toBe(RollbackRedirectTarget.EntityList);
-    expect(nav.entityListHref).toBe('/mcp-containers');
+    expect(nav.entityListHref).toBe('/containers');
   });
 
   test('Delete → entity detail page (both contexts)', () => {
@@ -31,7 +31,7 @@ describe('getRollbackNavigation', () => {
     );
     const nav = getRollbackNavigation(ActivityAuditType.Delete, CONTAINER, 'svc', true);
     expect(nav.target).toBe(RollbackRedirectTarget.EntityDetail);
-    expect(nav.entityDetailHref).toBe('/mcp-containers/svc');
+    expect(nav.entityDetailHref).toBe('/containers/svc');
   });
 
   test('Delete recreate uses the new id from the create response (image definitions)', () => {
@@ -44,7 +44,7 @@ describe('getRollbackNavigation', () => {
 
   test('Delete recreate resolves containers by name from the response', () => {
     const nav = getRollbackNavigation(ActivityAuditType.Delete, CONTAINER, 'svc', false, { name: 'svc' });
-    expect(nav.entityDetailHref).toBe('/mcp-containers/svc');
+    expect(nav.entityDetailHref).toBe('/containers/svc');
   });
 
   test('Update from audit → audit list', () => {

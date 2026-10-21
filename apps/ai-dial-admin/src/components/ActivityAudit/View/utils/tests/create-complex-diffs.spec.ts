@@ -1,5 +1,5 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { PricingType } from '@/src/models/dial/model';
 import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
@@ -25,37 +25,37 @@ import {
 
 describe('Activity audit :: compareSimpleTypes', () => {
   test('should push REMOVE when val1 is defined and val2 is null', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', 'value1', void 0);
     expect(diffs).toEqual([{ parameter: 'key', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 
   test('should push ADD when val1 is null and val2 is defined', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', void 0, 'value2');
     expect(diffs).toEqual([{ parameter: 'key', value: 'value2', diffStatus: DiffStatus.ADDED }]);
   });
 
   test('should push CHANGE when val1 and val2 are different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', 'old', 'new');
     expect(diffs).toEqual([{ parameter: 'key', value: 'new', pairedValue: 'old', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value when val1 and val2 are the same', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', 'same', 'same');
     expect(diffs).toEqual([{ parameter: 'key', value: 'same' }]);
   });
 
   test('should handle number types and push CHANGE if different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'count', 1, 2);
     expect(diffs).toEqual([{ parameter: 'count', value: '2', pairedValue: '1', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should handle boolean types and push CHANGE if different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'enabled', true, false);
     expect(diffs).toEqual([
       { parameter: 'enabled', value: 'false', pairedValue: 'true', diffStatus: DiffStatus.CHANGED },
@@ -63,13 +63,13 @@ describe('Activity audit :: compareSimpleTypes', () => {
   });
 
   test('should push unchanged value for boolean true === true', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'flag', true, true);
     expect(diffs).toEqual([{ parameter: 'flag', value: 'true' }]);
   });
 
   test('should push unchanged value for number 42 === 42', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'answer', 42, 42);
     expect(diffs).toEqual([{ parameter: 'answer', value: '42' }]);
   });
@@ -77,31 +77,31 @@ describe('Activity audit :: compareSimpleTypes', () => {
 
 describe('Activity audit :: fillSimpleTypes', () => {
   test('should push string value as-is', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'name', 'John');
     expect(diffs).toEqual([{ parameter: 'name', value: 'John' }]);
   });
 
   test('should convert number to string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'age', 30);
     expect(diffs).toEqual([{ parameter: 'age', value: '30' }]);
   });
 
   test('should convert boolean true to string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'active', true);
     expect(diffs).toEqual([{ parameter: 'active', value: 'true' }]);
   });
 
   test('should convert boolean false to string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'active', false);
     expect(diffs).toEqual([{ parameter: 'active', value: 'false' }]);
   });
 
   test('should push empty string when value is undefined', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'optional', undefined);
     expect(diffs).toEqual([{ parameter: 'optional', value: '' }]);
   });
@@ -377,6 +377,28 @@ describe('Activity audit :: fillStringArray', () => {
     expect(diffs[0].value).toContain('ModelView.Pricing.Tokens ModelView.Pricing.PerMillion');
   });
 
+  test('should compare a flat-to-tree pricing revision as readable strings', () => {
+    const diffs: any[] = [];
+    const flatPricing = { unit: PricingType.Token, cacheRead: '0.0000002' };
+    const treePricing = {
+      unit: PricingType.Token,
+      cacheRead: {
+        test: { field: 'ttl', operator: '==', value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    };
+
+    const t = (str: string) => str;
+    compareStringArray(diffs, EntityParameterKeys.PRICING, flatPricing, treePricing, false, t);
+
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.CHANGED);
+    // The legacy flat scaling has no parseFloat cleanup, so the float artifact is the recorded value.
+    expect(diffs[0].pairedValue).toContain('cacheRead: 0.19999999999999998');
+    expect(diffs[0].value).toContain('cacheRead: ttl == 1h ? 6 : 3.75');
+  });
+
   test('should handle non-pricing key even with translator', () => {
     const diffs: any[] = [];
     const obj = { x: 1, y: 2 };
@@ -550,16 +572,16 @@ describe('Activity audit :: fillDefaultLimits', () => {
 describe('Activity audit :: compareUpstreams', () => {
   const makeEndpoint = (endpoint: string, config: Partial<DialModelEndpoint> = {}): DialModelEndpoint => ({
     endpoint,
-    url: `${endpoint}.com`,
-    active: true,
-    timeout: 1000,
+    baseUrl: `https://${endpoint}.com`,
+    key: 'upstream-key',
+    weight: 1000,
     ...config,
   });
 
   test('should mark endpoint as REMOVED when present in val1 but not in val2', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const val1 = [makeEndpoint('api1')];
-    const val2: EntityParameterKeys[] = [];
+    const val2: DialModelEndpoint[] = [];
 
     compareUpstreams(diffMap, val1, val2);
 
@@ -572,7 +594,7 @@ describe('Activity audit :: compareUpstreams', () => {
 
   test('should mark endpoint as ADDED when present in val2 but not in val1', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    const val1: EntityParameterKeys[] = [];
+    const val1: DialModelEndpoint[] = [];
     const val2 = [makeEndpoint('api2')];
 
     compareUpstreams(diffMap, val1, val2);
@@ -586,8 +608,8 @@ describe('Activity audit :: compareUpstreams', () => {
 
   test('should compare common endpoints with changed fields and mark as CHANGED', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    const val1 = [makeEndpoint('api3', { timeout: 1000 })];
-    const val2 = [makeEndpoint('api3', { timeout: 2000 })];
+    const val1 = [makeEndpoint('api3', { weight: 1000 })];
+    const val2 = [makeEndpoint('api3', { weight: 2000 })];
 
     compareUpstreams(diffMap, val1, val2);
 
@@ -595,7 +617,7 @@ describe('Activity audit :: compareUpstreams', () => {
     const diffs = diffMap[sectionKey];
 
     expect(diffs.some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
-    expect(diffs.find((d) => d.parameter === 'timeout')?.value).toBe('2000');
+    expect(diffs.find((d) => d.parameter === 'weight')?.value).toBe('2000');
   });
 
   test('should produce multiple UPSTREAMS sections for multiple endpoints', () => {
@@ -626,7 +648,7 @@ describe('Activity audit :: compareUpstreams', () => {
   test('should preserve provided isCurrent flag (mirror status)', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const val1 = [makeEndpoint('api1')];
-    const val2: EntityParameterKeys[] = [];
+    const val2: DialModelEndpoint[] = [];
 
     compareUpstreams(diffMap, val1, val2, true);
 
@@ -638,9 +660,9 @@ describe('Activity audit :: compareUpstreams', () => {
 describe('Activity audit :: fillUpstreams', () => {
   const makeEndpoint = (endpoint: string, extra: Partial<DialModelEndpoint> = {}): DialModelEndpoint => ({
     endpoint,
-    url: `${endpoint}.example.com`,
-    active: true,
-    timeout: 1000,
+    baseUrl: `https://${endpoint}.example.com`,
+    key: 'upstream-key',
+    weight: 1000,
     ...extra,
   });
 
@@ -658,9 +680,9 @@ describe('Activity audit :: fillUpstreams', () => {
     expect(api1Diffs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ parameter: 'endpoint', value: 'api1' }),
-        expect.objectContaining({ parameter: 'url', value: 'api1.example.com' }),
-        expect.objectContaining({ parameter: 'active', value: 'true' }),
-        expect.objectContaining({ parameter: 'timeout', value: '1000' }),
+        expect.objectContaining({ parameter: 'baseUrl', value: 'https://api1.example.com' }),
+        expect.objectContaining({ parameter: 'key', value: 'upstream-key' }),
+        expect.objectContaining({ parameter: 'weight', value: '1000' }),
       ]),
     );
 
@@ -696,8 +718,8 @@ describe('Activity audit :: fillUpstreams', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const endpoints = [
       makeEndpoint('nested-api', {
-        config: { retries: 3, secure: true },
-      }) as unknown as DialModelEndpoint,
+        extraData: { retries: 3, secure: true },
+      }),
     ];
 
     fillUpstreams(diffMap, endpoints);
@@ -706,7 +728,7 @@ describe('Activity audit :: fillUpstreams', () => {
     expect(diffs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ parameter: 'endpoint', value: 'nested-api' }),
-        expect.objectContaining({ parameter: 'url', value: 'nested-api.example.com' }),
+        expect.objectContaining({ parameter: 'baseUrl', value: 'https://nested-api.example.com' }),
       ]),
     );
   });

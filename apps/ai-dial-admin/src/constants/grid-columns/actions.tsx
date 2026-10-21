@@ -9,6 +9,7 @@ import {
   IconPencilMinus,
   IconPlayerPause,
   IconPlayerPlay,
+  IconPlayerStop,
   IconRefreshDot,
   IconReload,
   IconReplace,
@@ -18,11 +19,13 @@ import {
 import { GridApi, IRowNode } from 'ag-grid-community';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { RunStatus } from '@/src/models/evaluation/run';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import IconCompare from '@/public/images/icons/difference.svg';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 export function getResourceRollbackOperation<T>(
   onClick: (entity?: T) => void,
@@ -226,12 +229,33 @@ export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOp
   };
 }
 
+export function getCancelOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPlayerStop {...BASE_BUTTON_ICON_PROPS} />,
+    id: ActionMenuOperationI18nKey.Stop,
+    label: ActionMenuOperationI18nKey.Stop,
+    onClick,
+    hidden: (_: GridApi, node: IRowNode) =>
+      node.data?.status !== RunStatus.RUNNING && node.data?.status !== RunStatus.PENDING,
+  };
+}
+
 export function getTryOutOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} className="text-success" />,
     id: ActionMenuOperationI18nKey.Try_out,
     label: ActionMenuOperationI18nKey.Try_out,
     onClick,
+    hidden: (_: GridApi, node: IRowNode) => {
+      const row = node.data as { rowType?: GridRowType; isFlattened?: boolean; turnNumber?: number } | undefined;
+      if (row?.rowType === GridRowType.TURN && !row.isFlattened) {
+        return true;
+      }
+      if (row?.rowType === GridRowType.TURN && row.isFlattened) {
+        return row.turnNumber !== 1;
+      }
+      return false;
+    },
   };
 }
 
@@ -253,7 +277,9 @@ export function getCompareOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconCompare {...BASE_BUTTON_ICON_PROPS} className="mx-1" />,
+    icon: (
+      <IconCompare width={BASE_BUTTON_ICON_SIZE} height={BASE_BUTTON_ICON_SIZE} className="[&_path]:fill-current" />
+    ),
     id: ActionMenuOperationI18nKey.Compare,
     label: ActionMenuOperationI18nKey.Compare,
     onClick,

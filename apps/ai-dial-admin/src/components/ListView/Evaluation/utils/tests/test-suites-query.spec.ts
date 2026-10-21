@@ -12,6 +12,7 @@ import {
 import { SuiteType } from '@/src/models/evaluation/test-suite';
 import { FilterOperatorDto, SortDirectionDto } from '@/src/types/request';
 
+import { TEST_SUITE_DATASET_FILTER } from '../constants';
 import {
   buildTestSuitesFilter,
   buildTestSuitesQuery,
@@ -21,6 +22,29 @@ import {
 } from '../test-suites-query';
 
 describe('test-suites-query', () => {
+  test('TEST_SUITE_DATASET_FILTER becomes a string-typed eq on dataset_id', () => {
+    expect(buildTestSuitesFilter([TEST_SUITE_DATASET_FILTER('DATASET_abc')])).toEqual({
+      op: ComparisonOp.Eq,
+      args: [
+        { type: ExprType.Field, name: 'dataset_id' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'DATASET_abc' },
+      ],
+    });
+  });
+
+  test('dataset scope combines with grid filters via and', () => {
+    const filter = buildTestSuitesFilter([
+      TEST_SUITE_DATASET_FILTER('ds-1'),
+      { column: 'name', value: 'x', operator: FilterOperatorDto.CONTAINS },
+    ]);
+    expect(filter).toMatchObject({ op: LogicalOp.And });
+    expect((filter as { args: unknown[] }).args).toHaveLength(2);
+  });
+
+  test('a query without a dataset scope carries no dataset_id filter', () => {
+    expect(JSON.stringify(buildTestSuitesQuery(0, 10, [], []).filter ?? null)).not.toContain('dataset_id');
+  });
+
   test('buildTestSuitesFilter returns undefined for empty filters', () => {
     expect(buildTestSuitesFilter([])).toBeUndefined();
   });
@@ -79,7 +103,7 @@ describe('test-suites-query', () => {
     expect(node && 'args' in node ? node.args : []).toHaveLength(2);
   });
 
-  test('buildTestSuitesFilter ORs application against both deployment name fields', () => {
+  test('buildTestSuitesFilter ORs application against all target name fields', () => {
     expect(
       buildTestSuitesFilter([{ column: 'application', value: 'google', operator: FilterOperatorDto.CONTAINS }]),
     ).toEqual({
@@ -96,6 +120,13 @@ describe('test-suites-query', () => {
           op: ComparisonOp.Co,
           args: [
             { type: ExprType.Field, name: 'mcp_deployment_ref::name' },
+            { type: ExprType.Value, value_type: ValueType.String, value: 'google' },
+          ],
+        },
+        {
+          op: ComparisonOp.Co,
+          args: [
+            { type: ExprType.Field, name: 'routes_ref::name' },
             { type: ExprType.Value, value_type: ValueType.String, value: 'google' },
           ],
         },
@@ -151,7 +182,9 @@ describe('test-suites-query', () => {
         dataset_id: 'ds-1',
         deployment_ref: { id: 'dep', name: 'App', version: '1' },
         mcp_deployment_ref: null,
+        routes_ref: { name: 'routes/platform/route-1' },
         endpoint_ref: { method: 'POST', relativeUrlPattern: '/v1' },
+        test_case_filter: { op: 'eq', args: [] },
       }),
     ).toEqual({
       id: 'id-1',
@@ -164,15 +197,19 @@ describe('test-suites-query', () => {
       datasetId: 'ds-1',
       deploymentRef: { id: 'dep', name: 'App', version: '1' },
       mcpDeploymentRef: undefined,
+      routesRef: { name: 'routes/platform/route-1' },
       endpointRef: { method: 'POST', relativeUrlPattern: '/v1' },
+      testCaseFilter: { op: 'eq', args: [] },
     });
   });
 
   test('mapTestSuiteRow parses JSON string refs', () => {
     const suite = mapTestSuiteRow({
       deployment_ref: JSON.stringify({ id: 'd', name: 'N' }),
+      test_case_filter: JSON.stringify({ op: 'co', args: [] }),
     });
     expect(suite.deploymentRef).toEqual({ id: 'd', name: 'N' });
+    expect(suite.testCaseFilter).toEqual({ op: 'co', args: [] });
   });
 
   test('mapTestSuitesQueryResult returns null for null result', () => {
@@ -207,6 +244,7 @@ describe('test-suites-query', () => {
           deploymentRef: undefined,
           mcpDeploymentRef: undefined,
           endpointRef: undefined,
+          testCaseFilter: null,
         },
       ],
     });
