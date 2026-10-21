@@ -1,5 +1,5 @@
 .react-datepicker-wrapper {
-  @apply w-full small text-secondary;
+  @apply w-full text-sm text-secondary;
 
   .react-datepicker__input-container {
     @apply flex;
@@ -17,7 +17,7 @@
 .react-datepicker-popper,
 .dial-range-calendar {
   .react-datepicker {
-    @apply bg-layer-0 text-secondary small rounded border-primary px-3 py-4;
+    @apply bg-layer-0 text-secondary text-sm rounded border-primary px-3 py-4;
   }
 
   .react-datepicker__header {
@@ -55,7 +55,7 @@
 
     .react-datepicker__day,
     .react-datepicker__time-name .react-datepicker__current-month {
-      @apply small text-secondary;
+      @apply text-secondary;
     }
 
     .react-datepicker__day {
@@ -117,7 +117,7 @@
     }
 
     .react-datepicker__day-name {
-      @apply tiny text-secondary;
+      @apply text-xs text-secondary;
     }
   }
 }

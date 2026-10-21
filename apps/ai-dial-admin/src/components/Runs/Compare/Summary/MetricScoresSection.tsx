@@ -83,7 +83,7 @@ const MetricScoresSection: FC<Props> = ({
               defaultExpanded
               className="min-w-0 overflow-hidden bg-layer-2"
               barDescriptions={group.barDescriptions}
-              barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
+              barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-xs px-1"
               titleTooltip={group.description}
               barTitleClassName="block min-w-0 truncate text-secondary"
             />

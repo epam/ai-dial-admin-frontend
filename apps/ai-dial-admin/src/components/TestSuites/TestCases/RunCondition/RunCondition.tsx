@@ -74,7 +74,9 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
   return (
     <div className="flex flex-wrap items-center gap-1">
       <div className="flex items-center gap-0.5 mr-1">
-        <span className="small-text-semi text-secondary whitespace-nowrap">{t(TestSuitesI18nKey.RunCondition)}</span>
+        <span className="dial-small-semi-text text-secondary whitespace-nowrap">
+          {t(TestSuitesI18nKey.RunCondition)}
+        </span>
         <DialTooltip tooltip={t(TestSuitesI18nKey.RunConditionTooltip)}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
         </DialTooltip>

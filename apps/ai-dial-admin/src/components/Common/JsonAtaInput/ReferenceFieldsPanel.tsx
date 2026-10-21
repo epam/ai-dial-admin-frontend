@@ -57,7 +57,7 @@ const ReferenceFieldsPanel: FC<Props> = ({ responseSchema, onSelect }) => {
       </div>
       {isCollapsed && (
         <div className={boxClassName}>
-          <span className="flex-1 min-h-0 pt-6 text-center small text-secondary [writing-mode:vertical-rl] rotate-180 self-center">
+          <span className="flex-1 min-h-0 pt-6 text-center dial-small-text text-secondary [writing-mode:vertical-rl] rotate-180 self-center">
             {label}
           </span>
           <div className={classNames(footerClassName, 'justify-center')}>

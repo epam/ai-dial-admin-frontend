@@ -732,7 +732,7 @@ const ActivityAuditList: FC<Props> = ({
             disableConfirmButton={isCheckingState || !!rollbackBlockReason}
             onClose={onCloseModal}
           >
-            <div className="text-secondary small-150 px-6 py-4">
+            <div className="text-secondary dial-small-paragraph-text px-6 py-4">
               <p>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart1)}</span>
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>

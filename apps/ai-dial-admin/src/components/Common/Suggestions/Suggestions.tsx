@@ -49,8 +49,8 @@ const Suggestions: FC<Props> = ({
           onMouseEnter={handleHightLightSuggestion(idx)}
           onMouseDown={handleSelectSuggestion(opt)}
         >
-          <span className="small">{isUpperCased ? opt.label.toUpperCase() : startCase(opt.label)}</span>
-          <span className="small text-secondary truncate">{opt.value}</span>
+          <span className="dial-small-text">{isUpperCased ? opt.label.toUpperCase() : startCase(opt.label)}</span>
+          <span className="dial-small-text text-secondary truncate">{opt.value}</span>
         </li>
       ))}
     </ul>

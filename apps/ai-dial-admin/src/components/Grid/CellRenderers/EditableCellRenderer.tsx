@@ -136,7 +136,7 @@ const EditableCellRenderer = ({
             'leading-[18px] h-[32px] dial-input px-2 py-1',
             !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
             required && (correctValue == null || correctValue === '') && 'dial-input-error',
-            isMaxValue && 'placeholder-primary',
+            isMaxValue && 'placeholder:text-primary',
             isRightAligned && 'text-right',
           )}
         />

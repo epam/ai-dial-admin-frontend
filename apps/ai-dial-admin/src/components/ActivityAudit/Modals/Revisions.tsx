@@ -134,7 +134,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
               const isExpanded = !!expandedKeys[key as keyof typeof expandedKeys];
 
               return (
-                <div className="tiny text-secondary" key={key}>
+                <div className="dial-tiny-text text-secondary" key={key}>
                   <div onClick={() => toggleKey(key)} className="cursor-pointer flex items-center my-3 gap-1">
                     <span>
                       {isExpanded ? (
@@ -152,7 +152,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
                         <li
                           key={i}
                           className={classNames(
-                            'flex items-center text-primary small h-[34px] rounded px-3 cursor-pointer',
+                            'flex items-center text-primary dial-small-text h-[34px] rounded px-3 cursor-pointer',
                             value.id === selectedRevision?.id &&
                               'border-l-2 border-accent-primary bg-accent-primary-alpha',
                           )}

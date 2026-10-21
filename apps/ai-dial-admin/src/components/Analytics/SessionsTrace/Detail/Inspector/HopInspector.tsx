@@ -40,7 +40,6 @@ import {
   HopReadState,
   HopSideSuppression,
   McpToolCallTally,
-  SessionScope,
   SpanBodyTab,
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
@@ -60,7 +59,7 @@ const TAB_LABEL_KEY: Record<SpanBodyTab, string> = {
 };
 
 interface Props {
-  scope: SessionScope;
+  readKey: string;
   traceId: string;
   span: SessionSpanRow;
   kind: SpanKind;
@@ -71,7 +70,7 @@ interface Props {
   mcpToolCalls: McpToolCallTally;
 }
 
-const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpToolCalls }) => {
+const HopInspector: FC<Props> = ({ readKey, traceId, span, kind, bodyGrants, mcpToolCalls }) => {
   const t = useI18n();
   const { tabs, activeTab, onSelectTab } = useSpanBodyTabs({ span, bodyGrants });
   const [isRawRequest, setIsRawRequest] = useState(false);
@@ -89,9 +88,9 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
   const isRequestFetchable = bodyGrants.isRequestReadable && suppressions.request === null;
   const isResponseFetchable = bodyGrants.isResponseReadable && suppressions.response === null;
 
-  const request = useHopRequest({ scope, traceId, span, isEnabled: isRequestFetchable && !isMcp && !isEmbedding });
+  const request = useHopRequest({ readKey, traceId, span, isEnabled: isRequestFetchable && !isMcp && !isEmbedding });
   const response = useHopResponse({
-    scope,
+    readKey,
     traceId,
     span,
     isEnabled:
@@ -103,13 +102,13 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
   // One read for both halves of an MCP hop, and it proceeds on either grant: the two sides are separate
   // columns of one row, so a caller entitled to the result and not the arguments still has something to read.
   const mcp = useHopMcpFacts({
-    scope,
+    readKey,
     traceId,
     span,
     isEnabled: isMcp && !isProtocol && (isRequestFetchable || isResponseFetchable),
   });
   const protocol = useHopProtocolFacts({
-    scope,
+    readKey,
     traceId,
     span,
     isEnabled: isProtocol && (isRequestFetchable || isResponseFetchable),
@@ -118,7 +117,7 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
   // holding only that column still has a Response tab, and a read that never ran would leave it loading
   // forever.
   const embedding = useHopEmbeddingFacts({
-    scope,
+    readKey,
     traceId,
     span,
     isEnabled: isEmbedding && (bodyGrants.isRequestReadable || bodyGrants.isResponseReadable),
@@ -185,7 +184,6 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
             embedding={embedding}
             request={request}
             isRaw={isRawRequest}
-            scope={scope}
             traceId={traceId}
             span={span}
           />
@@ -223,7 +221,6 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
             embedding={embedding}
             response={response}
             isRaw={isRawResponse}
-            scope={scope}
             traceId={traceId}
             span={span}
             mcpToolCalls={mcpToolCalls}
@@ -231,7 +228,6 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
         )}
         {activeTab === SpanBodyTab.Chat && (
           <HopChatPanel
-            scope={scope}
             traceId={traceId}
             span={span}
             request={request.value}
@@ -262,7 +258,6 @@ interface SideProps {
   mcp: McpState;
   protocol: ProtocolState;
   embedding: EmbeddingState;
-  scope: SessionScope;
   traceId: string;
   span: SessionSpanRow;
 }
@@ -278,7 +273,6 @@ const RequestSide: FC<SideProps & { request: RequestState; isRaw: boolean }> = (
   request,
   isRaw,
   embedding,
-  scope,
   traceId,
   span,
 }) => {
@@ -312,7 +306,6 @@ const RequestSide: FC<SideProps & { request: RequestState; isRaw: boolean }> = (
       <>
         <HopStateNote state={HopReadState.Unstructured} />
         <HopRawView
-          scope={scope}
           traceId={traceId}
           coreSpanId={span.core_span_id}
           requestTime={span.request_time}
@@ -330,7 +323,6 @@ const RequestSide: FC<SideProps & { request: RequestState; isRaw: boolean }> = (
     <HopRequestPanel
       envelope={request.value}
       isRaw={isRaw}
-      scope={scope}
       traceId={traceId}
       coreSpanId={span.core_span_id}
       requestTime={span.request_time}
@@ -349,7 +341,6 @@ const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpT
   embedding,
   response,
   isRaw,
-  scope,
   traceId,
   span,
   mcpToolCalls,
@@ -383,7 +374,6 @@ const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpT
       <>
         <HopStateNote state={HopReadState.Unstructured} />
         <HopRawView
-          scope={scope}
           traceId={traceId}
           coreSpanId={span.core_span_id}
           requestTime={span.request_time}
@@ -397,7 +387,6 @@ const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpT
     <HopResponsePanel
       envelope={response.value}
       isRaw={isRaw}
-      scope={scope}
       traceId={traceId}
       coreSpanId={span.core_span_id}
       requestTime={span.request_time}

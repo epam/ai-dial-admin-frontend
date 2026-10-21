@@ -233,8 +233,6 @@ export const SESSIONS_HEADER_STACK_HEIGHT =
 
 export const SESSIONS_STORAGE_KEY = 'analytics/sessions';
 
-export const SUMMARY_COST_PRECISION = 3;
-
 // Below a dollar, cost is rendered at significant digits; from a dollar up, rounded and abbreviated.
 export const COST_COMPACT_THRESHOLD = 1;
 
@@ -540,12 +538,12 @@ export const INSPECTOR_LOADER_SIZE = 18;
 // a filter bar rather than as a row of buttons.
 //
 // Every class here is important-qualified, and each for its own reason. The radius comes from ui-kit's
-// stylesheet — every 2.0 button class carries `border-radius: 9999px` — so a plain `rounded-sm` sits at equal
+// stylesheet — every 2.0 button class carries `border-radius: 9999px` — so a plain `rounded-xs` sits at equal
 // specificity against it and the winner would depend on stylesheet order. The height and padding come from
 // utilities the button puts on the element, and ui-kit concatenates the caller's `className` onto its own
 // with `classnames` rather than merging with `tailwind-merge` — so `h-[24px]` and `px-2` stay in the
 // attribute alongside these, and again only order would decide.
-export const FILTER_CHIP_CLASS = 'border !h-5 !rounded-sm !px-1.5';
+export const FILTER_CHIP_CLASS = 'border !h-5 !rounded-xs !px-1.5';
 
 // Every message is labelled with its own role wherever it renders, which is what makes stating a system
 // prompt safe: nothing can read as something a person typed.

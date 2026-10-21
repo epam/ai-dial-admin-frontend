@@ -12,7 +12,6 @@ import {
   SessionSpanNode,
   SessionTraceFigures,
   HopBodyGrants,
-  SessionScope,
   SpanFieldGroup,
   SpanFieldRow,
   SpanFieldTag,
@@ -38,7 +37,7 @@ vi.mock('@/src/app/[lang]/sessions/actions', () => ({
   getSessionHopEmbedding: (...args: unknown[]) => getSessionHopEmbedding(...args),
 }));
 
-const SCOPE: SessionScope = { id: 'chat-1', source: null };
+const READ_KEY = 'chat-1';
 
 const GRANTS: HopBodyGrants = { isRequestReadable: true, isResponseReadable: true };
 
@@ -133,7 +132,7 @@ describe('SessionTraceView', () => {
   const renderTrace = (props: Partial<ComponentProps<typeof SessionTraceView>> = {}) =>
     render(
       <SessionTraceView
-        scope={SCOPE}
+        readKey={READ_KEY}
         bodyGrants={GRANTS}
         figures={FIGURES}
         spans={SPANS}

@@ -12,7 +12,7 @@ interface CollapseButtonProps {
 }
 
 const CollapseButton: FC<CollapseButtonProps> = ({ isCollapsed, onToggle }) => (
-  <button className="flex-shrink-0 flex items-center" onClick={onToggle}>
+  <button className="shrink-0 flex items-center" onClick={onToggle}>
     {isCollapsed ? (
       <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
     ) : (

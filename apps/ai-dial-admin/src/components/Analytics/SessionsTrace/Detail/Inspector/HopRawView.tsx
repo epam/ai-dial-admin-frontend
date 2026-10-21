@@ -9,7 +9,7 @@ import HopStateNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspec
 import { useHopRaw } from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/use-hop-raw';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { HopInspectorSide, HopReadState, SessionScope } from '@/src/models/analytics/sessions-trace';
+import { HopInspectorSide, HopReadState } from '@/src/models/analytics/sessions-trace';
 
 const LOADER_SIZE = 18;
 
@@ -20,16 +20,15 @@ const TITLE_KEY: Record<HopInspectorSide, string> = {
 };
 
 interface Props {
-  scope: SessionScope;
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
   side: HopInspectorSide;
 }
 
-const HopRawView: FC<Props> = ({ scope, traceId, coreSpanId, requestTime, side }) => {
+const HopRawView: FC<Props> = ({ traceId, coreSpanId, requestTime, side }) => {
   const t = useI18n();
-  const { body, isLoading, onRequestRaw } = useHopRaw({ scope, traceId, coreSpanId, requestTime, side });
+  const { body, isLoading, onRequestRaw } = useHopRaw({ traceId, coreSpanId, requestTime, side });
 
   useEffect(() => {
     void onRequestRaw();

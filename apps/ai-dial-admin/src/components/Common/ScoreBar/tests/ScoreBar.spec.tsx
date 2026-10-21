@@ -33,14 +33,14 @@ describe('ScoreBar utils', () => {
 describe('ScoreBar', () => {
   test('renders fill bar for score value', () => {
     const { container } = render(<ScoreBar value={0.5} />);
-    const fill = container.querySelector('.h-full.rounded-sm');
+    const fill = container.querySelector('.h-full.rounded-xs');
     expect(fill).toBeInTheDocument();
     expect(fill).toHaveStyle({ width: '50%', backgroundColor: '#b8c94a' });
   });
 
   test('renders empty track for zero score', () => {
     const { container } = render(<ScoreBar value={0} />);
-    expect(container.querySelector('.h-full.rounded-sm')).not.toBeInTheDocument();
+    expect(container.querySelector('.h-full.rounded-xs')).not.toBeInTheDocument();
     expect(container.firstChild).toHaveClass('bg-layer-1');
   });
 

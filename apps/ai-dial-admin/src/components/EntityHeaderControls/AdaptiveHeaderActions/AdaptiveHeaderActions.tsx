@@ -112,7 +112,7 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
     label: (
       <div className="text-secondary flex-row flex size-full gap-3 items-center">
         {action.icon}
-        <span className="text-primary small">{action.label}</span>
+        <span className="text-primary dial-small-text">{action.label}</span>
       </div>
     ),
     onClick: action.onClick,

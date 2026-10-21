@@ -19,7 +19,7 @@ const SectionBlock: FC<Props> = ({ title, subtitle, markerClassName, action, war
     <div className="flex items-center justify-between gap-2">
       <h3 className="flex items-baseline gap-2 uppercase tracking-wide text-secondary dial-tiny-semi-text">
         {markerClassName && (
-          <span aria-hidden className={classNames('size-2 shrink-0 self-center rounded-sm', markerClassName)} />
+          <span aria-hidden className={classNames('size-2 shrink-0 self-center rounded-xs', markerClassName)} />
         )}
         {title}
         {subtitle && <span className="normal-case tracking-normal text-secondary dial-tiny-text">· {subtitle}</span>}

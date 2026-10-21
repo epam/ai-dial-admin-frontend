@@ -138,7 +138,7 @@ const DetailRow: FC<Props> = ({
             title={openDiffLabel}
             aria-label={openDiffLabel}
             className={mergeClasses(
-              'shrink-0 flex items-center justify-center size-[22px] rounded-sm text-secondary hover:text-primary',
+              'shrink-0 flex items-center justify-center size-[22px] rounded-xs text-secondary hover:text-primary',
               'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity',
             )}
           >

@@ -159,7 +159,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     >
       <div className="flex flex-col px-6 py-4">
         {!!duplicateModalDescriptionMap[view] && (
-          <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
+          <div className="text-secondary dial-small-text mb-4">{t(duplicateModalDescriptionMap[view])}</div>
         )}
         <div className="flex flex-col gap-y-8">
           <IdControl

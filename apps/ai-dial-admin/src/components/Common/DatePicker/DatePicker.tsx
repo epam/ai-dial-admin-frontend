@@ -35,7 +35,7 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
     <div className="mb-4 cursor-pointer">
       {label && (
         <label htmlFor={id}>
-          <p className="tiny text-secondary mb-2">{label}</p>
+          <p className="dial-tiny-text text-secondary mb-2">{label}</p>
         </label>
       )}
       <ReactDatePicker

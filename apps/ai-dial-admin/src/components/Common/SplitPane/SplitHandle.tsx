@@ -55,13 +55,13 @@ const SplitHandle: FC<Props> = ({ ariaLabel, percent, minPercent, onChangePercen
       aria-valuemin={Math.round(clampSplitPercent(0, minPercent))}
       aria-valuemax={Math.round(clampSplitPercent(100, minPercent))}
       onKeyDown={onKeyDown}
-      className="group flex size-full cursor-ns-resize items-center justify-center outline-none focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+      className="group flex size-full cursor-ns-resize items-center justify-center outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
     >
       {/* `bg-layer-4` is the one ground neither section beside it uses, so the grip is not read as a seam;
           `bg-secondary` for the rules because the palette defines `tertiary` as a stroke token only. */}
       <span
         aria-hidden
-        className="flex h-2.5 w-6 flex-col items-center justify-center gap-[2px] rounded-sm border border-primary bg-layer-4 transition-colors group-hover:border-hover group-focus-visible:border-hover"
+        className="flex h-2.5 w-6 flex-col items-center justify-center gap-[2px] rounded-xs border border-primary bg-layer-4 transition-colors group-hover:border-hover group-focus-visible:border-hover"
       >
         <span className="h-px w-3 rounded-full bg-secondary transition-colors group-hover:bg-primary group-focus-visible:bg-primary" />
         <span className="h-px w-3 rounded-full bg-secondary transition-colors group-hover:bg-primary group-focus-visible:bg-primary" />

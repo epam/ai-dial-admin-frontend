@@ -70,9 +70,9 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
 
   return (
     <div className="mt-4 rounded bg-layer-2 p-4 max-h-80 overflow-y-auto">
-      <span className="tiny-semi text-secondary">{t(TestSuitesI18nKey.OverallScoreWeightedMean)}</span>
+      <span className="dial-tiny-semi-text text-secondary">{t(TestSuitesI18nKey.OverallScoreWeightedMean)}</span>
 
-      {isEmpty && <p className="mt-2 tiny text-error">{t(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)}</p>}
+      {isEmpty && <p className="mt-2 dial-tiny-text text-error">{t(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)}</p>}
 
       {weights.map((weight, index) => (
         <WeightRow

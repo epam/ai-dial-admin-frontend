@@ -13,7 +13,6 @@ import {
   HopResponseEnvelope,
   HopToolCall,
   MessageRole,
-  SessionScope,
 } from '@/src/models/analytics/sessions-trace';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
 import { NO_FACTS } from '@/src/utils/analytics/hop-inspector/response';
@@ -23,8 +22,6 @@ const getSessionHopMessage = vi.fn();
 vi.mock('@/src/app/[lang]/sessions/actions', () => ({
   getSessionHopMessage: (...args: unknown[]) => getSessionHopMessage(...args),
 }));
-
-const SCOPE: SessionScope = { id: 'chat-1', source: null };
 
 const SPAN: SessionSpanRow = {
   core_span_id: 's1',
@@ -97,7 +94,6 @@ const response = (overrides: Partial<HopResponseEnvelope> = {}): HopResponseEnve
 const renderPanel = (props: Partial<Parameters<typeof HopChatPanel>[0]> = {}) =>
   render(
     <HopChatPanel
-      scope={SCOPE}
       traceId="tr1"
       span={SPAN}
       request={request()}

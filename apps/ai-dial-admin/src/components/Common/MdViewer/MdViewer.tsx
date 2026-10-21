@@ -14,7 +14,7 @@ const MdViewer: FC<Props> = ({ content }) => {
   const clean = DOMPurify.sanitize(markdown);
 
   return (
-    <div className="markdown-viewer flex flex-col overflow-scroll small">
+    <div className="markdown-viewer flex flex-col overflow-scroll dial-small-text">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{clean}</ReactMarkdown>
     </div>
   );

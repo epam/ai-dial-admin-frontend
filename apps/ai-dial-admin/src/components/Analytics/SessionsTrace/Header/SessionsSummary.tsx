@@ -5,11 +5,12 @@ import { Big } from 'big.js';
 import classNames from 'classnames';
 import { FC, ReactNode, useId } from 'react';
 
-import { SUMMARY_COST_PRECISION, UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { SessionPeriodSummary } from '@/src/models/analytics/sessions-trace';
 import { toBig, toNumber } from '@/src/utils/analytics/scalar';
+import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 
 const ICON_SIZE = 14;
 
@@ -119,7 +120,7 @@ const SessionsSummary: FC<Props> = ({ period, periodLabel, isPending = false }) 
         scope={periodLabel}
       />
       <SummaryPill
-        value={cost === null ? UNAVAILABLE_VALUE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
+        value={cost === null ? UNAVAILABLE_VALUE : `$${formatNumberByDelimiter(cost.toString(), ',', '0')}`}
         label={t(SessionsTraceI18nKey.SummaryCost)}
         valueClassName="text-success"
         hint={cost === null ? absentHint : periodHint}

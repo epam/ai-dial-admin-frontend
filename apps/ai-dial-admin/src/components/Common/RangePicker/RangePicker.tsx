@@ -51,7 +51,7 @@ const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
   return (
     <div className="dial-range-calendar flex flex-col gap-3 p-3">
       {maxDays && (
-        <div className="self-start px-2 py-0.5 rounded border border-warning text-primary tiny" role="status">
+        <div className="self-start px-2 py-0.5 rounded border border-warning text-primary dial-tiny-text" role="status">
           {t(TelemetryI18nKey.MaxRangeDays, { days: maxDays })}
         </div>
       )}

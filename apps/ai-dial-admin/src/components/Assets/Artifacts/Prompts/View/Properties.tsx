@@ -75,7 +75,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
       <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />
       <div>
         <div className="flex justify-between mb-2">
-          <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
+          <div className="dial-tiny-text mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
           {!isReadOnlyAdmin && (
             <DialSwitch
               isOn={isJSONContentMode}

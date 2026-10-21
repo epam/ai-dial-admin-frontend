@@ -43,7 +43,7 @@ writing up a review, then fill it in.
 - [ ] ui-kit / Common reused before new markup; AG Grid for tabular data
 - [ ] Theme tokens, not hardcoded colors
 - [ ] i18n keys added in the right group, shared keys reused
-- [ ] Breakpoint prefixes exist in tailwind.config.js; JS branching via the hooks
+- [ ] Breakpoint prefixes exist as `@custom-variant` in app-theme.css; JS branching via the hooks
 
 ### Accessibility
 

@@ -138,7 +138,7 @@ const Variable: FC<Props> = ({
       <div className="flex min-w-0 flex-1 flex-col rounded border border-primary p-3 lg:contents">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer lg:hidden" onClick={toggleCollapse}>
-            <h3 className="small flex items-center">
+            <h3 className="dial-small-text flex items-center">
               <i className="text-icon-primary mr-2">
                 {isCollapsed ? (
                   <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
@@ -149,7 +149,7 @@ const Variable: FC<Props> = ({
               {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
             </h3>
             {isCollapsed && (
-              <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">{variable.name}</p>
+              <p className="max-w-[220px] md:max-w-1/2 truncate dial-tiny-text text-secondary mt-3">{variable.name}</p>
             )}
           </div>
         )}

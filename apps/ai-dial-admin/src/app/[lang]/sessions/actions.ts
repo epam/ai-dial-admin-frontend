@@ -56,6 +56,7 @@ import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { toReadFailure } from '@/src/utils/notification';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { errorObjLog } from '@/src/server/logger';
 import { attachRatings, sessionRatingCounts, unresolvedRatings } from '@/src/utils/analytics/session-rows';
@@ -92,10 +93,13 @@ import {
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { EntityCallRow, EntityTraceCursor, EntityTracePage } from '@/src/models/analytics/entity-traces';
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/session-formatting';
 import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/session-trace-groups';
+import { entityTraceCursorOf, entityTraceGroupsOf } from '@/src/utils/analytics/entity-trace-groups';
+import { buildEntityCallPageQuery, entityCallClauses } from '@/src/utils/analytics/entity-trace-queries';
 import { hopBodyFields, spanFields } from '@/src/utils/analytics/session-column-catalog';
 import { unqualified } from '@/src/utils/analytics/session-enrichment';
 import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
@@ -681,6 +685,77 @@ export async function getSessionTracePage(
   };
 }
 
+const ENTITY_TRACE_PAGE_SIZE = 50;
+const ENTITY_TRACE_FIGURES_LIMIT = ENTITY_TRACE_PAGE_SIZE * 8;
+
+/**
+ * One page of calls to an entity, newest first, with the figures of the traces they belong to.
+ *
+ * Two reads, where the session listing needs three: the page rows are the calls themselves, so they already
+ * carry every card fact, and only the traces' own figures remain. Those are read by trace id over the page's
+ * own window, padded past whole UTC days — a trace's other spans straddle the entity's call by up to tens of
+ * seconds, more for a long call, and a figure computed without them would understate the trace.
+ */
+export async function getEntityTracePage(
+  route: ApplicationRoute,
+  entityName: string | null,
+  fromMs: number,
+  toMs: number,
+  cursor: EntityTraceCursor | null,
+): Promise<ServerActionResponse<EntityTracePage>> {
+  const clauses = entityCallClauses(route, entityName);
+
+  if (!clauses) {
+    return { success: true, response: { groups: [], hasMore: false, cursor: null } };
+  }
+
+  const authToken = await token();
+  const pageResult = await analyticsDataApi.executeAction(
+    buildEntityCallPageQuery(clauses, { fromMs, toMs }, ENTITY_TRACE_PAGE_SIZE, cursor),
+    authToken,
+  );
+
+  if (!pageResult.success) {
+    errorObjLog(pageResult, 'Failed to fetch the entity call page');
+    return { ...pageResult, response: undefined };
+  }
+
+  const callRows = (pageResult.response?.rows ?? []) as unknown as EntityCallRow[];
+  const hasMore = callRows.length === ENTITY_TRACE_PAGE_SIZE;
+  const nextCursor = entityTraceCursorOf(callRows);
+  const pageWindow = paddedUtcDayRange(callRows.map(({ request_time }) => request_time));
+
+  if (!callRows.length || !pageWindow) {
+    return { success: true, response: { groups: [], hasMore: false, cursor: null } };
+  }
+
+  const traceIds = [...new Set(callRows.map(({ trace_id }) => trace_id))];
+  const figuresResult = await analyticsDataApi.executeAction(
+    buildSessionTraceFiguresQuery(traceIds, pageWindow, ENTITY_TRACE_FIGURES_LIMIT),
+    authToken,
+  );
+
+  // As on the session listing: without its figures a trace would state 0 spans and no cost as its facts.
+  if (!figuresResult.success) {
+    errorObjLog(figuresResult, 'Failed to fetch the entity trace figures');
+    return { ...figuresResult, response: undefined };
+  }
+
+  const figureRows = (figuresResult.response?.rows ?? []) as unknown as SessionTraceFigureRow[];
+
+  if (figureRows.length >= ENTITY_TRACE_FIGURES_LIMIT) {
+    errorObjLog(
+      { traceCount: traceIds.length, limit: ENTITY_TRACE_FIGURES_LIMIT },
+      'The entity trace figures read came back full and may be clipped: some trace totals will be understated',
+    );
+  }
+
+  return {
+    success: true,
+    response: { groups: entityTraceGroupsOf(callRows, figureRows), hasMore, cursor: nextCursor },
+  };
+}
+
 // One hop's body row, read the way the retained payload requirement demands: filtered by session, trace and
 // hop, and bounded by that hop's own instant — a single instant is a single partition, measured at 71-337 ms.
 // Every tier below re-reads it rather than holding a parsed body between calls: server actions here are
@@ -716,9 +791,9 @@ const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): string[] 
 const isSideReadable = (side: HopInspectorSide, fields: HopBodyFields): boolean =>
   side === HopInspectorSide.Request ? fields.isRequestReadable : fields.isResponseReadable;
 
-// Takes no `scope` — see `buildSessionHopBodyQuery` for why a session predicate here left a Core-internal
-// hop reporting that it had recorded nothing. The actions that call this keep `scope`: it is the client's
-// contract and the key it holds one read per, and it reaches no filter.
+// Takes no session — see `buildSessionHopBodyQuery` for why a session predicate here left a Core-internal
+// hop reporting that it had recorded nothing. Neither do the actions that call it: a hop is located by its
+// trace and its span alone, so the same read serves a trace opened from a session and from an entity.
 async function readHopBody(
   traceId: string,
   coreSpanId: string,
@@ -779,7 +854,6 @@ const emptyRequestEnvelope = (state: HopReadState): HopRequestEnvelope => ({
 // each text clamped — never a body. A dialect no parser claims resolves to `Unstructured`, which the panel
 // answers with the raw view rather than with an empty result.
 export async function getSessionHopRequest(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -828,7 +902,6 @@ const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
 });
 
 export async function getSessionHopResponse(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -848,7 +921,6 @@ export async function getSessionHopResponse(
 // on every hop selection. The dialect parsers already yield the unclamped message, so this needs no decoder of
 // its own: it parses, picks the index the envelope numbered, and returns that message.
 export async function getSessionHopMessage(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -876,7 +948,6 @@ export async function getSessionHopMessage(
 
 // Tier 3. The body as recorded, clamped to a stated budget — never the unbounded value, which reaches 4 MiB.
 export async function getSessionHopRawBody(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -896,7 +967,6 @@ export async function getSessionHopRawBody(
 }
 
 export async function getSessionHopMcp(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -930,7 +1000,6 @@ export async function getSessionHopMcp(
 }
 
 export async function getSessionHopProtocol(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -958,7 +1027,6 @@ export async function getSessionHopProtocol(
 }
 
 export async function getSessionHopEmbedding(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,

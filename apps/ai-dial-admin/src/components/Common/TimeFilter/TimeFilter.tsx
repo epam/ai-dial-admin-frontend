@@ -43,9 +43,9 @@ const LEGACY_OVERLAY_CLASS = 'rounded border border-secondary bg-layer-0 shadow-
 
 /** Mirrors `overlayItemClassName`, the row every 2.0 `MenuItem` — and so every `Select` option — is. */
 const MODERN_OPTION_CLASS =
-  'flex h-[40px] w-full cursor-pointer items-center gap-2 truncate rounded-lg px-3 dial-small-text text-primary hover:bg-control-accent-alpha-hover focus-visible:outline focus-visible:outline-focus';
+  'flex h-[40px] w-full cursor-pointer items-center gap-2 truncate rounded-lg px-3 dial-small-text text-primary hover:bg-control-accent-alpha-hover focus-visible:outline-3 focus-visible:outline-focus';
 const LEGACY_OPTION_CLASS =
-  'flex w-full items-center whitespace-nowrap px-3 py-2 text-left small text-primary hover:bg-layer-3';
+  'flex w-full items-center whitespace-nowrap px-3 py-2 text-left dial-small-text text-primary hover:bg-layer-3';
 
 const MODERN_OPTION_SELECTED_CLASS = 'bg-control-accent-alpha';
 const LEGACY_OPTION_SELECTED_CLASS = 'bg-layer-3';

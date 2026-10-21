@@ -44,7 +44,7 @@ const Preview: FC<Props> = ({ previewData, checkedColumns, isLoading }) => {
 
   return (
     <div className="flex flex-col gap-2 flex-1 min-h-0">
-      <p className="text-secondary text-sm flex-shrink-0">{t(ExportRunI18nKey.PreviewDescription)}</p>
+      <p className="text-secondary text-sm shrink-0">{t(ExportRunI18nKey.PreviewDescription)}</p>
       <div className="flex-1 min-h-0">
         <AgGridWrapper columnDefs={columnDefs} rowData={rowData} isLiveData={true} />
       </div>

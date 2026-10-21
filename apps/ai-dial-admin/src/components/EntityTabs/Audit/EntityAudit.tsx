@@ -4,6 +4,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
+import EntityTraceListing from '@/src/components/Analytics/EntityTraces/EntityTraceListing';
 import EntityUsageDashboard from '@/src/components/Analytics/Usage/EntityUsageDashboard';
 import { hasEntityDashboard } from '@/src/components/Analytics/Usage/utils/entity-blocks';
 import { resolveEntityAuditType } from '@/src/components/ActivityAudit/View/Header/utils';
@@ -37,6 +38,9 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
   const sharableTimeFilter = getSharableTimeFilter(timeFilter);
   // The same pair of flags that decides what `/dashboards` serves, so the page and the entity agree.
   const isUsageDashboard = featureFlags.analyticsUsageEnabled && hasEntityDashboard(view);
+  // The flag `Dashboard` reads (it already requires ANALYTICS_ENABLED), so the two tabs switch to the usage log
+  // together and never disagree.
+  const isUsageTraces = featureFlags.analyticsUsageEnabled;
 
   return (
     <div className="flex flex-row gap-4 size-full">
@@ -51,7 +55,7 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
           />
         </div>
       </div>
-      <div className="flex flex-col flex-1 min-h-0 w-full relative">
+      <div className="flex flex-col flex-1 min-h-0 min-w-0 w-full relative">
         {activeTab === EntityViewTab.Dashboard && isUsageDashboard && (
           <EntityUsageDashboard
             defaultTimeFilter={sharableTimeFilter}
@@ -68,7 +72,15 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
             route={view}
           />
         )}
-        {activeTab === EntityViewTab.Traces && (
+        {activeTab === EntityViewTab.Traces && isUsageTraces && (
+          <EntityTraceListing
+            defaultTimeFilter={sharableTimeFilter}
+            onTimeFilterChange={setTimeFilter}
+            entity={entity}
+            route={view}
+          />
+        )}
+        {activeTab === EntityViewTab.Traces && !isUsageTraces && (
           <UsageLog
             defaultTimeFilter={sharableTimeFilter}
             onTimeFilterChange={setTimeFilter}
