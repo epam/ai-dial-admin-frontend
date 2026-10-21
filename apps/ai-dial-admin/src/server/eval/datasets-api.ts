@@ -147,6 +147,10 @@ export class DatasetsApi extends BaseApi {
     return this.deleteAction(`${DATASET_FILES_URL(id)}/${encodeURIComponent(fileName)}`, token);
   }
 
+  downloadDatasetFile(id: string, fileName: string, token: Token): Promise<Response> {
+    return this.streamRequest(`${DATASET_FILES_URL(id)}/${encodeURIComponent(fileName)}`, fileName, token);
+  }
+
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {
     const filtersStr = getRequestFiltersStr(filters);
     const sortsStr = getRequestSortsStr(sorts);
