@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, OutlinedButton } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -57,7 +57,7 @@ const InterfaceDefaultsButton = ({ fieldId, value, disabled, onChange }: Props) 
 
   return (
     <>
-      <DialNeutralButton label={t(ButtonsI18nKey.Defaults)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
+      <OutlinedButton label={t(ButtonsI18nKey.Defaults)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
       <DialFormPopup
         onClose={onCancel}
         header={t(EntityFieldsI18nKey.defaults)}

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton, DialGhostIconButton, DialSwitch, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, DialSwitch, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
@@ -408,7 +408,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           {runs.map((compareRun, position) => (
             <Fragment key={compareRun.slot}>
               {position > 0 && (
-                <DialGhostIconButton
+                <GhostIconButton
                   size={ElementSize.Small}
                   icon={<IconArrowsLeftRight size={16} aria-hidden />}
                   aria-label={t(RunsI18nKey.RunCompareFlip)}
@@ -444,7 +444,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           />
         )}
         {activeTab === CompareViewTab.ExecutionResults && (
-          <DialGhostButton
+          <GhostButton
             label={t(RunsI18nKey.RunCompareDisplay)}
             iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}
             onClick={toggleDisplayPanel}

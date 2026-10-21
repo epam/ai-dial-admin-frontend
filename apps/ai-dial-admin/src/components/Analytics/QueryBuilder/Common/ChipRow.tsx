@@ -3,7 +3,7 @@
 import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp, IconTrashX } from '@tabler/icons-react';
 
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
@@ -54,7 +54,7 @@ const ChipRow: FC<Props> = ({
   }, [expanded]);
 
   const removeButton = (
-    <DialGhostIconButton
+    <GhostIconButton
       size={ElementSize.Small}
       aria-label={t(ButtonsI18nKey.Remove)}
       icon={<IconTrashX size={16} className="text-error" />}

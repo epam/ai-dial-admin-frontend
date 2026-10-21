@@ -1,4 +1,4 @@
-import { DialCollapsibleSidebar, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -123,7 +123,7 @@ const EntityRoutes: FC<Props> = ({
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.AppRoutes)}</h1>
               {!disabled && (
-                <DialPrimaryButton
+                <PrimaryButton
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(ButtonsI18nKey.Add)}
                   onClick={handleModalOpen}

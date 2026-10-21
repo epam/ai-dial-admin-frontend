@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -97,7 +97,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
             onTimeRangeChange={onTimeRangeChange}
             maxRangeMs={telemetryMaxRangeMs}
           />
-          <DialNeutralButton
+          <OutlinedButton
             label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onRefresh}

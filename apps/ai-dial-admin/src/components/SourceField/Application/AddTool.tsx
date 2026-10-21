@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
-import { DialGhostButton, DialInput, DialLabel, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, DialLabel } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -9,6 +9,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 export interface Props {
   entity: DialApplicationScheme;
@@ -74,11 +75,11 @@ const AddTool: FC<Props> = ({ entity, onChangeEntity }) => {
             }}
           />
           <div className="w-[40px] shrink-0 mt-[10px]">
-            <DialRemoveButton onClick={() => onRemoveTool(index)} />
+            <RemoveButton onClick={() => onRemoveTool(index)} />
           </div>
         </div>
       ))}
-      <DialGhostButton
+      <GhostButton
         label={t(ToolsetI18nKey.AddTools)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         className="mt-2 min-h-[34px] h-[34px]"

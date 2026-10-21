@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip, DialGhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, GhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useMemo } from 'react';
@@ -154,7 +154,7 @@ const SessionTraceView: FC<Props> = ({
     <div className="flex size-full min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconChevronLeft {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             aria-label={t(SessionsTraceI18nKey.TraceBackToList)}

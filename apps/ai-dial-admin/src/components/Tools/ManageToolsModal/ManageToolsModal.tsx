@@ -5,10 +5,10 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import {
   ButtonAppearance,
   DialCollapsibleSidebar,
-  DialNeutralButton,
+  OutlinedButton,
   DialNoDataContent,
   DialPopup,
-  DialPrimaryButton,
+  PrimaryButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -229,8 +229,8 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
       dividers
       footer={
         <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton label={t(ButtonsI18nKey.Confirm)} onClick={onConfirmChanges} disabled={!isValid} />
+          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <PrimaryButton label={t(ButtonsI18nKey.Confirm)} onClick={onConfirmChanges} disabled={!isValid} />
         </div>
       }
     >
@@ -267,7 +267,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
           <div>
             <div className="flex flex-row justify-between items-center mt-2 pr-[4px]">
               <span className="dial-tiny text-secondary">{t(ToolsetI18nKey.OtherInAToolset)}</span>
-              <DialPrimaryButton
+              <PrimaryButton
                 appearance={ButtonAppearance.Link}
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}

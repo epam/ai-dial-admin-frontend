@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
 import { FC, useState } from 'react';
 
@@ -46,7 +46,7 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
       >
         <div className="flex flex-row items-start justify-between gap-2">
           <h2 className="dial-h3 text-primary">{t(TestSuitesI18nKey.OverallScore)}</h2>
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.Edit)}
             iconBefore={<IconEdit stroke={2} size={20} />}
             className="text-accent-primary"

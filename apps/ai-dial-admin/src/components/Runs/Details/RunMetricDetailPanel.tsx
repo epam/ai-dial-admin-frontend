@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialGhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 
@@ -77,7 +77,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
           onChange={() => setIsJsonView(!isJsonView)}
         />
         {onSwitchMode && (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconLayoutBottombar size={16} />}
             onClick={onSwitchMode}

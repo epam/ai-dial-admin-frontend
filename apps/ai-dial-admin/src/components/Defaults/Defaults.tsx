@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
@@ -101,7 +101,7 @@ const Defaults: FC<Props> = ({ values, onChangeValues, disabled, title, validati
       ))}
       {!isReadonly && (
         <div>
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.AddDefault)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddItem}

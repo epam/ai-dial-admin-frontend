@@ -1,6 +1,6 @@
 import { FC, MouseEvent, ReactNode, useCallback } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -80,7 +80,7 @@ const ToolHeader: FC<Props> = ({
           {!isCollapsed && !!viewSelector && !disabled && <div className="w-px h-6 bg-layer-4"></div>}
 
           {!disabled && (
-            <DialNeutralButton
+            <OutlinedButton
               className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
               iconBefore={<IconPlayerPlay size={20} />}
               onClick={openTryOutSidebar}

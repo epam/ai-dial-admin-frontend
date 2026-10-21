@@ -2,7 +2,7 @@
 import { IconCircleCheck, IconExclamationCircle, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialIconButton } from '@epam/ai-dial-ui-kit';
+import { IconButton } from '@epam/ai-dial-ui-kit';
 
 import { NotificationIcons } from '@/src/components/Notification/Notification';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -48,8 +48,8 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
       <div className="flex flex-row w-full items-center [&:not(:only-child)]:mb-2 px-4">
         <div className="flex items-center relative w-full pr-5">
           <p className="dial-small-semi-text truncate w-full">{title}</p>
-          <DialIconButton className={classNames(iconClassName, 'size-auto')} onClick={showDetails} icon={Icon} />
-          <DialIconButton
+          <IconButton className={classNames(iconClassName, 'size-auto')} onClick={showDetails} icon={Icon} />
+          <IconButton
             className="absolute right-0 size-auto top-0"
             onClick={onClose}
             icon={<IconX height={18} width={18} />}
@@ -85,7 +85,7 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
         {progress && !failed && !complete && (
           <div className="flex flex-row items-center truncate">
             <p className="dial-tiny-text text-secondary mx-1">{fileProgress}</p>
-            <DialIconButton className="size-auto" icon={<IconX height={18} width={18} />} onClick={onCancel} />
+            <IconButton className="size-auto" icon={<IconX height={18} width={18} />} onClick={onCancel} />
           </div>
         )}
         {failed && (

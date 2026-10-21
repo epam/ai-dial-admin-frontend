@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -98,7 +98,7 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
           <CreateRunConditionFilter draft={draft} fieldOptions={fieldOptions} onChange={setDraft} onClear={onClose} />
         )}
       >
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           size={ElementSize.Small}

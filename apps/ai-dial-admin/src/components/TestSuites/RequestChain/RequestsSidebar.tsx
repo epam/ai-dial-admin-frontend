@@ -2,13 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  DialCollapsibleSidebar,
-  DialPrimaryButton,
-  DialTooltip,
-  ElementSize,
-  EllipsisTooltip,
-} from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, PrimaryButton, DialTooltip, ElementSize, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconInfoCircle, IconPencilMinus, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -88,7 +82,7 @@ const RequestsSidebar: FC<Props> = ({
                 <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} size={16} className="text-secondary" />
               </DialTooltip>
             </div>
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.Add)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
               size={ElementSize.Small}

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -92,7 +92,7 @@ const ListEntities = <T extends object>({
             <ResetFiltersButton gridApi={gridApi} />
             {isEnableColumnPanel &&
               (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (
-                <DialGhostButton
+                <GhostButton
                   label={t(ButtonsI18nKey.Columns)}
                   iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
                   aria-pressed={showColumnsPanel}

@@ -3,7 +3,7 @@
 import { IconDownload, IconFileDescription, IconExternalLink, IconUpload, IconWorldCog } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC } from 'react';
-import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import ReadOnlyAdminBanner from '@/src/components/Common/ReadOnlyBanner/ReadOnlyBanner';
 import HeaderIcon from '@/public/images/icons/welcome-page/header-icon.svg';
@@ -44,7 +44,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           <p className="mb-2">{t(WelcomeViewI18nKey.Description)}</p>
           {docLink && (
             <div>
-              <DialPrimaryButton
+              <PrimaryButton
                 iconBefore={<IconFileDescription {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(WelcomeViewI18nKey.ViewDocumentation)}
                 onClick={() => {
@@ -63,7 +63,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
         <div className="flex flex-row gap-x-3">
           {!isReadOnlyAdmin && getIsConfigTransferEnabled(featureFlags) && (
             <>
-              <DialNeutralButton
+              <OutlinedButton
                 iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
                 className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
                 label={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
@@ -71,7 +71,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
                   router.push(ApplicationRoute.ImportConfig);
                 }}
               />
-              <DialNeutralButton
+              <OutlinedButton
                 iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
                 className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
                 label={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
@@ -81,7 +81,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
               />
             </>
           )}
-          <DialNeutralButton
+          <OutlinedButton
             iconBefore={<IconWorldCog {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
             className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
             label={isTabletScreen ? '' : t(MenuI18nKey.SystemProperties)}
@@ -90,7 +90,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
             }}
           />
           {dialLink && (
-            <DialNeutralButton
+            <OutlinedButton
               iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
               className="p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
               label={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}

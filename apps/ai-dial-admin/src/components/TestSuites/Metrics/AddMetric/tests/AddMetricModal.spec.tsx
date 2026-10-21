@@ -88,12 +88,12 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </nav>
   ),
   DialLoader: () => <div role="progressbar" aria-label="loading" />,
-  DialNeutralButton: ({ label, onClick }: any) => (
+  OutlinedButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>
   ),
-  DialPrimaryButton: ({ label, onClick, disabled }: any) => (
+  PrimaryButton: ({ label, onClick, disabled }: any) => (
     <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>

@@ -13,7 +13,7 @@ import {
   DialConfirmationPopup,
   DialEllipsisTooltip,
   DialFormPopup,
-  DialGhostButton,
+  GhostButton,
   PopupSize,
   Tabs,
 } from '@epam/ai-dial-ui-kit';
@@ -499,7 +499,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                   disableSave={!isEditorEnabled && !draft.canMaterialize}
                   onDiscard={onDiscard}
                   onSave={onTryToSave}
-                  isDesignSystem2
                 />
               )}
               {isJsonViewOnly && (
@@ -508,7 +507,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                     buttonLabel={t(ButtonsI18nKey.Copy)}
                     valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
                     value={copyValue}
-                    isDesignSystem2
                   />
                   <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
                 </>
@@ -625,10 +623,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           <div className="flex flex-col gap-3 p-6">
             <div className="flex flex-col items-start gap-1 border-l-2 border-tertiary pl-3">
               <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.AddRowsPurpose)}</p>
-              <DialGhostButton
-                label={t(AnalyticsTablesI18nKey.WriteProgrammatically)}
-                onClick={onWriteProgrammatically}
-              />
+              <GhostButton label={t(AnalyticsTablesI18nKey.WriteProgrammatically)} onClick={onWriteProgrammatically} />
             </div>
             <div className="h-[320px] overflow-hidden rounded border border-primary">
               <JsonEditorBase value={rowsJson} onChange={(v) => setRowsJson(v ?? '')} />

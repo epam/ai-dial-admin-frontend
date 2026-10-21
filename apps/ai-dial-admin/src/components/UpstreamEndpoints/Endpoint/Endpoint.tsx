@@ -6,7 +6,6 @@ import {
   DialInput,
   DialNumberInput,
   DialPasswordInput,
-  DialRemoveButton,
   DialSelectField,
   DialTooltip,
   SelectOption,
@@ -38,6 +37,7 @@ import {
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   index: number;
@@ -454,7 +454,7 @@ const Endpoint: FC<Props> = ({
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 self-start">
-          <DialRemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
+          <RemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
         </div>
       )}
     </div>

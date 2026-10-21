@@ -5,10 +5,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  DialIconButton,
+  IconButton,
   DialConfirmationPopup,
   DialEllipsisTooltip,
-  DialNeutralButton,
+  OutlinedButton,
   DialSwitch,
 } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
@@ -221,7 +221,7 @@ const AuditView: FC<Props> = ({
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
               {canRollbackResource && (
-                <DialNeutralButton
+                <OutlinedButton
                   iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(RollbackI18nKey.Resource)}
                   onClick={onOpenModal}
@@ -247,7 +247,7 @@ const AuditView: FC<Props> = ({
                   <h3 className="flex flex-row items-center gap-x-3">
                     <DialEllipsisTooltip text={activity.activityId} />
                     {activity.activityId && (
-                      <DialIconButton
+                      <IconButton
                         onClick={() => openActivityInNewTab(activity)}
                         className="text-secondary size-auto"
                         icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}

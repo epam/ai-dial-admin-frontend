@@ -9,10 +9,12 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
+import { CloseButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   isOpen: boolean;
@@ -33,6 +35,7 @@ const isEscapeForInnerPopup = (event?: Event): boolean =>
 // A modal panel on the right edge. A click outside does not close it: the body holds form input that an
 // accidental click should not discard.
 const Drawer: FC<Props> = ({ isOpen, onClose, ariaLabel, header, children, footer, className }) => {
+  const t = useI18n();
   const { refs, context } = useFloating({
     open: isOpen,
     onOpenChange: (open, event) => {
@@ -61,7 +64,7 @@ const Drawer: FC<Props> = ({ isOpen, onClose, ariaLabel, header, children, foote
           >
             <header className="flex shrink-0 items-center justify-between gap-2 px-6 pb-2 pt-6">
               <div className="min-w-0 flex-1">{header}</div>
-              <CloseButton className="shrink-0" onClose={onClose} />
+              <CloseButton className="shrink-0" ariaLabel={t(ButtonsI18nKey.Close)} onClose={onClose} />
             </header>
             <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">{children}</div>
             {footer && <footer className="shrink-0 px-6 pb-6 pt-2">{footer}</footer>}

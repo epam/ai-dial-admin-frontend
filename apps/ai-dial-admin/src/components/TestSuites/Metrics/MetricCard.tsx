@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { Avatar, GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
@@ -65,13 +65,13 @@ const MetricCard: FC<Props> = ({ metric, onEdit, onDelete }) => {
       </div>
 
       <div className="flex shrink-0 flex-row gap-2">
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.Delete)}
           className="text-error"
           onClick={onDelete}
           iconBefore={<IconTrash stroke={2} size={20} />}
         />
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.Edit)}
           className="text-accent-primary"
           onClick={onEdit}

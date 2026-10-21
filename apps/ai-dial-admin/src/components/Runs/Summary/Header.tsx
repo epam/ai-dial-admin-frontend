@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialIconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -43,7 +43,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
           label={t(RunsI18nKey.TestSuite)}
           text={testSuite?.name || run.testSuiteId}
           postfix={
-            <DialIconButton
+            <IconButton
               className="text-secondary size-[20px]"
               onClick={() => onOpenInNewTab(ApplicationRoute.TestSuites, { id: run.testSuiteId })}
               icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}

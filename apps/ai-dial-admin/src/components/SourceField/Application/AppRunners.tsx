@@ -4,7 +4,7 @@ import {
   DialInputPopup,
   DialLabel,
   DialLoader,
-  DialNeutralButton,
+  OutlinedButton,
   DialSelectField,
   SelectOption,
 } from '@epam/ai-dial-ui-kit';
@@ -161,7 +161,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
           </DialInputPopup>
         </div>
         {currentValue && (
-          <DialNeutralButton
+          <OutlinedButton
             label={isMobile ? '' : t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
             onClick={openInNewTab}

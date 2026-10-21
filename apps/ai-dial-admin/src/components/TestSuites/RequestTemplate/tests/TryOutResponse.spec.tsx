@@ -31,7 +31,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     NotificationVariant: { Success: 'success', Error: 'error' },
     DialNotification: ({ message }: { message: string }) => <div>{message}</div>,
     DialLoader: () => <div>Loading...</div>,
-    DialNeutralButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
+    OutlinedButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
     ElementSize: { Small: 'small' },
   };
 });

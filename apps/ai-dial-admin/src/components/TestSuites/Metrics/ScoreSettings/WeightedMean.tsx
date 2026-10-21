@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
@@ -88,7 +88,7 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
 
       {canAddRow && (
         <div className="mt-3">
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.Add)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAdd}

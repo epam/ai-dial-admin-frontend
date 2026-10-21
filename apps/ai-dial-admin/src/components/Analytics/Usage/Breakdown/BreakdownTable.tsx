@@ -3,7 +3,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { ColDef } from 'ag-grid-community';
-import { DialLinkButton, ElementSize, Popup, PopupSize, Search } from '@epam/ai-dial-ui-kit';
+import { LinkButton, ElementSize, Popup, PopupSize, Search } from '@epam/ai-dial-ui-kit';
 
 import BreakdownGrid from '@/src/components/Analytics/Usage/Breakdown/BreakdownGrid';
 import DimensionCell from '@/src/components/Analytics/Usage/Breakdown/cells/DimensionCell';
@@ -370,7 +370,7 @@ const BreakdownTable: FC<Props> = ({
       headerActions={
         <div className="flex shrink-0 items-center gap-4">
           <TabSelector tabs={tabs} activeTab={tab} onChange={(next) => onTabChange(next as BreakdownTab)} />
-          {rowModels.length > 0 && <DialLinkButton label={t(AnalyticsUsageI18nKey.ViewAll)} onClick={onShowAll} />}
+          {rowModels.length > 0 && <LinkButton label={t(AnalyticsUsageI18nKey.ViewAll)} onClick={onShowAll} />}
         </div>
       }
     >

@@ -1,7 +1,7 @@
 import { ColDef, GridApi, IRowNode } from 'ag-grid-community';
 import { ChangeEvent, FC, useCallback, useMemo, useRef } from 'react';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -147,7 +147,7 @@ const SkillDetails: FC<Props> = ({
           </h3>
           {!disabled && (
             <>
-              <DialGhostButton
+              <GhostButton
                 onClick={onAddClick}
                 label={t(ButtonsI18nKey.Add)}
                 className="w-fit"

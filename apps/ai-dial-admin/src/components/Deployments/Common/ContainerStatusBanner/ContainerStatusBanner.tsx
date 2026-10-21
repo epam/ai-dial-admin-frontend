@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconArrowDown } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -62,7 +62,7 @@ const ContainerStatusBanner = ({ view, containerId }: Props) => {
       title={t(ContainersI18nKey.ContainerNotRunningTitle, { type, typeLower: type.toLowerCase() })}
       message={t(ContainersI18nKey.ContainerNotRunningDescription, { typeLower: type.toLowerCase() })}
     >
-      <DialNeutralButton
+      <OutlinedButton
         size={ElementSize.Small}
         className="w-fit shrink-0"
         iconBefore={<IconArrowDown {...BASE_BUTTON_ICON_PROPS} />}

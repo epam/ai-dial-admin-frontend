@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialInput, DialNumberInput, DialRemoveButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
@@ -16,6 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface DefaultItemDeclaration {
   key: string;
@@ -163,7 +164,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 mt-[10px]">
-          <DialRemoveButton onClick={() => onRemove(index)} />
+          <RemoveButton onClick={() => onRemove(index)} />
         </div>
       )}
     </div>

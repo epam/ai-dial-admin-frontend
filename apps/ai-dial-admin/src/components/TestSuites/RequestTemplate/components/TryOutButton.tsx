@@ -2,7 +2,7 @@
 
 import { FC, MouseEvent, useCallback, useEffect } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 
 import Tryout from '@/public/images/icons/tryout.svg';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -43,7 +43,7 @@ const TryOutButton: FC<Props> = ({ testSuite }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <DialNeutralButton label={t(ButtonsI18nKey.TryOut)} iconBefore={<Tryout />} onClick={openTryOutSidebar} />;
+  return <OutlinedButton label={t(ButtonsI18nKey.TryOut)} iconBefore={<Tryout />} onClick={openTryOutSidebar} />;
 };
 
 export default TryOutButton;

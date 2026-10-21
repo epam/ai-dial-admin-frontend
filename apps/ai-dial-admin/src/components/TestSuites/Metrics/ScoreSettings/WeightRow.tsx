@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNumberInput, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -10,6 +10,7 @@ import { FieldError } from '@/src/models/error';
 import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
 import { MetricOutputOption } from './models';
 import { formatWeightedMeanWeightInputValue, getMetricSelectionError, getWeightError } from './utils';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 export interface Props {
   index: number;
@@ -134,7 +135,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
           onChange={onWeightChange}
         />
       </div>
-      <DialRemoveButton
+      <RemoveButton
         onClick={onRemoveRow}
         aria-label={t(ButtonsI18nKey.Remove)}
         className={index === 0 ? 'mt-7' : ''}

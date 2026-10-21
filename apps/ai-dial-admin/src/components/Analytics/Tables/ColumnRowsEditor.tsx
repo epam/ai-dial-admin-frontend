@@ -1,14 +1,7 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import {
-  DialGhostButton,
-  DialInput,
-  DialLabel,
-  DialRemoveButton,
-  DialSelectField,
-  DialSwitch,
-} from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, DialLabel, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -17,6 +10,7 @@ import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
 import { createColumnRow, isNullableLockedType } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow, ColumnRowError } from '@/src/models/analytics/tables-ui';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   rows: ColumnRow[];
@@ -176,13 +170,13 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 isOn={row.sensitive}
                 onChange={(value) => update(row.id, { sensitive: value })}
               />
-              <DialRemoveButton onClick={() => onChange(rows.filter((r) => r.id !== row.id))} />
+              <RemoveButton onClick={() => onChange(rows.filter((r) => r.id !== row.id))} />
             </div>
           </div>
         );
       })}
       <div>
-        <DialGhostButton
+        <GhostButton
           label={t(AnalyticsTablesI18nKey.AddColumn)}
           onClick={() => onChange([...rows, createColumnRow()])}
         />

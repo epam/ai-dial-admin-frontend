@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useRef } from 'react';
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { FieldError } from '@/src/models/error';
@@ -83,7 +83,7 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal
         )}
       </ul>
 
-      <DialGhostButton
+      <GhostButton
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         label={addItemLabel}
         onClick={onAddItem}

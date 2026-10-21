@@ -3,7 +3,7 @@
 import { FC, useState } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconMaximize } from '@tabler/icons-react';
 
 import ResultValueDialog from '@/src/components/Analytics/QueryBuilder/Result/ResultValueDialog';
@@ -25,7 +25,7 @@ const ResultValueCell: FC<ICellRendererParams> = ({ value, valueFormatted, colDe
   return (
     <span className="flex min-w-0 items-center gap-1">
       <span className="min-w-0 flex-1 truncate">{previewOf(text)}</span>
-      <DialGhostIconButton
+      <GhostIconButton
         size={ElementSize.Small}
         aria-label={`${t(QueryBuilderI18nKey.ViewFullValue)} ${column}`}
         icon={<IconMaximize aria-hidden size={ICON_SIZE} />}

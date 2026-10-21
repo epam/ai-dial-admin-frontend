@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialIconButton, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -47,7 +47,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, selectedP
         style={{ paddingLeft: 4 + depth * 24 }}
       >
         {hasChildren ? (
-          <DialIconButton
+          <IconButton
             className="flex items-center justify-center rounded text-secondary hover:bg-accent-primary-alpha hover:text-accent-primary cursor-pointer"
             onClick={onToggleNode}
             size={ElementSize.Small}

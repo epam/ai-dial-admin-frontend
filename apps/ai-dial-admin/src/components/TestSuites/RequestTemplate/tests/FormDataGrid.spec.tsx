@@ -34,7 +34,7 @@ vi.mock('@/src/constants/grid-columns/actions', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialGhostButton: ({ label, onClick, iconBefore }: any) => (
+  GhostButton: ({ label, onClick, iconBefore }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>

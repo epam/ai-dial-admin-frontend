@@ -4,10 +4,9 @@ import { FC, useEffect, useState } from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
 import {
-  ButtonAppearance,
   DialDropdown,
   DialInput,
-  DialNeutralButton,
+  OutlinedButton,
   DialNumberInput,
   DialSelect,
   SelectOption,
@@ -107,11 +106,7 @@ const GridFilterDropdown: FC<Props> = ({
             />
           )}
           <div className="flex items-center justify-end">
-            <DialNeutralButton
-              appearance={ButtonAppearance.Outlined}
-              label={t(ButtonsI18nKey.Reset)}
-              onClick={onReset}
-            />
+            <OutlinedButton label={t(ButtonsI18nKey.Reset)} onClick={onReset} />
           </div>
         </div>
       )}

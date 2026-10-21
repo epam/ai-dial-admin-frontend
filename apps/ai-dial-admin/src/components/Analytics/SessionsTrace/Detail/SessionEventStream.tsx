@@ -2,7 +2,7 @@
 
 import {
   DialEllipsisTooltip,
-  DialGhostIconButton,
+  GhostIconButton,
   DialNoDataContent,
   ElementSize,
   GhostButton,
@@ -211,7 +211,7 @@ const HopTreeRowView: FC<RowProps> = ({
       <div className={cardClassName}>
         <span aria-hidden className={classNames('ml-1 h-7 shrink-0 border-l-2', railClassOf(type, node.isFailed))} />
         {children.length > 0 ? (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={
               expanded ? (

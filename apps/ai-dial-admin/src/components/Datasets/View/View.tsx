@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -211,7 +211,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
           hasValidityBadge={false}
         >
           {!isPublic && (
-            <DialNeutralButton label={t(DatasetsI18nKey.MakePublic)} onClick={() => setIsMakePublicOpen(true)} />
+            <OutlinedButton label={t(DatasetsI18nKey.MakePublic)} onClick={() => setIsMakePublicOpen(true)} />
           )}
         </SimpleEntityHeader>
 

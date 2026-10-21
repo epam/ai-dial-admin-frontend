@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 
 import {
-  DialGhostIconButton,
+  GhostIconButton,
   DialInput,
   DialLabel,
   DialSelectField,
@@ -119,7 +119,7 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
         />
         {!disabled && (
           <div className="h-10 flex items-center">
-            <DialGhostIconButton
+            <GhostIconButton
               size={ElementSize.Small}
               icon={<IconBinaryTree2 size={16} aria-hidden />}
               aria-pressed={false}
@@ -137,7 +137,7 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
       <div className="flex items-center gap-x-2">
         <DialLabel label={` ${label} · ${t(ModelViewI18nKey.ConditionalRate)}`} />
         {!disabled && (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconBinaryTree2 size={16} aria-hidden />}
             aria-pressed

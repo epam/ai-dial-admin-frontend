@@ -2,8 +2,8 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
-  DialDangerButton,
-  DialNeutralButton,
+  DangerButton,
+  OutlinedButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
@@ -219,7 +219,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                         disabled={!isValid}
                       />
                     ) : (
-                      <DialNeutralButton
+                      <OutlinedButton
                         className={buttonsClassNames}
                         label={t(CreateI18nKey.CreateEntity, { entity: createLabelEntity })}
                         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
@@ -230,7 +230,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                   </>
                 )}
 
-                <DialDangerButton
+                <DangerButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
                   appearance={ButtonAppearance.Outlined}
@@ -241,14 +241,14 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                   {container.status === CONTAINER_STATUS.RUNNING ||
                   container.status === CONTAINER_STATUS.PENDING ||
                   container.status === CONTAINER_STATUS.FAILED ? (
-                    <DialNeutralButton
+                    <OutlinedButton
                       className={buttonsClassNames}
                       label={t(ButtonsI18nKey.Stop)}
                       iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
                       onClick={handleStopContainer}
                     />
                   ) : (
-                    <DialNeutralButton
+                    <OutlinedButton
                       className={buttonsClassNames}
                       label={t(ButtonsI18nKey.Run)}
                       iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}

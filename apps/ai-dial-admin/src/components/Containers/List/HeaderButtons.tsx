@@ -1,6 +1,6 @@
 'use client';
 
-import { DialButtonDropdown, DialPrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialButtonDropdown, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -209,7 +209,7 @@ const HeaderButtons: FC<Props> = ({ route: listRoute, names, isReadOnlyAdmin }) 
           (showDropdown ? (
             <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)} />
           ) : (
-            <DialPrimaryButton
+            <PrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => handleModalOpen(isUnified ? ModalType.createContainerType : ModalType.createContainer)}

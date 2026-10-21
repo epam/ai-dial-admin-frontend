@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -100,7 +100,7 @@ const Paths: FC<Props> = ({
       ))}
       {!disabled && (
         <div>
-          <DialNeutralButton
+          <OutlinedButton
             label={t(RoutesI18nKey.AddPaths)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddPath}

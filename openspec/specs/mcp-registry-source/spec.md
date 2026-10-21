@@ -354,7 +354,7 @@ The component SHALL accept the following props:
 - `children: ReactNode` — body content
 - `className?: string` — optional override for the outer container (escape hatch for per-usage tweaks)
 
-The outer container SHALL use the classes `flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full` by default. The header row SHALL render the label as `<span className="dial-tiny-text text-secondary">` followed by a `DialCloseButton` with `size={24}`.
+The outer container SHALL use the classes `flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full` by default. The header row SHALL render the label as `<span className="dial-tiny-text text-secondary">` followed by a `CloseButton` at its default `ElementSize.Small` (24px).
 
 Both the HuggingFace `ModelDescription` and the new `McpServerDetails` SHALL compose `SidePanel`. `ModelDescription` SHALL be refactored to compose `SidePanel` without regressing its existing fetch/loader/empty behavior.
 

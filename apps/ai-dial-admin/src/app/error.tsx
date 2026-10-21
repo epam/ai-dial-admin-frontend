@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FC, useEffect } from 'react';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import { ButtonAppearance, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, PrimaryButton } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   error: Error & { digest?: string };
@@ -29,7 +29,7 @@ const GlobalError: FC<Props> = ({ error, reset }) => {
             {error.digest && <h2>Error ID: {error.digest}</h2>}
             <div className="flex flex-row items-center justify-center mt-4">
               <div>
-                <DialPrimaryButton label="Try again" appearance={ButtonAppearance.Ghost} onClick={reset} />
+                <PrimaryButton label="Try again" appearance={ButtonAppearance.Ghost} onClick={reset} />
               </div>
               <Link className="text-accent-primary ml-2" aria-label="homepage" href={ApplicationRoute.Home}>
                 Homepage

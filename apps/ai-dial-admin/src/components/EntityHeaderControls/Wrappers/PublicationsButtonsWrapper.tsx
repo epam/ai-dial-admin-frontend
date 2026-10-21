@@ -9,9 +9,9 @@ import {
   ButtonAppearance,
   DialNotification,
   DialConfirmationPopup,
-  DialDangerButton,
-  DialNeutralButton,
-  DialPrimaryButton,
+  DangerButton,
+  OutlinedButton,
+  PrimaryButton,
   DialTextarea,
 } from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
@@ -237,7 +237,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-                  <DialDangerButton
+                  <DangerButton
                     className={buttonsClassName}
                     label={t(ButtonsI18nKey.Delete)}
                     appearance={ButtonAppearance.Outlined}
@@ -246,14 +246,14 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                   />
                   {!isOnlyDeleteAvailable && (
                     <>
-                      <DialNeutralButton
+                      <OutlinedButton
                         className={buttonsClassName}
                         label={t(ButtonsI18nKey.Decline)}
                         onClick={() => setIsOpenDeclineModal(true)}
                         iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
                       />
                       {isAddAction(action) && (
-                        <DialPrimaryButton
+                        <PrimaryButton
                           className={classNames(buttonsClassName, approveButtonClassName)}
                           label={t(ButtonsI18nKey.Publish)}
                           onClick={() => setIsOpenApproveModal(true)}
@@ -261,7 +261,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                         />
                       )}
                       {action === ActionType.DELETE && (
-                        <DialPrimaryButton
+                        <PrimaryButton
                           className={classNames(buttonsClassName, approveButtonClassName)}
                           label={t(ButtonsI18nKey.Unpublish)}
                           onClick={() => setIsOpenApproveModal(true)}

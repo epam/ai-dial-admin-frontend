@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialInputPopup, DialLabel, DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialLabel, DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -128,7 +128,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
                 </div>
               ) : (
                 !!navigationTarget && (
-                  <DialNeutralButton
+                  <OutlinedButton
                     iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                     className="self-end shrink-0"
                     label={isMobile ? '' : t(ButtonsI18nKey.Open)}

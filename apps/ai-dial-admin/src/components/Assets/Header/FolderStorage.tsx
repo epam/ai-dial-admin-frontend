@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialIconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -45,7 +45,7 @@ const FoldersStorageLabel: FC<Props> = ({ asset }) => {
         label={t(EntitiesI18nKey.FolderStorage)}
         text={removeTrailingSlash(folder)}
         postfix={
-          <DialIconButton
+          <IconButton
             className="text-secondary size-[20px]"
             onClick={() => openFolderStorageInNewTab(folder)}
             icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}

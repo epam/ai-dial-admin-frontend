@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import RulesValue from '@/src/components/Rules/Value/RulesValue';
@@ -103,7 +103,7 @@ const RulesValueList: FC<Props> = ({
       )}
       <div className={classNames(ruleIndentClassName, isReadonly && 'hidden')}>
         <div className={lineHorizontalChildClassName}></div>
-        <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={onAddValue} disabled={isReadonlyAdmin} />
+        <PrimaryButton label={t(ButtonsI18nKey.Add)} onClick={onAddValue} disabled={isReadonlyAdmin} />
       </div>
     </div>
   );

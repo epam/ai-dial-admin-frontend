@@ -32,7 +32,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </div>
   ),
   NotificationVariant: { Info: 'info' },
-  DialNeutralButton: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
+  OutlinedButton: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
     <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>

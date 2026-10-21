@@ -3,7 +3,7 @@ import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState }
 import {
   DialEllipsisTooltip,
   DialErrorText,
-  DialGhostIconButton,
+  GhostIconButton,
   DialLabel,
   DialTag,
   ElementSize,
@@ -131,7 +131,7 @@ const SingleValueAutocomplete: FC<Props> = ({
                 contentClassName="max-w-full"
                 text={<DialTag label={selectedLabel} className="max-w-full" />}
               />
-              <DialGhostIconButton
+              <GhostIconButton
                 size={ElementSize.Small}
                 aria-label={t(ButtonsI18nKey.Remove)}
                 icon={<IconX size={16} aria-hidden />}

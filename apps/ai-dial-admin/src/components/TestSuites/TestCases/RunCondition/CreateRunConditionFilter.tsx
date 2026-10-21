@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton, DialInput, DialSelectField, ElementSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, DialSelectField, ElementSize, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconX } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
@@ -227,7 +227,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
         <div className="flex items-center gap-2">
           <div className={FIELD_COL} />
           <div className={OPERATOR_COL}>
-            <DialGhostButton
+            <GhostButton
               label={t(ButtonsI18nKey.Add)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={onAddPredicate}

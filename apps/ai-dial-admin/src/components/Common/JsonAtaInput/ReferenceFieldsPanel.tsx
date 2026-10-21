@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useId, useState } from 'react';
 
-import { DialIconButton, DialLabel, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLabel, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronsLeft, IconChevronsRight } from '@tabler/icons-react';
 import { JSONSchema7 } from 'json-schema';
 import classNames from 'classnames';
@@ -43,7 +43,7 @@ const ReferenceFieldsPanel: FC<Props> = ({ responseSchema, onSelect }) => {
             <SchemaTree responseSchema={responseSchema} onSelect={onSelect} />
           </div>
           <div className={classNames(footerClassName, 'justify-end')}>
-            <DialIconButton
+            <IconButton
               className="text-secondary hover:text-accent-primary cursor-pointer"
               size={ElementSize.Small}
               aria-label={t(JsonAtaI18nKey.CollapseReferenceFields)}
@@ -61,7 +61,7 @@ const ReferenceFieldsPanel: FC<Props> = ({ responseSchema, onSelect }) => {
             {label}
           </span>
           <div className={classNames(footerClassName, 'justify-center')}>
-            <DialIconButton
+            <IconButton
               className="text-secondary hover:text-accent-primary cursor-pointer"
               size={ElementSize.Small}
               aria-label={t(JsonAtaI18nKey.ExpandReferenceFields)}

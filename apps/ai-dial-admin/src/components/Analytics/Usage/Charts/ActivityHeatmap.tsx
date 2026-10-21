@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
-import { DialGhostButton, DialLoader, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialLoader, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
@@ -227,13 +227,13 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
               so the button appears to its left without moving the pager under the cursor — the
               reserved gap it used to sit in read as a control that had gone missing. */}
           {weekOffset !== 0 && (
-            <DialGhostButton
+            <GhostButton
               size={ElementSize.Small}
               label={t(AnalyticsUsageI18nKey.HeatmapCurrentWeek)}
               onClick={onCurrentWeek}
             />
           )}
-          <DialGhostButton
+          <GhostButton
             size={ElementSize.Small}
             className="px-1"
             iconBefore={<IconChevronLeft {...PAGER_ICON_PROPS} aria-hidden />}
@@ -243,7 +243,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
           <span className="dial-tiny-text min-w-[84px] whitespace-nowrap text-center text-primary">
             {formatWeekLabel(week)}
           </span>
-          <DialGhostButton
+          <GhostButton
             size={ElementSize.Small}
             className="px-1"
             iconBefore={<IconChevronRight {...PAGER_ICON_PROPS} aria-hidden />}

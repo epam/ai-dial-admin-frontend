@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { FieldError } from '@/src/models/error';
@@ -7,6 +7,7 @@ import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { useI18n } from '@/src/locales/client';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   item: string;
@@ -99,7 +100,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
           disabled={disabled}
         />
         <div className="w-[40px] shrink-0">
-          <DialRemoveButton onClick={() => onRemove(index)} disabled={disabled} />
+          <RemoveButton onClick={() => onRemove(index)} disabled={disabled} />
         </div>
       </li>
     );

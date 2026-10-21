@@ -86,7 +86,7 @@ describe('EnvVariable', () => {
     const removeVariable = vi.fn();
     render(<Variable {...baseProps} index={3} updateVariable={vi.fn()} removeVariable={removeVariable} />);
 
-    // DialRemoveButton renders a trash icon button; we locate it by querying buttons containing a tabler trash icon
+    // RemoveButton renders a trash icon button; we locate it by querying buttons containing a tabler trash icon
     const trashBtn = Array.from(document.querySelectorAll('button')).find((b) =>
       b.querySelector('svg.tabler-icon-trash, svg[class*="tabler-icon-trash"]'),
     );

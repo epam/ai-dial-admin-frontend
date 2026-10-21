@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { DialLinkButton } from '@epam/ai-dial-ui-kit';
+import { LinkButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -48,7 +48,7 @@ const ClampedDescription: FC<Props> = ({ text, className }) => {
         {text}
       </span>
       {(isOverflowing || isExpanded) && (
-        <DialLinkButton
+        <LinkButton
           className="shrink-0"
           label={t(isExpanded ? ButtonsI18nKey.ShowLess : ButtonsI18nKey.ShowMore)}
           onClick={() => setIsExpanded((prev) => !prev)}

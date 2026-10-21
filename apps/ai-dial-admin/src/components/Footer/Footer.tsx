@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialIconButton } from '@epam/ai-dial-ui-kit';
+import { IconButton } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
@@ -59,7 +59,7 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion, isOnl
               onClick={() => setIsModalOpen(true)}
             >
               {coreVersion}
-              <DialIconButton
+              <IconButton
                 disabled={!coreVersions}
                 className="size-auto"
                 icon={

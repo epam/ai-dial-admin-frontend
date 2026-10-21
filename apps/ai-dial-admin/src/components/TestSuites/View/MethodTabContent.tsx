@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, DialNotification, DialPrimaryButton, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialNotification, PrimaryButton, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
 
 import { getDeployment, getDeploymentById, getRoute } from '@/src/app/[lang]/test-suites/actions';
@@ -212,7 +212,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
               <MethodEndpoint testSuite={requestView} showFormattedUrl />
 
               <div className="flex flex-row gap-3 items-center">
-                <DialPrimaryButton
+                <PrimaryButton
                   iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                   appearance={ButtonAppearance.Ghost}
                   label={t(TestSuitesI18nKey.EditRequest)}

@@ -1,4 +1,4 @@
-import { DialGhostButton, DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialPasswordInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useState } from 'react';
@@ -62,7 +62,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
               valueLabel={t(EntityFieldsI18nKey.keyValue)}
             />
           ) : (
-            <DialGhostButton
+            <GhostButton
               className="ml-2"
               iconBefore={<IconSparkles />}
               label={t(ButtonsI18nKey.Generate)}

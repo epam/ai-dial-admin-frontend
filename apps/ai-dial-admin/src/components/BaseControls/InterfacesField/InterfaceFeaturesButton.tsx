@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialFormPopup, DialLabel, DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialLabel, OutlinedButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import {
   modelResourceFeatureLabelMap,
@@ -62,7 +62,7 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
 
   return (
     <>
-      <DialNeutralButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
+      <OutlinedButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
       <DialFormPopup
         onClose={onCancel}
         header={t(ButtonsI18nKey.Features)}

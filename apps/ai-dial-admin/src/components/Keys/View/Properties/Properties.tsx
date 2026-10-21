@@ -1,4 +1,4 @@
-import { DialGhostButton, DialSwitch, DialInput } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialSwitch, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -109,11 +109,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
           {!isReadOnlyAdmin && (
-            <DialGhostButton
-              iconBefore={<IconSparkles />}
-              label={t(ButtonsI18nKey.Generate)}
-              onClick={onGenerateKeyId}
-            />
+            <GhostButton iconBefore={<IconSparkles />} label={t(ButtonsI18nKey.Generate)} onClick={onGenerateKeyId} />
           )}
         </div>
       )}

@@ -5,7 +5,7 @@ import {
   NotificationVariant,
   DialNotification,
   DialNoDataContent,
-  DialPrimaryButton,
+  PrimaryButton,
   DialRadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
@@ -343,7 +343,7 @@ const ExportConfig: FC<Props> = ({
       <div className="flex flex-col size-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-          <DialPrimaryButton
+          <PrimaryButton
             iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(ButtonsI18nKey.Export)}
             disabled={isExportDisable}

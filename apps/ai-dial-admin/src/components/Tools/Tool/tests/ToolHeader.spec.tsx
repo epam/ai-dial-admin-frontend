@@ -25,7 +25,7 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialNeutralButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
+  OutlinedButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>

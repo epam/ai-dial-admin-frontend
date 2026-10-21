@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNeutralButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -124,7 +124,7 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
         <div className="flex flex-row items-center w-full my-4 justify-between h-[40px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
           {!route.isPublic && !disabled && (
-            <DialNeutralButton
+            <OutlinedButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
