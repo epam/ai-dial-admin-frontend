@@ -146,9 +146,9 @@ The highest-value axis in this codebase, because a violation is invisible in iso
   `<Entity>I18nKey` enums in `src/constants/i18n.ts`; check the shared sections (`BasicI18nKey`,
   `ButtonsI18nKey`, `EntitiesI18nKey`) before adding a duplicate.
 - **Responsive**: both Tailwind's default prefixes and the five named screens in
-  `@custom-variant` in `apps/ai-dial-admin/src/scss/app-theme.css` (`mobile`, `small_tablet`, `large_tablet`, `desktop`,
+  `apps/ai-dial-admin/tailwind.config.js` (`mobile`, `small_tablet`, `large_tablet`, `desktop`,
   `large_desktop`) are available. The codebase predominantly uses the defaults (`lg:`, `md:`, `sm:`).
-  Don't mix both systems inside one component, and don't introduce a prefix that is not declared there
+  Don't mix both systems inside one component, and don't introduce a prefix that isn't in the config
   — `npm run validate:agent-docs` fails on unknown named prefixes. JS branching goes through
   `useIsMobileScreen` / `useIsTabletScreen`, not raw `window.innerWidth`. Note the JS thresholds in
   `src/utils/mobile.ts` (600 / 1024) do not line up with the CSS screens (767 / 1023); if a change
