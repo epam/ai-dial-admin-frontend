@@ -671,6 +671,79 @@ describe('createFolderContext overlapping requests', () => {
   });
 });
 
+describe('createFolderContext when a fetch throws', () => {
+  test('flags an error and goes idle when a single-folder fetch rejects', async () => {
+    const get = renderProviderWithCapture(vi.fn().mockRejectedValue(new Error('session expired')));
+
+    await act(async () => {
+      get().fetchFiles('/folder/');
+    });
+
+    expect(get().hasFetchError).toBe(true);
+    expect(get().isFetchingFiles).toBe(false);
+    expect(get().fetchedFoldersData).toEqual({});
+  });
+
+  test('flags an error and goes idle when a multi-root fetch rejects', async () => {
+    const get = renderProviderWithCapture(vi.fn().mockRejectedValue(new Error('session expired')));
+
+    await act(async () => {
+      get().fetchFiles(['platform/', 'public/']);
+    });
+
+    expect(get().hasFetchError).toBe(true);
+    expect(get().isFetchingFiles).toBe(false);
+    expect(get().files).toEqual([]);
+  });
+
+  test('flags an error and goes idle when a hierarchy fetch rejects', async () => {
+    const get = renderProviderWithCapture(vi.fn().mockRejectedValue(new Error('session expired')));
+
+    await act(async () => {
+      get().fetchFolderHierarchy?.('a/b/');
+    });
+
+    expect(get().hasFetchError).toBe(true);
+    expect(get().isFetchingFiles).toBe(false);
+    expect(get().files).toEqual([]);
+  });
+
+  test('clears the error once a later fetch succeeds', async () => {
+    const getFiles = vi.fn().mockRejectedValueOnce(new Error('session expired')).mockResolvedValue([]);
+    const get = renderProviderWithCapture(getFiles);
+
+    await act(async () => {
+      get().fetchFiles('/folder/');
+    });
+    await act(async () => {
+      get().fetchFiles('/folder/');
+    });
+
+    expect(get().hasFetchError).toBe(false);
+  });
+
+  test('an older rejection does not flag an error after a newer request succeeded', async () => {
+    let rejectSlow: (reason: Error) => void = () => {};
+    const slow = new Promise<AssetListItem[]>((_, reject) => {
+      rejectSlow = reject;
+    });
+    const getFiles = vi.fn((path: string) => (path === 'a/' ? slow : Promise.resolve([createItem('b/one')])));
+    const get = renderProviderWithCapture(getFiles);
+
+    await act(async () => {
+      get().fetchFiles('a/');
+      get().fetchFiles('b/');
+    });
+    await act(async () => {
+      rejectSlow(new Error('session expired'));
+    });
+
+    expect(get().hasFetchError).toBe(false);
+    expect(get().fetchedFoldersData['b/']).toEqual([createItem('b/one')]);
+    expect(get().isFetchingFiles).toBe(false);
+  });
+});
+
 describe('createFolderContext under StrictMode', () => {
   test('opens the first node exactly once on the first load', async () => {
     const { Provider, useFolderContext } = createFolderContext(

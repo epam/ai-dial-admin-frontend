@@ -124,6 +124,11 @@ export function createFolderContext<T extends AssetListItem>(
                 ? { type: FolderActionType.HierarchyLoaded, hierarchy }
                 : { type: FolderActionType.FetchFailed },
             );
+          } catch {
+            // A rejected fetch is a failed fetch: without this the context stays empty, idle and error-free.
+            if (request.isLatest()) {
+              dispatch({ type: FolderActionType.FetchFailed });
+            }
           } finally {
             request.finish();
           }
@@ -173,6 +178,10 @@ export function createFolderContext<T extends AssetListItem>(
             resetFolder,
             isLatestRequest: request.isLatest(),
           });
+        } catch {
+          if (request.isLatest()) {
+            dispatch({ type: FolderActionType.FetchFailed });
+          }
         } finally {
           request.finish();
         }
@@ -203,6 +212,10 @@ export function createFolderContext<T extends AssetListItem>(
             resetFolder,
             isLatestRequest: request.isLatest(),
           });
+        } catch {
+          if (request.isLatest()) {
+            dispatch({ type: FolderActionType.FetchFailed });
+          }
         } finally {
           request.finish();
         }
