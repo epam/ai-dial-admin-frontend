@@ -3782,6 +3782,8 @@ export default {
     TraceSectionTitle: 'Traces in this session',
     TraceSectionRule: 'one card = one root span · core_parent_span_id IS NULL',
     TraceCardStarted: 'started',
+    TraceCardCaller: 'called by',
+    TraceCardProject: 'project',
     TraceCardSpans: '{count} spans',
     TraceCardOwnTokens: 'own tokens',
     TraceDuration: 'Duration',
@@ -3918,6 +3920,19 @@ export default {
     ValueFilterSearch: 'Search values',
     ValueFilterSelectAll: 'Select all',
   },
+  EntityTraces: {
+    Title: 'Calls to this entity',
+    Rule: 'one card = one call to this entity · newest first',
+    EmptyTitle: 'No calls in this period',
+    EmptyHint: 'Nothing called this entity in the selected period. Choose a wider period to look further back.',
+    UnmatchedTitle: 'Calls cannot be shown for this entity',
+    UnmatchedHint: 'Its calls are not recorded under a name this listing can match.',
+    LoadFailedTitle: 'Calls could not be loaded',
+    LoadFailedHint: 'The analytics service did not answer. Retry, or refresh the period.',
+    PageLoadFailed: 'The next calls could not be loaded.',
+    Retry: 'Retry',
+  },
+
   Backfill: {
     Title: 'Backfill',
     TableTitle: 'Backfill data',

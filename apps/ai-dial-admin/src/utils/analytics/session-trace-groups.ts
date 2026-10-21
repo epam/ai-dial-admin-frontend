@@ -4,6 +4,7 @@ import {
   SessionTraceCard,
   SessionTraceChip,
   SessionTraceFigureRow,
+  SessionTraceFigures,
   SessionTraceGroup,
   SessionTracePageRow,
   SessionTraceRootRow,
@@ -106,6 +107,18 @@ const chipsOf = (figures: SessionTraceFigureRow[]): SessionTraceChip[] =>
 const sum = (figures: SessionTraceFigureRow[], read: (row: SessionTraceFigureRow) => number): number =>
   figures.reduce((total, row) => total + read(row), 0);
 
+/** One trace's own figures, summed from its rows of the figures pass. Shared by every listing that reads it. */
+export const traceFiguresOf = (
+  figures: SessionTraceFigureRow[],
+): Pick<SessionTraceGroup, 'spans' | 'tokens' | 'price' | 'failedSpans' | 'chips' | 'responseIds'> => ({
+  spans: sum(figures, (row) => toNumber(row.spans) ?? 0),
+  tokens: sum(figures, (row) => toNumber(row.tokens) ?? 0),
+  price: sum(figures, (row) => toNumber(row.price) ?? 0),
+  failedSpans: sum(figures, (row) => toNumber(row.failed_spans) ?? 0),
+  chips: chipsOf(figures),
+  responseIds: [...new Set(figures.flatMap((row) => row.response_ids ?? []))].filter(Boolean),
+});
+
 // Assembles the page's three reads into what the listing renders.
 //
 // The figures are summed straight from their own pass with **no correction**: that pass is scoped by trace
@@ -129,12 +142,7 @@ export const traceGroupsOf = (
     return {
       traceId: pageRow.trace_id,
       startedAt: pageRow.first_request_time,
-      spans: sum(figures, (row) => toNumber(row.spans) ?? 0),
-      tokens: sum(figures, (row) => toNumber(row.tokens) ?? 0),
-      price: sum(figures, (row) => toNumber(row.price) ?? 0),
-      failedSpans: sum(figures, (row) => toNumber(row.failed_spans) ?? 0),
-      chips: chipsOf(figures),
-      responseIds: [...new Set(figures.flatMap((row) => row.response_ids ?? []))].filter(Boolean),
+      ...traceFiguresOf(figures),
       cards: roots.slice(0, rootCap).map((root) => cardOf(root, sessionProjectId)),
       // Disclosed rather than truncated in silence: the trace's own figures are not capped with its cards,
       // so a capped trace's totals legitimately exceed what is on screen and the reader has to be told why.
@@ -292,3 +300,17 @@ export const traceInvariantViolations = (
 
   return violations;
 };
+
+// The drawer states a trace's figures, and its prop shape is still `SessionTraceFigures` — the one type that
+// currently expresses "a trace's own totals". Mapping into it here keeps the drawer, its event stream and its
+// hop-body reads untouched, which is what this change scoped out. The shape is renamed when the turns model
+// is deleted and its last reader is gone.
+export const asTraceFigures = (group: SessionTraceGroup, card?: SessionTraceCard): SessionTraceFigures => ({
+  traceId: group.traceId,
+  startedAt: card?.startedAt ?? group.startedAt,
+  spans: group.spans,
+  failedSpans: group.failedSpans,
+  tokens: group.tokens,
+  price: group.price,
+  durationMs: card?.durationMs ?? null,
+});

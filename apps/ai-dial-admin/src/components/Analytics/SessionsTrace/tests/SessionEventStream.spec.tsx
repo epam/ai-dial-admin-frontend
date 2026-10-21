@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import SessionEventStream from '@/src/components/Analytics/SessionsTrace/Detail/SessionEventStream';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
@@ -365,5 +365,30 @@ describe('SessionEventStream — an unrecorded root', () => {
     renderStream(ORPHANED);
 
     expect(rows().getByRole('button', { name: /a-model/ })).toBeInTheDocument();
+  });
+});
+
+describe('SessionEventStream — opening on a span', () => {
+  const scrollIntoView = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+  });
+
+  test('scrolls the span a trace opens on into view', () => {
+    render(<SessionEventStream tree={TREE} selectedSpanId="mcp" onSelectSpan={vi.fn()} />);
+
+    expect(rowFor(/a-toolset/)).toHaveAttribute('aria-current', 'true');
+    expect(scrollIntoView).toHaveBeenCalledOnce();
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+  });
+
+  test('does not scroll again when the reader selects another span', () => {
+    const { rerender } = render(<SessionEventStream tree={TREE} selectedSpanId="mcp" onSelectSpan={vi.fn()} />);
+
+    rerender(<SessionEventStream tree={TREE} selectedSpanId="embed" onSelectSpan={vi.fn()} />);
+
+    expect(scrollIntoView).toHaveBeenCalledOnce();
   });
 });

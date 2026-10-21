@@ -3478,6 +3478,8 @@ export enum SessionsTraceI18nKey {
   TraceSectionTitle = 'SessionsTrace.TraceSectionTitle',
   TraceSectionRule = 'SessionsTrace.TraceSectionRule',
   TraceCardStarted = 'SessionsTrace.TraceCardStarted',
+  TraceCardCaller = 'SessionsTrace.TraceCardCaller',
+  TraceCardProject = 'SessionsTrace.TraceCardProject',
   TraceCardSpans = 'SessionsTrace.TraceCardSpans',
   TraceCardOwnTokens = 'SessionsTrace.TraceCardOwnTokens',
   TraceDuration = 'SessionsTrace.TraceDuration',
@@ -3610,6 +3612,19 @@ export enum SessionsTraceI18nKey {
   ValuesLoadFailed = 'SessionsTrace.ValuesLoadFailed',
   ValueFilterSearch = 'SessionsTrace.ValueFilterSearch',
   ValueFilterSelectAll = 'SessionsTrace.ValueFilterSelectAll',
+}
+
+export enum EntityTracesI18nKey {
+  Title = 'EntityTraces.Title',
+  Rule = 'EntityTraces.Rule',
+  EmptyTitle = 'EntityTraces.EmptyTitle',
+  EmptyHint = 'EntityTraces.EmptyHint',
+  UnmatchedTitle = 'EntityTraces.UnmatchedTitle',
+  UnmatchedHint = 'EntityTraces.UnmatchedHint',
+  LoadFailedTitle = 'EntityTraces.LoadFailedTitle',
+  LoadFailedHint = 'EntityTraces.LoadFailedHint',
+  PageLoadFailed = 'EntityTraces.PageLoadFailed',
+  Retry = 'EntityTraces.Retry',
 }
 
 export enum AnalyticsUsageI18nKey {

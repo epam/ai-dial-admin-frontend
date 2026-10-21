@@ -18,11 +18,9 @@ import {
   HopRequestEnvelope,
   HopResponseEnvelope,
   MessageRole,
-  SessionScope,
 } from '@/src/models/analytics/sessions-trace';
 
 interface Props {
-  scope: SessionScope;
   traceId: string;
   span: SessionSpanRow;
   request: HopRequestEnvelope | null;
@@ -42,7 +40,6 @@ const sessionTurnsOf = (messages: HopMessageEntry[]): HopMessageEntry[] =>
   );
 
 const HopChatPanel: FC<Props> = ({
-  scope,
   traceId,
   span,
   request,
@@ -54,7 +51,6 @@ const HopChatPanel: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({
-    scope,
     traceId,
     coreSpanId: span.core_span_id,
     requestTime: span.request_time,

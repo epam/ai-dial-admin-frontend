@@ -5,10 +5,9 @@ import { useCallback, useRef, useState } from 'react';
 import { getSessionHopMessage } from '@/src/app/[lang]/sessions/actions';
 import { useHopReadReport } from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/use-hop-read-report';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { HopMessageValue, HopReadState, SessionScope } from '@/src/models/analytics/sessions-trace';
+import { HopMessageValue, HopReadState } from '@/src/models/analytics/sessions-trace';
 
 interface Params {
-  scope: SessionScope;
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
@@ -17,7 +16,7 @@ interface Params {
 // Tier 2, one message at a time. The messages already opened are held for the hop on screen and dropped with
 // it, so opening five costs five reads rather than the whole body on every hop selection — the trade the
 // tiering exists to make.
-export const useHopMessage = ({ scope, traceId, coreSpanId, requestTime }: Params) => {
+export const useHopMessage = ({ traceId, coreSpanId, requestTime }: Params) => {
   const [messages, setMessages] = useState<Record<number, HopMessageValue>>({});
   const [loadingIndexes, setLoadingIndexes] = useState<number[]>([]);
   const getReqRef = useRef(useProtectedRequest());
@@ -28,14 +27,7 @@ export const useHopMessage = ({ scope, traceId, coreSpanId, requestTime }: Param
       setLoadingIndexes((current) => [...current, messageIndex]);
 
       try {
-        const result = await getReqRef.current(
-          getSessionHopMessage,
-          scope,
-          traceId,
-          coreSpanId,
-          requestTime,
-          messageIndex,
-        );
+        const result = await getReqRef.current(getSessionHopMessage, traceId, coreSpanId, requestTime, messageIndex);
         const value = result?.response as HopMessageValue | undefined;
 
         if (result && !result.success) {
@@ -50,7 +42,7 @@ export const useHopMessage = ({ scope, traceId, coreSpanId, requestTime }: Param
         setLoadingIndexes((current) => current.filter((held) => held !== messageIndex));
       }
     },
-    [scope, traceId, coreSpanId, requestTime, onReadFailed],
+    [traceId, coreSpanId, requestTime, onReadFailed],
   );
 
   const onClose = useCallback(
