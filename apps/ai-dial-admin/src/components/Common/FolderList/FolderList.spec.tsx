@@ -59,6 +59,50 @@ describe('FolderList', () => {
 
     expect(context.fetchFiles).not.toHaveBeenCalled();
   });
+
+  test('does not fetch again when the context value changes while files are still empty', async () => {
+    const fetchFiles = vi.fn();
+    const { rerender } = render(<FolderList context={() => ({ ...fakeContext(), fetchFiles })} />);
+    await vi.waitFor(() => expect(fetchFiles).toHaveBeenCalledOnce());
+
+    rerender(<FolderList context={() => ({ ...fakeContext(), isFetchingFiles: true, fetchFiles })} />);
+    rerender(<FolderList context={() => ({ ...fakeContext(), isFetchingFiles: false, fetchFiles })} />);
+
+    expect(screen.getByText(EntitiesI18nKey.NoFolders)).toBeInTheDocument();
+    expect(fetchFiles).toHaveBeenCalledOnce();
+  });
+
+  test('does not retry an empty context that has recorded a fetch error', async () => {
+    const fetchFiles = vi.fn();
+    const { rerender } = render(<FolderList context={() => ({ ...fakeContext(), fetchFiles })} />);
+    await vi.waitFor(() => expect(fetchFiles).toHaveBeenCalledOnce());
+
+    rerender(<FolderList context={() => ({ ...fakeContext(), hasFetchError: true, fetchFiles })} />);
+
+    expect(screen.getByText(EntitiesI18nKey.NoFolders)).toBeInTheDocument();
+    expect(fetchFiles).toHaveBeenCalledOnce();
+  });
+
+  test('does not refetch when rootPaths is a new array with the same entries', async () => {
+    const context = fakeContext();
+    const { rerender } = render(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
+    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledOnce());
+
+    rerender(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+  });
+
+  test('fetches again when the root paths change', async () => {
+    const context = fakeContext();
+    const { rerender } = render(<FolderList context={() => context} rootPaths={['platform/']} />);
+    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith('platform/'));
+
+    rerender(<FolderList context={() => context} rootPaths={['public/']} />);
+
+    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenLastCalledWith('public/'));
+    expect(context.fetchFiles).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('FolderList tree', () => {
