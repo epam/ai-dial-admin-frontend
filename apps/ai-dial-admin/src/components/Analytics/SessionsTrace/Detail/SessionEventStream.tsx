@@ -9,7 +9,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown, IconChevronRight, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useId, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useTreeExpansion } from '@/src/components/Common/TreeGrid/use-tree-expansion';
 import {
@@ -272,6 +272,22 @@ const SessionEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) =
   const matchCount = useMemo(() => countMatchingNodes(markedTree), [markedTree]);
 
   const rowElementId = useCallback((nodeId: string) => `${treeId}-${nodeId.replace(/\s+/g, '_')}`, [treeId]);
+
+  // Once per trace: a trace can open on a span deep in a long tree — an entity's own call — and a selection
+  // below the fold reads as no selection. Later selections are the reader's own clicks, already on screen.
+  const scrolledTreeRef = useRef<HopTreeNode[] | null>(null);
+  useEffect(() => {
+    if (scrolledTreeRef.current === tree || selectedSpanId === null) {
+      return;
+    }
+
+    const selectedRow = rows.find(({ node }) => node.span?.core_span_id === selectedSpanId);
+
+    if (selectedRow) {
+      scrolledTreeRef.current = tree;
+      document.getElementById(rowElementId(selectedRow.node.id))?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [tree, rows, selectedSpanId, rowElementId]);
 
   const onEmphasise = useCallback(
     (next: HopEmphasis) => setEmphasis((current) => (current === next ? null : next)),

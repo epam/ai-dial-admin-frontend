@@ -42,6 +42,15 @@ vi.mock('@/src/components/Analytics/Usage/EntityUsageDashboard', () => ({
   },
 }));
 
+const entityTracesPropsSpy = vi.fn();
+vi.mock('@/src/components/Analytics/EntityTraces/EntityTraceListing', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    entityTracesPropsSpy(props);
+    return <section aria-label="entity traces" />;
+  },
+}));
+
 const usageLogPropsSpy = vi.fn();
 vi.mock('@/src/components/UsageLog/UsageLog', () => ({
   __esModule: true,
@@ -136,6 +145,8 @@ describe('EntityAudit behind the analytics flags', () => {
   beforeEach(() => {
     dashboardPropsSpy.mockClear();
     usageDashboardPropsSpy.mockClear();
+    entityTracesPropsSpy.mockClear();
+    usageLogPropsSpy.mockClear();
     vi.mocked(useAppContext).mockReturnValue({
       featureFlags: { dashboardEnabled: true, analyticsUsageEnabled: true },
     } as unknown as ReturnType<typeof useAppContext>);
@@ -172,5 +183,45 @@ describe('EntityAudit behind the analytics flags', () => {
 
     expect(screen.getByRole('dashboards')).toBeInTheDocument();
     expect(usageDashboardPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test("serves the entity trace listing on a model's Traces tab, with the shared period", () => {
+    const entity = { name: 'gpt-4o' };
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Traces }));
+
+    expect(screen.getByRole('region', { name: 'entity traces' })).toBeInTheDocument();
+    expect(entityTracesPropsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ entity, route: ApplicationRoute.Models, defaultTimeFilter: DEFAULT_TIME_PERIOD }),
+    );
+    expect(usageLogPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test('keeps the telemetry Conversations tab behind the flags', () => {
+    render(<EntityAudit entity={{ name: 'gpt-4o' }} view={ApplicationRoute.Models} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Conversations }));
+
+    expect(screen.getByRole('usage-log')).toBeInTheDocument();
+  });
+
+  test('keeps the telemetry Traces tab with the usage flag off', () => {
+    vi.mocked(useAppContext).mockReturnValue({
+      featureFlags: { dashboardEnabled: true, analyticsUsageEnabled: false },
+    } as unknown as ReturnType<typeof useAppContext>);
+    render(<EntityAudit entity={{ name: 'gpt-4o' }} view={ApplicationRoute.Models} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Traces }));
+
+    expect(screen.getByRole('usage-log')).toBeInTheDocument();
+    expect(entityTracesPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test('offers asset applications no Traces tab', () => {
+    render(<EntityAudit entity={{ name: 'an-app' }} view={ApplicationRoute.AssetsApplications} />);
+
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Dashboard })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Traces })).toBeNull();
   });
 });

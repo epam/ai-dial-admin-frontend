@@ -19,6 +19,7 @@ import {
   HopBodyGrants,
 } from '@/src/models/analytics/sessions-trace';
 import { toNumber } from '@/src/utils/analytics/scalar';
+import { toMillis } from '@/src/utils/analytics/session-formatting';
 
 const EMBEDDING_EVENT_KIND = 'embedding';
 const LLM_CALL_EVENT_KIND = 'llm_call';
@@ -93,6 +94,23 @@ export const spanPhaseOf = ({ mcp_tool_call_name, mcp_method }: SessionSpanRow):
 
 export const areSpansPartial = (spans: SessionSpanRow[], hopCount: number | null): boolean =>
   hopCount !== null && hopCount > spans.length;
+
+// From the first span's start to the last span's end. A trace's own duration, for a surface whose card is not the
+// trace's root — an entity's call is one hop of many, so its duration is not the trace's. Understated where the
+// span read is partial, which the trace view already states.
+export const traceDurationMsOf = (spans: SessionSpanRow[]): number | null => {
+  const bounds = spans.flatMap(({ request_time, operation_duration_ms }) => {
+    const start = toMillis(request_time);
+
+    return start === null ? [] : [{ start, end: start + (toNumber(operation_duration_ms) ?? 0) }];
+  });
+
+  if (!bounds.length) {
+    return null;
+  }
+
+  return Math.max(...bounds.map(({ end }) => end)) - Math.min(...bounds.map(({ start }) => start));
+};
 
 // Any MCP hop that called no tool. By the absent call rather than by a list of known methods: one outside
 // such a list fell through to the tool-call reader, whose single shape it does not answer in, and rendered

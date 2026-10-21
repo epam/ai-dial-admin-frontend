@@ -17,22 +17,21 @@ import {
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { HopInspectorSide, HopRequestEnvelope, MessageRole, SessionScope } from '@/src/models/analytics/sessions-trace';
+import { HopInspectorSide, HopRequestEnvelope, MessageRole } from '@/src/models/analytics/sessions-trace';
 import { useHopMessage } from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/use-hop-message';
 
 interface Props {
   envelope: HopRequestEnvelope;
   isRaw: boolean;
-  scope: SessionScope;
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
 }
 
-const HopRequestPanel: FC<Props> = ({ envelope, isRaw, scope, traceId, coreSpanId, requestTime }) => {
+const HopRequestPanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, requestTime }) => {
   const t = useI18n();
   const [role, setRole] = useState<MessageRole | null>(null);
-  const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({ scope, traceId, coreSpanId, requestTime });
+  const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({ traceId, coreSpanId, requestTime });
 
   const shown = useMemo(
     () => (role === null ? envelope.messages : envelope.messages.filter((message) => message.role === role)),
@@ -108,7 +107,6 @@ const HopRequestPanel: FC<Props> = ({ envelope, isRaw, scope, traceId, coreSpanI
       </div>
       {isRaw ? (
         <HopRawView
-          scope={scope}
           traceId={traceId}
           coreSpanId={coreSpanId}
           requestTime={requestTime}

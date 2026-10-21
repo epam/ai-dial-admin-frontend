@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from 'react';
 import { getSessionHopRawBody } from '@/src/app/[lang]/sessions/actions';
 import { useHopReadReport } from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/use-hop-read-report';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { HopInspectorSide, HopRawBody, HopReadState, SessionScope } from '@/src/models/analytics/sessions-trace';
+import { HopInspectorSide, HopRawBody, HopReadState } from '@/src/models/analytics/sessions-trace';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
 
 const FAILED: HopRawBody = {
@@ -15,7 +15,6 @@ const FAILED: HopRawBody = {
 };
 
 interface Params {
-  scope: SessionScope;
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
@@ -25,7 +24,7 @@ interface Params {
 // Tier 3, and issued only when the reader asks for it: the raw response averages 52.8 KB against 1 511
 // characters for the assembled form, so opening every hop on the raw body would pay 35x for a view most
 // readers never select.
-export const useHopRaw = ({ scope, traceId, coreSpanId, requestTime, side }: Params) => {
+export const useHopRaw = ({ traceId, coreSpanId, requestTime, side }: Params) => {
   const [body, setBody] = useState<HopRawBody | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
@@ -35,7 +34,7 @@ export const useHopRaw = ({ scope, traceId, coreSpanId, requestTime, side }: Par
     setIsLoading(true);
 
     try {
-      const result = await getReqRef.current(getSessionHopRawBody, scope, traceId, coreSpanId, requestTime, side);
+      const result = await getReqRef.current(getSessionHopRawBody, traceId, coreSpanId, requestTime, side);
 
       if (result && !result.success) {
         onReadFailed(result);
@@ -48,7 +47,7 @@ export const useHopRaw = ({ scope, traceId, coreSpanId, requestTime, side }: Par
     } finally {
       setIsLoading(false);
     }
-  }, [scope, traceId, coreSpanId, requestTime, side, onReadFailed]);
+  }, [traceId, coreSpanId, requestTime, side, onReadFailed]);
 
   return { body, isLoading, onRequestRaw };
 };

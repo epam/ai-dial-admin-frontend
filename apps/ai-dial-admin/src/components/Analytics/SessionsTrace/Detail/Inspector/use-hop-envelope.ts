@@ -14,7 +14,6 @@ import {
   HopReadState,
   HopRequestEnvelope,
   HopResponseEnvelope,
-  SessionScope,
 } from '@/src/models/analytics/sessions-trace';
 
 const FAILED_REQUEST: HopRequestEnvelope = {
@@ -40,7 +39,7 @@ const FAILED_RESPONSE: HopResponseEnvelope = {
 };
 
 interface Params {
-  scope: SessionScope;
+  readKey: string;
   traceId: string;
   span: SessionSpanRow | null;
   // False where the hop row already settles the side — a protocol envelope, a zero-byte response — so no read
@@ -50,17 +49,12 @@ interface Params {
 
 // One hop's answer is held, and only one. A cache keyed by hop was rejected upstream for the same reason it
 // would be rejected here: a reader walking a 384-hop chain would accumulate the whole trace in memory. The
-// held key is `session:trace:span:side` — a span id is unique within its trace, not across the table — and it
+// held key is `readKey:trace:span:side` — a span id is unique within its trace, not across the table — and it
 // also settles the late-answer race, so an earlier hop's body can never appear under a later hop's heading.
 const useHeldRead = <T extends object>(
-  { scope, traceId, span, isEnabled }: Params,
+  { readKey, traceId, span, isEnabled }: Params,
   side: string,
-  read: (
-    scope: SessionScope,
-    traceId: string,
-    coreSpanId: string,
-    requestTime: number | string | null,
-  ) => Promise<ServerActionResponse<T>>,
+  read: (traceId: string, coreSpanId: string, requestTime: number | string | null) => Promise<ServerActionResponse<T>>,
   onFailure: T,
 ) => {
   const [value, setValue] = useState<T | null>(null);
@@ -71,7 +65,7 @@ const useHeldRead = <T extends object>(
 
   const spanId = span && isEnabled ? span.core_span_id : null;
   const requestTime = span?.request_time ?? null;
-  const heldKey = spanId === null ? null : `${scope.id}:${traceId}:${spanId}:${side}`;
+  const heldKey = spanId === null ? null : `${readKey}:${traceId}:${spanId}:${side}`;
 
   useEffect(() => {
     if (heldKey === heldKeyRef.current) {
@@ -91,7 +85,7 @@ const useHeldRead = <T extends object>(
 
     const run = async () => {
       try {
-        const result = await getReqRef.current(read, scope, traceId, spanId, requestTime);
+        const result = await getReqRef.current(read, traceId, spanId, requestTime);
 
         if (heldKeyRef.current !== heldKey) {
           return;
@@ -115,7 +109,7 @@ const useHeldRead = <T extends object>(
     };
 
     void run();
-  }, [scope, traceId, spanId, requestTime, heldKey, read, onFailure, side, onReadFailed]);
+  }, [readKey, traceId, spanId, requestTime, heldKey, read, onFailure, side, onReadFailed]);
 
   return { value, isLoading };
 };
