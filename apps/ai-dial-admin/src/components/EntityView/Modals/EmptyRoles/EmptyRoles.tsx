@@ -25,9 +25,9 @@ const EntityRolesModal: FC<Props> = ({ onConfirm, onClose, onCancel }) => {
       onClose={onClose}
       onCancel={onCancel}
     >
-      <div className="text-secondary small-150 px-6 py-4">
+      <div className="text-secondary dial-small-paragraph-text px-6 py-4">
         <p className="mb-2">{t(RolesI18nKey.SaveWithEmptyRolesDescription)}</p>
-        <p className="small-text-semi">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
+        <p className="dial-small-semi-text">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
       </div>
     </DialConfirmationPopup>,
     document.body,

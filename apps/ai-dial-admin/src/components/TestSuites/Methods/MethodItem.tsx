@@ -30,7 +30,7 @@ const MethodItem: FC<Props> = ({ index, item, isActive, onClick, label }) => {
       )}
       onClick={onMethodClick}
     >
-      <span className="tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
+      <span className="dial-tiny-text bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
         {item.method}
       </span>{' '}
       <DialEllipsisTooltip text={label ?? item.relativeUrlPattern} />

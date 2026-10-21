@@ -27,7 +27,7 @@ const RelatedArtefacts: FC<Props> = ({ entity, view }) => {
   }, [entity, view]);
 
   return (
-    <div className="flex flex-col text-secondary small-150">
+    <div className="flex flex-col text-secondary dial-small-paragraph-text">
       <div className="flex-1 min-h-0 flex flex-col">
         {isLoading ? (
           <DialLoader size={24} />

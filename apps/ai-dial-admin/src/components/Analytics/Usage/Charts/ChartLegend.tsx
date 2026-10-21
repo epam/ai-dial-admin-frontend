@@ -29,7 +29,7 @@ const ChartLegend: FC<Props> = ({ entries, onPreviewSeries, onToggleSeries, pinn
       const content = (
         <>
           {entry.color && (
-            <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: entry.color }} />
+            <span aria-hidden className="size-2.5 shrink-0 rounded-xs" style={{ backgroundColor: entry.color }} />
           )}
           <span className="min-w-0 truncate text-secondary">{entry.label}</span>
           {entry.value && <span className="shrink-0 tabular-nums text-primary">{entry.value}</span>}
@@ -42,7 +42,7 @@ const ChartLegend: FC<Props> = ({ entries, onPreviewSeries, onToggleSeries, pinn
             <button
               type="button"
               aria-pressed={pinnedSeriesIndex === entry.seriesIndex}
-              className="flex min-w-0 items-center gap-2 rounded focus-visible:outline focus-visible:outline-focus"
+              className="flex min-w-0 items-center gap-2 rounded focus-visible:outline-3 focus-visible:outline-focus"
               onMouseEnter={() => onPreviewSeries?.(entry.seriesIndex as number)}
               onMouseLeave={() => onPreviewSeries?.(null)}
               onFocus={() => onPreviewSeries?.(entry.seriesIndex as number)}

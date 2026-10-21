@@ -49,7 +49,7 @@ const RulesItemHeader: FC<Props> = ({
         <h3 className={classNames('min-w-0', !isAlwaysToggled && 'mx-2')}>
           <DialEllipsisTooltip contentClassName="truncate" text={folderName || t(FoldersI18nKey.Permissions)} />
         </h3>
-        {folderDescription && <span className="tiny text-secondary truncate">{folderDescription}</span>}
+        {folderDescription && <span className="dial-tiny-text text-secondary truncate">{folderDescription}</span>}
       </div>
       {children}
     </div>

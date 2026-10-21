@@ -73,7 +73,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
   }, [recalculateVisibleItems]);
 
   const itemClassName = mergeClasses(
-    'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden',
+    'dial-tiny-text bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden',
     tagClassName,
   );
 

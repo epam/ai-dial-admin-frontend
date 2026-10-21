@@ -60,7 +60,7 @@ const ResultValueDialog: FC<Props> = ({ column, value, onClose }) => {
     navigator.clipboard.writeText(text);
     showNotification(
       getCopyToClipboardNotification(
-        <p className="small-text-semi">{`${column} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>,
+        <p className="dial-small-semi-text">{`${column} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>,
       ),
     );
   };

@@ -61,7 +61,7 @@ const ScoreRangeCard: FC<Props> = ({ title, scoreMin, scoreMax, latestScore, run
       </div>
       <div className="flex flex-col gap-2">
         <div className="relative h-4 w-full">
-          <div className="absolute top-1/2 h-2 w-full -translate-y-1/2 rounded-sm bg-layer-1" />
+          <div className="absolute top-1/2 h-2 w-full -translate-y-1/2 rounded-xs bg-layer-1" />
           {hasRange && !isCollapsedRange && (
             <>
               {rangeWidthPct > 0 && (

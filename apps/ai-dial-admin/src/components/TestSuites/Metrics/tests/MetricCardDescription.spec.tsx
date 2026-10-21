@@ -30,7 +30,7 @@ describe('MetricCardDescription', () => {
     render(<MetricCardDescription>Long description</MetricCardDescription>);
 
     const toggle = screen.getByRole('button', { name: ButtonsI18nKey.ShowMore });
-    expect(toggle).toHaveClass('tiny-semi');
+    expect(toggle).toHaveClass('dial-tiny-semi-text');
     expect(toggle.querySelector('svg')).toBeTruthy();
   });
 

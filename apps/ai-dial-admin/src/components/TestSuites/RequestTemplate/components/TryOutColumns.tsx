@@ -87,7 +87,7 @@ const ColumnResultCard: FC<{ column: EvaluatedColumn }> = ({ column }) => {
     >
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-row gap-2 items-center">
-          <div className="small-text-semi text-primary">{column.name}</div>
+          <div className="dial-small-semi-text text-primary">{column.name}</div>
           <DialTag label={capitalize(column.type)} />
         </div>
         <DialTag label={statusLabel} className={statusStyle.badgeClass} />

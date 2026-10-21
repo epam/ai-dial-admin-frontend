@@ -356,7 +356,7 @@ const Tools: FC<Props> = ({
       {isNotSavedToolset && !disabled && (
         <DialNotification variant={NotificationVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
       )}
-      {!useAllTools && !disabled && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+      {!useAllTools && !disabled && <span className="dial-tiny-text text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
       {isModalOpen && (
         <ManageToolsModal
           isModalOpen={isModalOpen}

@@ -48,7 +48,7 @@ describe('EntityBanner', () => {
   test('renders the title as a semibold prefix when provided', () => {
     render(<EntityBanner title="Bold title" message="body text" />);
     const title = screen.getByText('Bold title');
-    expect(title).toHaveClass('small-text-semi');
+    expect(title).toHaveClass('dial-small-semi-text');
   });
 
   test('omits the semibold prefix when no title is provided', () => {

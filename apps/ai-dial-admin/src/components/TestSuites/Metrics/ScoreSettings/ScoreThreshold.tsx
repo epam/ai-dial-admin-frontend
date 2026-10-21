@@ -68,7 +68,7 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-col gap-2">
-        <span className="body-semi text-primary">{t(TestSuitesI18nKey.OverallScoreThresholdLabel)}</span>
+        <span className="dial-body-semi-text text-primary">{t(TestSuitesI18nKey.OverallScoreThresholdLabel)}</span>
         <DialSwitch
           switchId="enableScoreThreshold"
           label={t(TestSuitesI18nKey.EnableScoreThreshold)}
@@ -78,9 +78,9 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
       </div>
 
       <div className="flex flex-col gap-1 pl-11">
-        <p className="small text-secondary">{t(TestSuitesI18nKey.ScoreThresholdDescription)}</p>
+        <p className="dial-small-text text-secondary">{t(TestSuitesI18nKey.ScoreThresholdDescription)}</p>
         {isEnabled && (
-          <div className="flex flex-row items-center gap-3 small">
+          <div className="flex flex-row items-center gap-3 dial-small-text">
             <span>
               <span className="text-success">{t(TestSuitesI18nKey.ScoreThresholdPass)}</span>
               <span>{` ${t(TestSuitesI18nKey.ScoreThresholdConditionGe)}`}</span>

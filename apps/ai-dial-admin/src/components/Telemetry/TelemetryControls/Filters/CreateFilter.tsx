@@ -91,7 +91,7 @@ const CreateFilter: FC<Props> = ({
           </div>
         ) : (
           <div className="flex">
-            <p className="flex body mr-4 ml-2">{t(TelemetryI18nKey.FilterTypeProjects)}</p>
+            <p className="flex dial-body-text mr-4 ml-2">{t(TelemetryI18nKey.FilterTypeProjects)}</p>
           </div>
         )}
       </>

@@ -148,7 +148,7 @@ const SingleValueAutocomplete: FC<Props> = ({
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               disabled={disabled}
-              className="outline-none border-none w-full flex-1 p-1 dial-input h-auto"
+              className="outline-hidden border-none w-full flex-1 p-1 dial-input h-auto"
               placeholder={placeholder || ''}
             />
           </div>
@@ -165,7 +165,7 @@ const SingleValueAutocomplete: FC<Props> = ({
         />
       )}
       {!disabled && <DialErrorText text={error} />}
-      {caption && <div className="text-secondary tiny pt-2">{caption}</div>}
+      {caption && <div className="text-secondary dial-tiny-text pt-2">{caption}</div>}
     </div>
   );
 };

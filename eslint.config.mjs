@@ -9,7 +9,6 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import prettierPlugin from 'eslint-plugin-prettier';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import tailwindPlugin from 'eslint-plugin-tailwindcss';
 import globals from 'globals';
 
 export default [
@@ -55,14 +54,6 @@ export default [
       'jsx-a11y': jsxA11yPlugin,
       '@next/next': nextPlugin,
       import: importPlugin,
-      tailwindcss: tailwindPlugin,
-    },
-
-    settings: {
-      tailwindcss: {
-        config: 'apps/ai-dial-admin/tailwind.config.js',
-        callees: ['classnames', 'clsx', 'cn'],
-      },
     },
 
     rules: {

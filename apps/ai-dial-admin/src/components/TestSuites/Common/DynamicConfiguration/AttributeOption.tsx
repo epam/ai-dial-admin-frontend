@@ -43,7 +43,7 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
         aria-selected={isSelected}
         className={classNames(
           'flex w-full items-center gap-2 px-3 py-2 text-left',
-          'hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha focus-visible:outline-none',
+          'hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha focus-visible:outline-hidden',
           isSelected && 'bg-accent-primary-alpha',
         )}
         onClick={onPick}

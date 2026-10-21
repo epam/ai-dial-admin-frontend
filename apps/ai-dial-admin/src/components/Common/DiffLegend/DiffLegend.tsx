@@ -20,12 +20,17 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   const itemClassName = 'flex items-center gap-1';
   const descriptionClassName = classNames(!description && 'hidden');
   const rectangleClassName = classNames(
-    'inline-block rounded-sm border',
+    'inline-block rounded-xs border',
     description ? 'w-[14px] h-[14px]' : 'w-[24px] h-[24px] flex items-center justify-center',
   );
 
   return (
-    <div className={classNames('flex flex-row small', description ? 'gap-8 text-secondary' : 'gap-2 text-primary')}>
+    <div
+      className={classNames(
+        'flex flex-row dial-small-text',
+        description ? 'gap-8 text-secondary' : 'gap-2 text-primary',
+      )}
+    >
       <div className={classNames(itemClassName, !description && !added && 'hidden')}>
         <span className={classNames(rectangleClassName, DIFF_INSERT_HIGHLIGHT_CLASS)}>{added}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>

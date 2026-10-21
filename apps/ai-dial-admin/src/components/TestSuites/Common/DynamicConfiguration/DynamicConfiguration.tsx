@@ -63,7 +63,7 @@ const DynamicConfiguration: FC<Props> = ({
       {loading ? (
         <DialLoader size={40} />
       ) : rows.length === 0 ? (
-        <p className={classNames('body text-secondary', containerClassName)}>{t(BasicI18nKey.NoVariables)}</p>
+        <p className={classNames('dial-body-text text-secondary', containerClassName)}>{t(BasicI18nKey.NoVariables)}</p>
       ) : (
         <div className={classNames('flex flex-col gap-6', containerClassName)}>
           {rows.map((row) => (

@@ -18,7 +18,12 @@ const FilterChip: FC<Props> = ({ children, onRemove, className, removeAriaLabel 
   const t = useI18n();
 
   return (
-    <div className={classNames('flex text-primary small rounded bg-layer-3 px-1.5 py-1 cursor-pointer', className)}>
+    <div
+      className={classNames(
+        'flex text-primary dial-small-text rounded bg-layer-3 px-1.5 py-1 cursor-pointer',
+        className,
+      )}
+    >
       <p className="flex items-center">{children}</p>
       <button
         type="button"

@@ -103,8 +103,8 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <span className="body-semi text-primary">{t(TestSuitesI18nKey.OverallScoreCalculationMethod)}</span>
-        <p className="small text-secondary">{t(TestSuitesI18nKey.OverallScoreDescription)}</p>
+        <span className="dial-body-semi-text text-primary">{t(TestSuitesI18nKey.OverallScoreCalculationMethod)}</span>
+        <p className="dial-small-text text-secondary">{t(TestSuitesI18nKey.OverallScoreDescription)}</p>
       </div>
 
       <div className="flex flex-col gap-4">

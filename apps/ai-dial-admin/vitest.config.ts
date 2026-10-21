@@ -1,6 +1,3 @@
-import { resolve } from 'node:path';
-import autoprefixer from 'autoprefixer';
-import tailwindcss from 'tailwindcss';
 import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config';
 import { InlineReporter } from './vitest-reporter';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -23,11 +20,6 @@ const ciReporters = isCi
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/ai-dial-admin',
-  css: {
-    postcss: {
-      plugins: [tailwindcss({ config: resolve(__dirname, 'tailwind.config.js') }), autoprefixer()],
-    },
-  },
   plugins: [
     nxViteTsPaths(),
     react(),
