@@ -32,16 +32,31 @@ describe('SessionsSummary', () => {
     expect(screen.queryByText('212+')).not.toBeInTheDocument();
   });
 
-  test('rounds the period cost for display', () => {
+  test('rounds the period cost to a whole number for display', () => {
     renderSummary();
 
-    expect(screen.getByText('$654.071')).toBeInTheDocument();
+    expect(screen.getByText('$654')).toBeInTheDocument();
+    expect(screen.queryByText('$654.071')).not.toBeInTheDocument();
+  });
+
+  test('rounds a half-dollar remainder up', () => {
+    renderSummary({ period: { totals: { sessions: 1, cost: '12.500000000000' }, ratings: { rated: 0, negative: 0 } } });
+
+    expect(screen.getByText('$13')).toBeInTheDocument();
+  });
+
+  test('groups the thousands of a large cost', () => {
+    renderSummary({
+      period: { totals: { sessions: 1, cost: '1234567.890000000000' }, ratings: { rated: 0, negative: 0 } },
+    });
+
+    expect(screen.getByText('$1,234,568')).toBeInTheDocument();
   });
 
   test('reads a numeric cost as well as a string one', () => {
     renderSummary({ period: { totals: { sessions: 1, cost: 0.5335 }, ratings: { rated: 0, negative: 0 } } });
 
-    expect(screen.getByText('$0.534')).toBeInTheDocument();
+    expect(screen.getByText('$1')).toBeInTheDocument();
   });
 
   test('shows how many sessions in the period carry a rating', () => {

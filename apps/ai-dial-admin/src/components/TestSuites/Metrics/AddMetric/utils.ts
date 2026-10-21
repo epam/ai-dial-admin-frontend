@@ -1,6 +1,6 @@
-import { JSONSchema7 } from 'json-schema';
+import { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 
-import { jsonSchemaToFields, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import { jsonSchemaToFields, resolveDef, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { ResponseColumn, TestCaseSchema } from '@/src/models/evaluation/test-suite';
@@ -81,15 +81,52 @@ export const getBindingColumnType = (
   return undefined;
 };
 
+/** Types a schema property accepts, without `null`; `undefined` when the property does not restrict its type. */
+const collectAcceptedTypes = (def: JSONSchema7Definition, root: JSONSchema7): string[] | undefined => {
+  const resolved = resolveDef(def, root);
+  if (typeof resolved !== 'object' || resolved == null) {
+    return undefined;
+  }
+  if (resolved.type != null) {
+    return (Array.isArray(resolved.type) ? resolved.type : [resolved.type]).filter((type) => type !== 'null');
+  }
+  const variants = resolved.anyOf ?? resolved.oneOf;
+  if (!variants?.length) {
+    return undefined;
+  }
+  const variantTypes = variants.map((variant) => collectAcceptedTypes(variant, root));
+  return variantTypes.some((types) => types == null) ? undefined : [...new Set(variantTypes.flat() as string[])];
+};
+
+/**
+ * Column types an input accepts. An empty list means any type: the schema leaves the property untyped,
+ * or a union variant is. Falls back to the field's own type when the schema does not describe it.
+ */
+export const getInputAcceptedTypes = (field: SchemaFieldRow, inputSchema?: JSONSchema7): string[] => {
+  const def = inputSchema?.properties?.[field.name];
+  if (def == null) {
+    return [field.type];
+  }
+  return collectAcceptedTypes(def, inputSchema!) ?? [];
+};
+
+/** Whether a column of the given type can feed an input that accepts the given types (empty list: any type). */
+export const isColumnTypeAccepted = (acceptedTypes: string[], columnType: string): boolean =>
+  acceptedTypes.length === 0 || acceptedTypes.some((type) => isTypeCompatible(type, columnType));
+
 /** True when the column bound to an input has a type the input does not accept. */
 export const isBindingTypeMismatched = (
   field: SchemaFieldRow,
   binding: MetricBinding | undefined,
   testCaseSchema?: TestCaseSchema[],
   responseColumns?: ResponseColumn[],
+  inputSchema?: JSONSchema7,
 ): boolean => {
   const columnType = getBindingColumnType(binding, testCaseSchema, responseColumns);
-  return columnType != null && !isTypeCompatible(field.type, columnType);
+  if (columnType == null) {
+    return false;
+  }
+  return !isColumnTypeAccepted(getInputAcceptedTypes(field, inputSchema), columnType);
 };
 
 export const hasInputTypeMismatch = (
@@ -104,5 +141,6 @@ export const hasInputTypeMismatch = (
       inputBindings.find((binding) => binding.property === field.name),
       testCaseSchema,
       responseColumns,
+      inputSchema,
     ),
   );

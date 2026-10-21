@@ -512,6 +512,28 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call downloadTestSuiteFile via streamRequest', async () => {
+    const streamResponse = new Response(null, { status: 200 });
+    const streamSpy = vi.spyOn(instance as any, 'streamRequest').mockResolvedValue(streamResponse);
+
+    const result = await instance.downloadTestSuiteFile('id', 'notes.pdf', TOKEN_MOCK);
+
+    expect(streamSpy).toHaveBeenCalledWith(`${TEST_SUITE_URL('id')}/files/notes.pdf`, 'notes.pdf', TOKEN_MOCK);
+    expect(result).toBe(streamResponse);
+  });
+
+  test('Should encode file name in downloadTestSuiteFile', async () => {
+    const streamSpy = vi.spyOn(instance as any, 'streamRequest').mockResolvedValue(new Response(null, { status: 200 }));
+
+    await instance.downloadTestSuiteFile('id', 'a#b?c/d.txt', TOKEN_MOCK);
+
+    expect(streamSpy).toHaveBeenCalledWith(
+      `${TEST_SUITE_URL('id')}/files/a%23b%3Fc%2Fd.txt`,
+      'a#b?c/d.txt',
+      TOKEN_MOCK,
+    );
+  });
+
   test('Should call duplicateTestSuite', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     const body = { name: 'Cloned Suite' };
