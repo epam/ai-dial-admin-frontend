@@ -4,7 +4,7 @@ import { IconAdjustmentsHorizontal, IconLayoutBottombar, IconLayoutSidebarRight 
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { DialCloseButton, DialGhostButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { CloseButton, GhostButton, GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -36,20 +36,20 @@ const RowDetailHeader: FC<Props> = ({
     <div className="flex items-center justify-between gap-4 shrink-0 px-6 py-4">
       <h3 className="dial-h3 text-primary truncate">{title}</h3>
       <div className="flex items-center gap-4 shrink-0">
-        <DialGhostButton
+        <GhostButton
           label={t(RunsI18nKey.RunCompareDisplay)}
           iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onOpenDisplay}
           className={classNames(isDisplayOpen && 'text-accent-primary')}
         />
-        <DialGhostIconButton
+        <GhostIconButton
           size={ElementSize.Small}
           icon={isBottom ? <IconLayoutSidebarRight size={24} /> : <IconLayoutBottombar size={24} />}
           onClick={onSwitchDisplayMode}
           title={t(isBottom ? RunsI18nKey.SwitchToSidebar : RunsI18nKey.SwitchToBottom)}
         />
         <div className="h-4 w-px bg-secondary shrink-0" aria-hidden />
-        <DialCloseButton className="h-10" size={24} onClose={onClose} />
+        <CloseButton className="h-10" onClose={onClose} />
       </div>
     </div>
   );

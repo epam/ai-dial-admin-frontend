@@ -4,9 +4,9 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialLoader,
-  DialNeutralButton,
+  OutlinedButton,
   DialPopup,
-  DialPrimaryButton,
+  PrimaryButton,
   DialSteps,
   PopupSize,
   Step,
@@ -198,8 +198,8 @@ const AddMetricModal: FC<Props> = ({
       footer={
         isEditMode ? (
           <div className="flex flex-row items-center gap-2 px-6 py-4 justify-end">
-            <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-            <DialPrimaryButton label={t(ButtonsI18nKey.Confirm)} disabled={!isStep2Valid} onClick={onFinishClick} />
+            <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+            <PrimaryButton label={t(ButtonsI18nKey.Confirm)} disabled={!isStep2Valid} onClick={onFinishClick} />
           </div>
         ) : (
           <StepperModalButtons

@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import { IconRefresh } from '@tabler/icons-react';
-import { DialGhostButton, ElementSize, Select } from '@epam/ai-dial-ui-kit';
+import { GhostButton, ElementSize, Select } from '@epam/ai-dial-ui-kit';
 
 import { ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
 import { TimeFilterAppearance } from '@/src/components/Common/TimeFilter/models';
@@ -98,7 +98,7 @@ const UsageControls: FC<Props> = ({
         onChange={(next) => onCompareChange(next as ComparePeriod)}
       />
       <div className="grow" />
-      <DialGhostButton
+      <GhostButton
         iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
         label={t(ButtonsI18nKey.Refresh)}
         disabled={isRefreshing}

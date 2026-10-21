@@ -3,7 +3,7 @@
 import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
@@ -272,7 +272,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           <span className="text-sm text-secondary">
             {t(TabsI18nKey.Runs)}: {totalElements}
           </span>
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.Columns)}
             iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             onClick={onToggleColumnsPanel}

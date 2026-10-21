@@ -1,7 +1,7 @@
 'use client';
 
 import { FC } from 'react';
-import { DialGhostButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -36,7 +36,7 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = Sel
       }}
       header={
         onClick && (
-          <DialGhostButton
+          <GhostButton
             className="rounded-none"
             label={t(ButtonsI18nKey.Create)}
             onClick={onClick}

@@ -7,7 +7,7 @@ Semantics and disabled states of a container's Change image button.
 ## Requirements
 
 ### Requirement: Change image button uses proper button semantics
-The change image action SHALL be rendered as a `DialGhostButton` with the image name and version as `label` and the OpenPopup icon as `iconAfter`. The `DialLabelledText` SHALL provide only the label, with the button as its child.
+The change image action SHALL be rendered as a `GhostButton` with the image name and version as `label` and the OpenPopup icon as `iconAfter`. The `DialLabelledText` SHALL provide only the label, with the button as its child.
 
 #### Scenario: Button renders image name and version
 - **WHEN** a container has an associated image

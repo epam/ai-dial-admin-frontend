@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialIconButton } from '@epam/ai-dial-ui-kit';
+import { IconButton } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import Difference from '@/public/images/icons/difference.svg';
@@ -29,7 +29,7 @@ const CoreSyncBadge: FC<Props> = ({ status, onDiffClick }) => {
   let trailing = null;
   if (config.trailing === CoreSyncTrailing.Diff && onDiffClick) {
     trailing = (
-      <DialIconButton
+      <IconButton
         icon={<Difference {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
         onClick={onDiffClick}
         aria-label={t(CoreSyncI18nKey.SyncWithCore)}

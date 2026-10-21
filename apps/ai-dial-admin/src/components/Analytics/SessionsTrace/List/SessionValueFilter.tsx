@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonAppearance, DialCheckbox, DialInput, DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialInput, DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconSearch } from '@tabler/icons-react';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 import classNames from 'classnames';
@@ -224,12 +224,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
         </>
       )}
       <div className="flex items-center justify-end">
-        <DialNeutralButton
-          appearance={ButtonAppearance.Outlined}
-          label={t(ButtonsI18nKey.Reset)}
-          disabled={!selected.length && !search}
-          onClick={onReset}
-        />
+        <OutlinedButton label={t(ButtonsI18nKey.Reset)} disabled={!selected.length && !search} onClick={onReset} />
       </div>
     </div>
   );

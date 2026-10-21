@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, Ref, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent, PrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
@@ -191,7 +191,7 @@ const ParametersTab: FC<Props> = ({
           </div>
           <div className="flex flex-row gap-4">
             {paramsView === ParamsView.TABLE && !isReadOnlyAdmin && (
-              <DialPrimaryButton
+              <PrimaryButton
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}
                 onClick={() => setIsAddClicked(true)}

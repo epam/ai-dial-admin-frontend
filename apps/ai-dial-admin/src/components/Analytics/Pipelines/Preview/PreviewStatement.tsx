@@ -35,7 +35,6 @@ const PreviewStatement: FC<Props> = ({ statement }) => {
             valueLabel={t(PipelinePreviewI18nKey.SqlLabel)}
             value={statement}
             size={ElementSize.Small}
-            isDesignSystem2
           />
         </div>
       }

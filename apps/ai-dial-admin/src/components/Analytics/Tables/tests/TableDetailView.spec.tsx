@@ -1123,7 +1123,7 @@ describe('TableDetailView JSON definition view', () => {
 
   // `userEvent.click` does not reach `CopyButton`'s icon-only variant in jsdom — established across five
   // isolated probes in `qa/review-batch-4-round-1.md` §1: the event reaches the DOM node and a bare
-  // ui-kit `DialIconButton` responds fine, but `CopyButton`'s own click wiring does not survive the
+  // ui-kit `IconButton` responds fine, but `CopyButton`'s own click wiring does not survive the
   // synthetic pointer sequence. `fireEvent.click` is used deliberately here, not as a shortcut around it.
   test('the copy control writes the whole displayed document to the clipboard', async () => {
     const user = userEvent.setup();

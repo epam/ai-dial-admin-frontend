@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
 
-import { DialLabel, DialPrimaryButton, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, PrimaryButton, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -182,7 +182,7 @@ const InterfacesField = <V extends InterfaceValue>({
 
         {!isReadonly && showAddButton && (
           <div className="flex flex-1 justify-end">
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.AddInterface)}
               onClick={onAddClick}

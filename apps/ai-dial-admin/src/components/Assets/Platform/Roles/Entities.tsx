@@ -1,6 +1,6 @@
 'use client';
 
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -150,7 +150,7 @@ const RoleEntities: FC<Props> = ({ selectedRole, models, isSkipRefresh, onChange
             {t(TabsI18nKey.Entities)}: {data.length}
           </h1>
           {!isReadOnlyAdmin && (
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={() => setIsModalOpen(true)}

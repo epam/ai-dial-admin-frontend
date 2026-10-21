@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInput, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialInput, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import {
   DialDestinationFolderPopup,
   DialFile,
@@ -119,7 +119,7 @@ const FilePath: FC<Props> = ({
             labelProps={{ label }}
           />
         </div>
-        <DialNeutralButton
+        <OutlinedButton
           disabled={disabled}
           onClick={onOpenFilePathModal}
           label={t(ActionMenuOperationI18nKey.Move_to)}

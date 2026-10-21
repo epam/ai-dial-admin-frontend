@@ -120,8 +120,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     DialConfirmationPopup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    DialGhostButton: ({ label }: { label: string }) => <button>{label}</button>,
-    DialNeutralButton: ({ label }: { label: string }) => <button>{label}</button>,
+    GhostButton: ({ label }: { label: string }) => <button>{label}</button>,
+    OutlinedButton: ({ label }: { label: string }) => <button>{label}</button>,
     DialTooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
     DialSelect: ({
       options,

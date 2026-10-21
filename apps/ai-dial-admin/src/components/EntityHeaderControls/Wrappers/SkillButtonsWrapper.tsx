@@ -3,7 +3,7 @@
 import { FC, ReactNode, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, DialDangerButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -91,7 +91,7 @@ const SkillButtonsWrapper: FC<SkillButtonsWrapperProps> = ({
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             <div className="flex-1 flex flex-row gap-x-4 justify-center">
-              <DialDangerButton
+              <DangerButton
                 className={buttonsClassName}
                 label={t(ButtonsI18nKey.Delete)}
                 appearance={ButtonAppearance.Outlined}

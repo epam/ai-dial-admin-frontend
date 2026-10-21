@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -197,7 +197,7 @@ const McpServerNameField: FC<Props> = ({
           containerClassName={containerClassName}
           disabled={disabled}
         />
-        <DialNeutralButton
+        <OutlinedButton
           onClick={handleModalOpen}
           label={t(ButtonsI18nKey.McpRegistry)}
           iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialRemoveButton, DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight, IconGripVertical } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -17,6 +17,7 @@ import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
 import Value from '@/src/components/Deployments/Fields/ContainerVariables/Value';
 import { useColumnDragDrop } from '@/src/components/Deployments/Fields/ContainerVariables/use-column-drag-drop';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   index: number;
@@ -218,12 +219,12 @@ const Variable: FC<Props> = ({
                 />
               </div>
               <div className="hidden lg:flex">
-                <DialRemoveButton onClick={onRemove} disabled={disabled} />
+                <RemoveButton onClick={onRemove} disabled={disabled} />
               </div>
             </div>
           </div>
           <div className="lg:hidden">
-            <DialRemoveButton onClick={onRemove} disabled={disabled} />
+            <RemoveButton onClick={onRemove} disabled={disabled} />
           </div>
         </div>
       </div>

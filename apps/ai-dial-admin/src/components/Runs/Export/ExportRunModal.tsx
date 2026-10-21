@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialNeutralButton, DialPopup, DialPrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialPopup, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { exportRunPreview } from '@/src/app/[lang]/runs/actions';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
@@ -167,8 +167,8 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
           </Accordion>
         </div>
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary shrink-0">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton
+          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <PrimaryButton
             label={t(ButtonsI18nKey.ExportCsv)}
             onClick={onExport}
             disabled={isExporting || checkedColumns.size === 0}

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -165,7 +165,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
           onRemove={removeKey}
         >
           {!isReadOnlyAdmin && (
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => setIsRotateModalOpen(true)}

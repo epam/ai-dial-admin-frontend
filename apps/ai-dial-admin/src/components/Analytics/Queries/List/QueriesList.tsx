@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
@@ -96,7 +96,7 @@ const QueriesList = ({ data, entities }: Props) => {
         getRowId={({ data: query }) => query.id}
         emptyDataProps={{ title: t(emptyDataTitleMap[VIEW]) }}
       >
-        <DialPrimaryButton
+        <PrimaryButton
           label={t(ButtonsI18nKey.Create)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
           onClick={() => setIsCreateOpen(true)}

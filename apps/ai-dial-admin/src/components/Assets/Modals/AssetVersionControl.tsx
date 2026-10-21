@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton, DialLoader, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialLoader, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -128,7 +128,7 @@ const AssetVersionControl: FC<Props> = ({
             disabled={isVersionLoading}
             onChange={(v) => onChangeVersion(v as string)}
             footer={
-              <DialGhostButton
+              <GhostButton
                 className="w-full min-h-[34px] h-[34px]"
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Create)}

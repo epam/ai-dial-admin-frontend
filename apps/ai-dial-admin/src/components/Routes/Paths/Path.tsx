@@ -1,12 +1,13 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialInput } from '@epam/ai-dial-ui-kit';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   index: number;
@@ -72,7 +73,7 @@ const Path: FC<Props> = ({
           invalid={!!error}
         />
       </div>
-      {!disabled && <DialRemoveButton onClick={() => onRemove(index)} className={index === 0 ? 'mt-7' : ''} />}
+      {!disabled && <RemoveButton onClick={() => onRemove(index)} className={index === 0 ? 'mt-7' : ''} />}
     </div>
   );
 };

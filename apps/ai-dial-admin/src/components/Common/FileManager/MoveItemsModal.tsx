@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ButtonAppearance, DialPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -43,7 +43,7 @@ const MoveItemsModal: FC<Props> = ({ isModalOpen, totalItems = 0, movedItems = 0
             {t(FileManagerI18nKey.MovingProgress, { count: movedItems, total: totalItems })}
           </div>
         </div>
-        <DialPrimaryButton
+        <PrimaryButton
           className="w-fit"
           appearance={ButtonAppearance.Ghost}
           label={t(ButtonsI18nKey.Cancel)}

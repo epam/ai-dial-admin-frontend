@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNotification, DialPrimaryButton, DialSwitch, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { DialNotification, PrimaryButton, DialSwitch, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -132,7 +132,7 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
         </div>
 
         {!isReadOnlyAdmin && isSpecificRoles && (
-          <DialPrimaryButton
+          <PrimaryButton
             label={t(RolesI18nKey.AddRoles)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenModal}

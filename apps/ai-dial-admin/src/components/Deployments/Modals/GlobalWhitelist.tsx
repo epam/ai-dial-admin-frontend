@@ -1,11 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import {
-  DialConfirmationPopup,
-  DialGhostButton,
-  DialNeutralButton,
-  DialPrimaryButton,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, GhostButton, OutlinedButton, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -63,15 +57,15 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains,
 
   const footer = (
     <div className="flex flex-row items-center justify-between px-6 py-4">
-      <DialGhostButton
+      <GhostButton
         label={t(DeploymentsI18nKey.ViewInActivityAudit)}
         iconAfter={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
         onClick={onViewInActivityAudit}
       />
       {!isLoading && (
         <div className="flex flex-row items-center gap-2">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton label={confirmLabel} disabled={isConfirmDisabled} onClick={onConfirm} />
+          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <PrimaryButton label={confirmLabel} disabled={isConfirmDisabled} onClick={onConfirm} />
         </div>
       )}
     </div>

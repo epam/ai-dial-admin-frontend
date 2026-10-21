@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLinkButton, DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { LinkButton, DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconAlertTriangle, IconRefresh, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -139,7 +139,7 @@ const EntityTraceListing: FC<Props> = ({ route, entity, defaultTimeFilter, onTim
         title={t(hasLoadError ? EntityTracesI18nKey.LoadFailedTitle : EntityTracesI18nKey.EmptyTitle)}
         lines={[t(hasLoadError ? EntityTracesI18nKey.LoadFailedHint : EntityTracesI18nKey.EmptyHint)]}
       />
-      {hasLoadError && <DialNeutralButton label={t(EntityTracesI18nKey.Retry)} onClick={onRetry} />}
+      {hasLoadError && <OutlinedButton label={t(EntityTracesI18nKey.Retry)} onClick={onRetry} />}
     </div>
   );
 
@@ -171,7 +171,7 @@ const EntityTraceListing: FC<Props> = ({ route, entity, defaultTimeFilter, onTim
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
           />
-          <DialNeutralButton
+          <OutlinedButton
             label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onRefresh}
@@ -196,7 +196,7 @@ const EntityTraceListing: FC<Props> = ({ route, entity, defaultTimeFilter, onTim
           {!isEmpty && hasLoadError && (
             <div className="flex items-center justify-center gap-3 border-t border-primary p-2">
               <span className="text-error dial-small-text">{t(EntityTracesI18nKey.PageLoadFailed)}</span>
-              <DialLinkButton label={t(EntityTracesI18nKey.Retry)} onClick={onRetry} />
+              <LinkButton label={t(EntityTracesI18nKey.Retry)} onClick={onRetry} />
             </div>
           )}
         </div>

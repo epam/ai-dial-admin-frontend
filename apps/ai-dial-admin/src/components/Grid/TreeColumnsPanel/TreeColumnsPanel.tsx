@@ -1,13 +1,12 @@
 'use client';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { CloseButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconGripVertical } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -174,7 +173,7 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
     <div className={panelClassName} onClick={(e) => e.stopPropagation()} role="toolbar" aria-label={panelTitle}>
       <div className="flex flex-row justify-between py-4 px-6 items-center h-[70px] border-b border-tertiary">
         <h3 className="flex-1 min-w-0 mr-3">{panelTitle}</h3>
-        {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
+        {toggleColumnsPanel && <CloseButton ariaLabel={t(ButtonsI18nKey.Close)} onClose={toggleColumnsPanel} />}
       </div>
       <div className="flex-1 flex flex-col p-6 overflow-y-auto">
         {topSlot}

@@ -2,7 +2,7 @@
 
 import {
   DialEllipsisTooltip,
-  DialLinkButton,
+  LinkButton,
   DialLoader,
   DialNoDataContent,
   DialNotification,
@@ -394,9 +394,7 @@ const SessionTraceList: FC<Props> = ({
         )}
         {/* A manual fallback for the observer: a viewport tall enough to hold every loaded card never
             intersects the sentinel, and the reader would otherwise have no way to ask for the next page. */}
-        {hasMore && !isLoading && (
-          <DialLinkButton label={t(SessionsTraceI18nKey.TraceListLoadMore)} onClick={onLoadMore} />
-        )}
+        {hasMore && !isLoading && <LinkButton label={t(SessionsTraceI18nKey.TraceListLoadMore)} onClick={onLoadMore} />}
         <div ref={sentinelRef} aria-hidden className="h-px" />
       </div>
     </div>

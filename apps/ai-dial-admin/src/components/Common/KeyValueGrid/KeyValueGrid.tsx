@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { DialGhostButton, DialInput, DialLabel, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, DialLabel } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -10,6 +10,7 @@ import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n'
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface KeyValueRow {
   id: string;
@@ -108,7 +109,7 @@ const KeyValueGrid = ({ value, onChange, disabled, label, addButtonLabel, classN
               containerClassName="flex-1"
             />
             {!isReadonly && (
-              <DialRemoveButton
+              <RemoveButton
                 onClick={() => onRemoveRow(row.id)}
                 aria-label={t(ButtonsI18nKey.Delete)}
                 className="shrink-0"
@@ -120,7 +121,7 @@ const KeyValueGrid = ({ value, onChange, disabled, label, addButtonLabel, classN
 
       {!isReadonly && (
         <div className="mt-2">
-          <DialGhostButton
+          <GhostButton
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={addButtonLabel ?? t(ButtonsI18nKey.Add)}
             onClick={onAddRow}

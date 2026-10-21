@@ -24,17 +24,17 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         <div data-testid="footer">{footer}</div>
       </div>
     ) : null,
-  DialPrimaryButton: ({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) => (
+  PrimaryButton: ({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) => (
     <button data-variant="primary" onClick={onClick} disabled={disabled}>
       {label}
     </button>
   ),
-  DialNeutralButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
+  OutlinedButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
     <button data-variant="neutral" onClick={onClick}>
       {label}
     </button>
   ),
-  DialGhostButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
+  GhostButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
     <button data-variant="ghost" onClick={onClick}>
       {label}
     </button>

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
@@ -255,14 +255,14 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
   return (
     <>
       {(isUserSignedIn || isApplicationSignedIn) && (
-        <DialNeutralButton
+        <OutlinedButton
           label={t(ToolsetI18nKey.LogOut)}
           iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onLogout}
         />
       )}
       {!isFullSignedIn && (
-        <DialNeutralButton
+        <OutlinedButton
           label={t(ToolsetI18nKey.LogIn)}
           iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => setIsLoginModalOpen(true)}

@@ -93,7 +93,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {title}
     </div>
   ),
-  DialPrimaryButton: ({ label, onClick, disabled }: any) => (
+  PrimaryButton: ({ label, onClick, disabled }: any) => (
     <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>

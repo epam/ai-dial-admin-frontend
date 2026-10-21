@@ -2,8 +2,8 @@ import {
   DIAL_ICON_SIZE,
   DIAL_KIT_ICON_STROKE,
   DialDropdown,
-  DialNeutralButton,
-  DialPrimaryButton,
+  OutlinedButton,
+  PrimaryButton,
   ElementSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown } from '@tabler/icons-react';
@@ -184,8 +184,8 @@ const TimeFilter: FC<Props> = ({
     <div className={classNames('flex flex-col border-l', isModern ? 'border-tertiary' : 'border-secondary')}>
       <RangePicker value={draft.range} onChange={handleRangeChange} maxDays={maxDays} />
       <div className="flex justify-end gap-2 px-3 pb-3 mt-auto">
-        <DialNeutralButton size={ElementSize.Small} label={t(ButtonsI18nKey.Cancel)} onClick={handleCancel} />
-        <DialPrimaryButton
+        <OutlinedButton size={ElementSize.Small} label={t(ButtonsI18nKey.Cancel)} onClick={handleCancel} />
+        <PrimaryButton
           size={ElementSize.Small}
           label={t(ButtonsI18nKey.Apply)}
           onClick={handleApply}

@@ -2,7 +2,7 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { IconPlus } from '@tabler/icons-react';
-import { DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialLabel, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
@@ -148,7 +148,7 @@ const ContainerVariables: FC<Props> = ({ container, setContainer, disabled }) =>
           </div>
         </DndProvider>
         <div>
-          <DialNeutralButton
+          <OutlinedButton
             className="mb-2"
             label={t(EnvVariablesI18nKey.AddVariable)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}

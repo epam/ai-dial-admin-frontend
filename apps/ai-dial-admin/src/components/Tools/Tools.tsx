@@ -5,7 +5,7 @@ import {
   DialNotification,
   DialLoader,
   DialNoDataContent,
-  DialPrimaryButton,
+  PrimaryButton,
   DialSwitch,
 } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
@@ -314,7 +314,7 @@ const Tools: FC<Props> = ({
             </div>
           )}
           {!useAllTools && showManagementButtons && (
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.ManageTool)}
               iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={onOpenModal}

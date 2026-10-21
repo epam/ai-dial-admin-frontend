@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GetRowIdParams, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -183,7 +183,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
       )}
       <div className="flex flex-row justify-between items-center shrink-0">
         <span className="dial-small-text">{t(TestSuitesI18nKey.SchemaDescription)}</span>
-        <DialNeutralButton
+        <OutlinedButton
           label={t(BasicI18nKey.AddField)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAddField}

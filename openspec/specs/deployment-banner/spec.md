@@ -31,7 +31,7 @@ A reusable banner component SHALL live at `components/Deployments/Common/EntityB
 - `title?: ReactNode` — optional inline semibold prefix rendered before the message text. Omitted when not provided.
 - `message: ReactNode` — required body content. May be a plain string or rich React content.
 - `className?: string` — forwarded to the underlying `DialNotification` for caller-controlled spacing.
-- `children?: ReactNode` — optional CTA slot (typically a `DialNeutralButton`) passed through as `DialNotification` children.
+- `children?: ReactNode` — optional CTA slot (typically a `OutlinedButton`) passed through as `DialNotification` children.
 
 The component SHALL render `DialNotification` with `variant={variant ?? NotificationVariant.Warning}`, `className={className}`, a `message` prop containing a `<span className="small">` wrapping the optional bold title (`<span className="small-text-semi">{title}</span>` when title is truthy) followed by `{message}`, and `children` passed through unchanged.
 
@@ -52,8 +52,8 @@ The component SHALL render `DialNotification` with `variant={variant ?? Notifica
 
 #### Scenario: CTA children are rendered inside DialNotification
 
-- **WHEN** `<EntityBanner message="..."><DialNeutralButton label="Go" /></EntityBanner>` is rendered
-- **THEN** the `DialNeutralButton` SHALL appear as a child of the underlying `DialNotification`
+- **WHEN** `<EntityBanner message="..."><OutlinedButton label="Go" /></EntityBanner>` is rendered
+- **THEN** the `OutlinedButton` SHALL appear as a child of the underlying `DialNotification`
 
 #### Scenario: className is forwarded to DialNotification
 

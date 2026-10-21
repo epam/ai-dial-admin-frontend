@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialIconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
@@ -94,7 +94,7 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, runs, primaryTestSuite, co
             runName: name,
             value: suiteBySlot[slot].name ?? '—',
             postfix: (
-              <DialIconButton
+              <IconButton
                 className="text-secondary size-[20px]"
                 onClick={() => onOpenInNewTab(ApplicationRoute.TestSuites, { id: suiteBySlot[slot].id })}
                 icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
@@ -109,7 +109,7 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, runs, primaryTestSuite, co
           label={t(RunsI18nKey.TestSuite)}
           text={suiteName}
           postfix={
-            <DialIconButton
+            <IconButton
               className="text-secondary size-[20px]"
               onClick={() => onOpenInNewTab(ApplicationRoute.TestSuites, { id: suiteId })}
               icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}

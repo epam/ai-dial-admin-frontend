@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
@@ -88,7 +88,7 @@ const HeaderButtons = <T extends { id?: string }>({ route, onCreateEntity }: Pro
 
   return (
     <>
-      <DialPrimaryButton
+      <PrimaryButton
         label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={onModalOpen}

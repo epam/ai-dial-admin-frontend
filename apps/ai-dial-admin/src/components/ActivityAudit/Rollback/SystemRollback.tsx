@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLoader, DialPrimaryButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialLoader, PrimaryButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -206,7 +206,7 @@ const SystemRollback: FC = () => {
             )}
           </div>
           {!isReadOnlyAdmin && (
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RollbackI18nKey.Rollback)}
               onClick={() => setIsRollBackModalOpen(true)}

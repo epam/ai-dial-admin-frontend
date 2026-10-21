@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialIconButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { resolveRunDeployment } from '@/src/components/Runs/Summary/resolve-run-deployment';
@@ -30,7 +30,7 @@ const DeploymentExternalLink: FC<Props> = ({ suiteContext }) => {
 
   if (deployment) {
     return (
-      <DialIconButton
+      <IconButton
         className="text-secondary size-[20px]"
         onClick={() => onOpenInNewTab(deployment.route, deployment.entity)}
         icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}

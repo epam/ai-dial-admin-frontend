@@ -185,7 +185,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
           dynamicIcon={getFileIcon}
           // deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
           // addButtonLabel={t(ButtonsI18nKey.Add)}
-          // additionalActionButtons={<DialPrimaryButton label={t(ButtonsI18nKey.Upload)} onClick={onUpload} />}
+          // additionalActionButtons={<PrimaryButton label={t(ButtonsI18nKey.Upload)} onClick={onUpload} />}
           multiple={false}
         />
       </div>

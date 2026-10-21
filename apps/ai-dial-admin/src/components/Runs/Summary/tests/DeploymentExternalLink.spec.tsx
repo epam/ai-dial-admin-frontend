@@ -30,7 +30,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialIconButton: ({ onClick }: { onClick?: () => void }) => (
+    IconButton: ({ onClick }: { onClick?: () => void }) => (
       <button type="button" aria-label="Open deployment" onClick={onClick} />
     ),
     DialLoader: () => <div role="status" aria-label="loading" />,

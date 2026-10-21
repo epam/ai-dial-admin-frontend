@@ -1,4 +1,4 @@
-import { ButtonAppearance, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconReload } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -138,7 +138,7 @@ const Metrics: FC<Props> = ({ containerId, route, inferenceTask, containerType }
   return (
     <div className="flex flex-col gap-6 overflow-auto">
       <div className="flex justify-end">
-        <DialPrimaryButton
+        <PrimaryButton
           label={t(ButtonsI18nKey.Refresh)}
           appearance={ButtonAppearance.Ghost}
           iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}

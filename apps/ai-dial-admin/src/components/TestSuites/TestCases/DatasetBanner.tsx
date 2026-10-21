@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialEllipsisTooltip, DialGhostButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, GhostButton, GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconDatabaseExport, IconExternalLink, IconPencilMinus, IconUnlink } from '@tabler/icons-react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -49,7 +49,7 @@ const DatasetBanner: FC<Props> = ({ datasetName, onOpenDataset, onDetachDataset,
           <IconDatabaseExport size={16} aria-hidden />
         </span>
         <DialEllipsisTooltip className="dial-small-semi text-primary max-w-[600px]" text={datasetName} />
-        <DialGhostIconButton
+        <GhostIconButton
           size={ElementSize.Small}
           icon={<IconExternalLink size={16} aria-hidden />}
           aria-label={t(TestSuitesI18nKey.OpenDataset)}
@@ -58,12 +58,12 @@ const DatasetBanner: FC<Props> = ({ datasetName, onOpenDataset, onDetachDataset,
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <DialGhostButton
+        <GhostButton
           label={t(TestSuitesI18nKey.DetachFromDataset)}
           iconBefore={<IconUnlink {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => setIsDetachConfirmOpen(true)}
         />
-        <DialGhostButton
+        <GhostButton
           label={t(TestSuitesI18nKey.ChangeDataset)}
           iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onOpenChangeModal}

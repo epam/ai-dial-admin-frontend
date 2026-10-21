@@ -22,11 +22,11 @@ The Stop button SHALL appear in the image header controls (`ImagesButtonsWrapper
 - **THEN** the Stop button SHALL NOT be rendered
 
 ### Requirement: Stop button appearance
-The Stop button SHALL be rendered as a `DialNeutralButton` with the `IconPlayerPause` icon (from `@tabler/icons-react`, matching the container stop button) sized via `BASE_BUTTON_ICON_PROPS`, and labelled with `t(ButtonsI18nKey.Stop)`.
+The Stop button SHALL be rendered as a `OutlinedButton` with the `IconPlayerPause` icon (from `@tabler/icons-react`, matching the container stop button) sized via `BASE_BUTTON_ICON_PROPS`, and labelled with `t(ButtonsI18nKey.Stop)`.
 
 #### Scenario: Stop button styling matches container stop button
 - **WHEN** the Stop button is rendered
-- **THEN** it SHALL use `DialNeutralButton`, display the `IconPlayerPause` icon sized via `BASE_BUTTON_ICON_PROPS`, and show the label `t(ButtonsI18nKey.Stop)`
+- **THEN** it SHALL use `OutlinedButton`, display the `IconPlayerPause` icon sized via `BASE_BUTTON_ICON_PROPS`, and show the label `t(ButtonsI18nKey.Stop)`
 
 ### Requirement: Stop build confirmation modal
 Clicking the Stop button SHALL open a confirmation modal (`ImageStopBuild.tsx`, following the `ImageInstall.tsx` pattern) built on `DialConfirmationPopup`. The modal header SHALL be `t(ImagesI18nKey.StopBuildModalTitle)` ("Stop Build"). The modal body SHALL show the description `t(ImagesI18nKey.StopBuildModalDescription)` and the version as "Version: {image.version}", both styled `text-secondary small-150`. The confirm button SHALL be labelled `t(ButtonsI18nKey.Stop)`. Clicking Cancel SHALL close the modal without taking any action; clicking the confirm button SHALL invoke the stop action and close the modal.

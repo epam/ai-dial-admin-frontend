@@ -19,25 +19,18 @@ describe('Common components :: CopyButton', () => {
     expect(screen.getByRole('button', { name: 'copy' })).toBeInTheDocument();
   });
 
-  test('Should draw the labelled button with the 2.0 button when the page opts in, named by its label', () => {
-    render(<CopyButton buttonLabel="Copy" valueLabel="the definition" value="value" isDesignSystem2 />);
+  test('Should draw the labelled button with the 2.0 outlined neutral button, named by its label', () => {
+    render(<CopyButton buttonLabel="Copy" valueLabel="the definition" value="value" />);
 
-    const button = screen.getByRole('button', { name: 'Copy' });
-    expect(button).toHaveClass('dial-kit-neutral-outlined-button');
+    expect(screen.getByRole('button', { name: 'Copy' })).toHaveClass('dial-kit-neutral-outlined-button');
   });
 
-  test('Should copy through the 2.0 button as well', () => {
-    render(<CopyButton buttonLabel="Copy" valueLabel="the definition" value="2.0 value" isDesignSystem2 />);
+  test('Should copy through the labelled button as well', () => {
+    render(<CopyButton buttonLabel="Copy" valueLabel="the definition" value="labelled value" />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('2.0 value');
-  });
-
-  test('Should keep the 1.0 button without the opt-in', () => {
-    render(<CopyButton buttonLabel="Copy" valueLabel="the definition" value="value" />);
-
-    expect(screen.getByRole('button', { name: 'Copy' })).not.toHaveClass('dial-kit-neutral-outlined-button');
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('labelled value');
   });
 
   test('Should copy text and show notification on click', () => {

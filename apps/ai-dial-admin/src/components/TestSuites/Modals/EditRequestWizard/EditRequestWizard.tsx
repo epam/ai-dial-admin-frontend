@@ -3,12 +3,12 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  DialGhostButton,
-  DialGhostIconButton,
-  DialNeutralButton,
+  GhostButton,
+  GhostIconButton,
+  OutlinedButton,
   DialNotification,
   DialPopup,
-  DialPrimaryButton,
+  PrimaryButton,
   DialSteps,
   ElementSize,
   NotificationVariant,
@@ -126,7 +126,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
     <div className="flex flex-row items-center justify-between gap-2 px-6 py-4">
       <div>
         {isConfigurationStep && (
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.Back)}
             onClick={() => onChangeStep(EditRequestStep.Methods)}
             iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
@@ -136,7 +136,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
 
       <div className="flex flex-row items-center gap-4">
         {isConfigurationStep && isBodyEdited && (
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.ResetToDefault)}
             onClick={onResetToDefault}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
@@ -144,11 +144,11 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
         )}
 
         <div className="flex gap-2">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
           {isConfigurationStep ? (
-            <DialPrimaryButton label={t(ButtonsI18nKey.Save)} onClick={handleSave} disabled={!isMethodValid} />
+            <PrimaryButton label={t(ButtonsI18nKey.Save)} onClick={handleSave} disabled={!isMethodValid} />
           ) : (
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.Next)}
               onClick={() => onChangeStep(EditRequestStep.Configuration)}
               iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
@@ -164,7 +164,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
     if (!showVarReferences) return t(TestSuitesI18nKey.EditRequest);
     return (
       <div className="flex gap-4 items-center">
-        <DialGhostIconButton
+        <GhostIconButton
           icon={<IconChevronLeft />}
           size={ElementSize.Small}
           onClick={() => setShowVarReferences(false)}

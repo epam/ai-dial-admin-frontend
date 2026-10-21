@@ -2,13 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  DialGhostButton,
-  DialLoader,
-  DialNeutralButton,
-  DialNoDataContent,
-  DialSegmentedControl,
-} from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialLoader, OutlinedButton, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
@@ -635,7 +629,7 @@ const QueryBuilder: FC<Props> = ({
               showRun={!isAiView}
             >
               {savedQueryPage.savedQuery && savedQueryPage.isWritable && !savedQueryPage.isDirty && (
-                <DialGhostButton
+                <GhostButton
                   label={t(ButtonsI18nKey.Edit)}
                   iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
                   onClick={savedQueryPage.onOpenEdit}
@@ -648,7 +642,7 @@ const QueryBuilder: FC<Props> = ({
                   onDiscard={savedQueryPage.onDiscard}
                   onSave={savedQueryPage.onSave}
                 >
-                  <DialNeutralButton
+                  <OutlinedButton
                     className={saveAsClassName}
                     label={t(ButtonsI18nKey.SaveAs)}
                     onClick={savedQueryPage.onOpenSaveAs}

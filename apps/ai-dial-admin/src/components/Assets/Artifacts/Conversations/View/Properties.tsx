@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialIconButton, DialLabel, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLabel, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { getDeployment } from '@/src/app/[lang]/conversations/actions';
@@ -83,7 +83,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
             <>
               <DialTooltip tooltip={model}>{model}</DialTooltip>
               {!!agentLink && (
-                <DialIconButton
+                <IconButton
                   onClick={() => openResourceInNewTab()}
                   className="text-secondary size-auto"
                   icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}

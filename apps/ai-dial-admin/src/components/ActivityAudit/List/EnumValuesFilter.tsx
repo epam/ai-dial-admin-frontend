@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { ButtonAppearance, DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 
 import { EnumFilterValue } from '@/src/components/ActivityAudit/List/models';
@@ -81,12 +81,7 @@ const EnumValuesFilter: FC<Props> = ({ model, onModelChange, api, colDef, values
         ))}
       </div>
       <div className="flex items-center justify-end">
-        <DialNeutralButton
-          appearance={ButtonAppearance.Outlined}
-          label={t(ButtonsI18nKey.Reset)}
-          disabled={!selected.length}
-          onClick={onReset}
-        />
+        <OutlinedButton label={t(ButtonsI18nKey.Reset)} disabled={!selected.length} onClick={onReset} />
       </div>
     </div>
   );

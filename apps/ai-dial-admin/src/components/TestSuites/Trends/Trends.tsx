@@ -2,13 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import {
-  DialLoader,
-  DialNeutralButton,
-  DialNotification,
-  ElementSize,
-  NotificationVariant,
-} from '@epam/ai-dial-ui-kit';
+import { DialLoader, OutlinedButton, DialNotification, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import KpiStrip from '@/src/components/TestSuites/Trends/KpiStrip';
@@ -61,7 +55,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
             <div className="flex flex-col items-start gap-2">
               <span>{t(TestSuitesI18nKey.TrendsNoRunsDescription)}</span>
               {onStartRun && (
-                <DialNeutralButton
+                <OutlinedButton
                   size={ElementSize.Small}
                   className="w-fit"
                   label={t(ButtonsI18nKey.Run)}

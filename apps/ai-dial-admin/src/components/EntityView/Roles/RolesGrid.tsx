@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef } from 'react';
 
-import { DialGhostButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, PrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
@@ -121,14 +121,14 @@ const RolesGrid: FC<Props> = ({
 
         <div className="flex flex-row gap-3">
           {!isReadOnlyAdmin && isResetAvailable(entity) && (
-            <DialGhostButton
+            <GhostButton
               iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />
           )}
           {!isReadOnlyAdmin && !entity.isPublic && onOpenAddModal && (
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}

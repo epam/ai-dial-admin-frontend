@@ -2,13 +2,7 @@
 import { FC, ReactNode, useMemo } from 'react';
 
 import Grafana from '@/public/images/icons/grafana.svg';
-import {
-  NotificationVariant,
-  DialNotification,
-  DialLoader,
-  DialNeutralButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, DialLoader, OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -190,7 +184,7 @@ const TryOutResponsePreview: FC<Props> = ({
       {isSelectedRequestSkipped ? null : (
         <DialNotification message={alertMessage} variant={alertVariant}>
           {bannerGrafanaUrl && (
-            <DialNeutralButton
+            <OutlinedButton
               size={ElementSize.Small}
               className="w-fit"
               iconBefore={<Grafana />}

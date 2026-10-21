@@ -4,7 +4,7 @@ import {
   ButtonAppearance,
   DialInput,
   DialNumberInput,
-  DialPrimaryButton,
+  PrimaryButton,
   DialRadioGroup,
   DialSwitch,
   RadioButtonWithContent,
@@ -233,7 +233,7 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
             onChange={onChangeOrder}
           />
           {asset.order !== ORDER_DEFAULT_VALUE && !isReadOnlyAdmin && (
-            <DialPrimaryButton
+            <PrimaryButton
               className="h-10"
               appearance={ButtonAppearance.Link}
               label={t(ButtonsI18nKey.ResetToDefault)}

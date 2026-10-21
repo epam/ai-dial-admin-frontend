@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import {
-  DialGhostButton,
-  DialInput,
-  DialLabel,
-  DialRemoveButton,
-  DialSelectField,
-  DialTooltip,
-} from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, DialLabel, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { OVERRIDE_PATH_OPERATIONS } from '@/src/components/BaseControls/InterfacesField/constants';
@@ -20,6 +13,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { hasOverridePathIdError, setOverridePath } from '@/src/utils/models/override-paths';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   fieldId: string;
@@ -127,7 +121,7 @@ const OverridePathsField = ({ fieldId, type, value, disabled, onChange }: Props)
               containerClassName="w-full"
             />
             {!disabled && (
-              <DialRemoveButton
+              <RemoveButton
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${operation.key}`}
                 onClick={() => onDeleteOperation(operation.key)}
               />
@@ -149,7 +143,7 @@ const OverridePathsField = ({ fieldId, type, value, disabled, onChange }: Props)
 
       {showAddButton && (
         <div className="flex justify-start">
-          <DialGhostButton
+          <GhostButton
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={t(ButtonsI18nKey.AddOverridePath)}
             onClick={onAddClick}

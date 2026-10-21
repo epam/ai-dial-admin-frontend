@@ -1,4 +1,4 @@
-import { DialInput, DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialInputPopup, DialLabel, OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -172,7 +172,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
               </DialInputPopup>
             </div>
             {entity.source?.containerId && featureFlags.deploymentsEnabled && !disabled && (
-              <DialNeutralButton
+              <OutlinedButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={isMobile ? '' : t(ButtonsI18nKey.Open)}

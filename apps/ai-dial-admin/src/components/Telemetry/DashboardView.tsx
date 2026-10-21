@@ -6,7 +6,7 @@ import { MenuI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialLinkButton } from '@epam/ai-dial-ui-kit';
+import { LinkButton } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   grafanaLink?: string;
@@ -24,7 +24,7 @@ const DashboardView: FC<Props> = ({ grafanaLink }) => {
       <div className="flex flex-row mb-8 justify-between items-center h-[40px]">
         <h1>{t(MenuI18nKey.Dashboard)}</h1>
         {grafanaLink && (
-          <DialLinkButton iconBefore={<Grafana />} label={t(TelemetryI18nKey.Grafana)} onClick={onOpenGrafana} />
+          <LinkButton iconBefore={<Grafana />} label={t(TelemetryI18nKey.Grafana)} onClick={onOpenGrafana} />
         )}
       </div>
       <Dashboard route={ApplicationRoute.Dashboard} />
