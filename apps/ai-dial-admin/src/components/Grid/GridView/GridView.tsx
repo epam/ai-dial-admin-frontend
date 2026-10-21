@@ -44,6 +44,8 @@ const GridView = <T extends object>({
   additionalGridOptions,
   showColumnsPanel,
   storageKey,
+  columnWidths,
+  onColumnWidthsChange,
   toggleColumnsPanel,
   onGridReady,
   getIsEmptyData,
@@ -252,6 +254,8 @@ const GridView = <T extends object>({
             rowData={rowData}
             additionalGridOptions={additionalGridOptions}
             storageKey={storageKey}
+            columnWidths={columnWidths}
+            onColumnWidthsChange={onColumnWidthsChange}
             onGridReady={handleGridReady}
             isLiveData={isLiveData}
             getRowId={getRowId}

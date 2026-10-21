@@ -69,4 +69,20 @@ describe('Compare :: useCompareViewTabState', () => {
 
     expect(result.current.state).toEqual(createDefaultCompareViewTabState());
   });
+
+  test('keeps the column widths when run pair changes', () => {
+    const { result, rerender } = renderHook(
+      ({ primaryRunId, comparedRunId }) => useCompareViewTabState(primaryRunId, comparedRunId),
+      { initialProps: { primaryRunId: 'run-1', comparedRunId: 'run-2' } },
+    );
+
+    act(() => {
+      result.current.setExecutionResultsState({ columnWidths: { testCaseName: 240 }, hideHighlights: true });
+    });
+
+    rerender({ primaryRunId: 'run-2', comparedRunId: 'run-1' });
+
+    expect(result.current.state.executionResults.columnWidths).toEqual({ testCaseName: 240 });
+    expect(result.current.state.executionResults.hideHighlights).toBe(false);
+  });
 });

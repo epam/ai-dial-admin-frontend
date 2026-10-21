@@ -43,17 +43,22 @@ const MOCK_ROWS = [
   { id: 'run-cancelling', status: RunStatus.CANCELLING },
 ];
 
+/** The grid options the component hands the grid, so a test can fire the grid's own callbacks. */
+const gridProps: { additionalGridOptions?: any; datasource?: any } = {};
+
 const mockGridApi = {
-  setGridOption: vi.fn(),
+  setGridOption: vi.fn((option: string, value: unknown) => {
+    if (option === 'datasource') {
+      gridProps.datasource = value;
+    }
+  }),
+  refreshInfiniteCache: vi.fn(),
   hideOverlay: vi.fn(),
   showNoRowsOverlay: vi.fn(),
   forEachNode: vi.fn((callback: (node: { data: (typeof MOCK_ROWS)[number]; setData: typeof nodeSetData }) => void) => {
     MOCK_ROWS.forEach((row) => callback({ data: row, setData: nodeSetData }));
   }),
 };
-
-/** The grid options the component hands the grid, so a test can fire the grid's own callbacks. */
-const gridProps: { additionalGridOptions?: any } = {};
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ columnDefs, onGridReady, additionalGridOptions, showColumnsPanel }: any) => {
@@ -91,6 +96,28 @@ vi.mock('@/src/components/Runs/Cancel/RunCancelModal', () => ({
   ),
 }));
 
+/** What the grid does when it first reads from its datasource (or after a purge): ask for rows. */
+const requestRows = (params: Record<string, unknown> = {}) => {
+  const successCallback = vi.fn();
+  gridProps.datasource.getRows({
+    startRow: 0,
+    endRow: 50,
+    sortModel: [],
+    filterModel: {},
+    successCallback,
+    failCallback: vi.fn(),
+    ...params,
+  });
+  return successCallback;
+};
+
+/** One grid request, resolved: the rows the grid ends up with. */
+const requestRowsAndWait = async (params: Record<string, unknown> = {}) => {
+  const successCallback = requestRows(params);
+  await vi.waitFor(() => expect(successCallback).toHaveBeenCalled());
+  return successCallback;
+};
+
 describe('Runs', () => {
   const selectedTestSuite = { id: 'suite-1' } as TestSuite;
   const runRefreshRef = { current: null };
@@ -122,6 +149,7 @@ describe('Runs', () => {
     } as Awaited<ReturnType<typeof getRunsQuery>>);
 
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+    requestRows();
 
     expect(await screen.findByText(`${TabsI18nKey.Runs}: 250`)).toBeInTheDocument();
   });
@@ -152,9 +180,9 @@ describe('Runs', () => {
     nodeSetData.mockClear();
 
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
-    // Let the initial getRunsQuery() fetch settle so its own datasource refresh isn't mistaken for one
-    // triggered by the cancel confirmation below.
-    await vi.waitFor(() => expect(getRunsQuery).toHaveBeenCalled());
+    // Let the grid's first load settle so its own option writes aren't mistaken for ones triggered by
+    // the cancel confirmation below.
+    await requestRowsAndWait();
     await act(() => Promise.resolve());
     const datasourceCallsAfterMount = mockGridApi.setGridOption.mock.calls.length;
 
@@ -259,5 +287,72 @@ describe('Runs — row navigation', () => {
 
     expect(open).not.toHaveBeenCalled();
     open.mockRestore();
+  });
+});
+
+describe('Runs — first page loading', () => {
+  const selectedTestSuite = { id: 'suite-1' } as TestSuite;
+  const runRefreshRef: { current: (() => void) | null } = { current: null };
+  const FIRST_PAGE = { content: MOCK_ROWS, totalElements: 6 } as Awaited<ReturnType<typeof getRunsQuery>>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getRunsQuery).mockResolvedValue(FIRST_PAGE);
+  });
+
+  test('requests the first page once and hands it to the grid', async () => {
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+    const successCallback = await requestRowsAndWait();
+
+    expect(successCallback).toHaveBeenCalledWith(expect.any(Array), 6);
+    expect(getRunsQuery).toHaveBeenCalledOnce();
+  });
+
+  test('does not recreate the datasource when the first page arrives, so the grid is not loaded twice', async () => {
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+    const datasource = gridProps.datasource;
+    requestRows();
+
+    expect(await screen.findByText(`${TabsI18nKey.Runs}: 6`)).toBeInTheDocument();
+    expect(gridProps.datasource).toBe(datasource);
+  });
+
+  test('reuses the shared first page when the grid asks for it again', async () => {
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+    await requestRowsAndWait();
+    await requestRowsAndWait();
+
+    expect(getRunsQuery).toHaveBeenCalledOnce();
+  });
+
+  test('queries again for a sorted request', async () => {
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+    await requestRowsAndWait({ sortModel: [{ colId: 'startedAt', sort: 'desc' }] });
+
+    expect(getRunsQuery).toHaveBeenCalledOnce();
+    expect(vi.mocked(getRunsQuery).mock.calls[0][2]).toHaveLength(1);
+  });
+
+  test('drops the shared first page and purges the grid on refresh', async () => {
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+    await requestRowsAndWait();
+
+    runRefreshRef.current?.();
+    expect(mockGridApi.refreshInfiniteCache).toHaveBeenCalledOnce();
+
+    await requestRowsAndWait();
+    expect(getRunsQuery).toHaveBeenCalledTimes(2);
+  });
+
+  test('does not cache a failed first page', async () => {
+    vi.mocked(getRunsQuery).mockResolvedValueOnce(null).mockResolvedValue(FIRST_PAGE);
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+
+    const firstAttempt = await requestRowsAndWait();
+    expect(firstAttempt).toHaveBeenCalledWith([], 0);
+
+    const secondAttempt = await requestRowsAndWait();
+    expect(secondAttempt).toHaveBeenCalledWith(expect.any(Array), 6);
+    expect(getRunsQuery).toHaveBeenCalledTimes(2);
   });
 });

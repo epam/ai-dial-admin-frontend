@@ -17,6 +17,7 @@ const createDefaultExtractionResultState = (): ExtractionResultTabUiState => {
     showTreePanel: false,
     colDefs: defaultColDefs,
     panelColDefs: defaultColDefs,
+    columnWidths: {},
     results: null,
     snapshots: [],
   };

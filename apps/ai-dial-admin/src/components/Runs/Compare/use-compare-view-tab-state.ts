@@ -15,6 +15,7 @@ const createDefaultExecutionResultsState = (): ExecutionResultsTabUiState => ({
   panelColDefs: [],
   filterModel: null,
   columnState: null,
+  columnWidths: {},
   results: null,
   comparedResults: null,
 });
@@ -49,8 +50,13 @@ export interface UseCompareViewTabStateReturn {
 export const useCompareViewTabState = (primaryRunId: string, comparedRunId: string): UseCompareViewTabStateReturn => {
   const [state, setState] = useState<CompareViewTabUiState>(createDefaultTabState);
 
+  // Column ids follow the run slot, not the run, so a flip or a swapped run keeps the widths the operator set.
   useEffect(() => {
-    setState(createDefaultTabState());
+    setState((prev) => {
+      const next = createDefaultTabState();
+      next.executionResults.columnWidths = prev.executionResults.columnWidths;
+      return next;
+    });
   }, [primaryRunId, comparedRunId]);
 
   const setExecutionResultsState = useCallback((patch: Partial<ExecutionResultsTabUiState>) => {

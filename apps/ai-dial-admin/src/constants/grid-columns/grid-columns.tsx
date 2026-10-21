@@ -13,6 +13,7 @@ import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/Im
 import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
 import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
+import RunCostCellRenderer from '@/src/components/Grid/CellRenderers/RunCostCellRenderer';
 import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
 import { AUDIT_ENUM_VALUES_FILTER } from '@/src/components/ActivityAudit/List/audit-filter-components';
@@ -1536,10 +1537,14 @@ export const RUNS_COLUMN: ColDef[] = [
 
 const SUITE_SCOPED_RUN_COL_IDS = ['testSuiteId'];
 const SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS = ['target'];
+const SUITE_RUNS_COST_COL_ID = 'cost';
 
+/** Only the suite Runs tab polls for a landed cost (`useCalculatingRunCostsPoll`), so only it may show the spinner. */
 export const SUITE_RUNS_COLUMN: ColDef[] = RUNS_COLUMN.filter(
   (col) => !SUITE_SCOPED_RUN_COL_IDS.includes(col.colId ?? ''),
-).map((col) => (SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS.includes(col.colId ?? '') ? { ...col, hide: true } : col));
+)
+  .map((col) => (SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS.includes(col.colId ?? '') ? { ...col, hide: true } : col))
+  .map((col) => (col.colId === SUITE_RUNS_COST_COL_ID ? { ...col, cellRenderer: RunCostCellRenderer } : col));
 
 const COMPARE_RUN_PICKER_COL_IDS = [
   'testRunName',

@@ -7,6 +7,9 @@ import {
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
 } from '@/src/components/Runs/grid-column-layout';
+import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
+import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { FilterOperatorDto } from '@/src/types/request';
 import {
@@ -98,6 +101,9 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(columns[4]).toEqual(expect.objectContaining({ headerName: 'INPUT BINDINGS' }));
     expect(columns[5]).toEqual(expect.objectContaining({ headerName: 'Extracted' }));
 
+    expect(columns[2]).toEqual(expect.objectContaining({ headerGroupComponent: EllipsisHeaderGroup }));
+    expect(columns[3]).toEqual(expect.objectContaining({ headerGroupComponent: EllipsisHeaderGroup }));
+
     const accuracyChildren = (columns[2] as any).children;
     expect(accuracyChildren).toHaveLength(1);
     expect(accuracyChildren[0]).toEqual(
@@ -109,7 +115,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
         filter: 'agNumberColumnFilter',
         floatingFilter: true,
         width: METRIC_COLUMN_WIDTH,
-        cellClass: 'p-0',
+        cellClass: ['p-0', NO_BORDER_CLASS],
         headerClass: 'align-right',
       }),
     );
@@ -176,6 +182,27 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(schema.metricValues).toEqual({ 'Exact Match': { exact_match: 1 } });
     expect(schema.testCaseData).toEqual({ prompt: 'hello', language: 'fr' });
     expect(schema.extractedColumns).toEqual({ answer: 'Hi', verification: 'Yes' });
+  });
+
+  test('Should render metric, extracted and input leaf headers through the ellipsis header', () => {
+    const results = [
+      {
+        metricValues: { Accuracy: { accuracy: 0.95 } },
+        testCaseData: { prompt: 'hello' },
+        extractedColumns: { answer: 'Hi' },
+      },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const firstLeafOf = (headerName: string) =>
+      (columns.find((column: any) => column.headerName === headerName) as any).children[0];
+
+    expect(firstLeafOf('Accuracy').headerComponentParams).toEqual({
+      innerHeaderComponent: EllipsisHeader,
+      innerHeaderComponentParams: { isRightAligned: true },
+    });
+    expect(firstLeafOf('Extracted').headerComponentParams).toEqual({ innerHeaderComponent: EllipsisHeader });
+    expect(firstLeafOf('INPUT BINDINGS').headerComponentParams).toEqual({ innerHeaderComponent: EllipsisHeader });
   });
 
   test('Should merge extracted column keys from all rows, so a request chain shows every column', () => {

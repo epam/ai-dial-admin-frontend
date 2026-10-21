@@ -1,5 +1,8 @@
 import { ColDef, ColumnResizedEvent, ColumnState, GridApi } from 'ag-grid-community';
 
+// Widths of the columns the operator dragged, by column id.
+export type ColumnWidths = Record<string, number>;
+
 export interface GridStatePersistenceOptions {
   // Column-state keys to store. Omitted, the whole column state is stored; `width` is stored only for
   // columns the operator dragged either way.

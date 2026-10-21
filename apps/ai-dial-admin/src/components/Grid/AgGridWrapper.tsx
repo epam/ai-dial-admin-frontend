@@ -4,6 +4,7 @@ import { Grid, GridColorScheme } from '@epam/ai-dial-ui-kit';
 import {
   ColDef,
   ColGroupDef,
+  ColumnResizedEvent,
   GetRowIdParams,
   DisplayedColumnsChangedEvent,
   GridApi,
@@ -25,12 +26,18 @@ import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { HEADER_HEIGHT, ICON_ROW_HEIGHT } from './constants';
 import { useCellContextMenu } from './hooks/use-cell-context-menu';
 import { useGridStatePersistence } from './hooks/use-grid-state-persistence';
+import { ColumnWidths } from './models';
+import { withColumnWidths } from './utils';
 
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
   rowData?: T[] | null;
   additionalGridOptions?: Omit<GridOptions, 'columnDefs' | 'rowData' | 'onGridReady'>;
   storageKey?: string;
+  // Controlled alternative to `storageKey` for a grid whose owner keeps the widths in its own state,
+  // so they outlive the grid's remount: the owner gets the full map back on every finished drag.
+  columnWidths?: ColumnWidths;
+  onColumnWidthsChange?: (widths: ColumnWidths) => void;
   onGridReady?: (gridApi: GridReadyEvent) => void;
   // Opt-in for live-streaming feeds: data flows as React props and
   // persisted state is restored on columnDefs/storageKey change rather
@@ -74,6 +81,8 @@ const AgGridWrapper = <T extends object>({
   rowData,
   additionalGridOptions,
   storageKey,
+  columnWidths,
+  onColumnWidthsChange,
   onGridReady: gridReadyCb,
   isLiveData,
   getRowId,
@@ -85,8 +94,8 @@ const AgGridWrapper = <T extends object>({
   const colorScheme = currentTheme === EDITOR_THEMES.dark ? GridColorScheme.Dark : GridColorScheme.Light;
 
   const renderableColumnDefs = useMemo(
-    () => (columnDefs ? withFormattedValueRenderer(columnDefs) : columnDefs),
-    [columnDefs],
+    () => (columnDefs ? withColumnWidths(withFormattedValueRenderer(columnDefs), columnWidths) : columnDefs),
+    [columnDefs, columnWidths],
   );
 
   const {
@@ -109,6 +118,19 @@ const AgGridWrapper = <T extends object>({
       gridReadyCb?.({ api, type: 'gridReady', context: api.getGridOption('context') } as GridReadyEvent);
     },
     [gridReadyCb],
+  );
+
+  const onColumnResizedAndReport = useCallback(
+    (e: ColumnResizedEvent) => {
+      onColumnResized(e);
+      if (e.finished && e.source === 'uiColumnResized') {
+        onColumnWidthsChange?.({
+          ...columnWidths,
+          ...Object.fromEntries((e.columns ?? []).map((column) => [column.getColId(), column.getActualWidth()])),
+        });
+      }
+    },
+    [onColumnResized, columnWidths, onColumnWidthsChange],
   );
 
   const getRowIdFromRow = useCallback((row: T) => getRowId!({ data: row } as GetRowIdParams<T>), [getRowId]);
@@ -137,7 +159,7 @@ const AgGridWrapper = <T extends object>({
     onSortChanged,
     onColumnMoved,
     onColumnVisible,
-    onColumnResized,
+    onColumnResized: onColumnResizedAndReport,
     onCellContextMenu,
     preventDefaultOnContextMenu: true,
     ...(isLiveData ? { animateRows: false } : {}),
