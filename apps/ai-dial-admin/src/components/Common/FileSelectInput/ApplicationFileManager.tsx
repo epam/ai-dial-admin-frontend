@@ -7,11 +7,12 @@ import { ColDef, GridOptions } from 'ag-grid-community';
 import { getFormDataForUpload } from '@/src/components/EntityListView/HeaderButtons/utils';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ONE_ACTION_COLUMN, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { getDeleteOperation, getExportOperation } from '@/src/constants/grid-columns/actions';
 import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useApplicationFileExport } from '@/src/hooks/use-application-file-export';
 import { useI18n } from '@/src/locales/client';
 import { CustomFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -32,6 +33,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
   const t = useI18n();
   const { showNotification } = useNotification();
   const { getFiles: fetchFiles, uploadFiles, removeFile } = getEntityFileActions(view);
+  const exportFile = useApplicationFileExport(view);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -116,6 +118,16 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
     [getFiles, showNotification, t, id, removeFile],
   );
 
+  const onExportFile = useCallback(
+    (data?: CustomFileRowData) => {
+      if (!id || !data?.displayName) {
+        return;
+      }
+      void exportFile(id, data.displayName);
+    },
+    [exportFile, id],
+  );
+
   // after implementing multiple upload, the code above should be used
   // const onUpload = () => {
   //   const { body } = getFormDataForUpload(
@@ -145,7 +157,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
       ),
     },
     onCellClicked: (event) => {
-      if (event.column.getColId() === 'action-remove') {
+      if (event.column.getColId() === ACTIONS_COLUMN_CEL_ID) {
         return;
       }
       event.node.setSelected(true);
@@ -186,10 +198,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
           columnDefs={[
             DISPLAY_NAME_COLUMN,
             SIZE_COLUMN('Size') as ColDef,
-            {
-              ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveFile, void 0, 'text-error w-4 h-4')),
-              colId: 'action-remove',
-            },
+            ACTION_COLUMN([getExportOperation(onExportFile), getDeleteOperation(onRemoveFile)]),
           ]}
           rowData={data}
           additionalGridOptions={gridOptions}

@@ -16,6 +16,8 @@ export enum ApiRoute {
   SkillsPreview = '/api/skills/preview',
   Sse = '/api/sse',
   TestSuitesExport = '/api/test-suites/export',
+  TestSuitesFilesDownload = '/api/test-suites/files/download',
   DatasetsExport = '/api/datasets/export',
+  DatasetsFilesDownload = '/api/datasets/files/download',
   Themes = '/api/themes',
 }
