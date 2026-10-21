@@ -118,6 +118,12 @@ describe('ScoreCellRenderer', () => {
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
+  test('a visible dash cell draws a neutral right border so neighboring dash cells stay separated', () => {
+    const { container } = renderCell({ value: null, columnWidth: DEFAULT_TIER.minWidthAbsolute });
+
+    expect(container.firstChild).toHaveClass('border-r', 'border-tertiary');
+  });
+
   test.each([
     { tier: DEFAULT_TIER, name: 'default' },
     { tier: MEDIUM_TIER, name: 'medium' },
