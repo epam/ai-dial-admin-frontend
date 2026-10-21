@@ -35,6 +35,7 @@ import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evalu
 
 import { CompareAnalyticsRow, MetricGroup } from './models';
 import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 export type { MetricGroup } from './models';
 
 export const RUN_FILTER = (id?: string | null): FilterDto[] => [
@@ -50,11 +51,18 @@ export const RESULT_FILTERS = (run: Run): FilterDto[] => [
   },
 ];
 
+const ELLIPSIS_HEADER_PARAMS = { innerHeaderComponent: EllipsisHeader };
+const RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS = {
+  innerHeaderComponent: EllipsisHeader,
+  innerHeaderComponentParams: { isRightAligned: true },
+};
+
 const getInputColumns = (input: Record<string, unknown>, hide = false) => {
   return Object.keys(input).map((key) => {
     return {
       field: key,
       headerName: key,
+      headerComponentParams: ELLIPSIS_HEADER_PARAMS,
       hide,
       flex: 1,
       minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
@@ -74,6 +82,7 @@ const getExtractedColumns = (extracted: Record<string, unknown>) => {
     return {
       field: key,
       headerName: key,
+      headerComponentParams: ELLIPSIS_HEADER_PARAMS,
       flex: 1,
       minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
       ...NO_FILTER_COL_DEF,
@@ -105,12 +114,14 @@ const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Rec
 const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
+    headerGroupComponent: EllipsisHeaderGroup,
     children: Object.keys(groupValues).map(
       (key) =>
         ({
           field: `${groupKey}_${key}`,
           colId: `${groupKey}_${key}`,
           headerName: key,
+          headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
           cellRenderer: ScoreCellRenderer,
           ...NUMBER_FILTER_COL_DEF,
           ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
@@ -155,7 +166,7 @@ type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
   field,
   headerName,
-  headerComponentParams: { innerHeaderComponent: EllipsisHeader, innerHeaderComponentParams: { isRightAligned: true } },
+  headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
   colId: field,
   sortable: true,
   ...lockedWidthColDef(width),
