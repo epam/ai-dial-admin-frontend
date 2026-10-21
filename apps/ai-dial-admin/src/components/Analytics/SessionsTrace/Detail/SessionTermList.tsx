@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import FieldCaveat from '@/src/components/Common/FieldCaveat/FieldCaveat';
@@ -18,7 +18,7 @@ interface Props {
 //
 // One line per value, whatever its length. Nothing bounds an insight value and most metadata values are
 // opaque identifiers, so letting them reflow would give a handful of fields most of a panel whose point is
-// that every field is visible at once — the row rhythm is what makes the list scannable. `DialEllipsisTooltip`
+// that every field is visible at once — the row rhythm is what makes the list scannable. `EllipsisTooltip`
 // keeps the full value reachable: it clamps only when the value actually overflows, and exposes what it
 // clipped through the trigger's accessible name rather than a `title`.
 const SessionTermList: FC<Props> = ({ terms }) => (
@@ -35,7 +35,7 @@ const SessionTermList: FC<Props> = ({ terms }) => (
         {/* The alignment goes on the tooltip's own `className`, not on the `dd`: it renders the value in a
             span of its own carrying `text-start`, which wins over an inherited alignment. */}
         <dd className="min-w-0 text-primary dial-tiny-text">
-          <DialEllipsisTooltip text={value} className="text-right" contentClassName="break-all" />
+          <EllipsisTooltip text={value} className="text-right" contentClassName="break-all" />
         </dd>
       </div>
     ))}

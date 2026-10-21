@@ -6,7 +6,7 @@ import {
   DialLoader,
   DialNoDataContent,
   PrimaryButton,
-  DialSwitch,
+  Switch,
 } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
@@ -289,9 +289,9 @@ const Tools: FC<Props> = ({
         </h1>
 
         {showManagementButtons && (
-          <DialSwitch
-            switchId="useAllTools"
-            label={t(ToolsetI18nKey.UseAllTools)}
+          <Switch
+            id="useAllTools"
+            labelProps={{ label: t(ToolsetI18nKey.UseAllTools) }}
             isOn={useAllTools}
             onChange={onUseAllToolsSwitch}
           />

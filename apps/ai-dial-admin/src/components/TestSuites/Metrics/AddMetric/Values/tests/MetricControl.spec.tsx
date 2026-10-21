@@ -73,7 +73,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       </select>
     </label>
   ),
-  DialSwitch: ({ label, isOn, onChange }: any) => (
+  Switch: ({ labelProps: { label } = {}, isOn, onChange }: any) => (
     <label>
       <span>{label ?? 'switch-input'}</span>
       <input

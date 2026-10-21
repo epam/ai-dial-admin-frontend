@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  DialEllipsisTooltip,
-  GhostIconButton,
-  DialNoDataContent,
-  ElementSize,
-  GhostButton,
-} from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostIconButton, DialNoDataContent, ElementSize, GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown, IconChevronRight, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -162,7 +156,7 @@ const HopTreeRowView: FC<RowProps> = ({
           <span className="truncate text-primary dial-small-semi-text">{label}</span>
         ) : (
           <span className="min-w-0 text-primary dial-small-semi-text">
-            <DialEllipsisTooltip text={label} />
+            <EllipsisTooltip text={label} />
           </span>
         )}
         {/* What the hop did and what it recorded, on one line beneath who did it. An MCP row states its

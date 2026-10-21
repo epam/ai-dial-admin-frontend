@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 
 import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -64,29 +64,29 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
         }}
       />
 
-      <DialSwitch
+      <Switch
         isOn={runner['dial:appendApplicationPropertiesHeader']}
-        label={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
-        switchId="appendApplicationPropertiesHeader"
+        labelProps={{ label: t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader']) }}
+        id="appendApplicationPropertiesHeader"
         onChange={(value: boolean) => {
           onChange(value, 'dial:appendApplicationPropertiesHeader');
         }}
         disabled={isReadOnlyAdmin}
       />
-      <DialSwitch
+      <Switch
         isOn={runner['dial:applicationTypePlaybackSupport']}
-        label={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
-        switchId="applicationTypePlaybackSupport"
+        labelProps={{ label: t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport']) }}
+        id="applicationTypePlaybackSupport"
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypePlaybackSupport');
         }}
         disabled={isReadOnlyAdmin}
       />
 
-      <DialSwitch
+      <Switch
         isOn={runner['dial:applicationTypeAssistantAttachmentsInRequestSupported']}
-        label={t(EntityFieldsI18nKey['dial:applicationTypeAssistantAttachmentsInRequestSupported'])}
-        switchId="applicationTypeAssistantAttachmentsInRequestSupported"
+        labelProps={{ label: t(EntityFieldsI18nKey['dial:applicationTypeAssistantAttachmentsInRequestSupported']) }}
+        id="applicationTypeAssistantAttachmentsInRequestSupported"
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypeAssistantAttachmentsInRequestSupported');
         }}

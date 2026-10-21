@@ -53,8 +53,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         {label}
       </button>
     ),
-    DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
-    DialSwitch: () => <div />,
+    EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+    Switch: () => <div />,
     IconButton: () => <div />,
   };
 });

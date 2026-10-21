@@ -1,6 +1,6 @@
 'use client';
 
-import { GhostButton, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Tooltip, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -77,9 +77,9 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
         <span className="dial-small-semi-text text-secondary whitespace-nowrap">
           {t(TestSuitesI18nKey.RunCondition)}
         </span>
-        <DialTooltip tooltip={t(TestSuitesI18nKey.RunConditionTooltip)}>
+        <Tooltip tooltip={t(TestSuitesI18nKey.RunConditionTooltip)}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
-        </DialTooltip>
+        </Tooltip>
       </div>
       {filters.map((filter, index) => (
         <RunConditionChip

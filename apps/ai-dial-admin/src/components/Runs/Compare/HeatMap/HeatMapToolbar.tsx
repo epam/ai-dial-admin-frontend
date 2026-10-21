@@ -3,12 +3,13 @@
 import {
   DialCheckbox,
   DialDropdown,
-  DialEllipsisTooltip,
+  EllipsisTooltip,
   DialSearch,
   DialSegmentedControl,
-  DialTooltip,
+  Tooltip,
   ElementSize,
   SegmentedControlOption,
+  TooltipPlacement,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -149,10 +150,10 @@ const HeatMapToolbar: FC<Props> = ({
 
                 return (
                   <div key={groupKey} className="flex h-[34px] items-center pl-10 pr-3">
-                    <DialTooltip
+                    <Tooltip
                       tooltip={minOneSelectedTooltip}
                       hideTooltip={!isLastSelected}
-                      placement="top"
+                      placement={TooltipPlacement.Top}
                       triggerClassName="flex min-w-0"
                     >
                       <DialCheckbox
@@ -162,7 +163,7 @@ const HeatMapToolbar: FC<Props> = ({
                         label={groupKey}
                         onChange={(value) => onToggleGroup(groupKey, value)}
                       />
-                    </DialTooltip>
+                    </Tooltip>
                   </div>
                 );
               })}
@@ -176,7 +177,7 @@ const HeatMapToolbar: FC<Props> = ({
           className="inline-flex items-center gap-1 rounded-xs bg-layer-3 px-1.5 py-1 dial-small-text text-primary max-w-[280px] disabled:opacity-70 disabled:cursor-not-allowed"
           aria-disabled={isMetricsDropdownDisabled}
         >
-          <DialEllipsisTooltip text={triggerLabel} className="truncate" />
+          <EllipsisTooltip text={triggerLabel} className="truncate" />
           {chevronIcon}
         </button>
       </DialDropdown>

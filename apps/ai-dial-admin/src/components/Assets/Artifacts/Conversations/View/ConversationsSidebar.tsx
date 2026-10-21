@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialCollapsibleSidebar, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -34,7 +34,7 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
                 onClick={() => onSelect(conversation)}
               >
                 <span className="flex-1 min-w-0 text-left truncate">
-                  <DialEllipsisTooltip text={conversation.name} />
+                  <EllipsisTooltip text={conversation.name} />
                 </span>
               </button>
             );

@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef } from 'react';
 
-import { GhostButton, PrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, PrimaryButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
@@ -110,10 +110,10 @@ const RolesGrid: FC<Props> = ({
             {t(TabsI18nKey.Roles)}: {data.length}
           </h1>
           {!isReadOnlyAdmin && (
-            <DialSwitch
+            <Switch
               isOn={!entity.isPublic}
-              label={t(RolesI18nKey.AvailableSpecificRoles)}
-              switchId="specificRoles"
+              labelProps={{ label: t(RolesI18nKey.AvailableSpecificRoles) }}
+              id="specificRoles"
               onChange={onSwitchSpecificRoles}
             />
           )}

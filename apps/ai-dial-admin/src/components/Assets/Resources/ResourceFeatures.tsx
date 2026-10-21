@@ -1,6 +1,6 @@
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialLabel, DialLoader, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialLoader, Switch, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 
 import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -125,19 +125,19 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
           {keys.map((key) => {
             const { value, isReadonly } = getResourceReadOnlyValues(key, fullRunner);
             return (
-              <DialTooltip
+              <Tooltip
                 key={key}
                 tooltip={isReadonly ? t(FeaturesI18nKey.AppRunnerInherited) : ''}
-                placement="bottom-start"
+                placement={TooltipPlacement.Bottom}
               >
-                <DialSwitch
+                <Switch
                   disabled={isReadonly || isReadOnlyAdmin}
                   isOn={(isReadonly ? value : entity.features?.[key]) as boolean}
-                  label={t(resourceFeatureLabelMap[key])}
-                  switchId={key}
+                  labelProps={{ label: t(resourceFeatureLabelMap[key]) }}
+                  id={key}
                   onChange={(value) => onSwitch(value, key)}
                 />
-              </DialTooltip>
+              </Tooltip>
             );
           })}
         </div>

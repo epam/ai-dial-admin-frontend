@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { PrimaryButton, DialLoader, DialTabs, DialTooltip, TabModel } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton, DialLoader, DialTabs, Tooltip, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import {
@@ -225,14 +225,14 @@ const ConfigurationPreview: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary py-4 px-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <DialTooltip tooltip={blockedTooltip} hideTooltip={!isErrorOnlyDisable && !isAnalyticsBlockedByIssues}>
+        <Tooltip tooltip={blockedTooltip} hideTooltip={!isErrorOnlyDisable && !isAnalyticsBlockedByIssues}>
           <PrimaryButton
             label={t(ButtonsI18nKey.Import)}
             disabled={isImportDisabled || isImporting}
             iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onImportFile}
           />
-        </DialTooltip>
+        </Tooltip>
       </div>
       <div className="flex-1 min-h-0">{renderBody()}</div>
     </div>

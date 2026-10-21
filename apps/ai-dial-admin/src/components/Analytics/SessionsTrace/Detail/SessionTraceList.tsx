@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  DialEllipsisTooltip,
+  EllipsisTooltip,
   LinkButton,
   DialLoader,
   DialNoDataContent,
@@ -116,13 +116,13 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
       <span className="flex min-w-0 items-center gap-2">
         <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
         <span className="min-w-0 text-primary dial-small-semi-text">
-          <DialEllipsisTooltip text={title} />
+          <EllipsisTooltip text={title} />
         </span>
         {card.isCoreInternal && (
           <IdentityTag label={t(SessionsTraceI18nKey.TraceCardCoreInternal)} colorClassName="text-warning" />
         )}
         <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
-          <DialEllipsisTooltip text={card.traceId} />
+          <EllipsisTooltip text={card.traceId} />
         </span>
         <span className={classNames('flex shrink-0 items-center gap-1', isFailed && 'text-error')}>
           <StatusDot isFailed={isFailed} />
@@ -201,7 +201,7 @@ const UnrecordedRoot: FC<UnrecordedProps> = ({ group, onOpenTrace }) => {
           {t(SessionsTraceI18nKey.TraceRootNotRecorded)}
         </span>
         <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
-          <DialEllipsisTooltip text={group.traceId} />
+          <EllipsisTooltip text={group.traceId} />
         </span>
         {/* The trace's figures are real even though its root is not, so the panel still states them — that is
             what "renders from its trace-level figures" means. Only the middle tier is absent, because there is

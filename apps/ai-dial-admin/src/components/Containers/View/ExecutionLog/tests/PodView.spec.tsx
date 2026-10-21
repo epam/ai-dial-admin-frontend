@@ -45,7 +45,7 @@ vi.stubGlobal('EventSource', MockEventSource);
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialNoDataContent: ({ title }: any) => <div role="status">{title}</div>,
-  DialTooltip: ({ tooltip, children }: any) => (
+  Tooltip: ({ tooltip, children }: any) => (
     <>
       <span>{children}</span>
       <div role="tooltip">{tooltip}</div>

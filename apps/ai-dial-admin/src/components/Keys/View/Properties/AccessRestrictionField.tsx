@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialLabel, DialRadioButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialRadioButton, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { KeysI18nKey } from '@/src/constants/i18n';
@@ -176,10 +176,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | 
             disabled={disabled}
           />
           {showMaskNotice && (
-            <DialTooltip
-              tooltip={<span>{t(KeysI18nKey.IpRangesMaskNotice)}</span>}
-              triggerClassName="flex items-center"
-            >
+            <Tooltip tooltip={<span>{t(KeysI18nKey.IpRangesMaskNotice)}</span>} triggerClassName="flex items-center">
               <button
                 type="button"
                 aria-label={t(KeysI18nKey.IpRangesMaskNotice)}
@@ -187,7 +184,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | 
               >
                 <IconInfoCircle size={INFO_ICON_SIZE} aria-hidden />
               </button>
-            </DialTooltip>
+            </Tooltip>
           )}
         </div>
       </div>

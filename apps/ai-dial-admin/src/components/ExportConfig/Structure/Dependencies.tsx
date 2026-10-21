@@ -1,7 +1,7 @@
 'use client';
 import { FC, useMemo } from 'react';
 
-import { DialLabel, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, Switch, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -47,18 +47,18 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
     <div className="flex flex-col gap-y-3">
       <div className="flex items-center gap-x-2">
         <DialLabel label={t(ExportI18nKey.Resources)} htmlFor="dependencies" />
-        <DialTooltip tooltip={t(ExportI18nKey.DependenciesInfo)}>
+        <Tooltip tooltip={t(ExportI18nKey.DependenciesInfo)}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
-        </DialTooltip>
+        </Tooltip>
       </div>
 
       <div className="flex flex-col gap-y-3 flex-1 min-h-0">
         {switches.map(({ key, label }) => (
-          <DialSwitch
+          <Switch
             key={key}
             isOn={dependencies[key as keyof typeof dependencies]}
-            label={t(label)}
-            switchId={key}
+            labelProps={{ label: t(label) }}
+            id={key}
             onChange={(value) =>
               onChangeConfig({
                 ...dependencies,

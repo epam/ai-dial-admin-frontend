@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLoader, PrimaryButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialLoader, PrimaryButton, Switch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -214,7 +214,12 @@ const SystemRollback: FC = () => {
             />
           )}
           <div className="w-px h-6 bg-layer-4"></div>
-          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} label="JSON" />
+          <Switch
+            id="jsonView"
+            isOn={isJsonView}
+            onChange={() => setIsJsonView(!isJsonView)}
+            labelProps={{ label: 'JSON' }}
+          />
         </div>
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">

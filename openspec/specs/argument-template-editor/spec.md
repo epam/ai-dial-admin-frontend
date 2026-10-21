@@ -89,7 +89,7 @@ The value editor rendered for a field in Constant mode SHALL match the field's s
 
 #### Scenario: Boolean field shows toggle/switch
 - **WHEN** a boolean-typed field is in Constant mode
-- **THEN** the value editor SHALL be a `DialSwitch` or checkbox control
+- **THEN** the value editor SHALL be a `Switch` or checkbox control
 
 #### Scenario: Object/array field shows truncated JSON preview with edit button
 - **WHEN** an object or array-typed field is in Constant mode
@@ -116,7 +116,7 @@ When a field is in Binding mode, the value editor SHALL be a dropdown/select all
 
 ### Requirement: JSON editor toggle switches to raw argumentTemplate editing
 
-A `DialSwitch` labeled "JSON Editor" in the ArgumentTemplate section header SHALL toggle between table view and a Monaco JSON editor editing `argumentTemplate.arguments` directly.
+A `Switch` labeled "JSON Editor" in the ArgumentTemplate section header SHALL toggle between table view and a Monaco JSON editor editing `argumentTemplate.arguments` directly.
 
 #### Scenario: JSON toggle switches to Monaco editor
 - **WHEN** user toggles "JSON Editor" on

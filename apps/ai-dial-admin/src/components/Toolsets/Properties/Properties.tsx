@@ -1,6 +1,6 @@
 'use client';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
@@ -51,11 +51,11 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         isFullWidth={false}
       />
       <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={handleChangeToolset} />
-      <DialSwitch
+      <Switch
         isOn={selectedToolset.forwardPerRequestKey}
-        label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+        labelProps={{ label: t(EntityFieldsI18nKey.forwardPerRequestKey) }}
         disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY || isReadOnlyAdmin}
-        switchId="forwardPerRequestKey"
+        id="forwardPerRequestKey"
         onChange={(value: boolean) => {
           handleChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });
         }}

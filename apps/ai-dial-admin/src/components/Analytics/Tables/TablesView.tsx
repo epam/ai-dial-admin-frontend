@@ -11,7 +11,7 @@ import {
   ButtonVariant,
   ConfirmationPopupVariant,
   DialConfirmationPopup,
-  DialEllipsisTooltip,
+  EllipsisTooltip,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -287,7 +287,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
               <span>{t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}</span>
               <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
                 <span className="text-secondary shrink-0">{t(AnalyticsTablesI18nKey.Name)}:</span>
-                <DialEllipsisTooltip text={deleteTarget} />
+                <EllipsisTooltip text={deleteTarget} />
               </div>
             </div>
           }

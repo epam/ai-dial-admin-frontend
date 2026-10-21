@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { IconButton, DialLabel, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconButton, DialLabel, DialLoader, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { getDeployment } from '@/src/app/[lang]/conversations/actions';
@@ -71,7 +71,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
   return (
     <div className={`size-full flex flex-col gap-y-8 ${STANDARD_CONTROL_WIDTH}`}>
       <LabelledText label={t(EntityFieldsI18nKey.name)}>
-        <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
+        <Tooltip tooltip={selectedConversation.name}>{selectedConversation.name}</Tooltip>
       </LabelledText>
       <LabelledText label={t(EntityFieldsI18nKey.agent)}>
         <div className="flex flex-row gap-1 items-center">
@@ -81,7 +81,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
             </div>
           ) : (
             <>
-              <DialTooltip tooltip={model}>{model}</DialTooltip>
+              <Tooltip tooltip={model}>{model}</Tooltip>
               {!!agentLink && (
                 <IconButton
                   onClick={() => openResourceInNewTab()}

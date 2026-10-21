@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput, DialLabel, DialNumberInput, DialSelect, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialLabel, DialNumberInput, DialSelect, Tooltip } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import FileSelectInput from '@/src/components/Common/FileSelectInput/FileSelectInput';
@@ -56,9 +56,9 @@ const VariableRow: FC<Props> = ({
       <span>
         <DialLabel label={row.templateVariable} />
         {!!info && (
-          <DialTooltip tooltip={info}>
+          <Tooltip tooltip={info}>
             <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} size={16} className="text-secondary" />
-          </DialTooltip>
+          </Tooltip>
         )}
       </span>
       {showTypeSelector && !readonly && (

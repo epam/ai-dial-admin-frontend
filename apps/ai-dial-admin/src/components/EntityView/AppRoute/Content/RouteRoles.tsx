@@ -1,6 +1,6 @@
 'use client';
 
-import { OutlinedButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialNoDataContent, Switch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -108,9 +108,9 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
     <>
       <div className="size-full flex flex-col">
         {!disabled && (
-          <DialSwitch
-            switchId="inheritedAppRoles"
-            label={t(RoutesI18nKey.InheritApplicationRoles)}
+          <Switch
+            id="inheritedAppRoles"
+            labelProps={{ label: t(RoutesI18nKey.InheritApplicationRoles) }}
             isOn={route.isPublic}
             onChange={() => {
               onChangeRoute({

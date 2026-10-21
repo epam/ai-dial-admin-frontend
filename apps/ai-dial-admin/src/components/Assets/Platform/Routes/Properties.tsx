@@ -6,7 +6,7 @@ import {
   DialNumberInput,
   PrimaryButton,
   DialRadioGroup,
-  DialSwitch,
+  Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
@@ -156,10 +156,10 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
           disabled={isReadOnlyAdmin}
           trackGlobalValidity={false}
         />
-        <DialSwitch
+        <Switch
           isOn={asset.rewritePath}
-          label={t(EntityFieldsI18nKey.rewritePath)}
-          switchId="rewritePath"
+          labelProps={{ label: t(EntityFieldsI18nKey.rewritePath) }}
+          id="rewritePath"
           disabled={isReadOnlyAdmin}
           onChange={onChangeRewritePath}
         />

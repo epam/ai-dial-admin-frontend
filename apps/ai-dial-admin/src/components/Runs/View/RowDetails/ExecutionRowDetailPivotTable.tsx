@@ -3,7 +3,7 @@
 import { FC, useLayoutEffect, useMemo, useRef } from 'react';
 
 import classNames from 'classnames';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import {
   getPivotGridMinWidth,
@@ -67,7 +67,7 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
                 key={`section-${column.sectionKey}-${column.field.fieldKey}`}
                 className={classNames(HEADER_CELL_BASE, 'text-secondary', column.isSectionStart ? 'border-l' : '')}
               >
-                {column.isSectionStart ? <DialEllipsisTooltip text={sectionLabel} className="text-secondary" /> : null}
+                {column.isSectionStart ? <EllipsisTooltip text={sectionLabel} className="text-secondary" /> : null}
               </div>
             );
           })}
@@ -77,7 +77,7 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
               key={`field-${column.sectionKey}-${column.field.fieldKey}`}
               className={classNames(HEADER_CELL_BASE, 'text-secondary border-r')}
             >
-              <DialEllipsisTooltip
+              <EllipsisTooltip
                 text={column.field.label}
                 className={classNames('text-secondary', isRightAlignedRowDetailField(column.field) && 'text-right')}
               />

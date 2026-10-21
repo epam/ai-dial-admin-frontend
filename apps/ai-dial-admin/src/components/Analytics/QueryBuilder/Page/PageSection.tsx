@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialCheckbox, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, Switch } from '@epam/ai-dial-ui-kit';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
@@ -26,9 +26,9 @@ const PageSection: FC = () => {
       title={t(QueryBuilderI18nKey.Page)}
       markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Numeric].marker}
       action={
-        <DialSwitch
-          switchId="qb-page-enabled"
-          label={t(QueryBuilderI18nKey.IncludePage)}
+        <Switch
+          id="qb-page-enabled"
+          labelProps={{ label: t(QueryBuilderI18nKey.IncludePage) }}
           isOn={page.enabled}
           onChange={(value) => {
             page.enabled = value;

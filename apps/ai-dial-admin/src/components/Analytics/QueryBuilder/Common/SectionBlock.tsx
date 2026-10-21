@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 
 import classNames from 'classnames';
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconAlertTriangle } from '@tabler/icons-react';
 
 interface Props {
@@ -24,11 +24,11 @@ const SectionBlock: FC<Props> = ({ title, subtitle, markerClassName, action, war
         {title}
         {subtitle && <span className="normal-case tracking-normal text-secondary dial-tiny-text">· {subtitle}</span>}
         {warning && (
-          <DialTooltip tooltip={warning} triggerClassName="self-center">
+          <Tooltip tooltip={warning} triggerClassName="self-center">
             <span role="img" aria-label={warning} className="flex text-warning">
               <IconAlertTriangle size={14} />
             </span>
-          </DialTooltip>
+          </Tooltip>
         )}
       </h3>
       <div className="flex items-center gap-1.5">{action}</div>

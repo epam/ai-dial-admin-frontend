@@ -67,7 +67,7 @@ mid-edit.
 
 ### Requirement: JSONata toggle in the Request Template header
 
-The Request Template header row (`RequestTemplate.tsx`) SHALL render a `DialSwitch` labelled "JSONata",
+The Request Template header row (`RequestTemplate.tsx`) SHALL render a `Switch` labelled "JSONata",
 positioned before the existing `ContentTypeSelect`, wired to the derived JSONata mode.
 
 The switch SHALL be rendered when the body `contentType` is `application/json` **or** when `jsonataContent` is

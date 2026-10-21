@@ -8,18 +8,18 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import InterfaceFeaturesButton from '../InterfaceFeaturesButton';
 
-// DialSwitch's real markup doesn't associate its label with the checkbox accessibly in jsdom — same
+// Switch's real markup doesn't associate its label with the checkbox accessibly in jsdom — same
 // mock shape as Assets/Platform/Models/tests/Features.spec.tsx.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
-  DialSwitch: ({ label, isOn, onChange, disabled, switchId }: any) => (
+  Switch: ({ labelProps, isOn, onChange, disabled, id }: any) => (
     <label>
-      <span>{label}</span>
+      <span>{labelProps?.label}</span>
       <input
         type="checkbox"
         role="switch"
-        aria-label={label}
-        id={switchId}
+        aria-label={labelProps?.label}
+        id={id}
         checked={!!isOn}
         disabled={disabled}
         onChange={() => onChange(!isOn)}

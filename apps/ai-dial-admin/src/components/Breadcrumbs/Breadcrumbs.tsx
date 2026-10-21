@@ -16,7 +16,7 @@ import {
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { DialDropdown, DialEllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, EllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -115,7 +115,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
             href="/"
             className={linkClassName}
           >
-            <DialEllipsisTooltip text={label} />
+            <EllipsisTooltip text={label} />
           </Link>
         );
       } else if (hiddenBreadcrumbs && hiddenBreadcrumbs.length > 0) {
@@ -123,7 +123,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       } else {
         return (
           <Link prefetch={false} href={href} className={linkClassName}>
-            <DialEllipsisTooltip text={label} />
+            <EllipsisTooltip text={label} />
           </Link>
         );
       }
