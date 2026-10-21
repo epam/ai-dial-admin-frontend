@@ -1,6 +1,6 @@
 'use client';
 
-import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -35,7 +35,7 @@ const EditOverallScoreModalBody: FC<{
   const canApply = isValid && isOverallScoreDraftValid(draft);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open
       portalId="EditOverallScoreModal"
       header={t(TestSuitesI18nKey.EditOverallScore)}
@@ -53,7 +53,7 @@ const EditOverallScoreModalBody: FC<{
         <OverallScore selectedTestSuite={draft} metrics={metrics} testCaseSchema={testCaseSchema} onChange={onChange} />
         <ScoreThreshold selectedTestSuite={draft} onChange={onChange} />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

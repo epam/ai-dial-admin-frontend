@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { PrimaryButton, DialLoader, DialTabs, Tooltip, TabModel } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton, Spinner, DialTabs, Tooltip, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import {
@@ -161,7 +161,7 @@ const ConfigurationPreview: FC<Props> = ({
 
   const importingOverlay = isImporting && (
     <div className="size-full absolute bg-blackout z-10">
-      <DialLoader size={45} />
+      <Spinner size={45} fullWidth />
     </div>
   );
 
@@ -184,7 +184,7 @@ const ConfigurationPreview: FC<Props> = ({
     if (isLoading) {
       return (
         <div className="flex flex-col size-full justify-center items-center">
-          <DialLoader size={45} className="h-auto" />
+          <Spinner size={45} className="h-auto" fullWidth />
           <p className="mt-3 text-primary dial-small-text">{t(ImportI18nKey.ConfigurationParsing)}</p>
         </div>
       );

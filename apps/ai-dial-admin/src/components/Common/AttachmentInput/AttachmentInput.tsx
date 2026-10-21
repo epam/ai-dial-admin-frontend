@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { Label, DialRadioButton } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
@@ -98,7 +98,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
   return (
     <div className="flex flex-col w-full relative gap-3">
-      <DialLabel label={label} required={required} htmlFor={id} />
+      <Label label={label} required={required} htmlFor={id} />
 
       <div className="flex flex-col gap-3">
         <DialRadioButton

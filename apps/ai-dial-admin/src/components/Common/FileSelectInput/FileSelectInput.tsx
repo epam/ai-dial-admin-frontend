@@ -1,6 +1,6 @@
 import { FC, useCallback, useState } from 'react';
 
-import { DialFormPopup, DialInputPopup, DialLabel, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInputPopup, Label, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import OverflowValueTooltip from '@/src/components/Common/OverflowValueTooltip/OverflowValueTooltip';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
@@ -47,7 +47,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
   return (
     <FileFolderProvider>
       <div className="flex flex-col gap-y-1">
-        {label && <DialLabel label={label} htmlFor={elementId} />}
+        {label && <Label label={label} htmlFor={elementId} />}
         <OverflowValueTooltip text={filePath}>
           <DialInputPopup
             disabled={disabled || isReadOnlyAdmin}

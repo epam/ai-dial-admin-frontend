@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
 
-import { DialLabel, PrimaryButton, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Label, PrimaryButton, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -119,7 +119,7 @@ const InterfacesField = <V extends InterfaceValue>({
   return (
     <div className={classNames('flex flex-col gap-y-2')}>
       <div className="flex items-center gap-x-2">
-        <DialLabel label={t(InterfacesI18nKey.Interfaces)} />
+        <Label label={t(InterfacesI18nKey.Interfaces)} />
         <Tooltip
           tooltip={
             <div className="flex flex-col gap-1">

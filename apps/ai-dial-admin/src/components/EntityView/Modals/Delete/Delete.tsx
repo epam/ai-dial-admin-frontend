@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
+  ConfirmationPopup,
   EllipsisTooltip,
   DialSelect,
   PopupSize,
@@ -213,7 +213,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, []);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open={true}
       variant={ConfirmationPopupVariant.Danger}
       header={getTitle(view, t)}
@@ -265,7 +265,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
         </div>
         {hasRelatedArtefacts(view) && <RelatedArtefacts entity={entity} view={view} />}
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, OutlinedButton, DialTag } from '@epam/ai-dial-ui-kit';
+import { Spinner, OutlinedButton, DialTag } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
 import { ExternalServiceI18nKey } from '@/src/constants/i18n';
@@ -84,7 +84,7 @@ const ExternalServiceConsentActions: FC<Props> = ({
         />
       )}
       {isLoading ? (
-        <DialLoader fullWidth={false} size={16} />
+        <Spinner fullWidth={false} size={16} />
       ) : (
         !isReadOnlyAdmin && (
           <OutlinedButton

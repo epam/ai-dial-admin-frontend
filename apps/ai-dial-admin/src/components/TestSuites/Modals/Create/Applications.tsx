@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, MouseEvent, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { GhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 
@@ -86,7 +86,7 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
   if (deployments == null) {
     return (
       <div className="size-full flex flex-col">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }

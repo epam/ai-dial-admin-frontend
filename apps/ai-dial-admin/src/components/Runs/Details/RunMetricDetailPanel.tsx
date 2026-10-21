@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { GhostIconButton, DialLoader, Switch, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, Spinner, Switch, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 
@@ -91,7 +91,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
       ) : (
         <>
           {isLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
               <ExecutionStatusBar

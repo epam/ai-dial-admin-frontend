@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
@@ -186,7 +186,7 @@ const HeatMapTab: FC<Props> = ({
   if (!isCompareDataReady) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }

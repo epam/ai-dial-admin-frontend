@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { INSPECTOR_LOADER_SIZE } from '@/src/constants/analytics/sessions-trace';
@@ -13,7 +13,7 @@ const HopPanelLoader: FC = () => {
 
   return (
     <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-      <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} />
+      <Spinner size={INSPECTOR_LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} fullWidth />
     </div>
   );
 };

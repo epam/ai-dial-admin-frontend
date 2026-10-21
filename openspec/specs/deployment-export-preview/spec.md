@@ -13,7 +13,7 @@ When the export scope is Deployments, the `PreviewModal` SHALL call `POST /confi
 #### Scenario: Preview loads deployment entities
 - **WHEN** user clicks export with deployment scope selected
 - **THEN** the system SHALL call `previewDeploymentExportConfig` with the request built by `buildDeploymentExportPreviewRequest`
-- **AND** display a `DialLoader` while the request is in-flight
+- **AND** display a `Spinner` while the request is in-flight
 - **AND** render a tabbed grid on success
 
 #### Scenario: Tabs grouped by entity type with counts

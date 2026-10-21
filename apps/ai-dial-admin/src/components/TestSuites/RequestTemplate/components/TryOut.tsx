@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { CloseButton, GhostButton, DialLoader, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { CloseButton, GhostButton, Spinner, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -62,7 +62,7 @@ const TryOutResponseBody: FC<{
       growOnOpen={growOnOpen}
     >
       {isRequestSend ? (
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
           <JsonEditor entity={response?.body as object} options={{ wordWrap: 'off' }} readonly={true} />

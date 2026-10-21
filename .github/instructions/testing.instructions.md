@@ -235,6 +235,23 @@ they are correct at any speed.
    ```
 
    A mock-only wait is fine as a test's **last** statement, written `await vi.waitFor(() => expect(mock)…)`.
+
+   Await the data-dependent element itself, not a heading, container or region that renders while the data
+   is still loading — that proves the component mounted, not that the data arrived. A `getBy*` after a
+   `findBy*` for a *different* element is the same race whenever the second can appear later than the first:
+
+   ```tsx
+   // Wrong: the heading renders during loading, the card only once the page resolves
+   expect(await screen.findByRole('heading', { name: ListI18nKey.Title })).toBeTruthy();
+   expect(screen.getByText('an-app')).toBeTruthy();
+
+   // Correct: wait on the data, then assert the static chrome
+   expect(await screen.findByText('an-app')).toBeTruthy();
+   expect(screen.getByRole('heading', { name: ListI18nKey.Title })).toBeTruthy();
+   ```
+
+   It passes locally and fails on CI, because a fast machine usually resolves the mock before the second
+   line runs. Not linted — the linter cannot know which element appears later.
 2. **Keep `waitFor` simple.** One condition, no clicks or state changes inside it (it is retried), no
    `{ timeout }`. Use RTL's `waitFor` for `renderHook` state and for a condition on an element you
    already hold (`toBeEnabled()`); use `findBy*` for an element appearing.

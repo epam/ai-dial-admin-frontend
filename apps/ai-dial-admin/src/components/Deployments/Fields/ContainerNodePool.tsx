@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonAppearance, DialLoader, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, Spinner, PrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { getNodePools } from '@/src/app/actions/deployments';
 import { ButtonsI18nKey, DeploymentsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -74,7 +74,7 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
     <div className="flex flex-col gap-3">
       <span className="dial-small-semi-text text-primary">{t(EntityFieldsI18nKey.NodePool)}</span>
       {isLoading ? (
-        <DialLoader size={32} />
+        <Spinner size={32} fullWidth />
       ) : (
         <div className="flex items-center gap-3 rounded border border-primary px-4 py-3">
           <SelectedPoolDisplay pool={selectedPool} poolId={selectedId} poolName={selectedName} />

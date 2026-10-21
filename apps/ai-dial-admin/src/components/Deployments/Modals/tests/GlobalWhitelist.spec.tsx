@@ -7,7 +7,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { AuditListPreselect } from '@/src/types/audit-list-preselect';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialConfirmationPopup: ({
+  ConfirmationPopup: ({
     open,
     header,
     children,

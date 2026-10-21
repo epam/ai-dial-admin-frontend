@@ -1,0 +1,40 @@
+## MODIFIED Requirements
+
+### Requirement: Import preview shows deployment entities with actions in tabbed grid
+
+When the import scope is Deployments, `ConfigurationPreview` SHALL call `POST /configs/import/preview` and delegate rendering to `DeploymentConfigurationGrid`.
+
+#### Scenario: Preview loads on file upload
+- **WHEN** user uploads a deployment config ZIP and advances to the Configuration step
+- **THEN** the system SHALL call `previewDeploymentImportConfig` with the uploaded file and selected resolution policy
+- **AND** display a `Spinner` with "Configuration parsing..." message while the request is in-flight
+- **AND** render tabbed content on success via `DeploymentConfigurationGrid`
+
+#### Scenario: Tabs grouped by container type with counts
+- **WHEN** the preview response is received
+- **THEN** tabs SHALL be generated using `DEPLOYMENT_ENTITY_TABS` by grouping BE response keys:
+  - `mcpDeployments` → MCP Containers
+  - `adapterDeployments` → Adapter Containers
+  - `interceptorDeployments` → Interceptor Containers
+  - `inferenceDeployments` → Model Servings
+  - `mcpImageDefinitions` + `adapterImageDefinitions` + `interceptorImageDefinitions` → Images
+  - `globalImageBuildDomainWhitelist` → Global Firewall (see separate spec)
+- **AND** each tab label SHALL include the entity count (e.g., "MCP Containers: 5")
+- **AND** the first tab with data SHALL be selected by default
+
+#### Scenario: Grid shows Action column with colored status dots
+- **WHEN** a deployment entity tab is selected
+- **THEN** the grid SHALL show an Action column via `getComponentActionColumn()` as the first column
+- **AND** "Create" actions SHALL show a green dot (`bg-accent-primary`)
+- **AND** "Update" actions SHALL show an orange dot (`bg-orange-400`)
+- **AND** "Skip" actions SHALL show a gray dot (`bg-controls-disable`)
+
+#### Scenario: Grid columns match deployment grid
+- **WHEN** a container entity tab is selected
+- **THEN** the grid SHALL show: Action + Display name, Description, ID
+- **WHEN** the Images tab is selected
+- **THEN** the grid SHALL show: Action + Display name, Description, Version, ID
+
+#### Scenario: Empty entity types are not shown as tabs
+- **WHEN** the preview response contains an entity type with zero entities
+- **THEN** no tab SHALL be rendered for that entity type

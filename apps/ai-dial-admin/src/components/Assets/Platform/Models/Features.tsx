@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialLabel, Switch } from '@epam/ai-dial-ui-kit';
+import { Label, Switch } from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ReasoningEffortsInput from '@/src/components/EntityTabs/Features/ReasoningEffortsInput';
@@ -81,7 +81,7 @@ const ModelResourceFeatures: FC<Props> = ({ entity, onChangeEntity }) => {
 
       {modelResourceSwitchGroups.map(({ title, keys }) => (
         <div key={title} className="flex flex-col gap-y-3">
-          <DialLabel label={t(title)} />
+          <Label label={t(title)} />
           {keys.map((key) => (
             <Switch
               key={key}

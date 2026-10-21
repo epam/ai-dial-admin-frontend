@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLoader, PrimaryButton, Switch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, PrimaryButton, Switch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -232,7 +232,7 @@ const SystemRollback: FC = () => {
         </div>
         <div className="flex-1 min-h-0 flex flex-row w-full mb-4 mt-2 overflow-auto">
           {isLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
               {isJsonView ? (

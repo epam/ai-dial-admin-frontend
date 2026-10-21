@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialLoader, DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
@@ -128,7 +128,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
         </div>
         <div className="px-6 py-4 h-[600px] w-full min-h-0 flex flex-col overflow-auto">
           {isLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             Object.entries(groupedData).map(([key, values]) => {
               const isExpanded = !!expandedKeys[key as keyof typeof expandedKeys];

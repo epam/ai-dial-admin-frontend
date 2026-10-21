@@ -6,7 +6,7 @@ import {
   VisualizerConnectorRequest,
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
-import { DialConfirmationPopup, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import { ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -101,7 +101,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
         onChange={(v) => onChange(v as string)}
       />
       {createPortal(
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open={isModalOpen}
           header={t(EntitiesI18nKey.SaveParametersTitle)}
           description={t(EntitiesI18nKey.SaveParametersDescription)}

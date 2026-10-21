@@ -6,7 +6,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   Button,
-  DialLoader,
+  Spinner,
   PrimaryButton,
   DialTextarea,
   ElementSize,
@@ -142,9 +142,7 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
           rows={3}
         />
         <div className="flex items-center justify-end gap-2">
-          {isSending && (
-            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />
-          )}
+          {isSending && <Spinner size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />}
           <PrimaryButton
             label={t(QueryBuilderI18nKey.AiSend)}
             iconBefore={<IconSparkles size={18} stroke={2} />}

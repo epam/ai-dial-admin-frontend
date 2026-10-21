@@ -86,7 +86,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
       </button>
     ),
     GhostButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
-    DialLoader: () => <div>Loading...</div>,
+    Spinner: () => <div>Loading...</div>,
     OutlinedButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
       <button type="button" onClick={onClick}>
         {label}

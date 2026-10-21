@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
@@ -77,7 +77,7 @@ const AppRunnerAssetParameters: FC<Props> = ({ runner, onChange, isSkipRefresh }
   if (isLoading) {
     return (
       <div className="flex flex-col size-full">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }
@@ -85,7 +85,7 @@ const AppRunnerAssetParameters: FC<Props> = ({ runner, onChange, isSkipRefresh }
   if (resolveError) {
     return (
       <div className="flex flex-col size-full">
-        <DialNoDataContent title={t(EntitiesI18nKey.ResolvedSchemaFailed)} description={resolveError} />
+        <NoDataContent title={t(EntitiesI18nKey.ResolvedSchemaFailed)} description={resolveError} />
       </div>
     );
   }
@@ -93,7 +93,7 @@ const AppRunnerAssetParameters: FC<Props> = ({ runner, onChange, isSkipRefresh }
   return (
     <div className="flex flex-col size-full">
       {isNoData ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+        <NoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
       ) : (
         <SchemaGrid
           schema={schema as JSONSchema7}

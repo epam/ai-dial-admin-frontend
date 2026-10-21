@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialAnalyticsBarGroup, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialAnalyticsBarGroup, Spinner } from '@epam/ai-dial-ui-kit';
 
 import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
@@ -35,7 +35,7 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
     if (!data) {
       return (
         <div className="flex h-full items-center justify-center">
-          <DialLoader size={32} />
+          <Spinner size={32} fullWidth />
         </div>
       );
     }

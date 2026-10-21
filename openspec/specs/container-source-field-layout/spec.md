@@ -61,9 +61,9 @@ The `<ContainerSource>` component inside `ContainerFields.tsx` SHALL render unco
 
 ### Requirement: InternalImageField displays image as input-with-modal field
 
-For `INTERNAL_IMAGE` containers, the form body SHALL render an `InternalImageField` component built on `DialLabel` + `DialInputPopup` (the input-with-modal primitive from `@epam/ai-dial-ui-kit`) with the following behavior:
+For `INTERNAL_IMAGE` containers, the form body SHALL render an `InternalImageField` component built on `Label` + `DialInputPopup` (the input-with-modal primitive from `@epam/ai-dial-ui-kit`) with the following behavior:
 
-- Label: `t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })` (e.g. `"MCP Image"`, `"Adapter Image"`, `"Interceptor Image"`), rendered via `DialLabel` above the input.
+- Label: `t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })` (e.g. `"MCP Image"`, `"Adapter Image"`, `"Interceptor Image"`), rendered via `Label` above the input.
 - Selected value: `"<image.name> (<image.version>)"` displayed inside `DialInputPopup`.
 - Built-in expand affordance: `DialInputPopup` renders the whole input as a clickable popup trigger with an expand icon; clicking it opens the popup.
 - The popup's children is the existing `ContainerChangeImage` modal.
@@ -105,7 +105,7 @@ For `INTERNAL_IMAGE` containers, the form body SHALL render an `InternalImageFie
 #### Scenario: Accessibility
 
 - **WHEN** `InternalImageField` renders
-- **THEN** the `DialLabel` SHALL be associated with the popup input via `htmlFor`/`elementId="internalImage"`, and `DialInputPopup`'s built-in popup trigger button SHALL have an accessible name, satisfying WCAG 2.1 AA: 4.1.2 Name, Role, Value
+- **THEN** the `Label` SHALL be associated with the popup input via `htmlFor`/`elementId="internalImage"`, and `DialInputPopup`'s built-in popup trigger button SHALL have an accessible name, satisfying WCAG 2.1 AA: 4.1.2 Name, Role, Value
 
 ### Requirement: Centralized source type label utility
 

@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { I18nProviderClient } from '@/src/locales/client';
 
@@ -17,7 +17,7 @@ export const I18nProvider = ({ locale, children }: ProviderProps) => {
   }, [locale]);
 
   return (
-    <I18nProviderClient locale={locale} fallback={<DialLoader size={40} />}>
+    <I18nProviderClient locale={locale} fallback={<Spinner size={40} fullWidth />}>
       {children}
     </I18nProviderClient>
   );

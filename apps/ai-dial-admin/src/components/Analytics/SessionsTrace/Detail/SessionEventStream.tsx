@@ -1,6 +1,6 @@
 'use client';
 
-import { EllipsisTooltip, GhostIconButton, DialNoDataContent, ElementSize, GhostButton } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostIconButton, NoDataContent, ElementSize, GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown, IconChevronRight, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -291,10 +291,10 @@ const SessionEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) =
   if (!tree.length) {
     return (
       <div className="flex flex-1 flex-col justify-center bg-layer-1">
-        <DialNoDataContent
+        <NoDataContent
           icon={<IconSubtask size={EMPTY_ICON_SIZE} aria-hidden />}
           title={t(SessionsTraceI18nKey.TraceNoSpans)}
-          containerClassName="max-w-[520px] self-center p-6"
+          className="max-w-[520px] self-center p-6"
           titleClassName="dial-tiny-semi-text"
           descriptionClassName="dial-small-text"
         />

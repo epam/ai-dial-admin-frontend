@@ -33,7 +33,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
-  DialNoDataContent: ({ title, description }: { title?: string; description?: string }) => (
+  NoDataContent: ({ title, description }: { title?: string; description?: string }) => (
     <div role="status">
       <span>{title}</span>
       {description ? <span>{description}</span> : null}

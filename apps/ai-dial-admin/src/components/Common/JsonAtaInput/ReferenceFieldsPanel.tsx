@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useId, useState } from 'react';
 
-import { IconButton, DialLabel, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconButton, Label, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronsLeft, IconChevronsRight } from '@tabler/icons-react';
 import { JSONSchema7 } from 'json-schema';
 import classNames from 'classnames';
@@ -37,7 +37,7 @@ const ReferenceFieldsPanel: FC<Props> = ({ responseSchema, onSelect }) => {
         inert={isCollapsed}
         className={classNames('flex-1 min-h-0 gap-y-1', isCollapsed ? 'hidden' : 'flex flex-col')}
       >
-        <DialLabel label={label} />
+        <Label label={label} />
         <div className={boxClassName}>
           <div className="flex flex-col flex-1 min-h-0 p-4">
             <SchemaTree responseSchema={responseSchema} onSelect={onSelect} />

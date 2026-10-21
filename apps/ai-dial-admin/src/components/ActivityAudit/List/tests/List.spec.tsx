@@ -119,7 +119,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialConfirmationPopup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    ConfirmationPopup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     GhostButton: ({ label }: { label: string }) => <button>{label}</button>,
     OutlinedButton: ({ label }: { label: string }) => <button>{label}</button>,
     Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,

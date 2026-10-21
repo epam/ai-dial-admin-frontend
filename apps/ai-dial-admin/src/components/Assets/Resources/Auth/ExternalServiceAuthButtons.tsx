@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
@@ -250,7 +250,7 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
 
   if (authType !== ToolsetAuthType.OAUTH && authType !== ToolsetAuthType.API_KEY) return null;
 
-  if (isLoading) return <DialLoader fullWidth={false} size={16} />;
+  if (isLoading) return <Spinner fullWidth={false} size={16} />;
 
   return (
     <>

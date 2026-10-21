@@ -47,7 +47,9 @@ const row = (overrides?: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow
 // row but the first, because Multiselect always renders one and the editor labels that column itself.
 const visibleLabels = (container: HTMLElement, text: string) =>
   Array.from(container.querySelectorAll('label')).filter(
-    (label) => label.textContent?.includes(text) && !label.parentElement?.className.includes('sr-only'),
+    (label) =>
+      label.textContent?.includes(text) &&
+      !label.closest('.dial-kit-label')?.parentElement?.className.includes('sr-only'),
   );
 
 describe('ColumnRowsEditor', () => {

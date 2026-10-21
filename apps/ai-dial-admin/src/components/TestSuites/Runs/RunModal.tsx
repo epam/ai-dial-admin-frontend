@@ -1,7 +1,7 @@
 import {
   DialFormPopup,
   DialLabelledText,
-  DialLoader,
+  Spinner,
   DialNotification,
   DialNumberInput,
   NotificationVariant,
@@ -86,7 +86,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
     >
       <div className="flex flex-col gap-6 p-6 h-[300px]">
         {isLoading ? (
-          <DialLoader size={30} />
+          <Spinner size={30} fullWidth />
         ) : (
           <>
             <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={`${validRuns} of ${allRuns}`} />

@@ -2,8 +2,8 @@
 
 import {
   DialErrorText,
-  DialLoader,
-  DialNoDataContent,
+  Spinner,
+  NoDataContent,
   DialSelect,
   JsonSchema,
   SelectSize,
@@ -92,15 +92,15 @@ const CatalogPropertiesEditor: FC<Props> = ({
   );
 
   if (!schemaId) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.NoCatalogSchemaSelected)} />;
+    return <NoDataContent title={t(EntitiesI18nKey.NoCatalogSchemaSelected)} />;
   }
 
   if (isLoading) {
-    return <DialLoader size={40} />;
+    return <Spinner size={40} fullWidth />;
   }
 
   if (hasReadFailed) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.CatalogSchemaUnavailable)} />;
+    return <NoDataContent title={t(EntitiesI18nKey.CatalogSchemaUnavailable)} />;
   }
 
   const undeclaredBanner = !!undeclared.length && (
@@ -117,7 +117,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
     return (
       <div className="flex flex-col size-full">
         {undeclaredBanner}
-        <DialNoDataContent title={t(EntitiesI18nKey.NoCatalogProperties)} />
+        <NoDataContent title={t(EntitiesI18nKey.NoCatalogProperties)} />
       </div>
     );
   }

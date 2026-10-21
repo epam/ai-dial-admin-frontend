@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import SessionsProvenanceLine from '@/src/components/Analytics/SessionsTrace/Header/SessionsProvenanceLine';
@@ -94,7 +94,7 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
             className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-layer-2"
             style={{ top: SESSIONS_HEADER_STACK_HEIGHT }}
           >
-            <DialNoDataContent title={t(emptyStateTitle)} />
+            <NoDataContent title={t(emptyStateTitle)} />
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { GhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -108,7 +108,7 @@ const ListEntities = <T extends object>({
       <div className="flex-1 min-h-0 flex flex-row gap-x-3">
         <div className="flex-1 min-w-0">
           {isGridLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             <GridView
               showColumnsPanel={showColumnsPanel}

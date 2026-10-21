@@ -477,7 +477,7 @@ const FailuresGrid: FC<Props> = ({
       </div>
 
       {/* The reason, and the way out of it. The reason is repeated here rather than left to the grid's
-          own empty state: that one is drawn by `DialNoDataContent`, which is not a live region, so a
+          own empty state: that one is drawn by `NoDataContent`, which is not a live region, so a
           reader who narrowed the list would be told nothing about what the narrowing did. An empty path
           offers no way out of its own: the path select that narrowed it sits right above. */}
       {visible.length === 0 && !isLoading && !isSilent && (

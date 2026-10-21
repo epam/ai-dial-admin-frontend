@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { IconButton, DialLabel, DialLoader, Tooltip } from '@epam/ai-dial-ui-kit';
+import { IconButton, Label, Spinner, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { getDeployment } from '@/src/app/[lang]/conversations/actions';
@@ -77,7 +77,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
         <div className="flex flex-row gap-1 items-center">
           {isResolvingAgent ? (
             <div className="flex-none">
-              <DialLoader />
+              <Spinner size={18} fullWidth />
             </div>
           ) : (
             <>
@@ -96,7 +96,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
 
       {selectedConversation.prompt && (
         <div className="flex flex-col gap-2">
-          <DialLabel label={t(EntityFieldsI18nKey.prompt)} />
+          <Label label={t(EntityFieldsI18nKey.prompt)} />
           <ExpandableText lines={5} popupHeader={t(BasicI18nKey.PreviewPrompt)}>
             <div className="text-sm whitespace-pre-wrap">{selectedConversation.prompt}</div>
           </ExpandableText>

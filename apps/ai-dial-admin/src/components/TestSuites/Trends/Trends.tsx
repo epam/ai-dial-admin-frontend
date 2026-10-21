@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader, OutlinedButton, DialNotification, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Spinner, OutlinedButton, DialNotification, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import KpiStrip from '@/src/components/TestSuites/Trends/KpiStrip';
@@ -39,7 +39,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
   if (isLoading && !data) {
     return (
       <div className="flex h-full items-center justify-center">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }

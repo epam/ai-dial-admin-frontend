@@ -46,7 +46,7 @@ The `ContainerNodePool` field SHALL render exactly one of two states at a time: 
 #### Scenario: Loading state
 
 - **WHEN** pools are being fetched
-- **THEN** the field body SHALL render a `DialLoader` (size 32) and no action button
+- **THEN** the field body SHALL render a `Spinner` (size 32, `fullWidth`) and no action button
 
 #### Scenario: Ready state with no selection
 
@@ -125,7 +125,7 @@ The selector modal SHALL be composed of three components:
 #### Scenario: No matches but pools exist
 
 - **WHEN** the search yields zero pool matches but the loaded list is non-empty
-- **THEN** the modal SHALL render `DeploymentsI18nKey.NodePoolNoMatches` via `DialNoDataContent` below the "Any" row
+- **THEN** the modal SHALL render `DeploymentsI18nKey.NodePoolNoMatches` via `NoDataContent` below the "Any" row
 
 #### Scenario: Apply submits the pending id; Cancel discards
 

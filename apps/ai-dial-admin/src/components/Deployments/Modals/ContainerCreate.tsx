@@ -1,4 +1,4 @@
-import { DialLoader, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -169,7 +169,7 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         <>
           {currentStepId === CreateSteps.IMAGE && (
             <>
-              {loading && <DialLoader size={40} />}
+              {loading && <Spinner size={40} fullWidth />}
               {!loading && !!images.length && (
                 <GridView
                   rowData={images}

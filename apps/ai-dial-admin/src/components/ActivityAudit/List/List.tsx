@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  DialConfirmationPopup,
+  ConfirmationPopup,
   GhostButton,
   OutlinedButton,
   DialSelect,
@@ -723,7 +723,7 @@ const ActivityAuditList: FC<Props> = ({
       </ListEntities>
       {isRollbackModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isRollbackModalOpen}
             isLoading={isLoading}
             header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
@@ -751,7 +751,7 @@ const ActivityAuditList: FC<Props> = ({
                 <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
               )}
             </div>
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
       {isDetailsModalOpen &&

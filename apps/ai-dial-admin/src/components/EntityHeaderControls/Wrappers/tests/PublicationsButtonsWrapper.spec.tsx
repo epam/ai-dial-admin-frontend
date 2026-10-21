@@ -36,7 +36,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   NotificationVariant: { Info: 'info' },
   ButtonAppearance: { Outlined: 'outlined' },
   DialNotification: ({ message }: { message: ReactNode }) => <div>{message}</div>,
-  DialConfirmationPopup: ({
+  ConfirmationPopup: ({
     open,
     header,
     description,

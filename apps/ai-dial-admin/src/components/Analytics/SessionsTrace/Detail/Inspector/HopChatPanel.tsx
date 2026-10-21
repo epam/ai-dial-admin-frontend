@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import HopPanelLoader from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopPanelLoader';
@@ -117,7 +117,7 @@ const HopChatPanel: FC<Props> = ({
       {!isResponseGranted && <HopStateNote messageKey={SessionsTraceI18nKey.InspectorChatAnswerWithheld} />}
       {isResponseGranted && isResponseLoading && (
         <div className="flex items-center justify-center">
-          <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} />
+          <Spinner size={INSPECTOR_LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} fullWidth />
         </div>
       )}
       {hasAnswer && (

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, Switch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Switch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -736,7 +736,7 @@ const TestCasesList: FC<Props> = ({
         )}
       {isBatchDeleteModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isBatchDeleteModalOpen}
             header={t(DeleteI18nKey.Title, { entity: t(TabsI18nKey.TestCases) })}
             onConfirm={onBatchDelete}

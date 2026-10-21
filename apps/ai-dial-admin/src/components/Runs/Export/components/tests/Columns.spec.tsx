@@ -98,6 +98,6 @@ describe('Columns', () => {
       />,
     );
 
-    expect(container.querySelector('.text-primary')).toBeInTheDocument();
+    expect(container.querySelector('[role="status"]')).toBeInTheDocument();
   });
 });

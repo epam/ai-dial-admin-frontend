@@ -13,7 +13,7 @@ import {
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -425,7 +425,7 @@ const ExecutionResultsTab: FC<Props> = ({
   if (!isCompareDataReady) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }

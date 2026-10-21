@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { IconCircleCheck } from '@tabler/icons-react';
 
 import { getCoreSyncStatus } from '@/src/app/actions';
@@ -67,7 +67,7 @@ const CoreSyncDiffModal: FC<Props> = ({
     >
       <div className="h-full px-6 py-4">
         {loading ? (
-          <DialLoader />
+          <Spinner size={18} fullWidth />
         ) : newStatus?.status === EntitySyncStatus.FULLY_SYNCED ? (
           <div className="flex flex-col gap-y-2 items-center justify-center h-[250px] pb-7">
             <IconCircleCheck stroke={1} size={60} className="text-secondary" />

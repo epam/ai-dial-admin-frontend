@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { getRoute } from '@/src/app/[lang]/test-suites/actions';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
@@ -47,11 +47,11 @@ const RouteMethods: FC<Props> = ({ routeName, testSuite, onChange, isCreate, chi
   }, [routeName]);
 
   if (route === undefined) {
-    return <DialLoader size={40} />;
+    return <Spinner size={40} fullWidth />;
   }
 
   if (route === null) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.NoRoutes)} />;
+    return <NoDataContent title={t(EntitiesI18nKey.NoRoutes)} />;
   }
 
   return (

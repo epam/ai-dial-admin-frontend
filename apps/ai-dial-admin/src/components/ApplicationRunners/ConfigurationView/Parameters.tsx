@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import {
@@ -74,11 +74,11 @@ const Parameters: FC<Props> = ({ runner, onChangeRunner, isSkipRefresh }) => {
   return (
     <div className="flex flex-col size-full">
       {isLoading ? (
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       ) : (
         <>
           {isNoData ? (
-            <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+            <NoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
           ) : (
             <SchemaGrid
               schema={(resolvedSchema || runner) as JSONSchema7}

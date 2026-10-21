@@ -6,7 +6,7 @@ import {
   ButtonAppearance,
   DialCollapsibleSidebar,
   OutlinedButton,
-  DialNoDataContent,
+  NoDataContent,
   DialPopup,
   PrimaryButton,
   PopupSize,
@@ -260,7 +260,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
               </>
             ) : (
               <div className="py-3">
-                <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+                <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
               </div>
             )}
           </div>
@@ -291,7 +291,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
               </>
             ) : (
               <div className="py-2">
-                <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+                <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
               </div>
             )}
           </div>

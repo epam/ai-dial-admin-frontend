@@ -7,7 +7,7 @@ import type { Image } from '@/src/models/deployments/images';
 let capturedSize: string | undefined;
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialConfirmationPopup: ({ header, size, children, open }: any) => {
+  ConfirmationPopup: ({ header, size, children, open }: any) => {
     capturedSize = size;
     return open ? (
       <div role="dialog" aria-label={header}>

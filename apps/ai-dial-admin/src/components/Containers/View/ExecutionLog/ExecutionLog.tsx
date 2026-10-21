@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialCollapsibleSidebar, DialNoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, NoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
 
 import { Pod } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -85,7 +85,7 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
         </div>
       ) : (
         <div className="flex items-center justify-center h-full">
-          <DialNoDataContent
+          <NoDataContent
             title={t(EntitiesI18nKey.NoContainerLogs, { entityType: getTranslatedDeploymentType(route, t) })}
           />
         </div>

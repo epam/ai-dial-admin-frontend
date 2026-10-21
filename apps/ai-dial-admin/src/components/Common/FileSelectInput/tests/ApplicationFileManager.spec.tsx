@@ -24,7 +24,7 @@ vi.mock('@/src/hooks/use-application-file-export', () => ({
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialFileIcon: () => null,
-  DialLoader: () => <div>loader</div>,
+  Spinner: () => <div>loader</div>,
   DialLoadFileAreaField: () => <div>upload-area</div>,
 }));
 

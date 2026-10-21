@@ -13,7 +13,7 @@ import { buildFunctionParameterFieldName, parseFunctionParameterFieldName } from
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLabel: ({ label }: any) => <span>{label}</span>,
+  Label: ({ label }: any) => <span>{label}</span>,
   DialSegmentedControl: ({ options, value, onChange }: any) => (
     <div>
       {options.map((option: any) => (

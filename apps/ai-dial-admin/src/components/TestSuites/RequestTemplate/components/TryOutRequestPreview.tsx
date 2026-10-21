@@ -1,7 +1,7 @@
 'use client';
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getDatasetTestCase } from '@/src/app/[lang]/datasets/actions';
 import { getTestCaseTemplateVariables, getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
@@ -215,7 +215,7 @@ const TryOutRequestPreview: FC<Props> = ({
   })();
 
   return isVariablesLoading || isRequestSend ? (
-    <DialLoader size={40} />
+    <Spinner size={40} fullWidth />
   ) : (
     <>
       {sectionedVariables}

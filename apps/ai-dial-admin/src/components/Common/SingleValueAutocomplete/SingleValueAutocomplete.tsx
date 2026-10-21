@@ -1,6 +1,6 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { EllipsisTooltip, DialErrorText, GhostIconButton, DialLabel, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, DialErrorText, GhostIconButton, Label, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -114,7 +114,7 @@ const SingleValueAutocomplete: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
-      {label && <DialLabel htmlFor={elementId} label={label} />}
+      {label && <Label htmlFor={elementId} label={label} />}
       <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
         <div className="flex flex-wrap items-center gap-2">
           {value && (

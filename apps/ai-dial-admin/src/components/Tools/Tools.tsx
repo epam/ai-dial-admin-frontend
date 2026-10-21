@@ -3,8 +3,8 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   NotificationVariant,
   DialNotification,
-  DialLoader,
-  DialNoDataContent,
+  Spinner,
+  NoDataContent,
   PrimaryButton,
   Switch,
 } from '@epam/ai-dial-ui-kit';
@@ -277,7 +277,7 @@ const Tools: FC<Props> = ({
   }, []);
 
   if (loading) {
-    return <DialLoader size={40} />;
+    return <Spinner size={40} fullWidth />;
   }
 
   return (
@@ -327,7 +327,7 @@ const Tools: FC<Props> = ({
         <div className="flex flex-col gap-6 overflow-y-auto h-full">
           {!displayTools?.length ? (
             <div className="flex items-center justify-center h-full">
-              <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+              <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
             </div>
           ) : (
             <div className="flex flex-col gap-6">

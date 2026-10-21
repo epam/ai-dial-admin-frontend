@@ -1,4 +1,4 @@
-import { NotificationVariant, DialNotification, DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, DialFormPopup, Spinner } from '@epam/ai-dial-ui-kit';
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -140,7 +140,7 @@ const ContainerChangeImage: FC<Props> = ({
       }}
     >
       <div className="flex flex-col py-4 px-6 min-h-0 h-full">
-        {loading && <DialLoader size={24} />}
+        {loading && <Spinner size={24} fullWidth />}
         {!loading && !!images.length && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
             <GridView

@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ConfirmationPopupVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -26,7 +26,7 @@ const DiscardQueryPopup: FC<Props> = ({ destination, onConfirm, onCancel }) => {
   const t = useI18n();
 
   return createPortal(
-    <DialConfirmationPopup
+    <ConfirmationPopup
       variant={ConfirmationPopupVariant.Danger}
       open={true}
       header={t(QueryBuilderI18nKey.DiscardQueryHeader)}

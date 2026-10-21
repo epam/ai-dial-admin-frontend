@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import ReactECharts from 'echarts-for-react';
-import { DialNoDataContent, DialSegmentedControl, DialSelect } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, DialSegmentedControl, DialSelect } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 
 import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
@@ -83,7 +83,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   );
 
   if (!options) {
-    return <DialNoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />;
+    return <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />;
   }
 
   return (

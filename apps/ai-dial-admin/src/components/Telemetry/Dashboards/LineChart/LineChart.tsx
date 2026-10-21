@@ -1,7 +1,7 @@
 'use client';
 import { FC, useEffect, useState } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 import ReactECharts, { EChartsOption } from 'echarts-for-react';
 
 import { QueryInput } from '@/src/components/Telemetry/Dashboard';
@@ -62,9 +62,9 @@ const LineChart: FC<Props> = ({ getData, prepareData, query, title, refreshTime 
       <h3 className="text-primary mb-4">{title}</h3>
 
       {loading && !data ? (
-        <DialLoader size={24} />
+        <Spinner size={24} fullWidth />
       ) : !data?.length ? (
-        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
+        <NoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
         options && <ReactECharts option={options} className="flex size-full min-h-[280px] m-0 p-0" />
       )}

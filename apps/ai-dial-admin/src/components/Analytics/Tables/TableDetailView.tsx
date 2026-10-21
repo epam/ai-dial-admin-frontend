@@ -10,7 +10,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
+  ConfirmationPopup,
   EllipsisTooltip,
   DialFormPopup,
   GhostButton,
@@ -571,7 +571,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       {isActive ? activeSurface : draftSurface}
 
       {confirmOpen && (
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open={confirmOpen}
           variant={ConfirmationPopupVariant.Danger}
           header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}

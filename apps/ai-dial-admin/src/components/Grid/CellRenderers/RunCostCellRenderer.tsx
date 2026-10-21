@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 
 import OptionalValueCellRenderer from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
@@ -25,7 +25,7 @@ const RunCostCellRenderer = (params: ICellRendererParams<Run>) => {
 
   return (
     <span className="flex items-center justify-end">
-      <DialLoader size={SPINNER_SIZE} fullWidth={false} ariaLabel={t(RunsI18nKey.Calculating)} />
+      <Spinner size={SPINNER_SIZE} fullWidth={false} ariaLabel={t(RunsI18nKey.Calculating)} />
     </span>
   );
 };

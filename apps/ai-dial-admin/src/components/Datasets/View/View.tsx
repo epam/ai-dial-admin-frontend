@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -242,7 +242,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
 
       {isMakePublicOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isMakePublicOpen}
             header={t(DatasetsI18nKey.MakePublicConfirmTitle)}
             description={t(DatasetsI18nKey.MakePublicConfirmDescription)}

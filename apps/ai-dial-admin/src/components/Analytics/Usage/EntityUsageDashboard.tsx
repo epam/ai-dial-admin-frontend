@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import UsageControls from '@/src/components/Analytics/Usage/Controls/UsageControls';
 import { ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
@@ -67,7 +67,7 @@ const EntityUsageDashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onT
   if (isForbidden == null || callerSource == null) {
     return (
       <div className="flex size-full items-center justify-center">
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       </div>
     );
   }

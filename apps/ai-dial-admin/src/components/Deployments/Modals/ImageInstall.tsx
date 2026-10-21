@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -17,7 +17,7 @@ const ImageInstall: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }
   const t = useI18n();
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       portalId="ImageInstallModal"
       onClose={onClose}
       header={title}
@@ -34,7 +34,7 @@ const ImageInstall: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }
           {t(EntityFieldsI18nKey.version)}:<span className="text-primary ml-1">{image.version}</span>
         </p>
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

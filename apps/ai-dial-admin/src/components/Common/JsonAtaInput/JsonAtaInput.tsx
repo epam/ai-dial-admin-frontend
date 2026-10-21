@@ -1,6 +1,6 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialInputPopup, DialLabel, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInputPopup, Label, PopupSize } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import JsonataEditor from '@/src/components/Common/JsonataEditor/JsonataEditor';
@@ -80,7 +80,7 @@ const JsonAtaInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-1">
-      {label && <DialLabel label={label} htmlFor={elementId} />}
+      {label && <Label label={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}
@@ -103,7 +103,7 @@ const JsonAtaInput: FC<Props> = ({
           <div className="px-6 py-4 h-[512px] flex flex-row gap-x-3">
             <ReferenceFieldsPanel responseSchema={responseSchema} onSelect={onPickFromSchema} />
             <div className="flex flex-col flex-1 basis-0 min-w-0 min-h-0 gap-y-1">
-              <DialLabel label={header} />
+              <Label label={header} />
               <div className="flex-1 min-h-0 py-2 bg-layer-2 rounded overflow-hidden border border-secondary">
                 <JsonataEditor
                   value={expression}

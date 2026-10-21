@@ -1,4 +1,4 @@
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import {
   VisualizerConnectorEvents,
@@ -195,11 +195,11 @@ const FrameRenderer = forwardRef<FrameRendererHandle, Props>(
       <div className="relative size-full">
         {loading && (
           <div className="absolute inset-0 z-50 bg-layer-2">
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           </div>
         )}
         {isEmptyData ? (
-          <DialNoDataContent title="Error loading application custom UI" />
+          <NoDataContent title="Error loading application custom UI" />
         ) : (
           <div ref={containerRef} className={className} />
         )}

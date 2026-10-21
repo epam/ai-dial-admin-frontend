@@ -1,6 +1,6 @@
 'use client';
 
-import { LinkButton, DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { LinkButton, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconAlertTriangle, IconRefresh, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -95,7 +95,7 @@ const EntityTraceListing: FC<Props> = ({ route, entity, defaultTimeFilter, onTim
   if (isForbidden == null) {
     return (
       <div className="flex size-full items-center justify-center">
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       </div>
     );
   }

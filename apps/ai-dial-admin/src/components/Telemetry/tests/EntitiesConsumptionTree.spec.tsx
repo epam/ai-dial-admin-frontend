@@ -11,7 +11,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialLoader: () => <div data-testid="loader" />,
+    Spinner: () => <div data-testid="loader" />,
   };
 });
 
