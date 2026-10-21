@@ -1,3 +1,5 @@
+import type { ColumnResizedEvent } from 'ag-grid-community';
+
 export const ROW_HEIGHT = 48;
 /** Default row height of lists whose name cell carries an icon. */
 export const ICON_ROW_HEIGHT = 56;
@@ -9,3 +11,6 @@ export const TWO_LINE_ROW_HEIGHT = 64;
 export const GRID_COLUMNS_KEY = 'gridColumnsState';
 export const STACKED_LINE_HEIGHT = 22;
 export const STACKED_ROW_PADDING = 10;
+/** Resize sources dispatched by the grid itself; the operator did not choose these widths. */
+export const GRID_SIZED_RESIZE_SOURCES: ColumnResizedEvent['source'][] = ['autosizeColumns', 'sizeColumnsToFit'];
+export const GRID_STATE_SAVE_DEBOUNCE_MS = 300;
