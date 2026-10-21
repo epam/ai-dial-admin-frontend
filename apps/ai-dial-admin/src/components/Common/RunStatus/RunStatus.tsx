@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import { DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLoader, Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { STATUS_BADGE_TONES } from '@/src/components/Common/StatusBadge/constants';
 import { StatusBadgeLeading } from '@/src/components/Common/StatusBadge/models';
@@ -35,12 +35,12 @@ const RunStatusComponent: FC<Props> = ({ status, isLabelHidden }) => {
   if (isLabelHidden) {
     return (
       <div className="flex size-full items-center justify-center">
-        <DialTooltip tooltip={statusLabel}>
+        <Tooltip tooltip={statusLabel}>
           <span className="flex items-center">
             {indicator}
             <span className="sr-only">{statusLabel}</span>
           </span>
-        </DialTooltip>
+        </Tooltip>
       </div>
     );
   }
@@ -51,9 +51,9 @@ const RunStatusComponent: FC<Props> = ({ status, isLabelHidden }) => {
       {isTransitional ? (
         <span className="whitespace-nowrap">{statusLabel}</span>
       ) : (
-        <DialTooltip tooltip={statusLabel}>
+        <Tooltip tooltip={statusLabel}>
           <span>{statusLabel}</span>
-        </DialTooltip>
+        </Tooltip>
       )}
     </div>
   );

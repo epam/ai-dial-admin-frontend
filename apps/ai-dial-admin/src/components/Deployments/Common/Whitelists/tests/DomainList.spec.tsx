@@ -4,13 +4,13 @@ import { describe, expect, test, vi } from 'vitest';
 
 import DomainList from '../DomainList';
 
-// Render DialTooltip content inline so the tooltip message is queryable (the real
+// Render Tooltip content inline so the tooltip message is queryable (the real
 // component only mounts its content on hover, via a portal).
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialTooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
+    Tooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
       <>
         {children}
         {tooltip}

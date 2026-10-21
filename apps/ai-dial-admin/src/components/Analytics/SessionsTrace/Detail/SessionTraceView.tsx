@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip, GhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useMemo } from 'react';
@@ -165,14 +165,14 @@ const SessionTraceView: FC<Props> = ({
             <h2 className="flex min-w-0 items-center gap-2 text-primary">
               <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
               <span className="min-w-0">
-                <DialEllipsisTooltip text={title ?? figures.traceId} />
+                <EllipsisTooltip text={title ?? figures.traceId} />
               </span>
             </h2>
             <span className="flex min-w-0 items-center gap-1.5 pl-6 text-secondary dial-tiny-text">
               {/* Suppressed when the heading already is the trace id — repeating it says nothing twice. */}
               {title !== undefined && (
                 <span className="min-w-0 font-mono">
-                  <DialEllipsisTooltip text={figures.traceId} />
+                  <EllipsisTooltip text={figures.traceId} />
                 </span>
               )}
             </span>

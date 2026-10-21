@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import MethodItem from '../MethodItem';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialEllipsisTooltip: ({ text }: any) => <span>{text}</span>,
+  EllipsisTooltip: ({ text }: any) => <span>{text}</span>,
 }));
 
 const item = { method: 'GET', relativeUrlPattern: '/openai/v1/responses/[^/]+' };

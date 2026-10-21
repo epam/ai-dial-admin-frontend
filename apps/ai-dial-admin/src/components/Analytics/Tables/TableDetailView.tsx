@@ -11,7 +11,7 @@ import {
   ButtonVariant,
   ConfirmationPopupVariant,
   DialConfirmationPopup,
-  DialEllipsisTooltip,
+  EllipsisTooltip,
   DialFormPopup,
   GhostButton,
   PopupSize,
@@ -508,7 +508,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                     valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
                     value={copyValue}
                   />
-                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                 </>
               )}
               {!isChangeBarShown && !isJsonViewOnly && (
@@ -552,12 +552,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                       {/* Not permission-gated: on an active table it opens a read-only view of the stored
                           definition and writes nothing, and a system table is the one whose definition is
                           most often read as a document. */}
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                     </>
                   ) : (
-                    canModify && (
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
-                    )
+                    canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                   )}
                 </>
               )}
@@ -582,7 +580,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
               <span>{t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}</span>
               <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
                 <span className="text-secondary shrink-0">{t(AnalyticsTablesI18nKey.Name)}:</span>
-                <DialEllipsisTooltip text={name} />
+                <EllipsisTooltip text={name} />
               </div>
             </div>
           }

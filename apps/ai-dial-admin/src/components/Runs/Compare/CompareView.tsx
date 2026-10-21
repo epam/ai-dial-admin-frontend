@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { GhostButton, GhostIconButton, DialSwitch, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Switch, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
@@ -424,10 +424,10 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
             </Fragment>
           ))}
         </div>
-        <DialSwitch
-          switchId="onlyMatchingTestCases"
+        <Switch
+          id="onlyMatchingTestCases"
           isOn={onlyMatchingTestCases}
-          label={t(RunsI18nKey.OnlyMatchingTestCases)}
+          labelProps={{ label: t(RunsI18nKey.OnlyMatchingTestCases) }}
           onChange={setOnlyMatchingTestCases}
         />
       </div>

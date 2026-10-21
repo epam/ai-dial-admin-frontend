@@ -25,7 +25,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         {error && <span role="alert">{error}</span>}
       </label>
     ),
-    DialSwitch: ({ label, isOn, disabled, onChange }: any) => (
+    Switch: ({ labelProps: { label } = {}, isOn, disabled, onChange }: any) => (
       <label>
         <span>{label}</span>
         <input

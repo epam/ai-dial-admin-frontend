@@ -1,4 +1,4 @@
-import { DialTooltip, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Tooltip, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconAlertTriangleFilled } from '@tabler/icons-react';
 
 import { CoreVersionModalI18nKey } from '@/src/constants/i18n';
@@ -16,17 +16,17 @@ export const getCoreVersionElement = (
   if (autoDetectedVersion) {
     if (autoDetectedVersion === '-1' && !defaultVersion && !manuallySetVersion) {
       return (
-        <DialTooltip tooltip={t(CoreVersionModalI18nKey.NotDetectedTooltip)} triggerClassName="flex-1 cursor-pointer">
+        <Tooltip tooltip={t(CoreVersionModalI18nKey.NotDetectedTooltip)} triggerClassName="flex-1 cursor-pointer">
           <span className="flex flex-row items-center">
             <span className="bg-red-400 rounded-full size-[10px] mx-1"></span>
             <span>{`${t(CoreVersionModalI18nKey.NotDetected)}`}</span>
           </span>
-        </DialTooltip>
+        </Tooltip>
       );
     }
     if (autoDetectedVersion === '-1' && defaultVersion && !manuallySetVersion) {
       return (
-        <DialTooltip
+        <Tooltip
           tooltip={t(CoreVersionModalI18nKey.DefaultTooltip, { version: defaultVersion })}
           triggerClassName="flex-1 cursor-pointer"
         >
@@ -35,14 +35,14 @@ export const getCoreVersionElement = (
             <span className="bg-yellow-400 rounded-full size-[10px] mx-1"></span>
             <span>{`${t(CoreVersionModalI18nKey.Default)}]${defaultVersion}`}</span>
           </span>
-        </DialTooltip>
+        </Tooltip>
       );
     }
 
     if (manuallySetVersion) {
       const isSameAsAuto = manuallySetVersion === autoDetectedVersion;
       return (
-        <DialTooltip
+        <Tooltip
           tooltip={t(
             isSameAsAuto ? CoreVersionModalI18nKey.ManuallySameTooltip : CoreVersionModalI18nKey.ManuallyDiffTooltip,
           )}
@@ -53,18 +53,18 @@ export const getCoreVersionElement = (
             {!isSameAsAuto && <IconAlertTriangleFilled className="text-warning-icon mx-1" size={14} />}
             <span>{`${t(CoreVersionModalI18nKey.SetManually)}]${manuallySetVersion}`}</span>
           </span>
-        </DialTooltip>
+        </Tooltip>
       );
     }
 
     if (autoDetectedVersion !== '-1') {
       return (
-        <DialTooltip
+        <Tooltip
           tooltip={t(CoreVersionModalI18nKey.DetectedTooltip, { version: autoDetectedVersion })}
           triggerClassName="flex-1 cursor-pointer"
         >
           <span>{`[${t(CoreVersionModalI18nKey.Detected)}]${autoDetectedVersion}`}</span>
-        </DialTooltip>
+        </Tooltip>
       );
     }
   } else {
@@ -147,14 +147,14 @@ export const getIconAfter = (
     return version === coreVersions?.autoDetectedVersion ? (
       <span className="text-secondary">detected</span>
     ) : (
-      <DialTooltip
+      <Tooltip
         tooltip={t(CoreVersionModalI18nKey.ManuallySetDiffTooltip, {
           version: coreVersions?.autoDetectedVersion === '-1' ? '' : coreVersions?.autoDetectedVersion,
         })}
         triggerClassName="flex-1 cursor-pointer"
       >
         <IconAlertTriangleFilled className="text-warning-icon mx-1" {...BASE_BUTTON_ICON_PROPS} />
-      </DialTooltip>
+      </Tooltip>
     );
   }
   return null;

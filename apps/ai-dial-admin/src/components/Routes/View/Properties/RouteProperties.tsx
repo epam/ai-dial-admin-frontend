@@ -5,7 +5,7 @@ import {
   PrimaryButton,
   DialRadioGroup,
   DialSelectField,
-  DialSwitch,
+  Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
   SelectOption,
@@ -234,10 +234,10 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
         disabled={disabled || isReadOnlyAdmin}
         trackGlobalValidity={!skipGlobalValidation}
       />
-      <DialSwitch
+      <Switch
         isOn={route.rewritePath}
-        label={t(EntityFieldsI18nKey.rewritePath)}
-        switchId="rewritePath"
+        labelProps={{ label: t(EntityFieldsI18nKey.rewritePath) }}
+        id="rewritePath"
         disabled={disabled || isReadOnlyAdmin}
         onChange={onChangeRewritePath}
       />

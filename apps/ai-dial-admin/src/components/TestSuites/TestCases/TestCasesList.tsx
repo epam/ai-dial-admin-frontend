@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialSwitch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, Switch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -674,10 +674,10 @@ const TestCasesList: FC<Props> = ({
         additionalGridOptions={gridOptions}
         listLabel={t(TabsI18nKey.TestCases)}
         listLabelAddon={
-          <DialSwitch
-            switchId="view-only-included-in-run"
+          <Switch
+            id="view-only-included-in-run"
             isOn={showIncludedOnly}
-            label={t(TestSuitesI18nKey.ViewOnlyIncludedInRun, { count: includedCount })}
+            labelProps={{ label: t(TestSuitesI18nKey.ViewOnlyIncludedInRun, { count: includedCount }) }}
             onChange={setShowIncludedOnly}
           />
         }

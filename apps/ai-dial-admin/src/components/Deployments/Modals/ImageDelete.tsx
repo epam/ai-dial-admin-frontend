@@ -11,7 +11,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
-  DialEllipsisTooltip,
+  EllipsisTooltip,
   DialSelect,
   PopupSize,
   SelectSize,
@@ -218,13 +218,13 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
-              <DialEllipsisTooltip text={displayedId} />
+              <EllipsisTooltip text={displayedId} />
             </div>
           )}
           {name && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
-              <DialEllipsisTooltip text={name} />
+              <EllipsisTooltip text={name} />
             </div>
           )}
           {existingVersions && existingVersions.length > 0 ? (

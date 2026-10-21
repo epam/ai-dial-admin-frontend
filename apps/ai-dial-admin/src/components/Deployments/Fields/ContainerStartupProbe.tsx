@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { EntityCaptionsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -60,9 +60,9 @@ const ContainerStartupProbe: FC<Props> = ({ container, setContainer, disabled })
   return (
     <Accordion title={t(EntityFieldsI18nKey.StartupProbe)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-4">
-        <DialSwitch
-          switchId="startup-probe"
-          label={t('Enable startup probe')}
+        <Switch
+          id="startup-probe"
+          labelProps={{ label: t('Enable startup probe') }}
           isOn={container.probeProperties?.enabled || false}
           onChange={onChangeEnabled}
           disabled={isDisabled}

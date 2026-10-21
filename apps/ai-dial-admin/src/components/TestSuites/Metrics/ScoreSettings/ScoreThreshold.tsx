@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNumberInput, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, Switch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -69,9 +69,9 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
     <div className="flex flex-col gap-1">
       <div className="flex flex-col gap-2">
         <span className="dial-body-semi-text text-primary">{t(TestSuitesI18nKey.OverallScoreThresholdLabel)}</span>
-        <DialSwitch
-          switchId="enableScoreThreshold"
-          label={t(TestSuitesI18nKey.EnableScoreThreshold)}
+        <Switch
+          id="enableScoreThreshold"
+          labelProps={{ label: t(TestSuitesI18nKey.EnableScoreThreshold) }}
           isOn={isEnabled}
           onChange={onEnabledChange}
         />

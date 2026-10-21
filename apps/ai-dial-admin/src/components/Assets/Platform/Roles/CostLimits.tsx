@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
-import { DialNumberInput, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, Switch } from '@epam/ai-dial-ui-kit';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 
 import { RolesI18nKey } from '@/src/constants/i18n';
@@ -62,9 +62,9 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
 
   return (
     <div className="w-full">
-      <DialSwitch
-        switchId="costLimit"
-        label={t(RolesI18nKey.SetCostLimits)}
+      <Switch
+        id="costLimit"
+        labelProps={{ label: t(RolesI18nKey.SetCostLimits) }}
         isOn={costLimitExist}
         onChange={toggleCostLimit}
         disabled={isReadOnlyAdmin}

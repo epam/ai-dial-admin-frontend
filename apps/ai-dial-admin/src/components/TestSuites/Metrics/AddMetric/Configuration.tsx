@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialInput, Switch } from '@epam/ai-dial-ui-kit';
 
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
@@ -143,9 +143,9 @@ const MetricConfiguration: FC<Props> = ({
       <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-3">
         <div className="flex flex-row items-center justify-between shrink-0">
           <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.SetUpMetric)}</p>
-          <DialSwitch
-            switchId="metric-json-mode"
-            label={t(TestSuitesI18nKey.JsonMode)}
+          <Switch
+            id="metric-json-mode"
+            labelProps={{ label: t(TestSuitesI18nKey.JsonMode) }}
             isOn={isJsonView}
             onChange={onJsonModeChange}
           />

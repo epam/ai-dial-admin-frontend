@@ -7,7 +7,7 @@ import { VALUE_TYPE } from '@/src/types/deployments/variables';
 import { getFileNameError } from '@/src/utils/deployments/validation';
 import { downloadFile } from '@/src/utils/download';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { DialErrorText, DialFileIcon, IconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialFileIcon, IconButton, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -74,12 +74,12 @@ const ValueFile: FC<Props> = ({ value, index, ariaLabel, onValueChange, disabled
           error ? 'border-error' : 'border-primary',
         )}
       >
-        <DialTooltip tooltip={value.fileName}>
+        <Tooltip tooltip={value.fileName}>
           <div className="flex flex-row gap-x-3 text-accent-primary w-full items-center" onClick={handleFileDownload}>
             <DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />
             <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
           </div>
-        </DialTooltip>
+        </Tooltip>
         <IconButton
           icon={<IconX {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onClearFile}

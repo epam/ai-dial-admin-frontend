@@ -45,7 +45,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </div>
   ),
   DialSegmentedControl: () => <div>segments</div>,
-  DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+  EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';

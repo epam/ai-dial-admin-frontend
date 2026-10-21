@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialInput, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
@@ -143,10 +143,10 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
             })
           }
         />
-        <DialSwitch
+        <Switch
           isOn={selectedToolset.forward_per_request_key}
-          label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
-          switchId="forwardPerRequestKey"
+          labelProps={{ label: t(EntityFieldsI18nKey.forwardPerRequestKey) }}
+          id="forwardPerRequestKey"
           disabled={selectedToolset.auth_settings?.authentication_type === ToolsetAuthType.API_KEY || isReadOnlyAdmin}
           onChange={(value: boolean) => {
             onChange({ ...selectedToolset, forward_per_request_key: value });

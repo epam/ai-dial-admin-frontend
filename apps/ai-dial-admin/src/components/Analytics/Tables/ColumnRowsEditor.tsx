@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { GhostButton, DialInput, DialLabel, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, DialLabel, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
 
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -157,16 +157,16 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 isTopAligned && first && LABEL_ROW_OFFSET_CLASS,
               )}
             >
-              <DialSwitch
-                switchId={`col-nullable-${row.id}`}
-                label={t(AnalyticsTablesI18nKey.Nullable)}
+              <Switch
+                id={`col-nullable-${row.id}`}
+                labelProps={{ label: t(AnalyticsTablesI18nKey.Nullable) }}
                 isOn={!isNullableLocked && row.nullable}
                 disabled={isNullableLocked}
                 onChange={(value) => update(row.id, { nullable: value })}
               />
-              <DialSwitch
-                switchId={`col-sensitive-${row.id}`}
-                label={t(AnalyticsTablesI18nKey.Sensitive)}
+              <Switch
+                id={`col-sensitive-${row.id}`}
+                labelProps={{ label: t(AnalyticsTablesI18nKey.Sensitive) }}
                 isOn={row.sensitive}
                 onChange={(value) => update(row.id, { sensitive: value })}
               />

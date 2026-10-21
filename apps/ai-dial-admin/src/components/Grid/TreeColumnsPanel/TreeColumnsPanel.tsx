@@ -1,6 +1,6 @@
 'use client';
 
-import { CloseButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { CloseButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconGripVertical } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
@@ -102,15 +102,15 @@ const TreeColumnsPanelDiffSwitches: FC<TreeColumnsPanelDiffSection> = ({
 }) => (
   <div className="flex flex-col gap-4 mb-4 pb-4">
     <h3 className="dial-tiny-text text-secondary">{differencesTitle}</h3>
-    <DialSwitch
-      switchId={`${switchIdPrefix}-view-differences-only`}
-      label={viewDifferencesOnlyLabel}
+    <Switch
+      id={`${switchIdPrefix}-view-differences-only`}
+      labelProps={{ label: viewDifferencesOnlyLabel }}
       isOn={viewDifferencesOnly}
       onChange={onViewDifferencesOnlyChange}
     />
-    <DialSwitch
-      switchId={`${switchIdPrefix}-hide-highlights`}
-      label={hideHighlightsLabel}
+    <Switch
+      id={`${switchIdPrefix}-hide-highlights`}
+      labelProps={{ label: hideHighlightsLabel }}
       isOn={hideHighlights}
       onChange={onHideHighlightsChange}
     />

@@ -18,7 +18,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </select>
   ),
   DialTag: ({ label }: any) => <span data-testid="schema-readonly-badge">{label}</span>,
-  DialTooltip: ({ children }: any) => <>{children}</>,
+  Tooltip: ({ children }: any) => <>{children}</>,
 }));
 
 vi.mock('../SchemaViewer', () => ({

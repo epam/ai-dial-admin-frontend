@@ -1,13 +1,6 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import {
-  DialEllipsisTooltip,
-  DialErrorText,
-  GhostIconButton,
-  DialLabel,
-  DialTag,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, DialErrorText, GhostIconButton, DialLabel, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -126,7 +119,7 @@ const SingleValueAutocomplete: FC<Props> = ({
         <div className="flex flex-wrap items-center gap-2">
           {value && (
             <div className="flex max-w-full min-w-0 items-center">
-              <DialEllipsisTooltip
+              <EllipsisTooltip
                 className="min-w-0 flex-1"
                 contentClassName="max-w-full"
                 text={<DialTag label={selectedLabel} className="max-w-full" />}

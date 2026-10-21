@@ -1,4 +1,4 @@
-import { GhostButton, DialSwitch, DialInput } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Switch, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -156,10 +156,10 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
 
       {isKeyImmutable && (
         <>
-          <DialSwitch
+          <Switch
             isOn={entity.secured}
-            label={t(EntityFieldsI18nKey.secured)}
-            switchId="secured"
+            labelProps={{ label: t(EntityFieldsI18nKey.secured) }}
+            id="secured"
             onChange={onChangeSecured}
             disabled={isReadOnlyAdmin}
           />

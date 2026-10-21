@@ -3,7 +3,7 @@
 import { ChangeEvent, FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import DiffMiniMap from '@/src/components/Common/DiffMiniMap/DiffMiniMap';
 import { DEFAULT_COMPARE_DELTA_HEADER } from '@/src/components/Runs/Compare/ExecutionResults/constants';
@@ -140,7 +140,7 @@ const CompareRowDetailTable: FC<Props> = ({
             <div key={run.slot} className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text min-w-0')}>
               <div className="flex items-center gap-2 min-w-0">
                 <CompareRunIndexBadge runIndex={run.index} />
-                <DialEllipsisTooltip text={getRunLabel(run)} className="text-secondary" />
+                <EllipsisTooltip text={getRunLabel(run)} className="text-secondary" />
               </div>
             </div>
           ))}

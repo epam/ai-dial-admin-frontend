@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { readableColor } from 'polished';
 import randomColor from 'randomcolor';
 
@@ -66,7 +66,7 @@ export const UserIcon = ({ className, userName }: Props) => {
   }, [session?.user?.image]);
 
   return (
-    <DialTooltip tooltip={userName}>
+    <Tooltip tooltip={userName}>
       {showFallbackIcon ? (
         <FallbackIcon name={session?.user?.name} seed={session?.user?.email} />
       ) : (
@@ -79,6 +79,6 @@ export const UserIcon = ({ className, userName }: Props) => {
           onError={() => setShowFallbackIcon(true)}
         />
       )}
-    </DialTooltip>
+    </Tooltip>
   );
 };

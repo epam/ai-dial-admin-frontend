@@ -411,9 +411,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
               onSave={onTryToSave}
             />
           )}
-          {!isChangeBarShown && (
-            <JsonToggle isDesignSystem2 isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
-          )}
+          {!isChangeBarShown && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />}
         </div>
       </div>
 

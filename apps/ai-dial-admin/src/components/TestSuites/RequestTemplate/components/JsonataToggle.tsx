@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { getContentForJsonataExpression } from '@/src/components/TestSuites/utils/body-content';
@@ -44,7 +44,9 @@ const JsonataToggle: FC<Props> = ({ testSuite, bodyText, onChangeTestSuite }) =>
     [body, bodyText, onChangeTestSuite, testSuite],
   );
 
-  return <DialSwitch switchId="jsonataToggle" label={t(JsonAtaI18nKey.ToggleLabel)} isOn={isOn} onChange={onChange} />;
+  return (
+    <Switch id="jsonataToggle" labelProps={{ label: t(JsonAtaI18nKey.ToggleLabel) }} isOn={isOn} onChange={onChange} />
+  );
 };
 
 export default JsonataToggle;

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -67,7 +67,7 @@ const BindingsSection: FC<BindingsSectionProps> = ({ label, bindings, isExpanded
               >
                 {binding.source.$type}
               </span>
-              <DialEllipsisTooltip text={value} />
+              <EllipsisTooltip text={value} />
             </div>
           );
         })}

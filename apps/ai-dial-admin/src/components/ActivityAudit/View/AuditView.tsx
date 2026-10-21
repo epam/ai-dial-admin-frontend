@@ -4,13 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  IconButton,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
-  OutlinedButton,
-  DialSwitch,
-} from '@epam/ai-dial-ui-kit';
+import { IconButton, DialConfirmationPopup, EllipsisTooltip, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -214,7 +208,7 @@ const AuditView: FC<Props> = ({
         {!isModalView && (
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
-              <DialEllipsisTooltip text={activity.activityId} />
+              <EllipsisTooltip text={activity.activityId} />
               <CopyButton value={activity.activityId} valueLabel={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
@@ -230,11 +224,11 @@ const AuditView: FC<Props> = ({
                 />
               )}
               <div className="w-px h-6 bg-layer-4"></div>
-              <DialSwitch
-                switchId="jsonView"
+              <Switch
+                id="jsonView"
                 isOn={isJsonView}
                 onChange={() => setIsJsonView(!isJsonView)}
-                label="JSON"
+                labelProps={{ label: 'JSON' }}
               />
             </div>
           </div>
@@ -245,7 +239,7 @@ const AuditView: FC<Props> = ({
               {isModalView && (
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
-                    <DialEllipsisTooltip text={activity.activityId} />
+                    <EllipsisTooltip text={activity.activityId} />
                     {activity.activityId && (
                       <IconButton
                         onClick={() => openActivityInNewTab(activity)}
@@ -258,11 +252,11 @@ const AuditView: FC<Props> = ({
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
                     <FilterControl diffView={diffView} setDiffView={setDiffView} />
                     <div className="w-px h-6 bg-layer-4"></div>
-                    <DialSwitch
-                      switchId="jsonView"
+                    <Switch
+                      id="jsonView"
                       isOn={isJsonView}
                       onChange={() => setIsJsonView(!isJsonView)}
-                      label="JSON"
+                      labelProps={{ label: 'JSON' }}
                     />
                   </div>
                 </>

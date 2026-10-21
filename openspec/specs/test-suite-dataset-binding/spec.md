@@ -62,7 +62,7 @@ When a suite is bound to a dataset, the Test Cases tab SHALL show a `DatasetHead
 #### Scenario: Dataset header shows for bound suite
 - **WHEN** the suite has a non-null `datasetId`
 - **THEN** the DatasetHeader component is rendered at the top of the Test Cases tab
-- **THEN** the dataset ID is shown (truncated via DialEllipsisTooltip if long)
+- **THEN** the dataset ID is shown (truncated via EllipsisTooltip if long)
 - **THEN** the visibility badge reflects the dataset's visibility (PUBLIC or PRIVATE)
 
 #### Scenario: Open in new tab button

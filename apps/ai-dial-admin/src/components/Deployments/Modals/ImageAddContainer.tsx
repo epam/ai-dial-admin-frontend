@@ -4,7 +4,7 @@ import {
   DialFormPopup,
   DialLoader,
   DialNoDataContent,
-  DialSwitch,
+  Switch,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { GridApi, GridOptions, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
@@ -122,11 +122,11 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
         {isLoading && <DialLoader size={24} />}
         {!isLoading && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <DialSwitch
-              switchId="related-containers"
+            <Switch
+              id="related-containers"
               onChange={toggleShowRelated}
               isOn={showRelated}
-              label={t(ContainersI18nKey.ShowRelatedContainers)}
+              labelProps={{ label: t(ContainersI18nKey.ShowRelatedContainers) }}
             />
             {!displayedDependencies.length ? (
               <DialNoDataContent

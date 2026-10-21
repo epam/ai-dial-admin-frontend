@@ -7,7 +7,7 @@ import {
   DialNumberInput,
   DialPasswordInput,
   DialSelectField,
-  DialTooltip,
+  Tooltip,
   SelectOption,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
@@ -204,9 +204,9 @@ const Endpoint: FC<Props> = ({
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
             {!isExpanded && (
-              <DialTooltip tooltip={endpoint.endpoint || '—'}>
+              <Tooltip tooltip={endpoint.endpoint || '—'}>
                 <p className="max-w-[220px] truncate dial-tiny-text text-secondary mt-3">{endpoint.endpoint || '—'}</p>
-              </DialTooltip>
+              </Tooltip>
             )}
           </div>
         )}

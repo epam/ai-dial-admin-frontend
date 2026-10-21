@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC } from 'react';
 
@@ -49,7 +49,7 @@ const HopParamsLine: FC<Props> = ({ params, messageCount }) => {
     >
       {model !== null && (
         <>
-          <DialEllipsisTooltip text={model} className="max-w-[18rem] font-semibold text-primary" />
+          <EllipsisTooltip text={model} className="max-w-[18rem] font-semibold text-primary" />
           <span aria-hidden className="text-secondary">
             |
           </span>
@@ -65,7 +65,7 @@ const HopParamsLine: FC<Props> = ({ params, messageCount }) => {
           ) : (
             /* Bounded, because the length of a recorded value is not this line's to choose. Truncated with
                the tooltip rather than by hand, so what the call was actually made with stays readable. */
-            <DialEllipsisTooltip
+            <EllipsisTooltip
               text={value}
               className={classNames('max-w-[14rem]', BOOLEANS.has(value) ? 'text-accent-secondary' : 'text-primary')}
             />

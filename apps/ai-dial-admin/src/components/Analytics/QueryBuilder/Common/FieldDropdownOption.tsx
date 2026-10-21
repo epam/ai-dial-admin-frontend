@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconCheck } from '@tabler/icons-react';
 
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
@@ -27,7 +27,7 @@ const FieldDropdownOption: FC<Props> = ({ option, selected, onPick }) => {
     .join(' — ');
 
   return (
-    <DialTooltip hideTooltip={!tooltip} tooltip={tooltip} triggerClassName="w-full" contentClassName="max-w-[320px]">
+    <Tooltip hideTooltip={!tooltip} tooltip={tooltip} triggerClassName="w-full" contentClassName="max-w-[320px]">
       <button
         type="button"
         role="option"
@@ -55,7 +55,7 @@ const FieldDropdownOption: FC<Props> = ({ option, selected, onPick }) => {
           <span className="w-full truncate dial-tiny-text text-secondary">{option.description}</span>
         )}
       </button>
-    </DialTooltip>
+    </Tooltip>
   );
 };
 

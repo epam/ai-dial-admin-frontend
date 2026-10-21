@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialEllipsisTooltip, GhostButton, GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostButton, GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconDatabaseExport, IconExternalLink, IconPencilMinus, IconUnlink } from '@tabler/icons-react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -48,7 +48,7 @@ const DatasetBanner: FC<Props> = ({ datasetName, onOpenDataset, onDetachDataset,
         <span className="flex items-center p-2 shrink-0 text-accent-primary">
           <IconDatabaseExport size={16} aria-hidden />
         </span>
-        <DialEllipsisTooltip className="dial-small-semi text-primary max-w-[600px]" text={datasetName} />
+        <EllipsisTooltip className="dial-small-semi text-primary max-w-[600px]" text={datasetName} />
         <GhostIconButton
           size={ElementSize.Small}
           icon={<IconExternalLink size={16} aria-hidden />}

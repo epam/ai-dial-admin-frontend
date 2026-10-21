@@ -2,7 +2,7 @@
 
 import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   text: string;
@@ -27,11 +27,11 @@ const OverflowValueTooltip: FC<Props> = ({ text, children }) => {
   }, [text]);
 
   return (
-    <DialTooltip tooltip={isOverflowing && text ? text : undefined} triggerClassName="block w-full min-w-0">
+    <Tooltip tooltip={isOverflowing && text ? text : undefined} triggerClassName="block w-full min-w-0">
       <div ref={rootRef} className="w-full min-w-0" data-overflow-tooltip={isOverflowing ? 'armed' : 'idle'}>
         {children}
       </div>
-    </DialTooltip>
+    </Tooltip>
   );
 };
 

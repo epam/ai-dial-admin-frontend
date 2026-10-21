@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNotification, PrimaryButton, DialSwitch, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { DialNotification, PrimaryButton, Switch, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -122,10 +122,10 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
             {t(TabsI18nKey.Roles)}: {displayedCount}
           </h1>
           {!isReadOnlyAdmin && (
-            <DialSwitch
+            <Switch
               isOn={isSpecificRoles}
-              label={t(RolesI18nKey.AvailableSpecificRoles)}
-              switchId="specificRoles"
+              labelProps={{ label: t(RolesI18nKey.AvailableSpecificRoles) }}
+              id="specificRoles"
               onChange={onSwitchSpecificRoles}
             />
           )}

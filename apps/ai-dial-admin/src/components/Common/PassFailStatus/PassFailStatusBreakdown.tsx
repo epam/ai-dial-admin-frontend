@@ -1,6 +1,6 @@
 'use client';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import { Icon } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
@@ -100,9 +100,13 @@ const PassFailStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTi
   );
 
   return (
-    <DialTooltip tooltip={tooltipContent} placement="right" triggerClassName="inline-flex w-fit max-w-full self-start">
+    <Tooltip
+      tooltip={tooltipContent}
+      placement={TooltipPlacement.Right}
+      triggerClassName="inline-flex w-fit max-w-full self-start"
+    >
       {breakdown}
-    </DialTooltip>
+    </Tooltip>
   );
 };
 

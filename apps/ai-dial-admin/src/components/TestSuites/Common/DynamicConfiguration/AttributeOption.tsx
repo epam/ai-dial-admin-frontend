@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialTag, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AttributeSamplesPreview from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSamplesPreview';
@@ -21,7 +21,7 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
   const hasSamples = values.length > 0;
 
   return (
-    <DialTooltip
+    <Tooltip
       hideTooltip={!hasSamples}
       tooltip={
         hasSamples && (
@@ -34,7 +34,7 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
         )
       }
       contentClassName="[&&]:border-0 [&&]:bg-layer-1 [&>svg]:hidden"
-      placement="right-start"
+      placement={TooltipPlacement.Right}
       triggerClassName="w-full"
     >
       <button
@@ -51,7 +51,7 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
         <span className="truncate dial-small-text text-primary">{field.name}</span>
         <DialTag label={field.type.toLowerCase()} />
       </button>
-    </DialTooltip>
+    </Tooltip>
   );
 };
 

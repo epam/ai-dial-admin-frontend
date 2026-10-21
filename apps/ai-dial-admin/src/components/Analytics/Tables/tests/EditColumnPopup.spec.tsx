@@ -28,8 +28,8 @@ const renderPopup = (props?: Partial<Parameters<typeof EditColumnPopup>[0]>) => 
   return { onSubmit, onClose };
 };
 
-const nullableSwitch = () => screen.getAllByRole('checkbox')[0];
-const sensitiveSwitch = () => screen.getAllByRole('checkbox')[1];
+const nullableSwitch = () => screen.getAllByRole('switch')[0];
+const sensitiveSwitch = () => screen.getAllByRole('switch')[1];
 
 const setInput = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });

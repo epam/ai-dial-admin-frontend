@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IHeaderParams } from 'ag-grid-community';
 
 import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
@@ -22,7 +22,7 @@ const PreviewColumnHeader: FC<Props> = ({ previewColumn }) => {
 
   return (
     <div className="flex h-full min-w-0 flex-col justify-center gap-0.5 py-2">
-      <DialEllipsisTooltip
+      <EllipsisTooltip
         text={previewColumn.name}
         className="min-w-0 font-mono dial-small-semi text-primary"
         contentClassName="truncate"
