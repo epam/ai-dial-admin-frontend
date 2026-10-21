@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DialFile as FileManagerFile, DialFoldersTree } from '@epam/ai-dial-react-file-manager';
 import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
@@ -29,6 +29,8 @@ const IGNORE_TREE_EXPANSION_CHANGE = () => undefined;
 const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPaths = DEFAULT_ROOT_PATHS }) => {
   const t = useI18n();
   const folderContext = context?.();
+  const autoFetchedRootsKeyRef = useRef<string | undefined>(undefined);
+  const rootPathsKey = rootPaths.join('|');
 
   const folderData = useMemo(() => {
     return folderContext?.files?.filter((node) => !isFileRootPath(node.path));
@@ -57,8 +59,12 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
     } else if (
       !disableAutoFetch &&
       !initialPath &&
-      (folderContext?.files == null || folderContext?.files?.length === 0)
+      (folderContext?.files == null || folderContext?.files?.length === 0) &&
+      autoFetchedRootsKeyRef.current !== rootPathsKey
     ) {
+      // `folderContext` changes with every fetch (in-flight flag, failure), and Next.js runs server
+      // actions serially, so re-fetching on each change queues duplicates and retries a failure forever.
+      autoFetchedRootsKeyRef.current = rootPathsKey;
       // Only the assets context has dual-bucket views (Applications/Toolsets) whose empty-state
       // fetch takes several roots at once; a rule folder always has a single root.
       const assetsContext = folderContext as AssetsFolderContextReader<AssetListItem> | undefined;
@@ -68,7 +74,7 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
         folderContext?.fetchFiles(rootPaths[0]);
       }
     }
-  }, [folderContext, disableAutoFetch, initialPath, rootPaths, scrollToFolder]);
+  }, [folderContext, disableAutoFetch, initialPath, rootPaths, rootPathsKey, scrollToFolder]);
 
   // `context` is typed via `AssetsFolderContextReader`/`RuleFolderContextType`, neither of which
   // exposes `toggleFolder` at the type level: the former omits it because it's the one member that
