@@ -47,7 +47,7 @@ export const KeyRotateModal: FC<Props> = ({ isModalOpen, selectedKey, keys, onCo
       submitLabel={t(ButtonsI18nKey.Rotate)}
     >
       <div className="flex flex-col gap-y-8 px-6 py-4">
-        <div className="text-secondary small-150">{t(KeysI18nKey.RotateKeyDescription)}</div>
+        <div className="text-secondary dial-small-paragraph-text">{t(KeysI18nKey.RotateKeyDescription)}</div>
         <KeyGenerateField keys={keys} selectedKey={newKey} changeKey={onChangeKey} />
         <ValidityPeriod onChange={onChangeExpiresAt} />
       </div>

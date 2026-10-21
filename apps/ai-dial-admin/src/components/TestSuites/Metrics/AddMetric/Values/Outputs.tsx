@@ -18,7 +18,7 @@ const MetricOutputs: FC<Props> = ({ fields, title }) => {
           <div key={field.id} className="flex flex-col gap-1">
             <DialTag
               label={field.name}
-              className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0 w-fit"
+              className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-xs shrink-0 w-fit"
             />
             {field.description ? (
               <span className="dial-tiny-text text-secondary" title={field.description}>

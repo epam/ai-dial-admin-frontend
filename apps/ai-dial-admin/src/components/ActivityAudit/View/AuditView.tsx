@@ -301,7 +301,7 @@ const AuditView: FC<Props> = ({
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
           >
-            <div className="text-secondary small-150 px-6 py-4">
+            <div className="text-secondary dial-small-paragraph-text px-6 py-4">
               <p>
                 <span>{t(RollbackI18nKey.ConfirmSelectionRollbackDescription)}</span>
                 <span className="important-text-part">{formatDateTimeToLocalString(activity?.epochTimestampMs)}</span>

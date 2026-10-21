@@ -64,7 +64,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, selectedP
           aria-current={isSelected || undefined}
           onClick={onSelectNode}
         >
-          <span className="flex-1 min-w-0 small truncate">{node.name}</span>
+          <span className="flex-1 min-w-0 dial-small-text truncate">{node.name}</span>
           <DialTag label={node.type} className="rounded" />
         </button>
       </div>

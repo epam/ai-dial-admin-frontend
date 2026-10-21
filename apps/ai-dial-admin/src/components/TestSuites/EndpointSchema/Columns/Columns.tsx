@@ -153,7 +153,7 @@ const Columns: FC<ColumnsProps> = ({
     <div className="flex flex-col gap-4 flex-1 min-h-0">
       {duplicateMessage && <DialNotification variant={NotificationVariant.Error} message={duplicateMessage} />}
       <div className="flex flex-row justify-between items-center">
-        <span className="text-secondary small">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
+        <span className="text-secondary dial-small-text">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
         <div className="flex flex-row gap-2">
           <DialPrimaryButton
             iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}

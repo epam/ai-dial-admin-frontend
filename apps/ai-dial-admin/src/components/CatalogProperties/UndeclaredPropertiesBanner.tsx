@@ -33,7 +33,7 @@ const UndeclaredPropertiesBanner: FC<Props> = ({ className, names, isForbidden, 
     <DialNotification
       className={className}
       variant={isForbidden ? NotificationVariant.Error : NotificationVariant.Warning}
-      message={<span className="small">{message}</span>}
+      message={<span className="dial-small-text">{message}</span>}
     >
       {isForbidden && !isReadOnlyAdmin && (
         <DialNeutralButton

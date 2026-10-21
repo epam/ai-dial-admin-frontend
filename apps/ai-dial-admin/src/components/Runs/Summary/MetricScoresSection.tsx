@@ -57,7 +57,7 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
             className="min-w-0 overflow-hidden bg-layer-2"
             barDescriptions={group.barDescriptions}
             titleTooltip={group.description}
-            barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
+            barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-xs px-1"
             barTitleClassName="block min-w-0 truncate text-secondary"
           />
         ))}

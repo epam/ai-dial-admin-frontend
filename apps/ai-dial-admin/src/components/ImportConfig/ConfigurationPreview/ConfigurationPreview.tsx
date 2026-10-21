@@ -185,7 +185,7 @@ const ConfigurationPreview: FC<Props> = ({
       return (
         <div className="flex flex-col size-full justify-center items-center">
           <DialLoader size={45} className="h-auto" />
-          <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
+          <p className="mt-3 text-primary dial-small-text">{t(ImportI18nKey.ConfigurationParsing)}</p>
         </div>
       );
     }

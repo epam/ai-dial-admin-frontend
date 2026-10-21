@@ -44,7 +44,7 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
           ></div>
           <div className={classNames('flex-1 flex flex-col gap-4 ml-[5px]', !isSingle && 'mt-4')}>
             {isSingle ? (
-              <div className="small">{t(FoldersI18nKey.AllRules)}</div>
+              <div className="dial-small-text">{t(FoldersI18nKey.AllRules)}</div>
             ) : (
               sortRules(rulesMap).map(([key, value], index) => {
                 const isLastItem = index === rulesLength - 1;

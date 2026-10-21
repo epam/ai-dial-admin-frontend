@@ -22,7 +22,7 @@
 //   - hidden/invisible characters — bidi controls, zero-width chars, BOM, and
 //     U+FFFD from invalid UTF-8 — that corrupt parsing or silently alter text
 //   - floating MCP package versions (`@latest`) that break reproducibility
-//   - Tailwind breakpoints in source match the app's tailwind.config.js
+//   - Tailwind breakpoints in source match the app's @custom-variant declarations in app-theme.css
 //     (full scan only)
 //   - committed secrets (known token shapes) in any config file, and
 //     approval-gate-disabling permissions in .claude/settings.json. These are
@@ -376,14 +376,13 @@ const checkMirrorIntegrity = (manifest) => {
   return checked;
 };
 
-const TAILWIND_CONFIG = 'apps/ai-dial-admin/tailwind.config.js';
+const TAILWIND_THEME = 'apps/ai-dial-admin/src/scss/app-theme.css';
 
 const readTailwindBreakpoints = () => {
-  if (!existsSync(TAILWIND_CONFIG)) return new Set();
+  if (!existsSync(TAILWIND_THEME)) return new Set();
 
-  const src = readFileSync(TAILWIND_CONFIG, 'utf8');
-  const screensBlock = /screens:\s*\{([\s\S]*?)\n\s*\},/.exec(src)?.[1] ?? '';
-  return new Set([...screensBlock.matchAll(/^\s*([A-Za-z][\w-]*):/gm)].map((match) => match[1]));
+  const src = readFileSync(TAILWIND_THEME, 'utf8');
+  return new Set([...src.matchAll(/^@custom-variant\s+([A-Za-z][\w-]*)/gm)].map((match) => match[1]));
 };
 
 const checkSourceBreakpoints = () => {

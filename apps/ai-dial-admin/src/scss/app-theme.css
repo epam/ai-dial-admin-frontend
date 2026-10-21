@@ -1,0 +1,361 @@
+/*
+ * The app's design tokens as Tailwind v4 theme keys (replaces tailwind.config.js).
+ *
+ * Every colour reads the CSS variable the themes service sets, with the light palette as its fallback.
+ * `inline` writes each value into the utility that uses it instead of declaring it on `:root`.
+ * The kit ships its own copy of most of these (`@epam/ai-dial-ui-kit/styles.css`); this file keeps
+ * the app's values so its utilities do not depend on the kit's stylesheet being loaded first.
+ */
+@theme inline {
+  /* bg-*, gradient stops */
+  --background-color-transparent: transparent;
+  --background-color-layer-sunken: var(--bg-layer-sunken, #eef1f7);
+  --background-color-layer-base: var(--bg-layer-base, #f5f7fa);
+  --background-color-layer-raised: var(--bg-layer-raised, #fcfcfc);
+  --background-color-error: var(--bg-error, #f3d6d8);
+  --background-color-warning: var(--bg-warning, #faf0cf);
+  --background-color-info: var(--bg-info, #e1eaf9);
+  --background-color-success: var(--bg-success, #dbf1eb);
+  --background-color-backdrop: var(--bg-backdrop, #161b2d4d);
+  --background-color-gradient-1-hover: var(--bg-gradient-1-hover, #6785fb);
+  --background-color-gradient-1-active: var(--bg-gradient-1-active, #1d4ed8);
+  --background-color-gradient-2: var(--bg-gradient-2, #885df2);
+  --background-color-gradient-2-hover: var(--bg-gradient-2-hover, #885df2);
+  --background-color-gradient-2-active: var(--bg-gradient-2-active, #7c3aed);
+  --background-color-control-accent-alpha: var(--bg-control-accent-alpha, #2764d90f);
+  --background-color-control-accent-alpha-hover: var(--bg-control-accent-alpha-hover, #2764d924);
+  --background-color-control-accent-alpha-active: var(--bg-control-accent-alpha-active, #2764d933);
+  --background-color-control-accent: var(--bg-control-accent, #1d4ed8);
+  --background-color-control-accent-hover: var(--bg-control-accent-hover, #5976e9);
+  --background-color-control-neutral: var(--bg-control-neutral, #fcfcfc);
+  --background-color-control-neutral-hover-strong: var(--bg-control-neutral-hover-strong, #848e9c);
+  --background-color-control-neutral-hover-muted: var(--bg-control-neutral-hover-muted, #e0e6f0);
+  --background-color-control-neutral-active: var(--bg-control-neutral-active, #d1dbea);
+  --background-color-control-neutral-default: var(--bg-control-neutral-default, #acb3c3);
+  --background-color-control-inverted: var(--bg-control-inverted, #57647a);
+  --background-color-control-error: var(--bg-control-error, #ae2f2f);
+  --background-color-control-error-hover: var(--bg-control-error-hover, #bf3939);
+  --background-color-control-error-active: var(--bg-control-error-active, #cc4545);
+  --background-color-control-error-alpha-hover: var(--bg-control-error-alpha-hover, #f764641a);
+  --background-color-control-error-alpha-active: var(--bg-control-error-alpha-active, #f7646433);
+  --background-color-control-disable-primary: var(--bg-control-disable-primary, #dce0e8);
+  --background-color-control-disable-secondary: var(--bg-control-disable-secondary, #acb3c3);
+  --background-color-blue: var(--bg-visual-blue, #d6edf9);
+  --background-color-green-1: var(--bg-visual-green-1, #cde8e5);
+  --background-color-green-2: var(--bg-visual-green-2, #d1f0dc);
+  --background-color-brown: var(--bg-visual-brown, #fde8d8);
+  --background-color-red: var(--bg-visual-red, #fce7f3);
+  --background-color-violet-1: var(--bg-visual-violet-1, #dde3f9);
+  --background-color-violet-2: var(--bg-visual-violet-2, #f1e9ff);
+  --background-color-layer-0: var(--bg-layer-0, #fcfcfc);
+  --background-color-layer-1: var(--bg-layer-1, #e0e6f0);
+  --background-color-layer-2: var(--bg-layer-2, #fcfcfc);
+  --background-color-layer-3: var(--bg-layer-3, #eef1f7);
+  --background-color-layer-4: var(--bg-layer-4, #d1dbea);
+  --background-color-blackout: var(--bg-blackout, #161b2d4d);
+  --background-color-neutral: var(--bg-neutral, #eef1f7);
+  --background-color-inverted: var(--bg-inverted, #161b2d);
+  --background-color-accent-primary-alpha: var(--bg-accent-primary-alpha, #7da4ff2e);
+  --background-color-accent-secondary-alpha: var(--bg-accent-secondary-alpha, #37babc2e);
+  --background-color-accent-tertiary-alpha: var(--bg-accent-tertiary-alpha, #a972ff2e);
+  --background-color-accent-primary: var(--bg-accent-primary, #1d4ed8);
+  --background-color-accent-secondary: var(--bg-accent-secondary, #37babc);
+  --background-color-accent-tertiary: var(--bg-accent-tertiary, #a972ff);
+  --background-color-model-icon: var(--bg-model-icon, #ffffff);
+  --background-color-secondary: var(--bg-secondary, #848e9c);
+  --background-color-red-400: var(--bg-red-400, #f76464);
+  --background-color-red-800: var(--bg-red-800, #ae2f2f);
+  --background-color-orange-400: var(--bg-orange-400, #d97c27);
+  --background-color-yellow-400: var(--bg-yellow-400, #eec840);
+  --background-color-controls-accent-primary: var(--controls-bg-accent-primary, #3664e2);
+  --background-color-controls-accent-primary-hover: var(--controls-bg-accent-primary-hover, #2656d9);
+  --background-color-controls-accent-primary-active: var(--controls-bg-accent-primary-active, #124ace);
+  --background-color-controls-accent-primary-alpha-active: var(--controls-bg-accent-primary-alpha-active, #7da4ff5c);
+  --background-color-controls-accent-secondary-alpha-active: var(
+    --controls-bg-accent-secondary-alpha-active,
+    #37babc5c
+  );
+  --background-color-controls-accent-tertiary-alpha-active: var(--controls-bg-accent-tertiary-alpha-active, #a972ff5c);
+  --background-color-controls-error: var(--controls-bg-error, #cc4545);
+  --background-color-controls-error-hover: var(--controls-bg-error-hover, #bf3939);
+  --background-color-controls-error-active: var(--controls-bg-error-active, #ae2f2f);
+  --background-color-controls-error-alpha-hover: var(--controls-bg-error-alpha-hover, #f764642e);
+  --background-color-controls-error-alpha-active: var(--controls-bg-error-alpha-active, #f764645c);
+  --background-color-controls-disable-accent: var(--controls-bg-disable-accent, #acb3c3);
+  --background-color-controls-disable: var(--controls-bg-disable, #dce0e8);
+  --background-color-controls-neutral-hover: var(--controls-bg-neutral-hover, #e0e6f0);
+  --background-color-controls-neutral-active: var(--controls-bg-neutral-active, #d1dbea);
+  --background-color-controls-accent-success-alpha-hover: var(--controls-bg-accent-success-alpha-hover, #37babc2e);
+  --background-color-controls-accent-success-alpha-active: var(--controls-bg-accent-success-alpha-active, #37babc5c);
+  --background-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
+  --background-color-controls-accent-hover: var(--controls-bg-accent-hover, #5976e9);
+  --background-color-controls-accent-alpha: var(--controls-bg-accent-alpha, #2764d924);
+  --background-color-controls-enable-primary: var(--controls-enable-primary, #fcfcfc);
+  --background-color-score-abs-00: var(--bg-score-abs-00, #75010180);
+  --background-color-score-abs-01: var(--bg-score-abs-01, #69100b80);
+  --background-color-score-abs-02: var(--bg-score-abs-02, #6c210d80);
+  --background-color-score-abs-03: var(--bg-score-abs-03, #59210a80);
+  --background-color-score-abs-04: var(--bg-score-abs-04, #5f2b1880);
+  --background-color-score-abs-05: var(--bg-score-abs-05, #53320e80);
+  --background-color-score-abs-06: var(--bg-score-abs-06, #362a0e80);
+  --background-color-score-abs-07: var(--bg-score-abs-07, #403d1280);
+  --background-color-score-abs-08: var(--bg-score-abs-08, #22351380);
+  --background-color-score-abs-09: var(--bg-score-abs-09, #0d372680);
+  --background-color-score-abs-10: var(--bg-score-abs-10, #022d1c80);
+  --background-color-score-abs-11: var(--bg-score-abs-11, #01361180);
+  --background-color-score-delta-n4: var(--bg-score-delta-n4, #75010180);
+  --background-color-score-delta-n3: var(--bg-score-delta-n3, #6c210d80);
+  --background-color-score-delta-n2: var(--bg-score-delta-n2, #48171980);
+  --background-color-score-delta-n1: var(--bg-score-delta-n1, #2b0f0480);
+  --background-color-score-delta-p1: var(--bg-score-delta-p1, #1e2a1680);
+  --background-color-score-delta-p2: var(--bg-score-delta-p2, #283f1680);
+  --background-color-score-delta-p3: var(--bg-score-delta-p3, #30511b80);
+  --background-color-score-delta-p4: var(--bg-score-delta-p4, #32640b80);
+
+  /* border-* */
+  --border-color-transparent: transparent;
+  --border-color-primary: var(--stroke-primary, #57647a);
+  --border-color-secondary: var(--stroke-secondary, #d1dbea);
+  --border-color-tertiary: var(--stroke-tertiary, #e0e6f0);
+  --border-color-error: var(--stroke-error, #ae2f2f);
+  --border-color-warning: var(--stroke-warning, #eec840);
+  --border-color-info: var(--stroke-info, #1d4ed8);
+  --border-color-accent: var(--stroke-accent, #1d4ed8);
+  --border-color-success: var(--stroke-success, #007274);
+  --border-color-focus: var(--stroke-focus, #161b2d);
+  --border-color-default: var(--stroke-default, #b2c2dd);
+  --border-color-accent-alpha: var(--stroke-accent-alpha, #2764d933);
+  --border-color-gradient-1: var(--stroke-gradient-1, #5976e9);
+  --border-color-gradient-2: var(--stroke-gradient-2, #885df2);
+  --border-color-accent-focus: var(--stroke-accent-focus, #6785fb);
+  --border-color-error-alpha: var(--stroke-error-alpha, #ae2f2f73);
+  --border-color-control-disable-primary: var(--stroke-control-disable-primary, #848e9c);
+  --border-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
+  --border-color-red-900: var(--red-900, #f3d6d8);
+  --border-color-accent-primary: var(--stroke-accent-primary, #1d4ed8);
+  --border-color-accent-secondary: var(--stroke-accent-secondary, #37babc);
+  --border-color-accent-tertiary: var(--stroke-accent-tertiary, #a972ff);
+  --border-color-hover: var(--stroke-hover, #57647a);
+  --border-color-blue800: var(--stroke-blue-800, #2764d9);
+  --border-color-score-abs-00: var(--stroke-score-abs-00, #ff4e50);
+  --border-color-score-abs-01: var(--stroke-score-abs-01, #f26b5b);
+  --border-color-score-abs-02: var(--stroke-score-abs-02, #e5764a);
+  --border-color-score-abs-03: var(--stroke-score-abs-03, #e08c3f);
+  --border-color-score-abs-04: var(--stroke-score-abs-04, #d9a638);
+  --border-color-score-abs-05: var(--stroke-score-abs-05, #d4be3a);
+  --border-color-score-abs-06: var(--stroke-score-abs-06, #b8c94a);
+  --border-color-score-abs-07: var(--stroke-score-abs-07, #7ec96b);
+  --border-color-score-abs-08: var(--stroke-score-abs-08, #4ecba8);
+  --border-color-score-abs-09: var(--stroke-score-abs-09, #4ec5c5);
+  --border-color-score-abs-10: var(--stroke-score-abs-10, #4dc87a);
+  --border-color-score-abs-11: var(--stroke-score-abs-11, #30e070);
+  --border-color-score-delta-n4: var(--stroke-score-delta-n4, #eb503e);
+  --border-color-score-delta-n3: var(--stroke-score-delta-n3, #f26b5b);
+  --border-color-score-delta-n2: var(--stroke-score-delta-n2, #e5764a);
+  --border-color-score-delta-n1: var(--stroke-score-delta-n1, #a57a1d);
+  --border-color-score-delta-p1: var(--stroke-score-delta-p1, #9aa63c);
+  --border-color-score-delta-p2: var(--stroke-score-delta-p2, #67a455);
+  --border-color-score-delta-p3: var(--stroke-score-delta-p3, #4dc87a);
+  --border-color-score-delta-p4: var(--stroke-score-delta-p4, #30e070);
+
+  /* divide-* */
+  --divide-color-transparent: transparent;
+  --divide-color-primary: var(--stroke-primary, #57647a);
+  --divide-color-secondary: var(--stroke-secondary, #d1dbea);
+  --divide-color-tertiary: var(--stroke-tertiary, #e0e6f0);
+  --divide-color-error: var(--stroke-error, #ae2f2f);
+  --divide-color-warning: var(--stroke-warning, #eec840);
+  --divide-color-info: var(--stroke-info, #1d4ed8);
+  --divide-color-accent: var(--stroke-accent, #1d4ed8);
+  --divide-color-success: var(--stroke-success, #007274);
+  --divide-color-focus: var(--stroke-focus, #161b2d);
+  --divide-color-default: var(--stroke-default, #b2c2dd);
+  --divide-color-accent-alpha: var(--stroke-accent-alpha, #2764d933);
+  --divide-color-gradient-1: var(--stroke-gradient-1, #5976e9);
+  --divide-color-gradient-2: var(--stroke-gradient-2, #885df2);
+  --divide-color-accent-focus: var(--stroke-accent-focus, #6785fb);
+  --divide-color-error-alpha: var(--stroke-error-alpha, #ae2f2f73);
+  --divide-color-control-disable-primary: var(--stroke-control-disable-primary, #848e9c);
+  --divide-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
+  --divide-color-red-900: var(--red-900, #f3d6d8);
+  --divide-color-accent-primary: var(--stroke-accent-primary, #1d4ed8);
+  --divide-color-accent-secondary: var(--stroke-accent-secondary, #37babc);
+  --divide-color-accent-tertiary: var(--stroke-accent-tertiary, #a972ff);
+  --divide-color-hover: var(--stroke-hover, #57647a);
+  --divide-color-blue800: var(--stroke-blue-800, #2764d9);
+
+  /* outline-* */
+  --outline-color-transparent: transparent;
+  --outline-color-primary: var(--stroke-primary, #57647a);
+  --outline-color-secondary: var(--stroke-secondary, #d1dbea);
+  --outline-color-tertiary: var(--stroke-tertiary, #e0e6f0);
+  --outline-color-error: var(--stroke-error, #ae2f2f);
+  --outline-color-warning: var(--stroke-warning, #eec840);
+  --outline-color-info: var(--stroke-info, #1d4ed8);
+  --outline-color-accent: var(--stroke-accent, #1d4ed8);
+  --outline-color-success: var(--stroke-success, #007274);
+  --outline-color-focus: var(--stroke-focus, #161b2d);
+  --outline-color-default: var(--stroke-default, #b2c2dd);
+  --outline-color-accent-alpha: var(--stroke-accent-alpha, #2764d933);
+  --outline-color-gradient-1: var(--stroke-gradient-1, #5976e9);
+  --outline-color-gradient-2: var(--stroke-gradient-2, #885df2);
+  --outline-color-accent-focus: var(--stroke-accent-focus, #6785fb);
+  --outline-color-error-alpha: var(--stroke-error-alpha, #ae2f2f73);
+  --outline-color-control-disable-primary: var(--stroke-control-disable-primary, #848e9c);
+  --outline-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
+  --outline-color-red-900: var(--red-900, #f3d6d8);
+  --outline-color-accent-primary: var(--stroke-accent-primary, #1d4ed8);
+  --outline-color-accent-secondary: var(--stroke-accent-secondary, #37babc);
+  --outline-color-accent-tertiary: var(--stroke-accent-tertiary, #a972ff);
+  --outline-color-hover: var(--stroke-hover, #57647a);
+  --outline-color-blue800: var(--stroke-blue-800, #2764d9);
+  --outline-color-score-abs-00: var(--stroke-score-abs-00, #ff4e50);
+  --outline-color-score-abs-01: var(--stroke-score-abs-01, #f26b5b);
+  --outline-color-score-abs-02: var(--stroke-score-abs-02, #e5764a);
+  --outline-color-score-abs-03: var(--stroke-score-abs-03, #e08c3f);
+  --outline-color-score-abs-04: var(--stroke-score-abs-04, #d9a638);
+  --outline-color-score-abs-05: var(--stroke-score-abs-05, #d4be3a);
+  --outline-color-score-abs-06: var(--stroke-score-abs-06, #b8c94a);
+  --outline-color-score-abs-07: var(--stroke-score-abs-07, #7ec96b);
+  --outline-color-score-abs-08: var(--stroke-score-abs-08, #4ecba8);
+  --outline-color-score-abs-09: var(--stroke-score-abs-09, #4ec5c5);
+  --outline-color-score-abs-10: var(--stroke-score-abs-10, #4dc87a);
+  --outline-color-score-abs-11: var(--stroke-score-abs-11, #30e070);
+  --outline-color-score-delta-n4: var(--stroke-score-delta-n4, #eb503e);
+  --outline-color-score-delta-n3: var(--stroke-score-delta-n3, #f26b5b);
+  --outline-color-score-delta-n2: var(--stroke-score-delta-n2, #e5764a);
+  --outline-color-score-delta-n1: var(--stroke-score-delta-n1, #a57a1d);
+  --outline-color-score-delta-p1: var(--stroke-score-delta-p1, #9aa63c);
+  --outline-color-score-delta-p2: var(--stroke-score-delta-p2, #67a455);
+  --outline-color-score-delta-p3: var(--stroke-score-delta-p3, #4dc87a);
+  --outline-color-score-delta-p4: var(--stroke-score-delta-p4, #30e070);
+
+  /* text-* */
+  --text-color-transparent: transparent;
+  --text-color-primary: var(--text-primary, #161b2d);
+  --text-color-secondary: var(--text-secondary, #57647a);
+  --text-color-tertiary: var(--text-tertiary, #848e9c);
+  --text-color-accent: var(--text-accent, #1d4ed8);
+  --text-color-error: var(--text-error, #ae2f2f);
+  --text-color-warning: var(--text-warning, #7f6300);
+  --text-color-warning-icon: var(--text-warning-icon, #eec840);
+  --text-color-info: var(--text-info, #1d4ed8);
+  --text-color-success: var(--text-success, #007274);
+  --text-color-blue: var(--text-visual-blue, #1189c8);
+  --text-color-green-1: var(--text-visual-green-1, #059669);
+  --text-color-green-2: var(--text-visual-green-2, #0d6e72);
+  --text-color-green-3: var(--text-visual-green-3, #065f46);
+  --text-color-brown-1: var(--text-visual-brown-1, #d36817);
+  --text-color-brown-2: var(--text-visual-brown-2, #b45309);
+  --text-color-red: var(--text-visual-red, #9d174d);
+  --text-color-violet-1: var(--text-visual-violet-1, #7c3aed);
+  --text-color-violet-2: var(--text-visual-violet-2, #3730b7);
+  --text-color-control-permanent: var(--text-control-permanent, #fcfcfc);
+  --text-color-control-inverted: var(--text-control-inverted, #fcfcfc);
+  --text-color-control-disable-primary: var(--text-control-disable-primary, #848e9c);
+  --text-color-control-disable-secondary: var(--text-control-disable-secondary, #dce0e8);
+  --text-color-control-accent-hover: var(--text-control-accent-hover, #5976e9);
+  --text-color-control-accent-active: var(--text-control-accent-active, #6785fb);
+  --text-color-inverted: var(--text-inverted, #fcfcfc);
+  --text-color-accent-primary: var(--text-accent-primary, #1d4ed8);
+  --text-color-accent-secondary: var(--text-accent-secondary, #37babc);
+  --text-color-accent-tertiary: var(--text-accent-tertiary, #7c3aed);
+  --text-color-controls-permanent: var(--controls-text-permanent, #fcfcfc);
+  --text-color-controls-accent-disable: var(--controls-text-accent-disable, #dce0e8);
+  --text-color-controls-primary-disable: var(--controls-text-primary-disable, #848e9c);
+  --text-color-controls-secondary-disable: var(--controls-text-secondary-disable, #acb3c3);
+  --text-color-controls-neutral: var(--controls-text-neutral, #161b2d);
+  --text-color-controls-accent-primary-hover: var(--controls-text-accent-primary-hover, #3664e2);
+  --text-color-controls-accent-primary-active: var(--controls-text-accent-primary-active, #124ace);
+  --text-color-controls-primary: var(--controls-primary, #161b2d);
+  --text-color-controls-disable: var(--controls-text-disable, #acb3c3);
+  --text-color-score-abs-00: var(--text-score-abs-00, #ff4e50);
+  --text-color-score-abs-01: var(--text-score-abs-01, #f26b5b);
+  --text-color-score-abs-02: var(--text-score-abs-02, #e5764a);
+  --text-color-score-abs-03: var(--text-score-abs-03, #e08c3f);
+  --text-color-score-abs-04: var(--text-score-abs-04, #d9a638);
+  --text-color-score-abs-05: var(--text-score-abs-05, #d4be3a);
+  --text-color-score-abs-06: var(--text-score-abs-06, #b8c94a);
+  --text-color-score-abs-07: var(--text-score-abs-07, #7ec96b);
+  --text-color-score-abs-08: var(--text-score-abs-08, #4ecba8);
+  --text-color-score-abs-09: var(--text-score-abs-09, #4ec5c5);
+  --text-color-score-abs-10: var(--text-score-abs-10, #4dc87a);
+  --text-color-score-abs-11: var(--text-score-abs-11, #30e070);
+  --text-color-score-delta-n4: var(--text-score-delta-n4, #ff4e50);
+  --text-color-score-delta-n3: var(--text-score-delta-n3, #f26b5b);
+  --text-color-score-delta-n2: var(--text-score-delta-n2, #e5764a);
+  --text-color-score-delta-n1: var(--text-score-delta-n1, #a57a1d);
+  --text-color-score-delta-p1: var(--text-score-delta-p1, #9aa63c);
+  --text-color-score-delta-p2: var(--text-score-delta-p2, #67a455);
+  --text-color-score-delta-p3: var(--text-score-delta-p3, #4dc87a);
+  --text-color-score-delta-p4: var(--text-score-delta-p4, #30e070);
+
+  /* shadows */
+  --shadow: 0 0 4px 0 var(--bg-blackout, #161b2d4d);
+  --shadow-xs: 0 1px 4px 0 var(--shadow-xs-1, #2764d933), 0 1px 2px 0 var(--shadow-xs-2, #161b2d08);
+  --shadow-sm: 0 8px 10px 0 var(--shadow-sm, #2764d914);
+  --shadow-md: 0 8px 24px 0 var(--shadow-md, #2764d90f);
+  --shadow-lg: 0 8px 44px 0 var(--shadow-lg, #2764d914);
+
+  --radius: 3px;
+
+  --text-xxs: 10px;
+
+  --default-font-family: var(--theme-font, var(--font-inter));
+
+  --animate-fadeIn: fadeIn 100ms ease-in;
+  --animate-spin-steps: spin 0.75s steps(8) infinite;
+
+  /* background-image */
+  --background-image-control-accent-gradient: linear-gradient(
+    99.78deg,
+    var(--bg-gradient-1, #1d4ed8) 8.59%,
+    var(--bg-gradient-2, #885df2) 98.14%
+  );
+  --background-image-control-accent-gradient-hover: linear-gradient(
+    99.78deg,
+    var(--bg-gradient-1-hover, #6785fb) 8.59%,
+    var(--bg-gradient-2-hover, #885df2) 98.14%
+  );
+  --background-image-control-accent-gradient-active: linear-gradient(
+    99.78deg,
+    var(--bg-gradient-1-active, #1d4ed8) 8.59%,
+    var(--bg-gradient-2-active, #7c3aed) 98.14%
+  );
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
+@custom-variant mobile (@media (width >= 360px) and (width <= 767px));
+@custom-variant small_tablet (@media (width >= 768px) and (width <= 1023px));
+@custom-variant large_tablet (@media (width >= 1024px) and (width <= 1279px));
+@custom-variant desktop (@media (width >= 1280px) and (width <= 2559px));
+@custom-variant large_desktop (@media (width >= 2560px));
+
+/* `fill-*` paints surfaces, so it takes the background tokens; `stroke-*` and `outline-*` take the border ones. */
+@utility fill-* {
+  fill: --value(--background-color-*);
+}
+
+@utility stroke-* {
+  stroke: --value(--border-color-*);
+}
+
+@utility outline-* {
+  outline-color: --value(--border-color-*);
+}
+
+/* The bare `font` utility: the theme font, falling back to Inter. */
+@utility font {
+  font-family: var(--theme-font, var(--font-inter));
+}
+
+/* ScoreCell picks a bucket at runtime, so the classes cannot be found by scanning. */
+@source inline('{bg,text,border}-score-{abs-00,abs-01,abs-02,abs-03,abs-04,abs-05,abs-06,abs-07,abs-08,abs-09,abs-10,abs-11,delta-n4,delta-n3,delta-n2,delta-n1,delta-p1,delta-p2,delta-p3,delta-p4}');

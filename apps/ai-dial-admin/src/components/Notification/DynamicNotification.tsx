@@ -47,7 +47,7 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
     <div className="flex flex-col layer-3 py-2 w-[400px] bg-layer-3 [&:not(:last-child)]:mb-4 rounded shadow">
       <div className="flex flex-row w-full items-center [&:not(:only-child)]:mb-2 px-4">
         <div className="flex items-center relative w-full pr-5">
-          <p className="small-text-semi truncate w-full">{title}</p>
+          <p className="dial-small-semi-text truncate w-full">{title}</p>
           <DialIconButton className={classNames(iconClassName, 'size-auto')} onClick={showDetails} icon={Icon} />
           <DialIconButton
             className="absolute right-0 size-auto top-0"
@@ -80,17 +80,17 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
 
   return (
     <div className="flex flex-row content-between w-full mt-2 items-center">
-      <p className="w-full tiny text-secondary">{name}</p>
+      <p className="w-full dial-tiny-text text-secondary">{name}</p>
       <div className="flex flex-row items-center content-between">
         {progress && !failed && !complete && (
           <div className="flex flex-row items-center truncate">
-            <p className="tiny text-secondary mx-1">{fileProgress}</p>
+            <p className="dial-tiny-text text-secondary mx-1">{fileProgress}</p>
             <DialIconButton className="size-auto" icon={<IconX height={18} width={18} />} onClick={onCancel} />
           </div>
         )}
         {failed && (
           <span className="flex flex-row items-center">
-            <p className="tiny text-error mx-1">{t(BasicI18nKey.Failed)}</p>
+            <p className="dial-tiny-text text-error mx-1">{t(BasicI18nKey.Failed)}</p>
             <IconExclamationCircle className="text-error" {...BASE_BUTTON_ICON_PROPS} />
           </span>
         )}

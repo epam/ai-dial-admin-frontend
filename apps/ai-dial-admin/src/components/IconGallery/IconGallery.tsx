@@ -37,7 +37,9 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
           <Image src={url} alt={name} width={80} height={80} />
         )}
       </div>
-      <p className={classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary')}>{name}</p>
+      <p className={classNames('dial-tiny-text truncate w-full', selected ? 'text-primary' : 'text-secondary')}>
+        {name}
+      </p>
     </button>
   );
 };

@@ -661,7 +661,7 @@ const TestCasesList: FC<Props> = ({
     <Tooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
       <DialTag
         label={t(DatasetsI18nKey.VisibilityPrivate)}
-        className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
+        className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-xs shrink-0"
       />
     </Tooltip>
   );

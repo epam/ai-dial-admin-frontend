@@ -44,7 +44,7 @@ const SkillManifestTab: FC<Props> = ({ name, description, body, onChangeDescript
         required
       />
       <div>
-        <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
+        <div className="dial-tiny-text mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
         <MdEditor content={body} onChangeContent={onChangeBody} readOnly={disabled} />
       </div>
     </div>

@@ -36,7 +36,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
       confirmLabel={t(ButtonsI18nKey.Rollback)}
     >
       <div className="px-6 py-4">
-        <div className="text-secondary small-150">
+        <div className="text-secondary dial-small-paragraph-text">
           {t(RollbackI18nKey.ConfirmSystemRollbackDescription)}
           <span className="important-text-part ml-2">{revisionDate}</span>
         </div>

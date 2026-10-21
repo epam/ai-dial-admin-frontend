@@ -173,7 +173,7 @@ const HeatMapToolbar: FC<Props> = ({
         <button
           type="button"
           disabled={isMetricsDropdownDisabled}
-          className="inline-flex items-center gap-1 rounded-sm bg-layer-3 px-1.5 py-1 dial-small-text text-primary max-w-[280px] disabled:opacity-70 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1 rounded-xs bg-layer-3 px-1.5 py-1 dial-small-text text-primary max-w-[280px] disabled:opacity-70 disabled:cursor-not-allowed"
           aria-disabled={isMetricsDropdownDisabled}
         >
           <DialEllipsisTooltip text={triggerLabel} className="truncate" />

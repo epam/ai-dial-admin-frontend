@@ -142,7 +142,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         mobile ? 'lg:hidden flex md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
       )}
     >
-      <ol className="flex tiny whitespace-nowrap">
+      <ol className="flex dial-tiny-text whitespace-nowrap">
         {breadcrumbs.map((breadcrumb, index) => {
           return (
             <li key={`${breadcrumb.href}_${index}`} className="flex items-center group max-w-[300px] overflow-hidden">

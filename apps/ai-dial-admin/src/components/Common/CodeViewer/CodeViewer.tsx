@@ -50,7 +50,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
     <>
       <div className="border border-secondary rounded overflow-hidden shrink-0">
         {/* Only the title toggles: copy and fullscreen are buttons of their own and cannot nest inside it. */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 tiny select-none">
+        <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 dial-tiny-text select-none">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors"

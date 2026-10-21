@@ -35,12 +35,12 @@ const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => 
         </div>
         <h2>{t(menuGroup.key)}</h2>
       </div>
-      <p className="small mb-3">{t(menuGroup.descriptionKey)}</p>
+      <p className="dial-small-text mb-3">{t(menuGroup.descriptionKey)}</p>
       <ul className="flex flex-col gap-x-2 min-h-0 overflow-y-auto">
         {menuGroup.items.map((item) => (
           <li
             key={item.key}
-            className="small font-semibold hover:bg-accent-primary-alpha py-2 px-3 cursor-pointer rounded"
+            className="dial-small-text font-semibold hover:bg-accent-primary-alpha py-2 px-3 cursor-pointer rounded"
           >
             <Link href={item.href} aria-label={t(item.key)}>
               {t(item.key)}

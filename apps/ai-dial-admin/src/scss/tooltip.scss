@@ -1,8 +1,3 @@
-@layer components {
-  .tooltip {
-    @apply z-[55] break-words whitespace-pre-wrap rounded border border-primary bg-control-neutral px-2 py-1 tiny shadow max-w-[300px];
-  }
-}
 // Matches the ui-kit 2.0 tooltip bubble (`bg-control-inverted`); 14x7 like its floating arrow.
 .tooltip-arrow {
   @apply w-[14px] h-[7px] bg-control-inverted;

@@ -92,7 +92,7 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
     >
       <div className="h-full px-6 py-4 flex flex-col">
         <div className="flex flex-row items-center justify-between">
-          <span className="body text-secondary">{t(JsonAtaI18nKey.JsonAtaDescription)}</span>
+          <span className="dial-body-text text-secondary">{t(JsonAtaI18nKey.JsonAtaDescription)}</span>
           <DialNeutralButton
             size={ElementSize.Small}
             label={t(JsonAtaI18nKey.OpenFullDoc)}

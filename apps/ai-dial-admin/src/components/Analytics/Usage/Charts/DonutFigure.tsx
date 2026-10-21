@@ -96,7 +96,7 @@ const DonutFigure: FC<Props> = ({
       >
         {legend.map((slice) => (
           <li key={slice.id} className="flex min-w-0 items-center gap-3 dial-small-text">
-            <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: slice.color }} />
+            <span aria-hidden className="size-2.5 shrink-0 rounded-xs" style={{ backgroundColor: slice.color }} />
             <EllipsisTooltip className="text-primary" text={slice.label} />
             {/* Both measures where the caller supplied them, always calls then cost, so the columns
                 do not swap with whichever measure the ring happens to be split by. */}

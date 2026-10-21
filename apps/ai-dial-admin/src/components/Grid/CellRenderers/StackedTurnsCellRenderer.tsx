@@ -22,7 +22,7 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
   if (!field || !turns || turns.length === 0) return null;
 
   if (data?.expanded) {
-    return <EllipsisTooltip className="tiny" text="—" />;
+    return <EllipsisTooltip className="dial-tiny-text" text="—" />;
   }
 
   return (
@@ -32,7 +32,7 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
     >
       {turns.map((turn, index) => (
         <div key={index} className="flex items-center" style={{ height: STACKED_LINE_HEIGHT }}>
-          <EllipsisTooltip className="tiny" text={formatTurnValue(turn, field)} />
+          <EllipsisTooltip className="dial-tiny-text" text={formatTurnValue(turn, field)} />
         </div>
       ))}
     </div>

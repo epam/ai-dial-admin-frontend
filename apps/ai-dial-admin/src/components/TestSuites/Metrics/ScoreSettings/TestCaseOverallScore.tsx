@@ -51,7 +51,7 @@ const TestCaseOverallScore: FC<Props> = ({ selectedTestSuite, metrics, onChange 
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="tiny-semi text-secondary">{t(TestSuitesI18nKey.TestCaseOverallScore)}</span>
+      <span className="dial-tiny-semi-text text-secondary">{t(TestSuitesI18nKey.TestCaseOverallScore)}</span>
 
       <div className="flex flex-col gap-3">
         <DialRadioButton

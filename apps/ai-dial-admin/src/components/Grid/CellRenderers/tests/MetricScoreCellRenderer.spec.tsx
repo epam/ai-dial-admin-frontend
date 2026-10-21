@@ -15,14 +15,14 @@ describe('MetricScoreCellRenderer', () => {
   test('renders ScoreBar and formatted value for 0-1 scores', () => {
     const { container } = renderCell({ value: 0.102 });
     expect(screen.getByText('0.102')).toBeInTheDocument();
-    expect(container.querySelector('.h-1.rounded-sm.bg-layer-1')).toBeInTheDocument();
-    expect(container.querySelector('.h-full.rounded-sm')).toHaveStyle({ width: '10.2%' });
+    expect(container.querySelector('.h-1.rounded-xs.bg-layer-1')).toBeInTheDocument();
+    expect(container.querySelector('.h-full.rounded-xs')).toHaveStyle({ width: '10.2%' });
   });
 
   test('renders empty ScoreBar track for zero score', () => {
     const { container } = renderCell({ value: 0 });
     expect(screen.getByText('0.000')).toBeInTheDocument();
-    expect(container.querySelector('.h-full.rounded-sm')).not.toBeInTheDocument();
+    expect(container.querySelector('.h-full.rounded-xs')).not.toBeInTheDocument();
   });
 
   test('uses getMetricValue when provided', () => {

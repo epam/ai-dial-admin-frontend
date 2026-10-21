@@ -42,7 +42,7 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion, isOnl
   );
 
   return (
-    <div className="hidden lg:flex absolute bottom-0 right-0 caption text-right pr-6 pb-1 text-secondary tiny">
+    <div className="hidden lg:flex absolute bottom-0 right-0 dial-caption-text text-right pr-6 pb-1 text-secondary dial-tiny-text">
       <span className="mr-1">Admin: [FE]{process.env.NEXT_PUBLIC_APP_VERSION}</span>
       {isOnlyFE ? (
         <span className="mr-1 flex flex-row">

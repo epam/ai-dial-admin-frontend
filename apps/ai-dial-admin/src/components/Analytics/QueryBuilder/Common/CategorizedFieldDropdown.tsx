@@ -86,7 +86,7 @@ const GroupHeader: FC<GroupHeaderProps> = ({ expanded, count, textClassName, dot
     ) : (
       <IconChevronRight size={12} className="shrink-0" />
     )}
-    {dot && <span aria-hidden className={classNames('size-1.5 rounded-sm', dot)} />}
+    {dot && <span aria-hidden className={classNames('size-1.5 rounded-xs', dot)} />}
     <span className="min-w-0 flex-1 truncate">{label}</span>
     <span className="shrink-0 normal-case text-secondary">{count}</span>
   </button>

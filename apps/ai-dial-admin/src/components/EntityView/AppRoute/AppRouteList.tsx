@@ -47,7 +47,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
                   onClick(index);
                 }}
                 className={classNames(
-                  'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full small cursor-pointer hover:text-accent-primary',
+                  'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full dial-small-text cursor-pointer hover:text-accent-primary',
                   activeRouteIndex === index
                     ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary'
                     : 'text-primary',

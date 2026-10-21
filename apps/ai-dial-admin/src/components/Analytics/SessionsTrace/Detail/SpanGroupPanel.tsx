@@ -71,7 +71,7 @@ const SpanGroupPanel: FC<Props> = ({ group, row, isRecord, summaryFields, isOpen
         aria-expanded={isOpen}
         aria-controls={isOpen ? contentId : undefined}
         className={classNames(
-          'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left hover:bg-layer-4 focus-visible:bg-layer-4 focus-visible:outline focus-visible:outline-focus',
+          'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left hover:bg-layer-4 focus-visible:bg-layer-4 focus-visible:outline-3 focus-visible:outline-focus',
           isOpen && 'bg-layer-4',
         )}
         onClick={() => onToggle(group.tag)}

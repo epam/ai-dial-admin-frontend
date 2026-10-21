@@ -44,7 +44,9 @@ const CopyButton: FC<Props> = ({
   const onClick = useCallback(() => {
     if (valueLabel && value) {
       navigator.clipboard.writeText(value);
-      const customTitle = <p className="small-text-semi">{`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>;
+      const customTitle = (
+        <p className="dial-small-semi-text">{`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>
+      );
       showNotification(getCopyToClipboardNotification(customTitle));
     }
   }, [value, valueLabel, showNotification, t]);

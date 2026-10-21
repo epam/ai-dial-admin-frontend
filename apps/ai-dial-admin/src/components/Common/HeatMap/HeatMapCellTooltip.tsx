@@ -42,7 +42,7 @@ const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>>
             <div className="flex items-center gap-1">
               <span
                 aria-hidden
-                className={classNames('size-[15px] rounded-sm shrink-0 border', value.valueRow.className)}
+                className={classNames('size-[15px] rounded-xs shrink-0 border', value.valueRow.className)}
               />
               <span className="dial-tiny-text text-control-inverted whitespace-nowrap">{value.valueRow.value}</span>
             </div>

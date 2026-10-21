@@ -43,7 +43,7 @@ const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }:
       </span>
 
       <label htmlFor={inputId} className="min-w-0 cursor-pointer">
-        <EllipsisTooltip className="small text-primary" text={name} />
+        <EllipsisTooltip className="dial-small-text text-primary" text={name} />
       </label>
     </div>
   );

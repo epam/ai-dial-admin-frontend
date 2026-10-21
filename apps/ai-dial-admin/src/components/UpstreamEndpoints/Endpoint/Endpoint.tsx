@@ -195,7 +195,7 @@ const Endpoint: FC<Props> = ({
       <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-primary p-3 lg:border-none lg:p-0">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
-            <h3 className="small flex items-center">
+            <h3 className="dial-small-text flex items-center">
               {!isExpanded ? (
                 <IconChevronRight className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
               ) : (
@@ -205,7 +205,7 @@ const Endpoint: FC<Props> = ({
             </h3>
             {!isExpanded && (
               <DialTooltip tooltip={endpoint.endpoint || '—'}>
-                <p className="max-w-[220px] truncate tiny text-secondary mt-3">{endpoint.endpoint || '—'}</p>
+                <p className="max-w-[220px] truncate dial-tiny-text text-secondary mt-3">{endpoint.endpoint || '—'}</p>
               </DialTooltip>
             )}
           </div>

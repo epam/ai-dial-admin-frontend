@@ -30,7 +30,7 @@ const HeatmapScale: FC<Props> = ({ className }) => {
         {Array.from({ length: HEATMAP_SCALE_STEPS }, (_, step) => (
           <span
             key={step}
-            className="h-3 w-6 rounded-sm"
+            className="h-3 w-6 rounded-xs"
             style={{ backgroundColor: getHeatmapCellColor(getHeatmapCellOpacity(step + 1, HEATMAP_SCALE_STEPS)) }}
           />
         ))}

@@ -22,7 +22,7 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
       <div className="flex flex-row w-full relative pr-5 items-center">
         <div className="flex items-center w-full">
           <i className={iconClassName}>{Icon}</i>
-          {customTitle ?? <p className="small-text-semi truncate">{title}</p>}
+          {customTitle ?? <p className="dial-small-semi-text truncate">{title}</p>}
         </div>
         <DialIconButton
           aria-label="close"
@@ -32,12 +32,12 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
         />
       </div>
       {description ? (
-        <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2 max-h-40 overflow-y-auto">
+        <p className="dial-tiny-text text-secondary break-words whitespace-pre-wrap mt-2 max-h-40 overflow-y-auto">
           {description}
         </p>
       ) : null}
       {requestId ? (
-        <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">Request ID: {requestId}</p>
+        <p className="dial-tiny-text text-secondary break-words whitespace-pre-wrap mt-2">Request ID: {requestId}</p>
       ) : null}
     </div>
   );
