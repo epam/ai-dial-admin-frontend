@@ -22,6 +22,12 @@ export const INCOMPLETE_RUN_STATUSES = [
   RunStatus.FAILED,
 ];
 
+/**
+ * Statuses a run has settled into, so the backend can start aggregating its usage logs into a cost.
+ * PENDING and the transitional statuses are excluded: nothing is being aggregated for them yet.
+ */
+export const COST_AGGREGATING_RUN_STATUSES = [RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED];
+
 /** Every status the Status column's filter can offer, in the order its checkbox list renders them. */
 export const ALL_RUN_STATUSES = [
   RunStatus.PENDING,

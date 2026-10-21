@@ -13,4 +13,10 @@ export const RUN_ID_FILTER = (runId: string): FilterDto => ({
   value: runId,
 });
 
+export const RUN_IDS_FILTER = (runIds: string[]): FilterDto => ({
+  column: 'id',
+  operator: FilterOperatorDto.INCLUDES,
+  value: runIds.join(','),
+});
+
 export const VALID_FILTERS = [{ column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' }];

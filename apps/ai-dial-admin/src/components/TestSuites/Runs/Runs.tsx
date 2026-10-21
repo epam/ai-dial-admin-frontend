@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
@@ -15,6 +15,7 @@ import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellin
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
+import { withCostWaitStart } from '@/src/components/Runs/utils/run-list-values';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getCancelOperation,
@@ -29,11 +30,13 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { EvaluationPageData } from '@/src/models/request';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { RUN_FILTER } from './constants';
+import { useCalculatingRunCostsPoll } from './useCalculatingRunCostsPoll';
 import { useRunStatusStream } from './useRunStatusStream';
 
 interface Props {
@@ -45,9 +48,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
   const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [runs, setRuns] = useState<Run[] | null>(null);
   const [totalElements, setTotalElements] = useState(0);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRun, setSelectedRun] = useState<Run | undefined>(undefined);
@@ -59,6 +60,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
   useCancellingRunsPoll(gridApi);
+  useCalculatingRunCostsPoll(gridApi);
 
   const toggleColumnsPanel = useCallback(() => setShowColumnsPanel((prev) => !prev), []);
 
@@ -86,52 +88,38 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     },
   };
 
-  useEffect(() => {
-    if (!runs && !isLoading) {
-      setIsLoading(true);
-      getRunsQuery(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
-        if (runs) {
-          return;
-        }
-        setIsLoading(false);
-        const runsData = (res?.content || []) as Run[];
-        setTotalElements(res?.totalElements || 0);
-        setRuns(runsData);
-      });
+  /**
+   * The unfiltered, unsorted first page feeds both the "Runs: N" counter and the grid's first
+   * `getRows`, so it is requested once and shared as a promise. Keeping it in a ref rather than state
+   * means that resolving it does not recreate the datasource, which would make the grid load again.
+   */
+  const firstPageRef = useRef<{ suiteId?: string; request: Promise<EvaluationPageData<Run> | null> } | null>(null);
+
+  const loadFirstPage = useCallback(() => {
+    const suiteId = selectedTestSuite.id;
+    const cached = firstPageRef.current;
+    if (cached && cached.suiteId === suiteId) {
+      return cached.request;
     }
-  }, [isLoading, runs, selectedTestSuite.id]);
 
-  const gridDataSource: IDatasource = useMemo(
-    () => ({
-      getRows: (params: IGetRowsParams) => {
-        gridApi?.hideOverlay();
-        gridApi?.setGridOption('loading', true);
-        const page = Math.floor(params.startRow / PAGE_SIZE);
-        const sorts = getRequestSorts(params.sortModel);
-        const filters = getRequestFilters(params.filterModel);
-        const hasSorts = sorts.length > 0;
-        const hasFilters = filters.length > 0;
-
-        if (page === 0 && runs && !hasSorts && !hasFilters) {
-          onSetData(runs, totalElements, params);
-          return;
+    const fetchFirstPage = async () => {
+      let page: EvaluationPageData<Run> | null = null;
+      try {
+        page = await getRunsQuery(0, PAGE_SIZE, [], [RUN_FILTER(suiteId as string)]);
+      } finally {
+        // A failed request (a throw or a null result) must not stay cached, or the next load would reuse it.
+        if (page == null && firstPageRef.current?.request === request) {
+          firstPageRef.current = null;
         }
+      }
+      setTotalElements(page?.totalElements || 0);
+      return page == null ? null : { ...page, content: withCostWaitStart(page.content, Date.now()) };
+    };
 
-        getRunsQuery(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
-          .then((res) => {
-            const data = res == null || res.content.length === 0 ? [] : res?.content || [];
-
-            onSetData(data, res?.totalElements || 0, params);
-          })
-          .catch(() => {
-            params.failCallback();
-            gridApi?.setGridOption('loading', false);
-          });
-      },
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gridApi, selectedTestSuite.id, runs, totalElements],
-  );
+    const request = fetchFirstPage();
+    firstPageRef.current = { suiteId, request };
+    return request;
+  }, [selectedTestSuite.id]);
 
   const onSetData = useCallback(
     (data: Run[] | null, totalElements: number, params: IGetRowsParams) => {
@@ -144,12 +132,40 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     [gridApi],
   );
 
+  const gridDataSource: IDatasource = useMemo(
+    () => ({
+      getRows: (params: IGetRowsParams) => {
+        gridApi?.hideOverlay();
+        gridApi?.setGridOption('loading', true);
+        const page = Math.floor(params.startRow / PAGE_SIZE);
+        const sorts = getRequestSorts(params.sortModel);
+        const filters = getRequestFilters(params.filterModel);
+        const isFirstPageRequest = page === 0 && sorts.length === 0 && filters.length === 0;
+
+        const request = isFirstPageRequest
+          ? loadFirstPage()
+          : getRunsQuery(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters]).then(
+              (res) => (res == null ? null : { ...res, content: withCostWaitStart(res.content, Date.now()) }),
+            );
+
+        request
+          .then((res) => {
+            onSetData(res?.content ?? [], res?.totalElements || 0, params);
+          })
+          .catch(() => {
+            params.failCallback();
+            gridApi?.setGridOption('loading', false);
+          });
+      },
+    }),
+    [gridApi, selectedTestSuite.id, loadFirstPage, onSetData],
+  );
+
+  /** Drops the shared first page and has the infinite grid re-request every block it holds. */
   const refreshGrid = useCallback(() => {
-    setRuns(null);
-    if (gridApi) {
-      gridApi.setGridOption('datasource', gridDataSource);
-    }
-  }, [gridApi, gridDataSource]);
+    firstPageRef.current = null;
+    gridApi?.refreshInfiniteCache();
+  }, [gridApi]);
 
   const onOpenDeleteModal = useCallback((run?: Run) => {
     setSelectedRun(run);
@@ -215,7 +231,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     if (gridApi) {
       gridApi.setGridOption('datasource', gridDataSource);
     }
-  }, [gridApi, gridDataSource, refreshGrid]);
+  }, [gridApi, gridDataSource]);
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
