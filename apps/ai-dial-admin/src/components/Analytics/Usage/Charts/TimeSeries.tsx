@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ReactECharts from 'echarts-for-react';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import ChartLegend, { ChartLegendEntry } from '@/src/components/Analytics/Usage/Charts/ChartLegend';
@@ -307,7 +307,7 @@ const TimeSeries: FC<Props> = ({
     if (isLoading) {
       return (
         <div className="flex flex-1 items-center justify-center" style={{ minHeight: TIME_SERIES_MIN_HEIGHT }}>
-          <DialLoader size={24} />
+          <Spinner size={24} fullWidth />
         </div>
       );
     }

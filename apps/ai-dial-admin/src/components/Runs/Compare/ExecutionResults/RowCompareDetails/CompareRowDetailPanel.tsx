@@ -4,7 +4,7 @@ import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import CompareRowDetailDisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailDisplayPanel';
@@ -192,7 +192,7 @@ const CompareRowDetailPanel: FC<Props> = ({
       <div className="flex flex-col flex-1 min-h-0 gap-4 px-6 pb-6 overflow-hidden">
         {isLoading ? (
           <div className="flex flex-1 items-center justify-center">
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           </div>
         ) : hasError ? (
           <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>

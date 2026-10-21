@@ -31,7 +31,7 @@ describe('EnumValuesField', () => {
     const label = view.container.querySelector('label');
 
     expect(label).toHaveTextContent(AnalyticsTablesI18nKey.EnumValues);
-    expect(label?.parentElement?.className).toContain('sr-only');
+    expect(label?.closest('.dial-kit-label')?.parentElement?.className).toContain('sr-only');
   });
 
   test('shows its own label when the caller labels nothing', () => {

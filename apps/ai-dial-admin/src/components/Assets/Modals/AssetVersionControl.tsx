@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { GhostButton, DialLoader, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -136,7 +136,7 @@ const AssetVersionControl: FC<Props> = ({
             }
             onFooterClick={() => handleModalOpen(ModalType.addVersion)}
           />
-          {isVersionLoading && <DialLoader fullWidth={false} size={16} />}
+          {isVersionLoading && <Spinner fullWidth={false} size={16} />}
         </div>
       </div>
       {isModalOpen &&

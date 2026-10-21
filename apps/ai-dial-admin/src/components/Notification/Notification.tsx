@@ -1,7 +1,7 @@
 import { IconChevronDown, IconCircleCheck, IconExclamationCircle, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
-import { IconButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { IconButton, Spinner } from '@epam/ai-dial-ui-kit';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { NotificationConfig, NotificationIconColor, NotificationType } from '@/src/models/notification';
@@ -9,7 +9,7 @@ import { NotificationConfig, NotificationIconColor, NotificationType } from '@/s
 export const NotificationIcons: Record<NotificationType, ReactNode> = {
   success: <IconCircleCheck {...BASE_BUTTON_ICON_PROPS} />,
   error: <IconExclamationCircle {...BASE_BUTTON_ICON_PROPS} />,
-  prepare: <DialLoader size={18} className="text-primary" />,
+  prepare: <Spinner size={18} fullWidth />,
   dynamic: <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />,
 };
 

@@ -1,4 +1,4 @@
-import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -42,7 +42,7 @@ const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, nam
   }, [image]);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       onClose={onClose}
       header={modalTitle}
       portalId="ImageCreateContainerModal"
@@ -66,7 +66,7 @@ const ImageCreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, nam
           names={names}
         />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { OutlinedButton, DialNoDataContent, Switch } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, NoDataContent, Switch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -136,12 +136,12 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
             {data.length > 0 ? (
               <GridView columnDefs={columns} rowData={data} />
             ) : isAppRunnerView && route.isPublic ? (
-              <DialNoDataContent
+              <NoDataContent
                 icon={<IconReplace size={60} stroke={0.5} />}
                 title={t(RoutesI18nKey.InheritRolesWarning)}
               />
             ) : (
-              <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
+              <NoDataContent title={t(EntitiesI18nKey.NoRoles)} />
             )}
           </div>
         </div>

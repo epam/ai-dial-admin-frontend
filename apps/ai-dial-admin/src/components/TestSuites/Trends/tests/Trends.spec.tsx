@@ -23,8 +23,8 @@ vi.mock('echarts-for-react', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLoader: () => <div>loader</div>,
-  DialNoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
+  Spinner: () => <div>loader</div>,
+  NoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
   DialNotification: ({ title, message }: { title?: string; message: React.ReactNode }) => (
     <div role="status">
       <p>{title}</p>

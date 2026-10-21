@@ -1,6 +1,6 @@
 'use client';
 
-import { EllipsisTooltip, GhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostIconButton, NoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useMemo } from 'react';
@@ -124,7 +124,7 @@ const SessionTraceView: FC<Props> = ({
 
   const stream = hasLoadError ? (
     <div className="flex flex-1 items-center justify-center">
-      <DialNoDataContent title={t(SessionsTraceI18nKey.TraceLoadFailed)} />
+      <NoDataContent title={t(SessionsTraceI18nKey.TraceLoadFailed)} />
     </div>
   ) : (
     <SessionEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />

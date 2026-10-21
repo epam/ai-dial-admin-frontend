@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DialNoDataContent, Tooltip } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, Tooltip } from '@epam/ai-dial-ui-kit';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { Pod } from '@/src/models/deployments/containers';
 import { ErrorI18nKey, EntityFieldsI18nKey, DeploymentsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -120,7 +120,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
         {logs.length ? (
           <LogViewer logs={logs} />
         ) : (
-          <DialNoDataContent
+          <NoDataContent
             title={t(EntitiesI18nKey.NoContainerLogs, { entityType: getTranslatedDeploymentType(route, t) })}
           />
         )}

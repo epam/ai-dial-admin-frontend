@@ -8,7 +8,7 @@ import {
   NotificationVariant,
   ButtonAppearance,
   DialNotification,
-  DialConfirmationPopup,
+  ConfirmationPopup,
   DangerButton,
   OutlinedButton,
   PrimaryButton,
@@ -279,7 +279,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
       </div>
       {isDeleteModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isDeleteModalOpen}
             header={t(DeleteI18nKey.Title, { entity: t(PublicationsI18nKey.Publication) })}
             onConfirm={remove}
@@ -294,7 +294,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
         )}
       {isApproveModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isApproveModalOpen}
             header={t(keys.ApproveModalTitle)}
             onConfirm={approve}
@@ -306,12 +306,12 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             description={t(keys.ApproveDescription)}
           >
             {publishWarning}
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
       {isDeclineModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isDeclineModalOpen}
             header={t(keys.DeclineModalTitle)}
             onConfirm={decline}
@@ -332,7 +332,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                 error={declineErrorMessage}
               />
             </div>
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
     </>

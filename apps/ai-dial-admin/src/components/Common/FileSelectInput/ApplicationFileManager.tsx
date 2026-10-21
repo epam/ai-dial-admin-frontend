@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFileIcon, DialLoader, DialLoadFileAreaField } from '@epam/ai-dial-ui-kit';
+import { DialFileIcon, Spinner, DialLoadFileAreaField } from '@epam/ai-dial-ui-kit';
 import { SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { ColDef, GridOptions } from 'ag-grid-community';
 
@@ -190,7 +190,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
         />
       </div>
       {isLoading ? (
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       ) : (
         <GridView
           getIsEmptyData={() => !data.length}

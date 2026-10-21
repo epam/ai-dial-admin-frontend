@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { GhostButton, DialInput, DialLabel, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, Label, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { OVERRIDE_PATH_OPERATIONS } from '@/src/components/BaseControls/InterfacesField/constants';
@@ -97,7 +97,7 @@ const OverridePathsField = ({ fieldId, type, value, disabled, onChange }: Props)
   return (
     <div className="flex flex-col gap-y-3">
       <div className="flex items-center gap-x-2">
-        <DialLabel label={t(InterfacesI18nKey.OverridePaths)} />
+        <Label label={t(InterfacesI18nKey.OverridePaths)} />
         <Tooltip tooltip={t(InterfacesI18nKey.OverridePathsInfo, TOKEN_PARAMS)}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
         </Tooltip>

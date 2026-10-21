@@ -1,6 +1,6 @@
 import { FC, Fragment, ReactNode } from 'react';
 
-import { ButtonAppearance, DialLabel, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, Label, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -57,9 +57,7 @@ const ArrayEditorFrame: FC<{
   const t = useI18n();
   return (
     <div className="flex flex-col gap-y-2">
-      {label && (
-        <DialLabel htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />
-      )}
+      {label && <Label htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />}
       {children}
       <div>
         <PrimaryButton

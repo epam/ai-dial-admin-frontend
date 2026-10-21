@@ -36,7 +36,7 @@ const EnumValuesField: FC<Props> = ({ rowId, values, errorText, isLabelHidden, d
           draggable
           required={!disabled}
           disabled={disabled}
-          className={classNames(isLabelHidden && '[&>label]:sr-only')}
+          className={classNames(isLabelHidden && '[&>.dial-kit-label]:sr-only')}
           elementId={`col-enum-values-${rowId}`}
           label={t(AnalyticsTablesI18nKey.EnumValues)}
           heading={t(AnalyticsTablesI18nKey.EnumValues)}

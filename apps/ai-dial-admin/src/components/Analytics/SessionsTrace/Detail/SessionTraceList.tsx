@@ -3,8 +3,8 @@
 import {
   EllipsisTooltip,
   LinkButton,
-  DialLoader,
-  DialNoDataContent,
+  Spinner,
+  NoDataContent,
   DialNotification,
   NotificationVariant,
 } from '@epam/ai-dial-ui-kit';
@@ -340,7 +340,7 @@ const SessionTraceList: FC<Props> = ({
   if (!groups.length && !isLoading) {
     return (
       <div className="flex flex-1 flex-col justify-center bg-layer-1">
-        <DialNoDataContent
+        <NoDataContent
           icon={
             hasLoadError ? (
               <IconAlertTriangle size={EMPTY_ICON_SIZE} aria-hidden className="text-error" />
@@ -352,7 +352,7 @@ const SessionTraceList: FC<Props> = ({
           description={t(
             hasLoadError ? SessionsTraceI18nKey.TraceListLoadFailedHint : SessionsTraceI18nKey.TraceListEmptyHintLive,
           )}
-          containerClassName="max-w-[520px] self-center p-6"
+          className="max-w-[520px] self-center p-6"
           titleClassName="dial-tiny-semi-text"
           descriptionClassName="dial-small-text"
         />
@@ -389,7 +389,7 @@ const SessionTraceList: FC<Props> = ({
             does — and again on every appended page. */}
         {isLoading && (
           <div className="flex justify-center p-2">
-            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(BasicI18nKey.Loading)} />
+            <Spinner size={LOADER_SIZE} fullWidth={false} ariaLabel={t(BasicI18nKey.Loading)} />
           </div>
         )}
         {/* A manual fallback for the observer: a viewport tall enough to hold every loaded card never

@@ -1,4 +1,4 @@
-import { DialConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
@@ -103,7 +103,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
         </DialDropdown>
       )}
       {isLogoutConfirmationOpen && (
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open={isLogoutConfirmationOpen}
           header={t(AuthI18nKey.ModalTitle)}
           description={t(AuthI18nKey.ModalDescription)}

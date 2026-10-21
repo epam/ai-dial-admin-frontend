@@ -1,5 +1,5 @@
 'use client';
-import { DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
@@ -32,7 +32,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
 
   return (
     <div className="flex flex-col gap-y-1">
-      <DialLabel label={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
+      <Label label={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
       {!iconUrl ? (
         <DialInputPopup
           emptyValueText={t(BasicI18nKey.None)}

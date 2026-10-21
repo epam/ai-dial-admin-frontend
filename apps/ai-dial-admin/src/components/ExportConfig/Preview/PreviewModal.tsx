@@ -1,4 +1,4 @@
-import { DialCheckbox, DialFormPopup, DialLoader, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialFormPopup, Spinner, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { previewDeploymentExportConfig, previewExportConfig } from '@/src/app/[lang]/export-config/actions';
@@ -126,7 +126,7 @@ const PreviewModal: FC<Props> = ({
       );
     }
     if (isLoadingData) {
-      return <DialLoader size={50} />;
+      return <Spinner size={50} fullWidth />;
     }
     if (isDeploymentExport) {
       return (

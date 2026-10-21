@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { NotificationVariant, DialNotification, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconWorldStar } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -60,7 +60,7 @@ const EntitiesTabContent: FC<Props> = ({
   return showGlobalError ? (
     <div className="flex flex-col h-full">
       <div className="flex-1">
-        <DialNoDataContent
+        <NoDataContent
           icon={<IconWorldStar strokeWidth={1} size={60} />}
           title={t(InterceptorsI18nKey.GlobalMessage)}
         />

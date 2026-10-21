@@ -4,7 +4,7 @@
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialLoader } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Spinner } from '@epam/ai-dial-ui-kit';
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode, SelectionChangedEvent } from 'ag-grid-community';
 
 import {
@@ -367,7 +367,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
   return (
     <div className="h-full min-h-0">
       {isLoading ? (
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       ) : (
         <ListEntities
           additionalGridOptions={gridOptions}
@@ -399,7 +399,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
         )}
       {isBatchDeleteModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isBatchDeleteModalOpen}
             header={t(DeleteI18nKey.Title, { entity: t(TabsI18nKey.TestCases) })}
             onConfirm={onBatchDelete}

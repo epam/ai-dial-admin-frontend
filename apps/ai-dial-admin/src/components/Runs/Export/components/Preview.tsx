@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
@@ -33,13 +33,13 @@ const Preview: FC<Props> = ({ previewData, checkedColumns, isLoading }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-6">
-        <DialLoader size={24} className="text-primary" />
+        <Spinner size={24} fullWidth />
       </div>
     );
   }
 
   if (columnDefs.length === 0) {
-    return <DialNoDataContent title={t(ExportRunI18nKey.NoPreview)} />;
+    return <NoDataContent title={t(ExportRunI18nKey.NoPreview)} />;
   }
 
   return (

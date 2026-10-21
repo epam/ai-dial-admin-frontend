@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialLabel } from '@epam/ai-dial-ui-kit';
+import { Label } from '@epam/ai-dial-ui-kit';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -24,7 +24,7 @@ const AppRunnerSource: FC<Props> = ({ entity, onChangeEntity, isEntityImmutable,
 
   return (
     <div className="flex flex-col w-full gap-1">
-      <DialLabel label={t(EntitiesI18nKey.SourceType)} />
+      <Label label={t(EntitiesI18nKey.SourceType)} />
       <EndpointAndMCPContainer
         entity={entity}
         isEntityImmutable={isEntityImmutable}

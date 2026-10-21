@@ -1,4 +1,4 @@
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -30,7 +30,7 @@ const RelatedArtefacts: FC<Props> = ({ entity, view }) => {
     <div className="flex flex-col text-secondary dial-small-paragraph-text">
       <div className="flex-1 min-h-0 flex flex-col">
         {isLoading ? (
-          <DialLoader size={24} />
+          <Spinner size={24} fullWidth />
         ) : (
           <>
             {!!data?.length && (

@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { ColumnGroup, ColumnItem } from '@/src/components/Runs/Export/models';
 import { ColumnGroupId } from '@/src/components/Runs/Export/utils/group-columns';
@@ -36,13 +36,13 @@ const Columns: FC<Props> = ({ groups, checkedColumns, isLoading, onToggleColumn,
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center py-6">
-        <DialLoader size={60} className="text-primary" />
+        <Spinner size={60} fullWidth />
       </div>
     );
   }
 
   if (groups.length === 0) {
-    return <DialNoDataContent title={t(ExportRunI18nKey.NoColumns)} />;
+    return <NoDataContent title={t(ExportRunI18nKey.NoColumns)} />;
   }
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLabel, DialSegmentedControl, DialSelect, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Label, DialSegmentedControl, DialSelect, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -86,7 +86,7 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-1">
-        <DialLabel label={t(labelKey)} required />
+        <Label label={t(labelKey)} required />
         <div className="w-fit">
           <DialSegmentedControl
             ariaLabel={t(labelKey)}

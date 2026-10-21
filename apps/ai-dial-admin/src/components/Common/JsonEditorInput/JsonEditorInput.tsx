@@ -1,4 +1,4 @@
-import { DialErrorText, DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialFormPopup, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -100,7 +100,7 @@ const JsonEditorInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-1">
-      {label && <DialLabel label={label} htmlFor={elementId} />}
+      {label && <Label label={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}

@@ -2,7 +2,7 @@
 import { FC, ReactNode, useMemo } from 'react';
 
 import Grafana from '@/public/images/icons/grafana.svg';
-import { NotificationVariant, DialNotification, DialLoader, OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, Spinner, OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -48,7 +48,7 @@ const JsonCollapsible: FC<{
       growOnOpen={growOnOpen}
     >
       {isLoading ? (
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
           <JsonEditor entity={entity ?? null} options={{ wordWrap }} readonly={true} />

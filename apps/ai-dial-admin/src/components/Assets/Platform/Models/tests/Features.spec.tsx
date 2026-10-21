@@ -13,7 +13,7 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLabel: ({ label }: any) => <span>{label}</span>,
+  Label: ({ label }: any) => <span>{label}</span>,
   Switch: ({ labelProps, isOn, onChange, disabled, id }: any) => (
     <label>
       <span>{labelProps?.label}</span>

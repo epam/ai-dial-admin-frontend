@@ -10,7 +10,7 @@ import {
   ButtonDropdown,
   ButtonVariant,
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
+  ConfirmationPopup,
   EllipsisTooltip,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -278,7 +278,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       </ListEntities>
 
       {deleteTarget && (
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open={!!deleteTarget}
           variant={ConfirmationPopupVariant.Danger}
           header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}

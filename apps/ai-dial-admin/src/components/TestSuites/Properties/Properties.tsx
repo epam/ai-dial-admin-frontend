@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialInputPopup, DialLabel, DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, Label, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -107,7 +107,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
           <div className="flex gap-2">
             <div className="flex gap-2">
               <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-                <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
+                <Label label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
                 <DialInputPopup
                   open={isAppModalOpen}
                   onOpen={() => setIsAppModalOpen(true)}
@@ -124,7 +124,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
               </div>
               {isResolvingLink ? (
                 <div className="self-end flex size-[36px] items-center justify-center shrink-0">
-                  <DialLoader fullWidth={false} size={16} className="text-secondary" />
+                  <Spinner fullWidth={false} size={16} />
                 </div>
               ) : (
                 !!navigationTarget && (

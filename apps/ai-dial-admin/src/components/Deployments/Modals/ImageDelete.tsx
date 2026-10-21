@@ -10,7 +10,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
+  ConfirmationPopup,
   EllipsisTooltip,
   DialSelect,
   PopupSize,
@@ -203,7 +203,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
   );
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open={true}
       variant={ConfirmationPopupVariant.Danger}
       header={getTitle(view, t)}
@@ -250,7 +250,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
           <RelatedArtefacts entity={{ ...entity, existingVersions, selectedVersion }} view={view} />
         )}
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

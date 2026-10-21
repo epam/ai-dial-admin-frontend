@@ -1,4 +1,4 @@
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import {
@@ -51,7 +51,7 @@ const ConnectWriteTab: FC<Props> = ({
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectWhoCanWrite)}</h4>
         {isRolesLoading && (
-          <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(AnalyticsTablesI18nKey.ConnectRolesLoading)} />
+          <Spinner size={LOADER_SIZE} fullWidth={false} ariaLabel={t(AnalyticsTablesI18nKey.ConnectRolesLoading)} />
         )}
         {!isRolesLoading && isAccessReadable && writeRoles.length > 0 && (
           <>

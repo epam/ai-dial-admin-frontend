@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
@@ -47,7 +47,7 @@ const SchemaTree: FC<SchemaTreeProps> = ({ responseSchema, onSelect }) => {
   }, [responseSchema]);
 
   if (nodes.length === 0) {
-    return <DialNoDataContent title={t(TestSuitesI18nKey.NoSchemaProperties)} />;
+    return <NoDataContent title={t(TestSuitesI18nKey.NoSchemaProperties)} />;
   }
 
   return (

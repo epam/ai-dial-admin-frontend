@@ -1,6 +1,6 @@
 'use client';
 
-import { DialCheckbox, DialInput, DialLoader, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialInput, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconSearch } from '@tabler/icons-react';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 import classNames from 'classnames';
@@ -176,7 +176,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
       </span>
       {isLoading && (
         <div aria-hidden className="flex justify-center">
-          <DialLoader size={LOADER_SIZE} fullWidth={false} />
+          <Spinner size={LOADER_SIZE} fullWidth={false} />
         </div>
       )}
       {isAvailable && values.length > SEARCH_THRESHOLD && (

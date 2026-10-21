@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { ButtonAppearance, OutlinedButton, DialNoDataContent, PrimaryButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, OutlinedButton, NoDataContent, PrimaryButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
@@ -126,7 +126,7 @@ const RequestTemplate: FC<Props> = ({
         </>
       ) : (
         <div className="flex-1 min-h-[350px] flex items-center justify-center">
-          <DialNoDataContent
+          <NoDataContent
             title={t(TestSuitesI18nKey.ConfigureEndpointFirst)}
             description={t(TestSuitesI18nKey.ConfigureEndpointFirstDescription)}
           />

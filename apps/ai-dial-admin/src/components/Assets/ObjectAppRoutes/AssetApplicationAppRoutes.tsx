@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -42,7 +42,7 @@ const AssetApplicationAppRoutes: FC<Props> = ({ selectedEntity, onChangeEntity, 
   if (isLoading) {
     return (
       <div className="flex flex-col size-full">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }
@@ -50,7 +50,7 @@ const AssetApplicationAppRoutes: FC<Props> = ({ selectedEntity, onChangeEntity, 
   if (error) {
     return (
       <div className="flex flex-col size-full">
-        <DialNoDataContent title={t(EntitiesI18nKey.ResolvedSchemaFailed)} description={error} />
+        <NoDataContent title={t(EntitiesI18nKey.ResolvedSchemaFailed)} description={error} />
       </div>
     );
   }

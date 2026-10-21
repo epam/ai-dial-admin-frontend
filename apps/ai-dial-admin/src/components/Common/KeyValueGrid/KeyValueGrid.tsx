@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { GhostButton, DialInput, DialLabel } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, Label } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -89,7 +89,7 @@ const KeyValueGrid = ({ value, onChange, disabled, label, addButtonLabel, classN
 
   return (
     <div className={className}>
-      {label && <DialLabel label={label} />}
+      {label && <Label label={label} />}
 
       <div className={classNames('flex flex-col gap-y-2', label && 'mt-2')}>
         {rows.map((row) => (

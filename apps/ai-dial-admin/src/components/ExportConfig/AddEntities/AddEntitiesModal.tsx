@@ -1,7 +1,7 @@
 'use client';
 import { FC, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, NoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
@@ -74,7 +74,7 @@ const AddEntitiesModal: FC<Props> = ({
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
-          <DialNoDataContent title={t(emptyTitle)} />
+          <NoDataContent title={t(emptyTitle)} />
         ) : (
           <div className="flex-1 flex flex-row min-h-0">
             <div className="flex-1">

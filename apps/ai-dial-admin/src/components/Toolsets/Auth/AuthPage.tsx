@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useEffect } from 'react';
 
@@ -19,5 +19,5 @@ export const AuthPage: FC<Props> = ({ oAuthCode }) => {
     }
   }, [oAuthCode, router]);
 
-  return <DialLoader size={44} />;
+  return <Spinner size={44} fullWidth />;
 };

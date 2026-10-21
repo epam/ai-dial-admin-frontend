@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { DialLoader, DialNoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { getConfigurationSchema } from '@/src/app/[lang]/interceptors/actions';
@@ -55,13 +55,13 @@ const ParameterSchema: FC<Props> = ({
   }, [name, schemaURL, getSchema]);
 
   if (isLoading) {
-    return <DialLoader size={40} />;
+    return <Spinner size={40} fullWidth />;
   }
 
   return (
     <>
       {!schema ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+        <NoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
       ) : (
         <div className="flex relative min-h-0 size-full">
           <div className="size-full">

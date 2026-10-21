@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { LinkButton, DialLoader, ElementSize, Popup, PopupSize, Search } from '@epam/ai-dial-ui-kit';
+import { LinkButton, Spinner, ElementSize, Popup, PopupSize, Search } from '@epam/ai-dial-ui-kit';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
@@ -196,7 +196,7 @@ const ShareBreakdown: FC<Props> = ({
     if (rows.isLoading) {
       return (
         <div className="flex flex-1 items-center justify-center">
-          <DialLoader size={24} />
+          <Spinner size={24} fullWidth />
         </div>
       );
     }
@@ -281,7 +281,7 @@ const ShareBreakdown: FC<Props> = ({
               them, and the spinner says the next ones are on their way. */}
           {isReadingMore && (
             <div className="flex justify-center pt-3">
-              <DialLoader size={LEGEND_LOADER_SIZE} />
+              <Spinner size={LEGEND_LOADER_SIZE} fullWidth />
             </div>
           )}
         </div>

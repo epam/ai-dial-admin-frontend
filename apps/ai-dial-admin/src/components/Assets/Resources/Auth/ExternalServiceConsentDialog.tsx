@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ConfirmationPopupVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, ExternalServiceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -29,7 +29,7 @@ const ExternalServiceConsentDialog: FC<Props> = ({ applicationName, isApproved, 
   const confirmLabel = isApproved ? t(ExternalServiceI18nKey.WithdrawConsent) : t(ExternalServiceI18nKey.GrantConsent);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open={true}
       variant={ConfirmationPopupVariant.Danger}
       header={header}

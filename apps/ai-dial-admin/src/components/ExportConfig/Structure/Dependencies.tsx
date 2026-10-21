@@ -1,7 +1,7 @@
 'use client';
 import { FC, useMemo } from 'react';
 
-import { DialLabel, Switch, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Label, Switch, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -46,7 +46,7 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
   return (
     <div className="flex flex-col gap-y-3">
       <div className="flex items-center gap-x-2">
-        <DialLabel label={t(ExportI18nKey.Resources)} htmlFor="dependencies" />
+        <Label label={t(ExportI18nKey.Resources)} htmlFor="dependencies" />
         <Tooltip tooltip={t(ExportI18nKey.DependenciesInfo)}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
         </Tooltip>

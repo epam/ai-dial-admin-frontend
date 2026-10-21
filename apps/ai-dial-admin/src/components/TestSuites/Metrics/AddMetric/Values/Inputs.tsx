@@ -1,4 +1,4 @@
-import { DialLabel, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Label, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -199,7 +199,7 @@ const MetricInput: FC<{
 
   return (
     <div className="flex flex-col gap-1">
-      <DialLabel label={field.name} caption={field.description} required={field.required} />
+      <Label label={field.name} caption={field.description} required={field.required} />
       <div className="w-fit mb-2">
         <DialSegmentedControl
           ariaLabel={field.name}

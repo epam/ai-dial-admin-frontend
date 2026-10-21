@@ -104,8 +104,9 @@ describe('EntityTraceListing', () => {
   test('lists the calls to the entity under its own heading', async () => {
     renderListing();
 
-    expect(await screen.findByRole('heading', { name: EntityTracesI18nKey.Title })).toBeInTheDocument();
-    expect(screen.getByText('an-app')).toBeInTheDocument();
+    // The heading renders while the first page is still loading, so the cards are what the next line waits on.
+    expect(await screen.findByText('an-app')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: EntityTracesI18nKey.Title })).toBeInTheDocument();
     expect(getEntityTracePage).toHaveBeenCalledWith(
       ApplicationRoute.Models,
       'a-model',

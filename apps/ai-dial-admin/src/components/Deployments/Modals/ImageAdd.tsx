@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { Image } from '@/src/models/deployments/images';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -23,7 +23,7 @@ const ImageAdd: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, isRegi
   const [image, setImage] = useState<Image>(() => getImageTemplate(isRegistry));
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       portalId="ImageAddModal"
       header={modalTitle}
       open={isModalOpen}
@@ -37,7 +37,7 @@ const ImageAdd: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, isRegi
       <div className="flex px-6 py-4">
         <ImageFields image={image} setImage={setImage} isModal={true} />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

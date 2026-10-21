@@ -1,7 +1,7 @@
 'use client';
 import { FC, useMemo } from 'react';
 import classNames from 'classnames';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -22,7 +22,7 @@ const StatusIcon: FC<Props> = ({ status }) => {
   return (
     <div>
       {LOADING_STATUSES.includes(status) ? (
-        <DialLoader ariaLabel={statusLabel} size={12} className="size-2" />
+        <Spinner ariaLabel={statusLabel} size={12} className="size-2" fullWidth />
       ) : (
         <span role="status" aria-label={statusLabel} className={indicatorClassNames} />
       )}

@@ -1,5 +1,5 @@
 'use client';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { previewAnalyticsImportConfig } from '@/src/app/[lang]/import-config/actions';
@@ -75,7 +75,7 @@ const AnalyticsImportPreview: FC<Props> = ({
   if (isLoading) {
     return (
       <div className="flex flex-col size-full justify-center items-center">
-        <DialLoader size={45} className="h-auto" />
+        <Spinner size={45} className="h-auto" fullWidth />
         <p className="mt-3 text-primary dial-small-text">{t(ImportI18nKey.ConfigurationParsing)}</p>
       </div>
     );

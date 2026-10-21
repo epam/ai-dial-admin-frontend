@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 
-import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialConditionalResizableContainer, Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
 import {
@@ -164,7 +164,7 @@ const Methods: FC<Props> = ({
   };
 
   return isLoading ? (
-    <DialLoader size={40} />
+    <Spinner size={40} fullWidth />
   ) : (
     <div className="size-full flex flex-col gap-4">
       <div className="flex-1 min-h-0 overflow-auto">

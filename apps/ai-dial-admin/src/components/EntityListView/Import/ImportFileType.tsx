@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import {
   DialFileIcon,
-  DialLabel,
+  Label,
   DialLoadFileAreaField,
   DialRadioGroup,
   Switch,
@@ -71,7 +71,7 @@ const ImportFileTypeSelector: FC<Props> = ({
 
         {isAssetView(route) && (
           <div className="flex flex-col gap-y-1">
-            <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
+            <Label label={ignorePathsTitle} htmlFor="ignorePaths" />
             <Switch
               isOn={ignorePaths}
               labelProps={{ label: t(ImportI18nKey.PathsIgnore) }}

@@ -3,7 +3,7 @@
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -171,7 +171,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     <div className="flex flex-col gap-4 h-full min-h-0">
       <div className="flex-1 min-h-0 relative">
         {isLoading ? (
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
         ) : (
           <GridView
             columnDefs={colDefs}

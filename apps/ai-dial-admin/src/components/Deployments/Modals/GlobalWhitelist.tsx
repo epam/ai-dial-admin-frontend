@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DialConfirmationPopup, GhostButton, OutlinedButton, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, GhostButton, OutlinedButton, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -72,7 +72,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains,
   );
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       portalId="GlobalWhitelistModal"
       onClose={onClose}
       onConfirm={onConfirm}
@@ -95,7 +95,7 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains,
           />
         </div>
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

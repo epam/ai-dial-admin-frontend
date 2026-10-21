@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, type ReactNode } from 'react';
 
-import { ButtonAppearance, DialInput, DialLabel, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialInput, Label, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { createEmptyField, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -172,9 +172,7 @@ const MetricObjectMapControl: FC<MetricObjectMapControlProps> = ({
 
   return (
     <div className="flex flex-col gap-y-2">
-      {label && (
-        <DialLabel htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />
-      )}
+      {label && <Label htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />}
 
       <div className="flex flex-col gap-2">
         {entries.map(([entryKey], rowIndex) => (

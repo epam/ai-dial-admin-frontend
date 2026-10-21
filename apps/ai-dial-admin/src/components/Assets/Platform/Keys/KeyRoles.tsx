@@ -1,6 +1,6 @@
 'use client';
 
-import { OutlinedButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -89,7 +89,7 @@ const KeyRoles = ({ asset, roles, onChange }: Props) => {
       {selectedRoles.length ? (
         <GridView rowData={selectedRoles} columnDefs={columnDefs} />
       ) : (
-        <DialNoDataContent title={t(KeysI18nKey.BearerRolesNotAvailable)} />
+        <NoDataContent title={t(KeysI18nKey.BearerRolesNotAvailable)} />
       )}
 
       <AddEntitiesGrid

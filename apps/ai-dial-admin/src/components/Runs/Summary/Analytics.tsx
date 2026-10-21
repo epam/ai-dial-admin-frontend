@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialAnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
 import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
@@ -74,7 +74,7 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   if (!data) {
     return (
       <div className="flex h-24 items-center">
-        <DialLoader size={32} />
+        <Spinner size={32} fullWidth />
       </div>
     );
   }

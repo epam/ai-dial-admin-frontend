@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { DialLabel, Switch, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
+import { Label, Switch, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -103,7 +103,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
 
       {switchGroups.map(({ title, keys }) => (
         <div key={title} className="flex flex-col gap-y-3">
-          <DialLabel label={t(title)} />
+          <Label label={t(title)} />
           {keys.map((key) => {
             const { value, isReadonly } = getReadOnlyValues(key, appRunner);
             return (

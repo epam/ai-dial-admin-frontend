@@ -13,7 +13,7 @@ When the import scope is Deployments, `ConfigurationPreview` SHALL call `POST /c
 #### Scenario: Preview loads on file upload
 - **WHEN** user uploads a deployment config ZIP and advances to the Configuration step
 - **THEN** the system SHALL call `previewDeploymentImportConfig` with the uploaded file and selected resolution policy
-- **AND** display a `DialLoader` with "Configuration parsing..." message while the request is in-flight
+- **AND** display a `Spinner` with "Configuration parsing..." message while the request is in-flight
 - **AND** render tabbed content on success via `DeploymentConfigurationGrid`
 
 #### Scenario: Tabs grouped by container type with counts

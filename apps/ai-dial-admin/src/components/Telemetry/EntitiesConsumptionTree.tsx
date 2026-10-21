@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import TreeGrid from '@/src/components/Common/TreeGrid/TreeGrid';
@@ -87,7 +87,7 @@ const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime, rows,
         <h3>{title}</h3>
       </div>
       {loading ? (
-        <DialLoader size={24} />
+        <Spinner size={24} fullWidth />
       ) : (
         <div className="flex-1 min-h-0">
           <TreeGrid<EntityRow>

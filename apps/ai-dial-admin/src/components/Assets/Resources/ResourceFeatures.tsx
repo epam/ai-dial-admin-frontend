@@ -1,6 +1,6 @@
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialLabel, DialLoader, Switch, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
+import { Label, Spinner, Switch, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 
 import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -84,7 +84,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
   if (isFeaturesLoading) {
     return (
       <div className="flex flex-col size-full">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }
@@ -121,7 +121,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
 
       {resourceSwitchGroups.map(({ title, keys }) => (
         <div key={title} className="flex flex-col gap-y-3">
-          <DialLabel label={t(title)} />
+          <Label label={t(title)} />
           {keys.map((key) => {
             const { value, isReadonly } = getResourceReadOnlyValues(key, fullRunner);
             return (

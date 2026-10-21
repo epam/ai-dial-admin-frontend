@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialFormPopup, DialLabel, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, Label, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
 
 import {
   modelResourceFeatureLabelMap,
@@ -90,7 +90,7 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
           />
           {switchGroups.map(({ title, keys }) => (
             <div key={title} className="flex flex-col gap-y-3">
-              <DialLabel label={t(title)} />
+              <Label label={t(title)} />
               {keys.map((key) => (
                 <Switch
                   key={key}

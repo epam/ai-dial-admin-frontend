@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -195,7 +195,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
 
       {isOpenConfirmModal &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isOpenConfirmModal}
             description={t(KeysI18nKey.SaveWithoutRolesDescriptions)}
             header={t(KeysI18nKey.SaveWithoutRoles)}

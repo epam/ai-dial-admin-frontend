@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
@@ -56,10 +56,10 @@ const MetricTrends: FC<Props> = ({ runOrder, runCount, statistics, byStatistic, 
     >
       {isLoading ? (
         <div className="flex h-40 items-center justify-center">
-          <DialLoader size={32} />
+          <Spinner size={32} fullWidth />
         </div>
       ) : !groups.length ? (
-        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
+        <NoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {groups.map((group) => (

@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  DialLoader,
+  Spinner,
   OutlinedButton,
   DialPopup,
   PrimaryButton,
@@ -216,8 +216,8 @@ const AddMetricModal: FC<Props> = ({
         {!isEditMode && <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onStepChange} />}
 
         <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
-          {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <DialLoader size={44} />}
-          {currentStepId === MetricStep.Configuration && isMetricDetailsLoading && <DialLoader size={44} />}
+          {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <Spinner size={44} fullWidth />}
+          {currentStepId === MetricStep.Configuration && isMetricDetailsLoading && <Spinner size={44} fullWidth />}
           {currentStepId === MetricStep.AddMetric && !isMetricDeclarationsLoading && (
             <MetricSelection
               metrics={metricDeclarations || []}

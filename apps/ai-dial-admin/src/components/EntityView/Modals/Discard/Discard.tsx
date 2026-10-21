@@ -1,4 +1,4 @@
-import { ConfirmationPopupVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -15,7 +15,7 @@ const DiscardModal: FC<Props> = ({ onConfirm, onClose, onCancel }) => {
   const t = useI18n();
 
   return createPortal(
-    <DialConfirmationPopup
+    <ConfirmationPopup
       variant={ConfirmationPopupVariant.Danger}
       open={true}
       header={t(EntitiesI18nKey.DiscardChanges)}

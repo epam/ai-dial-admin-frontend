@@ -13,7 +13,7 @@ import MetricInputs from '../Inputs';
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   TooltipPlacement: { Left: 'left' },
   ErrorText: ({ text }: any) => (text ? <span role="alert">{text}</span> : null),
-  DialLabel: ({ label }: any) => <span>{label}</span>,
+  Label: ({ label }: any) => <span>{label}</span>,
   DialTag: ({ label }: any) => <span data-testid="type-tag">{label}</span>,
   Select: ({ id, options, value, onChange, placeholder, fieldClassName, invalid }: any) => (
     <select

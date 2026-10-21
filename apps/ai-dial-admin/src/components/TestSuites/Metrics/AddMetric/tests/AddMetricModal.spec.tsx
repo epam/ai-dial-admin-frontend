@@ -87,7 +87,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </nav>
   ),
-  DialLoader: () => <div role="progressbar" aria-label="loading" />,
+  Spinner: () => <div role="progressbar" aria-label="loading" />,
   OutlinedButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { IconButton, DialConfirmationPopup, EllipsisTooltip, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
+import { IconButton, ConfirmationPopup, EllipsisTooltip, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -287,7 +287,7 @@ const AuditView: FC<Props> = ({
       </div>
       {isOpenModal &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isOpenModal}
             isLoading={isLoading}
             header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
@@ -302,7 +302,7 @@ const AuditView: FC<Props> = ({
               </p>
               <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
             </div>
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
     </>

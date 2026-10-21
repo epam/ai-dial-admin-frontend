@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput, DialLabel, DialNumberInput, DialSelect, Tooltip } from '@epam/ai-dial-ui-kit';
+import { DialInput, Label, DialNumberInput, DialSelect, Tooltip } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import FileSelectInput from '@/src/components/Common/FileSelectInput/FileSelectInput';
@@ -54,7 +54,7 @@ const VariableRow: FC<Props> = ({
   return (
     <div className="flex flex-col gap-3">
       <span>
-        <DialLabel label={row.templateVariable} />
+        <Label label={row.templateVariable} />
         {!!info && (
           <Tooltip tooltip={info}>
             <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} size={16} className="text-secondary" />

@@ -16,8 +16,8 @@ vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLoader: () => <div>loader</div>,
-  DialNoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
+  Spinner: () => <div>loader</div>,
+  NoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';

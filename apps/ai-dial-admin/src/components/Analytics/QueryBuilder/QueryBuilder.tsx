@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GhostButton, DialLoader, OutlinedButton, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner, OutlinedButton, NoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
@@ -662,7 +662,7 @@ const QueryBuilder: FC<Props> = ({
         </div>
 
         {!entities.length ? (
-          <DialNoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
+          <NoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
         ) : (
           <div className="flex min-h-0 flex-1 border-t border-primary">
             <ResultArea
@@ -697,9 +697,9 @@ const QueryBuilder: FC<Props> = ({
               >
                 {!fieldsLoaded ? (
                   isLoadingSchema ? (
-                    <DialLoader size={40} />
+                    <Spinner size={40} fullWidth />
                   ) : (
-                    <DialNoDataContent title={schemaError ?? t(QueryBuilderI18nKey.SchemaLoadFailed)} />
+                    <NoDataContent title={schemaError ?? t(QueryBuilderI18nKey.SchemaLoadFailed)} />
                   )
                 ) : isJsonView ? (
                   <div className="flex h-full min-h-0 flex-col gap-2">
@@ -719,7 +719,7 @@ const QueryBuilder: FC<Props> = ({
                     <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
                       {sqlLoading ? (
                         <div className="flex h-full items-center justify-center">
-                          <DialLoader size={32} />
+                          <Spinner size={32} fullWidth />
                         </div>
                       ) : (
                         <SqlEditor value={sqlText} onChange={onChangeSql} />

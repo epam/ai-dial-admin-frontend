@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  DialConfirmationPopup,
+  ConfirmationPopup,
   DialRadioGroup,
   DialInput,
   PopupSize,
@@ -161,7 +161,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   }, [copyImage.name, names]);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       onClose={onClose}
       header={title}
       portalId="ImageDuplicateModal"
@@ -203,7 +203,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           onChange={onChangeVersion}
         />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

@@ -2,8 +2,8 @@ import {
   NotificationVariant,
   DialNotification,
   DialFormPopup,
-  DialLoader,
-  DialNoDataContent,
+  Spinner,
+  NoDataContent,
   Switch,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
@@ -119,7 +119,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 min-h-0 h-full">
-        {isLoading && <DialLoader size={24} />}
+        {isLoading && <Spinner size={24} fullWidth />}
         {!isLoading && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
             <Switch
@@ -129,7 +129,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
               labelProps={{ label: t(ContainersI18nKey.ShowRelatedContainers) }}
             />
             {!displayedDependencies.length ? (
-              <DialNoDataContent
+              <NoDataContent
                 title={t(EntitiesI18nKey.NoContainersType, {
                   type: getTranslatedType(getRouteByType(image.$type), t),
                   entityType: getTranslatedDeploymentType(getRouteByType(image.$type), t),

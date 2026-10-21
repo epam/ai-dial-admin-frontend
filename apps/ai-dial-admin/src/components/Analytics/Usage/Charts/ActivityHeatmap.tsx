@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
-import { GhostButton, DialLoader, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
@@ -190,7 +190,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
     if (buckets.isLoading) {
       return (
         <div className="flex justify-center">
-          <DialLoader size={24} />
+          <Spinner size={24} fullWidth />
         </div>
       );
     }

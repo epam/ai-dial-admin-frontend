@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { GhostButton, DialInput, DialLabel, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, Label, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
 
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -21,7 +21,7 @@ interface Props {
 
 // Vertical offset for the trailing (label-less) Nullable/Sensitive/remove-button group on the first row
 // when it has an error: with items-start (see rowHasError below), that group would otherwise sit flush
-// with the OTHER fields' labels instead of their inputs. The value matches DialLabel's rendered height
+// with the OTHER fields' labels instead of their inputs. The value matches Label's rendered height
 // (text line + its bottom margin) — same offset as the equivalent fix in Routes/Paths/Path.tsx.
 const LABEL_ROW_OFFSET_CLASS = 'mt-[22px]';
 
@@ -125,7 +125,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 />
               ) : (
                 <div className={classNames(TYPED_DETAIL_CELL_CLASS, 'self-start')}>
-                  {first && <DialLabel label={t(AnalyticsTablesI18nKey.ElementType)} required />}
+                  {first && <Label label={t(AnalyticsTablesI18nKey.ElementType)} required />}
                 </div>
               ))}
             {hasEnumRow &&
@@ -139,7 +139,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 />
               ) : (
                 <div className={classNames(TYPED_DETAIL_CELL_CLASS, 'self-start')}>
-                  {first && <DialLabel label={t(AnalyticsTablesI18nKey.EnumValues)} required />}
+                  {first && <Label label={t(AnalyticsTablesI18nKey.EnumValues)} required />}
                 </div>
               ))}
             <DialInput

@@ -2,14 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  GhostIconButton,
-  DialInput,
-  DialLabel,
-  OutlinedButton,
-  PrimaryButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, DialInput, Label, OutlinedButton, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconArrowLeft, IconEdit, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -193,7 +186,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
 
   return (
     <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
-      <DialLabel label={t(ExternalServiceI18nKey.ExternalServices)} />
+      <Label label={t(ExternalServiceI18nKey.ExternalServices)} />
 
       <div className="flex flex-col gap-y-2 rounded border border-primary p-4">
         {Object.keys(services).length === 0 && (

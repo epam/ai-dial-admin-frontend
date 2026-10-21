@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect } from 'react';
 
 import HopClampNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopClampNote';
@@ -37,7 +37,7 @@ const HopRawView: FC<Props> = ({ traceId, coreSpanId, requestTime, side }) => {
   if (isLoading || body === null) {
     return (
       <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-        <DialLoader size={LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} />
+        <Spinner size={LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} fullWidth />
       </div>
     );
   }
