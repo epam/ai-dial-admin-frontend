@@ -49,6 +49,7 @@ const RunConditionChip: FC<Props> = ({ filter, fieldOptions, onEdit, onRemove })
 
   return (
     <FilterEditorPopover
+      placement="right"
       isComplete={isRunConditionFilterComplete(draft)}
       onCommit={onCommit}
       onCancel={onCancel}
