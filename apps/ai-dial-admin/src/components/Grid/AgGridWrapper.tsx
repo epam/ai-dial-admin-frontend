@@ -28,13 +28,24 @@ import RadioNameCellRenderer from './CellRenderers/RadioNameCellRenderer';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { HEADER_HEIGHT, ICON_ROW_HEIGHT } from './constants';
 import { useCellContextMenu } from './hooks/use-cell-context-menu';
-import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage, toColumnLeaves } from './utils';
+import { ColumnWidths } from './models';
+import {
+  getColumnsStateFromStorage,
+  GridModel,
+  saveColumnsStateToStorage,
+  toColumnLeaves,
+  withColumnWidths,
+} from './utils';
 
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
   rowData?: T[] | null;
   additionalGridOptions?: Omit<GridOptions, 'columnDefs' | 'rowData' | 'onGridReady'>;
   storageKey?: string;
+  // Controlled alternative to `storageKey` for a grid whose owner keeps the widths in its own state,
+  // so they outlive the grid's remount: the owner gets the full map back on every finished drag.
+  columnWidths?: ColumnWidths;
+  onColumnWidthsChange?: (widths: ColumnWidths) => void;
   onGridReady?: (gridApi: GridReadyEvent) => void;
   // Opt-in for live-streaming feeds: data flows as React props and
   // persisted state is restored on columnDefs/storageKey change rather
@@ -124,6 +135,8 @@ const AgGridWrapper = <T extends object>({
   rowData,
   additionalGridOptions,
   storageKey,
+  columnWidths,
+  onColumnWidthsChange,
   onGridReady: gridReadyCb,
   isLiveData,
   getRowId,
@@ -161,11 +174,11 @@ const AgGridWrapper = <T extends object>({
 
   const gridColumnDefs = useMemo(() => {
     if (!columnDefs) return columnDefs;
-    const renderable = withFormattedValueRenderer(columnDefs);
+    const renderable = withColumnWidths(withFormattedValueRenderer(columnDefs), columnWidths);
     if (isLiveData || !storageKey || typeof window === 'undefined') return renderable;
     const model = loadPersistedModel(storageKey, getDefaultSorts(columnDefs));
     return model ? mergeStoredColumnDefs(renderable, model.columns, model.sizedColIds ?? []) : renderable;
-  }, [columnDefs, isLiveData, storageKey]);
+  }, [columnDefs, columnWidths, isLiveData, storageKey]);
 
   useEffect(() => {
     sizedColIdsRef.current = new Set(storageKey ? (loadPersistedModel(storageKey, [])?.sizedColIds ?? []) : []);
@@ -199,10 +212,14 @@ const AgGridWrapper = <T extends object>({
       });
       handleStateUpdated(e);
       if (e.finished && e.source === 'uiColumnResized') {
+        onColumnWidthsChange?.({
+          ...columnWidths,
+          ...Object.fromEntries((e.columns ?? []).map((column) => [column.getColId(), column.getActualWidth()])),
+        });
         e.api.sizeColumnsToFit();
       }
     },
-    [handleStateUpdated],
+    [handleStateUpdated, columnWidths, onColumnWidthsChange],
   );
 
   const getRowIdFromRow = useCallback((row: T) => getRowId!({ data: row } as GetRowIdParams<T>), [getRowId]);

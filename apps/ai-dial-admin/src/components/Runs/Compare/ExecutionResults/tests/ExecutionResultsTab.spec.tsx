@@ -125,6 +125,17 @@ describe('ExecutionResultsTab', () => {
     });
   });
 
+  test('renders a column at the width kept in the tab state', async () => {
+    const { container } = renderExecutionResultsTab({ initialState: { columnWidths: { testCaseName: 333 } } });
+
+    await screen.findByRole('region', { name: 'Data grid' });
+
+    await waitFor(() => {
+      const header = container.querySelector<HTMLElement>('.ag-header-cell[col-id="testCaseName"]');
+      expect(header?.style.width).toBe('333px');
+    });
+  });
+
   test('loads compare results for both runs and renders grid', async () => {
     renderExecutionResultsTab();
 

@@ -7,6 +7,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { ColumnWidths } from '@/src/components/Grid/models';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
@@ -32,7 +33,7 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
-  const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
+  const { showTreePanel, colDefs, panelColDefs, columnWidths, results, snapshots } = extractionResultState;
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const metricGroupOrder = useMemo(() => getMetricGroupOrder(colDefs ?? []), [colDefs]);
   const fieldSchema = useMemo(() => getRowDetailFieldSchema(results ?? []), [results]);
@@ -110,6 +111,11 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     [setExtractionResultState],
   );
 
+  const onColumnWidthsChange = useCallback(
+    (nextColumnWidths: ColumnWidths) => setExtractionResultState({ columnWidths: nextColumnWidths }),
+    [setExtractionResultState],
+  );
+
   const onCellClicked = useCallback(
     (event: CellClickedEvent) => {
       if (!event.data?.id) return;
@@ -169,6 +175,8 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
         ) : (
           <GridView
             columnDefs={colDefs}
+            columnWidths={columnWidths}
+            onColumnWidthsChange={onColumnWidthsChange}
             rowData={results}
             onGridReady={onGridReady}
             additionalGridOptions={gridOptions}

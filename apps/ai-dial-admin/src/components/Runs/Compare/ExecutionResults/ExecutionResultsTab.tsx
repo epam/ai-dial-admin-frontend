@@ -17,6 +17,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { ColumnWidths } from '@/src/components/Grid/models';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
 import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResults/constants';
@@ -91,8 +92,16 @@ const ExecutionResultsTab: FC<Props> = ({
   const [isGridReady, setIsGridReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  const { viewDifferencesOnly, hideHighlights, panelColDefs, filterModel, columnState, results, comparedResults } =
-    executionResultsState;
+  const {
+    viewDifferencesOnly,
+    hideHighlights,
+    panelColDefs,
+    filterModel,
+    columnState,
+    columnWidths,
+    results,
+    comparedResults,
+  } = executionResultsState;
 
   const panelColDefsRef = useRef(panelColDefs);
   panelColDefsRef.current = panelColDefs;
@@ -272,6 +281,11 @@ const ExecutionResultsTab: FC<Props> = ({
     [setExecutionResultsState],
   );
 
+  const onColumnWidthsChange = useCallback(
+    (nextColumnWidths: ColumnWidths) => setExecutionResultsState({ columnWidths: nextColumnWidths }),
+    [setExecutionResultsState],
+  );
+
   const gridOptions = useMemo(
     () => ({
       ...compareGridOptions,
@@ -422,6 +436,8 @@ const ExecutionResultsTab: FC<Props> = ({
         <GridView
           key={`${primaryRunId}-${comparedRunId}`}
           columnDefs={displayColDefs}
+          columnWidths={columnWidths}
+          onColumnWidthsChange={onColumnWidthsChange}
           rowData={displayedRowData}
           additionalGridOptions={gridOptions}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}

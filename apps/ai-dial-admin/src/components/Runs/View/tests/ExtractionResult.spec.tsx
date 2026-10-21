@@ -69,8 +69,17 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ additionalGridOptions }: { additionalGridOptions: Record<string, (e: unknown) => void> }) => (
-    <div role="grid" aria-label="Analytics grid">
+  default: ({
+    additionalGridOptions,
+    columnWidths,
+    onColumnWidthsChange,
+  }: {
+    additionalGridOptions: Record<string, (e: unknown) => void>;
+    columnWidths: Record<string, number>;
+    onColumnWidthsChange: (widths: Record<string, number>) => void;
+  }) => (
+    <div role="grid" aria-label="Analytics grid" data-column-widths={JSON.stringify(columnWidths)}>
+      <button onClick={() => onColumnWidthsChange({ testCaseName: 240 })}>Resize column</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
       <button
@@ -137,6 +146,19 @@ describe('ExtractionResultTab', () => {
     expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Columns panel' })).not.toBeInTheDocument();
+  });
+
+  test('keeps the column widths the grid reports in the tab state', async () => {
+    render(<ControlledExtractionResultTab initialState={{ columnWidths: { status: 90 } }} />);
+    const grid = await screen.findByRole('grid', { name: 'Analytics grid' });
+    expect(grid).toHaveAttribute('data-column-widths', JSON.stringify({ status: 90 }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Resize column' }));
+
+    expect(screen.getByRole('grid', { name: 'Analytics grid' })).toHaveAttribute(
+      'data-column-widths',
+      JSON.stringify({ testCaseName: 240 }),
+    );
   });
 
   test('shows Columns panel when showTreePanel is true', async () => {

@@ -1,6 +1,7 @@
 import { ColDef, ColGroupDef, ColumnState, FilterModel } from 'ag-grid-community';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { GRID_COLUMNS_KEY } from './constants';
+import { ColumnWidths } from './models';
 
 export interface GridModel {
   columns: ColumnState[];
@@ -8,6 +9,23 @@ export interface GridModel {
   // Columns the operator dragged. Other stored widths are an automatic fit saved with a sort or filter.
   sizedColIds?: string[];
 }
+
+// `flex: 0` because a column with `flex` ignores `width`; `suppressSizeToFit` keeps the grid's own fit off it.
+export const withColumnWidths = (columnDefs: ColDef[], widths: ColumnWidths | undefined): ColDef[] => {
+  if (!widths || Object.keys(widths).length === 0) {
+    return columnDefs;
+  }
+
+  return columnDefs.map((col) => {
+    const children = (col as ColGroupDef).children;
+    if (Array.isArray(children)) {
+      return { ...col, children: withColumnWidths(children as ColDef[], widths) } as ColDef;
+    }
+
+    const width = widths[(col.colId ?? col.field) as string];
+    return width == null ? col : { ...col, width, flex: 0, suppressSizeToFit: true };
+  });
+};
 
 export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;
 
