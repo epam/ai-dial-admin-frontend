@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   DialCopiedItem,
@@ -12,13 +12,14 @@ import {
   FileManagerColumnKey,
   FileManagerGridRow,
 } from '@epam/ai-dial-react-file-manager';
-import { AgGridEvent, ColDef, GridApi } from 'ag-grid-community';
+import { ColDef, GridApi, GridColumnsChangedEvent } from 'ag-grid-community';
 
 import {
   getDeleteNotificationContent,
   getMoveNotificationContent,
   getParentPathByFullPath,
 } from '@/src/components/Assets/utils';
+import { useGridStatePersistence } from '@/src/components/Grid/hooks/use-grid-state-persistence';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
@@ -37,7 +38,7 @@ import { getFolderName } from '@/src/utils/files/folder';
 import { getRootFolder, getRootFolders, isFileRootPath, isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
-import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
+import { FILE_MANAGER_GRID_PERSISTENCE, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
@@ -112,7 +113,16 @@ const FileManager: FC<Props> = ({
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
-  const gridReadyRef = useRef(false);
+  const [gridApi, setGridApi] = useState<GridApi>();
+  const {
+    columnDefs: persistedColumnDefs,
+    reapplyState,
+    onFilterChanged,
+    onSortChanged,
+    onColumnMoved,
+    onColumnVisible,
+    onColumnResized,
+  } = useGridStatePersistence({ storageKey: view, columnDefs, gridApi, ...FILE_MANAGER_GRID_PERSISTENCE });
 
   useEffect(() => {
     if (!folderToRefetch) {
@@ -382,49 +392,43 @@ const FileManager: FC<Props> = ({
     );
   }, [showNotification, t]);
 
-  const handleGridFilterChanged = useCallback(
-    (e: AgGridEvent) => {
-      if (!gridReadyRef.current) return;
-      const filters = e.api.getFilterModel();
-      const key = `${ASSET_LIST_FILTER_STORAGE_KEY}${view}`;
-      if (Object.keys(filters).length > 0) {
-        sessionStorage.setItem(key, JSON.stringify(filters));
-      } else {
-        sessionStorage.removeItem(key);
-      }
-    },
-    [view],
-  );
-
-  const handleGridApiChange = useCallback(
-    (api: GridApi) => {
-      const key = `${ASSET_LIST_FILTER_STORAGE_KEY}${view}`;
-      const saved = sessionStorage.getItem(key);
-      gridReadyRef.current = true;
-      if (saved) {
-        try {
-          api.setFilterModel(JSON.parse(saved));
-        } catch {
-          sessionStorage.removeItem(key);
-        }
-      }
-    },
-    [view],
-  );
+  // The file-manager library rebuilds the grid's columns on a path, selection or compact-view change. When
+  // that changes the column set (compact view keeps only the first column), the stored order and sort are
+  // re-applied; a rebuild of the same columns keeps the current order through `maintainColumnOrder`.
+  const onGridColumnsChanged = useCallback((event: GridColumnsChangedEvent) => reapplyState(event.api), [reapplyState]);
 
   const gridOptions = useMemo(() => {
-    const base = getGridOptions(view, isReadOnlyAdmin, columnDefs, t, undefined, filePath);
+    const base = getGridOptions(view, isReadOnlyAdmin, persistedColumnDefs ?? columnDefs, t, undefined, filePath);
     return {
       ...base,
       additionalGridOptions: {
         ...base.additionalGridOptions,
-        onFilterChanged: handleGridFilterChanged,
+        maintainColumnOrder: true,
+        onFilterChanged,
+        onSortChanged,
+        onColumnMoved,
+        onColumnVisible,
+        onColumnResized,
+        onGridColumnsChanged,
       },
     };
     // Applications and Toolsets are the only views whose action set depends on `filePath` (which
     // bucket is being browsed — see `isPlatformDualBucketView`); every other view keeps the same
     // options regardless of path, so this dependency is a no-op for them.
-  }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged, filePath]);
+  }, [
+    view,
+    isReadOnlyAdmin,
+    persistedColumnDefs,
+    columnDefs,
+    t,
+    onFilterChanged,
+    onSortChanged,
+    onColumnMoved,
+    onColumnVisible,
+    onColumnResized,
+    onGridColumnsChanged,
+    filePath,
+  ]);
 
   return (
     <>
@@ -453,7 +457,7 @@ const FileManager: FC<Props> = ({
           label,
         )}
         gridOptions={gridOptions}
-        onGridApiChange={handleGridApiChange}
+        onGridApiChange={setGridApi}
         onPathChange={handleOnPathChange}
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         {...props}
