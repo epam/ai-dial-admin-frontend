@@ -136,6 +136,7 @@
   "overrides": {
     "smol-toml": "^1.9.0",
     "axios": "1.20.0",
+    "hono": "^4.13.11",
     "postcss-selector-parser": "^7.1.6",
     "next": {
       "postcss": "^8.5.29"
