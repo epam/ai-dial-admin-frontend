@@ -26,6 +26,7 @@ import {
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
@@ -126,7 +127,7 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
           ...NUMBER_FILTER_COL_DEF,
           ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
           ...rightAlignedColumn,
-          cellClass: 'p-0',
+          cellClass: ['p-0', NO_BORDER_CLASS],
           valueGetter: (params) => {
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';

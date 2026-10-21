@@ -9,6 +9,7 @@ import {
 } from '@/src/components/Runs/grid-column-layout';
 import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
 import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
+import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { FilterOperatorDto } from '@/src/types/request';
 import {
@@ -114,7 +115,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
         filter: 'agNumberColumnFilter',
         floatingFilter: true,
         width: METRIC_COLUMN_WIDTH,
-        cellClass: 'p-0',
+        cellClass: ['p-0', NO_BORDER_CLASS],
         headerClass: 'align-right',
       }),
     );
