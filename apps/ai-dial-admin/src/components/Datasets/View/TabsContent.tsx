@@ -2,6 +2,7 @@
 
 import { FC, RefObject } from 'react';
 
+import KeepAliveTab from '@/src/components/Common/KeepAliveTab/KeepAliveTab';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
 import DatasetSchemaTab from '@/src/components/Datasets/Schema/SchemaTab';
@@ -68,14 +69,14 @@ const DatasetTabsContent: FC<Props> = ({
           onChange={onChange}
         />
       )}
-      {activeTab === EntityViewTab.TestCases && (
+      <KeepAliveTab isActive={activeTab === EntityViewTab.TestCases}>
         <DatasetTestCases
           dataset={selectedDataset}
           savedSchema={savedSchema}
           testCasesActionsRef={testCasesActionsRef}
           onDirtyChange={onTestCaseDirtyChange}
         />
-      )}
+      </KeepAliveTab>
       {activeTab === EntityViewTab.TestSuites && <DatasetTestSuites datasetId={selectedDataset.id as string} />}
     </>
   );

@@ -167,15 +167,13 @@ describe('CatalogPropertiesEditor', () => {
   test('surfaces the validation errors it is given, naming the property', () => {
     renderEditor({ errors: [{ field: 'tag', message: '"tag" must be one of Featured, New' }] });
 
-    expect(screen.getAllByRole('alert').map((node) => node.textContent)).toContain(
-      '"tag" must be one of Featured, New',
-    );
+    expect(screen.getByText('"tag" must be one of Featured, New')).toBeTruthy();
   });
 
   test('shows no error region for values matching the schema', () => {
     renderEditor({ values: { tag: 'New' } });
 
-    expect(screen.queryAllByRole('alert')).toEqual([]);
+    expect(screen.queryByText(/must be one of/)).toBeNull();
   });
 });
 

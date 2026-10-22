@@ -4,10 +4,16 @@ import {
   Spinner,
   Notification,
   NotificationType,
-  DialNumberInput,
+  NumberInput,
+  Label,
+  NeutralIconButton,
+  ButtonAppearance,
+  DIAL_ICON_SIZE,
+  ElementSize,
   NotificationVariant,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
+import { IconMinus, IconPlus } from '@tabler/icons-react';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -20,7 +26,7 @@ import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { useIncludedIds } from '../TestCases/RunCondition/use-included-ids';
-import { VALID_FILTERS } from './constants';
+import { MIN_RUNS, VALID_FILTERS } from './constants';
 
 interface Props {
   isModalOpen: boolean;
@@ -62,6 +68,26 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, expandedRows, schema);
   const validRuns = includedIds ? includedIds.size : validRows.length;
 
+  const totalRuns = allRuns ?? 0;
+  const selectedCountText =
+    validRuns === totalRuns
+      ? t(TestSuitesI18nKey.AllTestCasesCount, { count: totalRuns })
+      : t(TestSuitesI18nKey.SelectedTestCasesCount, { selected: validRuns, total: totalRuns });
+
+  const onIncrement = useCallback(() => {
+    setValue((current) => {
+      const runs = Number(current);
+      return Number.isFinite(runs) && runs >= MIN_RUNS ? Math.floor(runs) + 1 : MIN_RUNS;
+    });
+  }, []);
+
+  const onDecrement = useCallback(() => {
+    setValue((current) => {
+      const runs = Number(current);
+      return Number.isFinite(runs) && runs > MIN_RUNS ? Math.ceil(runs) - 1 : MIN_RUNS;
+    });
+  }, []);
+
   const onSubmit = useCallback(() => {
     if (isSubmittingRef.current) {
       return;
@@ -77,7 +103,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   return (
     <Popup
       onClose={onClose}
-      header={t(TestSuitesI18nKey.RunEvaluation)}
+      header={t(TestSuitesI18nKey.RunTestCases)}
       portalId="Run"
       open={isModalOpen}
       size={PopupSize.Sm}
@@ -94,14 +120,33 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
           <Spinner size={30} fullWidth />
         ) : (
           <>
-            <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={`${validRuns} of ${allRuns}`} />
-            <DialNumberInput
-              id="numberOfRuns"
-              labelProps={{ label: t(TestSuitesI18nKey.NumberOfRuns) }}
-              value={value}
-              containerClassName="w-[90px]"
-              onChange={setValue}
-            />
+            <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={selectedCountText} />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="numberOfRuns" label={t(TestSuitesI18nKey.NumberOfRuns)} />
+              <div className="flex items-center gap-2">
+                <NeutralIconButton
+                  appearance={ButtonAppearance.Outlined}
+                  size={ElementSize.Small}
+                  icon={<IconMinus size={DIAL_ICON_SIZE.SM} aria-hidden />}
+                  aria-label={t(TestSuitesI18nKey.DecreaseRuns)}
+                  onClick={onDecrement}
+                />
+                <NumberInput
+                  id="numberOfRuns"
+                  integer
+                  value={value}
+                  containerClassName="w-[90px]"
+                  onChange={setValue}
+                />
+                <NeutralIconButton
+                  appearance={ButtonAppearance.Outlined}
+                  size={ElementSize.Small}
+                  icon={<IconPlus size={DIAL_ICON_SIZE.SM} aria-hidden />}
+                  aria-label={t(TestSuitesI18nKey.IncreaseRuns)}
+                  onClick={onIncrement}
+                />
+              </div>
+            </div>
             <Notification
               type={NotificationType.SectionMessage}
               variant={NotificationVariant.Info}

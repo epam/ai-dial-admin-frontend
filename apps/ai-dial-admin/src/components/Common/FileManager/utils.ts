@@ -80,6 +80,7 @@ export const getDestinationFolderPopupOptions = (
   onCreateFolder,
   onCreateFolderValidate: (name: string) => validateCreateFolder(name, t),
   folderCreationValidationMessages: getValidationMessages(t),
+  hiddenFilesSwitcherLabel: t(FileManagerI18nKey.ShowHiddenFiles),
   emptyStateTitle: t(FileManagerI18nKey.EmptyMoveFolderTitle),
   emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
     items: t(assetEntityMap[view]).toLowerCase(),
@@ -225,13 +226,17 @@ export const getTreeOptions = (
   };
 };
 
+export const isHiddenFilesToggleSupported = (route: ApplicationRoute) => route === ApplicationRoute.Files;
+
 export const getToolbarOptions = (
   route: ApplicationRoute,
   isReadOnlyAdmin: boolean,
   t: (key: string) => string,
   currentPath?: string,
 ) => ({
-  showHiddenFilesToggle: false,
+  showHiddenFilesToggle: isHiddenFilesToggleSupported(route),
+  showHiddenFilesLabel: t(FileManagerI18nKey.ShowHiddenFiles),
+  hideHiddenFilesLabel: t(FileManagerI18nKey.HideHiddenFiles),
   newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin, currentPath), t),
   newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
 });

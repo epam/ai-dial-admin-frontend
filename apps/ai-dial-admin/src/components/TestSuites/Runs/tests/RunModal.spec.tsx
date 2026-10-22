@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { ComparisonOp, ExprType, FilterNode, ValueType } from '@/src/models/evaluation/structured-query';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -78,13 +78,56 @@ describe('RunModal', () => {
   test('counts included multi-turn cases after expanding per-turn rows', async () => {
     renderModal();
 
-    expect(await screen.findByText('2 of 3')).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.SelectedTestCasesCount)).toBeInTheDocument();
   });
 
   test('counts all valid cases when no run condition is set', async () => {
     renderModal({ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: null });
 
-    expect(await screen.findByText('3 of 3')).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.AllTestCasesCount)).toBeInTheDocument();
+  });
+
+  describe('number of runs stepper', () => {
+    const getInput = () => screen.getByRole('spinbutton') as HTMLInputElement;
+    const getButton = (key: TestSuitesI18nKey) => screen.getByRole('button', { name: key });
+
+    const renderLoaded = async () => {
+      renderModal();
+      await screen.findByText(TestSuitesI18nKey.SelectedTestCasesCount);
+    };
+
+    test('increments the value', async () => {
+      const user = userEvent.setup();
+      await renderLoaded();
+
+      await user.click(getButton(TestSuitesI18nKey.IncreaseRuns));
+
+      expect(getInput().value).toBe('2');
+    });
+
+    test('decrement stops at 1', async () => {
+      const user = userEvent.setup();
+      await renderLoaded();
+
+      await user.click(getButton(TestSuitesI18nKey.DecreaseRuns));
+
+      expect(getInput().value).toBe('1');
+    });
+
+    test.each([TestSuitesI18nKey.IncreaseRuns, TestSuitesI18nKey.DecreaseRuns])(
+      'sets 1 on %s when the input is empty',
+      async (key) => {
+        const user = userEvent.setup();
+        await renderLoaded();
+
+        await user.clear(getInput());
+        expect(getInput().value).toBe('');
+
+        await user.click(getButton(key));
+
+        expect(getInput().value).toBe('1');
+      },
+    );
   });
 
   test('ignores a second Run click while the first request is in flight', async () => {
@@ -93,7 +136,7 @@ describe('RunModal', () => {
 
     render(<RunModal isModalOpen={true} selectedTestSuite={suite} onClose={vi.fn()} onRun={onRun} />);
 
-    expect(await screen.findByText('2 of 3')).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.SelectedTestCasesCount)).toBeInTheDocument();
 
     const runButton = screen.getByRole('button', { name: ButtonsI18nKey.Run });
     await user.click(runButton);

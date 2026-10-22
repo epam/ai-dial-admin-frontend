@@ -110,3 +110,68 @@ picker — SHALL NOT store or restore widths, order, sort or filters.
 
 - **WHEN** the operator resizes a column in the delete-assets confirmation, closes it, and opens it again
 - **THEN** the grid renders with its default widths
+
+### Requirement: A file-manager list can clear its filters in one step
+
+Every file-manager list — Applications, Toolsets, Prompts, Conversations, Skills, the Platform lists and Files —
+SHALL offer a "Reset filters" control in its header, immediately before the Create (Add on Files) button. The
+control SHALL be shown only while at least one filter is applied to the list, and SHALL disappear once no filter
+is applied.
+
+Activating the control SHALL clear every filter of the list. It SHALL NOT change the column widths, column
+order or sort, whether currently shown or stored. The cleared filters SHALL be stored as the list's filters, so
+a reload shows the list unfiltered.
+
+#### Scenario: No filter, no control
+
+- **WHEN** the operator opens a list that has no filter applied
+- **THEN** no "Reset filters" control is shown in the header
+
+#### Scenario: The control appears with the first filter
+
+- **WHEN** the operator applies a filter to a column of a list
+- **THEN** a "Reset filters" control is shown in the header before the Create button
+
+#### Scenario: Resetting clears filters only
+
+- **WHEN** the operator has widened a column, sorted the list and filtered it, and activates "Reset filters"
+- **THEN** every row is shown again and no column carries a filter
+- **AND** the widened column keeps its width and the list keeps its sort
+- **AND** the control is no longer shown
+
+#### Scenario: A cleared filter stays cleared after a reload
+
+- **WHEN** the operator activates "Reset filters" and reloads the page
+- **THEN** the list renders without filters and the control is not shown
+
+#### Scenario: A restored filter offers the control
+
+- **WHEN** the operator reloads a list whose filter was stored
+- **THEN** the filter is applied and the "Reset filters" control is shown
+
+### Requirement: The Files list can show hidden files
+
+The Files list SHALL offer a "Show hidden files" switch in its header. While it is off, which is the default,
+hidden files and folders SHALL NOT be listed; while it is on, they SHALL be listed alongside regular ones and the
+switch SHALL read "Hide hidden files". The choice SHALL be stored in the browser and restored on reload. The
+move-destination popup of the Files list SHALL offer the same switch. No other file-manager list offers it.
+
+#### Scenario: Hidden files are off by default
+
+- **WHEN** the operator opens the Files list for the first time
+- **THEN** hidden files and folders are not listed and the switch reads "Show hidden files"
+
+#### Scenario: Turning the switch on lists hidden files
+
+- **WHEN** the operator turns the switch on
+- **THEN** hidden files and folders are listed alongside regular ones and the switch reads "Hide hidden files"
+
+#### Scenario: The choice survives a reload
+
+- **WHEN** the operator turns the switch on and reloads the page
+- **THEN** the Files list still shows hidden files
+
+#### Scenario: Other lists have no switch
+
+- **WHEN** the operator opens the Prompts list
+- **THEN** no hidden-files switch is shown in its header

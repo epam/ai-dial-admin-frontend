@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { getDatasetByName, updateDataset } from '@/src/app/[lang]/datasets/actions';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import DatasetView from '../View';
@@ -91,6 +92,58 @@ describe('DatasetView', () => {
 
     rerender(<DatasetView originalDataset={{ ...dataset(DatasetVisibility.PUBLIC), name: 'renamed' }} etag="e2" />);
     expect(tabsContent.props.isSkipRefresh).toBe(false);
+  });
+
+  describe('after a successful save', () => {
+    const renamed = { ...dataset(DatasetVisibility.PUBLIC), name: 'renamed' };
+
+    const saveRenamed = async () => {
+      vi.mocked(getDatasetByName).mockResolvedValue({ content: [] } as never);
+      vi.mocked(updateDataset).mockResolvedValue({ success: true, etag: 'e2' } as never);
+      const view = render(<DatasetView originalDataset={dataset(DatasetVisibility.PUBLIC)} etag="e" />);
+      act(() => tabsContent.props.onChange(renamed, true));
+      expect(header.props.isChanged).toBe(true);
+
+      await act(async () => header.props.onSave());
+      return view;
+    };
+
+    test('stops reporting changes before the saved dataset is reloaded', async () => {
+      await saveRenamed();
+
+      expect(header.props.isChanged).toBe(false);
+    });
+
+    test('discards back to the saved dataset while the reload is pending', async () => {
+      await saveRenamed();
+      act(() => tabsContent.props.onChange({ ...renamed, name: 'typed later' }, true));
+      expect(header.props.isChanged).toBe(true);
+
+      act(() => header.props.onDiscard());
+
+      expect(tabsContent.props.selectedDataset.name).toBe('renamed');
+      expect(header.props.isChanged).toBe(false);
+    });
+
+    test('adopts the reloaded dataset when nothing was edited in the meantime', async () => {
+      const { rerender } = await saveRenamed();
+      const reloaded = { ...renamed, updatedAt: 1 };
+
+      rerender(<DatasetView originalDataset={reloaded} etag="e2" />);
+
+      expect(tabsContent.props.selectedDataset).toEqual(reloaded);
+      expect(header.props.isChanged).toBe(false);
+    });
+
+    test('keeps edits made while the reload was pending', async () => {
+      const { rerender } = await saveRenamed();
+      act(() => tabsContent.props.onChange({ ...renamed, name: 'typed later' }, true));
+
+      rerender(<DatasetView originalDataset={renamed} etag="e2" />);
+
+      expect(tabsContent.props.selectedDataset.name).toBe('typed later');
+      expect(header.props.isChanged).toBe(true);
+    });
   });
 
   test('visiting the Test Suites tab does not mark the dataset changed', () => {

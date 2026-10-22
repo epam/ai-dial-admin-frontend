@@ -20,6 +20,7 @@ import {
   getParentPathByFullPath,
 } from '@/src/components/Assets/utils';
 import { useGridStatePersistence } from '@/src/components/Grid/hooks/use-grid-state-persistence';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
@@ -39,12 +40,14 @@ import { getRootFolder, getRootFolders, isFileRootPath, isFlatPlatformView } fro
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { FILE_MANAGER_GRID_PERSISTENCE, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
+import { useShowHiddenFiles } from './use-show-hidden-files';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
   getForbiddenSymbolsRegExp,
   getGridOptions,
   getToolbarOptions,
+  isHiddenFilesToggleSupported,
   getTreeOptions,
   getValidationMessages,
   validateCreateFolder,
@@ -114,6 +117,8 @@ const FileManager: FC<Props> = ({
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
   const [gridApi, setGridApi] = useState<GridApi>();
+  const [isShowHiddenFiles, onShowHiddenFilesChange] = useShowHiddenFiles(view);
+  const isHiddenFilesToggleVisible = isHiddenFilesToggleSupported(view);
   const {
     columnDefs: persistedColumnDefs,
     reapplyState,
@@ -430,6 +435,14 @@ const FileManager: FC<Props> = ({
     filePath,
   ]);
 
+  const toolbarOptions = useMemo(
+    () => ({
+      ...getToolbarOptions(view, isReadOnlyAdmin, t, filePath),
+      additionalButtons: <ResetFiltersButton gridApi={gridApi} />,
+    }),
+    [view, isReadOnlyAdmin, t, filePath, gridApi],
+  );
+
   return (
     <>
       <DialFileManager
@@ -444,7 +457,10 @@ const FileManager: FC<Props> = ({
         navigationPanelOptions={{ searchable: false }}
         sortOptions={{ sortable: false }}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
-        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t, filePath)}
+        toolbarOptions={toolbarOptions}
+        showHiddenFiles={isHiddenFilesToggleVisible ? isShowHiddenFiles : undefined}
+        onShowHiddenFilesChange={isHiddenFilesToggleVisible ? onShowHiddenFilesChange : undefined}
+        showHiddenFileSwitcherInDestinationPopup={isHiddenFilesToggleVisible ? true : undefined}
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,

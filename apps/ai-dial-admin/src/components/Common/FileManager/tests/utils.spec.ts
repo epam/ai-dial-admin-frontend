@@ -11,6 +11,7 @@ import {
   getDestinationFolderPopupOptions,
   getEmptyFile,
   getGridOptions,
+  getToolbarOptions,
   getValidationMessages,
   isItemNameValid,
   validateCreateFolder,
@@ -70,6 +71,20 @@ describe('FileManager', () => {
       const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
 
       expect(options.sortOptions).toEqual({ sortable: false });
+    });
+  });
+
+  describe('getToolbarOptions', () => {
+    test('shows the hidden files toggle with translated labels for the Files route', () => {
+      const options = getToolbarOptions(ApplicationRoute.Files, false, translate);
+
+      expect(options.showHiddenFilesToggle).toBe(true);
+      expect(options.showHiddenFilesLabel).toBe(FileManagerI18nKey.ShowHiddenFiles);
+      expect(options.hideHiddenFilesLabel).toBe(FileManagerI18nKey.HideHiddenFiles);
+    });
+
+    test('hides the hidden files toggle for other routes', () => {
+      expect(getToolbarOptions(ApplicationRoute.Prompts, false, translate).showHiddenFilesToggle).toBe(false);
     });
   });
 
