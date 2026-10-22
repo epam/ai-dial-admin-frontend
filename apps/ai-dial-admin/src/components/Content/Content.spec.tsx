@@ -38,6 +38,19 @@ describe('Content', () => {
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
+  test('clips the shell without making it scrollable', () => {
+    render(
+      <Content isEnableAuth={true}>
+        <div>Test Content</div>
+      </Content>,
+    );
+
+    const shell = screen.getByText('Test Content').closest('.overflow-clip');
+    expect(shell).toBeInTheDocument();
+    expect(shell).toHaveClass('relative', 'min-h-0');
+    expect(document.querySelector('.overflow-hidden')).toBeNull();
+  });
+
   test('renders the Footer and polls status/core-version/BE-version when the admin API is enabled', async () => {
     render(
       <Content isEnableAuth={false}>

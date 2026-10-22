@@ -120,7 +120,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
       <ReasoningEffortsInput values={entity.features?.reasoning_efforts} onChange={onChangeReasoningEfforts} />
 
       {resourceSwitchGroups.map(({ title, keys }) => (
-        <div key={title} className="flex flex-col gap-y-3">
+        <div key={title} className="flex flex-col items-start gap-y-3">
           <Label label={t(title)} />
           {keys.map((key) => {
             const { value, isReadonly } = getResourceReadOnlyValues(key, fullRunner);
