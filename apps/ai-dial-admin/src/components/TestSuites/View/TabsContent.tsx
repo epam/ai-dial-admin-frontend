@@ -2,6 +2,7 @@
 
 import { FC, RefObject } from 'react';
 
+import KeepAliveTab from '@/src/components/Common/KeepAliveTab/KeepAliveTab';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Metrics from '@/src/components/TestSuites/Metrics/Metrics';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
@@ -44,6 +45,8 @@ const TabsContent: FC<Props> = ({
   suiteEtag,
   onStartRun,
 }) => {
+  const isTestCasesActive = activeTab === EntityViewTab.TestCases;
+
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
@@ -59,7 +62,7 @@ const TabsContent: FC<Props> = ({
           dataset={dataset}
         />
       )}
-      {activeTab === EntityViewTab.TestCases && (
+      <KeepAliveTab isActive={isTestCasesActive}>
         <TestCases
           testCasesActionsRef={testCasesActionsRef}
           onDirtyChange={onTestCaseDirtyChange}
@@ -69,8 +72,9 @@ const TabsContent: FC<Props> = ({
           dataset={dataset ?? null}
           suiteEtag={suiteEtag}
           onChangeDataset={onChangeDataset}
+          isActive={isTestCasesActive}
         />
-      )}
+      </KeepAliveTab>
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
       {activeTab === EntityViewTab.Trends && <Trends selectedTestSuite={selectedTestSuite} onStartRun={onStartRun} />}
       {activeTab === EntityViewTab.Metrics && (
