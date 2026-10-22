@@ -1,8 +1,10 @@
 'use client';
 
-import { Checkbox, DialFormPopup, PasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Checkbox, PasswordInput, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
 import { FC, useMemo, useState } from 'react';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import {
   ButtonsI18nKey,
   EntityFieldsI18nKey,
@@ -57,17 +59,19 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
   }, [type, loginOrganization, loginUser, apiKeyValue]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(ToolsetI18nKey.LogIn)}
       portalId="LogInPopup"
       open={isModalOpen}
-      onSubmit={handleSubmit}
-      submitLabel={t(ToolsetI18nKey.LogIn)}
-      onCancel={onClose}
       size={PopupSize.Sm}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={disableSubmitButton}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ToolsetI18nKey.LogIn),
+        isSubmitDisabled: disableSubmitButton,
+        onCancel: onClose,
+        onSubmit: handleSubmit,
+      })}
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         {showOrganizationCheckbox && (
@@ -101,7 +105,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,9 +1,10 @@
 'use client';
 
-import { DialFormPopup, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
-import { toRadioItems } from '@/src/utils/radio-items';
+import { Popup, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+
 import { FC, useMemo, useState } from 'react';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { ContainerCreateSource } from '@/src/components/Containers/List/models';
 import { getCreateSourceOptions } from '@/src/components/Containers/List/utils';
 import { CONTAINER_TYPE_LABELS, UNIFIED_CONTAINER_TYPES } from '@/src/constants/deployments/container-types';
@@ -11,6 +12,7 @@ import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 interface Props {
   isModalOpen: boolean;
@@ -44,15 +46,18 @@ const ContainerTypeModal: FC<Props> = ({ isModalOpen, onClose, onContinue }) => 
   };
 
   return (
-    <DialFormPopup
+    <Popup
       portalId="ContainerTypeModal"
       open={isModalOpen}
       header={t(ContainersI18nKey.CreateContainerTitle)}
       onClose={onClose}
-      onCancel={onClose}
-      onSubmit={() => type && source && onContinue(type, source)}
-      submitLabel={t(ButtonsI18nKey.Next)}
-      disableSubmitButton={!type || !source}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Next),
+        isSubmitDisabled: !type || !source,
+        onCancel: onClose,
+        onSubmit: () => type && source && onContinue(type, source),
+      })}
     >
       <div className="flex flex-col px-6 py-4 gap-6">
         <RadioGroup
@@ -74,7 +79,7 @@ const ContainerTypeModal: FC<Props> = ({ isModalOpen, onClose, onContinue }) => 
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

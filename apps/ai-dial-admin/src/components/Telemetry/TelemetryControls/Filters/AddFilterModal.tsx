@@ -1,4 +1,6 @@
-import { DialFormPopup, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Popup, SelectOption } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { createPortal } from 'react-dom';
 import { cloneElement, Dispatch, FC, ReactElement, SetStateAction, useCallback, useState } from 'react';
 
@@ -60,16 +62,18 @@ const AddFilterModal: FC<Props> = ({
       <div onClick={() => setIsOpen(true)}>{cloneElement(children)}</div>
       {isOpen &&
         createPortal(
-          <DialFormPopup
+          <Popup
             onClose={onClose}
             header={t(TelemetryI18nKey.AddFilter)}
             portalId="AddFilter"
-            onSubmit={addFilter}
-            onCancel={onClose}
-            disableSubmitButton={!(type && condition && value.length > 0)}
-            submitLabel={t(ButtonsI18nKey.Apply)}
-            cancelLabel={t(ButtonsI18nKey.Cancel)}
             open={isOpen}
+            mainButtons={getFormPopupButtons({
+              cancelLabel: t(ButtonsI18nKey.Cancel),
+              submitLabel: t(ButtonsI18nKey.Apply),
+              isSubmitDisabled: !(type && condition && value.length > 0),
+              onCancel: onClose,
+              onSubmit: addFilter,
+            })}
           >
             <div className="flex flex-col px-6 py-4 h-full">
               <CreateFilter
@@ -87,7 +91,7 @@ const AddFilterModal: FC<Props> = ({
                 isRouteView={isRouteView}
               />
             </div>
-          </DialFormPopup>,
+          </Popup>,
           document.body,
         )}
     </>

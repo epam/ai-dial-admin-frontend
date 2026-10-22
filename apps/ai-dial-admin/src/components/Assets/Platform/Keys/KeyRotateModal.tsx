@@ -1,6 +1,9 @@
 'use client';
 
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { FC, useCallback, useState } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -54,34 +57,48 @@ const KeyRotateModal: FC<Props> = ({ isOpen, asset, etag, onRotate, onClose }) =
 
   if (step === RotateStep.Confirm) {
     return (
-      <DialFormPopup
+      <Popup
         open={isOpen}
         header={t(KeysI18nKey.RotateKeyTitle)}
         portalId="KeyRotateConfirm"
-        isLoading={isLoading}
         onClose={onCloseAndReset}
-        onCancel={onCloseAndReset}
-        onSubmit={onConfirmRotate}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        submitLabel={t(ButtonsI18nKey.Rotate)}
+        mainButtons={
+          isLoading
+            ? []
+            : getFormPopupButtons({
+                cancelLabel: t(ButtonsI18nKey.Cancel),
+                submitLabel: t(ButtonsI18nKey.Rotate),
+                onCancel: onCloseAndReset,
+                onSubmit: onConfirmRotate,
+              })
+        }
       >
-        <div className="px-6 py-4">
-          <p className="body-2">{t(KeysI18nKey.RotateKeyDescription)}</p>
-        </div>
-      </DialFormPopup>
+        {isLoading ? (
+          <PopupLoader />
+        ) : (
+          <>
+            <div className="px-6 py-4">
+              <p className="body-2">{t(KeysI18nKey.RotateKeyDescription)}</p>
+            </div>
+          </>
+        )}
+      </Popup>
     );
   }
 
   return (
-    <DialFormPopup
+    <Popup
       open={isOpen}
       header={t(KeysI18nKey.RotateKeySuccessTitle)}
       portalId="KeyRotateReveal"
       onClose={onCloseAndReset}
-      onCancel={onCloseAndReset}
-      onSubmit={onCloseAndReset}
-      cancelLabel={t(ButtonsI18nKey.Close)}
-      submitClassName="hidden"
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Close),
+        submitLabel: t(ButtonsI18nKey.Create),
+        submitClassName: 'hidden',
+        onCancel: onCloseAndReset,
+        onSubmit: onCloseAndReset,
+      })}
     >
       <div className="flex flex-col gap-4 px-6 py-4">
         <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
@@ -90,7 +107,7 @@ const KeyRotateModal: FC<Props> = ({ isOpen, asset, etag, onRotate, onClose }) =
           <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={newKeyValue} />
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

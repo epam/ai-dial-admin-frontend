@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialFormPopup, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Popup, OutlinedButton } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -58,21 +60,23 @@ const InterfaceDefaultsButton = ({ fieldId, value, disabled, onChange }: Props) 
   return (
     <>
       <OutlinedButton label={t(ButtonsI18nKey.Defaults)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
-      <DialFormPopup
+      <Popup
         onClose={onCancel}
         header={t(EntityFieldsI18nKey.defaults)}
         portalId={`${fieldId}-defaults-modal`}
         open={isOpen}
-        submitLabel={t(ButtonsI18nKey.Apply)}
-        onSubmit={onApply}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        onCancel={onCancel}
-        disableSubmitButton={!isValidJSON}
+        mainButtons={getFormPopupButtons({
+          cancelLabel: t(ButtonsI18nKey.Cancel),
+          submitLabel: t(ButtonsI18nKey.Apply),
+          isSubmitDisabled: !isValidJSON,
+          onCancel: onCancel,
+          onSubmit: onApply,
+        })}
       >
         <div className="px-6 py-4 h-[400px] max-h-[50vh]">
           <JsonEditorBase value={draft} onChange={setDraft} onValidateJSON={onValidateJSON} />
         </div>
-      </DialFormPopup>
+      </Popup>
     </>
   );
 };

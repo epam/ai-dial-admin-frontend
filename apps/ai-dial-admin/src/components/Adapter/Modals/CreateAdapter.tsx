@@ -1,4 +1,4 @@
-import { OutlinedButton, DialPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Popup, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -79,7 +79,7 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   }, [currentAdapter, showNotification, t, router, onClose]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={getCreateEntityTitle(ApplicationRoute.Adapters, t)}
       portalId="CreateAdapter"
@@ -92,7 +92,7 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
         <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <PrimaryButton label={t(ButtonsI18nKey.Create)} onClick={onCreate} disabled={!isValid} />
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

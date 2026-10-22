@@ -1,12 +1,14 @@
-import { ErrorText, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
+import { ErrorText, Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
+import classNames from 'classnames';
+
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ServerActionResponse } from '@/src/models/server-action';
-import classNames from 'classnames';
-import MultiselectModal from './Modal/MultiselectModal';
 import { GetItemError } from '@/src/models/error';
+import { ServerActionResponse } from '@/src/models/server-action';
+import MultiselectModal from './Modal/MultiselectModal';
 
 interface Props {
   elementId: string;
@@ -51,8 +53,8 @@ const Multiselect: FC<Props> = ({
   return (
     <div className={classNames('flex flex-col gap-y-3', className)}>
       <Label label={label} htmlFor={elementId} required={required} />
-      <DialInputPopup
-        inputClassName={errorText && 'dial-input-error'}
+      <InputPopup
+        invalid={!!errorText}
         open={isModalOpen}
         disabled={disabled}
         selectedValue={selectedItems}
@@ -67,7 +69,7 @@ const Multiselect: FC<Props> = ({
           onClose={onCloseModal}
           {...props}
         />
-      </DialInputPopup>
+      </InputPopup>
       {!disabled && <ErrorText text={errorText} />}
     </div>
   );

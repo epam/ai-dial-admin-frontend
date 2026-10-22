@@ -178,7 +178,7 @@ describe('AppRunnersResource', () => {
       />,
     );
 
-    expect(screen.getByText('http://asdqwe/edited')).toBeDefined();
+    expect(screen.getByDisplayValue('http://asdqwe/edited')).toBeDefined();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).toBeNull();
   });
 

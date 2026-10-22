@@ -69,7 +69,7 @@ vi.mock('@/src/components/Common/StepperModalButtons/StepperModalButtons', () =>
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   PopupSize: { Lg: 'Lg' },
   StepStatus: { VALID: 'VALID' },
-  DialPopup: ({ header, open, children, footer }: any) =>
+  Popup: ({ header, open, children, footer }: any) =>
     open ? (
       <div role="dialog" aria-label={header}>
         <h2>{header}</h2>

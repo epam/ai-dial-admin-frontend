@@ -2,7 +2,9 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { Spinner, DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Spinner, Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
@@ -86,17 +88,20 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
   }, [revisions]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(RollbackI18nKey.Revision)}
       portalId="RollBackRevisionsModal"
       open={isModalOpen}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      onSubmit={() => onApply(revisions, selectedRevision)}
-      onCancel={onClose}
-      disableSubmitButton={!selectedRevision}
-      dividers={true}
+      headerDivider
+      footerDivider
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !selectedRevision,
+        onCancel: onClose,
+        onSubmit: () => onApply(revisions, selectedRevision),
+      })}
     >
       <div className="flex h-full flex-col">
         <div className="flex flex-row gap-4 bg-layer-2 h-[84px] py-3 px-6">
@@ -169,7 +174,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
           )}
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,6 +1,8 @@
 'use client';
 
-import { DialFormPopup, Checkbox, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
@@ -34,17 +36,19 @@ const LogoutConfirmationPopup: FC<Props> = ({
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(ToolsetI18nKey.LogOut)}
       portalId="LogoutConfirmationPopup"
       open={isModalOpen}
-      onSubmit={handleConfirm}
-      submitLabel={t(ToolsetI18nKey.LogOut)}
-      onCancel={onClose}
       size={PopupSize.Sm}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!logoutUser && !logoutOrganization}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ToolsetI18nKey.LogOut),
+        isSubmitDisabled: !logoutUser && !logoutOrganization,
+        onCancel: onClose,
+        onSubmit: handleConfirm,
+      })}
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         <p className="text-sm">{t(ToolsetI18nKey.SelectLogoutLevels)}</p>
@@ -65,7 +69,7 @@ const LogoutConfirmationPopup: FC<Props> = ({
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,8 +1,9 @@
 'use client';
-import { DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
+import { Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -34,7 +35,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
     <div className="flex flex-col gap-y-1">
       <Label label={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
       {!iconUrl ? (
-        <DialInputPopup
+        <InputPopup
           emptyValueText={t(BasicI18nKey.None)}
           open={isModalOpen}
           selectedValue={iconUrl}
@@ -48,7 +49,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
             onClose={onCloseModal}
             onChange={(url) => onChange?.(url)}
           />
-        </DialInputPopup>
+        </InputPopup>
       ) : (
         <FilledIcon fileUrl={iconUrl} onChange={(url) => onChange?.(url)} disabled={isDisabled} />
       )}

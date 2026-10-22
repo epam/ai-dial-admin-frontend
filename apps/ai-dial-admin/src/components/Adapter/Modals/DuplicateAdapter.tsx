@@ -1,5 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -49,16 +51,18 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   );
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(getCloneTitle(ApplicationRoute.Adapters, t))}
       portalId="DuplicateAdapter"
       open={isModalOpen}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
-      onSubmit={() => onDuplicate(entity)}
-      onCancel={onClose}
-      disableSubmitButton={!isValid}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: () => onDuplicate(entity),
+      })}
     >
       <div className="flex flex-col gap-y-8 px-6 py-4">
         <IdControl entity={entity} onChangeEntity={setEntity} names={names} />
@@ -75,7 +79,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
           isFullWidth
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

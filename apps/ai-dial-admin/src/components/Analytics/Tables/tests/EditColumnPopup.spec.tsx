@@ -238,7 +238,7 @@ describe('EditColumnPopup', () => {
       for (const value of ['pending', 'running', 'failed']) {
         expect(screen.getAllByText(value).length).toBeGreaterThan(0);
       }
-      expect(screen.queryByRole('button', { name: 'open-popup' })).toBeNull();
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).toBeNull();
     });
 
     // Presenting the restriction is the point — without it the closed domain is invisible, and an operator

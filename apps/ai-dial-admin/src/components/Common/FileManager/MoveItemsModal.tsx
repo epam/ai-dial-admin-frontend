@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ButtonAppearance, DialPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, Popup, PrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -20,12 +20,10 @@ const MoveItemsModal: FC<Props> = ({ isModalOpen, totalItems = 0, movedItems = 0
   const t = useI18n();
 
   return (
-    <DialPopup
+    <Popup
       open={isModalOpen}
       className="w-[280px]"
-      header={undefined}
-      footer={undefined}
-      dividers={false}
+      ariaLabel={t(FileManagerI18nKey.MovingItems)}
       headerClassName={'hidden'}
       hideClose
     >
@@ -50,7 +48,7 @@ const MoveItemsModal: FC<Props> = ({ isModalOpen, totalItems = 0, movedItems = 0
           onClick={() => onCancel()}
         />
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

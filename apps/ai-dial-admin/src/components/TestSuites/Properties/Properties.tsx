@@ -2,12 +2,13 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialInputPopup, Label, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Label, OutlinedButton, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
 import { useModelDeploymentRoute } from '@/src/components/Runs/Summary/use-model-deployment-route';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
@@ -21,8 +22,8 @@ import {
   resolveMcpDeploymentNavigationTarget,
   resolveRouteNavigationTarget,
 } from '@/src/utils/deployment-navigation';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   isModal?: boolean;
@@ -108,7 +109,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
             <div className="flex gap-2">
               <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
                 <Label label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
-                <DialInputPopup
+                <InputPopup
                   open={isAppModalOpen}
                   onOpen={() => setIsAppModalOpen(true)}
                   selectedValue={selectedApplicationValue}
@@ -120,7 +121,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
                     onClose={() => setIsAppModalOpen(false)}
                     onCreate={onUpdate as (suite: TestSuite) => void}
                   />
-                </DialInputPopup>
+                </InputPopup>
               </div>
               {isResolvingLink ? (
                 <div className="self-end flex size-[36px] items-center justify-center shrink-0">

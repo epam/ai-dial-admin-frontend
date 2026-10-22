@@ -39,7 +39,7 @@ describe('Model asset :: no admin-backend dependency', () => {
    */
   const openTopics = async () => {
     const user = userEvent.setup();
-    await user.click(screen.getAllByRole('button')[0]);
+    await user.click(screen.getByRole('textbox'));
   };
 
   test('Should request the topic catalogue on an entity surface (control for the two below)', async () => {
