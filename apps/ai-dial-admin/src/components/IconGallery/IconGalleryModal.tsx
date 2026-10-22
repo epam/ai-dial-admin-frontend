@@ -1,4 +1,6 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useState } from 'react';
 
 import IconGallery from '@/src/components/IconGallery/IconGallery';
@@ -22,20 +24,22 @@ const IconGalleryModal: FC<Props> = ({ isModalOpen, selectedValue, onClose, onCh
   }, [onChange, onClose, selectedIcon]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(EntityFieldsI18nKey.iconUrl)}
       portalId="IconSelector"
       open={isModalOpen}
-      onSubmit={onApply}
-      onCancel={onClose}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        onCancel: onClose,
+        onSubmit: onApply,
+      })}
     >
       <div className="flex flex-col h-full max-h-[568px] p-6 overflow-y-auto">
         <IconGallery selectedIcon={selectedIcon} setSelectedIcon={setSelectedIcon} />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

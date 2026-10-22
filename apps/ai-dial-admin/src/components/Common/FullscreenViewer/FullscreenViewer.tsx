@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { Editor } from '@monaco-editor/react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -40,7 +40,7 @@ const FullscreenViewer: FC<Props> = ({ isOpen, title, content, contentType, onCl
   }, [content, contentType]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={title}
       footer={
@@ -80,7 +80,7 @@ const FullscreenViewer: FC<Props> = ({ isOpen, title, content, contentType, onCl
           />
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

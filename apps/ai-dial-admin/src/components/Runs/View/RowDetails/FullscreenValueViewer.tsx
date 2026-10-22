@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { formatFieldValue } from '@/src/components/Runs/Details/BottomDrawer/utils';
 
@@ -28,7 +28,7 @@ const FullscreenValueViewer: FC<Props> = ({ isOpen, fieldLabel, value, onClose }
   }, [value]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={fieldLabel}
       portalId="FullscreenValueViewer"
@@ -39,7 +39,7 @@ const FullscreenValueViewer: FC<Props> = ({ isOpen, fieldLabel, value, onClose }
       <div className="flex flex-col flex-1 min-h-0 overflow-auto px-6 py-4">
         <pre className="text-primary dial-small-text whitespace-pre-wrap break-words font-mono">{displayText}</pre>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

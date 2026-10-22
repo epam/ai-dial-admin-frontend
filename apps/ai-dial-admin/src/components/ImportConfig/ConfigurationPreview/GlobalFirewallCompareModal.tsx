@@ -1,7 +1,7 @@
 'use client';
 import { FC, useMemo } from 'react';
 
-import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -51,14 +51,15 @@ const GlobalFirewallCompareModal: FC<Props> = ({ action, prevDomains, nextDomain
   };
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(ImportI18nKey.Changes)}
       portalId="GlobalFirewallCompare"
       open={isOpen}
       size={PopupSize.Lg}
       className="h-[800px]"
-      dividers={true}
+      headerDivider
+      footerDivider
     >
       <div className="flex flex-col h-full px-6 py-4">
         <div className="flex flex-row gap-x-10">
@@ -86,7 +87,7 @@ const GlobalFirewallCompareModal: FC<Props> = ({ action, prevDomains, nextDomain
           </div>
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

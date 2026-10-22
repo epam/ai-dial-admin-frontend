@@ -1,7 +1,9 @@
 'use client';
 import { FC, useMemo, useState } from 'react';
 
-import { DialFormPopup, NoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, NoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
@@ -59,18 +61,20 @@ const AddEntitiesModal: FC<Props> = ({
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={modalTitle}
       portalId="AddExportEntities"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[800px]"
-      onSubmit={() => onApply(selectedEntities, selectedDependencies)}
-      onCancel={onClose}
-      disableSubmitButton={!selectedEntities.length}
-      submitLabel={t(ButtonsI18nKey.Add)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Add),
+        isSubmitDisabled: !selectedEntities.length,
+        onCancel: onClose,
+        onSubmit: () => onApply(selectedEntities, selectedDependencies),
+      })}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
@@ -90,7 +94,7 @@ const AddEntitiesModal: FC<Props> = ({
           </div>
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

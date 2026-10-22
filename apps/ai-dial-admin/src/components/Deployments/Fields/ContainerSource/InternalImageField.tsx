@@ -1,8 +1,10 @@
-import { DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
+import { Label } from '@epam/ai-dial-ui-kit';
+
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 
 import { updateContainer } from '@/src/app/actions/deployments';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 import ContainerChangeImage from '@/src/components/Deployments/Modals/ContainerChangeImage';
 import { ContainersI18nKey } from '@/src/constants/i18n';
@@ -61,7 +63,7 @@ const InternalImageField: FC<Props> = ({ container, image, route, disabled }) =>
   return (
     <div className={`${CONTROL_WITH_BUTTON_WIDTH} flex flex-col gap-y-1`}>
       <Label label={label} htmlFor="internalImage" />
-      <DialInputPopup
+      <InputPopup
         open={isModalOpen}
         onOpen={onOpenModal}
         selectedValue={selectedValue}
@@ -84,7 +86,7 @@ const InternalImageField: FC<Props> = ({ container, image, route, disabled }) =>
             containerStatus={container.status}
           />
         )}
-      </DialInputPopup>
+      </InputPopup>
     </div>
   );
 };

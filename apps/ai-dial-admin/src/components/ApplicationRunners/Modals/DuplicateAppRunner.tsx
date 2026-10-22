@@ -1,4 +1,6 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -48,16 +50,18 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
   }, []);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(getCloneTitle(ApplicationRoute.ApplicationRunners, t))}
       portalId="DuplicateScheme"
       open={isModalOpen}
-      onSubmit={() => onDuplicate(clonedEntity)}
-      onCancel={onClose}
-      disableSubmitButton={!isValid}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: () => onDuplicate(clonedEntity),
+      })}
     >
       <div className="flex flex-col px-6 py-4 gap-y-8">
         <IdControl
@@ -72,7 +76,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
           required
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,8 +1,12 @@
-import { NotificationVariant, Notification, NotificationType, DialFormPopup, Spinner } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, NotificationVariant, Popup, Spinner } from '@epam/ai-dial-ui-kit';
+
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -11,15 +15,12 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Image, ImageGroup } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { ApplicationRoute } from '@/src/types/routes';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-
-import GridView from '@/src/components/Grid/GridView/GridView';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 
 interface Props {
   isModalOpen: boolean;
@@ -126,18 +127,22 @@ const ContainerChangeImage: FC<Props> = ({
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={modalTitle}
       portalId="ContainerChangeImageModal"
       open={isModalOpen}
       className="lg:max-w-[55%] md:max-w-[75%] h-[600px]"
-      disableSubmitButton={!isValid}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      onSubmit={() => {
-        onApply(id);
-        onClose();
-      }}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: () => {
+          onApply(id);
+          onClose();
+        },
+      })}
     >
       <div className="flex flex-col py-4 px-6 min-h-0 h-full">
         {loading && <Spinner size={24} fullWidth />}
@@ -161,7 +166,7 @@ const ContainerChangeImage: FC<Props> = ({
           </div>
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,4 +1,6 @@
-import { DialFormPopup, Spinner } from '@epam/ai-dial-ui-kit';
+import { Popup, Spinner } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -95,16 +97,18 @@ const MultiselectModal: FC<Props> = ({
   }, [getItems]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={heading}
       portalId="itemsMultiSelect"
       open={isModalOpen}
-      onSubmit={onApply}
-      onCancel={onClose}
-      submitLabel={applyButtonText || t(ButtonsI18nKey.Apply)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={isModalInvalid || !isListValid || (draggable && isEqual(newItems, selectedItems))}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: applyButtonText || t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: isModalInvalid || !isListValid || (draggable && isEqual(newItems, selectedItems)),
+        onCancel: onClose,
+        onSubmit: onApply,
+      })}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (
@@ -122,7 +126,7 @@ const MultiselectModal: FC<Props> = ({
           </DndProvider>
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -33,12 +33,6 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
         ))}
       </select>
     ),
-    DialInputPopup: ({ children, selectedValue }: any) => (
-      <div data-testid="dial-input-popup">
-        <span>{selectedValue}</span>
-        {children}
-      </div>
-    ),
     Label: ({ label }: any) => <label>{label}</label>,
     OutlinedButton: ({ label, onClick }: any) => (
       <button type="button" onClick={onClick}>
@@ -47,6 +41,15 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
     ),
   };
 });
+
+vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
+  default: ({ children, selectedValue }: any) => (
+    <div data-testid="dial-input-popup">
+      <span>{selectedValue}</span>
+      {children}
+    </div>
+  ),
+}));
 
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({
   useIsMobileScreen: () => false,

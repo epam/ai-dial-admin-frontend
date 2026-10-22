@@ -1,4 +1,6 @@
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import HfRegistryGrid from '@/src/components/Deployments/HFRegistryGrid/HFRegistryGrid';
@@ -37,19 +39,23 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
   }, [descriptionModelData, isDescriptionShown]);
 
   return (
-    <DialFormPopup
+    <Popup
       portalId="HFRegistryModal"
       open={isModalOpen}
       header={t(ContainersI18nKey.SelectModelFromRegistry)}
-      submitLabel={t(ButtonsI18nKey.Confirm)}
       onClose={onClose}
-      onSubmit={() => {
-        onApply(selectedModelName);
-        onClose();
-      }}
-      disableSubmitButton={!selectedModelName}
       className="h-[800px]"
       size={PopupSize.Lg}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Confirm),
+        isSubmitDisabled: !selectedModelName,
+        onCancel: onClose,
+        onSubmit: () => {
+          onApply(selectedModelName);
+          onClose();
+        },
+      })}
     >
       <div className="flex h-full bg-layer-2 py-4 px-6 gap-4">
         <HfRegistryGrid
@@ -60,7 +66,7 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
           infoPanel={infoPanel}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

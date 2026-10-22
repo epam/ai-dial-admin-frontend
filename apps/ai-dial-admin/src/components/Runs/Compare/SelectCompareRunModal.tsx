@@ -2,7 +2,9 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { COMPARE_RUN_PICKER_COLUMN } from '@/src/constants/grid-columns/grid-columns';
@@ -36,18 +38,20 @@ const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, is
   };
 
   return (
-    <DialFormPopup
+    <Popup
       open={isModalOpen}
       onClose={onClose}
       header={t(RunsI18nKey.RunCompareSelectRun)}
       portalId="SelectCompareRunModal"
       size={PopupSize.Lg}
       className="h-[750px]"
-      submitLabel={t(ButtonsI18nKey.Confirm)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onSubmit={onSubmit}
-      onCancel={onClose}
-      disableSubmitButton={!selectedRunIdState}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Confirm),
+        isSubmitDisabled: !selectedRunIdState,
+        onCancel: onClose,
+        onSubmit: onSubmit,
+      })}
     >
       <div className="flex flex-col px-6 py-4 h-full min-h-0">
         <RadioSelectGrid
@@ -60,7 +64,7 @@ const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, is
           isLoading={isLoading}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

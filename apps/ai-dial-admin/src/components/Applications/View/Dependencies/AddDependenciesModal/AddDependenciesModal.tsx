@@ -1,7 +1,9 @@
 'use client';
 import { FC, useState } from 'react';
 
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { GridOptions } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -42,18 +44,20 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
       portalId="AddDependencyEntities"
       open={isModalOpen}
       className="h-[800px]"
       size={PopupSize.Lg}
-      submitLabel={t(ButtonsI18nKey.Add)}
-      onSubmit={() => onApply(selectedEntityName as string)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onCancel={onClose}
-      disableSubmitButton={!selectedEntityName}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Add),
+        isSubmitDisabled: !selectedEntityName,
+        onCancel: onClose,
+        onSubmit: () => onApply(selectedEntityName as string),
+      })}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         <GridView
@@ -65,7 +69,7 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
           }}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

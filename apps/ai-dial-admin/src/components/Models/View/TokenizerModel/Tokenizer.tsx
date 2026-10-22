@@ -1,8 +1,9 @@
 'use client';
 
+import { Switch } from '@epam/ai-dial-ui-kit';
 import { useCallback, useState } from 'react';
-import { DialInputPopup, Switch } from '@epam/ai-dial-ui-kit';
 
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -58,7 +59,7 @@ const TokenizerModelSwitch = <T extends { tokenizerModel?: string }>({ model, on
       />
       {model.tokenizerModel != null && (
         <div className="pl-[42px] w-[300px]">
-          <DialInputPopup
+          <InputPopup
             open={isModalOpen}
             selectedValue={model.tokenizerModel}
             onOpen={onOpenModal}
@@ -71,7 +72,7 @@ const TokenizerModelSwitch = <T extends { tokenizerModel?: string }>({ model, on
               isModalOpen={isModalOpen}
               onClose={onCloseModal}
             />
-          </DialInputPopup>
+          </InputPopup>
         </div>
       )}
     </div>

@@ -1,6 +1,9 @@
 'use client';
 
-import { DialFormPopup, DialInput } from '@epam/ai-dial-ui-kit';
+import { Popup, DialInput } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { SelectionChangedEvent } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -159,16 +162,18 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
 
   if (step === CreateStep.Details) {
     return (
-      <DialFormPopup
+      <Popup
         open={isOpen}
         header={getCreateEntityTitle(ApplicationRoute.PlatformKeys, t)}
         portalId="CreateKeyDetails"
         onClose={onCloseAndReset}
-        onCancel={onCloseAndReset}
-        onSubmit={onSubmit}
-        disableSubmitButton={!isDetailsValid}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        submitLabel={t(ButtonsI18nKey.Next)}
+        mainButtons={getFormPopupButtons({
+          cancelLabel: t(ButtonsI18nKey.Cancel),
+          submitLabel: t(ButtonsI18nKey.Next),
+          isSubmitDisabled: !isDetailsValid,
+          onCancel: onCloseAndReset,
+          onSubmit: onSubmit,
+        })}
       >
         <div className="flex flex-col px-6 py-4 gap-y-8">
           <IdControl entity={asset} names={names} onChangeEntity={onChangeName} />
@@ -181,51 +186,65 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
             containerClassName="w-full"
           />
         </div>
-      </DialFormPopup>
+      </Popup>
     );
   }
 
   if (step === CreateStep.Roles) {
     return (
-      <DialFormPopup
+      <Popup
         open={isOpen}
         header={t(RolesI18nKey.AddRoles)}
         portalId="CreateKeyRoles"
-        isLoading={isLoading}
         onClose={onCloseAndReset}
-        onCancel={onBack}
-        onSubmit={onSubmit}
-        disableSubmitButton={!isRolesValid}
-        cancelLabel={t(ButtonsI18nKey.Back)}
-        submitLabel={t(ButtonsI18nKey.Create)}
         className="max-h-[540px]"
+        mainButtons={
+          isLoading
+            ? []
+            : getFormPopupButtons({
+                cancelLabel: t(ButtonsI18nKey.Back),
+                submitLabel: t(ButtonsI18nKey.Create),
+                isSubmitDisabled: !isRolesValid,
+                onCancel: onBack,
+                onSubmit: onSubmit,
+              })
+        }
       >
-        <div className="flex flex-col px-6 py-4 h-full min-h-0">
-          <p className="text-secondary dial-small-paragraph-text mb-4">{t(KeysI18nKey.BearerRolesDescription)}</p>
-          <GridView
-            emptyDataProps={{ title: t(KeysI18nKey.NoRolesAvailable) }}
-            columnDefs={rolesColumnDefs}
-            rowData={roles}
-            additionalGridOptions={{
-              ...MULTI_ROW_SELECTION,
-              onSelectionChanged: onRolesSelectionChanged,
-            }}
-          />
-        </div>
-      </DialFormPopup>
+        {isLoading ? (
+          <PopupLoader />
+        ) : (
+          <>
+            <div className="flex flex-col px-6 py-4 h-full min-h-0">
+              <p className="text-secondary dial-small-paragraph-text mb-4">{t(KeysI18nKey.BearerRolesDescription)}</p>
+              <GridView
+                emptyDataProps={{ title: t(KeysI18nKey.NoRolesAvailable) }}
+                columnDefs={rolesColumnDefs}
+                rowData={roles}
+                additionalGridOptions={{
+                  ...MULTI_ROW_SELECTION,
+                  onSelectionChanged: onRolesSelectionChanged,
+                }}
+              />
+            </div>
+          </>
+        )}
+      </Popup>
     );
   }
 
   return (
-    <DialFormPopup
+    <Popup
       open={isOpen}
       header={t(KeysI18nKey.KeyValueRevealTitle)}
       portalId="CreateKeyReveal"
       onClose={onCloseAndReset}
-      onCancel={onCloseAndReset}
-      onSubmit={onCloseAndReset}
-      cancelLabel={t(ButtonsI18nKey.Close)}
-      submitClassName="hidden"
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Close),
+        submitLabel: t(ButtonsI18nKey.Create),
+        submitClassName: 'hidden',
+        onCancel: onCloseAndReset,
+        onSubmit: onCloseAndReset,
+      })}
     >
       <div className="flex flex-col gap-4 px-6 py-4">
         <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
@@ -234,7 +253,7 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
           <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={createdKeyValue} />
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

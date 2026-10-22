@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { Spinner, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Spinner, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getActivityById, getRevisionDetails } from '@/src/app/[lang]/activity-audit/actions';
 import AuditView from '@/src/components/ActivityAudit/View/AuditView';
@@ -89,14 +89,15 @@ const ActivityDetails: FC<Props> = ({
   }, [auditViewId, showNotification]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={heading || t(ActivityAuditI18nKey.ActivityDetails)}
       portalId="ActivityDetailsModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[800px]"
-      dividers={true}
+      headerDivider
+      footerDivider
     >
       <div className="h-full px-6 py-4">
         {loading ? (
@@ -112,7 +113,7 @@ const ActivityDetails: FC<Props> = ({
           />
         )}
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

@@ -1,6 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -92,16 +94,18 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   }, [clonedEntity, onDuplicate]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(getCloneTitle(ApplicationRoute.Toolsets, t))}
       portalId="DuplicateToolset"
       open={isModalOpen}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
-      onSubmit={onDuplicateClick}
-      onCancel={onClose}
-      disableSubmitButton={!isValid}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: onDuplicateClick,
+      })}
     >
       <div className="flex flex-col px-6 py-4">
         <div className="flex flex-col gap-y-8">
@@ -124,7 +128,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
           )}
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

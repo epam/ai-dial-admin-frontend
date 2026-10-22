@@ -2,7 +2,9 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { useRouter } from 'next/navigation';
 
 import { updateSavedQuery } from '@/src/app/[lang]/queries/actions';
@@ -70,21 +72,24 @@ const EditQuery: FC<Props> = ({ query, onClose, onSaved }) => {
   }, [form, query, showNotification, t, onClose, onSaved, router]);
 
   return (
-    <DialFormPopup
+    <Popup
       open
       header={t(QueriesI18nKey.EditQuery)}
       portalId="EditQueryModal"
       size={PopupSize.Md}
-      submitLabel={t(ButtonsI18nKey.Save)}
-      disableSubmitButton={!isValid || !form.name.trim() || isSaving}
-      onSubmit={onSubmit}
-      onCancel={onClose}
       onClose={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Save),
+        isSubmitDisabled: !isValid || !form.name.trim() || isSaving,
+        onCancel: onClose,
+        onSubmit: onSubmit,
+      })}
     >
       <div className="flex flex-col gap-y-6 px-6 py-4">
         <QueryProperties form={form} onChange={(patch) => setForm((prev) => ({ ...prev, ...patch }))} isModal />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

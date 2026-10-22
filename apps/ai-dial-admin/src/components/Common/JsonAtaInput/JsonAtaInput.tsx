@@ -1,8 +1,11 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialInputPopup, Label, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Label, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
 import { JSONSchema7 } from 'json-schema';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import JsonataEditor from '@/src/components/Common/JsonataEditor/JsonataEditor';
 import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -81,24 +84,26 @@ const JsonAtaInput: FC<Props> = ({
   return (
     <div className="flex flex-col gap-y-1">
       {label && <Label label={label} htmlFor={elementId} />}
-      <DialInputPopup
+      <InputPopup
         disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}
         selectedValue={value}
         onOpen={onOpenModal}
         inputClassName={inputClassName}
       >
-        <DialFormPopup
+        <Popup
           onClose={onCancelModal}
           header={header}
           portalId="jsonAtaInputModal"
           open={isModalOpen}
           size={PopupSize.Lg}
-          onSubmit={onApply}
-          submitLabel={t(ButtonsI18nKey.Apply)}
-          cancelLabel={t(ButtonsI18nKey.Cancel)}
-          onCancel={onCancelModal}
-          disableSubmitButton={!expression}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(ButtonsI18nKey.Apply),
+            isSubmitDisabled: !expression,
+            onCancel: onCancelModal,
+            onSubmit: onApply,
+          })}
         >
           <div className="px-6 py-4 h-[512px] flex flex-row gap-x-3">
             <ReferenceFieldsPanel responseSchema={responseSchema} onSelect={onPickFromSchema} />
@@ -114,8 +119,8 @@ const JsonAtaInput: FC<Props> = ({
               </div>
             </div>
           </div>
-        </DialFormPopup>
-      </DialInputPopup>
+        </Popup>
+      </InputPopup>
     </div>
   );
 };

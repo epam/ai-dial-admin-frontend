@@ -1,4 +1,6 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -243,16 +245,18 @@ const CreateEntity = <T extends CreateEntityBase>({
   }, []);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={getCreateEntityTitle(route, t)}
       portalId="CreateEntity"
       open={isModalOpen}
-      onSubmit={() => onCreate(currentEntity)}
-      onCancel={onClose}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={(isUniqueNameError != null && isUniqueNameError) || !isValid}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: (isUniqueNameError != null && isUniqueNameError) || !isValid,
+        onCancel: onClose,
+        onSubmit: () => onCreate(currentEntity),
+      })}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         <Properties
@@ -269,7 +273,7 @@ const CreateEntity = <T extends CreateEntityBase>({
           hideVersionField={isPlatformDualBucketCreate}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

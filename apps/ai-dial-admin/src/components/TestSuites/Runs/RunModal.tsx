@@ -1,5 +1,5 @@
 import {
-  DialFormPopup,
+  Popup,
   DialLabelledText,
   Spinner,
   Notification,
@@ -8,6 +8,8 @@ import {
   NotificationVariant,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getDataset, getTestCases } from '@/src/app/[lang]/datasets/actions';
@@ -73,17 +75,19 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   }, [onRun, value]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(TestSuitesI18nKey.RunEvaluation)}
       portalId="Run"
       open={isModalOpen}
       size={PopupSize.Sm}
-      submitLabel={t(ButtonsI18nKey.Run)}
-      onSubmit={onSubmit}
-      disableSubmitButton={isLoading || isSubmitting || !value || +value <= 0 || validRuns === 0}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Run),
+        isSubmitDisabled: isLoading || isSubmitting || !value || +value <= 0 || validRuns === 0,
+        onCancel: onClose,
+        onSubmit: onSubmit,
+      })}
     >
       <div className="flex flex-col gap-6 p-6 h-[300px]">
         {isLoading ? (
@@ -106,7 +110,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
           </>
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,4 +1,6 @@
-import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -39,20 +41,22 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
   );
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={getCreateEntityTitle(ApplicationRoute.Routes, t)}
-      submitLabel={t(ButtonsI18nKey.Create)}
       size={PopupSize.Sm}
-      onSubmit={() => {
-        onCreate(name);
-        setName('');
-      }}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onCancel={onClose}
-      disableSubmitButton={!name || !!nameError}
       portalId="CreateRoute"
       open={isModalOpen}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !name || !!nameError,
+        onCancel: onClose,
+        onSubmit: () => {
+          onCreate(name);
+          setName('');
+        },
+      })}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         <DialInput
@@ -65,7 +69,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
           error={nameError?.text}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

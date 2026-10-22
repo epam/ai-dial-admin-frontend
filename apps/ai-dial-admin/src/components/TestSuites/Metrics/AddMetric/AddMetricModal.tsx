@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Spinner,
   OutlinedButton,
-  DialPopup,
+  Popup,
   PrimaryButton,
   DialSteps,
   PopupSize,
@@ -187,14 +187,15 @@ const AddMetricModal: FC<Props> = ({
   );
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={isEditMode ? t(TestSuitesI18nKey.EditMetric) : t(TestSuitesI18nKey.AddMetric)}
       portalId="AddMetricModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]"
-      dividers
+      headerDivider
+      footerDivider
       footer={
         isEditMode ? (
           <div className="flex flex-row items-center gap-2 px-6 py-4 justify-end">
@@ -249,7 +250,7 @@ const AddMetricModal: FC<Props> = ({
           )}
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 export default AddMetricModal;

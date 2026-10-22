@@ -1,7 +1,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { CollapsibleSidebar, DialFormPopup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, Popup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { CreateAssetActionMap, PlatformCreateAssetActionMap } from '@/src/components/Assets/BaseAssetList/utils';
@@ -177,18 +179,20 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
   }, [isPlatformDualBucketCreate]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={getCreateEntityTitle(view, t)}
       portalId="CreateAsset"
       size={PopupSize.Lg}
       className="h-[750px]"
       open={isModalOpen}
-      onSubmit={() => onSubmit()}
-      onCancel={onClose}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isValid}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: () => onSubmit(),
+      })}
     >
       <div className="flex flex-row px-6 py-4 h-full">
         <div className="flex flex-row gap-4 flex-1 min-h-0">
@@ -215,7 +219,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
           </div>
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -2,7 +2,9 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialFormPopup, Label, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
+import { Popup, Label, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import {
   modelResourceFeatureLabelMap,
@@ -63,15 +65,17 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
   return (
     <>
       <OutlinedButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
-      <DialFormPopup
+      <Popup
         onClose={onCancel}
         header={t(ButtonsI18nKey.Features)}
         portalId={`${fieldId}-features-modal`}
         open={isOpen}
-        submitLabel={t(ButtonsI18nKey.Apply)}
-        onSubmit={onApply}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        onCancel={onCancel}
+        mainButtons={getFormPopupButtons({
+          cancelLabel: t(ButtonsI18nKey.Cancel),
+          submitLabel: t(ButtonsI18nKey.Apply),
+          onCancel: onCancel,
+          onSubmit: onApply,
+        })}
       >
         <div className="px-6 py-4 flex flex-col gap-y-8 max-h-[60vh] overflow-auto">
           {textFeatures.map((key) => (
@@ -103,7 +107,7 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
             </div>
           ))}
         </div>
-      </DialFormPopup>
+      </Popup>
     </>
   );
 };
