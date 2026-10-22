@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
 import FileManager from '../FileManager';
+import { SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX } from '../constants';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -90,6 +91,40 @@ describe('FileManager', () => {
 
     const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onMoveToFiles).toBeInstanceOf(Function);
+  });
+});
+
+describe('FileManager — hidden files toggle', () => {
+  const lastProps = () => dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+
+  beforeEach(() => {
+    dialFileManagerPropsSpy.mockClear();
+    localStorage.clear();
+  });
+
+  test('controls hidden files visibility and enables the popup switcher for the Files view', () => {
+    renderFileManager(ApplicationRoute.Files);
+
+    expect(lastProps().showHiddenFiles).toBe(false);
+    expect(lastProps().onShowHiddenFilesChange).toBeInstanceOf(Function);
+    expect(lastProps().showHiddenFileSwitcherInDestinationPopup).toBe(true);
+    expect((lastProps().toolbarOptions as { showHiddenFilesToggle: boolean }).showHiddenFilesToggle).toBe(true);
+  });
+
+  test('leaves hidden files uncontrolled for other views', () => {
+    renderFileManager(ApplicationRoute.Prompts);
+
+    expect(lastProps().showHiddenFiles).toBeUndefined();
+    expect(lastProps().onShowHiddenFilesChange).toBeUndefined();
+    expect((lastProps().toolbarOptions as { showHiddenFilesToggle: boolean }).showHiddenFilesToggle).toBe(false);
+  });
+
+  test('restores the stored visibility for the Files view', () => {
+    localStorage.setItem(`${SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX}:${ApplicationRoute.Files}`, 'true');
+
+    renderFileManager(ApplicationRoute.Files);
+
+    expect(lastProps().showHiddenFiles).toBe(true);
   });
 });
 

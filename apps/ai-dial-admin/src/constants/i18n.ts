@@ -2447,6 +2447,8 @@ export enum FileManagerI18nKey {
   CreateFolderValidateNameLength = 'FileManager.CreateFolderValidateNameLength',
   MoveItem = 'FileManager.MoveItem',
   MoveItems = 'FileManager.MoveItems',
+  ShowHiddenFiles = 'FileManager.ShowHiddenFiles',
+  HideHiddenFiles = 'FileManager.HideHiddenFiles',
   EmptyMoveFolderTitle = 'FileManager.EmptyMoveFolderTitle',
   EmptyMoveFolderDescription = 'FileManager.EmptyMoveFolderDescription',
   PromptEmptyStateTitle = 'FileManager.PromptEmptyStateTitle',
