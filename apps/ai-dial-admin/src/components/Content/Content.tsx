@@ -94,7 +94,7 @@ const Content: FC<Props> = ({ children, isEnableAuth }) => {
   }, [checkCoreVersion]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 min-w-0 relative overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 min-w-0 relative overflow-clip">
       <Blackout />
       <UserMobile isEnableAuth={isEnableAuth} />
       <div className="flex flex-row flex-1 min-h-0 relative">
