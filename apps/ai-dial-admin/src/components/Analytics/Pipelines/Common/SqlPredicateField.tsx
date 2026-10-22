@@ -19,6 +19,8 @@ interface Props {
   placeholder?: string;
   /** A single-line input, with the label carried as an accessible name rather than drawn. */
   isCompact?: boolean;
+  /** The label is carried as an accessible name rather than drawn, for a caller that already titles the field. */
+  isLabelHidden?: boolean;
   isDisabled?: boolean;
   onChange: (value: string) => void;
 }
@@ -40,6 +42,7 @@ const SqlPredicateField: FC<Props> = ({
   description,
   placeholder,
   isCompact,
+  isLabelHidden,
   isDisabled,
   onChange,
 }) => {
@@ -76,7 +79,8 @@ const SqlPredicateField: FC<Props> = ({
   return (
     <Textarea
       id={id}
-      labelProps={{ label }}
+      labelProps={isLabelHidden ? undefined : { label }}
+      aria-label={isLabelHidden ? label : undefined}
       value={value ?? ''}
       placeholder={placeholder}
       caption={caption}

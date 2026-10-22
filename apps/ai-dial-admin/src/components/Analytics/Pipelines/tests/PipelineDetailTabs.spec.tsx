@@ -88,10 +88,11 @@ const auditTab = () => screen.getByRole('tab', { name: TabsI18nKey.Audit });
 const propertiesTab = () => screen.getByRole('tab', { name: TabsI18nKey.Properties });
 const facts = () => screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.ReadOnlyFacts });
 const jsonToggle = () => screen.getByRole('switch');
-// The read filter is the plainest editable member: an unvalidated textarea bound straight to the
-// draft, so what it presents after a tab switch is what the draft still holds.
-const filterField = () => screen.getByLabelText(AnalyticsPipelinesI18nKey.Filter, { exact: false });
+// The read filter's SQL view is the plainest editable member: an unvalidated textarea bound straight to
+// the draft, so what it presents after a tab switch is what the draft still holds.
+const filterField = () => screen.getByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter });
 const editFilter = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
+  await user.click(await screen.findByRole('radio', { name: AnalyticsPipelinesI18nKey.FilterViewSql }));
   await user.clear(filterField());
   await user.type(filterField(), value);
 };

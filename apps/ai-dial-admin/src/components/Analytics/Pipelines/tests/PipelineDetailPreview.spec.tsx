@@ -80,8 +80,9 @@ const renderView = (override?: Partial<Pipeline>) =>
 const tabNames = () => screen.getAllByRole('tab').map((tab) => tab.textContent);
 const previewTab = () => screen.getByRole('tab', { name: TabsI18nKey.Preview });
 const propertiesTab = () => screen.getByRole('tab', { name: TabsI18nKey.Properties });
-const filterField = () => screen.getByLabelText(AnalyticsPipelinesI18nKey.Filter, { exact: false });
+const filterField = () => screen.getByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter });
 const editFilter = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
+  await user.click(await screen.findByRole('radio', { name: AnalyticsPipelinesI18nKey.FilterViewSql }));
   await user.clear(filterField());
   await user.type(filterField(), value);
 };
