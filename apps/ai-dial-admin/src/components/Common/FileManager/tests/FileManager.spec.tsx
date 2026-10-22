@@ -1,7 +1,9 @@
-import { act, render } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ColDef } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
 import FileManager from '../FileManager';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -198,5 +200,61 @@ describe('FileManager — grid state persistence', () => {
 
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').filters).toEqual({ name: { filter: 'readme' } });
     expect(sessionStorage.length).toBe(0);
+  });
+});
+
+describe('FileManager — reset filters', () => {
+  const lastProps = () => dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+
+  const makeApi = (filters: Record<string, unknown>) => {
+    const listeners: Record<string, () => void> = {};
+    return {
+      getFilterModel: vi.fn(() => filters),
+      setFilterModel: vi.fn(),
+      applyColumnState: vi.fn(),
+      getColumnState: vi.fn(() => []),
+      addEventListener: vi.fn((event: string, listener: () => void) => {
+        listeners[event] = listener;
+      }),
+      removeEventListener: vi.fn(),
+      listeners,
+    };
+  };
+
+  const renderWithGrid = (api: ReturnType<typeof makeApi>) => {
+    const context = { files: [], fetchFiles: vi.fn() } as unknown as AssetsFolderContextReader;
+    render(<FileManager view={ApplicationRoute.Prompts} label="label" columnDefs={[]} getContext={() => context} />);
+    act(() => {
+      (lastProps().onGridApiChange as (api: unknown) => void)(api);
+    });
+    render((lastProps().toolbarOptions as { additionalButtons: React.ReactNode }).additionalButtons);
+  };
+
+  beforeEach(() => {
+    dialFileManagerPropsSpy.mockClear();
+    localStorage.clear();
+  });
+
+  test('offers no reset button while no filter is applied', () => {
+    renderWithGrid(makeApi({}));
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ResetFilters })).toBeNull();
+  });
+
+  test('offers the reset button next to the toolbar actions once a filter is applied', () => {
+    renderWithGrid(makeApi({ name: { filter: 'readme' } }));
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ResetFilters })).toBeTruthy();
+  });
+
+  test('clears only the filters when the reset button is clicked', async () => {
+    const user = userEvent.setup();
+    const api = makeApi({ name: { filter: 'readme' } });
+    renderWithGrid(api);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.ResetFilters }));
+
+    expect(api.setFilterModel).toHaveBeenCalledWith(null);
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ResetFilters })).toBeNull();
   });
 });
