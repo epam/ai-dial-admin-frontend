@@ -8,7 +8,7 @@ import {
   Button,
   Spinner,
   PrimaryButton,
-  DialTextarea,
+  Textarea,
   ElementSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
@@ -132,7 +132,7 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
       )}
 
       <div className="flex flex-col gap-2">
-        <DialTextarea
+        <Textarea
           id="query-assistant-prompt"
           aria-label={t(QueryBuilderI18nKey.AiPanelHeading)}
           placeholder={t(QueryBuilderI18nKey.AiPromptPlaceholder)}

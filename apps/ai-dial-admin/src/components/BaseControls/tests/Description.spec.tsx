@@ -14,6 +14,6 @@ describe('DescriptionControl', () => {
   test('renders a required marker when required is set', () => {
     render(<DescriptionControl entity={{ description: '' }} onChangeEntity={vi.fn()} required />);
 
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}*` })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}(required)` })).toBeInTheDocument();
   });
 });

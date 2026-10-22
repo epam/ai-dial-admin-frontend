@@ -2,8 +2,8 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GhostButton, Spinner, OutlinedButton, NoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
-import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner, OutlinedButton, NoDataContent, SegmentedControl } from '@epam/ai-dial-ui-kit';
+import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
@@ -279,7 +279,7 @@ const QueryBuilder: FC<Props> = ({
     clearResult,
   });
 
-  const viewOptions: SegmentedControlOption<QueryBuilderView>[] = [
+  const viewOptions: SegmentedControlItem<QueryBuilderView>[] = [
     { value: QueryBuilderView.Form, label: t(QueryBuilderI18nKey.ViewForm) },
     { value: QueryBuilderView.Json, label: t(QueryBuilderI18nKey.ViewJson) },
     { value: QueryBuilderView.Sql, label: t(QueryBuilderI18nKey.ViewSql) },
@@ -683,9 +683,9 @@ const QueryBuilder: FC<Props> = ({
                 onCollapse={() => onToggleRail(true)}
                 switcher={
                   fieldsLoaded ? (
-                    <DialSegmentedControl
-                      ariaLabel={t(QueryBuilderI18nKey.ViewSwitcher)}
-                      options={viewOptions}
+                    <SegmentedControl
+                      aria-label={t(QueryBuilderI18nKey.ViewSwitcher)}
+                      items={viewOptions}
                       value={view}
                       onChange={onChangeView}
                       // Loading an AI message decides what lands in the SQL buffer; a switch made before

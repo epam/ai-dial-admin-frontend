@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, ButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 import { cloneDeep } from 'lodash';
 
@@ -181,7 +181,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
         onChangeActiveTab={setActiveTab}
         onRemove={removeApplicationScheme}
       >
-        <DialButtonDropdown
+        <ButtonDropdown
           label={t(ButtonsI18nKey.Create)}
           items={items}
           variant={ButtonVariant.Neutral}

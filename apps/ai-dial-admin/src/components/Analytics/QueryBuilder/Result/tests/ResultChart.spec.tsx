@@ -59,7 +59,7 @@ describe('QueryBuilder :: ResultChart', () => {
     const user = userEvent.setup();
     const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yField: 'total' });
 
-    await user.click(screen.getByRole('tab', { name: 'Pie' }));
+    await user.click(screen.getByRole('radio', { name: 'Pie' }));
 
     expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Pie, xField: 'deployment', yField: 'total' });
   });
@@ -68,7 +68,7 @@ describe('QueryBuilder :: ResultChart', () => {
     const user = userEvent.setup();
     const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yField: 'total' });
 
-    await user.click(screen.getByRole('tab', { name: 'Scatter' }));
+    await user.click(screen.getByRole('radio', { name: 'Scatter' }));
 
     expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Scatter, xField: null, yField: 'total' });
   });
@@ -81,8 +81,8 @@ describe('QueryBuilder :: ResultChart', () => {
     const meta: ExecutedQueryMeta = { ...META, aggregateColumns: ['total'] };
     renderChart(DEFAULT_CHART_CONFIG, result, meta);
 
-    expect(screen.queryByRole('tab', { name: 'Scatter' })).not.toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Pie' })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'Scatter' })).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Pie' })).toBeInTheDocument();
   });
 
   // A fallback-classified SQL run puts its numeric columns in BOTH lists; counting them twice would
@@ -103,7 +103,7 @@ describe('QueryBuilder :: ResultChart', () => {
       aggregateColumns: ['total'],
     });
 
-    expect(screen.queryByRole('tab', { name: 'Scatter' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'Scatter' })).not.toBeInTheDocument();
   });
 
   test('names the missing axis pick when a slot has no column to default to', () => {

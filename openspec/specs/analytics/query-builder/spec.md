@@ -6,7 +6,7 @@ How a query is authored: the rail's four mutually exclusive views — Form, JSON
 ## Requirements
 ### Requirement: Query Builder layout and view switcher
 
-The query page (`app/[lang]/queries/[id]/page.tsx`) SHALL render the saved query's name as the page heading, a toolbar, a main results area, and a query-builder rail on the right side of the content area. The toolbar SHALL contain the source (entity) selector, the shared time filter, the query's own actions, and the Run action. The rail header SHALL offer three mutually exclusive views — **Builder** (form), **SQL**, and **JSON** — via a `DialSegmentedControl`; selecting a view SHALL change the rail body without a page reload and the current view SHALL be indicated. The view switcher SHALL NOT be shown before a schema is loaded. Base form controls SHALL come from the DIAL UI Kit and tabular results SHALL be displayed with the app's grid stack.
+The query page (`app/[lang]/queries/[id]/page.tsx`) SHALL render the saved query's name as the page heading, a toolbar, a main results area, and a query-builder rail on the right side of the content area. The toolbar SHALL contain the source (entity) selector, the shared time filter, the query's own actions, and the Run action. The rail header SHALL offer three mutually exclusive views — **Builder** (form), **SQL**, and **JSON** — via a `SegmentedControl`; selecting a view SHALL change the rail body without a page reload and the current view SHALL be indicated. The view switcher SHALL NOT be shown before a schema is loaded. Base form controls SHALL come from the DIAL UI Kit and tabular results SHALL be displayed with the app's grid stack.
 
 The builder SHALL be reachable only through a saved query. There SHALL be no route offering the builder without a stored query behind it, so a query that cannot be stored cannot be run.
 
@@ -292,7 +292,7 @@ Every enum and function picker in the rail (operator, value type, nulls, sort di
 
 ### Requirement: Query mode and DISTINCT
 
-In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `DialSegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Aggregate, and Having sections and hide the projection section.
+In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `SegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Aggregate, and Having sections and hide the projection section.
 
 An aggregate metric whose catalog entry has `distinct_supported: true` SHALL render a per-aggregate DISTINCT control; aggregate metrics whose catalog entry has `distinct_supported: false` SHALL NOT render one, and there SHALL be no query-level DISTINCT toggle. When set, the control SHALL serialize into that aggregate's `distinct` flag. (This supersedes the previous rule that hid all DISTINCT controls: the served catalog now identifies exactly which functions accept `distinct`, so the control is offered precisely and only where it is valid.)
 

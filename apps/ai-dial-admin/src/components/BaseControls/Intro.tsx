@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialTextarea } from '@epam/ai-dial-ui-kit';
+import { Textarea } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -46,7 +46,7 @@ const IntroControl = <T extends { intro?: LocalizedText }>({
   );
 
   return (
-    <DialTextarea
+    <Textarea
       id="intro"
       labelProps={{ label: t(EntityFieldsI18nKey.intro) }}
       placeholder={t(EntityPlaceholdersI18nKey.Intro)}

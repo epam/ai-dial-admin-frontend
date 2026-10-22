@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialErrorText, DialInput } from '@epam/ai-dial-ui-kit';
+import { ErrorText, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { FieldError, GetItemError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -66,7 +66,7 @@ const NewItemInput: FC<Props> = ({
             onChange={onChange}
           />
         </div>
-        <DialErrorText text={error?.text} />
+        <ErrorText text={error?.text} />
       </div>
       <div className="shrink-0">
         <RemoveButton onClick={onRemove} />

@@ -8,7 +8,8 @@ import {
   DialRadioGroup,
   RadioGroupOrientation,
   DialLoadFileAreaField,
-  DialFileIcon,
+  DialItemType,
+  FileIcon,
 } from '@epam/ai-dial-ui-kit';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
@@ -178,7 +179,7 @@ const Files: FC<Props> = ({
           files={files.length === 0 ? files : [files[0]]}
           multiple={false}
           fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
-          iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
+          iconBeforeInput={<FileIcon type={DialItemType.File} name="file.json" decorative className="text-secondary" />}
           acceptTypes=".json, application/json"
           onChange={onChangeFile}
         />
@@ -197,7 +198,7 @@ const Files: FC<Props> = ({
           multiple={false}
           fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
           fileCountError={t(ImportI18nKey.ArchiveDescription)}
-          iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
+          iconBeforeInput={<FileIcon type={DialItemType.File} name="file.zip" decorative className="text-secondary" />}
           acceptTypes=".zip, application/x-zip-compressed, application/zip"
           onChange={onChangeFile}
         />
@@ -211,7 +212,7 @@ const Files: FC<Props> = ({
         emptyTextSecondLine={t(BasicI18nKey.Or)}
         emptyButtonLabel={t(ButtonsI18nKey.Browse)}
         files={files}
-        iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
+        iconBeforeInput={<FileIcon type={DialItemType.File} name="file.json" decorative className="text-secondary" />}
         acceptTypes="application/JSON"
         fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
         isInvalid={isLargeFile}

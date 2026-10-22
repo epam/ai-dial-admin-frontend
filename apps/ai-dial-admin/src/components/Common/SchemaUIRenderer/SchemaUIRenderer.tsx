@@ -2,11 +2,9 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialSchemaRenderer, JsonSchema } from '@epam/ai-dial-ui-kit';
-import { EditorThemes } from '@epam/ai-dial-ui-kit/dist/src/types/editor';
+import { SchemaRenderer, JsonSchema } from '@epam/ai-dial-ui-kit';
 
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
@@ -28,7 +26,6 @@ const SchemaUiRenderer: FC<Props> = ({
   acceptableResourceTypes,
 }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { currentTheme } = useTheme();
   const isReadonly = disabled || isReadOnlyAdmin;
   const onChange = useCallback(
     (value: Record<string, unknown>) => {
@@ -38,7 +35,7 @@ const SchemaUiRenderer: FC<Props> = ({
   );
 
   return (
-    <DialSchemaRenderer
+    <SchemaRenderer
       schema={schema}
       onChange={onChange}
       defaultValue={data}
@@ -47,7 +44,6 @@ const SchemaUiRenderer: FC<Props> = ({
       inputClassName={STANDARD_CONTROL_WIDTH}
       defaultExpanded={defaultExpanded}
       acceptableResourceTypes={acceptableResourceTypes}
-      jsonEditorTheme={currentTheme as EditorThemes}
     />
   );
 };

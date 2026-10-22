@@ -1,4 +1,4 @@
-import { DialErrorText, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
+import { ErrorText, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -68,7 +68,7 @@ const Multiselect: FC<Props> = ({
           {...props}
         />
       </DialInputPopup>
-      {!disabled && <DialErrorText text={errorText} />}
+      {!disabled && <ErrorText text={errorText} />}
     </div>
   );
 };

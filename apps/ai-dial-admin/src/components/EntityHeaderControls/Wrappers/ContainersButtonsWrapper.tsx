@@ -1,7 +1,7 @@
 import {
   ButtonAppearance,
   ButtonVariant,
-  DialButtonDropdown,
+  ButtonDropdown,
   DangerButton,
   OutlinedButton,
   DropdownItem,
@@ -211,7 +211,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                 {activeCreateEntity && container.status === CONTAINER_STATUS.RUNNING && !isCapabilityBlocked && (
                   <>
                     {route === ApplicationRoute.McpContainers ? (
-                      <DialButtonDropdown
+                      <ButtonDropdown
                         label={t(ButtonsI18nKey.Create)}
                         items={createToolsetOptions}
                         variant={ButtonVariant.Neutral}

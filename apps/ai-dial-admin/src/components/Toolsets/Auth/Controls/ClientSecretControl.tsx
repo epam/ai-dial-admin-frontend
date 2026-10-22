@@ -1,4 +1,4 @@
-import { DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { PasswordInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -54,7 +54,7 @@ const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, ha
   );
 
   return (
-    <DialPasswordInput
+    <PasswordInput
       id="clientSecret"
       labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
       placeholder={t(

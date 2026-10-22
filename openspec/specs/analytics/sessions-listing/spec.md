@@ -80,7 +80,7 @@ the client's own fetch, which is the first request the page makes against the en
 ### Requirement: Feedback filter resolved through a second query
 
 The sessions page SHALL provide a feedback filter with exactly four mutually exclusive states — all,
-positive, negative, and rated — defaulting to all. It SHALL reuse the shared `DialSegmentedControl`.
+positive, negative, and rated — defaulting to all. It SHALL reuse the shared `SegmentedControl`.
 
 Feedback lives in the `response_ratings` entity — the per-response rollup of DIAL's rate events, keyed on the
 rated `response_id` and carrying the `chat_id` the rating was submitted from — which the session rollup

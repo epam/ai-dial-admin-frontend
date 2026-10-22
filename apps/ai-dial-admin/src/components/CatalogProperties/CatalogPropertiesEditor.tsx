@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  DialErrorText,
+  ErrorText,
   Spinner,
   NoDataContent,
   DialSelect,
@@ -139,7 +139,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
       {!!otherErrors.length && (
         <div className="flex flex-col mb-2">
           {otherErrors.map((error) => (
-            <DialErrorText key={`${error.field}-${error.message}`} text={error.message} />
+            <ErrorText key={`${error.field}-${error.message}`} text={error.message} />
           ))}
         </div>
       )}

@@ -4,11 +4,11 @@ import {
   DialCheckbox,
   DialDropdown,
   EllipsisTooltip,
-  DialSearch,
-  DialSegmentedControl,
+  Search,
+  SegmentedControl,
   Tooltip,
   ElementSize,
-  SegmentedControlOption,
+  SegmentedControlItem,
   TooltipPlacement,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
@@ -103,7 +103,7 @@ const HeatMapToolbar: FC<Props> = ({
     [onSelectedMetricGroupsChange, selectedMetricGroups, availableMetricGroups],
   );
 
-  const colorDisplayOptions = useMemo<SegmentedControlOption<HeatMapColorDisplayMode>[]>(
+  const colorDisplayOptions = useMemo<SegmentedControlItem<HeatMapColorDisplayMode>[]>(
     () => [
       { value: HeatMapColorDisplayMode.Absolute, label: t(RunsI18nKey.RunCompareAbsoluteValues) },
       { value: HeatMapColorDisplayMode.Delta, label: t(RunsI18nKey.RunCompareDelta) },
@@ -123,10 +123,10 @@ const HeatMapToolbar: FC<Props> = ({
           <div className="bg-layer-0 rounded shadow flex flex-col w-[280px]">
             {isSearchVisible && (
               <div className="pt-2 px-2 pb-1">
-                <DialSearch
+                <Search
                   id="heat-map-metrics-search"
                   value={metricsSearchQuery}
-                  onChange={setMetricsSearchQuery}
+                  onChange={(value) => setMetricsSearchQuery(value ?? '')}
                   placeholder={t(BasicI18nKey.Search)}
                   size={ElementSize.Small}
                 />
@@ -186,11 +186,11 @@ const HeatMapToolbar: FC<Props> = ({
         <span className="dial-small-text text-secondary whitespace-nowrap">
           {t(RunsI18nKey.RunCompareColorDisplay)}
         </span>
-        <DialSegmentedControl
-          options={colorDisplayOptions}
+        <SegmentedControl
+          items={colorDisplayOptions}
           value={colorDisplayMode}
           onChange={onColorDisplayModeChange}
-          ariaLabel={t(RunsI18nKey.RunCompareColorDisplay)}
+          aria-label={t(RunsI18nKey.RunCompareColorDisplay)}
         />
       </div>
     </div>

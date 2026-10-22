@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconPlus } from '@tabler/icons-react';
 import Cloud from '@/public/images/icons/cloud.svg';
-import { DialButtonDropdown, GhostButton, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonDropdown, GhostButton, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image } from '@/src/models/deployments/images';
@@ -88,7 +88,7 @@ const HeaderButtons: FC<Props> = ({ route, isReadOnlyAdmin }) => {
 
         {!isReadOnlyAdmin &&
           (featureFlags.mcpRegistryEnabled ? (
-            <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)} />
+            <ButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)} />
           ) : (
             <PrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}

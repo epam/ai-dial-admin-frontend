@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialCollapsibleSidebar, DialFormPopup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, DialFormPopup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { CreateAssetActionMap, PlatformCreateAssetActionMap } from '@/src/components/Assets/BaseAssetList/utils';
@@ -179,13 +179,9 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
     >
       <div className="flex flex-row px-6 py-4 h-full">
         <div className="flex flex-row gap-4 flex-1 min-h-0">
-          <DialCollapsibleSidebar
-            width={360}
-            title={t(FoldersI18nKey.Folders)}
-            containerClassName="border border-primary"
-          >
+          <CollapsibleSidebar width={360} title={t(FoldersI18nKey.Folders)} className="border border-primary">
             <FolderList context={context} rootPaths={rootPaths} />
-          </DialCollapsibleSidebar>
+          </CollapsibleSidebar>
           <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4 overflow-auto">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">

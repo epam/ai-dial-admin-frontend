@@ -12,7 +12,7 @@ import {
   DangerButton,
   OutlinedButton,
   PrimaryButton,
-  DialTextarea,
+  Textarea,
 } from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -322,7 +322,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             confirmLabel={t(ButtonsI18nKey.Decline)}
           >
             <div className="px-6">
-              <DialTextarea
+              <Textarea
                 id="reason"
                 labelProps={{ label: t(PublicationsI18nKey.DeclineReason) }}
                 placeholder={t(PublicationsI18nKey.DeclineReasonPlaceholder)}

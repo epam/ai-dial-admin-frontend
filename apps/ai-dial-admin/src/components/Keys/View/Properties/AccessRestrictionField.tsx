@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { Label, DialRadioButton, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Label, Radio, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { KeysI18nKey } from '@/src/constants/i18n';
@@ -145,34 +145,34 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | 
       <Label label={t(KeysI18nKey.RestrictionFieldLabel)} htmlFor={elementId} />
 
       <div className="flex flex-col gap-4">
-        <DialRadioButton
-          inputId={`${elementId}-allow-all`}
+        <Radio
+          id={`${elementId}-allow-all`}
           name={`${elementId}-restriction-options`}
           value={RestrictionType.ALLOW_ALL}
-          checked={selectedRadio === RestrictionType.ALLOW_ALL}
+          isSelected={selectedRadio === RestrictionType.ALLOW_ALL}
           onChange={() => handleRadioChange(RestrictionType.ALLOW_ALL)}
-          label={t(KeysI18nKey.AllowAllRestriction)}
+          labelProps={{ label: t(KeysI18nKey.AllowAllRestriction) }}
           disabled={disabled}
         />
 
-        <DialRadioButton
-          inputId={`${elementId}-block-all`}
+        <Radio
+          id={`${elementId}-block-all`}
           name={`${elementId}-restriction-options`}
           value={RestrictionType.BLOCK_ALL}
-          checked={selectedRadio === RestrictionType.BLOCK_ALL}
+          isSelected={selectedRadio === RestrictionType.BLOCK_ALL}
           onChange={() => handleRadioChange(RestrictionType.BLOCK_ALL)}
-          label={t(KeysI18nKey.BlockAllRestriction)}
+          labelProps={{ label: t(KeysI18nKey.BlockAllRestriction) }}
           disabled={disabled}
         />
 
         <div className="flex items-center gap-1">
-          <DialRadioButton
-            inputId={`${elementId}-ranges`}
+          <Radio
+            id={`${elementId}-ranges`}
             name={`${elementId}-restriction-options`}
             value={RestrictionType.RANGES}
-            checked={selectedRadio === RestrictionType.RANGES}
+            isSelected={selectedRadio === RestrictionType.RANGES}
             onChange={() => handleRadioChange(RestrictionType.RANGES)}
-            label={t(KeysI18nKey.RangesRestriction)}
+            labelProps={{ label: t(KeysI18nKey.RangesRestriction) }}
             disabled={disabled}
           />
           {showMaskNotice && (

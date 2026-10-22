@@ -1,6 +1,6 @@
 'use client';
 
-import { Label, DialSegmentedControl, DialSelect, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Label, SegmentedControl, DialSelect, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -25,7 +25,7 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
   const { dispatch } = useSaveValidationContext();
 
   const elementId = `functionParameter-${labelKey}`;
-  const bindingTypeOptions = useMemo<SegmentedControlOption<FunctionParameterSourceType>[]>(
+  const bindingTypeOptions = useMemo<SegmentedControlItem<FunctionParameterSourceType>[]>(
     () => [
       { value: FunctionParameterSourceType.TestCase, label: t(TestSuitesI18nKey.TestCase) },
       { value: FunctionParameterSourceType.Response, label: t(TestSuitesI18nKey.ResponseColumn) },
@@ -88,9 +88,9 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
       <div className="flex flex-col gap-1">
         <Label label={t(labelKey)} required />
         <div className="w-fit">
-          <DialSegmentedControl
-            ariaLabel={t(labelKey)}
-            options={bindingTypeOptions}
+          <SegmentedControl
+            aria-label={t(labelKey)}
+            items={bindingTypeOptions}
             value={source.$type}
             onChange={onTabChange}
           />

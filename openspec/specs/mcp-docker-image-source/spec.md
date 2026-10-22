@@ -7,7 +7,7 @@ Creating and viewing MCP containers whose source is a docker image reference.
 ## Requirements
 
 ### Requirement: MCP Create button is a dropdown with two options
-The MCP containers listing page SHALL render the Create button as a `DialButtonDropdown` with two options: "From Internal MCP Image" and "From Docker Image Reference".
+The MCP containers listing page SHALL render the Create button as a `ButtonDropdown` with two options: "From Internal MCP Image" and "From Docker Image Reference".
 
 #### Scenario: User sees dropdown options on MCP listing
 - **WHEN** the user is on the MCP containers listing page and clicks the Create dropdown

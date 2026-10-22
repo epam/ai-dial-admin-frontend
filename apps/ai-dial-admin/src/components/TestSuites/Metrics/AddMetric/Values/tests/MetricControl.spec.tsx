@@ -22,7 +22,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </button>
   ),
   Label: ({ label }: any) => <span>{label}</span>,
-  DialTextarea: ({ labelProps, placeholder, value, onChange }: any) => (
+  Textarea: ({ labelProps, placeholder, value, onChange }: any) => (
     <textarea
       role="textbox"
       aria-label={labelProps?.label ?? 'text-input'}

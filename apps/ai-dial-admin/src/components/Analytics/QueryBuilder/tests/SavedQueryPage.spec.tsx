@@ -195,7 +195,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
     renderPage(composite);
 
-    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByLabelText('sql-editor')).toHaveValue(composite.sql);
     expect(screen.getByText(/QueryBuilder.Source:\s+conversations/)).toBeInTheDocument();
     expect(screen.queryByText('QueryBuilder.SchemaLoadFailed')).not.toBeInTheDocument();
@@ -204,7 +204,7 @@ describe('QueryBuilder — a stored saved query', () => {
   test('opens a representable structured body in the builder', () => {
     renderPage();
 
-    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' })).toHaveAttribute('aria-checked', 'true');
   });
 
   test('opens a structured body the builder cannot represent in the JSON view', async () => {
@@ -583,7 +583,7 @@ describe('QueryBuilder — a stored saved query', () => {
       renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
 
       await screen.findByLabelText('sql-editor');
-      await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+      await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
       // The switch is guarded rather than taken, so the stored SQL is still what a save sends.
       expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
@@ -606,7 +606,7 @@ describe('QueryBuilder — a stored saved query', () => {
       renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
 
       await screen.findByLabelText('sql-editor');
-      await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+      await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
       await screen.findByLabelText('json-editor');
       await user.click(saveButton()!);
 
@@ -622,7 +622,7 @@ describe('QueryBuilder — a stored saved query', () => {
       renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
 
       await screen.findByLabelText('sql-editor');
-      await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+      await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
 
       expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     });

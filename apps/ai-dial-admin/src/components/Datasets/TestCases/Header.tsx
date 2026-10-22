@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import {
   ButtonAppearance,
   ButtonVariant,
-  DialButtonDropdown,
+  ButtonDropdown,
   DangerButton,
   PrimaryButton,
   DropdownItem,
@@ -45,7 +45,7 @@ const DatasetTestCasesHeader: FC<Props> = ({
 
   return (
     <div className="flex gap-4">
-      <DialButtonDropdown
+      <ButtonDropdown
         label={t(ButtonsI18nKey.Import)}
         items={importItems}
         variant={ButtonVariant.Primary}

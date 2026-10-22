@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialCollapsibleSidebar, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -17,7 +17,7 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
   const t = useI18n();
 
   return (
-    <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Conversations)} containerClassName="bg-layer-3 mr-4">
+    <CollapsibleSidebar width={296} title={t(TabsI18nKey.Conversations)} className="bg-layer-3 mr-4">
       <div className="h-full flex flex-col">
         <h1 className="mb-6">{t(TabsI18nKey.Conversations)}</h1>
         <div className="flex-1 min-h-0 flex flex-col gap-y-2 overflow-auto">
@@ -41,7 +41,7 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
           })}
         </div>
       </div>
-    </DialCollapsibleSidebar>
+    </CollapsibleSidebar>
   );
 };
 

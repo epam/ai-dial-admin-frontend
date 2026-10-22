@@ -1,7 +1,7 @@
 'use client';
 import { FC, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, ButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -45,7 +45,7 @@ const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplicatio
 
   return (
     <>
-      <DialButtonDropdown label={t(ButtonsI18nKey.Add)} items={dropdownItems} variant={ButtonVariant.Primary} />
+      <ButtonDropdown label={t(ButtonsI18nKey.Add)} items={dropdownItems} variant={ButtonVariant.Primary} />
 
       {isModalOpen &&
         createPortal(
