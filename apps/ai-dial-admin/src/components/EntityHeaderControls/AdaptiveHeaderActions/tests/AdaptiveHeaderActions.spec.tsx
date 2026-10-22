@@ -15,7 +15,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
       dropdownItemsSpy(items);
       return <div data-testid="overflow-dropdown">{children}</div>;
     },
-    DialIconButton: ({ 'aria-label': ariaLabel, icon }: { 'aria-label'?: string; icon: React.ReactNode }) => (
+    IconButton: ({ 'aria-label': ariaLabel, icon }: { 'aria-label'?: string; icon: React.ReactNode }) => (
       <button type="button" aria-label={ariaLabel}>
         {icon}
       </button>

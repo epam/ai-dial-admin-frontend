@@ -406,15 +406,12 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
           {/* After the actions, so it lands where they were rather than pushing the row left. */}
           {isChangeBarShown && (
             <ChangedEntityButtons
-              isDesignSystem2
               disableSave={(shouldCheckFields && form.hasFieldErrors) || isGroupKeyMissing || isSaving}
               onDiscard={onDiscard}
               onSave={onTryToSave}
             />
           )}
-          {!isChangeBarShown && (
-            <JsonToggle isDesignSystem2 isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
-          )}
+          {!isChangeBarShown && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />}
         </div>
       </div>
 

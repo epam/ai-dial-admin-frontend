@@ -7,18 +7,21 @@ import { MetricBinding } from '@/src/models/evaluation/metric';
 import MetricControl from '../MetricControl';
 import { MetricBindingType } from '../../../../../../types/evaluation';
 
+vi.mock('@/src/components/Common/RemoveButton/RemoveButton', () => ({
+  default: ({ onClick }: any) => (
+    <button type="button" data-testid="dial-remove-button" aria-label="remove-row" onClick={onClick} />
+  ),
+}));
+
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   ButtonAppearance: { Ghost: 'ghost' },
   ElementSize: { Small: 'small' },
-  DialPrimaryButton: ({ onClick, label }: any) => (
+  PrimaryButton: ({ onClick, label }: any) => (
     <button type="button" data-testid="dial-primary-button" onClick={onClick}>
       {label}
     </button>
   ),
-  DialRemoveButton: ({ onClick }: any) => (
-    <button type="button" data-testid="dial-remove-button" aria-label="remove-row" onClick={onClick} />
-  ),
-  DialLabel: ({ label }: any) => <span>{label}</span>,
+  Label: ({ label }: any) => <span>{label}</span>,
   DialTextarea: ({ labelProps, placeholder, value, onChange }: any) => (
     <textarea
       role="textbox"
@@ -70,7 +73,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       </select>
     </label>
   ),
-  DialSwitch: ({ label, isOn, onChange }: any) => (
+  Switch: ({ labelProps: { label } = {}, isOn, onChange }: any) => (
     <label>
       <span>{label ?? 'switch-input'}</span>
       <input

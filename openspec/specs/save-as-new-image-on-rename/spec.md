@@ -100,7 +100,7 @@ The constants file `apps/ai-dial-admin/src/constants/i18n.ts` SHALL define match
 - **THEN** the modal's own `validateVersion` dispatches `field: 'version', isValid: false`, the aggregate `isValid` is false, and the `Create` button is disabled
 
 ### Requirement: Accessibility unchanged
-The fork button and modal title MUST continue to expose their visible labels through the existing `DialPrimaryButton` and `DialFormPopup` components from `@epam/ai-dial-ui-kit`, which already render semantic elements with accessible names from their `label` / `header` props. No new ARIA attributes SHALL be introduced.
+The fork button and modal title MUST continue to expose their visible labels through the existing `PrimaryButton` and `DialFormPopup` components from `@epam/ai-dial-ui-kit`, which already render semantic elements with accessible names from their `label` / `header` props. No new ARIA attributes SHALL be introduced.
 
 #### Scenario: Screen reader on the rename button
 - **WHEN** a screen reader reads the fork button after the user changes `name`

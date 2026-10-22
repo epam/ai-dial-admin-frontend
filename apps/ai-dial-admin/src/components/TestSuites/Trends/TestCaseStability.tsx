@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
 import { HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE } from '@/src/components/Common/HeatMap/constants';
@@ -63,10 +63,10 @@ const TestCaseStability: FC<Props> = ({ runOrder, runCount }) => {
     >
       {isLoading && !matrix ? (
         <div className="flex h-[220px] items-center justify-center">
-          <DialLoader size={32} />
+          <Spinner size={32} fullWidth />
         </div>
       ) : !hasData ? (
-        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
+        <NoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
         <div className="flex min-h-[280px] h-[min(480px,50vh)] flex-col">
           <HeatMapGrid

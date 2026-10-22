@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
   ButtonVariant,
-  DialLoader,
+  Spinner,
   ElementSize,
   Notification,
   NotificationType,
@@ -166,7 +166,7 @@ const PipelinePreview: FC<Props> = ({ pipeline, preview, hasUnsavedEdits, onOpen
 
       {result == null && isRunning && (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center" aria-busy="true">
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
           <h3 className="dial-h3">{t(PipelinePreviewI18nKey.ReadingTitle)}</h3>
           <p className="max-w-[440px] text-secondary dial-small-text">{t(PipelinePreviewI18nKey.ReadingHint)}</p>
         </div>

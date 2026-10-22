@@ -7,7 +7,7 @@ import SessionTraceList from '@/src/components/Analytics/SessionsTrace/Detail/Se
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { SessionTraceCard, SessionTraceGroup, RatingCounts } from '@/src/models/analytics/sessions-trace';
-import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/session-formatting';
+import { formatCompactNumber, formatDurationMs, formatSignificantCost } from '@/src/utils/analytics/session-formatting';
 
 const card = (over: Partial<SessionTraceCard> = {}): SessionTraceCard => ({
   traceId: 'trace-1',
@@ -457,5 +457,57 @@ describe('SessionTraceList — accessible naming', () => {
     expect(name).toContain(SessionsTraceI18nKey.TraceCardSucceeded);
     expect(name).toContain(SessionsTraceI18nKey.TraceCardCoreInternal);
     expect(name).toContain(SessionsTraceI18nKey.TraceCardOwnPrice);
+  });
+});
+
+describe('SessionTraceList — outside a session', () => {
+  // The headline row is the one stating the call's duration; the trace's totals belong to it only on a root card.
+  const headlineOf = () => screen.getByText(formatDurationMs(12341)).parentElement;
+
+  test('states a root card trace totals in its headline', () => {
+    renderList();
+
+    expect(headlineOf()).toHaveTextContent(formatSignificantCost(0.02895));
+  });
+
+  test('states the trace totals in the trace tier when the card is not the root', () => {
+    renderList({ isCardTheRoot: false, groups: [group({ price: 0.5 })] });
+
+    expect(headlineOf()).not.toHaveTextContent(formatSignificantCost(0.5));
+    expect(screen.getByText(formatSignificantCost(0.5))).toBeInTheDocument();
+  });
+
+  test('states no caller or project fact on a session card', () => {
+    renderList();
+
+    expect(screen.queryByText(SessionsTraceI18nKey.TraceCardCaller)).toBeNull();
+    expect(screen.queryByText(SessionsTraceI18nKey.TraceCardProject)).toBeNull();
+  });
+
+  test('states the caller and the project when the listing reads them', () => {
+    renderList({ groups: [group({ cards: [card({ caller: 'a-calling-app', projectId: 'a-project' })] })] });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceCardCaller)).toBeInTheDocument();
+    expect(screen.getByText('a-calling-app')).toBeInTheDocument();
+    expect(screen.getByText('a-project')).toBeInTheDocument();
+  });
+
+  test('states an unrecorded caller as unavailable', () => {
+    renderList({ groups: [group({ cards: [card({ caller: null, projectId: 'a-project' })] })] });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceCardCaller).nextSibling).toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('renders without ratings when none are given', () => {
+    renderList({ traceRatings: undefined });
+
+    expect(screen.getByText('applications/public/pg-chat-hub__1.0.0')).toBeInTheDocument();
+  });
+
+  test('states the heading and rule the listing supplies', () => {
+    renderList({ title: 'a heading', rule: 'a rule' });
+
+    expect(screen.getByRole('heading', { name: 'a heading' })).toBeInTheDocument();
+    expect(screen.getByText('a rule')).toBeInTheDocument();
   });
 });

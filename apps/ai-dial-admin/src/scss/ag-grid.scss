@@ -1,74 +1,88 @@
+// `@apply` only takes utilities in Tailwind v4, so the shared building blocks are declared as such.
+@utility input-disable {
+  @apply bg-layer-3 text-secondary;
+}
+
+@utility base-button {
+  @apply flex flex-row items-center px-3 py-2;
+  @apply rounded border border-solid border-transparent text-sm;
+
+  min-width: 38px;
+  min-height: 38px;
+}
+
+@utility base-button-disable {
+  @apply pointer-events-none text-controls-disable bg-controls-disable;
+}
+
+// Shared by `.input` and by the AG Grid fields that look like it: `@apply` cannot take a class in Tailwind v4.
+@mixin input-field {
+  @apply border border-solid border-primary rounded outline-0;
+  @apply bg-transparent text-sm truncate;
+  @apply px-3 py-2;
+
+  &:not(:placeholder-shown) {
+    @apply text-primary;
+  }
+
+  &:hover {
+    @apply border-hover;
+  }
+
+  &:focus,
+  &:focus-within {
+    @apply border-accent-primary;
+  }
+
+  &:disabled {
+    @apply bg-layer-3 text-secondary;
+  }
+}
+
+// Same reason as `input-field`: the grid buttons reuse these through `@include`.
+@mixin button-primary {
+  @apply base-button bg-controls-accent text-controls-primary;
+
+  &:hover,
+  &:focus {
+    @apply bg-controls-accent-hover;
+  }
+
+  &:focus {
+    @apply border-hover;
+  }
+}
+
+@mixin button-secondary {
+  @apply base-button bg-transparent text-primary;
+  @apply border-primary;
+
+  &:hover,
+  &:focus {
+    @apply bg-layer-4;
+  }
+
+  &:focus {
+    @apply border-hover;
+  }
+
+  &:disabled {
+    @apply base-button-disable;
+  }
+}
+
 @layer components {
   // TODO: remove after fixing style in UI kit
   .input {
-    @apply border border-solid border-primary rounded outline-0;
-    @apply bg-transparent small truncate;
-    @apply px-3 py-2;
-
-    &:not(:placeholder-shown) {
-      @apply text-primary;
-    }
-
-    &:hover {
-      @apply border-hover;
-    }
-
-    &:focus,
-    &:focus-within {
-      @apply border-accent-primary;
-    }
-
-    &:disabled {
-      @apply input-disable;
-    }
-  }
-
-  .input-disable {
-    @apply bg-layer-3 text-secondary;
-  }
-
-  .base-button {
-    @apply flex flex-row items-center px-3 py-2;
-    @apply rounded border border-solid border-transparent;
-    @apply small-medium;
-
-    min-width: 38px;
-    min-height: 38px;
-  }
-
-  .base-button-disable {
-    @apply pointer-events-none text-controls-disable bg-controls-disable;
+    @include input-field;
   }
 
   .primary {
-    @apply base-button bg-controls-accent text-controls-primary;
-
-    &:hover,
-    &:focus {
-      @apply bg-controls-accent-hover;
-    }
-
-    &:focus {
-      @apply border-hover;
-    }
+    @include button-primary;
   }
 
   .secondary {
-    @apply base-button bg-transparent text-primary;
-    @apply border-primary;
-
-    &:hover,
-    &:focus {
-      @apply bg-layer-4;
-    }
-
-    &:focus {
-      @apply border-hover;
-    }
-
-    &:disabled {
-      @apply base-button-disable;
-    }
+    @include button-secondary;
   }
 }
 
@@ -96,7 +110,7 @@
     .ag-input-field-input.ag-number-field-input,
     .ag-picker-field-wrapper.ag-picker-collapsed,
     .ag-picker-field-wrapper.ag-picker-expanded {
-      @apply input;
+      @include input-field;
     }
 
     .ag-input-field-input.ag-text-field-input,
@@ -107,11 +121,11 @@
     .ag-filter-apply-panel-button.ag-button {
       @apply base-button;
       &[data-ref='applyFilterButton'] {
-        @apply primary;
+        @include button-primary;
       }
 
       &[data-ref='resetFilterButton'] {
-        @apply secondary;
+        @include button-secondary;
       }
     }
   }
@@ -128,7 +142,8 @@
     .ag-pinned-left-header {
       .ag-floating-filter {
         input {
-          @apply input m-0 p-0 px-2;
+          @include input-field;
+          @apply m-0 p-0 px-2;
           height: 24px !important;
         }
       }
@@ -168,7 +183,7 @@
       // the override has to be important too or the counts stay on the left.
       .dial-kit-dropdown,
       .dial-kit-ellipsis-tooltip {
-        @apply text-right !important;
+        @apply text-right!;
       }
     }
   }

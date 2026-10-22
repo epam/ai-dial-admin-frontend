@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialGhostButton, DialNeutralButton, DialPrimaryButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { GhostButton, OutlinedButton, PrimaryButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft, IconArrowNarrowRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -53,7 +53,7 @@ const StepperModalButtons: FC<Props> = ({
       )}
     >
       {currentStep?.id !== steps[0]?.id && (
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.Back)}
           onClick={onPrevStep}
           iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
@@ -61,9 +61,9 @@ const StepperModalButtons: FC<Props> = ({
       )}
 
       <div className="flex gap-2">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         {currentStep?.id !== steps.at(-1)?.id && (
-          <DialPrimaryButton
+          <PrimaryButton
             label={t(ButtonsI18nKey.Next)}
             onClick={handleNextStep}
             iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
@@ -71,7 +71,7 @@ const StepperModalButtons: FC<Props> = ({
           />
         )}
         {currentStep?.id === steps.at(-1)?.id && (
-          <DialPrimaryButton
+          <PrimaryButton
             label={finishButtonLabel || t(ButtonsI18nKey.Finish)}
             disabled={steps.some((s) => s.status !== StepStatus.VALID) || !!isLoading}
             onClick={onFinishClick}

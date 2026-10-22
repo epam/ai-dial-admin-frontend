@@ -2,7 +2,7 @@
 
 import { FC, useRef } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import DiffMiniMap from '@/src/components/Common/DiffMiniMap/DiffMiniMap';
 import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
@@ -53,7 +53,7 @@ const EntityDiff: FC<Props> = ({ currentEntity, compareEntity, type, diffView, c
         </div>
       ) : (
         <div role="status" className="flex flex-1 min-h-0 mb-4 items-center justify-center">
-          <DialNoDataContent title={t(ActivityAuditI18nKey.SnapshotUnavailableTitle)} />
+          <NoDataContent title={t(ActivityAuditI18nKey.SnapshotUnavailableTitle)} />
         </div>
       )}
       {hasSections && <DiffLegend description={true} />}

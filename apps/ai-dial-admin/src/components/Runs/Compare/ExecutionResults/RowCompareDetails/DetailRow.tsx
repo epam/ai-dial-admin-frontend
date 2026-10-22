@@ -2,7 +2,7 @@
 
 import { FC, useState } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
@@ -108,7 +108,7 @@ const DetailRow: FC<Props> = ({
         style={{ scrollMarginTop: ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP }}
         {...diffCellDataAttr(fieldProps)}
       >
-        <DialEllipsisTooltip text={row.label} className="dial-small-text text-primary min-w-0" />
+        <EllipsisTooltip text={row.label} className="dial-small-text text-primary min-w-0" />
       </div>
       {runs.map(renderRunCell)}
       <div
@@ -138,7 +138,7 @@ const DetailRow: FC<Props> = ({
             title={openDiffLabel}
             aria-label={openDiffLabel}
             className={mergeClasses(
-              'shrink-0 flex items-center justify-center size-[22px] rounded-sm text-secondary hover:text-primary',
+              'shrink-0 flex items-center justify-center size-[22px] rounded-xs text-secondary hover:text-primary',
               'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity',
             )}
           >

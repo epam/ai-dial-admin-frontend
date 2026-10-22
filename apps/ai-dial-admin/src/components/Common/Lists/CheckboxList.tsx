@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
-import { DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { GetItemError } from '@/src/models/error';
@@ -123,7 +123,7 @@ const CheckboxList: FC<Props> = ({
 
       {addTitle && (
         <div>
-          <DialNeutralButton
+          <OutlinedButton
             className="self-start"
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={addTitle}

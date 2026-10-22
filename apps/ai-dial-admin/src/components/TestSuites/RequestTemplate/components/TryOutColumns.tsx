@@ -1,7 +1,7 @@
 'use client';
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialTag } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { capitalize } from 'lodash';
 
@@ -87,7 +87,7 @@ const ColumnResultCard: FC<{ column: EvaluatedColumn }> = ({ column }) => {
     >
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-row gap-2 items-center">
-          <div className="small-text-semi text-primary">{column.name}</div>
+          <div className="dial-small-semi-text text-primary">{column.name}</div>
           <DialTag label={capitalize(column.type)} />
         </div>
         <DialTag label={statusLabel} className={statusStyle.badgeClass} />
@@ -211,7 +211,7 @@ const TryOutColumns: FC<Props> = ({
   return (
     <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0 overflow-auto">
       {isLoading || isEvaluating ? (
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       ) : showGrouped ? (
         renderGrouped()
       ) : (

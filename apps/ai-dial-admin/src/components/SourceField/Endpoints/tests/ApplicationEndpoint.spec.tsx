@@ -21,7 +21,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
         {label}
       </label>
     ),
-    DialSwitch: ({ switchId, isOn, onChange, label, disabled }: any) => (
+    Switch: ({ id: switchId, isOn, onChange, labelProps: { label } = {}, disabled }: any) => (
       <label>
         <input
           type="checkbox"

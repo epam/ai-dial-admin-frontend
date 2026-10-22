@@ -3,7 +3,7 @@
 import { FC, Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import DiffMiniMap from '@/src/components/Common/DiffMiniMap/DiffMiniMap';
 import { DEFAULT_COMPARE_DELTA_HEADER } from '@/src/components/Runs/Compare/ExecutionResults/constants';
@@ -132,7 +132,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
       <Fragment key={run.slot}>
         <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3 gap-2')}>
           <CompareRunIndexBadge runIndex={run.index} />
-          <DialEllipsisTooltip text={getRunLabel(run)} className="text-primary" />
+          <EllipsisTooltip text={getRunLabel(run)} className="text-primary" />
         </div>
         {columns.map((column) => {
           const key = `${run.slot}-${column.sectionKey}-${column.field.fieldKey}`;
@@ -172,7 +172,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
                 key={`section-${column.sectionKey}-${column.field.fieldKey}`}
                 className={classNames(HEADER_CELL_BASE, 'text-secondary', column.isSectionStart ? 'border-l' : '')}
               >
-                {column.isSectionStart ? <DialEllipsisTooltip text={sectionLabel} className="text-secondary" /> : null}
+                {column.isSectionStart ? <EllipsisTooltip text={sectionLabel} className="text-secondary" /> : null}
               </div>
             );
           })}
@@ -184,7 +184,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
               key={`field-${column.sectionKey}-${column.field.fieldKey}`}
               className={classNames(HEADER_CELL_BASE, 'text-secondary border-r')}
             >
-              <DialEllipsisTooltip
+              <EllipsisTooltip
                 text={column.field.label}
                 className={classNames('text-secondary', isRightAlignedRowDetailField(column.field) && 'text-right')}
               />

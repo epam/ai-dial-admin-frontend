@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -107,7 +107,7 @@ const FormDataGrid = forwardRef<FormDataGridRef, Props>(
       <div className="flex flex-col gap-3 size-full">
         {!hideAddButton && (
           <div className="flex flex-row justify-end items-center">
-            <DialGhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddPart()} />
+            <GhostButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={() => onAddPart()} />
           </div>
         )}
         <div className="flex-1 min-h-0 overflow-auto">

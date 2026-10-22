@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC } from 'react';
 
@@ -61,9 +61,9 @@ const DynamicConfiguration: FC<Props> = ({
       containerClassName={accordionContainerClassName}
     >
       {loading ? (
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       ) : rows.length === 0 ? (
-        <p className={classNames('body text-secondary', containerClassName)}>{t(BasicI18nKey.NoVariables)}</p>
+        <p className={classNames('dial-body-text text-secondary', containerClassName)}>{t(BasicI18nKey.NoVariables)}</p>
       ) : (
         <div className={classNames('flex flex-col gap-6', containerClassName)}>
           {rows.map((row) => (

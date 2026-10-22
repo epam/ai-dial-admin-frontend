@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { DialLoader, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getActivityById, getRevisionDetails } from '@/src/app/[lang]/activity-audit/actions';
 import AuditView from '@/src/components/ActivityAudit/View/AuditView';
@@ -100,7 +100,7 @@ const ActivityDetails: FC<Props> = ({
     >
       <div className="h-full px-6 py-4">
         {loading ? (
-          <DialLoader />
+          <Spinner size={18} fullWidth />
         ) : (
           <AuditView
             activity={activity || ({} as DialActivity)}

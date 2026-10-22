@@ -6,9 +6,9 @@ import { createPortal } from 'react-dom';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
   ButtonAppearance,
-  DialNeutralButton,
+  OutlinedButton,
   DialNotification,
-  DialPrimaryButton,
+  PrimaryButton,
   NotificationVariant,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -153,15 +153,15 @@ const Columns: FC<ColumnsProps> = ({
     <div className="flex flex-col gap-4 flex-1 min-h-0">
       {duplicateMessage && <DialNotification variant={NotificationVariant.Error} message={duplicateMessage} />}
       <div className="flex flex-row justify-between items-center">
-        <span className="text-secondary small">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
+        <span className="text-secondary dial-small-text">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
         <div className="flex flex-row gap-2">
-          <DialPrimaryButton
+          <PrimaryButton
             iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
             appearance={ButtonAppearance.Ghost}
             label={`${t(CompareI18nKey.View)} ${t(JsonAtaI18nKey.JSONAtaDoc)}`}
             onClick={() => setIsDocumentationModalOpen(true)}
           />
-          <DialNeutralButton
+          <OutlinedButton
             label={t(ButtonsI18nKey.Add)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddColumn}

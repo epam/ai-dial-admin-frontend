@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { DialLabel, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Label, Switch, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -103,23 +103,23 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
 
       {switchGroups.map(({ title, keys }) => (
         <div key={title} className="flex flex-col gap-y-3">
-          <DialLabel label={t(title)} />
+          <Label label={t(title)} />
           {keys.map((key) => {
             const { value, isReadonly } = getReadOnlyValues(key, appRunner);
             return (
-              <DialTooltip
+              <Tooltip
                 key={key}
                 tooltip={isReadonly ? t(FeaturesI18nKey.AppRunnerInherited) : ''}
-                placement="bottom-start"
+                placement={TooltipPlacement.Bottom}
               >
-                <DialSwitch
+                <Switch
                   disabled={isReadonly || isReadOnlyAdmin}
                   isOn={(isReadonly ? value : entity?.features?.[key]) as boolean}
-                  label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
-                  switchId={key}
+                  labelProps={{ label: t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey]) }}
+                  id={key}
                   onChange={(value) => onSwitch(value, key)}
                 />
-              </DialTooltip>
+              </Tooltip>
             );
           })}
         </div>

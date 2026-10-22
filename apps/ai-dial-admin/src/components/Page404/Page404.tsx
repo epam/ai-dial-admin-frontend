@@ -7,7 +7,7 @@ import Icon from '@/public/images/404.svg';
 import { ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialLinkButton } from '@epam/ai-dial-ui-kit';
+import { LinkButton } from '@epam/ai-dial-ui-kit';
 
 const Page404: FC = () => {
   const router = useRouter();
@@ -29,8 +29,8 @@ const Page404: FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-10">
-          <DialLinkButton label={t(ButtonsI18nKey.GoToHomepage)} onClick={() => router.push(ApplicationRoute.Home)} />
-          <DialLinkButton label={t(ButtonsI18nKey.GoBack)} onClick={() => router.back()} />
+          <LinkButton label={t(ButtonsI18nKey.GoToHomepage)} onClick={() => router.push(ApplicationRoute.Home)} />
+          <LinkButton label={t(ButtonsI18nKey.GoBack)} onClick={() => router.back()} />
         </div>
       </div>
     </div>

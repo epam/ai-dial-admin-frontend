@@ -1,0 +1,37 @@
+/*
+ * Tailwind v4 entry, imported by `global.scss` as plain CSS (Sass leaves a `.css` import untouched, and
+ * Tailwind resolves it after sass-loader). The app's own SCSS rides in the same compilation, which is
+ * what lets its `@apply` see the theme and utilities below.
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+/* `important`: the app's utilities must keep beating the kit's unlayered `dial-*` rules. */
+@import 'tailwindcss/utilities.css' layer(utilities) important source(none);
+@import './app-theme.css';
+
+@source '../**/*.{html,js,ts,tsx,yaml}';
+@source '../../../../node_modules/@epam/ai-dial-ui-kit/dist';
+
+/* Tailwind v3 preflight behaviour that v4 dropped. */
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 1;
+    color: #9ca3af;
+  }
+
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+
+  :disabled {
+    cursor: default;
+  }
+
+  dialog {
+    margin: auto;
+  }
+}

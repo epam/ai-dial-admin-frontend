@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -39,9 +39,9 @@ const ValidityStatus: FC<Props> = ({ message, valid, isHideHint, label }) => {
       <div className={colorClassName}></div>
       <div>{title}</div>
       {!isHideHint && !valid && (
-        <DialTooltip tooltip={message || ''}>
+        <Tooltip tooltip={message || ''}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} onClick={onClick} className="cursor-pointer" />
-        </DialTooltip>
+        </Tooltip>
       )}
     </div>
   );

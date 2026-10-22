@@ -2,7 +2,7 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { IconPlus } from '@tabler/icons-react';
-import { DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { Label, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
@@ -120,10 +120,10 @@ const ContainerVariables: FC<Props> = ({ container, setContainer, disabled }) =>
           <div className={gridClassName}>
             {variables.length > 0 && (
               <>
-                <DialLabel label={t(EnvVariablesI18nKey.Name)} className="hidden lg:block lg:pl-8" />
-                <DialLabel label={t(EnvVariablesI18nKey.Description)} className="hidden lg:block" />
-                <DialLabel label={t(BasicI18nKey.Value)} className="hidden lg:block" />
-                <DialLabel label={t(EnvVariablesI18nKey.MountType)} className="hidden lg:block" />
+                <Label label={t(EnvVariablesI18nKey.Name)} className="hidden lg:block lg:pl-8" />
+                <Label label={t(EnvVariablesI18nKey.Description)} className="hidden lg:block" />
+                <Label label={t(BasicI18nKey.Value)} className="hidden lg:block" />
+                <Label label={t(EnvVariablesI18nKey.MountType)} className="hidden lg:block" />
               </>
             )}
 
@@ -148,7 +148,7 @@ const ContainerVariables: FC<Props> = ({ container, setContainer, disabled }) =>
           </div>
         </DndProvider>
         <div>
-          <DialNeutralButton
+          <OutlinedButton
             className="mb-2"
             label={t(EnvVariablesI18nKey.AddVariable)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}

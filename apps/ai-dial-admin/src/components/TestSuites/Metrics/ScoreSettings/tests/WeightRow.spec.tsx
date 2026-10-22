@@ -43,7 +43,6 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         />
       </div>
     ),
-    DialRemoveButton: ({ onClick, ...rest }: any) => <button type="button" onClick={onClick} {...rest} />,
   };
 });
 

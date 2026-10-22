@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { ColDef, FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -72,7 +72,7 @@ function RadioSelectGrid<T extends object>({
   if (isLoading) {
     return (
       <div className="size-full flex flex-col">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }

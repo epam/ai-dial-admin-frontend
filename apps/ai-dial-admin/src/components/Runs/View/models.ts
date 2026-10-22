@@ -1,5 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 
+import { ColumnWidths } from '@/src/components/Grid/models';
 import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -13,6 +14,7 @@ export interface ExtractionResultTabUiState {
   showTreePanel: boolean;
   colDefs: ColDef[];
   panelColDefs: ColDef[];
+  columnWidths: ColumnWidths;
   results: AnalyticsResult[] | null;
   snapshots: MetricSnapshot[];
 }

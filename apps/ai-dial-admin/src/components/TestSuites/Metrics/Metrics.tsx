@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialLoader, DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Spinner, NoDataContent, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import {
@@ -161,7 +161,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
               {t(TabsI18nKey.Metrics)}: {metrics?.length || 0}
             </h1>
 
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               disabled={!selectedTestSuite.datasetId}
@@ -172,7 +172,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
             <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.DatasetRequiredForMetrics)}</p>
           )}
           {isMetricsLoading ? (
-            <DialLoader size={44} />
+            <Spinner size={44} fullWidth />
           ) : (
             <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
               {hasMetrics ? (
@@ -193,7 +193,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
                   ))}
                 </div>
               ) : (
-                <DialNoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
+                <NoDataContent title={t(EntitiesI18nKey.NoMetrics)} />
               )}
             </div>
           )}
@@ -201,7 +201,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
 
         {isMetricsLoading ? (
           <div className="flex w-[420px] shrink-0 items-center justify-center rounded bg-layer-3 p-4">
-            <DialLoader size={44} />
+            <Spinner size={44} fullWidth />
           </div>
         ) : (
           hasMetrics && (
@@ -241,7 +241,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         )}
       {isDeleteModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isDeleteModalOpen}
             header={t(DeleteI18nKey.Title, { entity: t(TestSuitesI18nKey.Metric) })}
             onConfirm={() => onRemoveMetric(metricToEdit?.id as string)}

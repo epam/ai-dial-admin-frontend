@@ -12,14 +12,14 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  DialSwitch: ({ label, isOn, onChange, disabled, switchId }: any) => (
+  Switch: ({ labelProps, isOn, onChange, disabled, id }: any) => (
     <label>
-      <span>{label}</span>
+      <span>{labelProps?.label}</span>
       <input
         type="checkbox"
         role="switch"
-        aria-label={label}
-        id={switchId}
+        aria-label={labelProps?.label}
+        id={id}
         checked={!!isOn}
         disabled={disabled}
         onChange={() => onChange(!isOn)}

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconReload } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -126,7 +126,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
       <div className="flex justify-between items-center mb-3 h-[40px]">
         <h1>{t(RolesI18nKey.Sharing)}</h1>
         {!isReadOnlyAdmin && isResetAvailable && (
-          <DialGhostButton
+          <GhostButton
             iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(RolesI18nKey.ResetToDefaultLimits)}
             onClick={onResetAllSharingToDefault}

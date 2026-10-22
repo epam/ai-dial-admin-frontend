@@ -57,7 +57,7 @@ export default async function RootLayout({
         <link rel="icon" href={faviconUrl || '/favicon.ico'} sizes="any" type="image/png" />
         <link rel="apple-touch-icon" href={faviconUrl || '/favicon.ico'} type="image/png" />
       </head>
-      <body className={classNames(inter.variable, 'font min-w-[360px]')}>
+      <body className={classNames(inter.variable, 'font dial-body-text min-w-[360px]')}>
         {userInfo.success ? (
           children
         ) : (

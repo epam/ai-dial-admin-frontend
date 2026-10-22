@@ -50,7 +50,7 @@ const SpecificFunction: FC<Props> = ({
           labelNode: (
             <span className="inline-flex min-w-0 items-center gap-2">
               <span className="truncate">{label}</span>
-              <span className="shrink-0 rounded-full bg-layer-4 px-2 py-0.5 tiny-semi text-secondary">
+              <span className="shrink-0 rounded-full bg-layer-4 px-2 py-0.5 dial-tiny-semi-text text-secondary">
                 {suiteLevelOnlyLabel}
               </span>
             </span>
@@ -79,7 +79,7 @@ const SpecificFunction: FC<Props> = ({
 
   return (
     <div className="mt-4 flex flex-col gap-4 rounded bg-layer-2 p-4">
-      <span className="tiny-semi text-secondary">{t(TestSuitesI18nKey.OverallScoreFunction)}</span>
+      <span className="dial-tiny-semi-text text-secondary">{t(TestSuitesI18nKey.OverallScoreFunction)}</span>
 
       <DialSelectField
         id="overallScoreFunctionName"
@@ -90,7 +90,9 @@ const SpecificFunction: FC<Props> = ({
       />
 
       <div className="flex flex-col gap-4 border-l border-secondary pl-4">
-        <span className="tiny-semi text-secondary">{t(TestSuitesI18nKey.OverallScoreFunctionParameters)}</span>
+        <span className="dial-tiny-semi-text text-secondary">
+          {t(TestSuitesI18nKey.OverallScoreFunctionParameters)}
+        </span>
 
         <FunctionParameterRow
           labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
@@ -117,7 +119,7 @@ const SpecificFunction: FC<Props> = ({
           className="!gap-2 !p-2 [&>div:first-child]:!items-center [&>div:first-child]:!gap-2 [&>div.relative]:!size-6"
           onClose={() => setIsSuiteAlertVisible(false)}
           message={
-            <div className="flex flex-col gap-0.5 tiny text-primary">
+            <div className="flex flex-col gap-0.5 dial-tiny-text text-primary">
               <p>
                 <span className="font-bold">{functionLabel}</span>
                 {` ${t(TestSuitesI18nKey.OverallScoreFunctionSuiteOnlyAlertSuffix)}`}

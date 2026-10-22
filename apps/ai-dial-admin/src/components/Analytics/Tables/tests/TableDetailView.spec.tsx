@@ -71,7 +71,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+    EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
   };
 });
 
@@ -984,7 +984,7 @@ describe('TableDetailView tabs', () => {
 
 // The read-only definition view's own disclosure/copy/read-only behavior used to be covered by a
 // standalone wrapper component's own spec; that wrapper is now inlined into this header/body, and its
-// cases live here instead. The header control is a `DialSwitch` (see JsonToggle), which renders both a
+// cases live here instead. The header control is a `Switch` (see JsonToggle), which renders both a
 // `switch`-role wrapper with no accessible name of its own and a real `checkbox`-role input that
 // carries the on/off state and the click target — so every query below goes through the checkbox, not
 // a button. There is no toolbar heading over the document — the labelled toggle is what names the
@@ -1123,7 +1123,7 @@ describe('TableDetailView JSON definition view', () => {
 
   // `userEvent.click` does not reach `CopyButton`'s icon-only variant in jsdom — established across five
   // isolated probes in `qa/review-batch-4-round-1.md` §1: the event reaches the DOM node and a bare
-  // ui-kit `DialIconButton` responds fine, but `CopyButton`'s own click wiring does not survive the
+  // ui-kit `IconButton` responds fine, but `CopyButton`'s own click wiring does not survive the
   // synthetic pointer sequence. `fireEvent.click` is used deliberately here, not as a shortcut around it.
   test('the copy control writes the whole displayed document to the clipboard', async () => {
     const user = userEvent.setup();

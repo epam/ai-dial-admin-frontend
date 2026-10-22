@@ -2,9 +2,9 @@ import {
   NotificationVariant,
   DialNotification,
   DialFormPopup,
-  DialLoader,
-  DialNoDataContent,
-  DialSwitch,
+  Spinner,
+  NoDataContent,
+  Switch,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { GridApi, GridOptions, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
@@ -119,17 +119,17 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
       onCancel={onClose}
     >
       <div className="flex flex-col px-6 py-4 min-h-0 h-full">
-        {isLoading && <DialLoader size={24} />}
+        {isLoading && <Spinner size={24} fullWidth />}
         {!isLoading && (
           <div className="flex flex-col gap-4 min-h-0 h-full">
-            <DialSwitch
-              switchId="related-containers"
+            <Switch
+              id="related-containers"
               onChange={toggleShowRelated}
               isOn={showRelated}
-              label={t(ContainersI18nKey.ShowRelatedContainers)}
+              labelProps={{ label: t(ContainersI18nKey.ShowRelatedContainers) }}
             />
             {!displayedDependencies.length ? (
-              <DialNoDataContent
+              <NoDataContent
                 title={t(EntitiesI18nKey.NoContainersType, {
                   type: getTranslatedType(getRouteByType(image.$type), t),
                   entityType: getTranslatedDeploymentType(getRouteByType(image.$type), t),

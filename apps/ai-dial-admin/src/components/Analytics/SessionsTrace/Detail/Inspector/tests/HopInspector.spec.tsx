@@ -15,7 +15,6 @@ import {
   HopResponseEnvelope,
   MessageRole,
   HopToolCall,
-  SessionScope,
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
 
@@ -42,7 +41,7 @@ vi.mock('@/src/app/[lang]/sessions/actions', () => ({
   getSessionHopProtocol: (...args: unknown[]) => getSessionHopProtocol(...args),
 }));
 
-const SCOPE: SessionScope = { id: 'chat-1', source: null };
+const READ_KEY = 'chat-1';
 
 const GRANTS: HopBodyGrants = { isRequestReadable: true, isResponseReadable: true };
 
@@ -141,7 +140,7 @@ const protocolFacts = (overrides: Record<string, unknown> = {}) => ({
 const renderInspector = (props: Partial<Parameters<typeof HopInspector>[0]> = {}) =>
   render(
     <HopInspector
-      scope={SCOPE}
+      readKey={READ_KEY}
       traceId="tr1"
       span={span()}
       kind={SpanKind.Llm}
@@ -995,7 +994,7 @@ describe('HopInspector — the tab set', () => {
 
     rerender(
       <HopInspector
-        scope={SCOPE}
+        readKey={READ_KEY}
         traceId="tr1"
         span={span({ core_span_id: 's2' })}
         kind={SpanKind.Llm}
@@ -1029,7 +1028,7 @@ describe('HopInspector — the tab set', () => {
 
     rerender(
       <HopInspector
-        scope={SCOPE}
+        readKey={READ_KEY}
         traceId="tr1"
         span={span({ core_span_id: 's2', event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'get_page' })}
         kind={SpanKind.Mcp}

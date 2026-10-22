@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonAppearance, DialFileIcon, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialFileIcon, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { ChangeEvent, FC, useCallback, useRef } from 'react';
 import { IconEdit } from '@tabler/icons-react';
 
@@ -39,7 +39,7 @@ const SelectedFile: FC<Props> = ({ file, onChangeFile }) => {
 
       <div>
         <label htmlFor="file" tabIndex={0}>
-          <DialPrimaryButton
+          <PrimaryButton
             iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
             appearance={ButtonAppearance.Ghost}
             label={t(ButtonsI18nKey.Change)}

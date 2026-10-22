@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -121,9 +121,9 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, entity
             onChange={(value) => onSelect((value as string) || void 0)}
           />
         </div>
-        <DialNeutralButton label={t(ButtonsI18nKey.Browse)} disabled={isFieldDisabled} onClick={onOpenModal} />
+        <OutlinedButton label={t(ButtonsI18nKey.Browse)} disabled={isFieldDisabled} onClick={onOpenModal} />
         {schemaId && (
-          <DialNeutralButton
+          <OutlinedButton
             label={isMobile ? '' : t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             aria-label={t(ButtonsI18nKey.Open)}

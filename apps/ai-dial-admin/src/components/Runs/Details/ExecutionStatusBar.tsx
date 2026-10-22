@@ -10,7 +10,7 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
-import { DialLinkButton } from '@epam/ai-dial-ui-kit';
+import { LinkButton } from '@epam/ai-dial-ui-kit';
 
 import { getFormattedDuration, getTestCaseStatusClass } from '../View/utils';
 
@@ -72,7 +72,7 @@ const ExecutionStatusBar: FC<Props> = ({ status, httpCode, durationMs, timestamp
         )}
       </div>
       {grafanaUrl && (
-        <DialLinkButton
+        <LinkButton
           className="w-fit mt-1.5"
           iconBefore={<Grafana />}
           label={t(RunsI18nKey.GrafanaDetails)}

@@ -1,5 +1,5 @@
 'use client';
-import { DialLoader, DialNeutralButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { Spinner, OutlinedButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -158,7 +158,7 @@ const TabbedSelectionContent: FC<Props> = ({
                 {itemsCount}
               </h3>
               {!isFull && (
-                <DialNeutralButton
+                <OutlinedButton
                   label={getAddButtonTitle(selectedTab)}
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
                   onClick={() => setIsModalOpen(true)}
@@ -168,7 +168,7 @@ const TabbedSelectionContent: FC<Props> = ({
           )}
           <div className="flex-1 min-h-0">
             {isLoadingData ? (
-              <DialLoader size={50} />
+              <Spinner size={50} fullWidth />
             ) : (
               <GridView
                 getIsEmptyData={() => rowData.length === 0}

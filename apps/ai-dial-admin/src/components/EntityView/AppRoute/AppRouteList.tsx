@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { EllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -32,7 +32,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
 
   return (
     <div className="flex-1 min-h-0 flex flex-col relative gap-y-4 overflow-auto" role="tablist">
-      {activeRouteIndex == null && <DialNoDataContent title={t(EntitiesI18nKey.NoAppRoutes)} />}
+      {activeRouteIndex == null && <NoDataContent title={t(EntitiesI18nKey.NoAppRoutes)} />}
       {activeRouteIndex != null && !!routes?.length
         ? routes.map((route, index) => {
             return (
@@ -47,7 +47,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
                   onClick(index);
                 }}
                 className={classNames(
-                  'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full small cursor-pointer hover:text-accent-primary',
+                  'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full dial-small-text cursor-pointer hover:text-accent-primary',
                   activeRouteIndex === index
                     ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary'
                     : 'text-primary',

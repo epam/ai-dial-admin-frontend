@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 
 import { ToolsetI18nKey } from '@/src/constants/i18n';
@@ -295,14 +295,14 @@ const ResourceAuthButtons: FC<Props> = ({
       selectedToolset.auth_settings?.authentication_type !== ToolsetAuthType.NONE ? (
         <>
           {(isUserLevelSignedIn || isOrgLevelSignedIn) && (
-            <DialNeutralButton
+            <OutlinedButton
               label={t(ToolsetI18nKey.LogOut)}
               iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
               onClick={onLogout}
             />
           )}
           {!isToolsetFullSignedIn && (
-            <DialNeutralButton
+            <OutlinedButton
               label={t(ToolsetI18nKey.LogIn)}
               iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => setIsLoginModalOpen(true)}

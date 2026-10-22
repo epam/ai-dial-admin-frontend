@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
@@ -25,9 +25,9 @@ const SelectedFilter: FC<Props> = ({ selectedFilters, isDropdownOpen }) => {
   }, [selectedFilters, t]);
 
   return (
-    <div className="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center max-w-[150px]">
+    <div className="bg-layer-4 cursor-pointer h-[22px] px-1 dial-small-text rounded flex items-center justify-center max-w-[150px]">
       {t(ToolsetI18nKey.Filter)}:
-      <DialEllipsisTooltip text={title} className="mx-1" />
+      <EllipsisTooltip text={title} className="mx-1" />
       {icon}
     </div>
   );

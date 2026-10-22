@@ -1,4 +1,4 @@
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { Button } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import { useCallback } from 'react';
 
@@ -13,7 +13,7 @@ const ProfileButton = () => {
   }, [toggleUserMenu]);
 
   return (
-    <DialButton
+    <Button
       className="flex !h-[48px] items-center justify-center text-secondary md:text-primary"
       onClick={onClick}
       aria-label="Account settings"

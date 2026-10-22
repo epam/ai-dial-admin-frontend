@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialLoader, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import FolderInfo from '@/src/components/FoldersStorage/FolderInfo';
@@ -27,7 +27,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
       size={PopupSize.Lg}
     >
       {isLoading ? (
-        <DialLoader size={50} />
+        <Spinner size={50} fullWidth />
       ) : (
         <div className="flex flex-1 flex-row px-6 min-h-0">
           <div className="flex flex-1 gap-4 pt-4 mb-6 min-h-0">

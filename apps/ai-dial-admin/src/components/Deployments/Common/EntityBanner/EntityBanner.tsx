@@ -16,10 +16,10 @@ const EntityBanner: FC<Props> = ({ variant, title, message, className, children 
       className={className}
       variant={variant ?? NotificationVariant.Warning}
       message={
-        <span className="small">
+        <span className="dial-small-text">
           {title && (
             <>
-              <span className="small-text-semi">{title}</span>{' '}
+              <span className="dial-small-semi-text">{title}</span>{' '}
             </>
           )}
           {message}

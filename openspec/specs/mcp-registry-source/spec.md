@@ -354,7 +354,7 @@ The component SHALL accept the following props:
 - `children: ReactNode` — body content
 - `className?: string` — optional override for the outer container (escape hatch for per-usage tweaks)
 
-The outer container SHALL use the classes `flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full` by default. The header row SHALL render the label as `<span className="dial-tiny-text text-secondary">` followed by a `DialCloseButton` with `size={24}`.
+The outer container SHALL use the classes `flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full` by default. The header row SHALL render the label as `<span className="dial-tiny-text text-secondary">` followed by a `CloseButton` at its default `ElementSize.Small` (24px).
 
 Both the HuggingFace `ModelDescription` and the new `McpServerDetails` SHALL compose `SidePanel`. `ModelDescription` SHALL be refactored to compose `SidePanel` without regressing its existing fetch/loader/empty behavior.
 
@@ -427,8 +427,8 @@ Sidebar content SHALL be composed from DIAL primitives, rendered as children of 
 | Repository | `server.repository.url` as anchor with external-link icon | `DialLabelledText` with `children` |
 | Remotes | `server.remotes[].type` as inline tag chips | Static markup or reuse of `TagsCellRenderer` |
 | Full server.json | Pretty-printed `{ server, _meta }` payload | `CodeViewer` with `hideFullscreen` |
-| Loading state | While the full-payload fetch is in flight for the JSON block | `DialLoader` |
-| Empty state | When the fetch returns no data | `DialNoDataContent` |
+| Loading state | While the full-payload fetch is in flight for the JSON block | `Spinner` |
+| Empty state | When the fetch returns no data | `NoDataContent` |
 
 #### Scenario: Opening the sidebar
 
@@ -456,7 +456,7 @@ Sidebar content SHALL be composed from DIAL primitives, rendered as children of 
 
 - **WHEN** `getMcpServerVersion` returns an error
 - **THEN** the sidebar SHALL remain open showing the instant row data
-- **AND** the JSON viewer section SHALL render `DialNoDataContent` with label `NoServerDetails`
+- **AND** the JSON viewer section SHALL render `NoDataContent` with label `NoServerDetails`
 
 #### Scenario: Reopening the sidebar for a different server
 

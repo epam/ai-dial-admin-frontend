@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 import ReactECharts from 'echarts-for-react';
 
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
@@ -48,10 +48,10 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
     >
       {isLoading ? (
         <div className="flex h-[220px] items-center justify-center">
-          <DialLoader size={32} />
+          <Spinner size={32} fullWidth />
         </div>
       ) : !hasData ? (
-        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
+        <NoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
         <ReactECharts
           ref={chartRef}

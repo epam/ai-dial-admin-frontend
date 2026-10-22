@@ -13,7 +13,7 @@ import MetricInputs from '../Inputs';
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   TooltipPlacement: { Left: 'left' },
   ErrorText: ({ text }: any) => (text ? <span role="alert">{text}</span> : null),
-  DialLabel: ({ label }: any) => <span>{label}</span>,
+  Label: ({ label }: any) => <span>{label}</span>,
   DialTag: ({ label }: any) => <span data-testid="type-tag">{label}</span>,
   Select: ({ id, options, value, onChange, placeholder, fieldClassName, invalid }: any) => (
     <select
@@ -86,6 +86,10 @@ const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({
   depth: 0,
 });
 
+const testCaseBindingFor = (property: string, columnName: string): MetricBinding[] => [
+  { property, source: { $type: MetricBindingType.TestCase, columnName } },
+];
+
 describe('MetricInputs (Values)', () => {
   test('returns null when fields are empty', () => {
     const { container } = render(<MetricInputs title="Inputs" fields={[]} bindings={[]} />);
@@ -108,7 +112,7 @@ describe('MetricInputs (Values)', () => {
     expect(screen.getByText(TestSuitesI18nKey.InputsHint)).toBeInTheDocument();
   });
 
-  test('shows the expected type next to each input', () => {
+  test('does not show the expected type in the input header', () => {
     const fields: SchemaFieldRow[] = [
       makeField({ id: 'f1', name: 'actual', type: 'array', itemsType: 'string' }),
       makeField({ id: 'f2', name: 'prompt', type: 'number' }),
@@ -116,8 +120,8 @@ describe('MetricInputs (Values)', () => {
 
     render(<MetricInputs title="Inputs" fields={fields} bindings={[]} />);
 
-    expect(screen.getByText('Array<String>')).toBeInTheDocument();
-    expect(screen.getByText('Number')).toBeInTheDocument();
+    expect(screen.queryByText('Array<String>')).not.toBeInTheDocument();
+    expect(screen.queryByText('Number')).not.toBeInTheDocument();
   });
 
   test('updates binding type when switching tab', async () => {
@@ -208,14 +212,14 @@ describe('MetricInputs (Values)', () => {
     const options = screen.getAllByRole('option');
     expect(options.map((option) => option.getAttribute('value'))).toEqual(['answer', 'follow_up']);
     expect(options.every((option) => option.getAttribute('data-has-tag') === 'true')).toBe(true);
-    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'String', 'String']);
+    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'String']);
     expect(screen.getByRole('combobox')).toHaveAttribute('data-placeholder', EntityPlaceholdersI18nKey.Select);
   });
 
-  test('test case options include all schema columns with type tags', () => {
+  test('test case options list only columns of the type the input supports', () => {
     const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt', type: 'array' })];
     const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.TestCase, columnName: 'question' } },
+      { property: 'prompt', source: { $type: MetricBindingType.TestCase, columnName: 'items' } },
     ];
 
     render(
@@ -224,26 +228,80 @@ describe('MetricInputs (Values)', () => {
         fields={fields}
         bindings={bindings}
         testCaseSchema={[
-          {
-            name: 'question',
-            type: TestCaseItemType.STRING,
-            required: true,
-            description: '',
-          },
-          {
-            name: 'score',
-            type: TestCaseItemType.NUMBER,
-            required: false,
-            description: '',
-          },
+          { name: 'question', type: TestCaseItemType.STRING, required: true, description: '' },
+          { name: 'items', type: TestCaseItemType.ARRAY, required: false, description: '' },
+          { name: 'score', type: TestCaseItemType.NUMBER, required: false, description: '' },
         ]}
         onChange={vi.fn()}
       />,
     );
 
     const options = screen.getAllByRole('option');
-    expect(options.map((option) => option.getAttribute('value'))).toEqual(['question', 'score']);
-    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['Array', 'String', 'Number']);
+    expect(options.map((option) => option.getAttribute('value'))).toEqual(['items']);
+    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['Array']);
+  });
+
+  test('response column options list only columns of the type the input supports', () => {
+    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt', type: 'number' })];
+    const bindings: MetricBinding[] = [
+      { property: 'prompt', source: { $type: MetricBindingType.Response, columnName: 'score' } },
+    ];
+    const selectedTestSuite: TestSuite = {
+      responseColumns: [
+        { name: 'answer', displayName: 'Answer', expression: '', type: 'string' },
+        { name: 'score', displayName: 'Score', expression: '', type: 'integer' },
+      ],
+    };
+
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={fields}
+        bindings={bindings}
+        selectedTestSuite={selectedTestSuite}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['score']);
+  });
+
+  test('lists every column the schema union of an input allows', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'string' })]}
+        schema={{
+          type: 'object',
+          properties: { actual: { anyOf: [{ type: 'string' }, { type: 'array' }] } },
+        }}
+        bindings={testCaseBindingFor('actual', 'items')}
+        testCaseSchema={[
+          { name: 'question', type: TestCaseItemType.STRING, required: true, description: '' },
+          { name: 'items', type: TestCaseItemType.ARRAY, required: false, description: '' },
+          { name: 'flag', type: TestCaseItemType.BOOLEAN, required: false, description: '' },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['question', 'items']);
+  });
+
+  test('lists every column for an untyped input', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'string' })]}
+        schema={{ type: 'object', properties: { actual: { description: 'Any value' } } }}
+        bindings={testCaseBindingFor('actual', 'items')}
+        testCaseSchema={[
+          { name: 'question', type: TestCaseItemType.STRING, required: true, description: '' },
+          { name: 'flag', type: TestCaseItemType.BOOLEAN, required: false, description: '' },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['question', 'flag']);
   });
 
   test('test case options include sample tooltip when samples are provided', () => {
@@ -296,6 +354,37 @@ describe('MetricInputs type matching', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent(TestSuitesI18nKey.InputTypeMismatch);
     expect(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('accepts an array column for an input whose schema allows several types', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'string' })]}
+        schema={{
+          type: 'object',
+          properties: { actual: { anyOf: [{ type: 'string' }, { type: 'number' }, { type: 'array' }] } },
+        }}
+        bindings={testCaseBinding('items')}
+        testCaseSchema={[testCaseColumn('items', TestCaseItemType.ARRAY)]}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('accepts any column for an untyped input', () => {
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={[makeField({ id: 'f1', name: 'actual', type: 'string' })]}
+        schema={{ type: 'object', properties: { actual: { description: 'Any value' } } }}
+        bindings={testCaseBinding('items')}
+        testCaseSchema={[testCaseColumn('items', TestCaseItemType.ARRAY)]}
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   test('does not flag a test case column with a matching type', () => {

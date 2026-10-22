@@ -1,4 +1,4 @@
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
 import { getModelDetails } from '@/src/app/actions/deployments';
@@ -42,11 +42,11 @@ const ModelDescription: FC<Props> = ({ descriptionModelData, isDescriptionShown,
       onClose={() => onChangeIsDescriptionShown(false)}
     >
       {isLoading ? (
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       ) : descriptionData.length ? (
         <MdViewer content={descriptionData} />
       ) : (
-        <DialNoDataContent title={t(ContainersI18nKey.NoDescriptionAvailable)} />
+        <NoDataContent title={t(ContainersI18nKey.NoDescriptionAvailable)} />
       )}
     </SidePanel>
   );

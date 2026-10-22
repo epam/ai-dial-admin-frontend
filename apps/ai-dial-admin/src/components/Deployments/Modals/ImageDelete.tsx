@@ -10,8 +10,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
+  ConfirmationPopup,
+  EllipsisTooltip,
   DialSelect,
   PopupSize,
   SelectSize,
@@ -203,7 +203,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
   );
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open={true}
       variant={ConfirmationPopupVariant.Danger}
       header={getTitle(view, t)}
@@ -218,13 +218,13 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
-              <DialEllipsisTooltip text={displayedId} />
+              <EllipsisTooltip text={displayedId} />
             </div>
           )}
           {name && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
-              <DialEllipsisTooltip text={name} />
+              <EllipsisTooltip text={name} />
             </div>
           )}
           {existingVersions && existingVersions.length > 0 ? (
@@ -250,7 +250,7 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
           <RelatedArtefacts entity={{ ...entity, existingVersions, selectedVersion }} view={view} />
         )}
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { FC } from 'react';
 
@@ -14,7 +14,7 @@ interface Props {
 // off a real control whose accessible name *is* the hint, with the icon hidden so it does not compete with
 // that name. Focus-visible mirrors hover, so a keyboard gets the same feedback a pointer does.
 const FieldCaveat: FC<Props> = ({ hint }) => (
-  <DialTooltip tooltip={<span>{hint}</span>}>
+  <Tooltip tooltip={<span>{hint}</span>}>
     <button
       type="button"
       aria-label={hint}
@@ -22,7 +22,7 @@ const FieldCaveat: FC<Props> = ({ hint }) => (
     >
       <IconInfoCircle size={ICON_SIZE} aria-hidden />
     </button>
-  </DialTooltip>
+  </Tooltip>
 );
 
 export default FieldCaveat;

@@ -20,7 +20,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialCollapsibleSidebar: ({ children }: any) => <div role="complementary">{children}</div>,
   DialConditionalResizableContainer: ({ children }: any) => <div>{children}</div>,
-  DialLoader: () => <div role="progressbar" />,
+  Spinner: () => <div role="progressbar" />,
 }));
 
 vi.mock('../MethodItem', () => ({

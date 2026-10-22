@@ -1,4 +1,4 @@
-import { DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 
@@ -60,7 +60,7 @@ const InternalImageField: FC<Props> = ({ container, image, route, disabled }) =>
 
   return (
     <div className={`${CONTROL_WITH_BUTTON_WIDTH} flex flex-col gap-y-1`}>
-      <DialLabel label={label} htmlFor="internalImage" />
+      <Label label={label} htmlFor="internalImage" />
       <DialInputPopup
         open={isModalOpen}
         onOpen={onOpenModal}

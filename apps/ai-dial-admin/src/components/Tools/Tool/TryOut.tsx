@@ -2,9 +2,9 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  DialCloseButton,
-  DialLoader,
-  DialPrimaryButton,
+  CloseButton,
+  Spinner,
+  PrimaryButton,
   DialSelect,
   JsonSchema,
   SelectOption,
@@ -112,12 +112,8 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
       <div className="flex items-center justify-between">
         <h1 className="truncate">{t(ButtonsI18nKey.TryOut)}</h1>
         <div className="flex flex-row items-center gap-x-4">
-          <DialPrimaryButton
-            label={t(ButtonsI18nKey.SendRequest)}
-            onClick={() => sendRequest()}
-            disabled={isRequestSend}
-          />
-          <DialCloseButton onClose={close} />
+          <PrimaryButton label={t(ButtonsI18nKey.SendRequest)} onClick={() => sendRequest()} disabled={isRequestSend} />
+          <CloseButton onClose={close} />
         </div>
       </div>
       <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
@@ -155,7 +151,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
         <Divider />
         <div className="flex-1 basis-0 min-h-0 flex flex-col">
           <h3 className="mb-4">{t(BasicI18nKey.Response)}</h3>
-          {isRequestSend ? <DialLoader /> : <JsonEditor entity={response} readonly={true} />}
+          {isRequestSend ? <Spinner size={18} fullWidth /> : <JsonEditor entity={response} readonly={true} />}
         </div>
       </div>
     </div>

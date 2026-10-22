@@ -37,13 +37,16 @@ export const useSessionTrace = () => {
   const [selectedSpanId, setSelectedSpanId] = useState<string | null>(null);
   const getReqRef = useRef(useProtectedRequest());
 
-  const onOpenTrace = useCallback(async (figures: SessionTraceFigures, title?: string) => {
+  // `initialSpanId` is the span the opening surface is about — an entity's own call, which is rarely the
+  // entry hop. Absent from the read, it falls back to the entry hop rather than opening on nothing.
+  const onOpenTrace = useCallback(async (figures: SessionTraceFigures, title?: string, initialSpanId?: string) => {
     setIsLoading(true);
     setSelectedSpanId(null);
 
     try {
       const result = await getReqRef.current(getSessionSpans, figures.traceId);
-      const spans = result?.response?.spans ?? [];
+      const spans: SpanFieldRow[] = result?.response?.spans ?? [];
+      const initialSpan = spans.find(({ core_span_id }) => core_span_id === initialSpanId);
 
       setTrace({
         figures,
@@ -52,7 +55,7 @@ export const useSessionTrace = () => {
         fieldGroups: result?.response?.fieldGroups ?? [],
         hasLoadError: !result?.success,
       });
-      setSelectedSpanId(openingSpanOf(spans)?.core_span_id ?? null);
+      setSelectedSpanId((initialSpan ?? openingSpanOf(spans))?.core_span_id ?? null);
     } catch {
       setTrace({ figures, title, spans: [], fieldGroups: [], hasLoadError: true });
       setSelectedSpanId(null);

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { ButtonAppearance, DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 
 import { getStatusLabel } from '@/src/components/Common/RunStatus/utils';
@@ -99,12 +99,7 @@ const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, api }) => {
         ))}
       </div>
       <div className="flex items-center justify-end">
-        <DialNeutralButton
-          appearance={ButtonAppearance.Outlined}
-          label={t(ButtonsI18nKey.Reset)}
-          disabled={!selected.length}
-          onClick={onReset}
-        />
+        <OutlinedButton label={t(ButtonsI18nKey.Reset)} disabled={!selected.length} onClick={onReset} />
       </div>
     </div>
   );

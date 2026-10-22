@@ -5,11 +5,11 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  DialConfirmationPopup,
-  DialGhostButton,
-  DialNeutralButton,
+  ConfirmationPopup,
+  GhostButton,
+  OutlinedButton,
   DialSelect,
-  DialTooltip,
+  Tooltip,
   SelectSize,
   SelectVariant,
 } from '@epam/ai-dial-ui-kit';
@@ -646,7 +646,7 @@ const ActivityAuditList: FC<Props> = ({
   }, [t, featureFlags.analyticsEnabled]);
 
   const refreshButton = (
-    <DialGhostButton
+    <GhostButton
       label={t(ButtonsI18nKey.Refresh)}
       iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
       onClick={onRefresh}
@@ -697,7 +697,7 @@ const ActivityAuditList: FC<Props> = ({
         rendered this button, so the view identity — not the config flag — is the condition.
       */}
       {!isReadOnlyAdmin && effectiveViewType === ActivityAuditView.Config && (
-        <DialNeutralButton
+        <OutlinedButton
           iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
           label={t(RollbackI18nKey.Rollback)}
           onClick={systemRollback}
@@ -723,7 +723,7 @@ const ActivityAuditList: FC<Props> = ({
       </ListEntities>
       {isRollbackModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isRollbackModalOpen}
             isLoading={isLoading}
             header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
@@ -732,14 +732,14 @@ const ActivityAuditList: FC<Props> = ({
             disableConfirmButton={isCheckingState || !!rollbackBlockReason}
             onClose={onCloseModal}
           >
-            <div className="text-secondary small-150 px-6 py-4">
+            <div className="text-secondary dial-small-paragraph-text px-6 py-4">
               <p>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart1)}</span>
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart2)}</span>
-                <DialTooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
+                <Tooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
                   <span className="important-text-part m-1">{selectedActivity?.resourceId}</span>
-                </DialTooltip>
+                </Tooltip>
                 <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">
                   {formatDateTimeToLocalString(selectedActivity?.epochTimestampMs)}
@@ -751,7 +751,7 @@ const ActivityAuditList: FC<Props> = ({
                 <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
               )}
             </div>
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
       {isDetailsModalOpen &&

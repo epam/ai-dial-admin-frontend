@@ -1,4 +1,4 @@
-import { ButtonAppearance, DialDangerButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DangerButton, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
@@ -260,7 +260,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
               onSave={onSave}
               isSaveAllowed={allowSave && !forceNewVersion}
             >
-              <DialPrimaryButton
+              <PrimaryButton
                 className={buttonsClassNames}
                 label={saveAsNewLabel}
                 onClick={onOpenSaveNewVersionModal}
@@ -278,7 +278,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   onChange={onVersionChange}
                   onClick={onOpenCreteNewVersionModal}
                 />
-                <DialDangerButton
+                <DangerButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
                   appearance={ButtonAppearance.Outlined}
@@ -286,7 +286,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   onClick={onOpenDeleteModal}
                 />
                 {image.buildStatus === IMAGE_STATUS.BUILDING && (
-                  <DialNeutralButton
+                  <OutlinedButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
                     iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
@@ -294,7 +294,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   />
                 )}
                 {image.buildStatus === IMAGE_STATUS.BUILT && (
-                  <DialNeutralButton
+                  <OutlinedButton
                     className={buttonsClassNames}
                     label={t(CreateI18nKey.CreateContainer, {
                       type: getTranslatedType(getRouteByType(image.$type), t),
@@ -304,7 +304,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   />
                 )}
                 {allowEditing && (
-                  <DialNeutralButton
+                  <OutlinedButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Install)}
                     iconBefore={<IconBlocks {...BASE_BUTTON_ICON_PROPS} />}

@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialLoader, DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
@@ -128,13 +128,13 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
         </div>
         <div className="px-6 py-4 h-[600px] w-full min-h-0 flex flex-col overflow-auto">
           {isLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             Object.entries(groupedData).map(([key, values]) => {
               const isExpanded = !!expandedKeys[key as keyof typeof expandedKeys];
 
               return (
-                <div className="tiny text-secondary" key={key}>
+                <div className="dial-tiny-text text-secondary" key={key}>
                   <div onClick={() => toggleKey(key)} className="cursor-pointer flex items-center my-3 gap-1">
                     <span>
                       {isExpanded ? (
@@ -152,7 +152,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
                         <li
                           key={i}
                           className={classNames(
-                            'flex items-center text-primary small h-[34px] rounded px-3 cursor-pointer',
+                            'flex items-center text-primary dial-small-text h-[34px] rounded px-3 cursor-pointer',
                             value.id === selectedRevision?.id &&
                               'border-l-2 border-accent-primary bg-accent-primary-alpha',
                           )}

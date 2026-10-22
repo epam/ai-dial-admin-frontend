@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -75,12 +75,12 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
       <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />
       <div>
         <div className="flex justify-between mb-2">
-          <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
+          <div className="dial-tiny-text mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
           {!isReadOnlyAdmin && (
-            <DialSwitch
+            <Switch
               isOn={isJSONContentMode}
-              label="JSON"
-              switchId="content_json_mode"
+              labelProps={{ label: 'JSON' }}
+              id="content_json_mode"
               onChange={onChangeContentMode}
             />
           )}

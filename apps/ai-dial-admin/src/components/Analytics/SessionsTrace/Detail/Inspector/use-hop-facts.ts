@@ -11,25 +11,23 @@ import {
   HopMcpFacts,
   HopProtocolFacts,
   HopReadState,
-  SessionScope,
 } from '@/src/models/analytics/sessions-trace';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
 
 interface Params {
-  scope: SessionScope;
+  readKey: string;
   traceId: string;
   span: SessionSpanRow | null;
   isEnabled: boolean;
 }
 
 // Every value a read is issued against is an argument, never a capture. A runner defined in the hook body and
-// frozen with `useRef(async …).current` holds the *first* render's `scope` and `traceId` for the life of the
-// component, while the held key is built from the current ones — so a scope change re-fired the effect and
-// committed an answer read against the old scope under the new key, which is the exact confusion the key
-// discipline exists to prevent. `use-hop-envelope.ts` passes both as arguments for the same reason.
+// frozen with `useRef(async …).current` holds the *first* render's `traceId` for the life of the component,
+// while the held key is built from the current one — so a key change re-fired the effect and committed an
+// answer read against the old trace under the new key, which is the exact confusion the key discipline exists
+// to prevent. `use-hop-envelope.ts` passes it as an argument for the same reason.
 type FactsRunner<T extends object> = (
-  scope: SessionScope,
   traceId: string,
   span: SessionSpanRow,
   request: ReturnType<typeof useProtectedRequest>,
@@ -38,7 +36,7 @@ type FactsRunner<T extends object> = (
 // Held per hop with the same key discipline as the envelope reads, so an answer for a hop the reader has left
 // can never appear under the hop they moved to.
 const useHeldFacts = <T extends object>(
-  { scope, traceId, span, isEnabled }: Params,
+  { readKey, traceId, span, isEnabled }: Params,
   run: FactsRunner<T>,
   onFailure: T,
 ) => {
@@ -49,7 +47,7 @@ const useHeldFacts = <T extends object>(
   const onReadFailed = useHopReadReport();
 
   const spanId = span && isEnabled ? span.core_span_id : null;
-  const heldKey = spanId === null ? null : `${scope.id}:${traceId}:${spanId}`;
+  const heldKey = spanId === null ? null : `${readKey}:${traceId}:${spanId}`;
 
   useEffect(() => {
     if (heldKey === heldKeyRef.current) {
@@ -69,7 +67,7 @@ const useHeldFacts = <T extends object>(
 
     const read = async () => {
       try {
-        const result = await run(scope, traceId, span, getReqRef.current);
+        const result = await run(traceId, span, getReqRef.current);
 
         if (heldKeyRef.current === heldKey) {
           if (result && !result.success) {
@@ -91,7 +89,7 @@ const useHeldFacts = <T extends object>(
     };
 
     void read();
-  }, [heldKey, scope, traceId, span, spanId, run, onFailure, onReadFailed]);
+  }, [heldKey, readKey, traceId, span, spanId, run, onFailure, onReadFailed]);
 
   return { facts, isLoading };
 };
@@ -129,10 +127,9 @@ const FAILED_PROTOCOL: HopProtocolFacts = {
 };
 
 // Module scope, so the runner is referentially stable without freezing anything render-scoped inside it.
-const runMcp: FactsRunner<HopMcpFacts> = async (scope, traceId, span, request) => {
+const runMcp: FactsRunner<HopMcpFacts> = async (traceId, span, request) => {
   const result = await request(
     getSessionHopMcp,
-    scope,
     traceId,
     span.core_span_id,
     span.request_time,
@@ -144,16 +141,15 @@ const runMcp: FactsRunner<HopMcpFacts> = async (scope, traceId, span, request) =
   return result;
 };
 
-const runEmbedding: FactsRunner<HopEmbeddingFacts> = async (scope, traceId, span, request) => {
-  const result = await request(getSessionHopEmbedding, scope, traceId, span.core_span_id, span.request_time);
+const runEmbedding: FactsRunner<HopEmbeddingFacts> = async (traceId, span, request) => {
+  const result = await request(getSessionHopEmbedding, traceId, span.core_span_id, span.request_time);
 
   return result;
 };
 
-const runProtocol: FactsRunner<HopProtocolFacts> = async (scope, traceId, span, request) => {
+const runProtocol: FactsRunner<HopProtocolFacts> = async (traceId, span, request) => {
   const result = await request(
     getSessionHopProtocol,
-    scope,
     traceId,
     span.core_span_id,
     span.request_time,

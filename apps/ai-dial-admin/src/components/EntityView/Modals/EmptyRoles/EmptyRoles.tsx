@@ -1,4 +1,4 @@
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -15,7 +15,7 @@ const EntityRolesModal: FC<Props> = ({ onConfirm, onClose, onCancel }) => {
   const t = useI18n();
 
   return createPortal(
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open={true}
       header={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
       confirmLabel={t(ButtonsI18nKey.Save)}
@@ -25,11 +25,11 @@ const EntityRolesModal: FC<Props> = ({ onConfirm, onClose, onCancel }) => {
       onClose={onClose}
       onCancel={onCancel}
     >
-      <div className="text-secondary small-150 px-6 py-4">
+      <div className="text-secondary dial-small-paragraph-text px-6 py-4">
         <p className="mb-2">{t(RolesI18nKey.SaveWithEmptyRolesDescription)}</p>
-        <p className="small-text-semi">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
+        <p className="dial-small-semi-text">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
       </div>
-    </DialConfirmationPopup>,
+    </ConfirmationPopup>,
     document.body,
   );
 };

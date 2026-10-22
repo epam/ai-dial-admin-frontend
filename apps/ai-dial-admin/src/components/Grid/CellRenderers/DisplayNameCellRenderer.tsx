@@ -39,8 +39,8 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
     <div className="flex h-full items-center gap-2 overflow-hidden">
       {renderIcon()}
       <div className="flex flex-col justify-center overflow-hidden">
-        <EllipsisTooltip className="small text-primary" text={displayName ?? ''} />
-        {showId && <EllipsisTooltip className="tiny text-secondary" text={id ?? ''} />}
+        <EllipsisTooltip className="dial-small-text text-primary" text={displayName ?? ''} />
+        {showId && <EllipsisTooltip className="dial-tiny-text text-secondary" text={id ?? ''} />}
       </div>
     </div>
   );

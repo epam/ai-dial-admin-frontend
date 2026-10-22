@@ -1,4 +1,4 @@
-import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
+import { Label, DialSelect } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
@@ -68,7 +68,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, nestedInArray 
       {hasEnumArray && (
         <div className="flex flex-col gap-1">
           {label && (
-            <DialLabel htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />
+            <Label htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />
           )}
           <div className="relative w-full">
             <span

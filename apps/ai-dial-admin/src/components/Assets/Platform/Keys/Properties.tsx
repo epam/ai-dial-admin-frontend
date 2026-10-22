@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialInput, Switch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
@@ -56,10 +56,10 @@ const KeyAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => {
           disabled={isReadOnlyAdmin}
         />
 
-        <DialSwitch
+        <Switch
           isOn={!!asset.secured}
-          label={t(EntityFieldsI18nKey.secured)}
-          switchId="secured"
+          labelProps={{ label: t(EntityFieldsI18nKey.secured) }}
+          id="secured"
           onChange={onChangeSecured}
           disabled={isReadOnlyAdmin}
         />

@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { Button, ButtonAppearance, ButtonVariant, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { Button, ButtonAppearance, ButtonVariant, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay, IconRefresh } from '@tabler/icons-react';
 
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
@@ -60,13 +60,13 @@ const PreviewRunBar: FC<Props> = ({
                 label={t(PipelinePreviewI18nKey.GroupLabel)}
                 value={
                   <div className="min-w-0" style={{ maxWidth: PREVIEW_GROUP_KEY_MAX_WIDTH_PX }}>
-                    <DialEllipsisTooltip text={groupKey} className="font-mono" contentClassName="truncate" />
+                    <EllipsisTooltip text={groupKey} className="font-mono" contentClassName="truncate" />
                   </div>
                 }
               />
               {previousGroupKey != null && (
                 <div className="min-w-0" style={{ maxWidth: PREVIEW_GROUP_KEY_MAX_WIDTH_PX }}>
-                  <DialEllipsisTooltip
+                  <EllipsisTooltip
                     text={t(PipelinePreviewI18nKey.GroupWas, { key: previousGroupKey })}
                     className="text-secondary dial-tiny-text"
                     contentClassName="truncate"

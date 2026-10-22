@@ -1,4 +1,4 @@
-import { DialErrorText, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -50,7 +50,7 @@ const Multiselect: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col gap-y-3', className)}>
-      <DialLabel label={label} htmlFor={elementId} required={required} />
+      <Label label={label} htmlFor={elementId} required={required} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}
         open={isModalOpen}

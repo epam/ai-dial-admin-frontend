@@ -16,7 +16,7 @@ import {
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { DialDropdown, DialEllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, EllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -115,7 +115,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
             href="/"
             className={linkClassName}
           >
-            <DialEllipsisTooltip text={label} />
+            <EllipsisTooltip text={label} />
           </Link>
         );
       } else if (hiddenBreadcrumbs && hiddenBreadcrumbs.length > 0) {
@@ -123,7 +123,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       } else {
         return (
           <Link prefetch={false} href={href} className={linkClassName}>
-            <DialEllipsisTooltip text={label} />
+            <EllipsisTooltip text={label} />
           </Link>
         );
       }
@@ -142,7 +142,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         mobile ? 'lg:hidden flex md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
       )}
     >
-      <ol className="flex tiny whitespace-nowrap">
+      <ol className="flex dial-tiny-text whitespace-nowrap">
         {breadcrumbs.map((breadcrumb, index) => {
           return (
             <li key={`${breadcrumb.href}_${index}`} className="flex items-center group max-w-[300px] overflow-hidden">

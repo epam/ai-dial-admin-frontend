@@ -3,7 +3,7 @@
 import { FC, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialDropdown, DialEllipsisTooltip, DialTooltip, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, EllipsisTooltip, Tooltip, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 interface Props {
@@ -44,7 +44,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
           className="max-h-[240px] min-w-[224px] overflow-y-auto rounded border border-secondary bg-layer-0 p-1 shadow-lg"
         >
           {options.map((option) => (
-            <DialTooltip
+            <Tooltip
               key={option.value}
               hideTooltip={!option.description}
               tooltip={option.description}
@@ -67,7 +67,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
                 </span>
                 <span className="truncate">{option.label}</span>
               </button>
-            </DialTooltip>
+            </Tooltip>
           ))}
         </div>
       )}
@@ -83,7 +83,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
         )}
       >
         {/* Full names outgrow these compact triggers, so a truncated label keeps its tooltip. */}
-        <DialEllipsisTooltip
+        <EllipsisTooltip
           className="min-w-0 flex-1 text-left"
           text={
             <>

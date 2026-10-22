@@ -286,8 +286,8 @@ of a result, including the first page the client fetches after mount; a server-p
 remain the displayed value once the client has fetched a page of its own.
 
 The cost total SHALL be summed with the decimal library rather than as floating-point numbers, since the
-values carry twelve fractional digits, and SHALL be rounded for display. That rounding is local to the summary
-and does not settle how the Cost column renders.
+values carry twelve fractional digits, and SHALL be rounded to a whole number for display, with its thousands
+grouped. That rounding is local to the summary and does not settle how the Cost column renders.
 
 When the summary request fails, the pills SHALL report that the figures are unavailable rather than rendering
 zeros, which would assert an empty result that was never established. A rating aggregate that fails SHALL make
@@ -347,6 +347,12 @@ rather than the applied one.
 - **WHEN** the rated pill renders
 - **THEN** it shows the number of sessions rated in the period and no denominator
 - **AND** it is never rendered as a fraction of the session count
+
+#### Scenario: The cost pill shows whole dollars
+
+- **WHEN** the period's summed cost carries a fractional part
+- **THEN** the cost pill shows it rounded to a whole number, with its thousands grouped
+- **AND** no fractional digits are shown
 
 #### Scenario: The pills follow a period change
 
@@ -1263,6 +1269,12 @@ from the column header beneath it.
 
 - **WHEN** the result holds zero sessions
 - **THEN** the no-data content renders instead of an empty grid body
+
+#### Scenario: A filtered empty result shows one empty state
+
+- **WHEN** a search term, a column filter or a feedback state leaves the result with zero sessions
+- **THEN** the page's own no-data content renders
+- **AND** the grid's built-in no-rows and no-matching-rows overlays do not render alongside it
 
 ### Requirement: Session grid columns are the curated set plus every field the entity schema reports
 

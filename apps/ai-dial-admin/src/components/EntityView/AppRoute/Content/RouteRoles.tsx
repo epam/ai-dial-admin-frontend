@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNeutralButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, NoDataContent, Switch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -108,9 +108,9 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
     <>
       <div className="size-full flex flex-col">
         {!disabled && (
-          <DialSwitch
-            switchId="inheritedAppRoles"
-            label={t(RoutesI18nKey.InheritApplicationRoles)}
+          <Switch
+            id="inheritedAppRoles"
+            labelProps={{ label: t(RoutesI18nKey.InheritApplicationRoles) }}
             isOn={route.isPublic}
             onChange={() => {
               onChangeRoute({
@@ -124,7 +124,7 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
         <div className="flex flex-row items-center w-full my-4 justify-between h-[40px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
           {!route.isPublic && !disabled && (
-            <DialNeutralButton
+            <OutlinedButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
@@ -136,12 +136,12 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
             {data.length > 0 ? (
               <GridView columnDefs={columns} rowData={data} />
             ) : isAppRunnerView && route.isPublic ? (
-              <DialNoDataContent
+              <NoDataContent
                 icon={<IconReplace size={60} stroke={0.5} />}
                 title={t(RoutesI18nKey.InheritRolesWarning)}
               />
             ) : (
-              <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
+              <NoDataContent title={t(EntitiesI18nKey.NoRoles)} />
             )}
           </div>
         </div>

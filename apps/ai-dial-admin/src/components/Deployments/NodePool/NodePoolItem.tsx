@@ -2,7 +2,7 @@
 
 import classNames from 'classnames';
 import { FC } from 'react';
-import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { Label, DialRadioButton } from '@epam/ai-dial-ui-kit';
 
 import NodePoolInfo from '@/src/components/Deployments/NodePool/NodePoolInfo';
 
@@ -24,7 +24,7 @@ const NodePoolItem: FC<Props> = ({ radioName, inputId, value, name, description,
       checked ? 'bg-accent-primary-alpha' : 'hover:bg-layer-3',
     )}
   >
-    <DialLabel
+    <Label
       htmlFor={inputId}
       className="grid grid-cols-[36px_1fr] gap-3 items-start cursor-pointer px-4 py-3"
       label={

@@ -1,6 +1,6 @@
 import { FC, MouseEvent, ReactNode, useCallback } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -69,7 +69,7 @@ const ToolHeader: FC<Props> = ({
       <div className="flex flex-row items-center">
         <h3 className="mx-2">{tool.name}</h3>
         {isAddedManual && (
-          <span className="ml-4 tiny h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
+          <span className="ml-4 dial-tiny-text h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
             {t(ToolsetI18nKey.AddedManually)}
           </span>
         )}
@@ -80,7 +80,7 @@ const ToolHeader: FC<Props> = ({
           {!isCollapsed && !!viewSelector && !disabled && <div className="w-px h-6 bg-layer-4"></div>}
 
           {!disabled && (
-            <DialNeutralButton
+            <OutlinedButton
               className={classNames(isCollapsed && 'invisible group-hover/accordion:visible')}
               iconBefore={<IconPlayerPlay size={20} />}
               onClick={openTryOutSidebar}

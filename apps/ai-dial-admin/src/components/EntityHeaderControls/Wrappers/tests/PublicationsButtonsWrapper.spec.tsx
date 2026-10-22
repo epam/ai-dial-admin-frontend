@@ -36,7 +36,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   NotificationVariant: { Info: 'info' },
   ButtonAppearance: { Outlined: 'outlined' },
   DialNotification: ({ message }: { message: ReactNode }) => <div>{message}</div>,
-  DialConfirmationPopup: ({
+  ConfirmationPopup: ({
     open,
     header,
     description,
@@ -65,13 +65,13 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         </button>
       </div>
     ) : null,
-  DialDangerButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
+  DangerButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{label}</button>
   ),
-  DialNeutralButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
+  OutlinedButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{label}</button>
   ),
-  DialPrimaryButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
+  PrimaryButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{label}</button>
   ),
   DialTextarea: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (

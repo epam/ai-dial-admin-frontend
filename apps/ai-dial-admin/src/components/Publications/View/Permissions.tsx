@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NotificationVariant, DialNotification, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconReplace } from '@tabler/icons-react';
 
 import RulesCompare from '@/src/components/Publications/Popup/RulesCompare';
@@ -68,7 +68,7 @@ const PublicationPermissions = <T extends Publication>({
         >
           <div className="flex gap-4">
             {isPermissionsChanged && !isReadOnlyAdmin && (
-              <DialNeutralButton
+              <OutlinedButton
                 label={t(CompareI18nKey.CompareChanges)}
                 iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={() => setIsCompareModalOpen(true)}

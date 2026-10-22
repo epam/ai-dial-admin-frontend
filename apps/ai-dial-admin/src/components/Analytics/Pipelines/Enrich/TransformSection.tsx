@@ -144,7 +144,7 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
             id={PREVIEW_SECTION_ANCHORS[PreviewSection.RequestTemplate]}
             tabIndex={-1}
             aria-label={t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)}
-            className="flex flex-col gap-2 outline-none"
+            className="flex flex-col gap-2 outline-hidden"
           >
             <Label
               htmlFor="transform-request-template"

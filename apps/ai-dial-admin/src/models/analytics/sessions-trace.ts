@@ -542,6 +542,10 @@ export interface SessionTraceCard {
   requestMessages: number | string | null;
   hasSessionLabel: boolean;
   isCoreInternal: boolean;
+  // Read only by the entity listing. `undefined` means the listing does not state the fact; `null` means the
+  // row recorded none.
+  caller?: string | null;
+  projectId?: string | null;
 }
 
 // A trace and the cards beneath it. `isRootRecorded` false is the trace whose root the roots pass did not

@@ -3,9 +3,9 @@
 import { FC, useState } from 'react';
 
 import {
-  DialNeutralButton,
+  OutlinedButton,
   DialPopup,
-  DialPrimaryButton,
+  PrimaryButton,
   DialRadioGroup,
   PopupSize,
   RadioButtonWithContent,
@@ -54,8 +54,8 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton label={t(ButtonsI18nKey.Export)} onClick={() => onApply?.(exportType as ImportFileType)} />
+        <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <PrimaryButton label={t(ButtonsI18nKey.Export)} onClick={() => onApply?.(exportType as ImportFileType)} />
       </div>
     </DialPopup>
   );

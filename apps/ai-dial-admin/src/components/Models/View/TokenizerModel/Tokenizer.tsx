@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { DialInputPopup, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, Switch } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -49,10 +49,10 @@ const TokenizerModelSwitch = <T extends { tokenizerModel?: string }>({ model, on
 
   return (
     <div className="flex flex-col gap-3">
-      <DialSwitch
+      <Switch
         isOn={model.tokenizerModel != null}
-        label={t(EntityFieldsI18nKey.tokenizerModel)}
-        switchId="tokenizerModel"
+        labelProps={{ label: t(EntityFieldsI18nKey.tokenizerModel) }}
+        id="tokenizerModel"
         onChange={onSwitchTokenizerModel}
         disabled={isReadOnlyAdmin}
       />

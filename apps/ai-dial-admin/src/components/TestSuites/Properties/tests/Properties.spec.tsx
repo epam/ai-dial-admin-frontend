@@ -64,7 +64,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         {children}
       </div>
     ),
-    DialNeutralButton: ({ label, onClick }: { label?: string; onClick?: () => void }) => (
+    OutlinedButton: ({ label, onClick }: { label?: string; onClick?: () => void }) => (
       <button type="button" onClick={onClick}>
         {label}
       </button>

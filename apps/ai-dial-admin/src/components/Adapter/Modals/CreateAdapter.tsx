@@ -1,4 +1,4 @@
-import { DialNeutralButton, DialPopup, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialPopup, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -89,8 +89,8 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} isModal={true} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton label={t(ButtonsI18nKey.Create)} onClick={onCreate} disabled={!isValid} />
+        <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <PrimaryButton label={t(ButtonsI18nKey.Create)} onClick={onCreate} disabled={!isValid} />
       </div>
     </DialPopup>
   );

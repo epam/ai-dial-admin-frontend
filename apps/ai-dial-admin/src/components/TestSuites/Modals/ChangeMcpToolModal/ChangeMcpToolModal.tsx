@@ -3,7 +3,7 @@
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import McpTool from '@/src/components/TestSuites/Modals/Create/McpTool';
 import { buildInitialArguments } from '@/src/components/TestSuites/ArgumentTemplate/utils';
@@ -49,7 +49,7 @@ const ChangeMcpToolModal: FC<Props> = ({ testSuite, isOpen, onClose, onSave }) =
   if (!deploymentId) return null;
 
   return createPortal(
-    <DialConfirmationPopup
+    <ConfirmationPopup
       portalId="ChangeMcpToolModal"
       header={t(TestSuitesI18nKey.ChangeTool)}
       open={isOpen}
@@ -70,7 +70,7 @@ const ChangeMcpToolModal: FC<Props> = ({ testSuite, isOpen, onClose, onSave }) =
           />
         </div>
       </div>
-    </DialConfirmationPopup>,
+    </ConfirmationPopup>,
     document.body,
   );
 };

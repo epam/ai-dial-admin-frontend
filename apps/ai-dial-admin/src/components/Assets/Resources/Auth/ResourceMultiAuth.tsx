@@ -2,14 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  DialGhostIconButton,
-  DialInput,
-  DialLabel,
-  DialNeutralButton,
-  DialPrimaryButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, DialInput, Label, OutlinedButton, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconArrowLeft, IconEdit, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -128,7 +121,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
     return (
       <div className={classNames('flex flex-col gap-y-4 rounded border border-primary p-4', STANDARD_CONTROL_WIDTH)}>
         <div className="flex items-center gap-x-2">
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconArrowLeft {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onBack}
@@ -179,8 +172,8 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
 
         {!isReadOnlyAdmin && (
           <div className="flex justify-end gap-x-2">
-            <DialNeutralButton label={t(ButtonsI18nKey.Back)} onClick={onBack} />
-            <DialPrimaryButton
+            <OutlinedButton label={t(ButtonsI18nKey.Back)} onClick={onBack} />
+            <PrimaryButton
               label={t(ButtonsI18nKey.Apply)}
               onClick={onSave}
               disabled={!editState.currentId || !isValid || isDuplicateId}
@@ -193,7 +186,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
 
   return (
     <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
-      <DialLabel label={t(ExternalServiceI18nKey.ExternalServices)} />
+      <Label label={t(ExternalServiceI18nKey.ExternalServices)} />
 
       <div className="flex flex-col gap-y-2 rounded border border-primary p-4">
         {Object.keys(services).length === 0 && (
@@ -262,13 +255,13 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                   )}
                   {isDeclarationManaged && !isReadOnlyAdmin && loadingServiceId !== serviceId && (
                     <>
-                      <DialGhostIconButton
+                      <GhostIconButton
                         aria-label={t(ButtonsI18nKey.Edit)}
                         size={ElementSize.Small}
                         icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                         onClick={() => onEdit(serviceId)}
                       />
-                      <DialGhostIconButton
+                      <GhostIconButton
                         aria-label={t(ButtonsI18nKey.Delete)}
                         size={ElementSize.Small}
                         icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" />}
@@ -283,7 +276,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
         </div>
 
         {!isReadOnlyAdmin && (
-          <DialNeutralButton
+          <OutlinedButton
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={t(ExternalServiceI18nKey.AddService)}
             onClick={onAdd}

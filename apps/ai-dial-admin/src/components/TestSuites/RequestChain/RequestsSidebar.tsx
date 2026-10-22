@@ -2,13 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  DialCollapsibleSidebar,
-  DialPrimaryButton,
-  DialTooltip,
-  ElementSize,
-  EllipsisTooltip,
-} from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, PrimaryButton, Tooltip, ElementSize, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconInfoCircle, IconPencilMinus, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -84,11 +78,11 @@ const RequestsSidebar: FC<Props> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
               <span className="dial-h1-text">{t(TestSuitesI18nKey.Requests)}</span>
-              <DialTooltip tooltip={t(TestSuitesI18nKey.RequestChainHint)}>
+              <Tooltip tooltip={t(TestSuitesI18nKey.RequestChainHint)}>
                 <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} size={16} className="text-secondary" />
-              </DialTooltip>
+              </Tooltip>
             </div>
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.Add)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
               size={ElementSize.Small}

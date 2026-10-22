@@ -16,7 +16,7 @@ const CompareRunIndexBadge: FC<Props> = ({ runIndex }) => {
     <span
       aria-hidden
       className={classNames(
-        'inline-flex items-center justify-center size-4 rounded-sm dial-tiny-semi-text text-secondary shrink-0',
+        'inline-flex items-center justify-center size-4 rounded-xs dial-tiny-semi-text text-secondary shrink-0',
         isPrimary ? 'bg-accent-primary-alpha' : 'bg-success',
       )}
     >

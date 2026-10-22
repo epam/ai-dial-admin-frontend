@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  DialInputPopup,
-  DialLabel,
-  DialLoader,
-  DialNeutralButton,
-  DialSelectField,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, Label, Spinner, OutlinedButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
@@ -122,7 +115,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
   return !isEntityImmutable ? (
     isRunnerResolving ? (
       <div className="relative w-full h-10">
-        <DialLoader size={18} />
+        <Spinner size={18} fullWidth />
       </div>
     ) : (
       <DialSelectField
@@ -142,7 +135,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-          <DialLabel label={label} required htmlFor="sourceEntity" />
+          <Label label={label} required htmlFor="sourceEntity" />
           <DialInputPopup
             disabled={isFieldDisabled || isRunnerResolving}
             placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
@@ -161,7 +154,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
           </DialInputPopup>
         </div>
         {currentValue && (
-          <DialNeutralButton
+          <OutlinedButton
             label={isMobile ? '' : t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
             onClick={openInNewTab}

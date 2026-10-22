@@ -26,7 +26,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     ButtonAppearance: { Ghost: 'ghost' },
-    DialPrimaryButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
+    PrimaryButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
       <button type="button" onClick={onClick}>
         {label}
       </button>

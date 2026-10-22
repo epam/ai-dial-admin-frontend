@@ -1,6 +1,6 @@
 'use client';
 
-import { DialCollapsibleSidebar, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconPlus, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -103,7 +103,7 @@ const ObjectAppRoutesView: FC<Props> = ({ routes, format, roles, disabled, onCha
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.AppRoutes)}</h1>
               {!disabled && (
-                <DialPrimaryButton
+                <PrimaryButton
                   iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(ButtonsI18nKey.Add)}
                   onClick={() => setIsModalOpen(true)}
@@ -126,7 +126,7 @@ const ObjectAppRoutesView: FC<Props> = ({ routes, format, roles, disabled, onCha
                     setActiveRouteName(name);
                   }}
                   className={classNames(
-                    'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full small cursor-pointer hover:text-accent-primary',
+                    'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full dial-small-text cursor-pointer hover:text-accent-primary',
                     activeRouteName === name
                       ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary'
                       : 'text-primary',

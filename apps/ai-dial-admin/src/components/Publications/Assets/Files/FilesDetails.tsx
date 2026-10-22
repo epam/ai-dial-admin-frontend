@@ -1,6 +1,6 @@
 import { ChangeEvent, Dispatch, FC, SetStateAction, useCallback, useRef } from 'react';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import FilesList from '@/src/components/Publications/Assets/Files/FilesList';
@@ -60,7 +60,7 @@ const FilesDetails: FC<Props> = ({ publication, onChange, addedFiles, setAddedFi
         </h3>
         {!disabled && addedFiles && (
           <>
-            <DialGhostButton
+            <GhostButton
               onClick={onAddClick}
               label={t(ButtonsI18nKey.Add)}
               className="w-fit"

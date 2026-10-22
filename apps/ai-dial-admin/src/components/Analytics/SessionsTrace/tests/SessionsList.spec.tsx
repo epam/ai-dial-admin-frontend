@@ -142,7 +142,15 @@ describe('SessionsList :: paging', () => {
   test('leaves the empty state to the view rather than the grid', () => {
     renderList();
 
-    expect(captured.additionalGridOptions?.suppressNoRowsOverlay).toBe(true);
+    expect(captured.additionalGridOptions?.suppressOverlays).toEqual(expect.arrayContaining(['noRows']));
+  });
+
+  // With a column filter applied, an empty result raises the grid's no-matching-rows overlay instead of the
+  // no-rows one, so suppressing only the latter left both empty states on screen.
+  test('suppresses the grid overlay for a filtered empty result too', () => {
+    renderList();
+
+    expect(captured.additionalGridOptions?.suppressOverlays).toEqual(expect.arrayContaining(['noMatchingRows']));
   });
 
   test('owns its row and header heights without replacing the shared column defaults', () => {

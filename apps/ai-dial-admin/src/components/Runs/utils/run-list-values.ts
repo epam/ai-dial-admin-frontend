@@ -1,5 +1,8 @@
+import { COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_AGGREGATING_RUN_STATUSES } from '@/src/constants/runs';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
-import { Run, RunTarget, RunTargetKind } from '@/src/models/evaluation/run';
+import { Run, RunStatus, RunTarget, RunTargetKind } from '@/src/models/evaluation/run';
+import { SuiteType } from '@/src/models/evaluation/test-suite';
 import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 const MS_IN_SECOND = 1000;
@@ -51,6 +54,48 @@ export const formatRunScore = (score?: number | null): string | null => {
   }
   return score.toFixed(SCORE_DECIMALS);
 };
+
+/**
+ * Whether a run's cost is still being aggregated, as opposed to never going to exist. The backend
+ * aggregates usage logs asynchronously after a run settles and cannot say "there will be no figure"
+ * (e.g. an unpriced model), so a settled run with no cost counts as calculating only for
+ * `COST_FETCH_MAX_WAIT_MS` — the same backstop the Summary cost cards use. The window opens at
+ * `costWaitStartedAt` (when the grid first saw the run), or at `completedAt` for a run that settled
+ * while the grid was watching it. MCP-tool suites are excluded because cost aggregation does not
+ * support them at all.
+ *
+ * `graceMs` stretches the window, so a poller can still touch a row on the first tick after the
+ * window closes and have the cell re-render as settled.
+ */
+export const isRunCostCalculating = (run: Run | null | undefined, now: number, graceMs = 0): boolean => {
+  if (run == null || run.totalCost != null) {
+    return false;
+  }
+  if (!COST_AGGREGATING_RUN_STATUSES.includes(run.status as RunStatus)) {
+    return false;
+  }
+  if (run.suiteSnapshot?.suiteType === SuiteType.McpTool) {
+    return false;
+  }
+  const waitStartedAt = run.costWaitStartedAt ?? run.completedAt;
+  if (waitStartedAt == null) {
+    return false;
+  }
+  return now - waitStartedAt < COST_FETCH_MAX_WAIT_MS + graceMs;
+};
+
+/**
+ * Opens the cost wait window on settled runs that arrive without a cost, once: a run already stamped
+ * keeps its original start, so reusing cached rows never restarts the wait.
+ */
+export const withCostWaitStart = (runs: Run[], now: number): Run[] =>
+  runs.map((run) =>
+    run.totalCost == null &&
+    run.costWaitStartedAt == null &&
+    COST_AGGREGATING_RUN_STATUSES.includes(run.status as RunStatus)
+      ? { ...run, costWaitStartedAt: now }
+      : run,
+  );
 
 const DEPLOYMENT_TYPE_TO_TARGET_KIND: Partial<Record<string, RunTargetKind>> = {
   [DeploymentType.Model]: RunTargetKind.Model,

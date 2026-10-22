@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLabelledText, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLabelledText, Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
@@ -64,7 +64,7 @@ const McpServerDetails: FC<Props> = ({ server, serverResponse, isLoading, isOpen
           )}
 
           {isLoading ? (
-            <DialLoader size={32} />
+            <Spinner size={32} fullWidth />
           ) : (
             <CodeViewer title={t(ContainersI18nKey.ViewFullServerJson)} content={jsonContent} hideFullscreen />
           )}

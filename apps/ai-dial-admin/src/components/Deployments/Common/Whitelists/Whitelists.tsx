@@ -123,8 +123,8 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
         <DialNotification
           id="alert"
           message={
-            <p className="small">
-              <span className="small-text-semi mr-1">{t(DeploymentsI18nKey.WhitelistPolicyAllWarning)}</span>
+            <p className="dial-small-text">
+              <span className="dial-small-semi-text mr-1">{t(DeploymentsI18nKey.WhitelistPolicyAllWarning)}</span>
               {t(DeploymentsI18nKey.WhitelistPolicyAllWarningDescription, {
                 type: getTranslatedDeploymentType(route, t).toLowerCase(),
               })}
@@ -136,16 +136,16 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
         <div className="flex flex-col ml-[34px] gap-8">
           {route === ApplicationRoute.Images && !!globalWhitelist.length && (
             <div className="flex flex-col gap-2">
-              <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
-              <p className="tiny text-secondary">{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
+              <p className="dial-small-semi-text">{t(DeploymentsI18nKey.AllowedDomains)}</p>
+              <p className="dial-tiny-text text-secondary">{t(DeploymentsI18nKey.GlobalWhitelist)}</p>
               <DomainList domains={globalWhitelist} />
             </div>
           )}
           <div className="flex flex-col gap-2">
             {!(route === ApplicationRoute.Images && !!globalWhitelist.length) && (
-              <p className="small-text-semi">{t(DeploymentsI18nKey.AllowedDomains)}</p>
+              <p className="dial-small-semi-text">{t(DeploymentsI18nKey.AllowedDomains)}</p>
             )}
-            <p className="tiny text-secondary">
+            <p className="dial-tiny-text text-secondary">
               {t(DeploymentsI18nKey.SpecificWhitelist, { type: getDeploymentEntityKey(route, t) })}
             </p>
             <ItemsList

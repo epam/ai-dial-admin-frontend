@@ -4,8 +4,8 @@ import { FC, useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import {
   NotificationVariant,
   DialNotification,
-  DialNoDataContent,
-  DialPrimaryButton,
+  NoDataContent,
+  PrimaryButton,
   DialRadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
@@ -314,7 +314,7 @@ const ExportConfig: FC<Props> = ({
         );
       default:
         if (selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
-          return <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff size={50} />} />;
+          return <NoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff size={50} />} />;
         }
         return (
           <ConfigContent
@@ -343,7 +343,7 @@ const ExportConfig: FC<Props> = ({
       <div className="flex flex-col size-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-          <DialPrimaryButton
+          <PrimaryButton
             iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(ButtonsI18nKey.Export)}
             disabled={isExportDisable}

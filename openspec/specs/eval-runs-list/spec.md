@@ -173,6 +173,48 @@ Overall score as its numeric value.
 - **WHEN** a run has no cost value
 - **THEN** the Cost cell shows a missing-value indication, not `$0`
 
+### Requirement: Suite Runs tab shows a spinner while a run's cost is being calculated
+
+On the test suite Runs tab, the Cost cell SHALL show a loading spinner in place of the missing-value
+indication while a run's cost is still being aggregated. The backend aggregates usage logs
+asynchronously after a run settles and cannot say a figure will never come, so a run counts as
+calculating when it is COMPLETED, FAILED or CANCELLED, has no cost, and is inside a
+`COST_FETCH_MAX_WAIT_MS` wait window — the same backstop the Summary cost cards use. The window opens
+when the tab first loads the run (so a run that finished long ago and still has no cost gets a fresh
+wait on each load, as on the Summary tab), or at the run's completion time for a run that settles
+while the tab is open. Runs that are PENDING, RUNNING or CANCELLING, and runs of MCP-tool suites
+(which have no cost aggregation), SHALL keep the missing-value indication. While any row is
+calculating, the tab SHALL re-fetch all calculating rows together every `COST_FETCH_POLL_INTERVAL_MS`
+and replace the spinner with the formatted cost once it arrives, or with the missing-value indication
+once the window closes. The unscoped Runs list and the compare picker do not poll and SHALL NOT show
+the spinner.
+
+#### Scenario: A just-completed run has no cost yet
+
+- **WHEN** a run completed a minute ago and has no cost value
+- **THEN** the Cost cell shows a spinner labelled Calculating, not the missing-value indication
+
+#### Scenario: A long-finished run with no cost is loaded
+
+- **WHEN** the tab loads a COMPLETED run that finished a day ago and has no cost value
+- **THEN** the Cost cell shows the spinner until `COST_FETCH_MAX_WAIT_MS` after the load, then the
+  missing-value indication
+
+#### Scenario: The cost arrives
+
+- **WHEN** a re-fetch of a calculating run returns a cost
+- **THEN** the spinner is replaced by the formatted cost
+
+#### Scenario: Calculation never produces a figure
+
+- **WHEN** a run has had no cost for `COST_FETCH_MAX_WAIT_MS` or longer since its window opened
+- **THEN** the Cost cell shows the missing-value indication, not a spinner
+
+#### Scenario: A run that has not settled
+
+- **WHEN** a run is RUNNING and has no cost value
+- **THEN** the Cost cell shows the missing-value indication, not a spinner
+
 ### Requirement: Columns keep a configured width and never wrap
 
 `Test suite run name`, `Test Suite ID`, and `Metrics` SHALL be flexible: after every other column has

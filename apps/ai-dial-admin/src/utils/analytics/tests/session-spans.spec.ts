@@ -19,6 +19,7 @@ import {
   spanKindOf,
   spanLabelOf,
   spanPhaseOf,
+  traceDurationMsOf,
   unansweredToolNamesOf,
 } from '@/src/utils/analytics/session-spans';
 
@@ -413,5 +414,23 @@ describe('spanBodyTabsOf', () => {
       SpanBodyTab.Response,
       SpanBodyTab.Chat,
     ]);
+  });
+});
+
+describe('traceDurationMsOf', () => {
+  const at = (request_time: number | string | null, operation_duration_ms: number | null) =>
+    ({ request_time, operation_duration_ms }) as SessionSpanRow;
+
+  test('measures from the first span start to the last span end', () => {
+    expect(traceDurationMsOf([at(1000, 500), at(1200, 2000), at(3000, 100)])).toBe(2200);
+  });
+
+  test('counts a span with no recorded duration as an instant', () => {
+    expect(traceDurationMsOf([at(1000, null), at(4000, null)])).toBe(3000);
+  });
+
+  test('yields null when no span records a start', () => {
+    expect(traceDurationMsOf([])).toBeNull();
+    expect(traceDurationMsOf([at(null, 500)])).toBeNull();
   });
 });

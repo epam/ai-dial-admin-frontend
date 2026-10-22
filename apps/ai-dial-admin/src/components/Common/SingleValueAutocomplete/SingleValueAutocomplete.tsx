@@ -1,13 +1,6 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import {
-  DialEllipsisTooltip,
-  DialErrorText,
-  DialGhostIconButton,
-  DialLabel,
-  DialTag,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, DialErrorText, GhostIconButton, Label, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -121,17 +114,17 @@ const SingleValueAutocomplete: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
-      {label && <DialLabel htmlFor={elementId} label={label} />}
+      {label && <Label htmlFor={elementId} label={label} />}
       <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
         <div className="flex flex-wrap items-center gap-2">
           {value && (
             <div className="flex max-w-full min-w-0 items-center">
-              <DialEllipsisTooltip
+              <EllipsisTooltip
                 className="min-w-0 flex-1"
                 contentClassName="max-w-full"
                 text={<DialTag label={selectedLabel} className="max-w-full" />}
               />
-              <DialGhostIconButton
+              <GhostIconButton
                 size={ElementSize.Small}
                 aria-label={t(ButtonsI18nKey.Remove)}
                 icon={<IconX size={16} aria-hidden />}
@@ -148,7 +141,7 @@ const SingleValueAutocomplete: FC<Props> = ({
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               disabled={disabled}
-              className="outline-none border-none w-full flex-1 p-1 dial-input h-auto"
+              className="outline-hidden border-none w-full flex-1 p-1 dial-input h-auto"
               placeholder={placeholder || ''}
             />
           </div>
@@ -165,7 +158,7 @@ const SingleValueAutocomplete: FC<Props> = ({
         />
       )}
       {!disabled && <DialErrorText text={error} />}
-      {caption && <div className="text-secondary tiny pt-2">{caption}</div>}
+      {caption && <div className="text-secondary dial-tiny-text pt-2">{caption}</div>}
     </div>
   );
 };

@@ -10,7 +10,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialSwitch: ({ switchId, label, isOn, onChange }: any) => (
+    Switch: ({ id: switchId, labelProps: { label } = {}, isOn, onChange }: any) => (
       <button
         type="button"
         role="switch"

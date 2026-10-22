@@ -16,7 +16,7 @@ import {
   SessionScope,
   SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
-import { attributeRatingsToTraces, traceCardTitle } from '@/src/utils/analytics/session-trace-groups';
+import { asTraceFigures, attributeRatingsToTraces, traceCardTitle } from '@/src/utils/analytics/session-trace-groups';
 
 interface Props {
   session: SessionDetailRow;
@@ -29,20 +29,6 @@ interface Props {
   isCommentTextReadable: boolean;
   onOpenTrace: (figures: SessionTraceFigures, title?: string) => void;
 }
-
-// The drawer states a trace's figures, and its prop shape is still `SessionTraceFigures` — the one type that
-// currently expresses "a trace's own totals". Mapping into it here keeps the drawer, its event stream and its
-// hop-body reads untouched, which is what this change scoped out. The shape is renamed when the turns model
-// is deleted and its last reader is gone.
-const asTraceFigures = (group: SessionTraceGroup, card?: SessionTraceCard): SessionTraceFigures => ({
-  traceId: group.traceId,
-  startedAt: card?.startedAt ?? group.startedAt,
-  spans: group.spans,
-  failedSpans: group.failedSpans,
-  tokens: group.tokens,
-  price: group.price,
-  durationMs: card?.durationMs ?? null,
-});
 
 /**
  * The session's traces, and the panels beside them.

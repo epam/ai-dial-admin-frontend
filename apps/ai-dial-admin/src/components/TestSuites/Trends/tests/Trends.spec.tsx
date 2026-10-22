@@ -23,8 +23,8 @@ vi.mock('echarts-for-react', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLoader: () => <div>loader</div>,
-  DialNoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
+  Spinner: () => <div>loader</div>,
+  NoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
   DialNotification: ({ title, message }: { title?: string; message: React.ReactNode }) => (
     <div role="status">
       <p>{title}</p>
@@ -32,7 +32,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </div>
   ),
   NotificationVariant: { Info: 'info' },
-  DialNeutralButton: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
+  OutlinedButton: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
     <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>
@@ -45,7 +45,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </div>
   ),
   DialSegmentedControl: () => <div>segments</div>,
-  DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+  EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';

@@ -2,13 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import {
-  ButtonAppearance,
-  DialNeutralButton,
-  DialNoDataContent,
-  DialPrimaryButton,
-  DialTabs,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, OutlinedButton, NoDataContent, PrimaryButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
@@ -106,11 +100,11 @@ const RequestTemplate: FC<Props> = ({
           <div className="flex flex-row justify-between items-start mb-3">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
             {showAddButton && (
-              <DialNeutralButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddRow} />
+              <OutlinedButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddRow} />
             )}
             {showVariablesDoc && (
               <div className="flex-none">
-                <DialPrimaryButton
+                <PrimaryButton
                   appearance={ButtonAppearance.Ghost}
                   iconBefore={<IconInfoCircle size={14} />}
                   label={t(TestSuitesI18nKey.TemplateVariablesViewDoc)}
@@ -132,7 +126,7 @@ const RequestTemplate: FC<Props> = ({
         </>
       ) : (
         <div className="flex-1 min-h-[350px] flex items-center justify-center">
-          <DialNoDataContent
+          <NoDataContent
             title={t(TestSuitesI18nKey.ConfigureEndpointFirst)}
             description={t(TestSuitesI18nKey.ConfigureEndpointFirstDescription)}
           />

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostIconButton, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -120,11 +120,11 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="flex flex-col absolute right-0 top-0 bottom-0 w-full md:w-[560px] bg-layer-3 z-20 divide-tertiary divide-y outline-none"
+        className="flex flex-col absolute right-0 top-0 bottom-0 w-full md:w-[560px] bg-layer-3 z-20 divide-tertiary divide-y outline-hidden"
       >
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <h3 className="dial-h5 text-primary truncate">{title}</h3>
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconX size={18} />}
             onClick={onClose}

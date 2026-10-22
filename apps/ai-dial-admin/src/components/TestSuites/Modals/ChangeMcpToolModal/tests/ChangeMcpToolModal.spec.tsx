@@ -41,7 +41,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     PopupSize: { Lg: 'lg' },
-    DialConfirmationPopup: ({
+    ConfirmationPopup: ({
       children,
       confirmLabel,
       onConfirm,

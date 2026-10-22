@@ -22,7 +22,7 @@ When the import preview response contains a non-null `globalImageBuildDomainWhit
 - **WHEN** user selects the "Global Firewall" tab
 - **THEN** `DeploymentConfigurationGrid` SHALL render a heading "Global domain whitelist" (`DeploymentsI18nKey.GlobalWhitelist`)
 - **AND** below it, a `DomainList` component showing domains from `globalImageBuildDomainWhitelist.next`
-- **AND** a `DialGhostButton` with `IconReplace` icon labeled "Compare changes"
+- **AND** a `GhostButton` with `IconReplace` icon labeled "Compare changes"
 
 ### Requirement: Compare changes opens Before/After diff popup
 

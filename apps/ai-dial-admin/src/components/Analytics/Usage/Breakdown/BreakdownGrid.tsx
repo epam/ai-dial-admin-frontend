@@ -3,7 +3,7 @@
 import { FC, useCallback, useMemo, useRef } from 'react';
 
 import { ColDef, IDatasource, ModelUpdatedEvent } from 'ag-grid-community';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
@@ -106,7 +106,7 @@ const BreakdownGrid: FC<Props> = ({
   if (isLoading) {
     return (
       <div className={classNames('flex items-center justify-center', className)}>
-        <DialLoader size={24} />
+        <Spinner size={24} fullWidth />
       </div>
     );
   }
@@ -145,7 +145,7 @@ const BreakdownGrid: FC<Props> = ({
             HEADER_OFFSET_CLASS,
           )}
         >
-          <DialLoader size={LOADER_SIZE} />
+          <Spinner size={LOADER_SIZE} fullWidth />
         </div>
       )}
       {isEmpty && (

@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import FilterCondition from '@/src/components/Analytics/QueryBuilder/Filter/FilterCondition';
@@ -89,7 +89,7 @@ const FilterGroup: FC<Props> = ({
           {operatorSelect}
           <SectionAction label={t(QueryBuilderI18nKey.AddCondition)} onClick={addCondition} />
           <div className="flex-1" />
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             aria-label={t(ButtonsI18nKey.Remove)}
             icon={<IconTrashX size={16} className="text-error" />}

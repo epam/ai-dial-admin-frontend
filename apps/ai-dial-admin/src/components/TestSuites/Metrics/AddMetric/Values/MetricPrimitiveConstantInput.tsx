@@ -1,6 +1,6 @@
 import { FC, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { DialNumberInput, DialSelectField, DialSwitch, DialTextarea } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField, Switch, DialTextarea } from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { BindingSourceValue } from '@/src/models/evaluation/metric';
@@ -95,9 +95,9 @@ const MetricPrimitiveConstantInput: FC<MetricPrimitiveConstantInputProps> = ({
 
   if (field.type === 'boolean') {
     return (
-      <DialSwitch
-        switchId={elementId}
-        label={showFieldLabel ? field.name : undefined}
+      <Switch
+        id={elementId}
+        labelProps={{ label: showFieldLabel ? field.name : undefined }}
         caption={showFieldLabel ? field.description : undefined}
         isOn={value as boolean | undefined}
         onChange={(v) => onChange(v)}

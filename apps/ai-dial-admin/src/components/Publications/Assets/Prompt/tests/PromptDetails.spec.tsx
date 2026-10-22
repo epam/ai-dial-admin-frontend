@@ -40,7 +40,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
   return {
     ...actual,
-    DialDangerButton: ({ label, onClick, iconBefore }: any) => (
+    DangerButton: ({ label, onClick, iconBefore }: any) => (
       <button role="button" aria-label={label} onClick={onClick}>
         {iconBefore}
         {label}

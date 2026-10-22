@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLoader, DialPrimaryButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, PrimaryButton, Switch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -191,8 +191,8 @@ const SystemRollback: FC = () => {
           <div
             className={
               isReadOnlyAdmin
-                ? 'flex flex-row items-center small bg-layer-3 rounded h-6 p-2'
-                : 'flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer'
+                ? 'flex flex-row items-center dial-small-text bg-layer-3 rounded h-6 p-2'
+                : 'flex flex-row items-center dial-small-text bg-layer-3 rounded h-6 p-2 cursor-pointer'
             }
             onClick={isReadOnlyAdmin ? undefined : () => setRevisionModalOpen(true)}
             role={isReadOnlyAdmin ? undefined : 'button'}
@@ -206,7 +206,7 @@ const SystemRollback: FC = () => {
             )}
           </div>
           {!isReadOnlyAdmin && (
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RollbackI18nKey.Rollback)}
               onClick={() => setIsRollBackModalOpen(true)}
@@ -214,7 +214,12 @@ const SystemRollback: FC = () => {
             />
           )}
           <div className="w-px h-6 bg-layer-4"></div>
-          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} label="JSON" />
+          <Switch
+            id="jsonView"
+            isOn={isJsonView}
+            onChange={() => setIsJsonView(!isJsonView)}
+            labelProps={{ label: 'JSON' }}
+          />
         </div>
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">
@@ -227,7 +232,7 @@ const SystemRollback: FC = () => {
         </div>
         <div className="flex-1 min-h-0 flex flex-row w-full mb-4 mt-2 overflow-auto">
           {isLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
               {isJsonView ? (

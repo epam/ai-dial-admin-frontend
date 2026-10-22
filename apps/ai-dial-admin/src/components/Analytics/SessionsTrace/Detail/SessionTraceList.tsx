@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  DialEllipsisTooltip,
-  DialLinkButton,
-  DialLoader,
-  DialNoDataContent,
+  EllipsisTooltip,
+  LinkButton,
+  Spinner,
+  NoDataContent,
   DialNotification,
   NotificationVariant,
 } from '@epam/ai-dial-ui-kit';
@@ -116,13 +116,13 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
       <span className="flex min-w-0 items-center gap-2">
         <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
         <span className="min-w-0 text-primary dial-small-semi-text">
-          <DialEllipsisTooltip text={title} />
+          <EllipsisTooltip text={title} />
         </span>
         {card.isCoreInternal && (
           <IdentityTag label={t(SessionsTraceI18nKey.TraceCardCoreInternal)} colorClassName="text-warning" />
         )}
         <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
-          <DialEllipsisTooltip text={card.traceId} />
+          <EllipsisTooltip text={card.traceId} />
         </span>
         <span className={classNames('flex shrink-0 items-center gap-1', isFailed && 'text-error')}>
           <StatusDot isFailed={isFailed} />
@@ -161,6 +161,14 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
         <Fact label={t(SessionsTraceI18nKey.TraceCardChainPrice)}>
           <span className={COST_TEXT_CLASS}>{formatSignificantCost(card.chainPrice) || UNAVAILABLE_VALUE}</span>
         </Fact>
+        {/* Stated only by a listing that reads them — the entity listing, whose calls come from many callers.
+            Within one session the caller is the session itself, so the session card has no such fact. */}
+        {card.caller !== undefined && (
+          <Fact label={t(SessionsTraceI18nKey.TraceCardCaller)}>{card.caller || UNAVAILABLE_VALUE}</Fact>
+        )}
+        {card.projectId !== undefined && (
+          <Fact label={t(SessionsTraceI18nKey.TraceCardProject)}>{card.projectId || UNAVAILABLE_VALUE}</Fact>
+        )}
         {ratings && <RatingCounts counts={ratings} />}
       </span>
 
@@ -193,7 +201,7 @@ const UnrecordedRoot: FC<UnrecordedProps> = ({ group, onOpenTrace }) => {
           {t(SessionsTraceI18nKey.TraceRootNotRecorded)}
         </span>
         <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
-          <DialEllipsisTooltip text={group.traceId} />
+          <EllipsisTooltip text={group.traceId} />
         </span>
         {/* The trace's figures are real even though its root is not, so the panel still states them — that is
             what "renders from its trace-level figures" means. Only the middle tier is absent, because there is
@@ -212,6 +220,7 @@ const UnrecordedRoot: FC<UnrecordedProps> = ({ group, onOpenTrace }) => {
 interface GroupProps {
   group: SessionTraceGroup;
   ratings?: RatingCountsModel;
+  isCardTheRoot: boolean;
   onOpenTrace: (group: SessionTraceGroup, card?: SessionTraceCard) => void;
 }
 
@@ -219,7 +228,7 @@ interface GroupProps {
 // overwhelming majority — the panel *is* the card and its bottom tier carries the trace's register. Where a
 // trace records more than one, the panel owns that register once, so the trace-level figures are stated where
 // they belong instead of being repeated on every card.
-const TraceGroup: FC<GroupProps> = ({ group, ratings, onOpenTrace }) => {
+const TraceGroup: FC<GroupProps> = ({ group, ratings, isCardTheRoot, onOpenTrace }) => {
   const t = useI18n();
 
   if (!group.isRootRecorded) {
@@ -232,8 +241,11 @@ const TraceGroup: FC<GroupProps> = ({ group, ratings, onOpenTrace }) => {
         group={group}
         card={group.cards[0]}
         ratings={ratings}
-        traceTier={<TraceTier group={group} />}
-        hasTraceTotals
+        // The headline may carry the trace's totals only where the card's call is the trace's root, whose
+        // figures they approximate. A card for some other hop states them in the trace tier, labelled as the
+        // trace's, so they cannot be read as that one call's.
+        traceTier={<TraceTier group={group} hasTotals={!isCardTheRoot} />}
+        hasTraceTotals={isCardTheRoot}
         onOpenTrace={onOpenTrace}
       />
     );
@@ -277,7 +289,13 @@ const TraceGroup: FC<GroupProps> = ({ group, ratings, onOpenTrace }) => {
 
 interface Props {
   groups: SessionTraceGroup[];
-  traceRatings: Map<string, RatingCountsModel>;
+  // Absent where the listing has no session to attribute ratings to; no card then renders rating counts.
+  traceRatings?: Map<string, RatingCountsModel>;
+  // The heading and the rule line name what one panel stands for, which differs by listing.
+  title?: string;
+  rule?: string;
+  // False where a card is a call somewhere inside its trace — an entity's call — rather than the trace's root.
+  isCardTheRoot?: boolean;
   hasMore: boolean;
   isLoading: boolean;
   hasLoadError: boolean;
@@ -288,6 +306,9 @@ interface Props {
 const SessionTraceList: FC<Props> = ({
   groups,
   traceRatings,
+  title,
+  rule,
+  isCardTheRoot = true,
   hasMore,
   isLoading,
   hasLoadError,
@@ -319,7 +340,7 @@ const SessionTraceList: FC<Props> = ({
   if (!groups.length && !isLoading) {
     return (
       <div className="flex flex-1 flex-col justify-center bg-layer-1">
-        <DialNoDataContent
+        <NoDataContent
           icon={
             hasLoadError ? (
               <IconAlertTriangle size={EMPTY_ICON_SIZE} aria-hidden className="text-error" />
@@ -331,7 +352,7 @@ const SessionTraceList: FC<Props> = ({
           description={t(
             hasLoadError ? SessionsTraceI18nKey.TraceListLoadFailedHint : SessionsTraceI18nKey.TraceListEmptyHintLive,
           )}
-          containerClassName="max-w-[520px] self-center p-6"
+          className="max-w-[520px] self-center p-6"
           titleClassName="dial-tiny-semi-text"
           descriptionClassName="dial-small-text"
         />
@@ -345,8 +366,8 @@ const SessionTraceList: FC<Props> = ({
         {/* States the rule the listing follows, so a reader knows what one panel stands for without having to
             infer it. Deliberately not "turn": the data records no turn index. */}
         <div className="flex flex-wrap items-baseline justify-between gap-2 pb-1">
-          <h3 className="text-primary dial-small-semi-text">{t(SessionsTraceI18nKey.TraceSectionTitle)}</h3>
-          <p className="font-mono text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.TraceSectionRule)}</p>
+          <h3 className="text-primary dial-small-semi-text">{title ?? t(SessionsTraceI18nKey.TraceSectionTitle)}</h3>
+          <p className="font-mono text-secondary dial-tiny-text">{rule ?? t(SessionsTraceI18nKey.TraceSectionRule)}</p>
         </div>
         {hasLoadError && (
           <DialNotification
@@ -359,7 +380,8 @@ const SessionTraceList: FC<Props> = ({
           <TraceGroup
             key={group.traceId}
             group={group}
-            ratings={traceRatings.get(group.traceId)}
+            ratings={traceRatings?.get(group.traceId)}
+            isCardTheRoot={isCardTheRoot}
             onOpenTrace={onOpenTrace}
           />
         ))}
@@ -367,14 +389,12 @@ const SessionTraceList: FC<Props> = ({
             does — and again on every appended page. */}
         {isLoading && (
           <div className="flex justify-center p-2">
-            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(BasicI18nKey.Loading)} />
+            <Spinner size={LOADER_SIZE} fullWidth={false} ariaLabel={t(BasicI18nKey.Loading)} />
           </div>
         )}
         {/* A manual fallback for the observer: a viewport tall enough to hold every loaded card never
             intersects the sentinel, and the reader would otherwise have no way to ask for the next page. */}
-        {hasMore && !isLoading && (
-          <DialLinkButton label={t(SessionsTraceI18nKey.TraceListLoadMore)} onClick={onLoadMore} />
-        )}
+        {hasMore && !isLoading && <LinkButton label={t(SessionsTraceI18nKey.TraceListLoadMore)} onClick={onLoadMore} />}
         <div ref={sentinelRef} aria-hidden className="h-px" />
       </div>
     </div>

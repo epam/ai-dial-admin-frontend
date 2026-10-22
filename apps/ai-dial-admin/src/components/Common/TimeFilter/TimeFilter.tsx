@@ -2,8 +2,8 @@ import {
   DIAL_ICON_SIZE,
   DIAL_KIT_ICON_STROKE,
   DialDropdown,
-  DialNeutralButton,
-  DialPrimaryButton,
+  OutlinedButton,
+  PrimaryButton,
   ElementSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown } from '@tabler/icons-react';
@@ -43,9 +43,9 @@ const LEGACY_OVERLAY_CLASS = 'rounded border border-secondary bg-layer-0 shadow-
 
 /** Mirrors `overlayItemClassName`, the row every 2.0 `MenuItem` — and so every `Select` option — is. */
 const MODERN_OPTION_CLASS =
-  'flex h-[40px] w-full cursor-pointer items-center gap-2 truncate rounded-lg px-3 dial-small-text text-primary hover:bg-control-accent-alpha-hover focus-visible:outline focus-visible:outline-focus';
+  'flex h-[40px] w-full cursor-pointer items-center gap-2 truncate rounded-lg px-3 dial-small-text text-primary hover:bg-control-accent-alpha-hover focus-visible:outline-3 focus-visible:outline-focus';
 const LEGACY_OPTION_CLASS =
-  'flex w-full items-center whitespace-nowrap px-3 py-2 text-left small text-primary hover:bg-layer-3';
+  'flex w-full items-center whitespace-nowrap px-3 py-2 text-left dial-small-text text-primary hover:bg-layer-3';
 
 const MODERN_OPTION_SELECTED_CLASS = 'bg-control-accent-alpha';
 const LEGACY_OPTION_SELECTED_CLASS = 'bg-layer-3';
@@ -184,8 +184,8 @@ const TimeFilter: FC<Props> = ({
     <div className={classNames('flex flex-col border-l', isModern ? 'border-tertiary' : 'border-secondary')}>
       <RangePicker value={draft.range} onChange={handleRangeChange} maxDays={maxDays} />
       <div className="flex justify-end gap-2 px-3 pb-3 mt-auto">
-        <DialNeutralButton size={ElementSize.Small} label={t(ButtonsI18nKey.Cancel)} onClick={handleCancel} />
-        <DialPrimaryButton
+        <OutlinedButton size={ElementSize.Small} label={t(ButtonsI18nKey.Cancel)} onClick={handleCancel} />
+        <PrimaryButton
           size={ElementSize.Small}
           label={t(ButtonsI18nKey.Apply)}
           onClick={handleApply}

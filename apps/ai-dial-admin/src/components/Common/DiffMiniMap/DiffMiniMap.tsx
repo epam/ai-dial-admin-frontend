@@ -191,7 +191,7 @@ const DiffMiniMap: FC<Props> = ({ scrollContainerRef, isHorizontal = false }) =>
         <div
           key={i}
           className={classNames(
-            'absolute opacity-90 rounded-sm',
+            'absolute opacity-90 rounded-xs',
             isHorizontal ? 'top-0 bottom-0' : 'left-0 right-0',
             MARKER_BG[marker.status],
             MARKER_BORDER[marker.status],

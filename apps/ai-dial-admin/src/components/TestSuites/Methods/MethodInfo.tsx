@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialInput, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialInput, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import TableView from '@/src/components/Common/ViewSelector/TableView';
@@ -122,7 +122,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
               />
             ) : (
               <div className="size-full flex items-center justify-center">
-                <DialNoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />
+                <NoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />
               </div>
             )}
 
@@ -145,7 +145,7 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
       </div>
     </div>
   ) : (
-    <DialNoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />
+    <NoDataContent title={t(TestSuitesI18nKey.NoInformationToPreview)} />
   );
 };
 

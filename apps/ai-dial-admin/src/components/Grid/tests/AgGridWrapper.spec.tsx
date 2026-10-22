@@ -368,6 +368,63 @@ describe('AgGridWrapper — default and stored width of a sized column', () => {
   });
 });
 
+describe('AgGridWrapper — controlled column widths', () => {
+  const makeColumn = (colId: string, width: number) => ({
+    getColId: () => colId,
+    getActualWidth: () => width,
+    getColDef: () => ({}),
+  });
+
+  const fireColumnResized = (event: Record<string, unknown>) => {
+    act(() => {
+      const onColumnResized = gridOptions().onColumnResized as (event: unknown) => void;
+      onColumnResized({ api: { ...makeFakeApi(), sizeColumnsToFit: vi.fn() }, ...event });
+    });
+  };
+
+  beforeEach(() => {
+    mockState.lastProps = null;
+  });
+
+  test('applies the given widths to the rendered columns', () => {
+    render(
+      <AgGridWrapper columnDefs={[{ field: 'name' }, { field: 'id' }]} rowData={[]} columnWidths={{ name: 320 }} />,
+    );
+
+    expect(mockState.lastProps?.columnDefs).toEqual([
+      expect.objectContaining({ field: 'name', width: 320, flex: 0, suppressSizeToFit: true }),
+      { field: 'id' },
+    ]);
+  });
+
+  test('reports the merged widths when the operator finishes a drag', () => {
+    const onColumnWidthsChange = vi.fn();
+    render(
+      <AgGridWrapper
+        columnDefs={[{ field: 'name' }, { field: 'id' }]}
+        rowData={[]}
+        columnWidths={{ name: 320 }}
+        onColumnWidthsChange={onColumnWidthsChange}
+      />,
+    );
+
+    fireColumnResized({ source: 'uiColumnResized', finished: true, columns: [makeColumn('id', 150)] });
+
+    expect(onColumnWidthsChange).toHaveBeenCalledWith({ name: 320, id: 150 });
+  });
+
+  test('does not report while the drag is in progress or for a resize the grid performed', () => {
+    const onColumnWidthsChange = vi.fn();
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} onColumnWidthsChange={onColumnWidthsChange} />);
+
+    fireColumnResized({ source: 'uiColumnResized', finished: false, columns: [makeColumn('id', 150)] });
+    fireColumnResized({ source: 'sizeColumnsToFit', finished: true, columns: [makeColumn('id', 150)] });
+    fireColumnResized({ source: 'autosizeColumns', finished: true, columns: [makeColumn('id', 150)] });
+
+    expect(onColumnWidthsChange).not.toHaveBeenCalled();
+  });
+});
+
 describe('AgGridWrapper — sizing strategy', () => {
   beforeEach(() => {
     mockState.lastProps = null;

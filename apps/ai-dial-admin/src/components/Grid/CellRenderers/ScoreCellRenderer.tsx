@@ -41,6 +41,8 @@ const isScoreValue = (value: unknown, mode: ScoreColorMode): value is number =>
  *   grid of divided boxes.
  * - Value hidden (see `isHidden` below): a right+bottom border in the bucket's visible accent color,
  *   so the grid structure stays legible once the numbers themselves are gone.
+ * - Missing value (the dash) or zero delta: a neutral right border, hidden or not — neither has a
+ *   bucket color, so without it adjacent ones would merge into one blank area.
  */
 const ScoreCellRenderer = ({ value, column, context, mode = ScoreColorMode.Absolute }: ScoreCellRendererParams) => {
   const columnWidth = resolveHeatMapLayoutWidth(context, column);
@@ -56,8 +58,8 @@ const ScoreCellRenderer = ({ value, column, context, mode = ScoreColorMode.Absol
     return (
       <div
         className={classNames(
-          'flex items-center justify-end size-full overflow-hidden',
-          tier ? tier.paddingClassName : 'border-r border-tertiary',
+          'flex items-center justify-end size-full overflow-hidden border-r border-tertiary',
+          tier?.paddingClassName,
         )}
         role={isTextHidden ? 'group' : undefined}
         aria-label={isTextHidden ? MISSING_DISPLAY : undefined}

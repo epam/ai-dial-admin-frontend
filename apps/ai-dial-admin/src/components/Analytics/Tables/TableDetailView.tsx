@@ -10,10 +10,10 @@ import {
   ButtonAppearance,
   ButtonVariant,
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
+  ConfirmationPopup,
+  EllipsisTooltip,
   DialFormPopup,
-  DialGhostButton,
+  GhostButton,
   PopupSize,
   Tabs,
 } from '@epam/ai-dial-ui-kit';
@@ -499,7 +499,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                   disableSave={!isEditorEnabled && !draft.canMaterialize}
                   onDiscard={onDiscard}
                   onSave={onTryToSave}
-                  isDesignSystem2
                 />
               )}
               {isJsonViewOnly && (
@@ -508,9 +507,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                     buttonLabel={t(ButtonsI18nKey.Copy)}
                     valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
                     value={copyValue}
-                    isDesignSystem2
                   />
-                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                 </>
               )}
               {!isChangeBarShown && !isJsonViewOnly && (
@@ -554,12 +552,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                       {/* Not permission-gated: on an active table it opens a read-only view of the stored
                           definition and writes nothing, and a system table is the one whose definition is
                           most often read as a document. */}
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                     </>
                   ) : (
-                    canModify && (
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
-                    )
+                    canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                   )}
                 </>
               )}
@@ -575,7 +571,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       {isActive ? activeSurface : draftSurface}
 
       {confirmOpen && (
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open={confirmOpen}
           variant={ConfirmationPopupVariant.Danger}
           header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}
@@ -584,7 +580,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
               <span>{t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}</span>
               <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
                 <span className="text-secondary shrink-0">{t(AnalyticsTablesI18nKey.Name)}:</span>
-                <DialEllipsisTooltip text={name} />
+                <EllipsisTooltip text={name} />
               </div>
             </div>
           }
@@ -625,10 +621,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           <div className="flex flex-col gap-3 p-6">
             <div className="flex flex-col items-start gap-1 border-l-2 border-tertiary pl-3">
               <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.AddRowsPurpose)}</p>
-              <DialGhostButton
-                label={t(AnalyticsTablesI18nKey.WriteProgrammatically)}
-                onClick={onWriteProgrammatically}
-              />
+              <GhostButton label={t(AnalyticsTablesI18nKey.WriteProgrammatically)} onClick={onWriteProgrammatically} />
             </div>
             <div className="h-[320px] overflow-hidden rounded border border-primary">
               <JsonEditorBase value={rowsJson} onChange={(v) => setRowsJson(v ?? '')} />

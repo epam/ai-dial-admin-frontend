@@ -1,4 +1,4 @@
-import { NotificationVariant, DialNotification, DialConfirmationPopup, DialInput } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, ConfirmationPopup, DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
@@ -25,18 +25,19 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
   );
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       onClose={onClose}
       header={t(RollbackI18nKey.ConfirmSystemRollbackTitle)}
       portalId="ConfirmationRollBackModal"
       open={isModalOpen}
       disableConfirmButton={isDisabled}
-      dividers={true}
+      headerDivider
+      footerDivider
       onConfirm={onConfirm}
       confirmLabel={t(ButtonsI18nKey.Rollback)}
     >
       <div className="px-6 py-4">
-        <div className="text-secondary small-150">
+        <div className="text-secondary dial-small-paragraph-text">
           {t(RollbackI18nKey.ConfirmSystemRollbackDescription)}
           <span className="important-text-part ml-2">{revisionDate}</span>
         </div>
@@ -54,7 +55,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
           onChange={onChangeConfirmation}
         />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

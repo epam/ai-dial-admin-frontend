@@ -1,4 +1,4 @@
-import { DialGhostButton, SelectOption } from '@epam/ai-dial-ui-kit';
+import { GhostButton, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -109,7 +109,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getBaseData, route, isMcpView
         isMcpView={isMcpView}
         isRouteView={isRouteView}
       >
-        <DialGhostButton label={t(TelemetryI18nKey.AddFilter)} iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
+        <GhostButton label={t(TelemetryI18nKey.AddFilter)} iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />} />
       </AddFilter>
     </>
   );

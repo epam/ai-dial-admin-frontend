@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialConfirmationPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -30,7 +30,7 @@ const RenameRequestModal: FC<Props> = ({ isOpen, initialName, onClose, onConfirm
   const disableConfirmButton = !trimmed || !!nameError;
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       portalId="RenameRequestModal"
       header={t(TestSuitesI18nKey.RenameRequest)}
       open={isOpen}
@@ -51,7 +51,7 @@ const RenameRequestModal: FC<Props> = ({ isOpen, initialName, onClose, onConfirm
           onChange={(value) => setName(value ?? '')}
         />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

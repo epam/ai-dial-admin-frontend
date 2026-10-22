@@ -1,6 +1,6 @@
 'use client';
 
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -107,7 +107,7 @@ const KeyAssetView: FC<Props> = ({ etag, originalKey, roles }) => {
   );
 
   const rotateButton = !isReadOnlyAdmin && (
-    <DialPrimaryButton
+    <PrimaryButton
       label={t(ButtonsI18nKey.Rotate)}
       iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
       onClick={() => setIsRotateModalOpen(true)}

@@ -1,10 +1,11 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialErrorText, DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { FieldError, GetItemError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getTopicError } from '@/src/utils/validation/topic-error';
 import { useI18n } from '@/src/locales/client';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   value: string;
@@ -68,7 +69,7 @@ const NewItemInput: FC<Props> = ({
         <DialErrorText text={error?.text} />
       </div>
       <div className="shrink-0">
-        <DialRemoveButton onClick={onRemove} />
+        <RemoveButton onClick={onRemove} />
       </div>
     </div>
   );

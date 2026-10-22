@@ -1,5 +1,5 @@
 'use client';
-import { DialCheckbox, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -225,10 +225,10 @@ const EndpointAndMCPContainer: FC<Props> = ({
               disabled
             />
 
-            <DialSwitch
-              switchId="forwardPerRequestKey"
+            <Switch
+              id="forwardPerRequestKey"
               isOn={entity?.['dial:applicationTypeMcp']?.['dial:forwardPerRequestKey']}
-              label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+              labelProps={{ label: t(EntityFieldsI18nKey.forwardPerRequestKey) }}
               onChange={onChangeForwardPerRequestKey}
               disabled={isReadOnlyAdmin}
             />

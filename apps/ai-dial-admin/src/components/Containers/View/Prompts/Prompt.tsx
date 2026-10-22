@@ -42,13 +42,13 @@ const Prompt: FC<Props> = ({ prompt }) => {
       <div className={classNames('flex flex-col mt-4 gap-4', isCollapsed && 'hidden')}>
         {prompt.description && (
           <div>
-            <p className="small text-secondary">{t(EntityFieldsI18nKey.description)}</p>
-            <p className="body">{prompt.description}</p>
+            <p className="dial-small-text text-secondary">{t(EntityFieldsI18nKey.description)}</p>
+            <p className="dial-body-text">{prompt.description}</p>
           </div>
         )}
         {!!prompt.arguments?.length && (
           <div>
-            <p className="small text-secondary">{t(EntityFieldsI18nKey.Arguments)}</p>
+            <p className="dial-small-text text-secondary">{t(EntityFieldsI18nKey.Arguments)}</p>
             <GridView
               columnDefs={PROMPT_ARGUMENT_COLUMNS}
               rowData={prompt.arguments.map((argument) => {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
+  getEntityTracePage,
   getSessionFieldValues,
   getSessionHopMessage,
   getSessionHopRawBody,
@@ -14,7 +15,6 @@ import {
   ARRAY_VALUE_PAGE_SIZE,
   SESSION_FIELD_VALUE_COUNT_ALIAS,
   FEEDBACK_CANDIDATE_LIMIT,
-  CHAT_ID_SESSION_SOURCE,
   RAW_BODY_BYTE_BUDGET,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/sessions-trace';
@@ -29,7 +29,6 @@ import {
   HopInspectorSide,
   HopReadState,
   MessageRole,
-  SessionScope,
   UsageLogField,
 } from '@/src/models/analytics/sessions-trace';
 import {
@@ -43,6 +42,7 @@ import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cac
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -855,7 +855,6 @@ describe('getSessionsSchema', () => {
 });
 
 describe('the hop inspector reads', () => {
-  const SCOPE: SessionScope = { id: 'chat-1', source: CHAT_ID_SESSION_SOURCE };
   const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
   const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody];
 
@@ -888,7 +887,7 @@ describe('the hop inspector reads', () => {
   });
 
   const readRequest = (requestTime: number | string | null = 1787052797216) =>
-    getSessionHopRequest(SCOPE, 'tr1', 'sp1', requestTime);
+    getSessionHopRequest('tr1', 'sp1', requestTime);
 
   // Tier 1: roles, positions, sizes and clamped texts cross to the browser; the body does not.
   test('ships an envelope and no raw body', async () => {
@@ -963,7 +962,7 @@ describe('the hop inspector reads', () => {
   test('a side the caller does not hold is withheld without reading anything', async () => {
     schemaOf([UsageLogField.RequestBody]);
 
-    const result = await getSessionHopResponse(SCOPE, 'tr1', 'sp1', 1);
+    const result = await getSessionHopResponse('tr1', 'sp1', 1);
 
     expect(result.success).toBe(true);
     expect(result.response?.state).toBe(HopReadState.ColumnWithheld);
@@ -1010,7 +1009,7 @@ describe('the hop inspector reads', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    const result = await getSessionHopMessage(SCOPE, 'tr1', 'sp1', 1, 1);
+    const result = await getSessionHopMessage('tr1', 'sp1', 1, 1);
 
     expect(result.response?.text).toBe('the prompt');
     expect(JSON.stringify(result.response)).not.toContain('quartermaster');
@@ -1020,7 +1019,7 @@ describe('the hop inspector reads', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    expect((await getSessionHopMessage(SCOPE, 'tr1', 'sp1', 1, 9)).response?.state).toBe(HopReadState.NoBody);
+    expect((await getSessionHopMessage('tr1', 'sp1', 1, 9)).response?.state).toBe(HopReadState.NoBody);
   });
 
   // An assistant message that only called a tool: the call is what it said, so tier 2 carries it.
@@ -1033,7 +1032,7 @@ describe('the hop inspector reads', () => {
     });
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: withCall })] } });
 
-    const result = await getSessionHopMessage(SCOPE, 'tr1', 'sp1', 1, 0);
+    const result = await getSessionHopMessage('tr1', 'sp1', 1, 0);
 
     // The tier-2 read of one message carries the call's id for the same reason the envelope does.
     expect(result.response?.toolCalls).toEqual([{ name: 'calc', args: '{"a":1}', id: null }]);
@@ -1045,7 +1044,7 @@ describe('the hop inspector reads', () => {
     const huge = 'x'.repeat(RAW_BODY_BYTE_BUDGET + 50);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: huge })] } });
 
-    const result = await getSessionHopRawBody(SCOPE, 'tr1', 'sp1', 1, HopInspectorSide.Request);
+    const result = await getSessionHopRawBody('tr1', 'sp1', 1, HopInspectorSide.Request);
 
     expect(result.response?.clamp).toEqual({
       isClamped: true,
@@ -1058,7 +1057,7 @@ describe('the hop inspector reads', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    const result = await getSessionHopResponse(SCOPE, 'tr1', 'sp1', 1);
+    const result = await getSessionHopResponse('tr1', 'sp1', 1);
 
     expect(result.response?.text).toBe('the answer');
     expect(result.response?.finishReason).toBe('stop');
@@ -1074,5 +1073,60 @@ describe('the hop inspector reads', () => {
     // Matched as an operator rather than as a substring: the identity enrichment's column name contains
     // "ge" (usa*ge*_client_identity), so a bare `toContain` passes for the wrong reason.
     expect(JSON.stringify(query.filter)).not.toContain(`"op":"${QueryOperator.Ge}"`);
+  });
+});
+
+describe('getEntityTracePage', () => {
+  const CALL = { trace_id: 't1', core_span_id: 's1', request_time: END_MS - 1000, deployment: 'a-model' };
+  const FIGURE = { trace_id: 't1', event_kind: 'llm_call', spans: 3, tokens: 10, price: 0.1, failed_spans: 0 };
+
+  test('reads the calls, then the figures of their traces, with the token', async () => {
+    execute()
+      .mockResolvedValueOnce(ok([CALL]))
+      .mockResolvedValueOnce(ok([FIGURE]));
+
+    const result = await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
+
+    expect(execute()).toHaveBeenCalledTimes(2);
+    expect(execute()).toHaveBeenNthCalledWith(1, expect.objectContaining({ entity: 'dial_usage_log' }), TOKEN_MOCK);
+    expect(result.response?.groups).toEqual([
+      expect.objectContaining({ traceId: 't1', spans: 3, cards: [expect.objectContaining({ coreSpanId: 's1' })] }),
+    ]);
+    expect(result.response?.cursor).toEqual({ requestTime: END_MS - 1000, coreSpanId: 's1' });
+    expect(result.response?.hasMore).toBe(false);
+  });
+
+  test('reads nothing for an entity with no name to match', async () => {
+    const result = await getEntityTracePage(ApplicationRoute.Models, null, END_MS - DAY_MS, END_MS, null);
+
+    expect(execute()).not.toHaveBeenCalled();
+    expect(result.response).toEqual({ groups: [], hasMore: false, cursor: null });
+  });
+
+  test('issues no figures read for an empty page', async () => {
+    execute().mockResolvedValueOnce(ok([]));
+
+    const result = await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
+
+    expect(execute()).toHaveBeenCalledOnce();
+    expect(result.response?.groups).toEqual([]);
+  });
+
+  test('passes a refusal through with its status', async () => {
+    execute().mockResolvedValueOnce({ success: false, status: 403 });
+
+    const result = await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
+
+    expect(result).toEqual(expect.objectContaining({ success: false, status: 403 }));
+  });
+
+  test('fails the page when the figures read fails', async () => {
+    execute()
+      .mockResolvedValueOnce(ok([CALL]))
+      .mockResolvedValueOnce({ success: false });
+
+    const result = await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
+
+    expect(result.success).toBe(false);
   });
 });

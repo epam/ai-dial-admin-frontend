@@ -1,15 +1,14 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 import classNames from 'classnames';
 
-import { DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { CloseButton, DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
-import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { getFilterConditionConfig, getFilterTypeConfig, isDeploymentFilter } from '@/src/utils/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
 interface Props {
   type: FILTER_TYPE;
@@ -91,7 +90,7 @@ const CreateFilter: FC<Props> = ({
           </div>
         ) : (
           <div className="flex">
-            <p className="flex body mr-4 ml-2">{t(TelemetryI18nKey.FilterTypeProjects)}</p>
+            <p className="flex dial-body-text mr-4 ml-2">{t(TelemetryI18nKey.FilterTypeProjects)}</p>
           </div>
         )}
       </>
@@ -137,7 +136,7 @@ const CreateFilter: FC<Props> = ({
           />
         )}
       </div>
-      <CloseButton onClose={onClose} className="hidden md:flex" />
+      <CloseButton ariaLabel={t(ButtonsI18nKey.Close)} onClose={onClose} className="hidden md:flex" />
     </div>
   );
 };

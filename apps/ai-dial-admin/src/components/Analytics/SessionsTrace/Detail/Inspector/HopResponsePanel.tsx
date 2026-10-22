@@ -16,20 +16,18 @@ import {
   HopResponseEnvelope,
   McpToolCallTally,
   MessageRole,
-  SessionScope,
 } from '@/src/models/analytics/sessions-trace';
 
 interface Props {
   envelope: HopResponseEnvelope;
   isRaw: boolean;
-  scope: SessionScope;
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
   mcpToolCalls: McpToolCallTally;
 }
 
-const HopResponsePanel: FC<Props> = ({ envelope, isRaw, scope, traceId, coreSpanId, requestTime, mcpToolCalls }) => {
+const HopResponsePanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, requestTime, mcpToolCalls }) => {
   const t = useI18n();
   // Text or a call: a response that only called a tool said exactly that, and it is a message either way.
   const hasMessage = envelope.text !== null || envelope.toolCalls.length > 0;
@@ -50,7 +48,6 @@ const HopResponsePanel: FC<Props> = ({ envelope, isRaw, scope, traceId, coreSpan
       <div className="flex min-w-0 flex-col gap-3">
         {isRaw ? (
           <HopRawView
-            scope={scope}
             traceId={traceId}
             coreSpanId={coreSpanId}
             requestTime={requestTime}

@@ -1,7 +1,7 @@
 'use client';
 
 import { ChangeEvent, FC, useCallback, useRef } from 'react';
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconFileArrowRight } from '@tabler/icons-react';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -51,7 +51,7 @@ const FileButton: FC<Props> = ({ onChange, disabled }) => {
 
   return (
     <>
-      <DialNeutralButton
+      <OutlinedButton
         iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
         onClick={onClick}
         disabled={disabled}

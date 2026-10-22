@@ -48,9 +48,9 @@ const MetricCard: FC<Props> = ({ name, value, isError, isSelected, onClick }) =>
       <div className={classNames('dial-small-semi-text', isError ? 'text-error' : 'text-primary')}>
         {formattedValue}
       </div>
-      <div className="h-[3px] bg-layer-4 rounded-sm mt-1.5 overflow-hidden">
+      <div className="h-[3px] bg-layer-4 rounded-xs mt-1.5 overflow-hidden">
         <div
-          className={classNames('h-full rounded-sm transition-[width] duration-400', isError && 'bg-error')}
+          className={classNames('h-full rounded-xs transition-[width] duration-400', isError && 'bg-error')}
           style={{
             width: `${fillWidth}%`,
             ...(!isError && value != null ? { backgroundColor: getAccuracyColors(value, currentTheme).bg } : {}),

@@ -1,4 +1,4 @@
-import { DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -108,7 +108,7 @@ const MultiselectModal: FC<Props> = ({
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
         ) : (
           <DndProvider backend={HTML5Backend}>
             <MultiselectContentModal

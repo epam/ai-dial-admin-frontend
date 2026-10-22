@@ -45,7 +45,7 @@ const TestCaseNameCellRenderer = (params: TestCaseNameCellRendererParams) => {
       ) : (
         <DialTag
           label={t(TestSuitesI18nKey.TurnCountBadge, { count: data.turnCount ?? 0 })}
-          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
+          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-xs shrink-0"
         />
       )}
     </div>

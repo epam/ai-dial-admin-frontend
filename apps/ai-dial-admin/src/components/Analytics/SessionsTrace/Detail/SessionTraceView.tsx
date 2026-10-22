@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip, DialGhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostIconButton, NoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useMemo } from 'react';
@@ -16,7 +16,6 @@ import { useI18n } from '@/src/locales/client';
 import {
   SessionTraceFigures,
   HopBodyGrants,
-  SessionScope,
   SpanFieldGroup,
   SpanFieldRow,
 } from '@/src/models/analytics/sessions-trace';
@@ -62,7 +61,7 @@ const Stat: FC<StatProps> = ({ label, value, valueClassName }) => (
 );
 
 interface Props {
-  scope: SessionScope;
+  readKey: string;
   // What names the trace on screen. The data records no turn index, so there is no ordinal to fall back to:
   // the caller supplies the card's own name, and the trace id stands alone for a trace whose root the roots
   // pass never returned, which leaves no card to name it.
@@ -80,7 +79,7 @@ interface Props {
 }
 
 const SessionTraceView: FC<Props> = ({
-  scope,
+  readKey,
   title,
   figures,
   spans,
@@ -125,7 +124,7 @@ const SessionTraceView: FC<Props> = ({
 
   const stream = hasLoadError ? (
     <div className="flex flex-1 items-center justify-center">
-      <DialNoDataContent title={t(SessionsTraceI18nKey.TraceLoadFailed)} />
+      <NoDataContent title={t(SessionsTraceI18nKey.TraceLoadFailed)} />
     </div>
   ) : (
     <SessionEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
@@ -141,7 +140,7 @@ const SessionTraceView: FC<Props> = ({
       // between the two sections, and a full pad here stacked into a visible void over the tab strip.
       <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
         <HopInspector
-          scope={scope}
+          readKey={readKey}
           traceId={figures.traceId}
           span={selected.span}
           kind={selected.kind}
@@ -152,10 +151,10 @@ const SessionTraceView: FC<Props> = ({
     );
 
   return (
-    <div className="flex size-full flex-col gap-4">
+    <div className="flex size-full min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconChevronLeft {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             aria-label={t(SessionsTraceI18nKey.TraceBackToList)}
@@ -166,14 +165,14 @@ const SessionTraceView: FC<Props> = ({
             <h2 className="flex min-w-0 items-center gap-2 text-primary">
               <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
               <span className="min-w-0">
-                <DialEllipsisTooltip text={title ?? figures.traceId} />
+                <EllipsisTooltip text={title ?? figures.traceId} />
               </span>
             </h2>
             <span className="flex min-w-0 items-center gap-1.5 pl-6 text-secondary dial-tiny-text">
               {/* Suppressed when the heading already is the trace id — repeating it says nothing twice. */}
               {title !== undefined && (
                 <span className="min-w-0 font-mono">
-                  <DialEllipsisTooltip text={figures.traceId} />
+                  <EllipsisTooltip text={figures.traceId} />
                 </span>
               )}
             </span>
@@ -217,7 +216,7 @@ const SessionTraceView: FC<Props> = ({
       )}
 
       <div className="flex min-h-0 flex-1 rounded border border-primary">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-layer-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-layer-1">
           {hasBodies ? (
             <SplitPane ariaLabel={t(SessionsTraceI18nKey.BodiesSplitLabel)} top={stream} bottom={bodies} />
           ) : (

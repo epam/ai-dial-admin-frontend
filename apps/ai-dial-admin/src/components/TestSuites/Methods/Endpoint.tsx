@@ -13,7 +13,7 @@ const MethodEndpoint: FC<Props> = ({ testSuite, showFormattedUrl = false }) => {
   return (
     <div>
       {testSuite?.endpointRef?.method && (
-        <span className="tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
+        <span className="dial-tiny-text bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
           {testSuite?.endpointRef.method}
         </span>
       )}

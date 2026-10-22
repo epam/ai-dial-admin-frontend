@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 import { CellClickedEvent, ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import { getColumnsByParameter, getCurrentAndRollbackEntities } from '@/src/components/ActivityAudit/EntityGrid/utils';
@@ -87,7 +87,7 @@ const AuditEntityGrid: FC<Props> = ({
 
   return !data?.length ? (
     <div className="rounded border border-secondary h-full">
-      <DialNoDataContent title={t(EntitiesI18nKey.NoResource)} />
+      <NoDataContent title={t(EntitiesI18nKey.NoResource)} />
     </div>
   ) : (
     <div className="size-full relative">

@@ -5,9 +5,9 @@ import { FC, useEffect, useRef, useState } from 'react';
 import {
   ButtonAppearance,
   ButtonVariant,
-  DialButton,
-  DialLoader,
-  DialPrimaryButton,
+  Button,
+  Spinner,
+  PrimaryButton,
   DialTextarea,
   ElementSize,
 } from '@epam/ai-dial-ui-kit';
@@ -93,7 +93,7 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
                           valueLabel={t(QueryBuilderI18nKey.SqlQuery)}
                           size={ElementSize.Small}
                         />
-                        <DialButton
+                        <Button
                           label={t(QueryBuilderI18nKey.Run)}
                           iconBefore={<IconPlayerPlay size={14} stroke={2} />}
                           appearance={ButtonAppearance.Outlined}
@@ -119,7 +119,7 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
       {messages.length === 0 && (
         <div className="flex flex-wrap gap-2">
           {QUERY_ASSISTANT_SUGGESTIONS.map((key) => (
-            <DialButton
+            <Button
               key={key}
               label={t(key)}
               appearance={ButtonAppearance.Ghost}
@@ -142,10 +142,8 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
           rows={3}
         />
         <div className="flex items-center justify-end gap-2">
-          {isSending && (
-            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />
-          )}
-          <DialPrimaryButton
+          {isSending && <Spinner size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />}
+          <PrimaryButton
             label={t(QueryBuilderI18nKey.AiSend)}
             iconBefore={<IconSparkles size={18} stroke={2} />}
             onClick={onSend}

@@ -94,7 +94,7 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
               {(groupHeading || status) && (
                 <div className="flex flex-row items-center gap-2 mb-2">
                   {groupHeading && <h4>{groupHeading}</h4>}
-                  {status && <span className="text-secondary small">{status}</span>}
+                  {status && <span className="text-secondary dial-small-text">{status}</span>}
                 </div>
               )}
               <div className="flex flex-row gap-8">

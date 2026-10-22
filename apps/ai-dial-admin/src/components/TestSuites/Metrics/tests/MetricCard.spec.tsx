@@ -10,7 +10,7 @@ import MetricCard from '../MetricCard';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Avatar: ({ name }: { name: string }) => <div data-testid="avatar">{name}</div>,
-  DialGhostButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
+  GhostButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>

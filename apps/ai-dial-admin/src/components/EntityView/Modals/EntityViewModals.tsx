@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -27,7 +27,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
       {isModalOpen &&
         modalType === ModalType.entity &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isModalOpen}
             header={t(EntitiesI18nKey.SaveChangesTitle)}
             description={t(EntitiesI18nKey.SaveChangesDescription)}
@@ -43,7 +43,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
       {isModalOpen &&
         modalType === ModalType.parameters &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isModalOpen}
             header={t(EntitiesI18nKey.SaveParametersTitle)}
             description={t(EntitiesI18nKey.SaveParametersDescription)}

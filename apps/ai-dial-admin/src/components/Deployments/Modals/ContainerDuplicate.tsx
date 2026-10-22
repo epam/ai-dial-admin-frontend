@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -52,7 +52,7 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
   }, [duplicate.name, names, t]);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       onClose={onClose}
       header={title}
       portalId="DuplicateContainerModal"
@@ -74,7 +74,7 @@ const ContainerDuplicate: FC<Props> = ({ title, isModalOpen, container, onClose,
         />
         <DisplayNameControl displayName={duplicate.displayName} required onChange={onChangeDisplayName} />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

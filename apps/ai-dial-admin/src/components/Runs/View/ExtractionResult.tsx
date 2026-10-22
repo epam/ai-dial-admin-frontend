@@ -3,10 +3,11 @@
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { ColumnWidths } from '@/src/components/Grid/models';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
@@ -32,7 +33,7 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
-  const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
+  const { showTreePanel, colDefs, panelColDefs, columnWidths, results, snapshots } = extractionResultState;
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const metricGroupOrder = useMemo(() => getMetricGroupOrder(colDefs ?? []), [colDefs]);
   const fieldSchema = useMemo(() => getRowDetailFieldSchema(results ?? []), [results]);
@@ -110,6 +111,11 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     [setExtractionResultState],
   );
 
+  const onColumnWidthsChange = useCallback(
+    (nextColumnWidths: ColumnWidths) => setExtractionResultState({ columnWidths: nextColumnWidths }),
+    [setExtractionResultState],
+  );
+
   const onCellClicked = useCallback(
     (event: CellClickedEvent) => {
       if (!event.data?.id) return;
@@ -165,10 +171,12 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     <div className="flex flex-col gap-4 h-full min-h-0">
       <div className="flex-1 min-h-0 relative">
         {isLoading ? (
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
         ) : (
           <GridView
             columnDefs={colDefs}
+            columnWidths={columnWidths}
+            onColumnWidthsChange={onColumnWidthsChange}
             rowData={results}
             onGridReady={onGridReady}
             additionalGridOptions={gridOptions}

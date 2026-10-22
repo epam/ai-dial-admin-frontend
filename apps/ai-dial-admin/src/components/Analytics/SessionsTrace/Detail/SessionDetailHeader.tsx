@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, Tooltip } from '@epam/ai-dial-ui-kit';
 import { FC, Fragment, ReactNode } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -31,7 +31,7 @@ const MetaTag: FC<MetaProps> = ({ label, value, hint, title, action }) => {
     </span>
   );
 
-  return hint ? <DialTooltip tooltip={hint}>{text}</DialTooltip> : text;
+  return hint ? <Tooltip tooltip={hint}>{text}</Tooltip> : text;
 };
 
 const Separator: FC = () => <span aria-hidden className="h-4 border-l border-primary" />;
@@ -53,7 +53,7 @@ const SessionDetailHeader: FC<Props> = ({ session, nowMs }) => {
       label: t(SessionsTraceI18nKey.DetailId),
       value: (
         <span className="inline-block max-w-[260px] align-bottom">
-          <DialEllipsisTooltip text={session.client_session_id} />
+          <EllipsisTooltip text={session.client_session_id} />
         </span>
       ),
       action: (
@@ -88,7 +88,7 @@ const SessionDetailHeader: FC<Props> = ({ session, nowMs }) => {
           an accessible heading, so the dash carries the label rather than standing alone as the name. */}
       <h1 className="dial-h1-text min-w-0 text-primary">
         {title ? (
-          <DialEllipsisTooltip text={title} />
+          <EllipsisTooltip text={title} />
         ) : (
           <span aria-label={t(SessionsTraceI18nKey.NoTitle)}>{UNAVAILABLE_VALUE}</span>
         )}

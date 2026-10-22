@@ -144,7 +144,7 @@ describe('Model asset Properties :: responses defaults gating', () => {
 
 describe('Model asset Properties :: interface base URL fallback', () => {
   const ifaceBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
-  // DialLabel renders the required marker as a `*` span inside the label, so it lands in the
+  // Label renders the required marker as a `*` span inside the label, so it lands in the
   // input's accessible name.
   const queryIfaceBaseUrlInputWithMarker = () =>
     screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });

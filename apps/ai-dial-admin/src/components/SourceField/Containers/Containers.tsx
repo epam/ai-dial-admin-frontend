@@ -1,4 +1,4 @@
-import { DialInput, DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialInputPopup, Label, OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -147,7 +147,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
         ) : (
           <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-              <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
+              <Label label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
@@ -172,7 +172,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
               </DialInputPopup>
             </div>
             {entity.source?.containerId && featureFlags.deploymentsEnabled && !disabled && (
-              <DialNeutralButton
+              <OutlinedButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={isMobile ? '' : t(ButtonsI18nKey.Open)}

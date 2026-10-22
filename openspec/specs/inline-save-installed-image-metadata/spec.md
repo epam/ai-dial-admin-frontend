@@ -81,7 +81,7 @@ The image header (`ImagesButtonsWrapper`) SHALL render the primary **Save** butt
 - **THEN** `isOnlyMetadataChange` evaluates to `false` and Save is hidden
 
 ### Requirement: Accessibility
-The Save and Save-as-new-version buttons MUST expose their visible labels through `DialPrimaryButton` / `DialNeutralButton` from `@epam/ai-dial-ui-kit`, which render semantic `<button>` elements with accessible names. No new ARIA attributes are introduced.
+The Save and Save-as-new-version buttons MUST expose their visible labels through `PrimaryButton` / `OutlinedButton` from `@epam/ai-dial-ui-kit`, which render semantic `<button>` elements with accessible names. No new ARIA attributes are introduced.
 
 #### Scenario: Keyboard navigation
 - **WHEN** the user tabs through the header on a BUILT image with metadata-only changes

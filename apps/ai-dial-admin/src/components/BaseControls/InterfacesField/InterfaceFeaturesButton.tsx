@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialFormPopup, DialLabel, DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, Label, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
 
 import {
   modelResourceFeatureLabelMap,
@@ -62,7 +62,7 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
 
   return (
     <>
-      <DialNeutralButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
+      <OutlinedButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
       <DialFormPopup
         onClose={onCancel}
         header={t(ButtonsI18nKey.Features)}
@@ -90,13 +90,13 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
           />
           {switchGroups.map(({ title, keys }) => (
             <div key={title} className="flex flex-col gap-y-3">
-              <DialLabel label={t(title)} />
+              <Label label={t(title)} />
               {keys.map((key) => (
-                <DialSwitch
+                <Switch
                   key={key}
                   isOn={!!draft[key]}
-                  label={t(featureLabelMap[key])}
-                  switchId={`${fieldId}-${key}`}
+                  labelProps={{ label: t(featureLabelMap[key]) }}
+                  id={`${fieldId}-${key}`}
                   onChange={(value) => setDraft((prev) => ({ ...prev, [key]: value }))}
                 />
               ))}

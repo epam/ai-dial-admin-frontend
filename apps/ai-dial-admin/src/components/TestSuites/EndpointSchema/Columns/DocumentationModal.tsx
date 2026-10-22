@@ -2,9 +2,9 @@ import { FC, useMemo } from 'react';
 
 import {
   ButtonAppearance,
-  DialNeutralButton,
+  OutlinedButton,
   DialPopup,
-  DialPrimaryButton,
+  PrimaryButton,
   ElementSize,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
@@ -92,8 +92,8 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
     >
       <div className="h-full px-6 py-4 flex flex-col">
         <div className="flex flex-row items-center justify-between">
-          <span className="body text-secondary">{t(JsonAtaI18nKey.JsonAtaDescription)}</span>
-          <DialNeutralButton
+          <span className="dial-body-text text-secondary">{t(JsonAtaI18nKey.JsonAtaDescription)}</span>
+          <OutlinedButton
             size={ElementSize.Small}
             label={t(JsonAtaI18nKey.OpenFullDoc)}
             iconBefore={<IconExternalLink size={14} />}
@@ -118,7 +118,7 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
           <div className="text-sm">{t(JsonAtaI18nKey.MoreResources)}</div>
           <div className="flex flex-row items-center gap-3 justify-center">
             {RESOURCE_LINKS.map(({ labelKey, url }) => (
-              <DialPrimaryButton
+              <PrimaryButton
                 key={url}
                 iconBefore={<IconExternalLink size={14} />}
                 size={ElementSize.Small}

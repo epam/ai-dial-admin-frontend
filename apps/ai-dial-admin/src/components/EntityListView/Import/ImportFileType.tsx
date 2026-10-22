@@ -2,10 +2,10 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import {
   DialFileIcon,
-  DialLabel,
+  Label,
   DialLoadFileAreaField,
   DialRadioGroup,
-  DialSwitch,
+  Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
@@ -71,11 +71,11 @@ const ImportFileTypeSelector: FC<Props> = ({
 
         {isAssetView(route) && (
           <div className="flex flex-col gap-y-1">
-            <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
-            <DialSwitch
+            <Label label={ignorePathsTitle} htmlFor="ignorePaths" />
+            <Switch
               isOn={ignorePaths}
-              label={t(ImportI18nKey.PathsIgnore)}
-              switchId="ignorePaths"
+              labelProps={{ label: t(ImportI18nKey.PathsIgnore) }}
+              id="ignorePaths"
               onChange={setIgnorePaths}
             />
           </div>

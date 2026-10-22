@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import Grafana from '@/public/images/icons/grafana.svg';
 import IconCompare from '@/public/images/icons/difference.svg';
 import { IconColumns2, IconFileExport, IconPlayerStop } from '@tabler/icons-react';
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 
 import { cancelRun, getRun } from '@/src/app/[lang]/runs/actions';
 import RunStatusBadge from '@/src/components/Common/RunStatus/RunStatusBadge';
@@ -169,7 +169,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
 
   const columnsTabsTrailing =
     activeTab === EntityViewTab.ExtractionResult ? (
-      <DialGhostButton
+      <GhostButton
         label={t(ButtonsI18nKey.Columns)}
         iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
         onClick={toggleTreePanel}
