@@ -10,6 +10,7 @@ import FolderList from '@/src/components/Common/FolderList/FolderList';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
+import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
@@ -26,6 +27,8 @@ import {
 import { filterNames } from '@/src/utils/entities/filter-names';
 import {
   DUAL_BUCKET_VIEWS,
+  FILE_ROOT_FOLDER,
+  PLATFORM_ROOT_FOLDER,
   getRootFolder,
   getRootFolders,
   isFlatPlatformView,
@@ -42,10 +45,15 @@ interface Props {
   isModalOpen: boolean;
   initialValues?: Partial<AssetWithVersion>;
   context?: () => AssetsFolderContextReader<AssetListItem>;
+  /**
+   * Creates into the `platform` bucket only and also rejects names Core's configuration file holds:
+   * an API write under such a name replaces that entity rather than failing.
+   */
+  isPlatformTarget?: boolean;
   onClose: () => void;
 }
 
-const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onClose }) => {
+const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isPlatformTarget, onClose }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
@@ -55,7 +63,8 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   const filePath = folderContext?.filePath as string;
   const folderItems = folderContext?.fetchedFoldersData[filePath];
   const hasFetchError = folderContext?.hasFetchError;
-  const names = filterNames(folderItems);
+  const configFileItems = isPlatformTarget ? folderContext?.fetchedFoldersData[`${FILE_ROOT_FOLDER}/`] : undefined;
+  const names = [...filterNames(folderItems), ...filterNames(configFileItems)];
   const versionsMap = getVersionsPerName((folderItems ?? []) as AssetWithVersion[]);
   const isLoadingFolder = folderItems == null && !hasFetchError;
 
@@ -65,10 +74,14 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
 
   // Both bucket roots for dual-bucket views (platform only when the Catalog menu group is enabled),
   // the single root for every other view — the same resolution the file manager sidebar uses.
-  const rootPaths = useMemo(
-    () => getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`),
-    [view, featureFlags.catalogEnabled],
-  );
+  // A platform target drops the public root, so the platform root is the one the create opens on.
+  // With Catalog off there is no platform root to keep, and the create falls back to public.
+  const rootPaths = useMemo(() => {
+    const roots = getRootFolders(view, featureFlags.catalogEnabled);
+    const targetRoots =
+      isPlatformTarget && roots.includes(PLATFORM_ROOT_FOLDER) ? roots.filter((root) => root !== ROOT_FOLDER) : roots;
+    return targetRoots.map((root) => `${root}/`);
+  }, [view, featureFlags.catalogEnabled, isPlatformTarget]);
 
   const [currentEntity, setCurrentEntity] = useState<DialResource>({
     ...initialValues,

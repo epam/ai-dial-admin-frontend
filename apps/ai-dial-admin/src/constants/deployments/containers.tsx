@@ -9,9 +9,9 @@ import {
 } from '@/src/types/deployments/containers';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ContainersI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
+import { ContainersI18nKey, EntitiesI18nKey, ErrorI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { Autoscaling, AutoscalingStrategy } from '@/src/models/deployments/containers';
+import { Autoscaling, AutoscalingStrategy, ContainerAssetLabels } from '@/src/models/deployments/containers';
 
 export const POD_OBJECT_KIND = 'pod';
 
@@ -19,6 +19,29 @@ export const ENTITY_TRANSPORT: Record<CONTAINER_TRANSPORT, ToolsetTransport> = {
   [CONTAINER_TRANSPORT.SSE]: ToolsetTransport.SSE,
   [CONTAINER_TRANSPORT.HTTP]: ToolsetTransport.HTTP,
 };
+
+/** Labels per Core asset view. Core has no adapter, so an adapter container's asset is a model. */
+export const CONTAINER_ASSET_LABELS: Record<
+  | ApplicationRoute.PlatformModels
+  | ApplicationRoute.PlatformInterceptors
+  | ApplicationRoute.AssetsApplications
+  | ApplicationRoute.AssetsToolsets,
+  ContainerAssetLabels
+> = {
+  [ApplicationRoute.PlatformModels]: { option: EntitiesI18nKey.AssetModel, entity: EntitiesI18nKey.Model },
+  [ApplicationRoute.PlatformInterceptors]: {
+    option: EntitiesI18nKey.AssetInterceptor,
+    entity: EntitiesI18nKey.Interceptor,
+  },
+  [ApplicationRoute.AssetsApplications]: {
+    option: EntitiesI18nKey.AssetApplication,
+    entity: EntitiesI18nKey.Application,
+  },
+  [ApplicationRoute.AssetsToolsets]: { option: EntitiesI18nKey.AssetToolset, entity: EntitiesI18nKey.Toolset },
+};
+
+/** The path a text-classification Model Serving container serves MCP on, relative to its URL. */
+export const SERVING_MCP_ENDPOINT_PATH = '/mcp';
 
 export const EVENT_TYPES: Record<KubEventType, string> = {
   [KubEventType.NORMAL]: KubEventsI18nKey.Normal,

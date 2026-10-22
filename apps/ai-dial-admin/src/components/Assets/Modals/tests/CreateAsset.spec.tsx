@@ -292,3 +292,58 @@ describe('CreateAsset', () => {
     expect(push).toHaveBeenCalledWith('/assets-applications/t?path=public%2Ft__1.0.0');
   });
 });
+
+describe('CreateAsset — platform target', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    assetPropertiesCalls.length = 0;
+    folderListCalls.length = 0;
+  });
+
+  // The selected `platform/` root plus the already-fetched synthetic `file/` root, as a fresh folder
+  // context holds them right after the initial root batch.
+  const makePlatformContext = () =>
+    ({
+      ...makeContext().ctx,
+      filePath: 'platform/',
+      fetchedFoldersData: {
+        'platform/': [{ name: 'in-platform', path: 'platform/in-platform' }],
+        'file/': [{ name: 'in-config-file', path: 'file/in-config-file' }],
+      },
+    }) as unknown as AssetsFolderContextReader;
+
+  const renderPlatformTarget = (view: ApplicationRoute, isPlatformTarget?: boolean) =>
+    render(
+      <CreateAsset
+        view={view}
+        isModalOpen={true}
+        context={makePlatformContext}
+        isPlatformTarget={isPlatformTarget}
+        onClose={vi.fn()}
+      />,
+    );
+
+  test('rejects a name held only by the configuration file', () => {
+    renderPlatformTarget(ApplicationRoute.PlatformInterceptors, true);
+
+    expect(lastAssetProperties().names).toEqual(['in-platform', 'in-config-file']);
+  });
+
+  test('keeps the selected-folder names only for other callers', () => {
+    renderPlatformTarget(ApplicationRoute.PlatformInterceptors);
+
+    expect(lastAssetProperties().names).toEqual(['in-platform']);
+  });
+
+  test('drops the public root so a dual-bucket create opens on platform', () => {
+    renderPlatformTarget(ApplicationRoute.AssetsToolsets, true);
+
+    expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'platform/']);
+  });
+
+  test('keeps every root of a dual-bucket view for other callers', () => {
+    renderPlatformTarget(ApplicationRoute.AssetsToolsets);
+
+    expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'platform/', 'public/']);
+  });
+});
