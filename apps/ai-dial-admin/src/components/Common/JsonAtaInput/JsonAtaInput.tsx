@@ -8,7 +8,8 @@ import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import JsonataEditor from '@/src/components/Common/JsonataEditor/JsonataEditor';
 import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
-import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { MAX_JSONATA_EXPRESSION_SYMBOLS } from '@/src/constants/validation';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { JsonataVariable } from '@/src/models/jsonata';
@@ -44,6 +45,8 @@ const JsonAtaInput: FC<Props> = ({
 
   const [expression, setExpression] = useState(value);
   const [type, setType] = useState<string | undefined>(undefined);
+
+  const isTooLong = expression.length > MAX_JSONATA_EXPRESSION_SYMBOLS;
 
   const editorOptions = useMemo(() => ({ ...EDITOR_HINTS_OFF_OPTIONS, ariaLabel: header }), [header]);
 
@@ -100,7 +103,7 @@ const JsonAtaInput: FC<Props> = ({
           mainButtons={getFormPopupButtons({
             cancelLabel: t(ButtonsI18nKey.Cancel),
             submitLabel: t(ButtonsI18nKey.Apply),
-            isSubmitDisabled: !expression,
+            isSubmitDisabled: !expression || isTooLong,
             onCancel: onCancelModal,
             onSubmit: onApply,
           })}
@@ -117,6 +120,11 @@ const JsonAtaInput: FC<Props> = ({
                   variables={variables}
                 />
               </div>
+              {isTooLong && (
+                <span role="alert" className="text-error dial-tiny-text">
+                  {t(BasicI18nKey.FieldValueTooLong, { field: header, limit: MAX_JSONATA_EXPRESSION_SYMBOLS })}
+                </span>
+              )}
             </div>
           </div>
         </Popup>

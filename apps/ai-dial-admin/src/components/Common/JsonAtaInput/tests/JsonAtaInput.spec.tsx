@@ -5,7 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { JSONSchema7 } from 'json-schema';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, JsonAtaI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, JsonAtaI18nKey } from '@/src/constants/i18n';
+import { MAX_JSONATA_EXPRESSION_SYMBOLS } from '@/src/constants/validation';
 import { JsonataVariable } from '@/src/models/jsonata';
 import JsonAtaInput from '../JsonAtaInput';
 
@@ -146,6 +147,19 @@ describe('JsonAtaInput', () => {
 
     await user.clear(screen.getByRole('textbox'));
 
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply }).hasAttribute('disabled')).toBe(true);
+  });
+
+  test('blocks Apply and shows an error while the expression exceeds the max length', async () => {
+    const user = renderInput({ value: 'a'.repeat(MAX_JSONATA_EXPRESSION_SYMBOLS) });
+    await user.click(rowButton('a'));
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply }).hasAttribute('disabled')).toBe(false);
+
+    await user.type(screen.getByRole('textbox'), 'a');
+
+    expect(screen.getByRole('alert').textContent).toContain(BasicI18nKey.FieldValueTooLong);
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply }).hasAttribute('disabled')).toBe(true);
   });
 
