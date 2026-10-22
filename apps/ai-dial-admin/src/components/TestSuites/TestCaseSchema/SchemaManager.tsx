@@ -59,55 +59,62 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     return key;
   }, []);
 
+  // AG Grid only re-renders a cell whose displayed value changed when it swaps a row's data object (what a
+  // save does when the reloaded schema replaces the rows), so a cell can keep handing back the previous
+  // object. The server id then finds the row that is live.
+  const findLiveField = useCallback((field: TestCaseSchema) => {
+    const schema = schemaRef.current;
+    if (schema.includes(field)) return field;
+    return field.id ? schema.find(({ id }) => id === field.id) : undefined;
+  }, []);
+
   // CRITICAL: mutate row data IN PLACE (same pattern as test cases grid).
   // When EditableCellRenderer calls setValue(), the value is already in the row node data,
   // so ag-grid sees no change and doesn't refresh/recreate the cell.
   const onCellChange = useCallback(
     (value: string | number, data: unknown, column: string) => {
-      const field = data as TestCaseSchema;
-      const index = schemaRef.current.indexOf(field);
-      if (index === -1) return;
+      const field = findLiveField(data as TestCaseSchema);
+      if (!field) return;
 
       (field as unknown as Record<string, unknown>)[column] = value;
-      const schema = [...schemaRef.current];
-      schema[index] = field;
-      commitSchema(schema, true);
+      commitSchema([...schemaRef.current], true);
     },
-    [commitSchema],
+    [commitSchema, findLiveField],
   );
 
   const onSelectChange = useCallback(
     (value: string | string[], data: unknown, column?: string) => {
       if (!column) return;
 
-      const field = data as TestCaseSchema;
-      const index = schemaRef.current.indexOf(field);
-      if (index === -1) return;
+      const field = findLiveField(data as TestCaseSchema);
+      if (!field) return;
 
       (field as unknown as Record<string, unknown>)[column] = value;
-      const schema = [...schemaRef.current];
-      schema[index] = field;
-      commitSchema(schema);
+      commitSchema([...schemaRef.current]);
     },
-    [commitSchema],
+    [commitSchema, findLiveField],
   );
 
   const onChangeRequired = useCallback(
     (value: boolean, data: TestCaseSchema) => {
-      data.required = value;
-      const schema = [...schemaRef.current];
-      commitSchema(schema);
+      const field = findLiveField(data);
+      if (!field) return;
+
+      field.required = value;
+      commitSchema([...schemaRef.current]);
     },
-    [commitSchema],
+    [commitSchema, findLiveField],
   );
 
   const onChangePerTurn = useCallback(
     (value: boolean, data: TestCaseSchema) => {
-      data.perTurn = value;
-      const schema = [...schemaRef.current];
-      commitSchema(schema);
+      const field = findLiveField(data);
+      if (!field) return;
+
+      field.perTurn = value;
+      commitSchema([...schemaRef.current]);
     },
-    [commitSchema],
+    [commitSchema, findLiveField],
   );
 
   const onAddField = useCallback(() => {
@@ -120,12 +127,12 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   const onRemoveField = useCallback(
     (field?: TestCaseSchema) => {
-      if (!field) return;
+      const liveField = field && findLiveField(field);
+      if (!liveField) return;
 
-      const schema = schemaRef.current.filter((item) => item !== field);
-      commitSchema(schema);
+      commitSchema(schemaRef.current.filter((item) => item !== liveField));
     },
-    [commitSchema],
+    [commitSchema, findLiveField],
   );
 
   const columnDefs: ColDef[] = useMemo(

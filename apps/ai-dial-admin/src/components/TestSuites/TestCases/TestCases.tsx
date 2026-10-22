@@ -22,6 +22,7 @@ interface Props {
   dataset: Dataset | null;
   suiteEtag?: string;
   onChangeDataset?: (dataset: Dataset) => void;
+  isActive?: boolean;
 }
 
 const TestCases: FC<Props> = ({

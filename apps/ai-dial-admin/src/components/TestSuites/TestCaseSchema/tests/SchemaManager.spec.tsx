@@ -154,6 +154,79 @@ describe('SchemaManager', () => {
   });
 });
 
+describe('SchemaManager stale row objects', () => {
+  const field = (): TestCaseSchema => ({
+    id: 'field-1',
+    name: 'question',
+    type: TestCaseItemType.STRING,
+    required: false,
+    description: '',
+  });
+
+  // A save reloads the dataset, so the grid's cells can still hold the objects from before it.
+  const renderWithReloadedSchema = () => {
+    const staleRow = field();
+    const onChangeTestCaseSchema = vi.fn();
+    const { rerender } = render(
+      <SchemaManager testCaseSchema={[staleRow]} onChangeTestCaseSchema={onChangeTestCaseSchema} />,
+    );
+    rerender(<SchemaManager testCaseSchema={[field()]} onChangeTestCaseSchema={onChangeTestCaseSchema} />);
+    return { staleRow, onChangeTestCaseSchema };
+  };
+
+  const column = (colId: string) => gridOptions.columnDefs.find((def) => def.colId === colId);
+
+  test('applies an inline edit made through a stale row object to the live row', () => {
+    const { staleRow, onChangeTestCaseSchema } = renderWithReloadedSchema();
+
+    column('name')?.cellRendererParams.onChange('question_text', staleRow, 'name', 0);
+
+    expect(onChangeTestCaseSchema).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ id: 'field-1', name: 'question_text' })],
+      true,
+    );
+    expect(staleRow.name).toBe('question');
+  });
+
+  test('applies a select change made through a stale row object to the live row', () => {
+    const { staleRow, onChangeTestCaseSchema } = renderWithReloadedSchema();
+
+    column('type')?.cellRendererParams.onChange(TestCaseItemType.NUMBER, staleRow, 'type', 0);
+
+    expect(onChangeTestCaseSchema).toHaveBeenLastCalledWith([
+      expect.objectContaining({ id: 'field-1', type: TestCaseItemType.NUMBER }),
+    ]);
+  });
+
+  test.each(['required', 'perTurn'])('applies a %s toggle made through a stale row object to the live row', (colId) => {
+    const { staleRow, onChangeTestCaseSchema } = renderWithReloadedSchema();
+
+    column(colId)?.cellRendererParams.onChange(true, staleRow);
+
+    expect(onChangeTestCaseSchema).toHaveBeenLastCalledWith([
+      expect.objectContaining({ id: 'field-1', [colId]: true }),
+    ]);
+  });
+
+  test('removes the live row when the remove action is triggered through a stale row object', () => {
+    const { staleRow, onChangeTestCaseSchema } = renderWithReloadedSchema();
+
+    column('action-remove')?.cellRendererParams.item.onClick(staleRow);
+
+    expect(onChangeTestCaseSchema).toHaveBeenLastCalledWith([]);
+  });
+
+  test('ignores a stale row object that has no live counterpart', () => {
+    const onChangeTestCaseSchema = vi.fn();
+    render(<SchemaManager testCaseSchema={[field()]} onChangeTestCaseSchema={onChangeTestCaseSchema} />);
+
+    column('name')?.cellRendererParams.onChange('x', { ...field(), id: 'removed' }, 'name', 0);
+    column('name')?.cellRendererParams.onChange('x', { ...field(), id: undefined }, 'name', 0);
+
+    expect(onChangeTestCaseSchema).not.toHaveBeenCalled();
+  });
+});
+
 describe('SchemaManager read-only', () => {
   const schema: TestCaseSchema[] = [
     { name: 'temperature', type: TestCaseItemType.NUMBER, required: true, description: 'Sampling temp' },

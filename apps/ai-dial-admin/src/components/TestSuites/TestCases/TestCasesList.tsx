@@ -82,6 +82,7 @@ interface Props {
   dataset: Dataset | null;
   suiteEtag?: string;
   onChangeDataset?: (dataset: Dataset, etag?: string) => void;
+  isActive?: boolean;
 }
 
 const STRUCTURAL_FIELDS = ['testCaseName', 'enabled', '_turnIndex'];
@@ -96,6 +97,7 @@ const TestCasesList: FC<Props> = ({
   suiteEtag,
   dataset,
   onChangeDataset,
+  isActive = true,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -545,6 +547,12 @@ const TestCasesList: FC<Props> = ({
   useEffect(() => {
     onRemoveCaseRef.current = onOpenDeleteModal;
   }, [onOpenDeleteModal]);
+
+  useEffect(() => {
+    if (!isActive) {
+      sidebar.closeSidebar();
+    }
+  }, [isActive]);
 
   useEffect(() => {
     return () => sidebar.closeSidebar();

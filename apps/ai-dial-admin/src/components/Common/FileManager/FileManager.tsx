@@ -20,6 +20,7 @@ import {
   getParentPathByFullPath,
 } from '@/src/components/Assets/utils';
 import { useGridStatePersistence } from '@/src/components/Grid/hooks/use-grid-state-persistence';
+import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
@@ -430,6 +431,14 @@ const FileManager: FC<Props> = ({
     filePath,
   ]);
 
+  const toolbarOptions = useMemo(
+    () => ({
+      ...getToolbarOptions(view, isReadOnlyAdmin, t, filePath),
+      additionalButtons: <ResetFiltersButton gridApi={gridApi} />,
+    }),
+    [view, isReadOnlyAdmin, t, filePath, gridApi],
+  );
+
   return (
     <>
       <DialFileManager
@@ -444,7 +453,7 @@ const FileManager: FC<Props> = ({
         navigationPanelOptions={{ searchable: false }}
         sortOptions={{ sortable: false }}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
-        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t, filePath)}
+        toolbarOptions={toolbarOptions}
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,

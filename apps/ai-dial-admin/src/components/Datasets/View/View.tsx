@@ -40,10 +40,14 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
   const { showNotification, removeNotification } = useNotification();
 
   const testCasesActionsRef = useRef<DatasetTestCasesActions | null>(null);
+  const savedDatasetRef = useRef(originalDataset);
+  const isAwaitingRefreshRef = useRef(false);
   const tabs = getDatasetTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedDataset, setSelectedDataset] = useState(structuredClone(originalDataset));
+  // What was last persisted. Runs ahead of `originalDataset` between a save and the router.refresh() that reloads it.
+  const [savedDataset, setSavedDataset] = useState(originalDataset);
   const [isChanged, setIsChanged] = useState(false);
   const [hasTestCaseChanges, setHasTestCaseChanges] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
@@ -68,12 +72,21 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalDataset, selectedDataset) || hasTestCaseChanges);
+    setIsChanged(!isEqualSkippingUndefined(savedDataset, selectedDataset) || hasTestCaseChanges);
     setNameExistsError(undefined);
-  }, [originalDataset, selectedDataset, hasTestCaseChanges]);
+  }, [savedDataset, selectedDataset, hasTestCaseChanges]);
 
   useEffect(() => {
-    setSelectedDataset(structuredClone(originalDataset));
+    const isReloadAfterSave = isAwaitingRefreshRef.current;
+    isAwaitingRefreshRef.current = false;
+    const lastSaved = savedDatasetRef.current;
+
+    savedDatasetRef.current = originalDataset;
+    setSavedDataset(originalDataset);
+    // Edits made while the reload was in flight are kept rather than overwritten by the reloaded copy.
+    setSelectedDataset((current) =>
+      isReloadAfterSave && !isEqualSkippingUndefined(current, lastSaved) ? current : structuredClone(originalDataset),
+    );
     // The grid must pick up the freshly cloned rows, or its stale row objects no longer match the schema.
     setIsSkipRefresh(false);
   }, [originalDataset]);
@@ -83,14 +96,15 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
   }, [initialEtag]);
 
   const onDiscard = useCallback(() => {
-    setSelectedDataset(structuredClone(originalDataset));
+    setSelectedDataset(structuredClone(savedDataset));
     setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
-  }, [originalDataset]);
+  }, [savedDataset]);
 
   const onSave = useCallback(() => {
+    const savedSnapshot = structuredClone(selectedDataset);
     let prepareNotificationId: string | undefined;
 
     const dismissPrepareNotification = () => {
@@ -108,6 +122,9 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
 
     const showSuccessAndRefresh = () => {
       dismissPrepareNotification();
+      savedDatasetRef.current = savedSnapshot;
+      isAwaitingRefreshRef.current = true;
+      setSavedDataset(savedSnapshot);
       showNotification(
         getSuccessNotification(
           getUpdateNotificationTitle(ApplicationRoute.Datasets, t),
@@ -129,7 +146,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
         }
 
         const schemaChanged =
-          JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
+          JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(savedDataset.testCaseSchema);
 
         if (schemaChanged) {
           prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
@@ -155,7 +172,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
       });
     };
 
-    const isNameUnchanged = selectedDataset.name === originalDataset.name;
+    const isNameUnchanged = selectedDataset.name === savedDataset.name;
 
     if (isNameUnchanged) {
       performUpdate();
@@ -169,7 +186,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag, isSchemaRe
         performUpdate();
       }
     });
-  }, [selectedDataset, etag, originalDataset, showNotification, removeNotification, t, router]);
+  }, [selectedDataset, etag, savedDataset, showNotification, removeNotification, t, router]);
 
   const onChangeDataset = useCallback((dataset: Dataset, skipRefresh = false) => {
     setSelectedDataset(dataset);
