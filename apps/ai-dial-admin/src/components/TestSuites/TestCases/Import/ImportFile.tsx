@@ -1,6 +1,6 @@
 'use client';
 
-import { Spinner, DialLoadFileArea, DialPopup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialLoadFileArea, Popup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -88,7 +88,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
   }, [selectedFile, importMode, conflictStrategy, onApply, onClose]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       open={isModalOpen}
       header={t(TestSuitesI18nKey.ImportFromPC)}
@@ -142,7 +142,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
         onClose={onClose}
         finishButtonLabel={t(ButtonsI18nKey.Import)}
       />
-    </DialPopup>
+    </Popup>
   );
 };
 

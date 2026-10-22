@@ -1,6 +1,9 @@
 'use client';
 
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -149,16 +152,18 @@ const CreateApplication: FC<Props> = ({
     (source === 'endpoints' && !!asset.endpoint && isValidEndpoint(asset.endpoint));
   if (step === CreateStep.Details) {
     return (
-      <DialFormPopup
+      <Popup
         open={isOpen}
         header={getCreateEntityTitle(ApplicationRoute.AssetsApplications, t)}
         portalId="CreateApplicationDetails"
         onClose={onCloseAndReset}
-        onCancel={onCloseAndReset}
-        onSubmit={onNext}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        submitLabel={t(ButtonsI18nKey.Next)}
-        disableSubmitButton={!isDetailsValid}
+        mainButtons={getFormPopupButtons({
+          cancelLabel: t(ButtonsI18nKey.Cancel),
+          submitLabel: t(ButtonsI18nKey.Next),
+          isSubmitDisabled: !isDetailsValid,
+          onCancel: onCloseAndReset,
+          onSubmit: onNext,
+        })}
       >
         <div className="flex flex-col gap-y-8 px-6 py-4">
           <AssetProperties
@@ -174,40 +179,51 @@ const CreateApplication: FC<Props> = ({
             }}
           />
         </div>
-      </DialFormPopup>
+      </Popup>
     );
   }
 
   return (
-    <DialFormPopup
+    <Popup
       open={isOpen}
       header={t(EntitiesI18nKey.SourceType)}
       portalId="CreateApplicationSource"
       className="max-h-[750px]"
-      isLoading={isLoading}
       onClose={onCloseAndReset}
-      onCancel={() => setStep(CreateStep.Details)}
-      onSubmit={onCreateApplication}
-      cancelLabel={t(ButtonsI18nKey.Back)}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isSourceValid || !isValid}
+      mainButtons={
+        isLoading
+          ? []
+          : getFormPopupButtons({
+              cancelLabel: t(ButtonsI18nKey.Back),
+              submitLabel: t(ButtonsI18nKey.Create),
+              isSubmitDisabled: !isSourceValid || !isValid,
+              onCancel: () => setStep(CreateStep.Details),
+              onSubmit: onCreateApplication,
+            })
+      }
     >
-      <div className="flex min-h-0 flex-col overflow-auto px-6 py-4">
-        <ResourceSourceField
-          id="sourceType"
-          label={t(EntitiesI18nKey.SourceType)}
-          entity={asset}
-          onChange={setAsset}
-          view={ApplicationRoute.AssetsApplications}
-          sourceItems={ASSET_APPLICATION_CREATE_SOURCE_ITEMS}
-          runners={runners}
-          initialSource={source}
-          onSourceChange={setSource}
-          translators={translators}
-          codeAppEditorUrl={codeAppEditorUrl}
-        />
-      </div>
-    </DialFormPopup>
+      {isLoading ? (
+        <PopupLoader />
+      ) : (
+        <>
+          <div className="flex min-h-0 flex-col overflow-auto px-6 py-4">
+            <ResourceSourceField
+              id="sourceType"
+              label={t(EntitiesI18nKey.SourceType)}
+              entity={asset}
+              onChange={setAsset}
+              view={ApplicationRoute.AssetsApplications}
+              sourceItems={ASSET_APPLICATION_CREATE_SOURCE_ITEMS}
+              runners={runners}
+              initialSource={source}
+              onSourceChange={setSource}
+              translators={translators}
+              codeAppEditorUrl={codeAppEditorUrl}
+            />
+          </div>
+        </>
+      )}
+    </Popup>
   );
 };
 

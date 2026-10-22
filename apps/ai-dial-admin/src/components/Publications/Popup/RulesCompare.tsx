@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { FoldersI18nKey } from '@/src/constants/i18n';
@@ -18,7 +18,7 @@ const RulesCompare: FC<Props> = ({ rules, compareRules, isOpen, onClose }) => {
   const t = useI18n();
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(FoldersI18nKey.ComparePermissions)}
       portalId="RulesCompare"
@@ -42,7 +42,7 @@ const RulesCompare: FC<Props> = ({ rules, compareRules, isOpen, onClose }) => {
           isAlwaysToggled={true}
         />
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

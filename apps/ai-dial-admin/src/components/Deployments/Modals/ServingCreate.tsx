@@ -1,7 +1,9 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -45,20 +47,23 @@ const ServingCreate: FC<Props> = ({
   );
 
   return (
-    <DialFormPopup
+    <Popup
       portalId="ServingCreateModal"
       open={isModalOpen}
       header={header}
       onClose={onClose}
-      onSubmit={() => onApply(container)}
-      onCancel={onClose}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isValid}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: () => onApply(container),
+      })}
     >
       <div className="flex flex-col px-6 py-4 gap-4 h-full">
         <ContainerFields container={container} setContainer={setContainer} route={route} names={names} isModal={true} />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

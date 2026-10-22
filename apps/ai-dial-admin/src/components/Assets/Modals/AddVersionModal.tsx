@@ -1,4 +1,6 @@
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
 
@@ -77,24 +79,26 @@ const AddVersionModal: FC<Props> = ({
   }, [dispatch]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={header}
       portalId="newVersionModal"
       open={isModalOpen}
       size={PopupSize.Sm}
-      onCancel={onClose}
-      onSubmit={() => onConfirm(version)}
-      disableSubmitButton={!!existingVersions?.[version] || !isValid}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={submitLabel || t(ButtonsI18nKey.Create)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: submitLabel || t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !!existingVersions?.[version] || !isValid,
+        onCancel: onClose,
+        onSubmit: () => onConfirm(version),
+      })}
     >
       <div className="flex flex-col gap-4 dial-small-text px-6 py-4">
         {description && <div className="text-secondary">{description}</div>}
 
         <VersionControl version={version} error={versionError?.text} onChange={onVersionChange} />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

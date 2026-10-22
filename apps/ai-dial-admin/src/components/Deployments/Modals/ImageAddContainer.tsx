@@ -1,31 +1,32 @@
 import {
-  NotificationVariant,
+  NoDataContent,
   Notification,
   NotificationType,
-  DialFormPopup,
-  Spinner,
-  NoDataContent,
-  Switch,
+  NotificationVariant,
+  Popup,
   PopupSize,
+  Spinner,
+  Switch,
 } from '@epam/ai-dial-ui-kit';
+
 import { GridApi, GridOptions, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getContainers } from '@/src/app/actions/deployments';
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import GridView from '@/src/components/Grid/GridView/GridView';
 import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getImageType } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
-
-import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props {
   title: string;
@@ -106,18 +107,20 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
   }, [dependencies, gridApi, image.id, imageVersionsIds, showRelated]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={title}
       portalId="ImageAddContainerModal"
       open={isModalOpen}
       className="h-[800px]"
       size={PopupSize.Lg}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      onSubmit={() => onApply(selectedEntities)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!selectedEntities.length}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !selectedEntities.length,
+        onCancel: onClose,
+        onSubmit: () => onApply(selectedEntities),
+      })}
     >
       <div className="flex flex-col px-6 py-4 min-h-0 h-full">
         {isLoading && <Spinner size={24} fullWidth />}
@@ -151,7 +154,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
           </div>
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

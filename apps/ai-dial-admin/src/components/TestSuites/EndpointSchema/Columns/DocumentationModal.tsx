@@ -1,13 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import {
-  ButtonAppearance,
-  OutlinedButton,
-  DialPopup,
-  PrimaryButton,
-  ElementSize,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, OutlinedButton, Popup, PrimaryButton, ElementSize, PopupSize } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
@@ -81,14 +74,15 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
   }, [schema]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(JsonAtaI18nKey.JSONAtaDoc)}
       portalId="JSONAtaDocumentationModal"
       open={isModalOpen}
       size={PopupSize.Md}
       className="h-[800px]"
-      dividers={true}
+      headerDivider
+      footerDivider
     >
       <div className="h-full px-6 py-4 flex flex-col">
         <div className="flex flex-row items-center justify-between">
@@ -130,7 +124,7 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
           </div>
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

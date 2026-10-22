@@ -1,23 +1,25 @@
-import { Checkbox, DialFormPopup, Spinner, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialTabs, Popup, PopupSize, Spinner, TabModel } from '@epam/ai-dial-ui-kit';
+
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { previewDeploymentExportConfig, previewExportConfig } from '@/src/app/[lang]/export-config/actions';
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
-import AnalyticsExportPreview from '@/src/components/ExportConfig/Preview/AnalyticsExportPreview';
 import { getDeploymentColDefs } from '@/src/components/ExportConfig/deployment-utils';
+import AnalyticsExportPreview from '@/src/components/ExportConfig/Preview/AnalyticsExportPreview';
 import { getDeploymentExportPreviewTabs, getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ButtonsI18nKey, EntitiesI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { CatalogExportRequest } from '@/src/models/analytics/catalog-export';
+import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { DeploymentExportRequest, ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
-import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
 import { ExportComponentType, ExportType } from '@/src/types/export';
-import { CatalogExportRequest } from '@/src/models/analytics/catalog-export';
 import { getErrorNotification } from '@/src/utils/notification';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   exportRequest?: Partial<ExportRequest>;
@@ -160,18 +162,20 @@ const PreviewModal: FC<Props> = ({
   const submitLabel = isDeploymentExport ? t(ButtonsI18nKey.PrepareFile) : t(ButtonsI18nKey.Export);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       open={isModalOpen}
       className="h-[754px]"
       size={PopupSize.Lg}
-      submitLabel={submitLabel}
-      disableSubmitButton={isAnalyticsExport && !isAnalyticsPreviewAccepted}
-      onSubmit={() => onPrepare(isIncludeSecret, isDeploymentExport ? isIncludeGlobalFirewall : undefined)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: submitLabel,
+        isSubmitDisabled: isAnalyticsExport && !isAnalyticsPreviewAccepted,
+        onCancel: onClose,
+        onSubmit: () => onPrepare(isIncludeSecret, isDeploymentExport ? isIncludeGlobalFirewall : undefined),
+      })}
     >
       <div className="flex flex-col gap-4 p-6 h-full">
         <div className="flex-1 min-h-0">{renderBody()}</div>
@@ -197,7 +201,7 @@ const PreviewModal: FC<Props> = ({
           </div>
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

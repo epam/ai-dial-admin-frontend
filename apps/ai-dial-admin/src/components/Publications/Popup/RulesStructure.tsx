@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { Spinner, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Spinner, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import FolderInfo from '@/src/components/FoldersStorage/FolderInfo';
@@ -18,7 +18,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
   const t = useI18n();
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(FoldersI18nKey.ReviewStructure)}
       portalId="RulesStructure"
@@ -40,7 +40,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
           </div>
         </div>
       )}
-    </DialPopup>
+    </Popup>
   );
 };
 

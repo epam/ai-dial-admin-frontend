@@ -2,7 +2,9 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { getDatasetByName } from '@/src/app/[lang]/datasets/actions';
 import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
@@ -43,17 +45,19 @@ const PublishDatasetModal: FC<Props> = ({ isOpen, testCaseCount, onClose, onConf
   }, [onClose]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onCloseModal}
       header={t(TestSuitesI18nKey.PublishToDataset)}
       portalId="PublishDatasetModal"
       open={isOpen}
-      onSubmit={onCreateClick}
-      onCancel={onCloseModal}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!dataset.name?.trim() || nameExistsError !== undefined}
       size={PopupSize.Md}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !dataset.name?.trim() || nameExistsError !== undefined,
+        onCancel: onCloseModal,
+        onSubmit: onCreateClick,
+      })}
     >
       <div className="flex flex-col gap-4 py-4 px-6">
         <p className="dial-small text-secondary">
@@ -61,7 +65,7 @@ const PublishDatasetModal: FC<Props> = ({ isOpen, testCaseCount, onClose, onConf
         </p>
         <DatasetProperties dataset={dataset} onChange={setDataset} nameExistsError={nameExistsError} isModal />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

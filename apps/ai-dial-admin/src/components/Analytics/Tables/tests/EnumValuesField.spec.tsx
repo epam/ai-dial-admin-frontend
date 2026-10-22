@@ -13,11 +13,7 @@ const renderField = (props?: Partial<Parameters<typeof EnumValuesField>[0]>) => 
   return { onChange, view };
 };
 
-// The ui-kit `DialInputPopup` trigger changes element depending on state: with no value it is a real
-// `<button aria-label="open-popup">`, and once values are selected it becomes a plain `<div>` with no role and
-// no accessible name. That inconsistency is upstream's (no 2.0 replacement exists), so the popup is driven from
-// the **empty** state here — which is also the state a new enum column starts in — and the populated field is
-// asserted only on what it renders.
+// The popup is driven from the empty state, which is also the state a new enum column starts in.
 describe('EnumValuesField', () => {
   test('labels itself as the value set', () => {
     renderField();
@@ -90,12 +86,11 @@ describe('EnumValuesField', () => {
   });
 
   describe('the values popup', () => {
-    // Reachable only from the empty state, per the trigger note above.
     const openPopup = async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(<EnumValuesField rowId="col-1" values={[]} onChange={onChange} />);
-      await user.click(screen.getByRole('button', { name: 'open-popup' }));
+      await user.click(screen.getByRole('textbox'));
       return { user, onChange, dialog: screen.getByRole('dialog') };
     };
 

@@ -4,10 +4,10 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   ButtonAppearance,
+  ButtonVariant,
   CollapsibleSidebar,
-  OutlinedButton,
   NoDataContent,
-  DialPopup,
+  Popup,
   PrimaryButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
@@ -219,20 +219,24 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
   }, [toolsConfig, customToolsConfig, isApplicationTools, isAssetToolset, originalEntity, onConfirm, onClose]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(ToolsetI18nKey.ManageTools)}
       portalId="ManageToolsModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[800px]"
-      dividers
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <PrimaryButton label={t(ButtonsI18nKey.Confirm)} onClick={onConfirmChanges} disabled={!isValid} />
-        </div>
-      }
+      headerDivider
+      footerDivider
+      mainButtons={[
+        { label: t(ButtonsI18nKey.Cancel), onClick: onClose },
+        {
+          label: t(ButtonsI18nKey.Confirm),
+          variant: ButtonVariant.Primary,
+          disabled: !isValid,
+          onClick: onConfirmChanges,
+        },
+      ]}
     >
       <div className="h-full px-6 py-4 flex flex-1 min-h-0">
         <CollapsibleSidebar
@@ -316,7 +320,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
           )}
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

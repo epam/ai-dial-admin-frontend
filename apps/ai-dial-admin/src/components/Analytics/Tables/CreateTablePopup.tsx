@@ -5,7 +5,7 @@ import { FC, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
-  DialFormPopup,
+  Popup,
   DialInput,
   RadioGroup,
   DialSelectField,
@@ -15,10 +15,13 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { toRadioItems } from '@/src/utils/radio-items';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import { ButtonsI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+
 import { createTable } from '@/src/app/[lang]/tables/actions';
 import { createTableForm, tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { WRITE_MODE_OPTIONS } from '@/src/constants/analytics/tables';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsTable, AnalyticsTableType, CreateTableDto, TableWriteMode } from '@/src/models/analytics/table';
@@ -95,15 +98,19 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
   };
 
   return (
-    <DialFormPopup
+    <Popup
       open
       onClose={onClose}
       portalId="qb-create-table"
       size={PopupSize.Sm}
       header={t(isSource ? AnalyticsTablesI18nKey.CreateSourceTitle : AnalyticsTablesI18nKey.CreateEnrichmentTitle)}
-      submitLabel={t(isSource ? AnalyticsTablesI18nKey.CreateSource : AnalyticsTablesI18nKey.CreateEnrichment)}
-      disableSubmitButton={!canSubmit}
-      onSubmit={onSubmit}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(isSource ? AnalyticsTablesI18nKey.CreateSource : AnalyticsTablesI18nKey.CreateEnrichment),
+        isSubmitDisabled: !canSubmit,
+        onCancel: onClose,
+        onSubmit: onSubmit,
+      })}
     >
       <div className="flex flex-col gap-4 p-6">
         <DialInput
@@ -142,7 +149,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

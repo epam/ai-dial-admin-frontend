@@ -58,12 +58,6 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialInputPopup: ({ children, selectedValue }: { children?: ReactNode; selectedValue?: string }) => (
-      <div>
-        <div>{selectedValue}</div>
-        {children}
-      </div>
-    ),
     OutlinedButton: ({ label, onClick }: { label?: string; onClick?: () => void }) => (
       <button type="button" onClick={onClick}>
         {label}
@@ -71,6 +65,15 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     ),
   };
 });
+
+vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
+  default: ({ children, selectedValue }: { children?: ReactNode; selectedValue?: string }) => (
+    <div>
+      <div>{selectedValue}</div>
+      {children}
+    </div>
+  ),
+}));
 
 describe('TestSuiteProperties', () => {
   beforeEach(() => {

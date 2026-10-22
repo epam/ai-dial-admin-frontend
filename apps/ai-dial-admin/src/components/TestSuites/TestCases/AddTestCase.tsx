@@ -1,6 +1,8 @@
 'use client';
 
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC } from 'react';
 
 import { useI18n } from '@/src/locales/client';
@@ -16,19 +18,21 @@ const AddTestCase: FC<Props> = ({ isModalOpen, onClose, onAdd }) => {
   const t = useI18n();
   // TODO: add implementation of add test case form
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header="add test case"
       portalId="AddTestCase"
       className="h-[660px]"
       open={isModalOpen}
-      onSubmit={onAdd}
-      onCancel={onClose}
-      submitLabel={t(ButtonsI18nKey.Add)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Add),
+        onCancel: onClose,
+        onSubmit: onAdd,
+      })}
     >
       <div className="flex px-6 py-4 h-full flex-col">Add Test Case Form</div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

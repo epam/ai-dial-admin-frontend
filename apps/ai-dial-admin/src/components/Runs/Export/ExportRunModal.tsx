@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { OutlinedButton, DialPopup, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Popup, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { exportRunPreview } from '@/src/app/[lang]/runs/actions';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
@@ -132,7 +132,7 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
   }, [checkedColumns, isExporting, onClose, previewData, removeNotification, runId, showNotification, t]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={`${t(ExportRunI18nKey.ExportRunTitle)} ${runId}`}
       portalId="ExportRunModal"
@@ -175,7 +175,7 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
           />
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

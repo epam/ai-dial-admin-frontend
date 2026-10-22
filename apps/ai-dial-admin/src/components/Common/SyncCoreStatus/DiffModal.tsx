@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { Spinner, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Spinner, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { IconCircleCheck } from '@tabler/icons-react';
 
 import { getCoreSyncStatus } from '@/src/app/actions';
@@ -56,14 +56,17 @@ const CoreSyncDiffModal: FC<Props> = ({
     });
   }, [coreSyncStatus, etag, name, onCoreSyncStatusChange, view]);
 
+  const hasDividers = newStatus?.status !== EntitySyncStatus.FULLY_SYNCED;
+
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(CoreSyncI18nKey.SyncWithCore)}
       portalId="SyncWithCore"
       open={isModalOpen}
       size={size}
-      dividers={!(newStatus?.status === EntitySyncStatus.FULLY_SYNCED)}
+      headerDivider={hasDividers}
+      footerDivider={hasDividers}
     >
       <div className="h-full px-6 py-4">
         {loading ? (
@@ -91,7 +94,7 @@ const CoreSyncDiffModal: FC<Props> = ({
           </div>
         )}
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 
