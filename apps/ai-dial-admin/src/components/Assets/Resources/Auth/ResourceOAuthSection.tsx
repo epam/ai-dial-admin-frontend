@@ -1,6 +1,12 @@
 import { FC, useMemo } from 'react';
 
-import { DialNotification, DialSelectField, NotificationVariant, SelectOption } from '@epam/ai-dial-ui-kit';
+import {
+  Notification,
+  NotificationType,
+  DialSelectField,
+  NotificationVariant,
+  SelectOption,
+} from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -63,7 +69,11 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
     <div className="flex flex-col pl-[26px]">
       {isLoggedIn && (
         <div className="mb-3">
-          <DialNotification variant={NotificationVariant.Info} message={t(ToolsetI18nKey.AuthSettingsLockedMessage)} />
+          <Notification
+            type={NotificationType.SectionMessage}
+            variant={NotificationVariant.Info}
+            message={t(ToolsetI18nKey.AuthSettingsLockedMessage)}
+          />
         </div>
       )}
       <div className="flex flex-col gap-y-3">

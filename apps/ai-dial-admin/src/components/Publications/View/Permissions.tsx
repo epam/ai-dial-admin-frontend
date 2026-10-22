@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NotificationVariant, DialNotification, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconReplace } from '@tabler/icons-react';
 
 import RulesCompare from '@/src/components/Publications/Popup/RulesCompare';
@@ -34,7 +34,8 @@ const PublicationPermissions = <T extends Publication>({
 
   const warning = useMemo(() => {
     return (
-      <DialNotification
+      <Notification
+        type={NotificationType.SectionMessage}
         variant={NotificationVariant.Warning}
         message={
           <div className="flex flex-row gap-3">

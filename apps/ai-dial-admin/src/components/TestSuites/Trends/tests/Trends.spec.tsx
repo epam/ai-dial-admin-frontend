@@ -25,12 +25,13 @@ vi.mock('echarts-for-react', () => ({
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Spinner: () => <div>loader</div>,
   NoDataContent: ({ title }: { title: string }) => <div>{title}</div>,
-  DialNotification: ({ title, message }: { title?: string; message: React.ReactNode }) => (
+  Notification: ({ title, message }: { title?: string; message: React.ReactNode }) => (
     <div role="status">
       <p>{title}</p>
       <div>{message}</div>
     </div>
   ),
+  NotificationType: { SectionMessage: 'section-message' },
   NotificationVariant: { Info: 'info' },
   OutlinedButton: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
     <button type="button" onClick={onClick} disabled={disabled}>

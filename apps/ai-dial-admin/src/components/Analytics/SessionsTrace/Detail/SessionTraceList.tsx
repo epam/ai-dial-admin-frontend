@@ -5,7 +5,8 @@ import {
   LinkButton,
   Spinner,
   NoDataContent,
-  DialNotification,
+  Notification,
+  NotificationType,
   NotificationVariant,
 } from '@epam/ai-dial-ui-kit';
 import { IconAlertTriangle, IconChevronRight, IconSubtask } from '@tabler/icons-react';
@@ -275,7 +276,8 @@ const TraceGroup: FC<GroupProps> = ({ group, ratings, isCardTheRoot, onOpenTrace
       {/* The cap holds back cards while the trace's own figures stay uncapped, so a capped trace's totals
           legitimately exceed what is on screen — stated rather than truncated in silence. */}
       {group.elidedCardCount > 0 && (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Info}
           iconSize={NOTIFICATION_ICON_SIZE}
           message={t(SessionsTraceI18nKey.TraceFurtherCalls, {
@@ -370,7 +372,8 @@ const SessionTraceList: FC<Props> = ({
           <p className="font-mono text-secondary dial-tiny-text">{rule ?? t(SessionsTraceI18nKey.TraceSectionRule)}</p>
         </div>
         {hasLoadError && (
-          <DialNotification
+          <Notification
+            type={NotificationType.SectionMessage}
             variant={NotificationVariant.Error}
             iconSize={NOTIFICATION_ICON_SIZE}
             message={t(SessionsTraceI18nKey.TraceListLoadFailedHint)}

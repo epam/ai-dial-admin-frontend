@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { NotificationVariant, DialNotification, NoDataContent } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconWorldStar } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -65,7 +65,11 @@ const EntitiesTabContent: FC<Props> = ({
           title={t(InterceptorsI18nKey.GlobalMessage)}
         />
       </div>
-      <DialNotification variant={NotificationVariant.Info} message={t(InterceptorsI18nKey.GlobalAlert)} />
+      <Notification
+        type={NotificationType.SectionMessage}
+        variant={NotificationVariant.Info}
+        message={t(InterceptorsI18nKey.GlobalAlert)}
+      />
     </div>
   ) : (
     <AddEntitiesView

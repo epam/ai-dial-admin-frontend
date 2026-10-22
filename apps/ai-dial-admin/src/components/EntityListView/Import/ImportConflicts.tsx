@@ -2,7 +2,8 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridOptions, GridReadyEvent, RowClassRules } from 'ag-grid-community';
-import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent, StepStatus } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioGroupOrientation, RadioButtonWithContent, StepStatus } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import {
   changeFilesMap,
@@ -98,11 +99,11 @@ const ImportConflicts: FC<Props> = ({
   return (
     <div className="flex flex-col min-h-0">
       <h3 className="pt-6 pb-4">{t(ImportI18nKey.ConflictResolution)}</h3>
-      <DialRadioGroup
+      <RadioGroup
         orientation={RadioGroupOrientation.Column}
-        radioButtons={resolutions}
-        activeRadioButton={resolution}
-        elementId="conflict-resolution"
+        items={toRadioItems(resolutions)}
+        value={resolution}
+        id="conflict-resolution"
         onChange={setResolution}
       />
       {shouldShowPreview && (

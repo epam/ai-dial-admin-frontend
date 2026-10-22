@@ -3,7 +3,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  DialNotification,
+  Notification,
+  NotificationType,
   DialPopup,
   DialSteps,
   NotificationVariant,
@@ -144,7 +145,11 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[600px]">
         {showWarning && (
-          <DialNotification variant={NotificationVariant.Warning} message={t(TestSuitesI18nKey.AttachDatasetWarning)} />
+          <Notification
+            type={NotificationType.SectionMessage}
+            variant={NotificationVariant.Warning}
+            message={t(TestSuitesI18nKey.AttachDatasetWarning)}
+          />
         )}
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onChangeStep} />
         <div className="flex-1 min-h-0">

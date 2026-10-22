@@ -41,7 +41,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
   return {
     ...actual,
-    DialNotification: ({ message }: { message: string }) => <div role="alert">{message}</div>,
+    Notification: ({ message }: { message: string }) => <div role="alert">{message}</div>,
   };
 });
 

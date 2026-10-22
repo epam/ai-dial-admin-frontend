@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 
-import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { SCOPE_LABEL_KEYS } from '@/src/components/Common/ConfigScopeSelector/constants';
 import { ExportI18nKey } from '@/src/constants/i18n';
@@ -23,11 +24,11 @@ const ConfigScopeSelector: FC<Props> = ({ scopes, selectedScope, onChange }) => 
   );
 
   return (
-    <DialRadioGroup
-      radioButtons={scopeOptions}
-      activeRadioButton={selectedScope}
-      elementId="configScope"
-      fieldTitle={t(ExportI18nKey.Components)}
+    <RadioGroup
+      items={toRadioItems(scopeOptions)}
+      value={selectedScope}
+      id="configScope"
+      labelProps={{ label: t(ExportI18nKey.Components) }}
       orientation={RadioGroupOrientation.Column}
       onChange={onChange}
     />

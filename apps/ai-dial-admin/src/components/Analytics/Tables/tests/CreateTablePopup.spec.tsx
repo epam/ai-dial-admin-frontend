@@ -85,9 +85,9 @@ describe('CreateTablePopup source', () => {
 
   test('states that the write discipline is fixed once the table is created', () => {
     setup();
-    // DialRadioGroup renders `labelDescription` as the label's info button, the same affordance the
-    // schema-definition surface gives its physical keys.
-    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.WriteModeHint })).toBeInTheDocument();
+    // RadioGroup renders its caption as visible text under the group, so the hint no longer sits
+    // behind an info button.
+    expect(screen.getByText(AnalyticsTablesI18nKey.WriteModeHint)).toBeInTheDocument();
   });
 
   test('selecting the collapsing discipline sends it in the payload', () => {

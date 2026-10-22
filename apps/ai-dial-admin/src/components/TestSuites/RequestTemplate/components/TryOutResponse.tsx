@@ -2,7 +2,14 @@
 import { FC, ReactNode, useMemo } from 'react';
 
 import Grafana from '@/public/images/icons/grafana.svg';
-import { NotificationVariant, DialNotification, Spinner, OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import {
+  NotificationVariant,
+  Notification,
+  NotificationType,
+  Spinner,
+  OutlinedButton,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -182,7 +189,7 @@ const TryOutResponsePreview: FC<Props> = ({
   return (
     <>
       {isSelectedRequestSkipped ? null : (
-        <DialNotification message={alertMessage} variant={alertVariant}>
+        <Notification type={NotificationType.SectionMessage} message={alertMessage} variant={alertVariant}>
           {bannerGrafanaUrl && (
             <OutlinedButton
               size={ElementSize.Small}
@@ -192,7 +199,7 @@ const TryOutResponsePreview: FC<Props> = ({
               onClick={() => window.open(bannerGrafanaUrl, '_blank')}
             />
           )}
-        </DialNotification>
+        </Notification>
       )}
 
       {usesHistorySections ? (

@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialTag, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
+import { Tag, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AttributeSamplesPreview from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSamplesPreview';
@@ -49,7 +49,7 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
         onClick={onPick}
       >
         <span className="truncate dial-small-text text-primary">{field.name}</span>
-        <DialTag label={field.type.toLowerCase()} />
+        <Tag label={field.type.toLowerCase()} />
       </button>
     </Tooltip>
   );

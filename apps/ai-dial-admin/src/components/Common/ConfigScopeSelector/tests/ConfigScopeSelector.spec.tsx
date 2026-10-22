@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
@@ -36,5 +36,23 @@ describe('ConfigScopeSelector', () => {
     );
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+  });
+
+  test('marks the selected scope and reports the one the user picks', () => {
+    const onChange = vi.fn();
+    render(
+      <ConfigScopeSelector
+        scopes={[ExportComponentType.ADMIN, ExportComponentType.DEPLOYMENTS]}
+        selectedScope={ExportComponentType.ADMIN}
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: ExportI18nKey.EntitiesBuildersAccess })).toBeChecked();
+    expect(screen.getByRole('radio', { name: ExportI18nKey.Deployments })).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole('radio', { name: ExportI18nKey.Deployments }));
+
+    expect(onChange).toHaveBeenCalledWith(ExportComponentType.DEPLOYMENTS);
   });
 });

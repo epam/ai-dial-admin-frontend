@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  DialCheckbox,
+  Checkbox,
   DialDropdown,
   EllipsisTooltip,
   Search,
@@ -134,11 +134,11 @@ const HeatMapToolbar: FC<Props> = ({
             )}
             {showAllCheckbox && (
               <div className="flex h-[34px] items-center px-3">
-                <DialCheckbox
-                  checked={allCheckState === MetricGroupsCheckState.Checked}
-                  indeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
+                <Checkbox
+                  isSelected={allCheckState === MetricGroupsCheckState.Checked}
+                  isIndeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
                   id="heat-map-metrics-all"
-                  label={t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll)}
+                  labelProps={{ label: t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll) }}
                   onChange={onToggleAll}
                 />
               </div>
@@ -156,11 +156,11 @@ const HeatMapToolbar: FC<Props> = ({
                       placement={TooltipPlacement.Top}
                       triggerClassName="flex min-w-0"
                     >
-                      <DialCheckbox
-                        checked={isChecked}
+                      <Checkbox
+                        isSelected={isChecked}
                         disabled={isLastSelected}
                         id={`heat-map-metric-${groupKey}`}
-                        label={groupKey}
+                        labelProps={{ label: groupKey }}
                         onChange={(value) => onToggleGroup(groupKey, value)}
                       />
                     </Tooltip>

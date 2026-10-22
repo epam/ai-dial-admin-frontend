@@ -3,13 +3,14 @@ import {
   DialInput,
   DialNumberInput,
   PrimaryButton,
-  DialRadioGroup,
+  RadioGroup,
   DialSelectField,
   Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
   SelectOption,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -254,12 +255,12 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
       />
 
       {!isAppRoute && <TopicsControl entity={route} onChange={onChange} />}
-      <DialRadioGroup
-        radioButtons={outputRadio}
-        activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
-        elementId="output"
+      <RadioGroup
+        items={toRadioItems(outputRadio)}
+        value={route.response ? outputRadio[1].id : outputRadio[0].id}
+        id="output"
         disabled={disabled || isReadOnlyAdmin}
-        fieldTitle={t(RoutesI18nKey.Output)}
+        labelProps={{ label: t(RoutesI18nKey.Output) }}
         orientation={RadioGroupOrientation.Row}
         onChange={onChangeOutput}
       />

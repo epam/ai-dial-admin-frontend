@@ -2,7 +2,8 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -68,22 +69,22 @@ const ImportOptionsStep: FC<Props> = ({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col">
         <h3 className="mb-4">{t(TestSuitesI18nKey.ImportMode)}</h3>
-        <DialRadioGroup
+        <RadioGroup
           orientation={RadioGroupOrientation.Column}
-          radioButtons={importModeOptions}
-          activeRadioButton={importMode}
-          elementId="import-mode"
+          items={toRadioItems(importModeOptions)}
+          value={importMode}
+          id="import-mode"
           onChange={(value) => onImportModeChange(value as TestCaseImportMode)}
         />
       </div>
 
       <div className="flex flex-col">
         <h3 className="mb-4">{t(TestSuitesI18nKey.OnNameCollision)}</h3>
-        <DialRadioGroup
+        <RadioGroup
           orientation={RadioGroupOrientation.Column}
-          radioButtons={conflictStrategyOptions}
-          activeRadioButton={conflictStrategy}
-          elementId="conflict-strategy"
+          items={toRadioItems(conflictStrategyOptions)}
+          value={conflictStrategy}
+          id="conflict-strategy"
           onChange={(value) => onConflictStrategyChange(value as TestCaseConflictStrategy)}
         />
       </div>

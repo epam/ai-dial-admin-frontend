@@ -6,7 +6,8 @@ import {
   GhostButton,
   GhostIconButton,
   OutlinedButton,
-  DialNotification,
+  Notification,
+  NotificationType,
   DialPopup,
   PrimaryButton,
   DialSteps,
@@ -197,7 +198,8 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
               onChange={setCurrentSuite}
               takenColumnNames={takenColumnNames}
             >
-              <DialNotification
+              <Notification
+                type={NotificationType.SectionMessage}
                 message={t(TestSuitesI18nKey.MethodChangeWarning)}
                 variant={NotificationVariant.Warning}
               />
