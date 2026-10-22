@@ -1,4 +1,4 @@
-import { NotificationVariant, DialNotification, DialFormPopup, Spinner } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType, DialFormPopup, Spinner } from '@epam/ai-dial-ui-kit';
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -150,7 +150,8 @@ const ContainerChangeImage: FC<Props> = ({
               onGridReady={onGridReady}
             />
             {containerStatus === CONTAINER_STATUS.RUNNING && (
-              <DialNotification
+              <Notification
+                type={NotificationType.SectionMessage}
                 message={t(ContainersI18nKey.ContainerRestartWarning, {
                   entityType: getTranslatedDeploymentType(route, t),
                 })}

@@ -9,7 +9,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialNotification: ({
+    Notification: ({
       variant,
       className,
       message,
@@ -37,7 +37,7 @@ describe('EntityBanner', () => {
     );
   });
 
-  test('forwards a custom variant to DialNotification', () => {
+  test('forwards a custom variant to Notification', () => {
     render(<EntityBanner variant={NotificationVariant.Error} message="boom" />);
     expect(screen.getByText('boom').closest('[data-variant]')).toHaveAttribute(
       'data-variant',
@@ -62,7 +62,7 @@ describe('EntityBanner', () => {
     expect(screen.getByText('my message')).toBeInTheDocument();
   });
 
-  test('renders CTA children inside DialNotification', () => {
+  test('renders CTA children inside Notification', () => {
     render(
       <EntityBanner message="msg">
         <button>do thing</button>
@@ -71,7 +71,7 @@ describe('EntityBanner', () => {
     expect(screen.getByRole('button', { name: 'do thing' })).toBeInTheDocument();
   });
 
-  test('forwards className to DialNotification', () => {
+  test('forwards className to Notification', () => {
     const { container } = render(<EntityBanner className="mb-6" message="msg" />);
     expect(container.firstChild).toHaveClass('mb-6');
   });

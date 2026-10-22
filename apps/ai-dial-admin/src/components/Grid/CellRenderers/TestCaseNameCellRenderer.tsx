@@ -1,6 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { EllipsisTooltip, DialTag } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, Badge, BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
 
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -43,9 +43,10 @@ const TestCaseNameCellRenderer = (params: TestCaseNameCellRendererParams) => {
       {data.rowType === GridRowType.TURN ? (
         turnLabel
       ) : (
-        <DialTag
+        <Badge
           label={t(TestSuitesI18nKey.TurnCountBadge, { count: data.turnCount ?? 0 })}
-          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-xs shrink-0"
+          variant={BadgeVariant.Filled}
+          color={BadgeColor.Violet}
         />
       )}
     </div>

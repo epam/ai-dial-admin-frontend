@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ConfirmationPopup, Switch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Switch, Badge, BadgeColor, BadgeVariant, Tooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -659,10 +659,7 @@ const TestCasesList: FC<Props> = ({
 
   const datasetTag = isPrivate && (
     <Tooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
-      <DialTag
-        label={t(DatasetsI18nKey.VisibilityPrivate)}
-        className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-xs shrink-0"
-      />
+      <Badge label={t(DatasetsI18nKey.VisibilityPrivate)} variant={BadgeVariant.Filled} color={BadgeColor.Violet} />
     </Tooltip>
   );
 

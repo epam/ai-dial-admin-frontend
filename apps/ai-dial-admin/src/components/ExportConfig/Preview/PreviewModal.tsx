@@ -1,4 +1,4 @@
-import { DialCheckbox, DialFormPopup, Spinner, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialFormPopup, Spinner, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { previewDeploymentExportConfig, previewExportConfig } from '@/src/app/[lang]/export-config/actions';
@@ -177,18 +177,18 @@ const PreviewModal: FC<Props> = ({
         <div className="flex-1 min-h-0">{renderBody()}</div>
         {!isAnalyticsExport && (
           <div className="flex flex-row items-center gap-4">
-            <DialCheckbox
-              checked={isIncludeSecret}
-              label={t(ExportI18nKey.IncludeSecrets)}
+            <Checkbox
+              isSelected={isIncludeSecret}
+              labelProps={{ label: t(ExportI18nKey.IncludeSecrets) }}
               id="includeSecret"
               onChange={toggleIncludeSecret}
             />
             {isDeploymentExport && (
               <>
                 <div className="h-5 w-px bg-layer-4" />
-                <DialCheckbox
-                  checked={isIncludeGlobalFirewall}
-                  label={t(ExportI18nKey.IncludeGlobalFirewall)}
+                <Checkbox
+                  isSelected={isIncludeGlobalFirewall}
+                  labelProps={{ label: t(ExportI18nKey.IncludeGlobalFirewall) }}
                   id="includeGlobalFirewall"
                   onChange={toggleIncludeGlobalFirewall}
                 />

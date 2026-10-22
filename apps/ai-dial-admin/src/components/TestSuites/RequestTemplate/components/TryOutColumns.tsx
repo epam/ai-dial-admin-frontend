@@ -1,7 +1,7 @@
 'use client';
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Spinner, DialTag } from '@epam/ai-dial-ui-kit';
+import { Badge, BadgeColor, BadgeVariant, Spinner, Tag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { capitalize } from 'lodash';
 
@@ -38,24 +38,27 @@ interface Props {
 
 interface ColumnStatusStyle {
   cardClass: string;
-  badgeClass: string;
+  badgeVariant: BadgeVariant;
+  badgeColor?: BadgeColor;
   labelKey: string;
 }
 
 const COLUMN_STATUS_STYLE: Record<ColumnExtractionStatus, ColumnStatusStyle> = {
   [ColumnExtractionStatus.Extracted]: {
     cardClass: 'border-success bg-success',
-    badgeClass: 'border-success bg-controls-accent-success-alpha-hover',
+    badgeVariant: BadgeVariant.Filled,
+    badgeColor: BadgeColor.Green,
     labelKey: ValidityStatusI18nKey.Valid,
   },
   [ColumnExtractionStatus.Failed]: {
     cardClass: 'border-error bg-error',
-    badgeClass: 'border-error bg-controls-error-alpha-hover',
+    badgeVariant: BadgeVariant.Filled,
+    badgeColor: BadgeColor.Red,
     labelKey: ValidityStatusI18nKey.Invalid,
   },
   [ColumnExtractionStatus.NotExtracted]: {
     cardClass: 'border-primary bg-layer-2',
-    badgeClass: 'border-primary bg-layer-3',
+    badgeVariant: BadgeVariant.Outlined,
     labelKey: TestSuitesI18nKey.ColumnNotExtracted,
   },
 };
@@ -88,9 +91,9 @@ const ColumnResultCard: FC<{ column: EvaluatedColumn }> = ({ column }) => {
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-row gap-2 items-center">
           <div className="dial-small-semi-text text-primary">{column.name}</div>
-          <DialTag label={capitalize(column.type)} />
+          <Tag label={capitalize(column.type)} />
         </div>
-        <DialTag label={statusLabel} className={statusStyle.badgeClass} />
+        <Badge label={statusLabel} variant={statusStyle.badgeVariant} color={statusStyle.badgeColor} />
       </div>
       <div className="text-secondary text-sm">{column.expression}</div>
       {reason ? <div className="text-secondary text-sm">{reason}</div> : null}

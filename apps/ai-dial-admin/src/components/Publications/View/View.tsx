@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import { getSkillManifest, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/skills/actions';
@@ -359,7 +359,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const warning = useMemo(() => {
     if (publication.resourceIssues?.length) {
       return (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           className="mt-8"
           variant={NotificationVariant.Warning}
           message={

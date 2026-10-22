@@ -1,6 +1,6 @@
 'use client';
 
-import { DialCheckbox } from '@epam/ai-dial-ui-kit';
+import { Checkbox } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, ReactNode, useState } from 'react';
@@ -33,10 +33,10 @@ const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeaf
 
     return (
       <div className="pl-6">
-        <DialCheckbox
+        <Checkbox
           id={nodeId}
-          label={panelLabel}
-          checked={node.hide !== true}
+          labelProps={{ label: panelLabel }}
+          isSelected={node.hide !== true}
           onChange={(value) => {
             onColumnsChange(toggleColDefNode(tree, path, !value));
           }}
@@ -57,11 +57,11 @@ const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeaf
         >
           {isExpanded ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
         </button>
-        <DialCheckbox
+        <Checkbox
           id={nodeId}
-          label={panelLabel}
-          checked={checkState === 'checked'}
-          indeterminate={checkState === 'indeterminate'}
+          labelProps={{ label: panelLabel }}
+          isSelected={checkState === 'checked'}
+          isIndeterminate={checkState === 'indeterminate'}
           onChange={(value) => {
             onColumnsChange(toggleColDefNode(tree, path, !value));
           }}

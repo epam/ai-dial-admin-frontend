@@ -1,6 +1,6 @@
 'use client';
 
-import { DialFormPopup, DialCheckbox, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, Checkbox, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
@@ -53,19 +53,19 @@ const ResourceLogoutPopup: FC<Props> = ({
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         <p className="text-sm">{t(ToolsetI18nKey.SelectLogoutLevels)}</p>
         {isLoggedInAsUser && (
-          <DialCheckbox
+          <Checkbox
             id="personal-logout-checkbox"
-            label={userLabel ?? t(ToolsetI18nKey.Personal)}
-            checked={logoutUser}
-            onChange={(v) => setLogoutUser(!!v)}
+            labelProps={{ label: userLabel ?? t(ToolsetI18nKey.Personal) }}
+            isSelected={logoutUser}
+            onChange={setLogoutUser}
           />
         )}
         {isLoggedInAsOrganization && (
-          <DialCheckbox
+          <Checkbox
             id="organization-logout-checkbox"
-            label={orgLabel ?? t(ToolsetI18nKey.Organization)}
-            checked={logoutOrganization}
-            onChange={(v) => setLogoutOrganization(!!v)}
+            labelProps={{ label: orgLabel ?? t(ToolsetI18nKey.Organization) }}
+            isSelected={logoutOrganization}
+            onChange={setLogoutOrganization}
           />
         )}
       </div>

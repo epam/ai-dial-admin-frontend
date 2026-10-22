@@ -5,7 +5,7 @@ import { formatDataTypeLabel, getDataTypeIcon, isTypeCompatible, toTypedSelectOp
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   TooltipPlacement: { Left: 'left' },
-  DialTag: ({ label }: { label: string }) => <span data-testid="type-tag">{label}</span>,
+  Tag: ({ label }: { label: string }) => <span data-testid="type-tag">{label}</span>,
 }));
 
 describe('typedSelectOptions', () => {
@@ -26,7 +26,7 @@ describe('typedSelectOptions', () => {
     expect(isTypeCompatible('string', 'NUMBER')).toBe(false);
   });
 
-  test('toTypedSelectOption includes type DialTag and optional tooltip', () => {
+  test('toTypedSelectOption includes type Tag and optional tooltip', () => {
     const option = toTypedSelectOption({
       value: 'col1',
       label: 'Column 1',

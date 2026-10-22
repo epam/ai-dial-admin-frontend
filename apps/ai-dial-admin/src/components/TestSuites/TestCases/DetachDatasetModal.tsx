@@ -4,11 +4,12 @@ import { FC, useMemo, useState } from 'react';
 
 import {
   DialFormPopup,
-  DialRadioGroup,
+  RadioGroup,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -53,11 +54,11 @@ const DetachDatasetModal: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
       onSubmit={() => onConfirm(mode)}
     >
       <div className="px-6 py-4">
-        <DialRadioGroup
+        <RadioGroup
           orientation={RadioGroupOrientation.Column}
-          radioButtons={options}
-          activeRadioButton={mode}
-          elementId="detach-mode"
+          items={toRadioItems(options)}
+          value={mode}
+          id="detach-mode"
           onChange={(value) => setMode(value as DatasetDetachMode)}
         />
       </div>

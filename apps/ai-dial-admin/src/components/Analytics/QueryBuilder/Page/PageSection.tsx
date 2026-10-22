@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialCheckbox, Switch } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Switch } from '@epam/ai-dial-ui-kit';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
@@ -103,12 +103,12 @@ const PageSection: FC = () => {
           )}
 
           {supportsTotal && (
-            <DialCheckbox
+            <Checkbox
               id="qb-page-total"
-              label={t(QueryBuilderI18nKey.IncludeTotal)}
-              checked={page.includeTotal}
+              labelProps={{ label: t(QueryBuilderI18nKey.IncludeTotal) }}
+              isSelected={page.includeTotal}
               onChange={(value) => {
-                page.includeTotal = !!value;
+                page.includeTotal = value;
                 refresh();
               }}
             />

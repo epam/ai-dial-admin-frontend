@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialTag } from '@epam/ai-dial-ui-kit';
+import { Tag } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   title: string;
@@ -23,7 +23,7 @@ const AttributeSamplesPreview: FC<Props> = ({ title, type, values, totalCount })
     <div className="flex flex-col min-w-[200px]">
       <div className="flex items-center gap-2 truncate py-2">
         <span className="text-primary text-sm font-semibold truncate">{title}</span>
-        <DialTag label={type} />
+        <Tag label={type} />
       </div>
       <div className="flex flex-col gap-1 text-left">
         <div className="flex flex-col gap-1">

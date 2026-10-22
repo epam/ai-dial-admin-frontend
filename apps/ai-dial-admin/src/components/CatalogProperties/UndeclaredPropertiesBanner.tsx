@@ -1,6 +1,6 @@
 'use client';
 
-import { OutlinedButton, DialNotification, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Notification, NotificationType, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import { FC } from 'react';
 
@@ -30,7 +30,8 @@ const UndeclaredPropertiesBanner: FC<Props> = ({ className, names, isForbidden, 
   );
 
   return (
-    <DialNotification
+    <Notification
+      type={NotificationType.SectionMessage}
       className={className}
       variant={isForbidden ? NotificationVariant.Error : NotificationVariant.Warning}
       message={<span className="dial-small-text">{message}</span>}
@@ -44,7 +45,7 @@ const UndeclaredPropertiesBanner: FC<Props> = ({ className, names, isForbidden, 
           onClick={onRemove}
         />
       )}
-    </DialNotification>
+    </Notification>
   );
 };
 

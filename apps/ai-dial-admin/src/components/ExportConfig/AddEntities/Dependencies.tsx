@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialCheckbox, CollapsibleSidebar } from '@epam/ai-dial-ui-kit';
+import { Checkbox, CollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import { ExportI18nKey } from '@/src/constants/i18n';
@@ -63,22 +63,22 @@ const Dependencies: FC<Props> = ({
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>
         <div className="flex-1 min-h-0">
           {!disabled && (
-            <DialCheckbox
-              checked={isAllSelected}
+            <Checkbox
+              isSelected={isAllSelected}
               id="all-dependencies"
-              label={t(ExportI18nKey.AllDependencies)}
+              labelProps={{ label: t(ExportI18nKey.AllDependencies) }}
               onChange={onSelectAll}
             />
           )}
           <div className={`flex flex-col ${disabled ? '' : 'pl-[20px] mt-3'} gap-y-3`}>
             {allDependencies.map((dep, i) => {
               return (
-                <DialCheckbox
-                  checked={selectedDependencies.includes(dep)}
+                <Checkbox
+                  isSelected={selectedDependencies.includes(dep)}
                   disabled={disabled}
                   id={dep}
                   key={i}
-                  label={getButtonTitle(t, dep)}
+                  labelProps={{ label: getButtonTitle(t, dep) }}
                   onChange={(v) => onChange(v, dep)}
                 />
               );

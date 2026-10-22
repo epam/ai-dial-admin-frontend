@@ -1,6 +1,6 @@
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { DialSelect, DialTag, Tooltip, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { DialSelect, Badge, Tooltip, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 
 import { getSectionViewOptions, SectionView } from '@/src/components/TestSuites/Metrics/AddMetric/constants';
 import { CompareI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -30,10 +30,7 @@ const MetricSectionTabs: FC<Props> = ({ title, schema, controlsContent }) => {
         <div className="flex flex-row items-center gap-3">
           {activeView === SectionView.Schema && (
             <Tooltip tooltip={t(TestSuitesI18nKey.SchemaReadOnlyDescription)} triggerClassName="flex items-center">
-              <DialTag
-                label={t(TestSuitesI18nKey.SchemaReadOnlyBadge)}
-                className="rounded-full bg-layer-4 text-secondary border-transparent h-4 dial-tiny-semi-text shrink-0"
-              />
+              <Badge label={t(TestSuitesI18nKey.SchemaReadOnlyBadge)} />
             </Tooltip>
           )}
           <div className="w-fit shrink-0">

@@ -83,7 +83,7 @@ When the banner is rendered, `ImageStatusBanner` SHALL pass a `OutlinedButton` a
 
 ### Requirement: Banner is rendered only on the Container view's Properties tab
 
-`Containers/View/TabsContent.tsx` SHALL render `<ImageStatusBanner image={image} />` inside the `activeTab === EntityViewTab.Properties` branch only, positioned **above** `<PropertiesTabContent>` (which is the component that renders `EntityInfoHeader`). The previous inline `DialNotification` implementation SHALL be removed.
+`Containers/View/TabsContent.tsx` SHALL render `<ImageStatusBanner image={image} />` inside the `activeTab === EntityViewTab.Properties` branch only, positioned **above** `<PropertiesTabContent>` (which is the component that renders `EntityInfoHeader`). The previous inline `Notification` implementation SHALL be removed.
 
 #### Scenario: ImageStatusBanner appears in Properties branch only
 
@@ -96,9 +96,9 @@ When the banner is rendered, `ImageStatusBanner` SHALL pass a `OutlinedButton` a
 - **WHEN** the active tab is any value other than `EntityViewTab.Properties` (Tools, Resources, Prompts, Metrics, ExecutionLog, Events, Firewall)
 - **THEN** `<ImageStatusBanner>` SHALL NOT be rendered
 
-#### Scenario: Inline DialNotification is removed from TabsContent
+#### Scenario: Inline Notification is removed from TabsContent
 
 - **WHEN** `Containers/View/TabsContent.tsx` is read after the change
-- **THEN** the file SHALL NOT contain a direct `DialNotification` import or render related to image-not-installed
+- **THEN** the file SHALL NOT contain a direct `Notification` import or render related to image-not-installed
 - **AND** SHALL NOT contain the previous custom CSS overrides (`[&>div]:flex-1 [&>div>div:last-child]:w-full`) for the image-not-installed alert
 

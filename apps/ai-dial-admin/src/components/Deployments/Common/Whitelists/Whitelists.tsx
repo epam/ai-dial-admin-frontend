@@ -2,11 +2,13 @@
 
 import {
   NotificationVariant,
-  DialNotification,
-  DialRadioGroup,
+  Notification,
+  NotificationType,
+  RadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { getGlobalWhitelist } from '@/src/app/actions/deployments';
@@ -110,17 +112,18 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
 
   return (
     <div className="flex flex-col gap-8">
-      <DialRadioGroup
-        elementId="policy"
-        fieldTitle={t(DeploymentsI18nKey.WhitelistPolicyLabel)}
-        radioButtons={policyOptions}
-        activeRadioButton={currentPolicy}
+      <RadioGroup
+        id="policy"
+        labelProps={{ label: t(DeploymentsI18nKey.WhitelistPolicyLabel) }}
+        items={toRadioItems(policyOptions)}
+        value={currentPolicy}
         orientation={RadioGroupOrientation.Column}
         onChange={(id) => onPolicyChange(id as WHITELIST_POLICY)}
         disabled={disabled}
       />
       {currentPolicy === WHITELIST_POLICY.ALL ? (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           id="alert"
           message={
             <p className="dial-small-text">

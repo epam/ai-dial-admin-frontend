@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNotification, PrimaryButton, Switch, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, PrimaryButton, Switch, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -150,7 +150,11 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
       </div>
 
       {isAssetUnavailable(asset.userRoles) && (
-        <DialNotification variant={NotificationVariant.Info} message={t(getNoAvailableTitle(view))} />
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Info}
+          message={t(getNoAvailableTitle(view))}
+        />
       )}
 
       <AddEntitiesGrid

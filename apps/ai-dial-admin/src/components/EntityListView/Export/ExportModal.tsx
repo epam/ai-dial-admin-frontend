@@ -6,11 +6,12 @@ import {
   OutlinedButton,
   DialPopup,
   PrimaryButton,
-  DialRadioGroup,
+  RadioGroup,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -44,11 +45,11 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
       size={PopupSize.Sm}
     >
       <div className="flex p-6 h-full flex-col">
-        <DialRadioGroup
-          radioButtons={exportTypeRadio}
-          activeRadioButton={exportType}
-          elementId="type"
-          fieldTitle={t(ExportI18nKey.ExportFormat)}
+        <RadioGroup
+          items={toRadioItems(exportTypeRadio)}
+          value={exportType}
+          id="type"
+          labelProps={{ label: t(ExportI18nKey.ExportFormat) }}
           orientation={RadioGroupOrientation.Column}
           onChange={setExportType}
         />
