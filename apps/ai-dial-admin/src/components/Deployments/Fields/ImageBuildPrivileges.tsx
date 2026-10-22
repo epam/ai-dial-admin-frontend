@@ -1,5 +1,6 @@
 import { FC, useCallback } from 'react';
-import { DialRadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { Image } from '@/src/models/deployments/images';
 import { ImagesI18nKey } from '@/src/constants/i18n';
@@ -30,12 +31,12 @@ const ImageBuildPrivileges: FC<Props> = ({ image, setImage }) => {
   );
 
   return (
-    <DialRadioGroup
-      fieldTitle={t(ImagesI18nKey.BuildPrivileges)}
-      elementId="imageBuilder"
-      radioButtons={builderTypes}
+    <RadioGroup
+      labelProps={{ label: t(ImagesI18nKey.BuildPrivileges) }}
+      id="imageBuilder"
+      items={toRadioItems(builderTypes)}
       onChange={onChange}
-      activeRadioButton={image.imageBuilder || builderTypes[0].id}
+      value={image.imageBuilder || builderTypes[0].id}
       orientation={RadioGroupOrientation.Column}
       disabled={isReadOnlyAdmin}
     />

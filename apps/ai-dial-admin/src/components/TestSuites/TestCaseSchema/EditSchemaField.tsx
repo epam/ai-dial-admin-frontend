@@ -2,14 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  DialCheckbox,
-  CloseButton,
-  DialInput,
-  OutlinedButton,
-  PrimaryButton,
-  DialSelectField,
-} from '@epam/ai-dial-ui-kit';
+import { Checkbox, CloseButton, DialInput, OutlinedButton, PrimaryButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -72,10 +65,10 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
             required
           />
           <div className="flex items-end pb-2">
-            <DialCheckbox
+            <Checkbox
               id="schema-field-required"
-              label={t(BasicI18nKey.Required)}
-              checked={editableField.required}
+              labelProps={{ label: t(BasicI18nKey.Required) }}
+              isSelected={editableField.required}
               onChange={(checked) => setEditableField({ ...editableField, required: !!checked })}
             />
           </div>

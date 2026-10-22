@@ -14,7 +14,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
-    DialTag: ({ label }: { label: string }) => <span>{label}</span>,
+    Badge: ({ label }: { label: string }) => <span>{label}</span>,
   };
 });
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { FC } from 'react';
 
 import { EntityFieldsI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
@@ -25,11 +26,11 @@ const ModelTypeControl: FC<Props> = ({ entity, onChangeEntity, isAsset }) => {
   ];
 
   return (
-    <DialRadioGroup
-      radioButtons={modelTypeRadio}
-      activeRadioButton={entity.type as string}
-      elementId="type"
-      fieldTitle={t(EntityFieldsI18nKey.type)}
+    <RadioGroup
+      items={toRadioItems(modelTypeRadio)}
+      value={entity.type as string}
+      id="type"
+      labelProps={{ label: t(EntityFieldsI18nKey.type) }}
       orientation={RadioGroupOrientation.Row}
       onChange={onChangeEntity}
       disabled={isReadOnlyAdmin}

@@ -17,7 +17,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </select>
   ),
-  DialTag: ({ label }: any) => <span data-testid="schema-readonly-badge">{label}</span>,
+  Badge: ({ label }: any) => <span data-testid="schema-readonly-badge">{label}</span>,
   Tooltip: ({ children }: any) => <>{children}</>,
 }));
 

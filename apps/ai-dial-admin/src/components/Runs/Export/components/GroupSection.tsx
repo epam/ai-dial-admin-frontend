@@ -2,7 +2,7 @@
 
 import { FC, useMemo, useState } from 'react';
 
-import { DialCheckbox } from '@epam/ai-dial-ui-kit';
+import { Checkbox } from '@epam/ai-dial-ui-kit';
 
 import { ColumnGroup, ColumnItem } from '@/src/components/Runs/Export/models';
 import { ColumnGroupId, getCheckState, GROUP_LABEL_KEY } from '@/src/components/Runs/Export/utils/group-columns';
@@ -38,11 +38,11 @@ const GroupSection: FC<GroupSectionProps> = ({ group, checkedColumns, onToggleCo
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1">
         <CollapseButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed((prev) => !prev)} />
-        <DialCheckbox
+        <Checkbox
           id={`group-${group.id}`}
-          label={t(GROUP_LABEL_KEY[group.id])}
-          checked={checkState === 'checked'}
-          indeterminate={checkState === 'indeterminate'}
+          labelProps={{ label: t(GROUP_LABEL_KEY[group.id]) }}
+          isSelected={checkState === 'checked'}
+          isIndeterminate={checkState === 'indeterminate'}
           onChange={(value) => onToggleGroup(group.id, value)}
         />
       </div>
@@ -66,11 +66,11 @@ const GroupSection: FC<GroupSectionProps> = ({ group, checkedColumns, onToggleCo
             // Leaf columns have no chevron — use bigger indent
             <div className="grid grid-cols-3 gap-2 pl-12">
               {group.columns.map((item) => (
-                <DialCheckbox
+                <Checkbox
                   key={item.name}
                   id={`col-${item.name}`}
-                  label={item.displayName}
-                  checked={checkedColumns.has(item.name)}
+                  labelProps={{ label: item.displayName }}
+                  isSelected={checkedColumns.has(item.name)}
                   onChange={(value) => onToggleColumn(item.name, value)}
                 />
               ))}

@@ -1,14 +1,14 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { EllipsisTooltip, ErrorText, GhostIconButton, Label, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
+import { ElementSize, EllipsisTooltip, ErrorText, GhostIconButton, Label, Tag } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
 import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
+import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   elementId?: string;
@@ -122,7 +122,7 @@ const SingleValueAutocomplete: FC<Props> = ({
               <EllipsisTooltip
                 className="min-w-0 flex-1"
                 contentClassName="max-w-full"
-                text={<DialTag label={selectedLabel} className="max-w-full" />}
+                text={<Tag label={selectedLabel} className="max-w-full" />}
               />
               <GhostIconButton
                 size={ElementSize.Small}

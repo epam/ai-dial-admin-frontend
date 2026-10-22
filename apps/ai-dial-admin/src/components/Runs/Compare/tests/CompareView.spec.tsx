@@ -67,7 +67,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     Spinner: ({ size }: { size: number }) => <div aria-label={`loading-${size}`} />,
-    DialTag: ({
+    Tag: ({
       label,
       icon,
       onClick,

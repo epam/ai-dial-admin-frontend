@@ -3,7 +3,7 @@
 import { FC, RefObject, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -54,7 +54,13 @@ const TestCases: FC<Props> = ({
         onChangeDataset={onChangeDataset}
         {...props}
       />
-      {isNotSaved && <DialNotification variant={NotificationVariant.Info} message={t(TestSuitesI18nKey.Warning)} />}
+      {isNotSaved && (
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Info}
+          message={t(TestSuitesI18nKey.Warning)}
+        />
+      )}
       {isSchemaModalOpen &&
         createPortal(
           <TestCasesSchemaModal

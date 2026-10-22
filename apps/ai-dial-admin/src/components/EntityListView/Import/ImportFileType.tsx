@@ -5,11 +5,12 @@ import {
   FileIcon,
   Label,
   DialLoadFileAreaField,
-  DialRadioGroup,
+  RadioGroup,
   Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
@@ -60,12 +61,12 @@ const ImportFileTypeSelector: FC<Props> = ({
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col gap-4 mt-6">
-        <DialRadioGroup
-          fieldTitle={t(ImportI18nKey.FileType)}
+        <RadioGroup
+          labelProps={{ label: t(ImportI18nKey.FileType) }}
           orientation={RadioGroupOrientation.Column}
-          radioButtons={fileTypes}
-          activeRadioButton={fileType}
-          elementId="file-type"
+          items={toRadioItems(fileTypes)}
+          value={fileType}
+          id="file-type"
           onChange={onChangeFileType}
         />
 

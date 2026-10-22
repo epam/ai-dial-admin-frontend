@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Spinner, OutlinedButton, DialTag } from '@epam/ai-dial-ui-kit';
+import { Spinner, OutlinedButton, Badge, BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
 import { ExternalServiceI18nKey } from '@/src/constants/i18n';
@@ -78,10 +78,7 @@ const ExternalServiceConsentActions: FC<Props> = ({
   return (
     <>
       {isApproved && (
-        <DialTag
-          label={t(ExternalServiceI18nKey.Approved)}
-          className="text-accent-secondary rounded-full bg-accent-secondary-alpha border border-transparent h-4 dial-caption-text shrink-0"
-        />
+        <Badge label={t(ExternalServiceI18nKey.Approved)} variant={BadgeVariant.Filled} color={BadgeColor.Green} />
       )}
       {isLoading ? (
         <Spinner fullWidth={false} size={16} />

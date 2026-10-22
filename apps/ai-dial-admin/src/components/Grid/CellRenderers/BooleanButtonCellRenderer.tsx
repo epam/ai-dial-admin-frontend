@@ -8,7 +8,7 @@ interface BooleanButtonCellRendererParams extends ICellRendererParams {
   isReadonly?: boolean;
 }
 
-// TODO: use DialTag after implementing design system for tags
+// TODO: use Tag after implementing design system for tags
 
 const BooleanButtonCellRenderer = ({
   value,

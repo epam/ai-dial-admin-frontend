@@ -5,11 +5,12 @@ import {
   DialInput,
   DialNumberInput,
   PrimaryButton,
-  DialRadioGroup,
+  RadioGroup,
   Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -174,12 +175,12 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
           className={STANDARD_CONTROL_WIDTH}
           errorText={asset.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
         />
-        <DialRadioGroup
-          radioButtons={outputRadio}
-          activeRadioButton={asset.response ? outputRadio[1].id : outputRadio[0].id}
-          elementId="output"
+        <RadioGroup
+          items={toRadioItems(outputRadio)}
+          value={asset.response ? outputRadio[1].id : outputRadio[0].id}
+          id="output"
           disabled={isReadOnlyAdmin}
-          fieldTitle={t(RoutesI18nKey.Output)}
+          labelProps={{ label: t(RoutesI18nKey.Output) }}
           orientation={RadioGroupOrientation.Row}
           onChange={onChangeOutput}
         />

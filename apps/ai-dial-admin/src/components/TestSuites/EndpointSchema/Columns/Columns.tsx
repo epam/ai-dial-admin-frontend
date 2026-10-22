@@ -7,7 +7,8 @@ import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
   ButtonAppearance,
   OutlinedButton,
-  DialNotification,
+  Notification,
+  NotificationType,
   PrimaryButton,
   NotificationVariant,
 } from '@epam/ai-dial-ui-kit';
@@ -151,7 +152,13 @@ const Columns: FC<ColumnsProps> = ({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
-      {duplicateMessage && <DialNotification variant={NotificationVariant.Error} message={duplicateMessage} />}
+      {duplicateMessage && (
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Error}
+          message={duplicateMessage}
+        />
+      )}
       <div className="flex flex-row justify-between items-center">
         <span className="text-secondary dial-small-text">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
         <div className="flex flex-row gap-2">

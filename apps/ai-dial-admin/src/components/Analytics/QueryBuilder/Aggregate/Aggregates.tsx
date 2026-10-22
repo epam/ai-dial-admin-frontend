@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialCheckbox, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Checkbox, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
@@ -132,10 +132,10 @@ const Aggregates: FC = () => {
                 />
               ))}
               {fn?.distinct_supported && (
-                <DialCheckbox
+                <Checkbox
                   id={`qb-agg-${agg.id}-distinct`}
-                  checked={agg.distinct}
-                  label={t(QueryBuilderI18nKey.Distinct)}
+                  isSelected={agg.distinct}
+                  labelProps={{ label: t(QueryBuilderI18nKey.Distinct) }}
                   onChange={() => {
                     agg.distinct = !agg.distinct;
                     syncAlias(agg);

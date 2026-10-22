@@ -7,7 +7,8 @@ import { createPortal } from 'react-dom';
 import {
   NotificationVariant,
   ButtonAppearance,
-  DialNotification,
+  Notification,
+  NotificationType,
   ConfirmationPopup,
   DangerButton,
   OutlinedButton,
@@ -214,7 +215,8 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     if (isAddAction(action) && !entity.rules?.length) {
       return (
         <div className="flex flex-col gap-2 px-6 py-4">
-          <DialNotification
+          <Notification
+            type={NotificationType.SectionMessage}
             variant={NotificationVariant.Info}
             message={<span className="text-sm">{t(PublicationsI18nKey.PublishWarningTitle)}</span>}
           />

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-  NotificationVariant,
-  DialNotification,
-  RadioGroupPopupField,
   DialInput,
+  Notification,
+  NotificationType,
+  NotificationVariant,
   PopupSize,
   RadioGroupItem,
+  RadioGroupPopupField,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
@@ -17,8 +18,8 @@ import {
   EntityPlaceholdersI18nKey,
   ForwardTokenI18nKey,
 } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { LocalizedText } from '@/src/models/dial/localized';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -85,7 +86,8 @@ const ForwardAuthTokenField = <T extends { displayName?: LocalizedText; forwardA
       label: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
       content: (
         <div className="flex flex-col gap-y-8 mt-3">
-          <DialNotification
+          <Notification
+            type={NotificationType.SectionMessage}
             variant={NotificationVariant.Error}
             message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)}
           />

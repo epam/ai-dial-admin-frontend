@@ -1,6 +1,6 @@
 'use client';
 
-import { CloseButton, DialCheckbox, GhostButton } from '@epam/ai-dial-ui-kit';
+import { CloseButton, Checkbox, GhostButton } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
@@ -34,10 +34,7 @@ const ColumnsPanel: FC<Props> = ({
   const t = useI18n();
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const onCheckedChange = useCallback(
-    (_value?: boolean, id?: string) => toggleColumnVisibility?.(id?.replace(COLUMN_PANEL_PREFIX, '')),
-    [toggleColumnVisibility],
-  );
+  const onCheckedChange = useCallback((field: string) => toggleColumnVisibility?.(field), [toggleColumnVisibility]);
 
   const [, drop] = useDrop(() => ({ accept: 'column' }));
 
@@ -68,11 +65,11 @@ const ColumnsPanel: FC<Props> = ({
                 <li key={col.field}>
                   <DraggableItem id={col.field} findItem={onFind} moveItem={onMove}>
                     <div className="flex flex-col">
-                      <DialCheckbox
-                        label={col.headerName}
+                      <Checkbox
+                        labelProps={{ label: col.headerName }}
                         id={`${COLUMN_PANEL_PREFIX}${col.field}`}
-                        checked={!col.hide}
-                        onChange={onCheckedChange}
+                        isSelected={!col.hide}
+                        onChange={() => onCheckedChange(col.field)}
                       />
                       {col.groupName && <span className="pl-6 dial-tiny-text text-secondary">{col.groupName}</span>}
                     </div>

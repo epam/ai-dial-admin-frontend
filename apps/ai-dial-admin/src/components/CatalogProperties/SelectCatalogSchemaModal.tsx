@@ -1,4 +1,4 @@
-import { DialCheckbox, DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { GridOptions } from 'ag-grid-community';
 
@@ -112,10 +112,10 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
           />
         </div>
         {!!entityType && (
-          <DialCheckbox
+          <Checkbox
             id="showAllCatalogEntityKinds"
-            label={t(EntitiesI18nKey.ShowAllCatalogEntityKinds)}
-            checked={isShowingAllKinds}
+            labelProps={{ label: t(EntitiesI18nKey.ShowAllCatalogEntityKinds) }}
+            isSelected={isShowingAllKinds}
             onChange={onToggleAllKinds}
           />
         )}

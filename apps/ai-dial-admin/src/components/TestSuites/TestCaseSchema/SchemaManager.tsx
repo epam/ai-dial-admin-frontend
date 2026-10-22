@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { OutlinedButton, DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Notification, NotificationType, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GetRowIdParams, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -176,7 +176,8 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
       {duplicateName && (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Error}
           message={t(TestSuitesI18nKey.DuplicateSchemaFieldName, { name: duplicateName })}
         />

@@ -2,7 +2,8 @@ import {
   DialFormPopup,
   DialLabelledText,
   Spinner,
-  DialNotification,
+  Notification,
+  NotificationType,
   DialNumberInput,
   NotificationVariant,
   PopupSize,
@@ -97,7 +98,11 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
               containerClassName="w-[90px]"
               onChange={setValue}
             />
-            <DialNotification variant={NotificationVariant.Info} message={t(TestSuitesI18nKey.RunWarning)} />
+            <Notification
+              type={NotificationType.SectionMessage}
+              variant={NotificationVariant.Info}
+              message={t(TestSuitesI18nKey.RunWarning)}
+            />
           </>
         )}
       </div>

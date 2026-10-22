@@ -5,12 +5,13 @@ import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
   PrimaryButton,
   RadioButtonWithContent,
-  DialRadioGroup,
+  RadioGroup,
   RadioGroupOrientation,
   DialLoadFileAreaField,
   DialItemType,
   FileIcon,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
 import { getConfigScopes } from '@/src/components/Common/ConfigScopeSelector/utils';
@@ -120,22 +121,22 @@ const Files: FC<Props> = ({
     switch (configScope) {
       case ExportComponentType.DEPLOYMENTS:
         return (
-          <DialRadioGroup
-            radioButtons={DEPLOYMENT_IMPORT_RESOLUTIONS(t)}
-            activeRadioButton={deploymentResolution}
-            elementId="deploymentConflictResolution"
-            fieldTitle={t(ImportI18nKey.ConflictResolution)}
+          <RadioGroup
+            items={toRadioItems(DEPLOYMENT_IMPORT_RESOLUTIONS(t))}
+            value={deploymentResolution}
+            id="deploymentConflictResolution"
+            labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
             orientation={RadioGroupOrientation.Column}
             onChange={onChangeDeploymentResolution}
           />
         );
       case ExportComponentType.ANALYTICS:
         return (
-          <DialRadioGroup
-            radioButtons={ANALYTICS_IMPORT_RESOLUTIONS(t)}
-            activeRadioButton={analyticsPolicy}
-            elementId="analyticsConflictResolution"
-            fieldTitle={t(ImportI18nKey.ConflictResolution)}
+          <RadioGroup
+            items={toRadioItems(ANALYTICS_IMPORT_RESOLUTIONS(t))}
+            value={analyticsPolicy}
+            id="analyticsConflictResolution"
+            labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
             orientation={RadioGroupOrientation.Column}
             onChange={(value) => onChangeAnalyticsPolicy(value as CatalogResolutionPolicy)}
           />
@@ -143,20 +144,20 @@ const Files: FC<Props> = ({
       default:
         return (
           <>
-            <DialRadioGroup
-              radioButtons={IMPORT_RESOLUTIONS(t)}
-              activeRadioButton={activeResolution}
-              elementId="conflictResolution"
-              fieldTitle={t(ImportI18nKey.ConflictResolution)}
+            <RadioGroup
+              items={toRadioItems(IMPORT_RESOLUTIONS(t))}
+              value={activeResolution}
+              id="conflictResolution"
+              labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
               orientation={RadioGroupOrientation.Column}
               onChange={onChangeResolution}
             />
             <div className="h-[104px]">
-              <DialRadioGroup
-                radioButtons={IMPORT_FILE_TYPES(t)}
-                activeRadioButton={fileType}
-                elementId="fileType"
-                fieldTitle={t(ImportI18nKey.FileType)}
+              <RadioGroup
+                items={toRadioItems(IMPORT_FILE_TYPES(t))}
+                value={fileType}
+                id="fileType"
+                labelProps={{ label: t(ImportI18nKey.FileType) }}
                 orientation={RadioGroupOrientation.Column}
                 onChange={onChangeFileType}
               />

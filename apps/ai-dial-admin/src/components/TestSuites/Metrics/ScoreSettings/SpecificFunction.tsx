@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNotification, DialSelectField, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, DialSelectField, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -113,7 +113,8 @@ const SpecificFunction: FC<Props> = ({
       </div>
 
       {isSuiteAlertVisible && (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Info}
           closable
           className="!gap-2 !p-2 [&>div:first-child]:!items-center [&>div:first-child]:!gap-2 [&>div.relative]:!size-6"

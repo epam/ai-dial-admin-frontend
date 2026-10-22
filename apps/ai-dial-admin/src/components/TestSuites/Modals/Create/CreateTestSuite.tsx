@@ -2,7 +2,8 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   NotificationVariant,
-  DialNotification,
+  Notification,
+  NotificationType,
   DialPopup,
   DialSteps,
   PopupSize,
@@ -128,7 +129,11 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   ]);
 
   const methodChangeWarning = currentEntity ? (
-    <DialNotification message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={NotificationVariant.Warning} />
+    <Notification
+      type={NotificationType.SectionMessage}
+      message={t(TestSuitesI18nKey.MethodChangeWarning)}
+      variant={NotificationVariant.Warning}
+    />
   ) : null;
 
   let methodsContent: ReactNode;

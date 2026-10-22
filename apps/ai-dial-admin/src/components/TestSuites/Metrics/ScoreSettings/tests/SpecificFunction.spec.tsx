@@ -25,7 +25,8 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       </div>
     );
   },
-  DialNotification: ({ message }: any) => <div>{message}</div>,
+  Notification: ({ message }: any) => <div>{message}</div>,
+  NotificationType: { SectionMessage: 'section-message' },
   NotificationVariant: { Info: 'info' },
 }));
 

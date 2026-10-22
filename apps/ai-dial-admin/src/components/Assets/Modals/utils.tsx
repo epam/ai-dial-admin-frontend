@@ -1,5 +1,5 @@
 import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialTag } from '@epam/ai-dial-ui-kit';
+import { Badge } from '@epam/ai-dial-ui-kit';
 import { FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -41,18 +41,14 @@ export const getGridColumns = (
         return (
           <div className="flex flex-wrap gap-1 py-1">
             {selectedVersionsMap?.[selectedItemKey]?.map((v: string) => (
-              <DialTag key={`${params.data.name}__${v}`} label={v} className="max-w-full bg-layer-4 border-0 p-2" />
+              <Badge key={`${params.data.name}__${v}`} label={v} />
             ))}
           </div>
         );
       } else if (params.data.version) {
         return (
           <div className="flex flex-wrap gap-1 py-1">
-            <DialTag
-              key={`${params.data.name}__${params.data.version}`}
-              label={params.data.version}
-              className="max-w-full bg-layer-4 border-0 p-2"
-            />
+            <Badge key={`${params.data.name}__${params.data.version}`} label={params.data.version} />
           </div>
         );
       } else {
