@@ -12,28 +12,24 @@ import JsonAtaInput from '../JsonAtaInput';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let capturedEditorProps: any;
 
-vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
-  return {
-    ...actual,
-    DialInputPopup: ({
-      children,
-      selectedValue,
-      onOpen,
-    }: {
-      children?: ReactNode;
-      selectedValue?: string;
-      onOpen?: () => void;
-    }) => (
-      <div>
-        <button type="button" onClick={onOpen}>
-          {selectedValue}
-        </button>
-        {children}
-      </div>
-    ),
-  };
-});
+vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
+  default: ({
+    children,
+    selectedValue,
+    onOpen,
+  }: {
+    children?: ReactNode;
+    selectedValue?: string;
+    onOpen?: () => void;
+  }) => (
+    <div>
+      <button type="button" onClick={onOpen}>
+        {selectedValue}
+      </button>
+      {children}
+    </div>
+  ),
+}));
 
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 

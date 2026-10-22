@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialInputPopup, Label, OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, Label, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
@@ -116,7 +117,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
           <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <Label label={t(SourceI18nKey.InterceptorTemplate)} required htmlFor="templates" />
-              <DialInputPopup
+              <InputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedRunner?.name}
@@ -132,7 +133,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
                   runners={runners}
                   isModalOpen={isModalOpen}
                 />
-              </DialInputPopup>
+              </InputPopup>
             </div>
             {entity.source?.runnerName && !disabled && (
               <OutlinedButton

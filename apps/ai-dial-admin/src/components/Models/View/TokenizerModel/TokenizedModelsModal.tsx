@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -44,21 +46,23 @@ const TokenizedModelsModal = <T extends { tokenizerModel?: string }>({
   }, [model]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(EntityFieldsI18nKey.tokenizerModel)}
       portalId="Model"
       open={isModalOpen}
-      onSubmit={onApply}
-      onCancel={onClose}
-      disableSubmitButton={!selectedModel}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !selectedModel,
+        onCancel: onClose,
+        onSubmit: onApply,
+      })}
     >
       <div className="flex flex-col px-6 py-4 h-[400px]">
         <TokenizedModelsGrid selectedModel={selectedModel} onSelectModelId={onSelectModel} />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

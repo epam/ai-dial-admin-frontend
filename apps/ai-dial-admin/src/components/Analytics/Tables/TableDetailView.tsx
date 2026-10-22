@@ -12,11 +12,13 @@ import {
   ConfirmationPopupVariant,
   ConfirmationPopup,
   EllipsisTooltip,
-  DialFormPopup,
+  Popup,
   GhostButton,
   PopupSize,
   Tabs,
 } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { IconPlugConnected } from '@tabler/icons-react';
 
 import {
@@ -591,32 +593,40 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       )}
 
       {addOpen && (
-        <DialFormPopup
+        <Popup
           open={addOpen}
           portalId="qb-add-columns"
           size={PopupSize.Lg}
           header={t(AnalyticsTablesI18nKey.AddColumns)}
-          submitLabel={t(AnalyticsTablesI18nKey.AddColumns)}
-          disableSubmitButton={toTableColumns(addColumns).length === 0 || hasColumnRowErrors(addColumnErrors)}
           onClose={() => setAddOpen(false)}
-          onSubmit={() => void onSubmitAddColumns()}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(AnalyticsTablesI18nKey.AddColumns),
+            isSubmitDisabled: toTableColumns(addColumns).length === 0 || hasColumnRowErrors(addColumnErrors),
+            onCancel: () => setAddOpen(false),
+            onSubmit: () => void onSubmitAddColumns(),
+          })}
         >
           <div className="max-h-[70vh] overflow-auto p-6">
             <ColumnRowsEditor rows={addColumns} errors={addColumnErrors} onChange={setAddColumns} />
           </div>
-        </DialFormPopup>
+        </Popup>
       )}
 
       {writeOpen && (
-        <DialFormPopup
+        <Popup
           open={writeOpen}
           portalId="qb-write-rows"
           size={PopupSize.Lg}
           header={t(AnalyticsTablesI18nKey.AddRows)}
-          submitLabel={t(AnalyticsTablesI18nKey.InsertRows)}
-          disableSubmitButton={!parseRowsJson(rowsJson)}
           onClose={() => setWriteOpen(false)}
-          onSubmit={() => void onSubmitWriteRows()}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(AnalyticsTablesI18nKey.InsertRows),
+            isSubmitDisabled: !parseRowsJson(rowsJson),
+            onCancel: () => setWriteOpen(false),
+            onSubmit: () => void onSubmitWriteRows(),
+          })}
         >
           <div className="flex flex-col gap-3 p-6">
             <div className="flex flex-col items-start gap-1 border-l-2 border-tertiary pl-3">
@@ -627,7 +637,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
               <JsonEditorBase value={rowsJson} onChange={(v) => setRowsJson(v ?? '')} />
             </div>
           </div>
-        </DialFormPopup>
+        </Popup>
       )}
 
       {editColumn && (

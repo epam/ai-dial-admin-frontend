@@ -3,11 +3,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  DialSteps,
   Notification,
   NotificationType,
-  DialPopup,
-  DialSteps,
   NotificationVariant,
+  Popup,
   PopupSize,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
@@ -18,8 +18,8 @@ import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/colum
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import ListEntities from '@/src/components/ListView/List';
-import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DATASETS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { OnCellChange } from '@/src/types/grid-cell';
@@ -136,7 +136,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
   }, [selectedDataset, onConfirm]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(TestSuitesI18nKey.AttachDataset)}
       portalId="PickPublicDatasetModal"
@@ -186,7 +186,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
         onNextStep={onNextStep}
         isLoading={isLoadingPreview}
       />
-    </DialPopup>
+    </Popup>
   );
 };
 

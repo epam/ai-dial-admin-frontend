@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { OutlinedButton, DialPopup, PrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { Editor } from '@monaco-editor/react';
 import { IconCopy } from '@tabler/icons-react';
 
@@ -66,22 +66,21 @@ const ResultValueDialog: FC<Props> = ({ column, value, onClose }) => {
   };
 
   return (
-    <DialPopup
+    <Popup
       open
       header={column}
       size={PopupSize.Lg}
       className="h-[80vh]"
       onClose={onClose}
-      footer={
-        <div className="flex justify-end gap-3 px-6 py-4">
-          <OutlinedButton label={t(ButtonsI18nKey.Close)} onClick={onClose} />
-          <PrimaryButton
-            label={t(QueryBuilderI18nKey.CopyValue)}
-            iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onCopyValue}
-          />
-        </div>
-      }
+      mainButtons={[
+        { label: t(ButtonsI18nKey.Close), onClick: onClose },
+        {
+          label: t(QueryBuilderI18nKey.CopyValue),
+          variant: ButtonVariant.Primary,
+          iconBefore: <IconCopy {...BASE_BUTTON_ICON_PROPS} />,
+          onClick: onCopyValue,
+        },
+      ]}
     >
       <div className="h-full px-6 py-4">
         <div className="h-full overflow-hidden rounded border border-primary">
@@ -97,7 +96,7 @@ const ResultValueDialog: FC<Props> = ({ column, value, onClose }) => {
           />
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

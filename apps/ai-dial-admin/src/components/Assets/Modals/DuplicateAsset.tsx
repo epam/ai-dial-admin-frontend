@@ -1,6 +1,6 @@
-import { DialFormPopup, RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
-import { toRadioItems } from '@/src/utils/radio-items';
 import { DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
+import { Popup, RadioButtonWithContent, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
 
@@ -8,6 +8,7 @@ import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import {
@@ -23,14 +24,15 @@ import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { DialApplicationResource, DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/entities/versions';
 import { isDeploymentAsset, isVersionlessAssetView } from '@/src/utils/is-view';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { addTrailingSlash } from '@/src/utils/url';
-import { DialApplicationResource, DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 
 interface Props {
   view: ApplicationRoute;
@@ -216,24 +218,25 @@ const DuplicateAsset: FC<Props> = ({
   );
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(getCloneTitle(view, t))}
       portalId="DuplicateAsset"
       open={isModalOpen}
-      onSubmit={() =>
-        onDuplicate?.({
-          ...clonedAsset,
-          _metadata: {
-            ...clonedAsset._metadata,
-            folderId: addTrailingSlash(clonedAsset._metadata?.folderId),
-          },
-        } as AssetWithVersion)
-      }
-      onCancel={onClose}
-      disableSubmitButton={!isInnerValid || !isValid}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isInnerValid || !isValid,
+        onCancel: onClose,
+        onSubmit: () =>
+          onDuplicate?.({
+            ...clonedAsset,
+            _metadata: {
+              ...clonedAsset._metadata,
+              folderId: addTrailingSlash(clonedAsset._metadata?.folderId),
+            },
+          } as AssetWithVersion),
+      })}
     >
       <div className="flex flex-col px-6 py-4 gap-4">
         {!isVersionless && (
@@ -285,7 +288,7 @@ const DuplicateAsset: FC<Props> = ({
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

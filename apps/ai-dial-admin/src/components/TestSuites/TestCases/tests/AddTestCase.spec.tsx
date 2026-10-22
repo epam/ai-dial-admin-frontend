@@ -3,8 +3,6 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import AddTestCase from '../AddTestCase';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 
-// Mock DialFormPopup component
-
 describe('AddTestCase', () => {
   const mockOnClose = vi.fn();
   const mockOnAdd = vi.fn();

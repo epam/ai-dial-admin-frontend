@@ -4,7 +4,7 @@ import { FC, useState } from 'react';
 
 import {
   OutlinedButton,
-  DialPopup,
+  Popup,
   PrimaryButton,
   RadioGroup,
   PopupSize,
@@ -37,7 +37,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   const [exportType, setExportType] = useState(exportTypeRadio[0].id);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={getModalTitle(route, t)}
       portalId="ExportModal"
@@ -58,7 +58,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
         <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <PrimaryButton label={t(ButtonsI18nKey.Export)} onClick={() => onApply?.(exportType as ImportFileType)} />
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

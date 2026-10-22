@@ -1,6 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialSelectField, DialInput, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Popup, DialSelectField, DialInput, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { ButtonsI18nKey, CoreVersionModalI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -93,19 +95,22 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
   }, [definition, onApply, version]);
 
   return (
-    <DialFormPopup
+    <Popup
       portalId="CoreVersion"
       className="min-w-[480px]"
       size={PopupSize.Sm}
       open={isModalOpen}
-      dividers={true}
       header={t(CoreVersionModalI18nKey.Title)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      onSubmit={setNewVersion}
-      onCancel={onClose}
       onClose={onClose}
-      disableSubmitButton={!version}
+      headerDivider
+      footerDivider
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !version,
+        onCancel: onClose,
+        onSubmit: setNewVersion,
+      })}
     >
       <div className="px-6 py-4">
         <div className="flex flex-row gap-x-4">
@@ -128,7 +133,7 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
           />
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

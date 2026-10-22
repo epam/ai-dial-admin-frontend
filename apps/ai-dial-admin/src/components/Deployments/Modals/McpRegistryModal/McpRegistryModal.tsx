@@ -1,4 +1,6 @@
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { getMcpServerVersion } from '@/src/app/actions/deployments';
@@ -72,21 +74,25 @@ const McpRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, fetchServe
   );
 
   return (
-    <DialFormPopup
+    <Popup
       portalId="McpRegistryModal"
       open={isModalOpen}
       header={t(ContainersI18nKey.SelectMcpServerFromRegistry)}
-      submitLabel={t(ButtonsI18nKey.Confirm)}
       onClose={onClose}
-      onSubmit={() => {
-        if (selectedServer) {
-          onApply(selectedServer);
-          onClose();
-        }
-      }}
-      disableSubmitButton={!selectedServer}
       className="h-[800px]"
       size={PopupSize.Lg}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Confirm),
+        isSubmitDisabled: !selectedServer,
+        onCancel: onClose,
+        onSubmit: () => {
+          if (selectedServer) {
+            onApply(selectedServer);
+            onClose();
+          }
+        },
+      })}
     >
       <div className="flex h-full bg-layer-2 py-4 px-6 gap-4">
         <McpRegistryGrid
@@ -98,7 +104,7 @@ const McpRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, fetchServe
           onShowDetails={handleShowDetails}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

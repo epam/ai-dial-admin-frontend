@@ -1,6 +1,6 @@
 'use client';
 
-import { DialPopup, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Popup, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
@@ -256,7 +256,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
   }, [zipFile, fileType, onChangeSteps, jsonFileMap, currentStepId, separateFileMap, totalFileSizeExceeded]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       closeOnOutsideClick={false}
       header={getModalTitle(route, t)}
@@ -303,7 +303,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
           />
         )}
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

@@ -14,7 +14,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialPopup: ({ open, header, children }: { open: boolean; header: string; children: ReactNode }) =>
+    Popup: ({ open, header, children }: { open: boolean; header: string; children: ReactNode }) =>
       open ? (
         <div role="dialog">
           <h2>{header}</h2>

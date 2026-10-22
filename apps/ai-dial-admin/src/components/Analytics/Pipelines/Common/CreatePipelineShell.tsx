@@ -4,7 +4,9 @@ import { FC, ReactNode, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { DialFormPopup, Input, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, Input, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { createPipeline } from '@/src/app/[lang]/pipelines/actions';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
@@ -59,15 +61,19 @@ const CreatePipelineShell: FC<Props> = ({ name, onChangeName, isValid, buildDto,
   };
 
   return (
-    <DialFormPopup
+    <Popup
       open
       onClose={onClose}
       portalId="create-pipeline"
       size={PopupSize.Md}
       header={t(AnalyticsPipelinesI18nKey.CreateRuleTitle)}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isValid || isSubmitting}
-      onSubmit={() => void onSubmit()}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !isValid || isSubmitting,
+        onCancel: onClose,
+        onSubmit: () => void onSubmit(),
+      })}
     >
       <div className="flex flex-col gap-y-6 p-6">
         <Input
@@ -78,7 +84,7 @@ const CreatePipelineShell: FC<Props> = ({ name, onChangeName, isValid, buildDto,
         />
         {children}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

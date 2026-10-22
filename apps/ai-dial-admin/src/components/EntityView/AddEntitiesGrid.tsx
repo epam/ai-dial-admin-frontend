@@ -1,4 +1,6 @@
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import { useMemo, useState } from 'react';
 
@@ -45,18 +47,20 @@ const AddEntitiesGrid = <T extends object>({
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={modalTitle}
       portalId="AddEntity"
       open={isModalOpen}
       className="h-[800px]"
       size={PopupSize.Lg}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      onSubmit={() => onApply(selectedEntities)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!selectedEntities.length}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !selectedEntities.length,
+        onCancel: onClose,
+        onSubmit: () => onApply(selectedEntities),
+      })}
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         <GridView
@@ -66,7 +70,7 @@ const AddEntitiesGrid = <T extends object>({
           additionalGridOptions={additionalGridOptions}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

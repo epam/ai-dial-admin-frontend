@@ -61,7 +61,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialPopup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    Popup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     DialSteps: ({ currentStep }: { currentStep: string }) => <div>Current step:{currentStep}</div>,
   };
 });

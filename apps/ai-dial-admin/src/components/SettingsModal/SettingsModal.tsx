@@ -1,4 +1,6 @@
-import { DialFormPopup, DialSelectField, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Popup, DialSelectField, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, SettingsModalI18nKey } from '@/src/constants/i18n';
@@ -27,14 +29,18 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
   );
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(SettingsModalI18nKey.Settings)}
       portalId="SettingsModal"
       open={isModalOpen}
       size={PopupSize.Sm}
-      submitLabel={t(ButtonsI18nKey.Save)}
-      onSubmit={() => onConfirm(settings)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Save),
+        onCancel: onClose,
+        onSubmit: () => onConfirm(settings),
+      })}
     >
       <div className="flex flex-col gap-4 p-6">
         <DialSelectField
@@ -45,7 +51,7 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
           onChange={(theme) => onChangeTheme(theme as string)}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

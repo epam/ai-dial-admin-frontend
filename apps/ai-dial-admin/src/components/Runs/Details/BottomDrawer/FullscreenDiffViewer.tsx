@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import { DiffEditor, Monaco } from '@monaco-editor/react';
-import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -50,7 +50,7 @@ const FullscreenDiffViewer: FC<Props> = ({
   }
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={fieldLabel}
       portalId="FullscreenDiffViewer"
@@ -76,7 +76,7 @@ const FullscreenDiffViewer: FC<Props> = ({
           />
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

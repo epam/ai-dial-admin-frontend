@@ -1,4 +1,6 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useState } from 'react';
 
 import { getTestSuiteByName } from '@/src/app/[lang]/test-suites/actions';
@@ -52,16 +54,18 @@ const DuplicateTestSuite: FC<Props> = ({ entity, isModalOpen, onClose, onDuplica
   }, [clonedEntity, onDuplicate, t]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(getCloneTitle(ApplicationRoute.TestSuites, t))}
       portalId="DuplicateTestSuite"
       open={isModalOpen}
-      onSubmit={() => onCheckAndDuplicate()}
-      onCancel={onClose}
-      disableSubmitButton={!isValid || isCheckingName}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isValid || isCheckingName,
+        onCancel: onClose,
+        onSubmit: () => onCheckAndDuplicate(),
+      })}
     >
       <div className="flex flex-col px-6 py-4 gap-y-8">
         <DisplayNameControl
@@ -75,7 +79,7 @@ const DuplicateTestSuite: FC<Props> = ({ entity, isModalOpen, onClose, onDuplica
           onChangeEntity={(entity: TestSuite) => setEntity({ ...clonedEntity, description: entity.description })}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

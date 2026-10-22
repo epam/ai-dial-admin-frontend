@@ -1,13 +1,14 @@
 'use client';
 
-import { DialInputPopup, Label, Spinner, OutlinedButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, Label, OutlinedButton, SelectOption, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -136,7 +137,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
           <Label label={label} required htmlFor="sourceEntity" />
-          <DialInputPopup
+          <InputPopup
             disabled={isFieldDisabled || isRunnerResolving}
             placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
             open={isModalOpen}
@@ -151,7 +152,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
               sourceEntities={runners}
               columns={LIST_RUNNER_COLUMNS}
             />
-          </DialInputPopup>
+          </InputPopup>
         </div>
         {currentValue && (
           <OutlinedButton

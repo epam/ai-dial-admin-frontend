@@ -1,11 +1,11 @@
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  NotificationVariant,
+  DialSteps,
   Notification,
   NotificationType,
-  DialPopup,
-  DialSteps,
+  NotificationVariant,
+  Popup,
   PopupSize,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
@@ -165,7 +165,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   }
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(currentEntity ? TestSuitesI18nKey.UpdateTestSuite : TestSuitesI18nKey.CreateTestSuite)}
       portalId="CreateTestSuiteModal"
@@ -212,7 +212,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
         onNextStep={!currentEntity ? () => onNextStepWithNameCheck() : undefined}
         isLoading={isCheckingName}
       />
-    </DialPopup>
+    </Popup>
   );
 };
 

@@ -1,4 +1,6 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { getDatasetByName } from '@/src/app/[lang]/datasets/actions';
@@ -44,21 +46,23 @@ const DuplicateDataset: FC<Props> = ({ entity, isModalOpen, onClose, onDuplicate
   }, [dataset, onDuplicate, t]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={getCloneTitle(ApplicationRoute.Datasets, t)}
       portalId="DuplicateDataset"
       open={isModalOpen}
-      onSubmit={onCheckAndDuplicate}
-      onCancel={onClose}
-      disableSubmitButton={!isValid || isCheckingName || nameExistsError !== undefined}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isValid || isCheckingName || nameExistsError !== undefined,
+        onCancel: onClose,
+        onSubmit: onCheckAndDuplicate,
+      })}
     >
       <div className="flex flex-col py-4 px-6 gap-y-6">
         <DatasetProperties dataset={dataset} onChange={setDataset} nameExistsError={nameExistsError} isModal />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 
