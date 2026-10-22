@@ -7,12 +7,13 @@ import { useRouter } from 'next/navigation';
 import {
   DialFormPopup,
   DialInput,
-  DialRadioGroup,
+  RadioGroup,
   DialSelectField,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { createTable } from '@/src/app/[lang]/tables/actions';
 import { createTableForm, tableDetailHref } from '@/src/components/Analytics/Tables/utils';
@@ -120,13 +121,13 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           onChange={(v) => update('description', v ?? '')}
         />
         {isSource && (
-          <DialRadioGroup
-            elementId="table-write-mode"
-            fieldTitle={t(AnalyticsTablesI18nKey.WriteMode)}
-            labelDescription={t(AnalyticsTablesI18nKey.WriteModeHint)}
+          <RadioGroup
+            id="table-write-mode"
+            labelProps={{ label: t(AnalyticsTablesI18nKey.WriteMode) }}
+            caption={t(AnalyticsTablesI18nKey.WriteModeHint)}
             orientation={RadioGroupOrientation.Column}
-            radioButtons={writeModeRadios}
-            activeRadioButton={form.write}
+            items={toRadioItems(writeModeRadios)}
+            value={form.write}
             onChange={(id) => update('write', id as TableWriteMode)}
           />
         )}

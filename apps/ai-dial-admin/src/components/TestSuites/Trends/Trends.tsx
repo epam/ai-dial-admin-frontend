@@ -2,7 +2,14 @@
 
 import { FC, useMemo } from 'react';
 
-import { Spinner, OutlinedButton, DialNotification, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import {
+  Spinner,
+  OutlinedButton,
+  Notification,
+  NotificationType,
+  ElementSize,
+  NotificationVariant,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import KpiStrip from '@/src/components/TestSuites/Trends/KpiStrip';
@@ -47,7 +54,8 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
   if (isEmpty || !kpis) {
     return (
       <div className="p-4">
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Info}
           iconSize={20}
           title={t(TestSuitesI18nKey.TrendsNoRunsTitle)}
@@ -75,7 +83,8 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-auto p-4">
       {kpis.runCount === 1 && (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Info}
           iconSize={20}
           message={t(TestSuitesI18nKey.TrendsSingleRunMessage)}

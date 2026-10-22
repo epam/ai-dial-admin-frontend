@@ -1,6 +1,6 @@
 'use client';
 
-import { DialCheckbox, DialFormPopup, PasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialFormPopup, PasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo, useState } from 'react';
 
 import {
@@ -71,19 +71,19 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         {showOrganizationCheckbox && (
-          <DialCheckbox
+          <Checkbox
             id="organization-login-checkbox"
-            label={t(ToolsetI18nKey.Organization)}
-            checked={loginOrganization}
+            labelProps={{ label: t(ToolsetI18nKey.Organization) }}
+            isSelected={loginOrganization}
             onChange={handleOrganizationChange}
             disabled={!showUserCheckbox}
           />
         )}
         {showUserCheckbox && (
-          <DialCheckbox
+          <Checkbox
             id="personal-login-checkbox"
-            label={t(ToolsetI18nKey.Personal)}
-            checked={loginUser}
+            labelProps={{ label: t(ToolsetI18nKey.Personal) }}
+            isSelected={loginUser}
             onChange={handleUserChange}
             disabled={!showOrganizationCheckbox}
           />

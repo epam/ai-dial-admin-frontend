@@ -29,12 +29,12 @@ For MCP_TOOL suites, the response status badge SHALL use the `isError` boolean f
 
 #### Scenario: Successful MCP response renders success badge
 - **WHEN** try-it-out completes for an MCP suite and `response.isError === false`
-- **THEN** the `DialNotification` SHALL render with `NotificationVariant.Success`
+- **THEN** the `Notification` SHALL render with `NotificationVariant.Success`
 - **AND** SHALL display "Tool call succeeded" or equivalent label
 
 #### Scenario: Error MCP response renders error badge
 - **WHEN** try-it-out completes for an MCP suite and `response.isError === true`
-- **THEN** the `DialNotification` SHALL render with `NotificationVariant.Error`
+- **THEN** the `Notification` SHALL render with `NotificationVariant.Error`
 - **AND** SHALL display "Tool call returned an error" or equivalent label
 
 #### Scenario: MCP response displays full MCP envelope in Response collapsible
@@ -44,7 +44,7 @@ For MCP_TOOL suites, the response status badge SHALL use the `isError` boolean f
 
 #### Scenario: HTTP status code not shown for MCP response
 - **WHEN** try-it-out completes for an MCP suite
-- **THEN** the `DialNotification` SHALL NOT display a numeric HTTP status code
+- **THEN** the `Notification` SHALL NOT display a numeric HTTP status code
 - **AND** SHALL use the `isError` boolean exclusively for status determination
 
 ### Requirement: TryOut button available for MCP_TOOL suites

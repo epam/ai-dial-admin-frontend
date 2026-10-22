@@ -1,6 +1,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import classNames from 'classnames';
 
 import { getAuthTypeStorageKey } from '@/src/components/Toolsets/Auth/utils';
@@ -103,12 +104,12 @@ const ResourceAuthTypeSection: FC<Props> = ({
       {isSelected && config.id !== ToolsetAuthType.NONE && config.id !== ToolsetAuthType.DIAL_NATIVE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
           {config.id === ToolsetAuthType.OAUTH && radioLogin.length > 1 && (
-            <DialRadioGroup
-              elementId="auth"
+            <RadioGroup
+              id="auth"
               disabled={disabled}
-              activeRadioButton={selectedAuthType}
+              value={selectedAuthType}
               orientation={RadioGroupOrientation.Row}
-              radioButtons={radioLogin}
+              items={toRadioItems(radioLogin)}
               onChange={onChangeAuth}
             />
           )}

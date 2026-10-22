@@ -4,7 +4,7 @@ import { IconPencilMinus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import { DialTag } from '@epam/ai-dial-ui-kit';
+import { Tag } from '@epam/ai-dial-ui-kit';
 
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
@@ -26,7 +26,7 @@ const CompareRunTag: FC<Props> = ({ run, onEdit, isEditDisabled }) => {
     : t(RunsI18nKey.RunCompareTagAria, { index, name });
 
   return (
-    <DialTag
+    <Tag
       aria-label={ariaLabel}
       label=""
       icon={

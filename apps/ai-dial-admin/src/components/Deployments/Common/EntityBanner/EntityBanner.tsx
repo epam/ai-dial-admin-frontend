@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react';
 
-import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   variant?: NotificationVariant;
@@ -12,7 +12,8 @@ interface Props {
 
 const EntityBanner: FC<Props> = ({ variant, title, message, className, children }) => {
   return (
-    <DialNotification
+    <Notification
+      type={NotificationType.SectionMessage}
       className={className}
       variant={variant ?? NotificationVariant.Warning}
       message={
@@ -27,7 +28,7 @@ const EntityBanner: FC<Props> = ({ variant, title, message, className, children 
       }
     >
       {children}
-    </DialNotification>
+    </Notification>
   );
 };
 

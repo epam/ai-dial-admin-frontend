@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useRef } from 'react';
 
 import classNames from 'classnames';
-import { DialTag } from '@epam/ai-dial-ui-kit';
+import { Tag } from '@epam/ai-dial-ui-kit';
 
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleDiffModel, RuleDiffStatus } from '@/src/models/dial/rule';
@@ -56,7 +56,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
       <div className="flex gap-1">
         {rule.targets?.map((tag) => {
           return (
-            <DialTag
+            <Tag
               key={tag}
               label={tag}
               className={

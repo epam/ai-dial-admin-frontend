@@ -1,6 +1,6 @@
 'use client';
 
-import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { ReadOnlyI18nKey } from '@/src/constants/i18n';
@@ -10,7 +10,8 @@ const ReadOnlyBanner: FC = () => {
   const t = useI18n();
 
   return (
-    <DialNotification
+    <Notification
+      type={NotificationType.SectionMessage}
       variant={NotificationVariant.Info}
       title={t(ReadOnlyI18nKey.BannerTitle)}
       message={t(ReadOnlyI18nKey.Description)}

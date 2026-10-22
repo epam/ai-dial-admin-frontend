@@ -2,7 +2,8 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialInput, DialRadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { DialInput, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import type { RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
@@ -65,12 +66,12 @@ const QueryProperties: FC<Props> = ({ form, onChange, isModal }) => {
       />
 
       {isFullAdmin && (
-        <DialRadioGroup
-          elementId="query-scope"
-          fieldTitle={t(QueriesI18nKey.Scope)}
+        <RadioGroup
+          id="query-scope"
+          labelProps={{ label: t(QueriesI18nKey.Scope) }}
           orientation={RadioGroupOrientation.Column}
-          radioButtons={scopeOptions}
-          activeRadioButton={form.scope}
+          items={toRadioItems(scopeOptions)}
+          value={form.scope}
           onChange={(id) => onChangeScope(id as SavedQueryScope)}
         />
       )}

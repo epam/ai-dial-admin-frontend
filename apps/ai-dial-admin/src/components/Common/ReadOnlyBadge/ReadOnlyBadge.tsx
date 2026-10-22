@@ -1,6 +1,6 @@
 'use client';
 
-import { DialTag, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
+import { Badge, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { ReadOnlyI18nKey } from '@/src/constants/i18n';
@@ -15,10 +15,7 @@ const ReadOnlyBadge: FC = () => {
       triggerClassName="flex items-center"
       placement={TooltipPlacement.Left}
     >
-      <DialTag
-        label={t(ReadOnlyI18nKey.BadgeLabel)}
-        className="text-inverted rounded-full bg-inverted border border-transparent h-4 dial-caption-text font-bold shrink-0"
-      />
+      <Badge label={t(ReadOnlyI18nKey.BadgeLabel)} />
     </Tooltip>
   );
 };

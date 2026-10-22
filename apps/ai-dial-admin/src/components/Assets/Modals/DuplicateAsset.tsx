@@ -1,4 +1,5 @@
-import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
@@ -236,11 +237,11 @@ const DuplicateAsset: FC<Props> = ({
     >
       <div className="flex flex-col px-6 py-4 gap-4">
         {!isVersionless && (
-          <DialRadioGroup
-            radioButtons={duplicationTypes}
-            activeRadioButton={duplicationType}
-            elementId="duplicationTypes"
-            fieldTitle={t(EntitiesI18nKey.DuplicationType)}
+          <RadioGroup
+            items={toRadioItems(duplicationTypes)}
+            value={duplicationType}
+            id="duplicationTypes"
+            labelProps={{ label: t(EntitiesI18nKey.DuplicationType) }}
             orientation={RadioGroupOrientation.Column}
             onChange={onChangeDuplicationType}
           />

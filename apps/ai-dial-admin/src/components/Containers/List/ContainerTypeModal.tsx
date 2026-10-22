@@ -1,6 +1,7 @@
 'use client';
 
-import { DialFormPopup, DialRadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { FC, useMemo, useState } from 'react';
 
 import { ContainerCreateSource } from '@/src/components/Containers/List/models';
@@ -54,21 +55,21 @@ const ContainerTypeModal: FC<Props> = ({ isModalOpen, onClose, onContinue }) => 
       disableSubmitButton={!type || !source}
     >
       <div className="flex flex-col px-6 py-4 gap-6">
-        <DialRadioGroup
-          fieldTitle={t(ContainersI18nKey.ContainerTypeField)}
-          elementId="container-type"
-          radioButtons={typeOptions}
+        <RadioGroup
+          labelProps={{ label: t(ContainersI18nKey.ContainerTypeField) }}
+          id="container-type"
+          items={toRadioItems(typeOptions)}
           onChange={onTypeChange}
-          activeRadioButton={type ?? ''}
+          value={type ?? ''}
           orientation={RadioGroupOrientation.Column}
         />
         {type && (
-          <DialRadioGroup
-            fieldTitle={t(ContainersI18nKey.ContainerSourceField)}
-            elementId="container-source"
-            radioButtons={sourceOptions}
+          <RadioGroup
+            labelProps={{ label: t(ContainersI18nKey.ContainerSourceField) }}
+            id="container-source"
+            items={toRadioItems(sourceOptions)}
             onChange={(id) => setSource(id as ContainerCreateSource)}
-            activeRadioButton={source ?? ''}
+            value={source ?? ''}
             orientation={RadioGroupOrientation.Column}
           />
         )}

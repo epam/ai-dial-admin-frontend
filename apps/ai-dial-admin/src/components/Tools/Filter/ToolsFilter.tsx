@@ -1,6 +1,6 @@
 'use client';
 
-import { DialCheckbox, DialDropdown } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialDropdown } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
 import { ToolsetI18nKey } from '@/src/constants/i18n';
@@ -26,27 +26,27 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
       renderOverlay={() => (
         <div className="bg-layer-0 rounded flex flex-col w-[200px]">
           <div className="py-2 px-4">
-            <DialCheckbox
-              checked={isAllSelected}
+            <Checkbox
+              isSelected={isAllSelected}
               id={ToolFilter.All}
-              label={t(ToolsetI18nKey.AllTools)}
+              labelProps={{ label: t(ToolsetI18nKey.AllTools) }}
               onChange={onSelectAll}
             />
           </div>
           <div className="flex flex-col pl-[20px]">
             <div className="py-2 px-4">
-              <DialCheckbox
-                checked={selectedFilters.includes(ToolFilter.AutoDetected)}
+              <Checkbox
+                isSelected={selectedFilters.includes(ToolFilter.AutoDetected)}
                 id={ToolFilter.AutoDetected}
-                label={t(ToolsetI18nKey.AutoDetected)}
+                labelProps={{ label: t(ToolsetI18nKey.AutoDetected) }}
                 onChange={(value) => onSelectFilter(value, ToolFilter.AutoDetected)}
               />
             </div>
             <div className="py-2 px-4">
-              <DialCheckbox
-                checked={selectedFilters.includes(ToolFilter.AddedManually)}
+              <Checkbox
+                isSelected={selectedFilters.includes(ToolFilter.AddedManually)}
                 id={ToolFilter.AddedManually}
-                label={t(ToolsetI18nKey.AddedManually)}
+                labelProps={{ label: t(ToolsetI18nKey.AddedManually) }}
                 onChange={(value) => onSelectFilter(value, ToolFilter.AddedManually)}
               />
             </div>
