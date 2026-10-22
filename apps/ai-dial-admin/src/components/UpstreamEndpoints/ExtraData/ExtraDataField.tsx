@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialRadioGroupPopupField, DialTextarea, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import { RadioGroupPopupField, Textarea, RadioGroupItem } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { isNull } from 'lodash';
 
@@ -108,13 +108,13 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
     }
   }, [onChange, radioFieldId, stringValue, jsonValue]);
 
-  const radioButtons: RadioButtonWithContent[] = [
-    { id: NONE_ID, name: t(BasicI18nKey.None) },
+  const items: RadioGroupItem[] = [
+    { value: NONE_ID, label: t(BasicI18nKey.None) },
     {
-      id: USE_STRING_ID,
-      name: t(TypeI18nKey.String),
+      value: USE_STRING_ID,
+      label: t(TypeI18nKey.String),
       content: (
-        <DialTextarea
+        <Textarea
           id="extraDataStringValue"
           value={stringValue}
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
@@ -123,8 +123,8 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
       ),
     },
     {
-      id: USE_JSON_ID,
-      name: t(TypeI18nKey.JSON),
+      value: USE_JSON_ID,
+      label: t(TypeI18nKey.JSON),
       content: (
         <div className="h-[540px] max-h-[35vh]">
           <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
@@ -170,21 +170,19 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
     <div
       className={classNames('flex flex-col overflow-hidden', containerClassName ?? 'w-[200px] max-w-[200px] shrink-0')}
     >
-      <DialRadioGroupPopupField
+      <RadioGroupPopupField
         disabled={disabled}
-        htmlFor="extraDataInput"
         id="extraDataInput"
         placeholder={emptyValueText}
-        label={label ?? ''}
+        labelProps={{ label: label ?? '' }}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
-        customInputValue={customInputValue}
-        selectedRadioValue={radioFieldId}
-        inputClassName={isFlexible ? 'w-full' : 'max-w-[200px]'}
-        valueClassName={isFlexible ? 'w-full truncate pr-2 text-left' : 'w-[180px] truncate pr-2 text-left'}
+        customValue={customInputValue}
+        selectedValue={radioFieldId}
+        fieldClassName={isFlexible ? 'w-full' : 'max-w-[200px]'}
         isValid={isValid}
-        radioButtons={radioButtons}
-        onChangeRadioField={onChangeRadioField}
+        items={items}
+        onSelectionChange={onChangeRadioField}
         onApply={onApply}
       />
     </div>

@@ -74,7 +74,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   PrimaryButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{label}</button>
   ),
-  DialTextarea: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
+  Textarea: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
     <textarea value={value} onChange={(e) => onChange(e.target.value)} />
   ),
 }));

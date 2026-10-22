@@ -44,7 +44,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       <span>{value}</span>
     </div>
   ),
-  DialSegmentedControl: () => <div>segments</div>,
+  SegmentedControl: () => <div>segments</div>,
   EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 

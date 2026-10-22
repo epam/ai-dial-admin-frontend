@@ -1,6 +1,6 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialErrorText, DialTag } from '@epam/ai-dial-ui-kit';
+import { ErrorText, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -152,7 +152,7 @@ const MultiValueAutocomplete: FC<Props> = ({
           onHightLightSuggestion={handleSetHighlight}
         />
       )}
-      {!isReadOnlyAdmin && <DialErrorText text={error} />}
+      {!isReadOnlyAdmin && <ErrorText text={error} />}
       {caption && <div className="text-secondary dial-tiny-text pt-2">{caption}</div>}
     </div>
   );

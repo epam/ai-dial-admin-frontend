@@ -4,7 +4,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   ButtonAppearance,
-  DialCollapsibleSidebar,
+  CollapsibleSidebar,
   OutlinedButton,
   NoDataContent,
   DialPopup,
@@ -235,10 +235,10 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
       }
     >
       <div className="h-full px-6 py-4 flex flex-1 min-h-0">
-        <DialCollapsibleSidebar
+        <CollapsibleSidebar
           width={280}
           title={t(ToolsetI18nKey.Tools)}
-          containerClassName="bg-layer-3 mr-2 h-full border border-primary"
+          className="bg-layer-3 mr-2 h-full border border-primary"
         >
           <Search onChange={(search) => setPattern(search)} />
           <div className="border-b border-primary pb-1">
@@ -295,7 +295,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
               </div>
             )}
           </div>
-        </DialCollapsibleSidebar>
+        </CollapsibleSidebar>
         <div className="border border-primary p-4 w-full overflow-auto">
           {activeCustomTool && (
             <AddNewTool

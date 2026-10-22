@@ -102,7 +102,7 @@ The selector display SHALL prefer the live `NodePool` from the loaded list when 
 The selector modal SHALL be composed of three components:
 
 - `Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — the `DialPopup` shell (`PopupSize.Lg`, fixed-height container) with Cancel / Apply footer buttons; owns the pending selection and resets it to the field's current `nodePoolId` on every open.
-- `Deployments/NodePool/NodePoolList.tsx` — the `DialSearch` input plus a `<ul>` of radio rows including the pinned "Any node pool" entry; owns the search query, which is reset to empty on every mount (i.e., every modal open).
+- `Deployments/NodePool/NodePoolList.tsx` — the `Search` input plus a `<ul>` of radio rows including the pinned "Any node pool" entry; owns the search query, which is reset to empty on every mount (i.e., every modal open).
 - `Deployments/NodePool/NodePoolItem.tsx` — a single radio row, wrapped in a `<label htmlFor=...>` so clicking anywhere in the row toggles the radio.
 
 #### Scenario: Modal lists "Any node pool" plus one row per loaded pool
@@ -138,7 +138,7 @@ The selector modal SHALL be composed of three components:
 
 ### Requirement: Accessibility and string handling
 
-All user-facing strings in the field and modal SHALL flow through `useI18n()`. Truncated text SHALL expose the full content via the `title` attribute so it is reachable without truncation. Radio rows SHALL use native `<label>` + `DialRadioButton` semantics so they are keyboard-operable and screen-reader-friendly.
+All user-facing strings in the field and modal SHALL flow through `useI18n()`. Truncated text SHALL expose the full content via the `title` attribute so it is reachable without truncation. Radio rows SHALL use native `<label>` + `Radio` semantics so they are keyboard-operable and screen-reader-friendly.
 
 #### Scenario: No hardcoded user-visible strings
 

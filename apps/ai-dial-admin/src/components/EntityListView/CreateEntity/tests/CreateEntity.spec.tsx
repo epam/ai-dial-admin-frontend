@@ -297,7 +297,7 @@ describe('CreateEntity', () => {
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
       target: { value: 'my-skill' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}(required)` }), {
       target: { value: 'Does a thing' },
     });
 
@@ -336,7 +336,7 @@ describe('CreateEntity', () => {
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
       target: { value: 'folder-s2' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}(required)` }), {
       target: { value: 'Does a thing' },
     });
 

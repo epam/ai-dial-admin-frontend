@@ -1,6 +1,6 @@
 import { FC, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { DialNumberInput, DialSelectField, Switch, DialTextarea } from '@epam/ai-dial-ui-kit';
+import { DialNumberInput, DialSelectField, Switch, Textarea } from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { BindingSourceValue } from '@/src/models/evaluation/metric';
@@ -65,7 +65,7 @@ const MetricPrimitiveConstantInput: FC<MetricPrimitiveConstantInputProps> = ({
     }
     return (
       <div ref={textareaWrapRef}>
-        <DialTextarea
+        <Textarea
           id={elementId}
           placeholder={valuePlaceholder}
           labelProps={labelProps}

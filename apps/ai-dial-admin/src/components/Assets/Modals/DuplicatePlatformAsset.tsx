@@ -1,4 +1,4 @@
-import { DialFormPopup, DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PasswordInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/actions';
@@ -217,7 +217,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
         />
         {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}
         {bearerUpstreamIndexes.map((index) => (
-          <DialPasswordInput
+          <PasswordInput
             key={index}
             id={`bearer-key-${index}`}
             value={bearerKeys[index]}

@@ -7,7 +7,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { ApplicationRoute } from '@/src/types/routes';
 
 const NAME_LABEL = `${EntityFieldsI18nKey.name}*`;
-const DESCRIPTION_LABEL = `${EntityFieldsI18nKey.description}*`;
+const DESCRIPTION_LABEL = `${EntityFieldsI18nKey.description}(required)`;
 
 const renderCreateForm = (
   onChangeEntity: (entity: object) => void,

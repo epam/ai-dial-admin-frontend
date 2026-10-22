@@ -1,5 +1,5 @@
 import { FC, memo, useCallback } from 'react';
-import { DialPasswordInput, DialInput, Label } from '@epam/ai-dial-ui-kit';
+import { PasswordInput, DialInput, Label } from '@epam/ai-dial-ui-kit';
 
 import { EnvVariableValue } from '@/src/models/deployments/variables';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -49,7 +49,7 @@ const ContainerVariableValue: FC<Props> = ({
         <div className="flex-1 min-w-0">
           {value.$type === VALUE_TYPE.SIMPLE &&
             (isSecure ? (
-              <DialPasswordInput
+              <PasswordInput
                 id={`value_${index}`}
                 value={value.value}
                 placeholder={t(EntityPlaceholdersI18nKey.Value)}

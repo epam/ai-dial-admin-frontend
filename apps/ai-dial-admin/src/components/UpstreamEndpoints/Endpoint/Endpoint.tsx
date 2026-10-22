@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import {
   DialInput,
   DialNumberInput,
-  DialPasswordInput,
+  PasswordInput,
   DialSelectField,
   Tooltip,
   SelectOption,
@@ -294,7 +294,7 @@ const Endpoint: FC<Props> = ({
                   onChange={(authType) => onChangeAuthType(authType as string)}
                 />
               )}
-              <DialPasswordInput
+              <PasswordInput
                 disabled={disabled}
                 id={`key-${index}`}
                 value={endpoint.key}
@@ -375,7 +375,7 @@ const Endpoint: FC<Props> = ({
               </div>
               {!isAuthTypeSupported && (
                 <div className="flex-1 min-w-0">
-                  <DialPasswordInput
+                  <PasswordInput
                     disabled={disabled}
                     id={`key-${index}`}
                     value={endpoint.key}
@@ -405,7 +405,7 @@ const Endpoint: FC<Props> = ({
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <DialPasswordInput
+                  <PasswordInput
                     disabled={disabled}
                     id={`key-${index}`}
                     value={endpoint.key}

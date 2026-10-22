@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFileIcon, Spinner, DialLoadFileAreaField } from '@epam/ai-dial-ui-kit';
+import { DialItemType, FileIcon, Spinner, DialLoadFileAreaField } from '@epam/ai-dial-ui-kit';
 import { SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { ColDef, GridOptions } from 'ag-grid-community';
 
@@ -16,7 +16,6 @@ import { useApplicationFileExport } from '@/src/hooks/use-application-file-expor
 import { useI18n } from '@/src/locales/client';
 import { CustomFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { CustomFileRowData, generateCustomFileGridData } from '@/src/utils/files/grid-data';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityFileActions } from './constants';
@@ -56,7 +55,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
   }, []);
 
   const getFileIcon = (name: string) => {
-    return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
+    return <FileIcon type={DialItemType.File} name={name} decorative />;
   };
 
   const onChangeFile = useCallback(

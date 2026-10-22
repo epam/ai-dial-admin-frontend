@@ -3,12 +3,11 @@
 import { FC, useCallback } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import { DialFileIcon } from '@epam/ai-dial-ui-kit';
+import { DialItemType, FileIcon } from '@epam/ai-dial-ui-kit';
 
 import { EnvVarRowData } from '@/src/models/activity-audit';
 import { VALUE_TYPE, MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { downloadFile } from '@/src/utils/download';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 
 const SECRET_PLACEHOLDER = '••••••';
 
@@ -30,11 +29,10 @@ const EnvVarValueCellRenderer: FC<ICellRendererParams> = (props) => {
   const isSecure = mountType === MOUNT_TYPE.SECURE_CONTENT || mountType === MOUNT_TYPE.SECURE_FILE;
 
   if (valueType === VALUE_TYPE.FILE && value) {
-    const { extension } = getNameExtensionFromFile(value);
     const isDownloadable = !!data.fileContent;
     return (
       <div className="h-full w-full flex items-center gap-x-2 min-w-0 text-accent-primary">
-        <DialFileIcon extension={extension} />
+        <FileIcon type={DialItemType.File} name={value} decorative />
         <span
           className={`truncate ${isDownloadable ? 'underline cursor-pointer' : ''}`}
           onClick={isDownloadable ? onDownload : undefined}

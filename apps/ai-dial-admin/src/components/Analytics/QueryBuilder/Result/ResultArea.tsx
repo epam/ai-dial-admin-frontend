@@ -3,8 +3,8 @@
 import { FC, useId, useMemo } from 'react';
 
 import { ColDef } from 'ag-grid-community';
-import { Spinner, NoDataContent, DialSegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
-import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent, SegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
+import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -75,7 +75,7 @@ const ResultArea: FC<Props> = ({
     return QueryBuilderI18nKey.ChartNoValueColumn;
   };
 
-  const viewOptions: SegmentedControlOption<QueryResultView>[] = [
+  const viewOptions: SegmentedControlItem<QueryResultView>[] = [
     { value: QueryResultView.Table, label: t(QueryBuilderI18nKey.ViewTable) },
     { value: QueryResultView.Chart, label: t(QueryBuilderI18nKey.ViewChart) },
   ];
@@ -90,9 +90,9 @@ const ResultArea: FC<Props> = ({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <DialSegmentedControl
-          ariaLabel={t(QueryBuilderI18nKey.ResultViewSwitcher)}
-          options={viewOptions}
+        <SegmentedControl
+          aria-label={t(QueryBuilderI18nKey.ResultViewSwitcher)}
+          items={viewOptions}
           value={view}
           onChange={onChangeView}
         />

@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   NotificationVariant,
   DialNotification,
-  DialRadioGroupPopupField,
+  RadioGroupPopupField,
   DialInput,
   PopupSize,
-  RadioButtonWithContent,
+  RadioGroupItem,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
@@ -76,11 +76,13 @@ const ForwardAuthTokenField = <T extends { displayName?: LocalizedText; forwardA
     onSetForwardToken(Boolean(forwardToken));
   }, [onSetForwardToken, forwardToken]);
 
-  const radioButtons: RadioButtonWithContent[] = [
-    { id: NONE_ID, name: t(BasicI18nKey.None) },
+  const selectedId = forwardToken ? USE_ID : NONE_ID;
+
+  const items: RadioGroupItem[] = [
+    { value: NONE_ID, label: t(BasicI18nKey.None) },
     {
-      id: USE_ID,
-      name: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
+      value: USE_ID,
+      label: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
       content: (
         <div className="flex flex-col gap-y-8 mt-3">
           <DialNotification
@@ -106,19 +108,17 @@ const ForwardAuthTokenField = <T extends { displayName?: LocalizedText; forwardA
 
   return (
     <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
-      <DialRadioGroupPopupField
-        htmlFor="forwardAuthToken"
+      <RadioGroupPopupField
         id="forwardAuthToken"
-        emptyValueText={t(BasicI18nKey.None)}
-        label={t(EntityFieldsI18nKey.forwardAuthToken)}
+        labelProps={{ label: t(EntityFieldsI18nKey.forwardAuthToken) }}
         header={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         portalId="entityNameToken"
         size={PopupSize.Sm}
-        selectedRadioValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
-        selectedValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
+        value={selectedId}
+        selectedValue={selectedId}
         isValid={isValid}
-        radioButtons={radioButtons}
-        onChangeRadioField={onChangeRadioField}
+        items={items}
+        onSelectionChange={onChangeRadioField}
         onApply={onApply}
         onCancel={() => {
           setForwardToken(entity.forwardAuthToken);

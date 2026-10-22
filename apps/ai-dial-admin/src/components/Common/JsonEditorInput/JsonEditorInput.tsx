@@ -1,4 +1,4 @@
-import { DialErrorText, DialFormPopup, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
+import { ErrorText, DialFormPopup, DialInputPopup, Label } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -124,7 +124,7 @@ const JsonEditorInput: FC<Props> = ({
             <div className="h-[540px] max-h-[35vh]">
               <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
             </div>
-            {disableValidation && parseError && <DialErrorText text={parseError} />}
+            {disableValidation && parseError && <ErrorText text={parseError} />}
           </div>
         </DialFormPopup>
       </DialInputPopup>

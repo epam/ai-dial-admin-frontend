@@ -38,9 +38,9 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </select>
   ),
-  DialSegmentedControl: ({ options, value, onChange, ariaLabel }: any) => (
+  SegmentedControl: ({ items, value, onChange, 'aria-label': ariaLabel }: any) => (
     <div role="tablist" aria-label={ariaLabel}>
-      {options.map((option: any) => (
+      {items.map((option: any) => (
         <button
           key={option.value}
           type="button"

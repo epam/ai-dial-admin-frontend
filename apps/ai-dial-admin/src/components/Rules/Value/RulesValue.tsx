@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialSelectField, DialTagInput, DialInput } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, TagInput, DialInput } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -97,14 +97,14 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               invalid={!!errorText}
             />
           ) : (
-            <DialTagInput
-              elementId={`rule-tags-${index}`}
-              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
+            <TagInput
+              id={`rule-tags-${index}`}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
-              captionDescription={t(FoldersI18nKey.ValueCaption)}
-              initialTags={rule.targets}
+              caption={t(FoldersI18nKey.ValueCaption)}
+              defaultValue={rule.targets}
               onChange={(targets: string[]) => onChangeValue({ ...rule, targets })}
-              errorText={errorText}
+              error={errorText}
               invalid={!!errorText}
               collapseTagOverflow
             />

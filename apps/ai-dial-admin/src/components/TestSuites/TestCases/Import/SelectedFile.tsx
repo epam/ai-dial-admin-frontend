@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonAppearance, DialFileIcon, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialItemType, FileIcon, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { ChangeEvent, FC, useCallback, useRef } from 'react';
 import { IconEdit } from '@tabler/icons-react';
 
@@ -33,7 +33,12 @@ const SelectedFile: FC<Props> = ({ file, onChangeFile }) => {
   return (
     <div className="flex flex-row justify-between items-center bg-layer-2 px-3 py-0.5">
       <div className="flex items-center gap-x-2">
-        <DialFileIcon extension={extension} className="text-secondary" />
+        <FileIcon
+          type={DialItemType.File}
+          name={file?.name ?? ''}
+          fileExtension={extension}
+          className="text-secondary"
+        />
         <span className="text-primary dial-small-text">{file?.name}</span>
       </div>
 

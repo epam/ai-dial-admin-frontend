@@ -1,4 +1,4 @@
-import { Label, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Label, SegmentedControl, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -93,7 +93,7 @@ const MetricInput: FC<{
   const t = useI18n();
   const selectPlaceholder = t(EntityPlaceholdersI18nKey.Select);
 
-  const bindingTypeOptions = useMemo<SegmentedControlOption<MetricBindingType>[]>(
+  const bindingTypeOptions = useMemo<SegmentedControlItem<MetricBindingType>[]>(
     () => [
       { value: MetricBindingType.TestCase, label: t(TestSuitesI18nKey.TestCase) },
       { value: MetricBindingType.Response, label: t(TestSuitesI18nKey.ResponseColumn) },
@@ -201,9 +201,9 @@ const MetricInput: FC<{
     <div className="flex flex-col gap-1">
       <Label label={field.name} caption={field.description} required={field.required} />
       <div className="w-fit mb-2">
-        <DialSegmentedControl
-          ariaLabel={field.name}
-          options={bindingTypeOptions}
+        <SegmentedControl
+          aria-label={field.name}
+          items={bindingTypeOptions}
           value={activeTab}
           onChange={onBindingTypeChange}
         />

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialCollapsibleSidebar, NoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, NoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
 
 import { Pod } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -62,11 +62,10 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
       {tabs.length ? (
         <div className="flex h-full min-h-0 gap-8">
           {tabs.length > 1 && (
-            <DialCollapsibleSidebar
+            <CollapsibleSidebar
               width={320}
               title={t(ContainersI18nKey.Pods)}
-              containerClassName="bg-layer-3 border-transparent mr-0"
-              iconSize={24}
+              className="bg-layer-3 border-transparent mr-0"
             >
               <DialTabs
                 tabs={tabs}
@@ -75,7 +74,7 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
                 orientation={TabOrientation.Vertical}
                 desktopTabClassName="[&>span]:max-w-[320px]"
               />
-            </DialCollapsibleSidebar>
+            </CollapsibleSidebar>
           )}
           <PodView
             pod={pods.find((pod) => pod.name === activeTab) ?? pods[0]}

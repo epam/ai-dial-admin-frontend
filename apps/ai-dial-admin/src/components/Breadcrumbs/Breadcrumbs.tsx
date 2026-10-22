@@ -41,19 +41,25 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   const setFilePath = folderContext?.setFilePath;
   const fetchFiles = folderContext?.fetchFiles;
+  const fetchFolderHierarchy = folderContext?.fetchFolderHierarchy;
   const listHref = basicBreadcrumbs[0]?.href;
 
-  // A folder crumb on a details page selects that folder and goes back to the list, refreshing the folder
-  // the same way the redirect after deleting an entity does, so the list has its content.
+  // A folder crumb on a details page selects that folder and goes back to the list. The tree may not hold
+  // the folder's ancestors (e.g. a direct load of the details page), so the whole chain is loaded and
+  // expanded; a single fetch would only place a folder directly under an already loaded parent.
   const onOpenFolder = useCallback(
     (folderPath: string) => {
       setFilePath?.(folderPath);
-      fetchFiles?.(folderPath);
+      if (fetchFolderHierarchy) {
+        fetchFolderHierarchy(folderPath, true);
+      } else {
+        fetchFiles?.(folderPath);
+      }
       if (listHref) {
         router.push(listHref);
       }
     },
-    [setFilePath, fetchFiles, listHref, router],
+    [setFilePath, fetchFiles, fetchFolderHierarchy, listHref, router],
   );
 
   useEffect(() => {

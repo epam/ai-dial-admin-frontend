@@ -1,6 +1,6 @@
 'use client';
 
-import { DialCheckbox, DialFormPopup, DialPasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialFormPopup, PasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo, useState } from 'react';
 
 import {
@@ -90,7 +90,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
         )}
 
         {type === ToolsetAuthType.API_KEY && (
-          <DialPasswordInput
+          <PasswordInput
             id="apiKeyValue"
             labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}

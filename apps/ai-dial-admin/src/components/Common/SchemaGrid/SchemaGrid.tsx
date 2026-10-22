@@ -20,7 +20,7 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialErrorText, OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { ErrorText, OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
 import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from './constants';
 import { SchemaConstraintRule, SchemaFieldInputConfig, SchemaMetaColumn, SchemaMetaHandlers } from './models';
@@ -383,9 +383,9 @@ const SchemaGrid: FC<SchemaGridProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {hasNameErrors && <DialErrorText className="mb-2" text={t(BasicI18nKey.FieldNamesInvalid)} />}
+      {hasNameErrors && <ErrorText className="mb-2" text={t(BasicI18nKey.FieldNamesInvalid)} />}
       {constraintViolations.map(({ field, rule, limit }) => (
-        <DialErrorText
+        <ErrorText
           key={`${field}-${rule}`}
           className="mb-2"
           text={t(CONSTRAINT_MESSAGE_KEYS[rule], { field, limit })}

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialButtonDropdown, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonDropdown, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -207,7 +207,7 @@ const HeaderButtons: FC<Props> = ({ route: listRoute, names, isReadOnlyAdmin }) 
       <div className="flex gap-4">
         {!isReadOnlyAdmin &&
           (showDropdown ? (
-            <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)} />
+            <ButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)} />
           ) : (
             <PrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}

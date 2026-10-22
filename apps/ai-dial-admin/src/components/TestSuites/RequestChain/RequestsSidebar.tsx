@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialCollapsibleSidebar, PrimaryButton, Tooltip, ElementSize, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, PrimaryButton, Tooltip, ElementSize, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconInfoCircle, IconPencilMinus, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -73,7 +73,7 @@ const RequestsSidebar: FC<Props> = ({
 
   return (
     <>
-      <DialCollapsibleSidebar width={296} title={t(TestSuitesI18nKey.Requests)} containerClassName="h-full bg-layer-3">
+      <CollapsibleSidebar width={296} title={t(TestSuitesI18nKey.Requests)} className="h-full bg-layer-3">
         <div className="flex flex-col gap-6 h-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -125,7 +125,7 @@ const RequestsSidebar: FC<Props> = ({
             })}
           </div>
         </div>
-      </DialCollapsibleSidebar>
+      </CollapsibleSidebar>
 
       {renamingRequest && (
         <RenameRequestModal

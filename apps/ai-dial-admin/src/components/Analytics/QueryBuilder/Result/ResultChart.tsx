@@ -3,8 +3,8 @@
 import { FC, useMemo } from 'react';
 
 import ReactECharts from 'echarts-for-react';
-import { NoDataContent, DialSegmentedControl, DialSelect } from '@epam/ai-dial-ui-kit';
-import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, SegmentedControl, DialSelect } from '@epam/ai-dial-ui-kit';
+import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 
 import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
@@ -51,7 +51,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   // Scatter needs two numeric columns to mean anything — with fewer, the type is hidden entirely.
   const scatterUnavailable = numericColumns.length < 2;
 
-  const typeOptions: SegmentedControlOption<ChartType>[] = CHART_TYPE_OPTIONS.filter(
+  const typeOptions: SegmentedControlItem<ChartType>[] = CHART_TYPE_OPTIONS.filter(
     (o) => !(o.value === ChartType.Scatter && scatterUnavailable),
   ).map((o) => ({ value: o.value as ChartType, label: o.label }));
 
@@ -89,9 +89,9 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <DialSegmentedControl
-          ariaLabel={t(QueryBuilderI18nKey.ChartTypeSwitcher)}
-          options={typeOptions}
+        <SegmentedControl
+          aria-label={t(QueryBuilderI18nKey.ChartTypeSwitcher)}
+          items={typeOptions}
           value={config.type}
           onChange={onChangeType}
         />

@@ -149,7 +149,7 @@ The `FileButton` SHALL be rendered as a direct flex sibling of the input/pill *i
 #### Scenario: Field component continues to own its error caption
 
 - **WHEN** any inline validation error is shown for the Value (file pill)
-- **THEN** the error caption SHALL be rendered by the field component itself (`ValueFile`'s `DialErrorText`); the `Value` component and the `Variable` row SHALL NOT render an external `DialErrorText` for the field
+- **THEN** the error caption SHALL be rendered by the field component itself (`ValueFile`'s `ErrorText`); the `Value` component and the `Variable` row SHALL NOT render an external `ErrorText` for the field
 
 ### Requirement: Drag-grip stays aligned to the Name input top at lg+ when an error caption is shown
 

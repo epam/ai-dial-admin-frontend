@@ -25,14 +25,14 @@ describe('SelectedFile', () => {
     const file = new File(['content'], 'dataset_export.csv', { type: 'text/csv' });
     render(<SelectedFile file={file} onChangeFile={vi.fn()} />);
 
-    expect(screen.getByRole('img', { name: 'CSV file icon' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'CSV file' })).toBeTruthy();
   });
 
   test('shows the ZIP file icon for a .zip file, not the CSV icon', () => {
     const file = new File(['content'], 'dataset_export.zip', { type: 'application/zip' });
     render(<SelectedFile file={file} onChangeFile={vi.fn()} />);
 
-    expect(screen.getByRole('img', { name: 'ZIP file icon' })).toBeTruthy();
-    expect(screen.queryByRole('img', { name: 'CSV file icon' })).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'ZIP file' })).toBeTruthy();
+    expect(screen.queryByRole('img', { name: 'CSV file' })).not.toBeInTheDocument();
   });
 });

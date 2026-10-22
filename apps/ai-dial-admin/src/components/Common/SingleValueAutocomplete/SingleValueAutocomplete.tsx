@@ -1,6 +1,6 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { EllipsisTooltip, DialErrorText, GhostIconButton, Label, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, ErrorText, GhostIconButton, Label, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -157,7 +157,7 @@ const SingleValueAutocomplete: FC<Props> = ({
           isUpperCased={false}
         />
       )}
-      {!disabled && <DialErrorText text={error} />}
+      {!disabled && <ErrorText text={error} />}
       {caption && <div className="text-secondary dial-tiny-text pt-2">{caption}</div>}
     </div>
   );

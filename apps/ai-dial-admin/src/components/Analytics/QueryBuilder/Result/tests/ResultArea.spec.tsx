@@ -136,7 +136,7 @@ describe('QueryBuilder :: ResultArea', () => {
     const user = userEvent.setup();
     renderArea({ result: AGG_RESULT, meta: AGG_META });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
     expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
@@ -149,7 +149,7 @@ describe('QueryBuilder :: ResultArea', () => {
       meta: { ...AGG_META, dimensionColumns: ['event_id', 'project_id'], aggregateColumns: [] },
     });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
   });
@@ -158,7 +158,7 @@ describe('QueryBuilder :: ResultArea', () => {
     const user = userEvent.setup();
     renderArea({ result: AGG_RESULT, meta: ROW_META });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText('QueryBuilder.ChartNoDimension')).toBeInTheDocument();
   });
@@ -167,7 +167,7 @@ describe('QueryBuilder :: ResultArea', () => {
     const user = userEvent.setup();
     renderArea({ result: AGG_RESULT, meta: SQL_TRANSLATED_META });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
     expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
@@ -180,7 +180,7 @@ describe('QueryBuilder :: ResultArea', () => {
       meta: SQL_FALLBACK_META,
     });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
     expect(screen.queryByText('QueryBuilder.ChartNoDimension')).not.toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('QueryBuilder :: ResultArea', () => {
     const user = userEvent.setup();
     renderArea({ result: { columns: [], rows: [] }, meta: AGG_META });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText('QueryBuilder.ChartNoRows')).toBeInTheDocument();
   });
@@ -249,7 +249,7 @@ describe('QueryBuilder :: ResultArea — Export CSV', () => {
     const user = userEvent.setup();
     renderArea({ result: AGG_RESULT, meta: AGG_META, onExportCsv: vi.fn() });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByRole('button', { name: EXPORT_NAME })).toBeTruthy();
   });

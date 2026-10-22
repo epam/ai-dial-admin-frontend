@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialCheckbox, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, CollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import { ExportI18nKey } from '@/src/constants/i18n';
@@ -58,11 +58,7 @@ const Dependencies: FC<Props> = ({
   }, [allDependencies, isAllSelected, onChangeSelectedDependencies]);
 
   return allDependencies.length ? (
-    <DialCollapsibleSidebar
-      width={256}
-      title={t(ExportI18nKey.Dependencies)}
-      containerClassName="border border-primary ml-3"
-    >
+    <CollapsibleSidebar width={256} title={t(ExportI18nKey.Dependencies)} className="border border-primary ml-3">
       <div className="flex flex-col">
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>
         <div className="flex-1 min-h-0">
@@ -90,7 +86,7 @@ const Dependencies: FC<Props> = ({
           </div>
         </div>
       </div>
-    </DialCollapsibleSidebar>
+    </CollapsibleSidebar>
   ) : null;
 };
 
