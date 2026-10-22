@@ -6,7 +6,7 @@ import { FC } from 'react';
 
 import BoundTableField from '@/src/components/Analytics/Pipelines/Common/BoundTableField';
 import SourceField from '@/src/components/Analytics/Pipelines/Common/SourceField';
-import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
+import PipelineFilterField from '@/src/components/Analytics/Pipelines/Filter/PipelineFilterField';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -79,13 +79,13 @@ const PipelineSharedFields: FC<Props> = ({ form, isFilterHidden }) => {
       </BoundTableField>
 
       {!isFilterHidden && (
-        <SqlPredicateField
-          id="pipeline-filter"
+        <PipelineFilterField
           className={getControlClassName()}
-          label={t(AnalyticsPipelinesI18nKey.Filter)}
-          description={t(AnalyticsPipelinesI18nKey.FilterCaption)}
           value={draft.filter}
           sourceName={sourceName}
+          isSourcePending={form.isTargetPending || form.isSourcePending || form.isSourceEntityPending}
+          hasFieldsError={form.hasSourceEntityError}
+          fields={form.sourceFields}
           onChange={(value) => onChange({ filter: value })}
         />
       )}

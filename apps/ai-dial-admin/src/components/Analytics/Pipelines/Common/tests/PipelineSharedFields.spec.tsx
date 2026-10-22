@@ -7,10 +7,11 @@ import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
+vi.mock('@/src/app/[lang]/queries/actions');
 
-const renderFields = async (props: { isFilterHidden?: boolean } = {}) => {
+const renderFields = async (props: { isFilterHidden?: boolean } = {}, filter = 'id > 0') => {
   const { result } = renderHook(() =>
-    usePipelineForm({ initialDraft: { kind: PipelineKind.Aggregate, name: 'rollup', filter: 'id > 0' } }),
+    usePipelineForm({ initialDraft: { kind: PipelineKind.Aggregate, name: 'rollup', filter } }),
   );
   await waitFor(() => expect(result.current.isTablesLoading).toBe(false));
   render(<PipelineSharedFields form={result.current} {...props} />);
@@ -29,9 +30,23 @@ describe('PipelineSharedFields — the filter', () => {
     expect(screen.getByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter })).toHaveValue('id > 0');
   });
 
+  test('opens an empty filter in the builder', async () => {
+    await renderFields({}, '');
+
+    expect(await screen.findByRole('button', { name: AnalyticsPipelinesI18nKey.FilterAddCondition })).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter })).not.toBeInTheDocument();
+  });
+
+  test('keeps a written filter in the SQL view while no source is chosen', async () => {
+    await renderFields();
+
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.FilterUnavailableNoSource)).toBeTruthy();
+  });
+
   test('is not offered when hidden', async () => {
     await renderFields({ isFilterHidden: true });
 
     expect(screen.queryByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: AnalyticsPipelinesI18nKey.Filter })).not.toBeInTheDocument();
   });
 });

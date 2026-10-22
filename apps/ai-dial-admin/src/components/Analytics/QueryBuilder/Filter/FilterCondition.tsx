@@ -21,8 +21,13 @@ import {
   functionResultType,
   operandFunctionOptions,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
+import {
+  isNullableOperator,
+  operatorForType,
+  operatorOptionsForType,
+} from '@/src/components/Analytics/QueryBuilder/utils/operators';
 import { compactSelectLabel } from '@/src/components/Analytics/QueryBuilder/utils/options';
-import { ENUM_UNSUPPORTED_OPERATORS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
+import { VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -35,7 +40,6 @@ import {
   FnArgValue,
   QueryBuilderColor,
 } from '@/src/models/analytics/query-builder';
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 
@@ -50,8 +54,6 @@ interface Props {
   // no: its operands are the query's own output columns, not the source's.
   isFunctionOperandOffered?: boolean;
 }
-
-const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
 
 // How a call reads in the collapsed row, on either side of the condition.
 const callSummary = (name: string, args: FnArgValue[], options: FieldOption[], fn?: QueryFunction): string =>
@@ -91,8 +93,6 @@ const BOOLEAN_ACTIVE = QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension];
 const fieldTypeOf = (options: FieldOption[], name: string): string | undefined =>
   options.find((o) => o.name === name)?.type;
 
-const isEnumType = (type?: string): boolean => type === AnalyticsFieldType.Enum;
-
 const FilterCondition: FC<Props> = ({
   node,
   parent,
@@ -130,24 +130,18 @@ const FilterCondition: FC<Props> = ({
     if (!node.fn) return fieldTypeOf(fieldOptions, node.field);
     return fn ? functionResultType(fn, node.args, fields) : undefined;
   };
-  const isEnumOperand = isEnumType(operandType());
+  const resolvedOperandType = operandType();
 
-  // Keyed on the resolved type alone — no list here names which fields are enums, so a field an instance
-  // begins reporting as one is guarded with no change. The unfiltered `operatorOptions` still back the
-  // collapsed summary below, so a JSON-authored predicate carrying a withheld operator still reads by name
-  // instead of falling back to its code.
+  // The unfiltered `operatorOptions` still back the collapsed summary below, so a JSON-authored predicate
+  // carrying a withheld operator still reads by name instead of falling back to its code.
   const availableOperatorOptions = useMemo(
-    () =>
-      isEnumOperand
-        ? operatorOptions.filter((option) => !ENUM_UNSUPPORTED_OPERATORS.includes(option.value as QueryOperator))
-        : operatorOptions,
-    [isEnumOperand, operatorOptions],
+    () => operatorOptionsForType(operatorOptions, resolvedOperandType),
+    [resolvedOperandType, operatorOptions],
   );
 
-  // Retargeting a contains condition at an enum operand would otherwise leave it serializing a predicate
-  // the service rejects outright, taking the whole query down rather than this one condition.
+  // A contains condition left on an enum operand would take the whole query down, not this one condition.
   const guardEnumOperator = (type?: string) => {
-    if (isEnumType(type) && ENUM_UNSUPPORTED_OPERATORS.includes(node.op)) node.op = QueryOperator.Eq;
+    node.op = operatorForType(node.op, type);
   };
 
   const onChangeField = (value: string) => {
@@ -182,7 +176,7 @@ const FilterCondition: FC<Props> = ({
 
   const onChangeOperator = (value: string) => {
     node.op = value as QueryOperator;
-    if (!isNullable(node.op)) node.isNull = false;
+    if (!isNullableOperator(node.op)) node.isNull = false;
     if (node.op === QueryOperator.In) node.rightKind = FilterOperandKind.Literal;
     refresh();
   };
@@ -206,7 +200,7 @@ const FilterCondition: FC<Props> = ({
     refresh();
   };
 
-  const typeOptions: SelectOption[] = isNullable(node.op)
+  const typeOptions: SelectOption[] = isNullableOperator(node.op)
     ? [...VALUE_TYPE_OPTIONS, { value: QueryValueType.Null, label: t(QueryBuilderI18nKey.IsNull) }]
     : VALUE_TYPE_OPTIONS;
 

@@ -372,8 +372,8 @@ describe('PipelineDetailView — runtime and pause', () => {
     const user = userEvent.setup();
     renderView();
 
-    const filter = await screen.findByLabelText(AnalyticsPipelinesI18nKey.Filter, { exact: false });
-    await user.type(filter, 'x');
+    await user.click(await screen.findByRole('radio', { name: AnalyticsPipelinesI18nKey.FilterViewSql }));
+    await user.type(screen.getByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter }), 'x');
     await openRuntime(user);
 
     // The change bar is up, so Delete and the enable toggle are hidden — the pause is not.
