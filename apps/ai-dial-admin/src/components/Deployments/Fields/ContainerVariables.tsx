@@ -105,7 +105,7 @@ const ContainerVariables: FC<Props> = ({ container, setContainer, disabled }) =>
   }, [errorFields, isValid]);
 
   const gridClassName = classNames(
-    'flex flex-col gap-2 overflow-auto',
+    'flex flex-col gap-2 overflow-auto p-0.5',
     'lg:grid lg:grid-cols-[minmax(182px,1.5fr)_minmax(150px,1.5fr)_minmax(248px,3fr)_minmax(208px,1.5fr)] lg:gap-x-4 lg:gap-y-1',
   );
 
