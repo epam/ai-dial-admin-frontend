@@ -148,3 +148,30 @@ a reload shows the list unfiltered.
 
 - **WHEN** the operator reloads a list whose filter was stored
 - **THEN** the filter is applied and the "Reset filters" control is shown
+
+### Requirement: The Files list can show hidden files
+
+The Files list SHALL offer a "Show hidden files" switch in its header. While it is off, which is the default,
+hidden files and folders SHALL NOT be listed; while it is on, they SHALL be listed alongside regular ones and the
+switch SHALL read "Hide hidden files". The choice SHALL be stored in the browser and restored on reload. The
+move-destination popup of the Files list SHALL offer the same switch. No other file-manager list offers it.
+
+#### Scenario: Hidden files are off by default
+
+- **WHEN** the operator opens the Files list for the first time
+- **THEN** hidden files and folders are not listed and the switch reads "Show hidden files"
+
+#### Scenario: Turning the switch on lists hidden files
+
+- **WHEN** the operator turns the switch on
+- **THEN** hidden files and folders are listed alongside regular ones and the switch reads "Hide hidden files"
+
+#### Scenario: The choice survives a reload
+
+- **WHEN** the operator turns the switch on and reloads the page
+- **THEN** the Files list still shows hidden files
+
+#### Scenario: Other lists have no switch
+
+- **WHEN** the operator opens the Prompts list
+- **THEN** no hidden-files switch is shown in its header

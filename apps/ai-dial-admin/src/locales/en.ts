@@ -2280,6 +2280,8 @@ export default {
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
+    ShowHiddenFiles: 'Show hidden files',
+    HideHiddenFiles: 'Hide hidden files',
     File: 'File',
     Files: 'Files',
     Models: 'Models',

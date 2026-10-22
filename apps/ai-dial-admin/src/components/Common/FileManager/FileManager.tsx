@@ -40,12 +40,14 @@ import { getRootFolder, getRootFolders, isFileRootPath, isFlatPlatformView } fro
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { FILE_MANAGER_GRID_PERSISTENCE, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
+import { useShowHiddenFiles } from './use-show-hidden-files';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
   getForbiddenSymbolsRegExp,
   getGridOptions,
   getToolbarOptions,
+  isHiddenFilesToggleSupported,
   getTreeOptions,
   getValidationMessages,
   validateCreateFolder,
@@ -115,6 +117,8 @@ const FileManager: FC<Props> = ({
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
   const [gridApi, setGridApi] = useState<GridApi>();
+  const [isShowHiddenFiles, onShowHiddenFilesChange] = useShowHiddenFiles(view);
+  const isHiddenFilesToggleVisible = isHiddenFilesToggleSupported(view);
   const {
     columnDefs: persistedColumnDefs,
     reapplyState,
@@ -454,6 +458,9 @@ const FileManager: FC<Props> = ({
         sortOptions={{ sortable: false }}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
         toolbarOptions={toolbarOptions}
+        showHiddenFiles={isHiddenFilesToggleVisible ? isShowHiddenFiles : undefined}
+        onShowHiddenFilesChange={isHiddenFilesToggleVisible ? onShowHiddenFilesChange : undefined}
+        showHiddenFileSwitcherInDestinationPopup={isHiddenFilesToggleVisible ? true : undefined}
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,
