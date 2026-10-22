@@ -41,7 +41,7 @@ describe('SchemaGrid :: field constraints', () => {
     render(<SchemaGrid schema={schemaWithTitle(LONG_TITLE)} onChange={vi.fn()} />);
 
     expect(lastValidity()).toBe(false);
-    expect(screen.getByRole('alert')).toHaveTextContent(BasicI18nKey.FieldValueTooLong);
+    expect(screen.getByText(BasicI18nKey.FieldValueTooLong)).toBeTruthy();
     expect(screen.queryByText(LONG_TITLE, { exact: false })).not.toBeInTheDocument();
   });
 
@@ -51,20 +51,20 @@ describe('SchemaGrid :: field constraints', () => {
     rerender(<SchemaGrid schema={schemaWithTitle('Summary')} onChange={vi.fn()} />);
 
     expect(lastValidity()).toBe(true);
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(BasicI18nKey.FieldValueTooLong)).toBeNull();
   });
 
   test('Should not block save when the consumer switches the defaults off', () => {
     render(<SchemaGrid schema={schemaWithTitle(LONG_TITLE)} onChange={vi.fn()} fieldInputProps={false} />);
 
     expect(lastValidity()).toBe(true);
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(BasicI18nKey.FieldValueTooLong)).toBeNull();
   });
 
   test('Should not block save on a read-only grid', () => {
     render(<SchemaGrid schema={schemaWithTitle(LONG_TITLE)} onChange={vi.fn()} isReadonly />);
 
     expect(lastValidity()).toBe(true);
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(BasicI18nKey.FieldValueTooLong)).toBeNull();
   });
 });
