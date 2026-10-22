@@ -91,6 +91,7 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
         />
       ))}
       <FilterEditorPopover
+        placement="right"
         isComplete={isRunConditionFilterComplete(draft)}
         onCommit={onAdd}
         onCancel={onCancelAdd}
