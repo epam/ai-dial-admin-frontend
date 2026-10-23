@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 
@@ -33,6 +34,18 @@ const StatefulIdControl = ({ onChange }: { onChange: (name?: string) => void }) 
         onChange(next.name);
       }}
     />
+  );
+};
+
+const TogglableIdControl = () => {
+  const [isDisabled, setIsDisabled] = useState(true);
+  return (
+    <>
+      <button type="button" onClick={() => setIsDisabled(false)}>
+        enable
+      </button>
+      <IdControl entity={{ name: 'a/b' }} disabled={isDisabled} />
+    </>
   );
 };
 
@@ -103,6 +116,67 @@ describe('IdControl', () => {
       type: ValidationActionType.SetField,
       field: 'name',
       isValid: true,
+    });
+  });
+
+  describe('disabled field', () => {
+    test('shows the validator error and registers the field as invalid while enabled', () => {
+      render(<IdControl entity={{ name: 'a/b' }} />);
+
+      expect(screen.getByText(ErrorI18nKey.ForbiddenChars)).toBeInTheDocument();
+      expect(dispatch).toHaveBeenLastCalledWith({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: false,
+      });
+    });
+
+    test('hides the validator error and registers the field as valid', () => {
+      render(<IdControl entity={{ name: 'a/b' }} disabled />);
+
+      expect(screen.queryByText(ErrorI18nKey.ForbiddenChars)).not.toBeInTheDocument();
+      expect(dispatch).toHaveBeenLastCalledWith({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: true,
+      });
+    });
+
+    test('registers an empty disabled field as valid', () => {
+      render(<IdControl entity={{ name: '' }} disabled />);
+
+      expect(dispatch).toHaveBeenLastCalledWith({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: true,
+      });
+    });
+
+    test('still shows an external error and registers the field as invalid', () => {
+      render(<IdControl entity={{ name: 'a/b' }} externalError="ID already exists" disabled />);
+
+      expect(screen.getByText('ID already exists')).toBeInTheDocument();
+      expect(dispatch).toHaveBeenLastCalledWith({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: false,
+      });
+    });
+
+    test('validates the current value once the field becomes enabled', async () => {
+      const user = userEvent.setup();
+      render(<TogglableIdControl />);
+
+      expect(screen.queryByText(ErrorI18nKey.ForbiddenChars)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'enable' }));
+
+      expect(screen.getByText(ErrorI18nKey.ForbiddenChars)).toBeInTheDocument();
+      expect(dispatch).toHaveBeenLastCalledWith({
+        type: ValidationActionType.SetField,
+        field: 'name',
+        isValid: false,
+      });
     });
   });
 });

@@ -50,6 +50,9 @@ const IdControl = <T extends { name?: string }>({
   const { dispatch } = useSaveValidationContext();
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
+  // A disabled value came from the server and the user cannot change it, so a validator error under it
+  // could never be fixed and would only block Save. `externalError` still applies.
+  const isDisabled = disabled || isReadOnlyAdmin;
 
   const validateName = useCallback(
     (name?: string) => {
@@ -82,19 +85,23 @@ const IdControl = <T extends { name?: string }>({
   );
 
   useEffect(() => {
-    if (entity.name) {
+    if (isDisabled) {
+      setNameError(null);
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: true });
+    } else if (entity.name) {
       validateName(entity.name);
     } else {
       dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUniqueNameError, validationField]);
+  }, [isUniqueNameError, validationField, isDisabled]);
 
+  // Runs after the effect above, so an external error wins over its result on every re-run.
   useEffect(() => {
     if (externalError) {
       dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: false });
     }
-  }, [externalError, dispatch, validationField]);
+  }, [externalError, dispatch, validationField, isDisabled]);
 
   const activeError: FieldError | null =
     nameError ?? (externalError ? { text: externalError, type: ErrorType.EXISTING } : null);
@@ -108,7 +115,7 @@ const IdControl = <T extends { name?: string }>({
       onChange={onChangeName}
       error={activeError?.text}
       invalid={!!activeError}
-      disabled={disabled || isReadOnlyAdmin}
+      disabled={isDisabled}
       containerClassName={containerClassName}
     />
   );
