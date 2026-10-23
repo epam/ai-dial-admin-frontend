@@ -10,6 +10,7 @@ import { getCompareBarGroups, unionStatistics, maxBarValue } from '@/src/compone
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { METRIC_SCORES_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
+import MetricGroupTitle from '@/src/components/Runs/Summary/MetricGroupTitle';
 import { MetricScoresData } from '@/src/components/Runs/Summary/models';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -72,7 +73,7 @@ const MetricScoresSection: FC<Props> = ({
           return (
             <DialAnalyticsBarGroup
               key={group.name}
-              title={group.name}
+              title={<MetricGroupTitle name={group.name} description={group.description} />}
               data={data}
               compareData={compareData}
               compareLabels={[firstLabel, secondLabel]}
@@ -84,7 +85,6 @@ const MetricScoresSection: FC<Props> = ({
               className="min-w-0 overflow-hidden bg-layer-2"
               barDescriptions={group.barDescriptions}
               barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-xs px-1"
-              titleTooltip={group.description}
               barTitleClassName="block min-w-0 truncate text-secondary"
             />
           );

@@ -10,6 +10,7 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import { METRIC_SCORES_GRID_CLASS } from './constants';
+import MetricGroupTitle from './MetricGroupTitle';
 import { MetricScoresData } from './models';
 import SummarySection from './SummarySection';
 
@@ -47,7 +48,7 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
         {groups.map((group) => (
           <DialAnalyticsBarGroup
             key={group.name}
-            title={group.name}
+            title={<MetricGroupTitle name={group.name} description={group.description} />}
             data={group.bars}
             maxValue={Math.max(1, ...Object.values(group.bars).filter((value): value is number => value != null))}
             onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
@@ -56,7 +57,6 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
             defaultExpanded
             className="min-w-0 overflow-hidden bg-layer-2"
             barDescriptions={group.barDescriptions}
-            titleTooltip={group.description}
             barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-xs px-1"
             barTitleClassName="block min-w-0 truncate text-secondary"
           />
