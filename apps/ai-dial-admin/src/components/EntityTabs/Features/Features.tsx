@@ -102,7 +102,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
       <ReasoningEffortsInput values={entity.features?.reasoningEfforts} onChange={onChangeReasoningEfforts} />
 
       {switchGroups.map(({ title, keys }) => (
-        <div key={title} className="flex flex-col gap-y-3">
+        <div key={title} className="flex flex-col items-start gap-y-3">
           <Label label={t(title)} />
           {keys.map((key) => {
             const { value, isReadonly } = getReadOnlyValues(key, appRunner);
