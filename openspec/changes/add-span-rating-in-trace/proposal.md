@@ -10,7 +10,7 @@ and match ids by eye.
 
 - **The span tree marks the rated span.** In a trace opened from a session, the row of the span that answered
   a rated response shows that response's rating counts — the same `RatingCounts` the trace card shows.
-- **The span rail states the rating.** Selecting that span adds a Feedback section to the rail: the rating's
+- **The span rail states the rating.** Selecting that span adds a rating card to the rail, with no heading of its own: the rating's
   direction, when it was rated (or the window, for a re-rated response), whether its ratings disagree, and its
   comments under the feedback panel's own comment-text gate. It reuses the feedback panel's entry, extracted
   into its own component.

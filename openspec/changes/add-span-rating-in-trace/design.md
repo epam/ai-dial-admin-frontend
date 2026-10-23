@@ -39,7 +39,9 @@ spans are affected, so it would mark every span.
 ### D4 — Reuse the feedback panel's entry; keep the tree badge control-free
 
 The rail's section renders `FeedbackEntry`, extracted unchanged from `SessionFeedbackPanel`, so the comment
-gate and the contested / re-rated wording cannot drift between the two. The tree badge sits inside the row's
+gate and the contested / re-rated wording cannot drift between the two. The entry is laid out as the rail's fact cards
+are — labelled rows (Response, Rated, Comment) divided inside one `bg-layer-3` card — and the feedback panel
+lists the same cards, so both places read alike. The tree badge sits inside the row's
 `<button>`; `RatingCounts` would render a caveat button only for `provable_down`, which `feedbackRowCounts`
 never sets, so no control nests inside the row.
 

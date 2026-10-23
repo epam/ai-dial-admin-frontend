@@ -5,8 +5,8 @@
 
 ## 2. Tree badge and rail section
 
-- [x] 2.1 Extract `FeedbackEntry` from `SessionFeedbackPanel` into `components/Analytics/SessionsTrace/Detail/FeedbackEntry.tsx`, unchanged
-- [x] 2.2 `SessionDetailView` passes the session's feedback map, its partial state and the comment-text grant to `SessionTraceView`; the view attributes them to spans once and passes the result to `SessionEventStream` (badge on the row) and `SessionSpanDetail` (Feedback section)
+- [x] 2.1 Extract `FeedbackEntry` from `SessionFeedbackPanel` into `components/Analytics/SessionsTrace/Detail/FeedbackEntry.tsx` and lay it out as the rail's fact cards (D4); the feedback panel lists the same cards
+- [x] 2.2 `SessionDetailView` passes the session's feedback map, its partial state and the comment-text grant to `SessionTraceView`; the view attributes them to spans once and passes the result to `SessionEventStream` (badge on the row) and `SessionSpanDetail` (rating card)
 - [x] 2.3 State the partial rating list once in `SessionTraceView` (D3); add `TraceRatingsPartial` to `constants/i18n.ts` and `locales/en.ts`
 - [x] 2.4 Component specs for 2.1–2.3: rated span badge, unrated hop without one, no session, relayed id badged once, partial notice present and absent, rail section with comment text readable and withheld, unrated span without a section
 

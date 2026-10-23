@@ -3785,6 +3785,8 @@ export default {
     DetailDeployment: 'Deployments',
     DetailTurn: 'Turn',
     DetailComment: 'Comment',
+    DetailRatedResponse: 'Response',
+    DetailRatedAt: 'Rated',
     DetailCommentCount: '{count} comments',
     DetailCommentCountOne: '1 comment',
     DetailCommentRestricted: 'Comment text requires elevated access',

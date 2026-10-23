@@ -586,7 +586,7 @@ describe('SessionTraceView — ratings', () => {
   test('the rated span detail states its rating', () => {
     renderRated({ selectedSpanId: RATED_ROOT.core_span_id });
 
-    expect(screen.getByRole('heading', { name: SessionsTraceI18nKey.DetailPanelFeedback })).toBeInTheDocument();
+    expect(screen.getByText(SessionsTraceI18nKey.DetailRatedResponse)).toBeInTheDocument();
     expect(screen.getByText(SessionsTraceI18nKey.DetailRatingNegative)).toBeInTheDocument();
   });
 
@@ -642,6 +642,6 @@ describe('SessionTraceView — ratings', () => {
   test('an unrated span detail has no rating section', () => {
     renderRated({ selectedSpanId: UPSTREAM_HOP.core_span_id });
 
-    expect(screen.queryByRole('heading', { name: SessionsTraceI18nKey.DetailPanelFeedback })).toBeNull();
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailRatedResponse)).toBeNull();
   });
 });

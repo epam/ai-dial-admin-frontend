@@ -3479,6 +3479,8 @@ export enum SessionsTraceI18nKey {
   DetailDeployment = 'SessionsTrace.DetailDeployment',
   DetailTurn = 'SessionsTrace.DetailTurn',
   DetailComment = 'SessionsTrace.DetailComment',
+  DetailRatedResponse = 'SessionsTrace.DetailRatedResponse',
+  DetailRatedAt = 'SessionsTrace.DetailRatedAt',
   DetailCommentCount = 'SessionsTrace.DetailCommentCount',
   DetailCommentCountOne = 'SessionsTrace.DetailCommentCountOne',
   DetailCommentRestricted = 'SessionsTrace.DetailCommentRestricted',

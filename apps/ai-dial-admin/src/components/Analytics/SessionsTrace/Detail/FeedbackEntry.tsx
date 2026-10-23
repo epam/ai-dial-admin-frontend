@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
@@ -52,6 +52,15 @@ const RatingDirection: FC<{ row: SessionFeedbackRow }> = ({ row }) => {
   return <span className="text-secondary">{t(SessionsTraceI18nKey.DetailRatingNoValue)}</span>;
 };
 
+// Laid out as the span rail's fact cards are — a label over its value, rows divided — so a rating reads as
+// one more card of the rail rather than a differently built block beside them.
+const EntryRow: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
+  <div className="flex flex-col py-1">
+    <span className="text-secondary dial-tiny-text">{label}</span>
+    {children}
+  </div>
+);
+
 interface Props {
   row: SessionFeedbackRow;
   isCommentTextReadable: boolean;
@@ -59,27 +68,34 @@ interface Props {
 
 const FeedbackEntry: FC<Props> = ({ row, isCommentTextReadable }) => {
   const t = useI18n();
+  const ratedAt = isFeedbackReRated(row)
+    ? t(SessionsTraceI18nKey.DetailRatingWindow, {
+        first: formatDateTimeToLocalString(row.first_rate_time ?? undefined),
+        last: formatDateTimeToLocalString(row.last_rate_time ?? undefined),
+      })
+    : formatDateTimeToLocalString(row.last_rate_time ?? undefined);
 
   return (
-    <div className="flex flex-col gap-0.5 rounded border border-primary p-2">
-      <div className="flex items-center justify-between gap-2 dial-tiny-text">
-        <span className="text-secondary">{row.response_id ?? UNAVAILABLE_VALUE}</span>
-        <RatingDirection row={row} />
-      </div>
-      <p className="dial-tiny-text text-secondary">
-        {isFeedbackReRated(row)
-          ? t(SessionsTraceI18nKey.DetailRatingWindow, {
-              first: formatDateTimeToLocalString(row.first_rate_time ?? undefined),
-              last: formatDateTimeToLocalString(row.last_rate_time ?? undefined),
-            })
-          : formatDateTimeToLocalString(row.last_rate_time ?? undefined)}
-      </p>
-      {isFeedbackContested(row) && (
-        <p className="dial-tiny-text text-warning">{t(SessionsTraceI18nKey.DetailRatingContested)}</p>
-      )}
-      <p className="dial-tiny-text text-secondary">
-        {t(SessionsTraceI18nKey.DetailComment)} <CommentValue row={row} isReadable={isCommentTextReadable} />
-      </p>
+    <div className="shrink-0 divide-y divide-tertiary rounded border border-primary bg-layer-3 px-3">
+      <EntryRow label={t(SessionsTraceI18nKey.DetailRatedResponse)}>
+        <span className="flex items-start justify-between gap-2 dial-tiny-text">
+          <span className="break-all font-mono text-primary">{row.response_id ?? UNAVAILABLE_VALUE}</span>
+          <span className="shrink-0">
+            <RatingDirection row={row} />
+          </span>
+        </span>
+      </EntryRow>
+      <EntryRow label={t(SessionsTraceI18nKey.DetailRatedAt)}>
+        <span className="text-primary dial-tiny-text">{ratedAt}</span>
+        {isFeedbackContested(row) && (
+          <span className="text-warning dial-tiny-text">{t(SessionsTraceI18nKey.DetailRatingContested)}</span>
+        )}
+      </EntryRow>
+      <EntryRow label={t(SessionsTraceI18nKey.DetailComment)}>
+        <span className="break-words text-secondary dial-tiny-text">
+          <CommentValue row={row} isReadable={isCommentTextReadable} />
+        </span>
+      </EntryRow>
     </div>
   );
 };

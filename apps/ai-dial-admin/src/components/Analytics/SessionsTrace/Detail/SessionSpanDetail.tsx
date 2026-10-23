@@ -106,12 +106,7 @@ const SessionSpanDetail: FC<Props> = ({ node, fieldGroups, feedback, isCommentTe
           <SpanFactRow key={row.label} {...row} />
         ))}
       </div>
-      {feedback && (
-        <section className="flex shrink-0 flex-col gap-1">
-          <h4 className="text-secondary dial-tiny-semi-text">{t(SessionsTraceI18nKey.DetailPanelFeedback)}</h4>
-          <FeedbackEntry row={feedback} isCommentTextReadable={isCommentTextReadable} />
-        </section>
-      )}
+      {feedback && <FeedbackEntry row={feedback} isCommentTextReadable={isCommentTextReadable} />}
       <SpanFieldsSection groups={fieldGroups} row={span} />
       {isJsonOpen && (
         <FullscreenViewer
