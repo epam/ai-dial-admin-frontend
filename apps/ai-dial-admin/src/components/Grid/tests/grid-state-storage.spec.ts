@@ -1,8 +1,15 @@
-import { ColumnState } from 'ag-grid-community';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { GRID_SELECTION_COLUMN_ID } from '@epam/ai-dial-ui-kit';
+import { FileManagerColumnKey } from '@epam/ai-dial-react-file-manager';
+import { ColumnState, GridApi } from 'ag-grid-community';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
-import { getColumnsStateFromStorage, mergeColumnOrder, saveColumnsStateToStorage } from '@/src/components/Grid/utils';
+import {
+  applyGridState,
+  getColumnsStateFromStorage,
+  mergeColumnOrder,
+  saveColumnsStateToStorage,
+} from '@/src/components/Grid/utils';
 
 const STORAGE_KEY = 'runs-v2';
 const DEFAULT_SORTS: ColumnState[] = [{ colId: 'startedAt', sort: 'desc' }];
@@ -54,9 +61,83 @@ describe('mergeColumnOrder', () => {
     expect(mergeColumnOrder(current, stored)).toEqual([{ colId: 'c' }, { colId: 'b' }, { colId: 'a' }, { colId: 'd' }]);
   });
 
+  test('keeps the select column first and the actions column last', () => {
+    const stored: ColumnState[] = [{ colId: 'name' }, { colId: FileManagerColumnKey.Actions }, { colId: 'author' }];
+    const current: ColumnState[] = [
+      { colId: 'name' },
+      { colId: GRID_SELECTION_COLUMN_ID },
+      { colId: FileManagerColumnKey.Actions },
+      { colId: 'author' },
+    ];
+
+    expect(mergeColumnOrder(current, stored).map((column) => column.colId)).toEqual([
+      GRID_SELECTION_COLUMN_ID,
+      'name',
+      'author',
+      FileManagerColumnKey.Actions,
+    ]);
+  });
+
   test('returns the current order when nothing is stored', () => {
     const current: ColumnState[] = [{ colId: 'a' }, { colId: 'b' }];
 
     expect(mergeColumnOrder(current, [])).toEqual(current);
+  });
+});
+
+describe('applyGridState', () => {
+  const makeApi = (columnState: ColumnState[]) =>
+    ({
+      applyColumnState: vi.fn(),
+      setFilterModel: vi.fn(),
+      getColumnState: vi.fn(() => columnState),
+    }) as unknown as GridApi & { applyColumnState: ReturnType<typeof vi.fn> };
+
+  // What the grid shows after a folder with fewer columns: the re-added utility columns sit next to `name`.
+  const MISPLACED: ColumnState[] = [
+    { colId: 'name' },
+    { colId: GRID_SELECTION_COLUMN_ID },
+    { colId: FileManagerColumnKey.Actions },
+    { colId: 'author' },
+  ];
+  const EXPECTED_ORDER = [
+    { colId: GRID_SELECTION_COLUMN_ID },
+    { colId: 'name' },
+    { colId: 'author' },
+    { colId: FileManagerColumnKey.Actions },
+  ];
+
+  test('moves the select column first and the actions column last when restoring order', () => {
+    const api = makeApi(MISPLACED);
+
+    applyGridState(api, { columns: [{ colId: 'name' }, { colId: 'author' }], filters: {} }, [], true);
+
+    expect(api.applyColumnState).toHaveBeenLastCalledWith({ state: EXPECTED_ORDER, applyOrder: true });
+  });
+
+  test('moves the utility columns when nothing is stored', () => {
+    const api = makeApi(MISPLACED);
+
+    applyGridState(api, null, DEFAULT_SORTS, true);
+
+    expect(api.applyColumnState).toHaveBeenCalledWith({ state: DEFAULT_SORTS });
+    expect(api.applyColumnState).toHaveBeenLastCalledWith({ state: EXPECTED_ORDER, applyOrder: true });
+  });
+
+  test('does not reorder a grid whose utility columns are already at the edges', () => {
+    const api = makeApi(EXPECTED_ORDER);
+
+    applyGridState(api, null, DEFAULT_SORTS, true);
+
+    expect(api.applyColumnState).toHaveBeenCalledTimes(1);
+  });
+
+  test('leaves the order alone when the grid does not restore it', () => {
+    const api = makeApi(MISPLACED);
+
+    applyGridState(api, null, DEFAULT_SORTS);
+
+    expect(api.applyColumnState).toHaveBeenCalledTimes(1);
+    expect(api.getColumnState).not.toHaveBeenCalled();
   });
 });

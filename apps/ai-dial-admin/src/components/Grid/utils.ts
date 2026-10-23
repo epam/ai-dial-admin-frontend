@@ -1,6 +1,6 @@
 import { ColDef, ColGroupDef, ColumnState, FilterModel, GridApi } from 'ag-grid-community';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import { GRID_COLUMNS_KEY } from './constants';
+import { GRID_COLUMNS_KEY, LEADING_COLUMN_IDS, TRAILING_COLUMN_IDS } from './constants';
 import { ColumnWidths } from './models';
 
 export interface GridModel {
@@ -81,7 +81,30 @@ export const mergeColumnOrder = (current: ColumnState[], stored: ColumnState[]):
   const currentIds = new Set(current.map((column) => column.colId));
   const pending = [...current];
   const slotted = stored.map((column) => (currentIds.has(column.colId) ? pending.shift() : column));
-  return [...slotted.filter((column): column is ColumnState => column !== undefined), ...pending];
+  return withUtilityColumnsAtEdges([
+    ...slotted.filter((column): column is ColumnState => column !== undefined),
+    ...pending,
+  ]);
+};
+
+const columnRank = ({ colId }: ColumnState): number => {
+  if (LEADING_COLUMN_IDS.includes(colId)) return 0;
+  return TRAILING_COLUMN_IDS.includes(colId) ? 2 : 1;
+};
+
+// The select column stays first and the actions column last, whatever slot a stored order or a rebuild with
+// another column set (a folder showing fewer columns) left them in.
+export const withUtilityColumnsAtEdges = (columns: ColumnState[]): ColumnState[] =>
+  [...columns].sort((a, b) => columnRank(a) - columnRank(b));
+
+// Works on the grid's own order: a column the applied state does not list stays where `maintainColumnOrder`
+// slotted it, which for a re-added utility column is next to the surviving data column.
+const keepUtilityColumnsAtEdges = (gridApi: GridApi) => {
+  const current = gridApi.getColumnState();
+  const ordered = withUtilityColumnsAtEdges(current);
+  if (ordered.some((column, index) => column.colId !== current[index].colId)) {
+    gridApi.applyColumnState({ state: ordered.map(({ colId }) => ({ colId })), applyOrder: true });
+  }
 };
 
 // ag-Grid lets `flex` win over `width`, so a dragged column drops its flex share to keep the stored width.
@@ -104,6 +127,9 @@ export const applyGridState = (
     gridApi.applyColumnState(shouldApplyOrder ? { state, applyOrder: true } : { state });
   } else {
     gridApi.applyColumnState({ state: defaultSorts });
+  }
+  if (shouldApplyOrder) {
+    keepUtilityColumnsAtEdges(gridApi);
   }
 };
 
