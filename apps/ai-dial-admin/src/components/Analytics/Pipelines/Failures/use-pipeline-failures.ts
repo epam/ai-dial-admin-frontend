@@ -25,6 +25,8 @@ export interface PipelineFailuresRead {
   items: DlqItem[];
   /** The service has a further page for the current filter. */
   hasMore: boolean;
+  /** The service has reported a count at least once. Zero before it is "not asked yet", not "none". */
+  hasAnswered: boolean;
   /** The summary or the first page is in flight. */
   isLoading: boolean;
   /** A further page is in flight. */
@@ -74,6 +76,7 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
   const [items, setItems] = useState<DlqItem[]>([]);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [hasMore, setHasMore] = useState(false);
+  const [hasAnswered, setHasAnswered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
@@ -130,6 +133,7 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
     }
 
     setHasFailed(false);
+    setHasAnswered(true);
     setCounts(countsOf(res.response));
     setNewestAt(res.response.items[0]?.created_at);
   }, []);
@@ -236,6 +240,7 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
       newestAt,
       items,
       hasMore,
+      hasAnswered,
       isLoading,
       isLoadingMore,
       hasFailed,
@@ -252,6 +257,7 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
       newestAt,
       items,
       hasMore,
+      hasAnswered,
       isLoading,
       isLoadingMore,
       hasFailed,

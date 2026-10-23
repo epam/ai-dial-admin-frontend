@@ -133,18 +133,18 @@ describe('PipelineFailuresCard', () => {
     expect(status).toBeTruthy();
   });
 
-  // Nothing to report is reported by not being here.
-  test('renders nothing for a pipeline the service reports no dead letters for', () => {
-    const { container } = renderCard(failuresRead());
+  // Absence would not tell "nothing failed" from "not tracked here".
+  test('states that there are no failures for a pipeline the service reports none for', () => {
+    renderCard(failuresRead());
 
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.FailuresTitle })).toBeTruthy();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.FailuresNone)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.FailuresShowAll })).toBeNull();
   });
 
-  // The counters start at zero and only a read moves them, so "not yet answered" and "nothing to
-  // report" are the same state by construction — which is what keeps the card from appearing as an
-  // empty frame and then filling.
+  // The counters start at zero before any answer; a card then would claim "no failures" unasked.
   test('renders nothing while the first read is still in flight', () => {
-    const { container } = renderCard(failuresRead({ isLoading: true }));
+    const { container } = renderCard(failuresRead({ hasAnswered: false, isLoading: true }));
 
     expect(container.firstChild).toBeNull();
   });
