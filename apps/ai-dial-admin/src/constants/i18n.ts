@@ -2384,7 +2384,6 @@ export enum RunsI18nKey {
   Below = 'Runs.Below',
   GroupByTestCase = 'Runs.GroupByTestCase',
   ExecutionOverallScore = 'Runs.ExecutionOverallScore',
-  Threshold = 'Runs.Threshold',
   ExpandTestCaseGroup = 'Runs.ExpandTestCaseGroup',
   CollapseTestCaseGroup = 'Runs.CollapseTestCaseGroup',
   Milliseconds = 'Runs.Milliseconds',

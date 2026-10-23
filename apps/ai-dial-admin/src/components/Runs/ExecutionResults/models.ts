@@ -41,9 +41,13 @@ export interface CompareTestCaseScores {
   comparedThresholdStatus?: TestCaseThresholdStatus;
 }
 
+export interface OverallScoreCellValue {
+  score: number | string;
+  thresholdStatus?: TestCaseThresholdStatus;
+}
+
 export interface ExecutionResultColumnLabels {
   score: string;
-  thresholdStatus: string;
   notApplicable: string;
 }
 

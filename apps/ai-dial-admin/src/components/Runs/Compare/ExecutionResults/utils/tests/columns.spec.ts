@@ -23,11 +23,8 @@ import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/Executio
 import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
-import { ExecutionResultRowType } from '@/src/components/Runs/ExecutionResults/models';
-import {
-  COMPARE_TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
-  COMPARE_TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-} from '@/src/components/Runs/ExecutionResults/constants';
+import { ExecutionResultRowType, TestCaseThresholdStatus } from '@/src/components/Runs/ExecutionResults/models';
+import { COMPARE_TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH } from '@/src/components/Runs/ExecutionResults/constants';
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   responseStatusCode: 200,
@@ -50,47 +47,74 @@ const withFlattenedMetricLeaves = (col: ColDef | ColGroupDef): ColGroupDef => {
 };
 
 describe('Runs Compare :: getCompareColumnsCompare', () => {
-  test('adds paired group score and threshold columns only in grouped mode', () => {
+  test('keeps durations numeric for sorting and displays blank durations on group rows', () => {
+    const columns = getCompareColumnsCompare([makeRow()]);
+    const execution = columns.find((column) => column.headerName === EXECUTION_GROUP_HEADER) as ColGroupDef;
+
+    for (const colId of ['duration', 'cmp_duration']) {
+      const column = execution.children.find((child) => (child as ColDef).colId === colId) as ColDef;
+      const data = makeRow({ execDurationMs: 471, _compared: makeRow({ execDurationMs: 1300 }) });
+      const value = (column.valueGetter as any)({ data });
+      expect(value).toBe(colId === 'duration' ? 471 : 1300);
+      expect((column.valueFormatter as any)({ data, value })).toBe(colId === 'duration' ? '471ms' : '1.3s');
+
+      const groupRow = { resultRowType: ExecutionResultRowType.Group };
+      expect((column.valueGetter as any)({ data: groupRow })).toBeNull();
+      expect((column.valueFormatter as any)({ data: groupRow, value: null })).toBe('');
+      expect((column.valueFormatter as any)({ data: {}, value: null })).toBe('—');
+    }
+  });
+
+  test('adds highlighted overall score columns and their delta only in grouped mode', () => {
     const runs = getCompareRuns({ id: 'run-1', name: 'Run 1' }, { id: 'run-2', name: 'Run 2' });
     const grouped = getCompareColumnsCompare([makeRow()], undefined, DEFAULT_COMPARE_DELTA_HEADER, {
       runs,
       isGrouped: true,
       primaryThreshold: 0.5,
       comparedThreshold: null,
-      groupingLabels: { score: 'Overall score', thresholdStatus: 'Threshold', notApplicable: 'N/A' },
+      groupingLabels: { score: 'Overall score', notApplicable: 'N/A' },
       onToggleGroup: () => {},
     });
     const scoreGroup = grouped.find((column) => column.headerName === 'Overall score') as ColGroupDef;
-    const scoreColumns = (scoreGroup.children[0] as ColGroupDef).children as ColDef[];
-    const statusColumns = (scoreGroup.children[1] as ColGroupDef).children as ColDef[];
+    const scoreColumns = scoreGroup.children as ColDef[];
     const groupRow = {
       resultRowType: ExecutionResultRowType.Group,
       primaryScore: 0.8,
       comparedScore: 0.4,
+      primaryThresholdStatus: TestCaseThresholdStatus.Pass,
+      comparedThresholdStatus: TestCaseThresholdStatus.Fail,
     };
 
-    expect(scoreColumns).toHaveLength(2);
-    expect((scoreColumns[0].valueGetter as any)({ data: groupRow })).toBe(0.8);
-    expect((scoreColumns[1].valueGetter as any)({ data: groupRow })).toBe(0.4);
-    expect(statusColumns[0].hide).toBe(false);
-    expect(statusColumns[1].hide).toBe(true);
+    expect(scoreColumns).toHaveLength(3);
+    expect((scoreColumns[0].valueGetter as any)({ data: groupRow })).toEqual({
+      score: 0.8,
+      thresholdStatus: TestCaseThresholdStatus.Pass,
+    });
+    expect((scoreColumns[1].valueGetter as any)({ data: groupRow })).toEqual({
+      score: 0.4,
+      thresholdStatus: undefined,
+    });
     expect(scoreColumns[0]).toMatchObject({
       width: COMPARE_TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
       maxWidth: COMPARE_TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
       flex: 0,
     });
-    expect(statusColumns[0]).toMatchObject({
-      width: COMPARE_TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-      maxWidth: COMPARE_TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-      flex: 0,
+    expect((scoreColumns[2].valueGetter as any)({ data: groupRow })).toBe(-0.4);
+    expect(scoreColumns[2]).toMatchObject({
+      colId: 'delta_testCaseScore',
+      headerName: DEFAULT_COMPARE_DELTA_HEADER,
     });
+    const primaryRules = scoreColumns[0].cellClassRules as Record<string, (params: { data?: unknown }) => boolean>;
+    const comparedRules = scoreColumns[1].cellClassRules as Record<string, (params: { data?: unknown }) => boolean>;
+    expect(primaryRules['compare-metric-new-start']({ data: groupRow })).toBe(true);
+    expect(comparedRules['compare-metric-new-end']({ data: groupRow })).toBe(true);
     expect(scoreColumns.every((column) => column.sortable === false && column.filter === false)).toBe(true);
 
     const flat = getCompareColumnsCompare([makeRow()]);
     expect(flat.some((column) => column.headerName === 'Overall score')).toBe(false);
   });
 
-  test('adds paired score and threshold columns to flat single-execution results', () => {
+  test('adds combined overall score columns to flat single-execution results', () => {
     const runs = getCompareRuns({ id: 'run-1', name: 'Run 1' }, { id: 'run-2', name: 'Run 2' });
     const columns = getCompareColumnsCompare([makeRow()], undefined, DEFAULT_COMPARE_DELTA_HEADER, {
       runs,
@@ -98,14 +122,26 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       showTestCaseSummary: true,
       primaryThreshold: 0.5,
       comparedThreshold: 0.5,
-      groupingLabels: { score: 'Overall score', thresholdStatus: 'Threshold', notApplicable: 'N/A' },
+      groupingLabels: { score: 'Overall score', notApplicable: 'N/A' },
     });
     const scoreGroup = columns.find((column) => column.headerName === 'Overall score') as ColGroupDef;
-    const scoreColumns = (scoreGroup.children[0] as ColGroupDef).children as ColDef[];
+    const scoreColumns = scoreGroup.children as ColDef[];
 
-    expect((scoreColumns[0].valueGetter as any)({ data: { primaryScore: 0.8 } })).toBe(0.8);
-    expect((scoreColumns[1].valueGetter as any)({ data: { comparedScore: 0.4 } })).toBe(0.4);
-    expect((scoreColumns[0].valueGetter as any)({ data: {} })).toBe('N/A');
+    expect(scoreColumns).toHaveLength(3);
+    expect(
+      (scoreColumns[0].valueGetter as any)({
+        data: { primaryScore: 0.8, primaryThresholdStatus: TestCaseThresholdStatus.Pass },
+      }),
+    ).toEqual({ score: 0.8, thresholdStatus: TestCaseThresholdStatus.Pass });
+    expect((scoreColumns[1].valueGetter as any)({ data: { comparedScore: 0.4 } })).toEqual({
+      score: 0.4,
+      thresholdStatus: undefined,
+    });
+    expect((scoreColumns[0].valueGetter as any)({ data: {} })).toEqual({
+      score: 'N/A',
+      thresholdStatus: undefined,
+    });
+    expect((scoreColumns[2].valueGetter as any)({ data: { primaryScore: 0.8, comparedScore: 0.4 } })).toBe(-0.4);
   });
   test('keeps status and Test Case name columns on the bottom header row', () => {
     const cols = getCompareColumnsCompare([makeRow()]);
