@@ -128,6 +128,30 @@ export async function getConfigFileCatalogSchemas() {
   return configFileApi.listNames(token, ConfigFileEntityType.CatalogSchemas);
 }
 
+/**
+ * Finds the storage path of the bucket resource that declares this `$id`. A bucket schema is stored
+ * under the name an admin typed, the bucket listing carries no `$id`, and Core has no lookup from
+ * `$id` to that name — so this costs the listing plus one content read per resource. Only for when
+ * the cheaper reads by path and from the configuration file have both missed.
+ */
+export async function findCatalogSchemaPathById(id: string): Promise<string | null> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const resources = await assetApi.list(token, ResourceType.CATALOG_SCHEMA, '');
+  const declaredIds = await Promise.all(
+    resources.map(async ({ path }) => {
+      try {
+        const content = await assetApi.getContent<{ $id?: string }>(token, ResourceType.CATALOG_SCHEMA, path);
+        return content?.$id;
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+  const index = declaredIds.indexOf(id);
+
+  return index === -1 ? null : resources[index].path;
+}
+
 /** Reads the schema Core's configuration file declares under this `$id`, keyed as Core keys it. */
 export async function getConfigFileCatalogSchema(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

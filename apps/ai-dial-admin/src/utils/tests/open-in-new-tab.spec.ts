@@ -286,6 +286,21 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('agent-schema');
   });
 
+  test('falls back to the declared id for a PlatformCatalogSchema with no storage name', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { $id: 'https://host/agent' });
+
+    expect(result).toEqual(encodeURIComponent('https://host/agent'));
+  });
+
+  test('prefers the storage name over the declared id for a PlatformCatalogSchema', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, {
+      $id: 'https://host/agent',
+      _metadata: { name: 'agent-schema' },
+    });
+
+    expect(result).toEqual('agent-schema');
+  });
+
   test('uses the metadata storage path for catalog schema deletion', () => {
     const result = getEntityPath(
       ApplicationRoute.PlatformCatalogSchemas,
