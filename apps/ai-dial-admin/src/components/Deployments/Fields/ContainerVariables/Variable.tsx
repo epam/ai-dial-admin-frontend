@@ -1,6 +1,6 @@
 'use client';
 
-import { DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight, IconGripVertical } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -171,7 +171,7 @@ const Variable: FC<Props> = ({
                 <IconGripVertical {...BASE_BUTTON_ICON_PROPS} />
               </div>
               <div className="flex-1 min-w-0">
-                <DialInput
+                <Input
                   id={`name ${index}`}
                   value={variable.name}
                   placeholder={t(EntityPlaceholdersI18nKey.Name)}
@@ -186,7 +186,7 @@ const Variable: FC<Props> = ({
               </div>
             </div>
 
-            <DialInput
+            <Input
               id={`description ${index}`}
               value={variable.description}
               placeholder={t(EntityPlaceholdersI18nKey.Description)}
@@ -208,12 +208,12 @@ const Variable: FC<Props> = ({
 
             <div className="flex flex-row gap-x-2 items-end">
               <div className="flex-1 min-w-0">
-                <DialSelectField
+                <Select
                   value={variable.mountType || mountTypeItems[0].value}
                   id={`mountType_${index}`}
                   options={mountTypeItems}
-                  label={isTablet ? t(EnvVariablesI18nKey.MountType) : undefined}
-                  aria-label={t(EnvVariablesI18nKey.MountType)}
+                  labelProps={{ label: isTablet ? t(EnvVariablesI18nKey.MountType) : undefined }}
+                  ariaLabel={t(EnvVariablesI18nKey.MountType)}
                   onChange={onChangeMountType}
                   disabled={disabled}
                 />

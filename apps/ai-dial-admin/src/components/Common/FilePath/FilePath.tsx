@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialInput, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Input, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import {
   DialDestinationFolderPopup,
   DialFile,
@@ -110,7 +110,7 @@ const FilePath: FC<Props> = ({
     <div className="flex">
       <div className="flex gap-x-2 items-end">
         <div className={CONTROL_WITH_BUTTON_WIDTH}>
-          <DialInput
+          <Input
             id="filePath"
             disabled={disabled}
             value={value}

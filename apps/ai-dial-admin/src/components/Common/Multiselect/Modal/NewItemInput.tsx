@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ErrorText, DialInput } from '@epam/ai-dial-ui-kit';
+import { ErrorText, Input } from '@epam/ai-dial-ui-kit';
 
 import { FieldError, GetItemError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -58,13 +58,7 @@ const NewItemInput: FC<Props> = ({
     <div className="flex gap-x-2 items-start w-full">
       <div className="flex flex-col w-full">
         <div className="flex-1 min-w-0">
-          <DialInput
-            invalid={!!error}
-            id={`item-${index}`}
-            value={value}
-            placeholder={placeholder}
-            onChange={onChange}
-          />
+          <Input invalid={!!error} id={`item-${index}`} value={value} placeholder={placeholder} onChange={onChange} />
         </div>
         <ErrorText text={error?.text} />
       </div>

@@ -119,7 +119,7 @@ describe('QueryBuilder', () => {
   test('renders toolbar, results empty state, and builder rail sections', () => {
     renderBuilder();
 
-    expect(screen.getByText(/dial_usage_log/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/dial_usage_log/);
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
@@ -524,7 +524,7 @@ describe('QueryBuilder AI view', () => {
 
     expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Buttons.Copy' })).not.toBeInTheDocument();
-    expect(screen.getByText(/dial_usage_log/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/dial_usage_log/);
     expect(screen.getByText(/Telemetry.TimePeriod/)).toBeInTheDocument();
   });
 
@@ -727,7 +727,7 @@ describe('QueryBuilder AI view', () => {
     await user.click(runButton);
     await vi.waitFor(() => expect(runButton).toBeDisabled());
 
-    await user.click(screen.getByRole('button', { name: /dial_usage_log/ }));
+    await user.click(screen.getByRole('combobox', { name: 'QueryBuilder.Source' }));
     await user.click(await screen.findByRole('option', { name: 'feedback' }));
 
     expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument();
@@ -808,7 +808,7 @@ describe('QueryBuilder AI view', () => {
     await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
 
-    await user.click(screen.getByRole('button', { name: /dial_usage_log/ }));
+    await user.click(screen.getByRole('combobox', { name: 'QueryBuilder.Source' }));
     await user.click(await screen.findByRole('option', { name: 'feedback' }));
     resolveReply({
       success: true,
@@ -977,8 +977,8 @@ describe('QueryBuilder :: SQL view Run', () => {
     expect(translateSqlToQuery).toHaveBeenCalled();
 
     await user.click(await screen.findByRole('radio', { name: 'QueryBuilder.ViewChart' }));
-    expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
-    expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toBeInTheDocument();
   });
 
   test('a rejected translation still shows the result and raises no notification', async () => {
@@ -1003,7 +1003,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     await screen.findByText('grid rows: 2');
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
-    expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
   });
 
   test('a translation that rejects outright still shows the result and clears the running state', async () => {
@@ -1054,7 +1054,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     renderBuilder({ initialEntities: [...ENTITIES, { name: 'dial_sessions' }] });
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
-    await user.click(screen.getByRole('button', { name: /QueryBuilder.Source/ }));
+    await user.click(screen.getByRole('combobox', { name: 'QueryBuilder.Source' }));
     await user.click(screen.getByRole('option', { name: 'dial_sessions' }));
 
     const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;

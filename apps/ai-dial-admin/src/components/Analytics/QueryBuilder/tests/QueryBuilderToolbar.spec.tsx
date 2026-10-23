@@ -30,7 +30,7 @@ describe('QueryBuilder :: QueryBuilderToolbar', () => {
   test('renders source select, time filter, and Run', () => {
     renderToolbar();
 
-    expect(screen.getByText(/dial_usage_log/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/dial_usage_log/);
     expect(screen.getByText(/Telemetry.TimePeriod/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeInTheDocument();
   });

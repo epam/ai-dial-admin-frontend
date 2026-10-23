@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonAppearance, DialDropdown, PrimaryIconButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, Dropdown, PrimaryIconButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { IconHelpCircle } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
@@ -47,13 +47,13 @@ const HelpButton: FC<Props> = ({ docLink }) => {
     return null;
   }
   return dropdownItems.length > 0 ? (
-    <DialDropdown items={dropdownItems} allowedPlacements={['bottom-end']}>
+    <Dropdown items={dropdownItems} allowedPlacements={['bottom-end']}>
       <PrimaryIconButton
         appearance={ButtonAppearance.Ghost}
         aria-label="Help button"
         icon={<IconHelpCircle size={24} stroke={1.5} />}
       />
-    </DialDropdown>
+    </Dropdown>
   ) : (
     <PrimaryIconButton
       appearance={ButtonAppearance.Ghost}

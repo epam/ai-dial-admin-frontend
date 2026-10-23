@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialSelectField, TagInput, DialInput } from '@epam/ai-dial-ui-kit';
+import { TagInput, Input, Select } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -64,30 +64,30 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
       <div className={classNames('h-[1px] w-[16px] bg-accent-primary', isFirstLine ? 'mt-11' : 'mt-5')}></div>
       <div ref={ref} className="flex-1 flex flex-row gap-x-2 items-start">
         <div className="shrink-0 w-[250px]">
-          <DialSelectField
+          <Select
             value={rule.source}
             id={`rule-attribute-${index}`}
             options={attributeItems}
-            label={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
+            labelProps={{ label: isFirstLine ? t(FoldersI18nKey.AttributeTitle) : '' }}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
             onChange={(source) => onChangeValue({ ...rule, source: source as string })}
-            containerClassName={'gap-2'}
+            className={'gap-2'}
           />
         </div>
         <div className="shrink-0 w-[160px]">
-          <DialSelectField
+          <Select
             value={rule.function}
             id={`rule-function-${index}`}
             options={functionItems}
-            label={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
+            labelProps={{ label: isFirstLine ? t(FoldersI18nKey.OperationTitle) : '' }}
             placeholder={t(FoldersI18nKey.OperationPlaceholder)}
             onChange={(func) => onChangeValue({ ...rule, function: func as RuleFunction, targets: [] })}
-            containerClassName={'gap-2'}
+            className={'gap-2'}
           />
         </div>
         <div className="flex-1 min-w-[160px]">
           {rule.function === RuleFunction.REGEX ? (
-            <DialInput
+            <Input
               id={`rule-regex-${index}`}
               value={rule.targets?.[0]}
               labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}

@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
@@ -103,7 +103,7 @@ const EntityProperties: FC<Props> = ({
       )}
 
       {view === ApplicationRoute.Routes && (
-        <DialInput
+        <Input
           id="path"
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           labelProps={{ label: t(EntityFieldsI18nKey.paths), required: true }}

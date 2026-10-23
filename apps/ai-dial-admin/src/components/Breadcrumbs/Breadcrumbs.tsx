@@ -16,7 +16,7 @@ import {
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { DialDropdown, EllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { Dropdown, EllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -83,7 +83,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   const getHiddenBreadcrumbsDropdown = useCallback(
     (name: string, hiddenBreadcrumbs: Breadcrumb[]) => (
-      <DialDropdown
+      <Dropdown
         className="cursor-pointer text-secondary hover:text-accent-primary"
         placement="bottom-start"
         items={hiddenBreadcrumbs.map(
@@ -95,7 +95,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         )}
       >
         {name}
-      </DialDropdown>
+      </Dropdown>
     ),
     [],
   );

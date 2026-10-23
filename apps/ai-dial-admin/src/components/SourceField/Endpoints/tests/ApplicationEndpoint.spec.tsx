@@ -34,7 +34,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
         {label}
       </label>
     ),
-    DialSelectField: ({ id, options, onChange, value, disabled }: any) => (
+    Select: ({ id, options, onChange, value, disabled }: any) => (
       <select
         aria-label={id}
         data-testid={`select-${id}`}

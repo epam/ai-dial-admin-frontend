@@ -1,5 +1,5 @@
 'use client';
-import { DialSelect, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Select, SelectOption } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
@@ -55,7 +55,7 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
 
   return (
     <div className="h-8 w-full overflow-hidden">
-      <DialSelect
+      <Select
         className="min-h-[32px] h-8 overflow-hidden px-2 py-1"
         options={items || []}
         selectAll={params.isMulti}

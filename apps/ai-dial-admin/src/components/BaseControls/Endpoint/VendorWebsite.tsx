@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -19,7 +19,7 @@ const VendorWebsiteControl: FC<Props> = ({ endpoint, onChange, isFullWidth = fal
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
-    <DialInput
+    <Input
       id="vendorWebsite"
       labelProps={{ label: t(EntityFieldsI18nKey.vendorWebsite) }}
       placeholder={t(EntityPlaceholdersI18nKey.VendorWebsite)}

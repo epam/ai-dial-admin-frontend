@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 
 import { Container, ProbeProperties } from '@/src/models/deployments/containers';
 import { EntityCaptionsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -183,7 +183,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
   return (
     <div className="flex flex-col gap-6">
       <h3>{t(EntityFieldsI18nKey.AdvancedTiming)}</h3>
-      <DialNumberInput
+      <NumberInput
         id="initialDelaySeconds"
         labelProps={{ label: t(EntityFieldsI18nKey.InitialDelaySeconds) }}
         caption={!initialDelaySecondsError ? t(EntityCaptionsI18nKey.ProbeInitialDelaySeconds) : ''}
@@ -195,7 +195,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
         invalid={!!initialDelaySecondsError}
         error={initialDelaySecondsError?.text}
       />
-      <DialNumberInput
+      <NumberInput
         id="periodSeconds"
         labelProps={{ label: t(EntityFieldsI18nKey.PeriodSeconds) }}
         caption={!periodSecondsError ? t(EntityCaptionsI18nKey.ProbePeriodSeconds) : ''}
@@ -207,7 +207,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
         invalid={!!periodSecondsError}
         error={periodSecondsError?.text}
       />
-      <DialNumberInput
+      <NumberInput
         id="timeoutSeconds"
         labelProps={{ label: t(EntityFieldsI18nKey.TimeoutSeconds) }}
         caption={!timeoutSecondsError ? t(EntityCaptionsI18nKey.ProbeTimeoutSeconds) : ''}
@@ -219,7 +219,7 @@ const AdvancedTiming: FC<Props> = ({ container, setContainer, disabled }) => {
         invalid={!!timeoutSecondsError}
         error={timeoutSecondsError?.text}
       />
-      <DialNumberInput
+      <NumberInput
         id="failureThreshold"
         labelProps={{ label: t(EntityFieldsI18nKey.FailureThreshold) }}
         caption={!failureThresholdError ? t(EntityCaptionsI18nKey.ProbeFailuresThreshold) : ''}

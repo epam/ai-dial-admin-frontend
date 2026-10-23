@@ -1,4 +1,4 @@
-import { GhostButton, Switch, DialInput } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Switch, Input } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -123,7 +123,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeKey} isFullWidth={!isKeyImmutable} />
 
-      <DialInput
+      <Input
         id="project"
         labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
@@ -136,7 +136,7 @@ const KeyProperties: FC<Props> = ({ entity, originalEntity, names, keys, isKeyIm
       />
 
       {isKeyImmutable && (
-        <DialInput
+        <Input
           id="projectContact"
           labelProps={{ label: t(EntityFieldsI18nKey.projectContactPoint) }}
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}

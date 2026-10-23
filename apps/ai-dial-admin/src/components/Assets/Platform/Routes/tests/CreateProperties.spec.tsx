@@ -46,14 +46,14 @@ describe('Route asset :: create form', () => {
   test('renders a required path control', () => {
     renderCreateForm(vi.fn());
 
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}(required)` })).toBeInTheDocument();
   });
 
   test('writes a valid initial path as the sole paths item', () => {
     const onChangeEntity = vi.fn();
     renderRouteCreateProperties(onChangeEntity);
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}(required)` }), {
       target: { value: '/v1/chat' },
     });
 
@@ -63,7 +63,7 @@ describe('Route asset :: create form', () => {
   test('shows an invalid-path error for an invalid path', () => {
     renderRouteCreateProperties(vi.fn());
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}(required)` }), {
       target: { value: 'v1/chat' },
     });
 
@@ -72,7 +72,7 @@ describe('Route asset :: create form', () => {
 
   test('shows a required-path error after clearing the path', () => {
     renderRouteCreateProperties(vi.fn(), { paths: ['/v1/chat'] });
-    const pathInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` });
+    const pathInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}(required)` });
 
     fireEvent.change(pathInput, { target: { value: '' } });
 

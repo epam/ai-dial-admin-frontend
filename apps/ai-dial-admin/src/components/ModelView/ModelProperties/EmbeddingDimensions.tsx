@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -16,7 +16,7 @@ const EmbeddingDimensions = <T extends { embeddingDimensions?: number }>({ model
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
-    <DialNumberInput
+    <NumberInput
       id="embeddingDimensions"
       value={model.embeddingDimensions}
       onChange={(value) => onChangeModel({ ...model, embeddingDimensions: value as number | undefined })}

@@ -1,4 +1,4 @@
-import { DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, ElementSize } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { TelemetryI18nKey } from '@/src/constants/i18n';
@@ -25,10 +25,10 @@ const ViewByFilter: FC<Props> = ({ value, onChange }) => {
   }));
 
   return (
-    <DialSelect
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+    <Select
+      size={ElementSize.Small}
       prefix={t(TelemetryI18nKey.ViewByLabel)}
+      ariaLabel={t(TelemetryI18nKey.ViewByLabel)}
       options={translatedOptions}
       value={value}
       onChange={(val) => onChange(val as DASHBOARD_VIEW_TYPE)}

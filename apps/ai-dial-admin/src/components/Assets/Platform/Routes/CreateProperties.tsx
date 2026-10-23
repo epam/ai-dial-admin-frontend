@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import IdControl from '@/src/components/BaseControls/Id/Id';
@@ -56,7 +56,7 @@ const RouteCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, on
         isUniqueNameError={isUniqueNameError}
         onChangeEntity={onChangeEntity}
       />
-      <DialInput
+      <Input
         id="path"
         placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
         labelProps={{ label: t(EntityFieldsI18nKey.paths), required: true }}

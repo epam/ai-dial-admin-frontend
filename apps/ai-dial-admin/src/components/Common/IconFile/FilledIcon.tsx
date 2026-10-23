@@ -1,4 +1,4 @@
-import { DialDropdown } from '@epam/ai-dial-ui-kit';
+import { Dropdown } from '@epam/ai-dial-ui-kit';
 import { IconRefreshDot, IconTrashX } from '@tabler/icons-react';
 import Image from 'next/image';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -68,9 +68,9 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, size = 80, onChange }) => {
     getImageSrc()
   ) : (
     <>
-      <DialDropdown items={items} className="w-[180px]">
+      <Dropdown items={items} className="w-[180px]">
         {getImageSrc()}
-      </DialDropdown>
+      </Dropdown>
 
       <IconGalleryModal isModalOpen={isModalOpen} selectedValue={fileUrl} onClose={onClose} onChange={onChange} />
     </>

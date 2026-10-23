@@ -72,7 +72,7 @@ over-engineer for a single use.
   and anything you **derive or must control after** it (so a caller cannot break the wrapper):
 
   ```tsx
-  <DialInput
+  <Input
     placeholder={t(BasicI18nKey.Search)} // default — caller may override
     {...inputProps}
     value={value} // controlled by this wrapper — caller must not override

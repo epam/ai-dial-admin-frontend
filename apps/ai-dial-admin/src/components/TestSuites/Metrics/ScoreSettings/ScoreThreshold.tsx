@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNumberInput, Switch } from '@epam/ai-dial-ui-kit';
+import { NumberInput, Switch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -85,7 +85,7 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
               <span className="text-success">{t(TestSuitesI18nKey.ScoreThresholdPass)}</span>
               <span>{` ${t(TestSuitesI18nKey.ScoreThresholdConditionGe)}`}</span>
             </span>
-            <DialNumberInput
+            <NumberInput
               containerClassName="relative max-w-[108px] [&>[role='alert']]:absolute [&>[role='alert']]:top-full [&>[role='alert']]:left-0 [&>[role='alert']]:pt-1 [&>[role='alert']]:whitespace-nowrap"
               id="overallScoreThreshold"
               step={0.01}

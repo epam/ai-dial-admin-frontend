@@ -254,7 +254,9 @@ describe('Endpoint', () => {
 
     fireEvent.click(screen.getByLabelText('toggle expanded fields'));
     expect(screen.getByText('UpstreamEndpoints.AuthenticationType')).toBeInTheDocument();
-    expect(screen.getByText('UpstreamEndpoints.ApiKey')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'UpstreamEndpoints.AuthenticationType' })).toHaveDisplayValue(
+      'UpstreamEndpoints.ApiKey',
+    );
   });
 
   test('requires a replacement key for a newly configured Bearer upstream', () => {

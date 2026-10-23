@@ -1,5 +1,5 @@
 import { FC, memo, useCallback } from 'react';
-import { PasswordInput, DialInput, Label } from '@epam/ai-dial-ui-kit';
+import { PasswordInput, Input, Label } from '@epam/ai-dial-ui-kit';
 
 import { EnvVariableValue } from '@/src/models/deployments/variables';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -58,7 +58,7 @@ const ContainerVariableValue: FC<Props> = ({
                 disabled={disabled}
               />
             ) : (
-              <DialInput
+              <Input
                 id={`value_${index}`}
                 value={value.value}
                 placeholder={t(EntityPlaceholdersI18nKey.Value)}

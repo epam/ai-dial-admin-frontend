@@ -6,7 +6,7 @@ import {
   VisualizerConnectorRequest,
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
-import { ConfirmationPopup, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import { ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -92,10 +92,10 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
 
   return (
     <>
-      <DialSelect
+      <Select
         prefix={`${t(CompareI18nKey.View)}: `}
-        size={SelectSize.Sm}
-        variant={SelectVariant.Secondary}
+        ariaLabel={t(CompareI18nKey.View)}
+        size={ElementSize.Small}
         options={items}
         value={paramsView}
         onChange={(v) => onChange(v as string)}

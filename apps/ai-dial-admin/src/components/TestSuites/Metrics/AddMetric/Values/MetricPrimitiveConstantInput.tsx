@@ -1,6 +1,6 @@
 import { FC, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { DialNumberInput, DialSelectField, Switch, Textarea } from '@epam/ai-dial-ui-kit';
+import { NumberInput, Switch, Textarea, Select } from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { BindingSourceValue } from '@/src/models/evaluation/metric';
@@ -53,9 +53,9 @@ const MetricPrimitiveConstantInput: FC<MetricPrimitiveConstantInputProps> = ({
   if (field.type === 'string') {
     if (field.enum) {
       return (
-        <DialSelectField
+        <Select
           id={elementId}
-          label={selectLabel}
+          labelProps={{ label: selectLabel }}
           caption={showFieldLabel ? field.description : undefined}
           options={field.enum.map((item) => ({ label: item, value: item }))}
           value={value as string | undefined}
@@ -80,7 +80,7 @@ const MetricPrimitiveConstantInput: FC<MetricPrimitiveConstantInputProps> = ({
 
   if (field.type === 'integer' || field.type === 'number') {
     return (
-      <DialNumberInput
+      <NumberInput
         id={elementId}
         max={field.maximum}
         min={field.minimum}

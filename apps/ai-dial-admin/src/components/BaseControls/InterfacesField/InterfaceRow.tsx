@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialInput, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 
 import InterfaceDefaultsButton from '@/src/components/BaseControls/InterfacesField/InterfaceDefaultsButton';
 import InterfaceFeaturesButton from '@/src/components/BaseControls/InterfacesField/InterfaceFeaturesButton';
@@ -203,10 +203,10 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
       </div>
 
       {isAsset && (
-        <DialSelectField
+        <Select
           id={`${fieldId}-mode`}
-          label={t(InterfacesI18nKey.Mode)}
-          containerClassName="max-w-[300px]"
+          labelProps={{ label: t(InterfacesI18nKey.Mode) }}
+          className="max-w-[300px]"
           options={modeOptions}
           value={effectiveMode}
           disabled={disabled}
@@ -216,7 +216,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
 
       <div className="flex items-start gap-x-2">
         {isPassthrough ? (
-          <DialInput
+          <Input
             id={fieldId}
             labelProps={{ label: t(InterfacesI18nKey.BaseUrl), required: isRequired }}
             placeholder={t(InterfacesI18nKey.BaseUrlPlaceholder, { type: typeLabel })}

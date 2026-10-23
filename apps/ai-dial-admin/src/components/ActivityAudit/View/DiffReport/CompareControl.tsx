@@ -1,4 +1,4 @@
-import { DialSelect, SelectVariant, SelectOption, SelectSize } from '@epam/ai-dial-ui-kit';
+import { Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import { ActivityAuditI18nKey, CompareI18nKey } from '@/src/constants/i18n';
@@ -32,10 +32,10 @@ const CompareControl: FC<Props> = ({ compareView, setCompareView }) => {
   );
 
   return (
-    <DialSelect
+    <Select
       prefix={`${t(CompareI18nKey.Comparison)}: `}
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+      ariaLabel={t(CompareI18nKey.Comparison)}
+      size={ElementSize.Small}
       options={items}
       value={compareView}
       onChange={(v) => onChange(v as string)}

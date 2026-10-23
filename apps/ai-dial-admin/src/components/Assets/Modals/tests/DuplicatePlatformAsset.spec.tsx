@@ -85,9 +85,9 @@ describe('DuplicatePlatformAsset', () => {
   test('duplicates an app runner under an edited storage name and ID', async () => {
     const user = userEvent.setup();
     const { onDuplicate } = renderModal(ApplicationRoute.PlatformAppRunners, runner);
-    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
+    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` });
 
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toHaveValue('runner-copy');
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` })).toHaveValue('runner-copy');
     expect(idInput).toHaveValue('http://runner/schema-copy');
 
     fireEvent.change(idInput, { target: { value: 'http://runner/other' } });
@@ -103,8 +103,10 @@ describe('DuplicatePlatformAsset', () => {
     const user = userEvent.setup();
     const { onDuplicate } = renderModal(ApplicationRoute.PlatformCatalogSchemas, catalogSchema);
 
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toHaveValue('catalog-schema-copy');
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` })).toHaveValue(
+      'catalog-schema-copy',
+    );
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` })).toHaveValue(
       'https://dial.epam.com/catalog_schemas/agent-copy',
     );
     expect(screen.getAllByRole('textbox')[2]).toHaveValue('Agent');
@@ -132,7 +134,7 @@ describe('DuplicatePlatformAsset', () => {
     expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
     expect(onDuplicate).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
       target: { value: 'https://dial.epam.com/catalog_schemas/available' },
     });
 
@@ -164,13 +166,13 @@ describe('DuplicatePlatformAsset', () => {
     renderModal(ApplicationRoute.PlatformAppRunners, runner);
 
     expect(screen.getAllByRole('textbox')).toHaveLength(3);
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toHaveValue('runner-copy');
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` })).toHaveValue('runner-copy');
   });
 
   test('renders an inline error when an app runner storage name exists', () => {
     renderModal(ApplicationRoute.PlatformAppRunners, runner, vi.fn(), vi.fn(), ['taken-name']);
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` }), {
       target: { value: 'taken-name' },
     });
 
@@ -188,7 +190,7 @@ describe('DuplicatePlatformAsset', () => {
     expect(await screen.findByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
     expect(onDuplicate).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
       target: { value: 'http://runner/available' },
     });
 

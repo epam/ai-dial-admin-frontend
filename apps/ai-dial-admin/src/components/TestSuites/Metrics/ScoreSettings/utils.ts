@@ -73,7 +73,7 @@ export const getMetricOutputOptions = (metrics?: Metric[]): MetricOutputOption[]
 export const DEFAULT_WEIGHTED_MEAN_WEIGHT = 1;
 
 /**
- * Format weight for DialNumberInput so whole numbers render with one decimal (Figma: 1.0).
+ * Format weight for NumberInput so whole numbers render with one decimal (Figma: 1.0).
  * Passing a string avoids the browser collapsing numeric `1` to `"1"`.
  */
 export const formatWeightedMeanWeightInputValue = (weight: number | undefined): string | number | undefined => {

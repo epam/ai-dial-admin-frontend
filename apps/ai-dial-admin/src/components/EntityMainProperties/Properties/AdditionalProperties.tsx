@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -61,7 +61,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
       ) : null}
       {view == ApplicationRoute.Toolsets && isEntityImmutable && (
         <>
-          <DialInput
+          <Input
             containerClassName={STANDARD_CONTROL_WIDTH}
             id="provider"
             labelProps={{ label: t(EntityFieldsI18nKey.provider) }}

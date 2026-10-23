@@ -10,7 +10,7 @@ import IntroControl from '../Intro';
 const MAP = { en: 'Hello', fr: 'Bonjour' };
 
 describe('DisplayNameControl — a locale map', () => {
-  const field = () => screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.displayName}*` });
+  const field = () => screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.displayName}(required)` });
 
   test('shows the fallback-locale value rather than a serialized object', () => {
     render(<DisplayNameControl displayName={MAP} required onChange={vi.fn()} />);

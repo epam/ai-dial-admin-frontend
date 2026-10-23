@@ -3,7 +3,7 @@
 import { FC, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialDropdown, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Dropdown, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
@@ -156,7 +156,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
   };
 
   return (
-    <DialDropdown
+    <Dropdown
       open={open}
       onOpenChange={onOpenChange}
       disabled={disabled}
@@ -287,7 +287,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
           controls={`${id}-listbox`}
         />
       )}
-    </DialDropdown>
+    </Dropdown>
   );
 };
 

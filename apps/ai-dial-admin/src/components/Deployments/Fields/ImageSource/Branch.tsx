@@ -1,5 +1,5 @@
 import { FC, useCallback, useMemo } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -47,7 +47,7 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
 
   return (
     <div className={classNames('flex flex-row gap-x-4', className)}>
-      <DialInput
+      <Input
         containerClassName="flex-1"
         labelProps={{ label: t(EntityFieldsI18nKey.BranchName) }}
         id="branch"
@@ -56,7 +56,7 @@ const Branch: FC<Props> = ({ image, isModal = false, setImage }) => {
         disabled={isReadOnlyAdmin}
         onChange={onBranchChange}
       />
-      <DialInput
+      <Input
         containerClassName="flex-1"
         labelProps={{ label: t(EntityFieldsI18nKey.SHA) }}
         id="SHA"

@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { FieldError } from '@/src/models/error';
@@ -89,7 +89,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
         key={`item-${index}`}
         ref={setLiRef}
       >
-        <DialInput
+        <Input
           id={`item-${index}`}
           value={item}
           containerClassName={containerClassName}

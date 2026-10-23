@@ -29,8 +29,8 @@ The `SelectContainerModal` SHALL continue to list only containers with status `r
 - **THEN** only containers with status `running` SHALL appear in the list
 
 ### Requirement: Modal (creation) mode unchanged
-The `DialSelectField` in modal mode SHALL continue to show only running containers as options. No change to creation flow.
+The `Select` in modal mode SHALL continue to show only running containers as options. No change to creation flow.
 
 #### Scenario: Creating entity from container in modal mode
 - **WHEN** the `Containers` component renders in modal mode (`isModal=true`)
-- **THEN** the `DialSelectField` options SHALL include only containers with status `running`
+- **THEN** the `Select` options SHALL include only containers with status `running`

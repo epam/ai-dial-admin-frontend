@@ -31,7 +31,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       onChange={(e) => onChange(e.target.value)}
     />
   ),
-  DialNumberInput: ({ labelProps, placeholder, value, onChange }: any) => (
+  NumberInput: ({ labelProps, placeholder, value, onChange }: any) => (
     <input
       role="spinbutton"
       aria-label={labelProps?.label ?? 'number-input'}
@@ -40,39 +40,33 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       onChange={(e) => onChange(e.target.value)}
     />
   ),
-  DialSelect: ({ options, value, onChange, multiple }: any) => (
-    <select
-      role="combobox"
-      aria-label="enum-array-select"
-      multiple={multiple}
-      value={value ?? (multiple ? [] : '')}
-      onChange={(e) => {
-        if (multiple) {
-          onChange(Array.from(e.target.selectedOptions).map((option) => option.value));
-        } else {
-          onChange(e.target.value);
-        }
-      }}
-    >
-      {options.map((option: any) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  ),
-  DialSelectField: ({ label, value, options, onChange }: any) => (
-    <label>
-      <span>{label ?? 'select-input'}</span>
-      <select aria-label={label ?? 'select-input'} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+  Select: ({ labelProps: { label } = {}, value, options, onChange, multiple }: any) =>
+    multiple ? (
+      <select
+        role="combobox"
+        aria-label="enum-array-select"
+        multiple
+        value={value ?? []}
+        onChange={(e) => onChange(Array.from(e.target.selectedOptions).map((option) => option.value))}
+      >
         {options.map((option: any) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
       </select>
-    </label>
-  ),
+    ) : (
+      <label>
+        <span>{label ?? 'select-input'}</span>
+        <select aria-label={label ?? 'select-input'} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+          {options.map((option: any) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
   Switch: ({ labelProps: { label } = {}, isOn, onChange }: any) => (
     <label>
       <span>{label ?? 'switch-input'}</span>
@@ -289,7 +283,7 @@ describe('MetricControl', () => {
     expect(onChangeValue).not.toHaveBeenCalled();
   });
 
-  test('renders multi DialSelect for array fields with enum', () => {
+  test('renders multi Select for array fields with enum', () => {
     const onChangeValue = vi.fn();
     const field = makeField({
       id: 'f9',

@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Input, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -82,7 +82,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }
         }}
       />
       <TopicsControl entity={runner} view={view} onChange={onChangeRunner} />
-      <DialInput
+      <Input
         id="title"
         labelProps={{ label: t(EntityFieldsI18nKey.title) }}
         placeholder={t(EntityPlaceholdersI18nKey.Title)}
@@ -93,15 +93,14 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }
         }}
         disabled={isReadOnlyAdmin}
       />
-      <DialSelectField
+      <Select
         value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
         id="typeCopy"
+        fieldClassName="w-[180px]"
         className="w-[180px]"
-        childrenClassName="w-[180px]"
-        containerClassName="w-[180px]"
         listClassName="w-[180px]"
         options={typeBucketCopy}
-        label={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
+        labelProps={{ label: t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy']) }}
         placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
         onChange={(type) => onChangeTypeCopyBucket(type as string)}
         disabled={isReadOnlyAdmin}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { GhostButton, DialInput, Label } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Input, Label } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -94,14 +94,14 @@ const KeyValueGrid = ({ value, onChange, disabled, label, addButtonLabel, classN
       <div className={classNames('flex flex-col gap-y-2', label && 'mt-2')}>
         {rows.map((row) => (
           <div key={row.id} className="flex gap-x-2 items-start">
-            <DialInput
+            <Input
               value={row.key}
               disabled={isReadonly}
               onChange={(key) => onChangeKey(row.id, key ?? '')}
               placeholder={t(EntityPlaceholdersI18nKey.Key)}
               containerClassName="w-2/5"
             />
-            <DialInput
+            <Input
               value={row.value}
               disabled={isReadonly}
               onChange={(rowValue) => onChangeValue(row.id, rowValue ?? '')}

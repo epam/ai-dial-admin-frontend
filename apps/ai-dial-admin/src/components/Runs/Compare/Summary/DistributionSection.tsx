@@ -6,11 +6,9 @@ import {
   AnalyticsCardVariant,
   DialAnalyticsCard,
   DialAnalyticsHistogram,
-  DialSelect,
+  Select,
   ElementSize,
   SelectOption,
-  SelectSize,
-  SelectVariant,
 } from '@epam/ai-dial-ui-kit';
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
@@ -109,10 +107,10 @@ const DistributionSection: FC<Props> = ({
   const onMetricChange = useCallback((value: string | string[]) => onSelectMetric(value as string), [onSelectMetric]);
 
   const control = (
-    <DialSelect
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+    <Select
+      size={ElementSize.Small}
       prefix={t(RunsI18nKey.Metric)}
+      ariaLabel={t(RunsI18nKey.Metric)}
       options={options}
       value={selectedMetricName ?? undefined}
       placeholder={t(RunsI18nKey.SelectMetric)}

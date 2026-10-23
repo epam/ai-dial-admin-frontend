@@ -1,12 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import {
-  Notification,
-  NotificationType,
-  DialSelectField,
-  NotificationVariant,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, NotificationVariant, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -77,10 +71,10 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
         </div>
       )}
       <div className="flex flex-col gap-y-3">
-        <DialSelectField
+        <Select
           id="type"
           disabled={isAuthDisabled}
-          label={t(ToolsetI18nKey.ClientRegistrationType)}
+          labelProps={{ label: t(ToolsetI18nKey.ClientRegistrationType) }}
           value={AuthType.EXISTING}
           options={types}
           onChange={(type) => {
@@ -91,10 +85,10 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           }}
         />
 
-        <DialSelectField
+        <Select
           id="tokenEndpointAuthMethod"
           disabled={isAuthDisabled}
-          label={t(ToolsetI18nKey.TokenEndpointAuthMethod)}
+          labelProps={{ label: t(ToolsetI18nKey.TokenEndpointAuthMethod) }}
           value={authSettings?.token_endpoint_auth_method ?? TokenEndpointAuthMethod.CLIENT_SECRET_BASIC}
           options={tokenEndpointAuthMethods}
           onChange={(tokenEndpointAuthMethod) => {
@@ -156,11 +150,11 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           onChange={(token_endpoint) => onChange?.({ ...(authSettings || {}), token_endpoint })}
         />
 
-        <DialSelectField
-          containerClassName="w-[192px]"
+        <Select
+          className="w-[192px]"
           id="type"
           disabled={isAuthDisabled}
-          label={t(EntityFieldsI18nKey.codeChallengeMethod)}
+          labelProps={{ label: t(EntityFieldsI18nKey.codeChallengeMethod) }}
           value={!authSettings?.code_challenge_method ? BasicI18nKey.None : authSettings.code_challenge_method}
           options={methods}
           onChange={(code_challenge_method) => {

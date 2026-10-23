@@ -150,7 +150,7 @@ describe('CatalogPropertiesEditor', () => {
     const onChange = vi.fn();
     renderEditor({ values: { tag: 'New' }, onChange });
 
-    await user.click(screen.getByRole('button', { name: `Compare.View: ${EntitiesI18nKey.Form}` }));
+    await user.click(screen.getByRole('combobox', { name: 'Compare.View' }));
     await user.click(screen.getByText(TypeI18nKey.JSON));
     await user.click(screen.getByRole('button', { name: 'json-editor' }));
 

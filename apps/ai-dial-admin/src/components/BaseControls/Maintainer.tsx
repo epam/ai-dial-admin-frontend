@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -16,7 +16,7 @@ const MaintainerControl = <T extends { author?: string }>({ entity, onChangeEnti
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
-    <DialInput
+    <Input
       containerClassName={STANDARD_CONTROL_WIDTH}
       id="author"
       labelProps={{ label: t(EntityFieldsI18nKey.author) }}

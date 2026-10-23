@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { GhostIconButton, DialInput, Label, OutlinedButton, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, Input, Label, OutlinedButton, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconArrowLeft, IconEdit, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -131,7 +131,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           </span>
         </div>
 
-        <DialInput
+        <Input
           id="serviceId"
           labelProps={{ label: t(ExternalServiceI18nKey.ServiceId), required: true }}
           placeholder={t(ExternalServiceI18nKey.ServiceId)}
@@ -142,7 +142,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           invalid={isDuplicateId}
         />
 
-        <DialInput
+        <Input
           id="displayName"
           labelProps={{ label: t(EntityFieldsI18nKey.displayName) }}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
@@ -151,7 +151,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           disabled={isReadOnlyAdmin}
         />
 
-        <DialInput
+        <Input
           id="description"
           labelProps={{ label: t(EntityFieldsI18nKey.description) }}
           placeholder={t(EntityPlaceholdersI18nKey.Description)}

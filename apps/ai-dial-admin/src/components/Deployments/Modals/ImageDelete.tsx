@@ -12,10 +12,9 @@ import {
   ConfirmationPopupVariant,
   ConfirmationPopup,
   EllipsisTooltip,
-  DialSelect,
+  Select,
   PopupSize,
-  SelectSize,
-  SelectVariant,
+  ElementSize,
 } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
@@ -230,9 +229,8 @@ const ImageDeleteConfirmationModal = <T extends Artefact>({
           {existingVersions && existingVersions.length > 0 ? (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span>
-              <DialSelect
-                size={SelectSize.Sm}
-                variant={SelectVariant.Secondary}
+              <Select
+                size={ElementSize.Small}
                 options={existingVersionOptions}
                 onChange={(value) => onVersionChange(value as string)}
                 value={selectedVersion}

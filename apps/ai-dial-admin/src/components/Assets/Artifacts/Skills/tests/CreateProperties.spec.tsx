@@ -6,7 +6,7 @@ import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { ApplicationRoute } from '@/src/types/routes';
 
-const NAME_LABEL = `${EntityFieldsI18nKey.name}*`;
+const NAME_LABEL = `${EntityFieldsI18nKey.name}(required)`;
 const DESCRIPTION_LABEL = `${EntityFieldsI18nKey.description}(required)`;
 
 const renderCreateForm = (

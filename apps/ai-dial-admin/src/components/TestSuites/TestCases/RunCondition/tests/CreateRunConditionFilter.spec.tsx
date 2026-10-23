@@ -9,7 +9,7 @@ import { RunConditionFieldOption, RunConditionFilter, RunConditionLogicalOp, Run
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  DialSelectField: ({ id, value, options, onChange }: any) => (
+  Select: ({ id, value, options, onChange }: any) => (
     <select id={id} value={value} onChange={(event) => onChange(event.target.value)} aria-label={id}>
       {options.map((option: any) => (
         <option key={option.value} value={option.value}>

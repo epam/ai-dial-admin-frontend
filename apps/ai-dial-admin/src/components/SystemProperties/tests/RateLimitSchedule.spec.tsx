@@ -58,8 +58,8 @@ describe('RateLimitSchedule', () => {
   test('renders the timezone, week start day and reset time controls with their labels', () => {
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
-    expect(screen.getByRole('group', { name: SystemPropertiesI18nKey.TimezoneLabel })).toBeTruthy();
-    expect(screen.getByRole('group', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toBeTruthy();
     expect(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel })).toBeTruthy();
     expect(screen.getByText(SystemPropertiesI18nKey.RateLimitScheduleDescription)).toBeTruthy();
   });
@@ -67,9 +67,12 @@ describe('RateLimitSchedule', () => {
   test('reflects a stored schedule in the controls', () => {
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
-    // DialSelectField's trigger carries the selected option's label as its accessible name.
-    expect(screen.getByRole('button', { name: 'Europe/Warsaw' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: SystemPropertiesI18nKey.WeekdaySunday })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel })).toHaveDisplayValue(
+      'Europe/Warsaw',
+    );
+    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toHaveDisplayValue(
+      SystemPropertiesI18nKey.WeekdaySunday,
+    );
     expect(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel })).toHaveValue('09:30');
   });
 
@@ -77,8 +80,10 @@ describe('RateLimitSchedule', () => {
     const onChangeRateLimitSchedule = vi.fn<(schedule: RateLimitScheduleModel) => void>();
     renderRateLimitSchedule({ onChangeRateLimitSchedule });
 
-    expect(screen.getByRole('button', { name: 'UTC' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: SystemPropertiesI18nKey.WeekdayMonday })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel })).toHaveDisplayValue('UTC');
+    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toHaveDisplayValue(
+      SystemPropertiesI18nKey.WeekdayMonday,
+    );
     expect(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel })).toHaveValue('00:00');
     expect(onChangeRateLimitSchedule).not.toHaveBeenCalled();
     expect(dispatch).toHaveBeenCalledWith({
@@ -92,7 +97,7 @@ describe('RateLimitSchedule', () => {
     const user = userEvent.setup();
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
-    await user.click(screen.getByRole('button', { name: 'Europe/Warsaw' }));
+    await user.click(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel }));
     await user.type(screen.getByPlaceholderText(BasicI18nKey.Search), 'Warsaw');
 
     expect(screen.getByRole('option', { name: 'Europe/Warsaw' })).toBeTruthy();
@@ -174,14 +179,12 @@ describe('RateLimitSchedule', () => {
     vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
     renderRateLimitSchedule({ schedule: SCHEDULE, onChangeRateLimitSchedule });
 
-    // DialSelectField exposes its disabled state only through styling (a 1.0 ui-kit gap, reported
-    // upstream rather than patched here) — cursor-not-allowed is the CSS-level signal.
-    const timezone = screen.getByRole('button', { name: 'Europe/Warsaw' });
-    const weekStartDay = screen.getByRole('button', { name: SystemPropertiesI18nKey.WeekdaySunday });
+    const timezone = screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel });
+    const weekStartDay = screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel });
     const resetTime = screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel });
 
-    expect(timezone.className).toContain('cursor-not-allowed');
-    expect(weekStartDay.className).toContain('cursor-not-allowed');
+    expect(timezone).toBeDisabled();
+    expect(weekStartDay).toBeDisabled();
     expect(resetTime).toBeDisabled();
 
     await user.click(timezone);

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput, Switch } from '@epam/ai-dial-ui-kit';
+import { Input, Switch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
@@ -46,7 +46,7 @@ const KeyAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => {
     <div className="flex flex-col">
       <ResourceInfoHeader entity={asset} />
       <div className="flex flex-col gap-y-8 mt-8">
-        <DialInput
+        <Input
           id="project"
           labelProps={{ label: t(EntityFieldsI18nKey.project) }}
           placeholder={t(EntityPlaceholdersI18nKey.Project)}

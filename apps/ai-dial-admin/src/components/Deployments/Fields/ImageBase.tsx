@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -101,7 +101,7 @@ const ImageBase: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DialInput
+      <Input
         labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
         id="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
@@ -113,7 +113,7 @@ const ImageBase: FC<Props> = ({
         disabled={isReadOnlyAdmin}
       />
       {isModal && (
-        <DialInput
+        <Input
           className="w-[120px]"
           labelProps={{ label: t(EntityFieldsI18nKey.version), required: true }}
           id="version"

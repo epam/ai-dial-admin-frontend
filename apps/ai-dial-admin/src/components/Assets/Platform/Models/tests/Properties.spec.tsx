@@ -90,10 +90,12 @@ describe('Model asset Properties :: identity fields', () => {
   test('Should not require a display version, since Core enforces no display identity', () => {
     renderProperties({ displayName: 'Shared Display Name' });
 
-    // The control marks a required field by appending `*` to its label, so the bare label is the
-    // assertion — flip `optional` off and the starred variant renders instead.
+    // The control marks a required field by adding a visually hidden "(required)" to its label, so the bare label is the
+    // assertion — flip `optional` off and the required variant renders instead.
     expect(screen.getByText(EntityFieldsI18nKey.displayVersion)).toBeInTheDocument();
-    expect(screen.queryByText(`${EntityFieldsI18nKey.displayVersion}*`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: `${EntityFieldsI18nKey.displayVersion}(required)` }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -144,10 +146,10 @@ describe('Model asset Properties :: responses defaults gating', () => {
 
 describe('Model asset Properties :: interface base URL fallback', () => {
   const ifaceBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
-  // Label renders the required marker as a `*` span inside the label, so it lands in the
+  // Label renders the required marker as visually hidden "(required)" text inside the label, so it lands in the
   // input's accessible name.
   const queryIfaceBaseUrlInputWithMarker = () =>
-    screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
+    screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\(required\\)$`) });
 
   test('Should not mark an empty interface base_url required while the entity base_url is set', () => {
     renderProperties({

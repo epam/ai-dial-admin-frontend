@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import KeyFieldLabel from '@/src/components/Analytics/Tables/KeyFieldLabel';
@@ -62,30 +62,34 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
 
       {isSource ? (
         <>
-          <DialSelectField
+          <Select
             id="draft-ordering-key"
             multiple
-            containerClassName={STANDARD_CONTROL_WIDTH}
-            label={
-              <KeyFieldLabel
-                label={t(AnalyticsTablesI18nKey.OrderingKey)}
-                hint={t(AnalyticsTablesI18nKey.OrderingKeyHint)}
-              />
-            }
-            required
+            className={STANDARD_CONTROL_WIDTH}
+            labelProps={{
+              label: (
+                <KeyFieldLabel
+                  label={t(AnalyticsTablesI18nKey.OrderingKey)}
+                  hint={t(AnalyticsTablesI18nKey.OrderingKeyHint)}
+                />
+              ),
+              required: true,
+            }}
             options={orderingOptions}
             value={form.orderingKey}
             onChange={(v) => update('orderingKey', v as string[])}
           />
-          <DialSelectField
+          <Select
             id="draft-partition-col"
-            containerClassName={STANDARD_CONTROL_WIDTH}
-            label={
-              <KeyFieldLabel
-                label={t(AnalyticsTablesI18nKey.PartitionColumn)}
-                hint={t(AnalyticsTablesI18nKey.PartitionColumnHint)}
-              />
-            }
+            className={STANDARD_CONTROL_WIDTH}
+            labelProps={{
+              label: (
+                <KeyFieldLabel
+                  label={t(AnalyticsTablesI18nKey.PartitionColumn)}
+                  hint={t(AnalyticsTablesI18nKey.PartitionColumnHint)}
+                />
+              ),
+            }}
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
               ...partitionNames.map((s) => ({ value: s, label: s })),
@@ -94,30 +98,34 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
             onChange={(v) => update('partitionColumn', v as string)}
           />
           {form.partitionColumn && (
-            <DialSelectField
+            <Select
               id="draft-partition-gran"
-              containerClassName={STANDARD_CONTROL_WIDTH}
-              label={
-                <KeyFieldLabel
-                  label={t(AnalyticsTablesI18nKey.Granularity)}
-                  hint={t(AnalyticsTablesI18nKey.GranularityHint)}
-                />
-              }
+              className={STANDARD_CONTROL_WIDTH}
+              labelProps={{
+                label: (
+                  <KeyFieldLabel
+                    label={t(AnalyticsTablesI18nKey.Granularity)}
+                    hint={t(AnalyticsTablesI18nKey.GranularityHint)}
+                  />
+                ),
+              }}
               options={PARTITION_GRANULARITY_OPTIONS}
               value={form.granularity}
               onChange={(v) => update('granularity', v as PartitionGranularity | '')}
             />
           )}
-          <DialSelectField
+          <Select
             id="draft-identity-col"
-            containerClassName={STANDARD_CONTROL_WIDTH}
-            label={
-              <KeyFieldLabel
-                label={t(AnalyticsTablesI18nKey.IdentityColumn)}
-                hint={t(AnalyticsTablesI18nKey.IdentityColumnHint)}
-              />
-            }
-            required={scanPairRequired}
+            className={STANDARD_CONTROL_WIDTH}
+            labelProps={{
+              label: (
+                <KeyFieldLabel
+                  label={t(AnalyticsTablesI18nKey.IdentityColumn)}
+                  hint={t(AnalyticsTablesI18nKey.IdentityColumnHint)}
+                />
+              ),
+              required: scanPairRequired,
+            }}
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
               ...identityNames.map((s) => ({ value: s, label: s })),
@@ -127,16 +135,18 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
             invalid={Boolean(identityError)}
             onChange={(v) => update('identityColumn', v as string)}
           />
-          <DialSelectField
+          <Select
             id="draft-version-col"
-            containerClassName={STANDARD_CONTROL_WIDTH}
-            label={
-              <KeyFieldLabel
-                label={t(AnalyticsTablesI18nKey.VersionColumn)}
-                hint={t(AnalyticsTablesI18nKey.VersionColumnHint)}
-              />
-            }
-            required={scanPairRequired}
+            className={STANDARD_CONTROL_WIDTH}
+            labelProps={{
+              label: (
+                <KeyFieldLabel
+                  label={t(AnalyticsTablesI18nKey.VersionColumn)}
+                  hint={t(AnalyticsTablesI18nKey.VersionColumnHint)}
+                />
+              ),
+              required: scanPairRequired,
+            }}
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
               ...versionNames.map((s) => ({ value: s, label: s })),
@@ -148,13 +158,15 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
           />
         </>
       ) : (
-        <DialSelectField
+        <Select
           id="draft-grain-key"
-          containerClassName={STANDARD_CONTROL_WIDTH}
-          label={
-            <KeyFieldLabel label={t(AnalyticsTablesI18nKey.GrainKey)} hint={t(AnalyticsTablesI18nKey.GrainKeyHint)} />
-          }
-          required
+          className={STANDARD_CONTROL_WIDTH}
+          labelProps={{
+            label: (
+              <KeyFieldLabel label={t(AnalyticsTablesI18nKey.GrainKey)} hint={t(AnalyticsTablesI18nKey.GrainKeyHint)} />
+            ),
+            required: true,
+          }}
           options={grainOptions}
           value={form.grainKey}
           onChange={(v) => update('grainKey', v as string)}
