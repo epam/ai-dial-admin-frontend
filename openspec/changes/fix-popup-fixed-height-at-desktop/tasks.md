@@ -24,7 +24,7 @@
 
 ## 5. Guard and tests
 
-- [x] 5.1 Add `src/tests/popup-height-prefix.spec.ts`: walk `src/**/*.tsx` (not specs), find `<Popup` tags, fail with file and line when `className` has an unprefixed `h-*` token; cover the three guard scenarios in `specs/popup-fixed-height/spec.md` with fixture strings against the scanner function
+- [-] 5.1 ~~Add `src/tests/popup-height-prefix.spec.ts` source-scanning guard~~ Dropped: a regex scan over sources is brittle; the guard is not enforced by a test
 - [x] 5.2 Update component specs that assert the old `h-[…]` class (grep specs for `h-\[` near `Popup`/modal names); none may be left asserting the unprefixed class
 - [x] 5.3 Add a regression assertion to `AddMetricModal` and `FullscreenValueViewer` specs that the popup `className` carries the `md:`-prefixed height (specs mock `Popup` per `test-setup.tsx`, so assert the prop)
 
