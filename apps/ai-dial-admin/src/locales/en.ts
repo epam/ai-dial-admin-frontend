@@ -2475,7 +2475,6 @@ export default {
     Below: 'below',
     GroupByTestCase: 'Group by test case',
     ExecutionOverallScore: 'Overall score',
-    Threshold: 'Threshold',
     ExpandTestCaseGroup: 'Expand test case',
     CollapseTestCaseGroup: 'Collapse test case',
     ExecError: 'error',

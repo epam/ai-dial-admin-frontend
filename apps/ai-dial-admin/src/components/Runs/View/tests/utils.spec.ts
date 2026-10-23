@@ -12,11 +12,8 @@ import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/Ellipsis
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { FilterOperatorDto } from '@/src/types/request';
-import { ExecutionResultRowType } from '@/src/components/Runs/ExecutionResults/models';
-import {
-  TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
-  TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-} from '@/src/components/Runs/ExecutionResults/constants';
+import { ExecutionResultRowType, TestCaseThresholdStatus } from '@/src/components/Runs/ExecutionResults/models';
+import { TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH } from '@/src/components/Runs/ExecutionResults/constants';
 import {
   RESULT_FILTERS,
   getTestCaseStatusClass,
@@ -80,10 +77,10 @@ describe('Runs View :: getCellClass', () => {
 });
 
 describe('Runs View :: grouped analytics columns', () => {
-  const labels = { score: 'Overall score', thresholdStatus: 'Threshold', notApplicable: 'N/A' };
+  const labels = { score: 'Overall score', notApplicable: 'N/A' };
   const onToggleGroup = () => {};
 
-  test('adds visible score and threshold columns when grouping with a configured threshold', () => {
+  test('adds one overall score column when grouping with a configured threshold', () => {
     const columns = getAnalyticsColumns([], {
       isGrouped: true,
       hasThreshold: true,
@@ -93,44 +90,35 @@ describe('Runs View :: grouped analytics columns', () => {
     const details = columns[0] as ColGroupDef;
     const leaves = details.children as ColDef[];
 
-    expect(leaves.map((column) => column.colId)).toEqual([
-      'status',
-      'testCaseName',
-      'testCaseScore',
-      'thresholdStatus',
-    ]);
-    expect(leaves.find((column) => column.colId === 'thresholdStatus')?.hide).toBe(false);
+    expect(leaves.map((column) => column.colId)).toEqual(['status', 'testCaseName', 'testCaseScore']);
     expect(leaves.find((column) => column.colId === 'testCaseScore')).toMatchObject({
       width: TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
       minWidth: TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
       maxWidth: TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
       flex: 0,
     });
-    expect(leaves.find((column) => column.colId === 'thresholdStatus')).toMatchObject({
-      width: TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-      minWidth: TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-      maxWidth: TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-      flex: 0,
-    });
     expect(leaves.every((column) => column.sortable === false && column.filter === false)).toBe(true);
   });
 
-  test('hides threshold status by default without a configured threshold and omits grouped columns in flat mode', () => {
-    const grouped = getAnalyticsColumns([], {
+  test('keeps the score column without a threshold indicator and omits it when no summary is requested', () => {
+    const withoutThreshold = getAnalyticsColumns([], {
       isGrouped: true,
       hasThreshold: false,
       labels,
       onToggleGroup,
     });
-    const groupedLeaves = (grouped[0] as ColGroupDef).children as ColDef[];
-    expect(groupedLeaves.find((column) => column.colId === 'thresholdStatus')?.hide).toBe(true);
+    const score = ((withoutThreshold[0] as ColGroupDef).children as ColDef[]).find(
+      (column) => column.colId === 'testCaseScore',
+    );
+    expect(
+      (score?.valueGetter as any)({ data: { resultRowType: ExecutionResultRowType.Group, testCaseScore: 0.75 } }),
+    ).toEqual({ score: 0.75, thresholdStatus: undefined });
 
     const flatLeaves = (getAnalyticsColumns([])[0] as ColGroupDef).children as ColDef[];
     expect(flatLeaves.some((column) => column.colId === 'testCaseScore')).toBe(false);
-    expect(flatLeaves.some((column) => column.colId === 'thresholdStatus')).toBe(false);
   });
 
-  test('adds score and threshold columns to flat single-execution results', () => {
+  test('adds the combined overall score column to flat single-execution results', () => {
     const columns = getAnalyticsColumns([], {
       isGrouped: false,
       showTestCaseSummary: true,
@@ -141,9 +129,12 @@ describe('Runs View :: grouped analytics columns', () => {
     const leaves = (columns[0] as ColGroupDef).children as ColDef[];
     const score = leaves.find((column) => column.colId === 'testCaseScore');
 
-    expect(leaves.some((column) => column.colId === 'thresholdStatus')).toBe(true);
-    expect((score?.valueGetter as any)({ data: { testCaseScore: 0.75 } })).toBe(0.75);
-    expect((score?.valueGetter as any)({ data: {} })).toBe('N/A');
+    expect(
+      (score?.valueGetter as any)({
+        data: { testCaseScore: 0.75, thresholdStatus: TestCaseThresholdStatus.Pass },
+      }),
+    ).toEqual({ score: 0.75, thresholdStatus: TestCaseThresholdStatus.Pass });
+    expect((score?.valueGetter as any)({ data: {} })).toEqual({ score: 'N/A', thresholdStatus: undefined });
   });
 
   test('shows score only on synthetic group rows', () => {
@@ -156,9 +147,22 @@ describe('Runs View :: grouped analytics columns', () => {
     const score = ((columns[0] as ColGroupDef).children as ColDef[]).find((column) => column.colId === 'testCaseScore');
     const valueGetter = score?.valueGetter as (params: { data: Record<string, unknown> }) => unknown;
 
-    expect(valueGetter({ data: { resultRowType: ExecutionResultRowType.Group, testCaseScore: 0.75 } })).toBe(0.75);
-    expect(valueGetter({ data: { resultRowType: ExecutionResultRowType.Result, testCaseScore: 0.75 } })).toBe('');
-    expect(valueGetter({ data: { resultRowType: ExecutionResultRowType.Group } })).toBe('N/A');
+    expect(
+      valueGetter({
+        data: {
+          resultRowType: ExecutionResultRowType.Group,
+          testCaseScore: 0.75,
+          thresholdStatus: TestCaseThresholdStatus.Pass,
+        },
+      }),
+    ).toEqual({ score: 0.75, thresholdStatus: TestCaseThresholdStatus.Pass });
+    expect(
+      valueGetter({ data: { resultRowType: ExecutionResultRowType.Result, testCaseScore: 0.75 } }),
+    ).toBeUndefined();
+    expect(valueGetter({ data: { resultRowType: ExecutionResultRowType.Group } })).toEqual({
+      score: 'N/A',
+      thresholdStatus: undefined,
+    });
   });
 
   test('leaves non-group data columns blank on synthetic group rows', () => {

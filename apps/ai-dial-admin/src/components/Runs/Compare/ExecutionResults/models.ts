@@ -28,4 +28,6 @@ export interface CompareColumnPanelContext {
   panelKey?: string;
   panelName?: string;
   panelRunIndex?: CompareRunIndex;
+  /** Keeps the synthetic overall-score run/run/delta group out of metric-schema expansion. */
+  isOverallScoreGroup?: boolean;
 }

@@ -134,7 +134,6 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       hasThreshold: run.suiteSnapshot?.overallScoreThreshold != null,
       labels: {
         score: t(RunsI18nKey.ExecutionOverallScore),
-        thresholdStatus: t(RunsI18nKey.Threshold),
         notApplicable: t(RunsI18nKey.NotApplicable),
       },
       onToggleGroup,
