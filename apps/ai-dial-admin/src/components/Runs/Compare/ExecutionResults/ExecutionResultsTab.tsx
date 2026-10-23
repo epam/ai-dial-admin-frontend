@@ -241,7 +241,6 @@ const ExecutionResultsTab: FC<Props> = ({
       comparedThreshold,
       groupingLabels: {
         score: t(RunsI18nKey.ExecutionOverallScore),
-        thresholdStatus: t(RunsI18nKey.Threshold),
         notApplicable: t(RunsI18nKey.NotApplicable),
       },
       onToggleGroup,

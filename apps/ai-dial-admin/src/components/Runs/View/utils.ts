@@ -4,12 +4,9 @@ import classNames from 'classnames';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
 import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
+import OverallScoreCellRenderer from '@/src/components/Runs/ExecutionResults/OverallScoreCellRenderer';
 import TestCaseGroupCellRenderer from '@/src/components/Runs/ExecutionResults/TestCaseGroupCellRenderer';
-import ThresholdStatusCellRenderer from '@/src/components/Runs/ExecutionResults/ThresholdStatusCellRenderer';
-import {
-  TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
-  TEST_CASE_THRESHOLD_COLUMN_WIDTH,
-} from '@/src/components/Runs/ExecutionResults/constants';
+import { TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH } from '@/src/components/Runs/ExecutionResults/constants';
 import {
   ExecutionResultColumnOptions,
   ExecutionResultRowType,
@@ -293,20 +290,14 @@ const getDetailsColumns = (options?: ExecutionResultColumnOptions): ColGroupDef 
             ...NO_FILTER_COL_DEF,
             ...rightAlignedColumn,
             cellClass: 'p-0',
-            cellRenderer: ScoreCellRenderer,
+            cellRenderer: OverallScoreCellRenderer,
             valueGetter: (params: ValueGetterParams<GroupedAnalyticsResult>) =>
               !options.isGrouped || params.data?.resultRowType === ExecutionResultRowType.Group
-                ? (params.data?.testCaseScore ?? options.labels.notApplicable)
-                : '',
-          },
-          {
-            field: 'thresholdStatus',
-            headerName: options.labels.thresholdStatus,
-            colId: 'thresholdStatus',
-            hide: !options.hasThreshold,
-            ...lockedWidthColDef(TEST_CASE_THRESHOLD_COLUMN_WIDTH),
-            ...NO_FILTER_COL_DEF,
-            cellRenderer: ThresholdStatusCellRenderer,
+                ? {
+                    score: params.data?.testCaseScore ?? options.labels.notApplicable,
+                    thresholdStatus: options.hasThreshold ? params.data?.thresholdStatus : undefined,
+                  }
+                : undefined,
           },
         ]
       : []),
