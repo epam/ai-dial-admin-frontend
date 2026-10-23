@@ -1,5 +1,6 @@
 import { EChartsOption } from 'echarts-for-react/src/types';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
+import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 export const MULTI_SERIES_COLORS = ['#5C8DEA', '#4ECDC4', '#FFB347', '#FF6B6B', '#A78BFA', '#34D399'];
@@ -12,14 +13,7 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#000000',
-      borderColor: '#000000',
-      borderWidth: 1,
-      padding: [8, 12],
-      textStyle: {
-        color: '#EEF1F7',
-        fontSize: 12,
-      },
+      ...CHART_TOOLTIP_STYLE,
       axisPointer: {
         type: 'line',
         lineStyle: {
@@ -35,7 +29,6 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
         <!-- Title -->
         <div style="
           font-size: 12px;
-          color: #9FA6BD;
           margin-bottom: 12px;
         ">
           ${formatDateTimeToLocalString(axisValue)}
@@ -46,7 +39,6 @@ export const lineChartDefaultOptions = (t: (key: string) => string): EChartsOpti
           display: flex;
           align-items: center;
           gap: 6px;
-          color: #EEF1F7;
           font-size: 10px;
         ">
           <span style="
@@ -133,14 +125,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#000000',
-      borderColor: '#000000',
-      borderWidth: 1,
-      padding: [8, 12],
-      textStyle: {
-        color: '#EEF1F7',
-        fontSize: 12,
-      },
+      ...CHART_TOOLTIP_STYLE,
       axisPointer: {
         type: 'line',
         lineStyle: {
@@ -154,7 +139,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
         const items = params
           .map(
             (p) => `
-            <div style="display:flex;align-items:center;gap:6px;color:#EEF1F7;font-size:10px;">
+            <div style="display:flex;align-items:center;gap:6px;font-size:10px;">
               <span style="width:8px;height:8px;border-radius:50%;background:${p.color};"></span>
               <span>${p.seriesName}: <b>${p.value}</b></span>
             </div>`,
@@ -162,7 +147,7 @@ export const multiSeriesLineChartOptions = (t: (key: string) => string): ECharts
           .join('');
 
         return `<div>
-          <div style="font-size:12px;color:#9FA6BD;margin-bottom:12px;">${title}</div>
+          <div style="font-size:12px;margin-bottom:12px;">${title}</div>
           ${items}
         </div>`;
       },

@@ -31,10 +31,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         ),
       );
     },
+    Tooltip: ({ children }: any) => children,
     DialAnalyticsBarGroup: ({ title, data, compareData, compareLabels, barDescriptions, onBarClick }: any) => {
       return createElement(
         'div',
-        { role: 'group', 'aria-label': String(title) },
+        { role: 'group', 'aria-label': title.props.name },
+        title,
         createElement('span', null, compareLabels?.[0]),
         createElement('span', null, compareLabels?.[1]),
         ...Object.entries(data || {}).map(([name, value]) =>

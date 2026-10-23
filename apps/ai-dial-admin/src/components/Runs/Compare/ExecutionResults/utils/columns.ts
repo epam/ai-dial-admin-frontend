@@ -270,9 +270,9 @@ const buildRunDurationColumn = (context: RunColumnContext): ColDef => ({
   ...rightAlignedColumn,
   valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
     const result = params.data && getCompareRowResult(params.data, context.run.slot);
-    if (!result) return '—';
-    return getFormattedDuration(getCompareRowDurationMs(result) ?? undefined);
+    return result ? getCompareRowDurationMs(result) : null;
   },
+  valueFormatter: (params) => getFormattedDuration(params.value ?? undefined),
   ...pairCellClassRules(context, getDurationPairKind),
 });
 

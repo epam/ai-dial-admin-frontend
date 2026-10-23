@@ -218,10 +218,8 @@ const executionColumns: ColDef[] = [
     ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     headerClass: 'align-right',
-    valueGetter: (params) => {
-      const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
-      return getFormattedDuration(duration);
-    },
+    valueGetter: (params) => params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs ?? null,
+    valueFormatter: (params) => getFormattedDuration(params.value ?? undefined),
     cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
 ];
