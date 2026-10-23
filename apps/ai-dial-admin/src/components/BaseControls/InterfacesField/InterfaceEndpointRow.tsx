@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialInput, PasswordInput } from '@epam/ai-dial-ui-kit';
+import { Input, PasswordInput } from '@epam/ai-dial-ui-kit';
 
 import ExtraDataField from '@/src/components/UpstreamEndpoints/ExtraData/ExtraDataField';
 import {
@@ -87,7 +87,7 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, upstreamBas
       <div className="flex flex-row flex-1 gap-x-2">
         <div className="flex flex-col flex-1 gap-y-2">
           <div className="flex flex-row gap-x-2">
-            <DialInput
+            <Input
               id={fieldId}
               labelProps={{ label: t(EntityFieldsI18nKey.endpoint), required: isRequired }}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}

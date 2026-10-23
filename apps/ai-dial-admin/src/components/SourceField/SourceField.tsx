@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -190,10 +190,10 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DialSelectField
+      <Select
         id={id}
-        containerClassName="w-[180px]"
-        label={label}
+        className="w-[180px]"
+        labelProps={{ label: label }}
         options={visibleSourceItems}
         onChange={(v) => onChangeSource(v as string)}
         value={source}

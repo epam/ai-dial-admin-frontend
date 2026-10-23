@@ -59,7 +59,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialSelectField: ({ id, options, onChange, placeholder }: any) => (
+    Select: ({ id, options, onChange, placeholder }: any) => (
       <select aria-label={placeholder ?? id} onChange={(e) => onChange(e.target.value)} defaultValue="">
         <option value="" disabled>
           {placeholder}
@@ -83,12 +83,12 @@ const MULTI_TYPES = [
 const SINGLE_TYPE = [DeploymentInterfaceType.OpenAIChatCompletions];
 
 const getBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
-// Label renders the required marker as a `*` span inside the label, so it lands in the input's
+// Label renders the required marker as visually hidden "(required)" text inside the label, so it lands in the input's
 // accessible name.
 const getBaseUrlInputWithRequiredMarker = () =>
-  screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
+  screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\(required\\)$`) });
 const queryBaseUrlInputWithRequiredMarker = () =>
-  screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
+  screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\(required\\)$`) });
 
 describe('InterfacesField', () => {
   test('single allowed type: clicking Add creates the inputs directly, no dropdown', async () => {
@@ -747,9 +747,9 @@ describe('InterfacesField — entity base URL fallback', () => {
 
 describe('InterfacesField — upstream endpoint fallback', () => {
   const getEndpointInputWithRequiredMarker = () =>
-    screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}\\s*\\*$`) });
+    screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}\\s*\\(required\\)$`) });
   const queryEndpointInputWithRequiredMarker = () =>
-    screen.queryByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}\\s*\\*$`) });
+    screen.queryByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}\\s*\\(required\\)$`) });
 
   const ControlledUpstreamFallbackField = ({ initialUpstreamBaseUrl }: { initialUpstreamBaseUrl?: string }) => {
     const [upstreamBaseUrl, setUpstreamBaseUrl] = useState(initialUpstreamBaseUrl);
@@ -811,7 +811,7 @@ describe('InterfacesField — upstream endpoint fallback', () => {
 
 describe('InterfacesField — upstream endpoint variant', () => {
   const getEndpointInput = () =>
-    screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}(\\s*\\*)?$`) });
+    screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}(\\s*\\(required\\))?$`) });
 
   test('adding an interface stores an absent endpoint, not an empty string', async () => {
     const user = userEvent.setup();

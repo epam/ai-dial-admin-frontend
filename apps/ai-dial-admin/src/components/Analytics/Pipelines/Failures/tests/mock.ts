@@ -47,6 +47,7 @@ export const failuresRead = (overrides: Partial<PipelineFailuresRead> = {}): Pip
     newestAt: items[0]?.created_at,
     items,
     hasMore: false,
+    hasAnswered: true,
     isLoading: false,
     isLoadingMore: false,
     hasFailed: false,

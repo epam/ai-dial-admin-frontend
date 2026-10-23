@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
@@ -51,13 +51,13 @@ const ValidityPeriod: FC<Props> = ({ onChange, disabled }) => {
 
   return (
     <div className="flex flex-row gap-8">
-      <DialSelectField
-        label={t(KeysI18nKey.ValidityPeriod)}
+      <Select
+        labelProps={{ label: t(KeysI18nKey.ValidityPeriod) }}
         value={selectedValue}
         options={items}
         id="period"
         onChange={(value) => onChangeValue(value as string)}
-        containerClassName="w-[180px]"
+        className="w-[180px]"
         disabled={disabled}
       />
       <LabelledText

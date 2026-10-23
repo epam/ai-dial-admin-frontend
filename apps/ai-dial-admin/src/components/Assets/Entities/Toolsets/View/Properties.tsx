@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import { DialInput, Switch } from '@epam/ai-dial-ui-kit';
+import { Input, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
@@ -89,7 +89,7 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
         <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
         <IntroControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
 
-        <DialInput
+        <Input
           containerClassName={STANDARD_CONTROL_WIDTH}
           id="provider"
           labelProps={{ label: t(EntityFieldsI18nKey.provider) }}

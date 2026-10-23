@@ -7,6 +7,23 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 const mockDispatch = vi.fn();
 
+// The kit's Select only shows its search field above a row-count threshold, so a list that starts empty
+// and fills from the typed query cannot be driven through it; this stand-in exposes the same query and
+// pick callbacks directly.
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
+  Select: ({ options, onChange, onSearchQueryChange }: any) => (
+    <div>
+      <input role="textbox" onChange={(e) => onSearchQueryChange?.(e.target.value)} />
+      {options.map((option: any) => (
+        <button key={option.value} role="option" aria-selected={false} onClick={() => onChange(option.value)}>
+          {option.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock('@/src/context/SaveValidationContext', () => ({
   useSaveValidationContext: () => ({ dispatch: mockDispatch, resetCounter: 0 }),
   ValidationActionType: {
@@ -99,7 +116,7 @@ describe('McpServerNameField stale-response guard (Issue #3053)', () => {
     return input;
   };
 
-  test('does not apply a lookup that resolves after the input is cleared', async () => {
+  test('does not apply a lookup that resolves after the search is changed', async () => {
     let resolveLookup!: (value: unknown) => void;
     const fetchServers = vi
       .fn()
@@ -120,8 +137,8 @@ describe('McpServerNameField stale-response guard (Issue #3053)', () => {
 
     const input = await pickSuggestion(fetchServers);
 
-    // User clears the field before the lookup comes back.
-    fireEvent.change(input, { target: { value: '' } });
+    // User searches for something else before the lookup comes back.
+    fireEvent.change(input, { target: { value: 'another-server' } });
     // The stale lookup finally resolves with a match.
     await act(async () => {
       resolveLookup(serverResponse);

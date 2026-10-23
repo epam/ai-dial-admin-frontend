@@ -1,6 +1,6 @@
 'use client';
 
-import { DialSelectField, Label, OutlinedButton, SelectOption, Spinner } from '@epam/ai-dial-ui-kit';
+import { Label, OutlinedButton, SelectOption, Spinner, Select } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
@@ -119,15 +119,14 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
         <Spinner size={18} fullWidth />
       </div>
     ) : (
-      <DialSelectField
+      <Select
         value={currentValue}
         searchable={true}
-        required
+        labelProps={{ label: label, required: true }}
         id="sourceEntity"
-        className="w-full mt-1"
+        fieldClassName="w-full mt-1"
         disabled={isFieldDisabled || isRunnerResolving}
         options={dropdownItems}
-        label={label}
         placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
         onChange={(runner) => handleRunnerSelect(runner as string)}
       />

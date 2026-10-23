@@ -170,10 +170,10 @@ describe('CreateEntity', () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
       target: { value: 'route1' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}(required)` }), {
       target: { value: '/v1' },
     });
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
@@ -294,7 +294,7 @@ describe('CreateEntity', () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` }), {
       target: { value: 'my-skill' },
     });
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}(required)` }), {
@@ -333,7 +333,7 @@ describe('CreateEntity', () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` }), {
       target: { value: 'folder-s2' },
     });
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}(required)` }), {
@@ -383,7 +383,7 @@ describe('CreateEntity', () => {
     expect(getCatalogSchemaById).toHaveBeenCalledWith(existingId);
     expect(createCatalogSchema).not.toHaveBeenCalled();
 
-    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
+    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` });
     await user.clear(idInput);
     await user.type(idInput, correctedId);
 
@@ -487,7 +487,7 @@ describe('CreateEntity', () => {
     expect(getResolvedRunnerSchema).toHaveBeenCalledWith(existingId);
     expect(createRunner).not.toHaveBeenCalled();
 
-    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
+    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` });
     await user.clear(idInput);
     await user.type(idInput, correctedId);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
@@ -75,7 +75,7 @@ const SkillCreateProperties: FC<Props> = ({ entity, names, onChangeEntity }) => 
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DialInput
+      <Input
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
         id="skill-name"

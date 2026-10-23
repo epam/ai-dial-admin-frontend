@@ -4,7 +4,7 @@ import { FC, useState } from 'react';
 
 import { noop } from 'lodash';
 
-import { Popup, DialInput, Switch, PopupSize, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Popup, Input, Switch, PopupSize, Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { IconLock } from '@tabler/icons-react';
@@ -95,7 +95,7 @@ const EditColumnPopup: FC<Props> = ({
       })}
     >
       <div className="flex flex-col gap-4 p-6">
-        <DialInput
+        <Input
           id="column-edit-name"
           labelProps={{ label: t(AnalyticsTablesI18nKey.ColumnName) }}
           value={values.name}
@@ -104,7 +104,7 @@ const EditColumnPopup: FC<Props> = ({
           invalid={Boolean(nameError)}
           onChange={setValue('name')}
         />
-        <DialInput
+        <Input
           id="column-edit-display-name"
           labelProps={{ label: t(AnalyticsTablesI18nKey.DisplayName) }}
           value={values.display_name}
@@ -112,7 +112,7 @@ const EditColumnPopup: FC<Props> = ({
           invalid={Boolean(displayNameError)}
           onChange={setValue('display_name')}
         />
-        <DialInput
+        <Input
           id="column-edit-tag"
           labelProps={{ label: t(AnalyticsTablesI18nKey.Tag) }}
           value={values.tag}
@@ -120,7 +120,7 @@ const EditColumnPopup: FC<Props> = ({
           invalid={Boolean(tagError)}
           onChange={setValue('tag')}
         />
-        <DialInput
+        <Input
           id="column-edit-description"
           labelProps={{ label: t(AnalyticsTablesI18nKey.Description) }}
           value={values.description}

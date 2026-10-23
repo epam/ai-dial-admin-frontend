@@ -1,5 +1,5 @@
 'use client';
-import { Checkbox, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Switch, Select } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -214,12 +214,12 @@ const EndpointAndMCPContainer: FC<Props> = ({
 
             <AddTool entity={entity} onChangeEntity={onChangeEntity} />
 
-            <DialSelectField
+            <Select
               id="transport"
               value={ONLY_HTTP_TRANSPORTS[0].value}
               options={ONLY_HTTP_TRANSPORTS}
-              containerClassName="max-w-[160px]"
-              label={t(EntityFieldsI18nKey.Transport)}
+              className="max-w-[160px]"
+              labelProps={{ label: t(EntityFieldsI18nKey.Transport) }}
               onChange={onChangeMCPTransport}
               disabled
             />
@@ -232,15 +232,15 @@ const EndpointAndMCPContainer: FC<Props> = ({
               disabled={isReadOnlyAdmin}
             />
 
-            <DialSelectField
+            <Select
               id="configDelivery"
               value={entity?.['dial:applicationTypeMcp']?.['dial:mcpConfigDelivery']?.toLowerCase() || ''}
               options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
                 value,
                 label: t(MCP_CONFIG_DELIVERY_I18N_MAP[value]),
               }))}
-              containerClassName="max-w-[160px]"
-              label={t(EntityFieldsI18nKey.configDelivery)}
+              className="max-w-[160px]"
+              labelProps={{ label: t(EntityFieldsI18nKey.configDelivery) }}
               onChange={onChangeMCPConfigDelivery}
               disabled={isReadOnlyAdmin}
             />

@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -94,7 +94,7 @@ const VersionControl: FC<Props> = ({
   const mergedError = error || (showFormatError ? formatError?.text : undefined);
 
   return (
-    <DialInput
+    <Input
       id="displayVersion"
       labelProps={{ label: title || t(EntityFieldsI18nKey.version), required: !optional }}
       placeholder={t(EntityPlaceholdersI18nKey.Version)}

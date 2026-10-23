@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Checkbox, CloseButton, DialInput, OutlinedButton, PrimaryButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Checkbox, CloseButton, Input, OutlinedButton, PrimaryButton, Select } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -46,7 +46,7 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex flex-row gap-4">
-          <DialInput
+          <Input
             id="schema-field-name"
             labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
             placeholder={t(EntityFieldsI18nKey.name)}
@@ -55,14 +55,13 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
             disabled={!isNew}
             error={isDuplicateName ? t(TestSuitesI18nKey.DuplicateFieldName) : undefined}
           />
-          <DialSelectField
+          <Select
             id="schema-field-type"
-            containerClassName="w-[180px]"
-            label={t(EntityFieldsI18nKey.type)}
+            className="w-[180px]"
+            labelProps={{ label: t(EntityFieldsI18nKey.type), required: true }}
             value={editableField.type}
             options={TYPE_OPTIONS}
             onChange={(value) => setEditableField({ ...editableField, type: value as TestCaseItemType })}
-            required
           />
           <div className="flex items-end pb-2">
             <Checkbox
@@ -73,7 +72,7 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
             />
           </div>
         </div>
-        <DialInput
+        <Input
           id="schema-field-description"
           labelProps={{ label: t(EntityFieldsI18nKey.description) }}
           placeholder={t(EntityFieldsI18nKey.description)}

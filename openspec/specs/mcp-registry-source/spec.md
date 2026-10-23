@@ -154,7 +154,7 @@ The `McpServerNameField` SHALL be generalized to work with both containers and i
 - `isModal?: boolean` — layout mode
 - `disabled?: boolean` — disabled state
 
-- SHALL render a `DialSelectField` with inline search (debounced, same pattern as `HFModelNameField`)
+- SHALL render a `Select` with `searchable`, feeding the typed search query to the debounced autocomplete (same pattern as `HFModelNameField`); an empty query reported when the list closes SHALL NOT be treated as input
 - Autocomplete SHALL call `fetchServers({ search: value, limit: 5 })` on input (debounce ~100ms, trigger after 2+ characters)
 - All autocomplete results SHALL be shown as options without client-side filtering
 - SHALL maintain a server cache (`Map<string, McpServer>`) for instant pre-fill on autocomplete selection

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
@@ -74,7 +74,7 @@ const DockerURI: FC<Props> = ({ image, setImage, disabled }) => {
   }, [dispatch]);
 
   return (
-    <DialInput
+    <Input
       labelProps={{ label: t(EntityFieldsI18nKey.ImageURI), required: true }}
       id="DockerURI"
       placeholder={t(EntityPlaceholdersI18nKey.URI)}

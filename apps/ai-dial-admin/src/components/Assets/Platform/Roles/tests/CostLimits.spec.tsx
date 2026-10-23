@@ -26,7 +26,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
       />
     </label>
   ),
-  DialNumberInput: ({ id, labelProps, value, disabled, onChange }: any) => (
+  NumberInput: ({ id, labelProps, value, disabled, onChange }: any) => (
     <label>
       {labelProps?.label !== undefined && <span>{labelProps.label}</span>}
       <input

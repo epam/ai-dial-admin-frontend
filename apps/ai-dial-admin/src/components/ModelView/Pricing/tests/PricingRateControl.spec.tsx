@@ -9,7 +9,7 @@ import PricingRateControl from '../PricingRateControl';
 // Same replacement as Pricing.spec.tsx: a native select stays queryable as a combobox with options.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  DialSelectField: ({ id, label, value, options, onChange, disabled }: any) => (
+  Select: ({ id, labelProps: { label } = {}, value, options, onChange, disabled }: any) => (
     <div>
       <label htmlFor={id}>{label}</label>
       <select id={id} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>

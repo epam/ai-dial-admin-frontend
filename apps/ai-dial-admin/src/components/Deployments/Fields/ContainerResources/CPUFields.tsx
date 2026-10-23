@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -145,7 +145,7 @@ const CPUFields: FC<Props> = ({ container, setContainer, disabled }) => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-2">
-      <DialNumberInput
+      <NumberInput
         id="cpuRequest"
         containerClassName="w-[180px]"
         labelProps={{ label: t(EntityFieldsI18nKey.CPURequest) }}
@@ -156,7 +156,7 @@ const CPUFields: FC<Props> = ({ container, setContainer, disabled }) => {
         disabled={isDisabled}
         onChange={onChangeRequest}
       />
-      <DialNumberInput
+      <NumberInput
         id="cpuLimit"
         containerClassName="w-[180px]"
         labelProps={{ label: t(EntityFieldsI18nKey.CPULimit) }}

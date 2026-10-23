@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialInput, DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Input, NumberInput, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
@@ -100,7 +100,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
     <div className="flex gap-x-3 items-end w-full">
       <div className="flex flex-row gap-x-4 items-center w-full min-w-0">
         <div className="w-[320px] shrink-0">
-          <DialInput
+          <Input
             id={`entity-default-key-${index}`}
             value={item.key}
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
@@ -110,18 +110,18 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
           />
         </div>
         <div className="w-[136px] shrink-0">
-          <DialSelectField
+          <Select
             value={item.type}
             id={`entity-default-type-${index}`}
             options={types}
-            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
+            labelProps={{ label: isFirstLine ? t(EntityFieldsI18nKey.type) : '' }}
             onChange={(type) => onChangeType(type as string)}
             disabled={disabled}
           />
         </div>
         <div className="flex-1 min-w-0">
           {item.type === DefaultItemType.string && (
-            <DialInput
+            <Input
               id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
@@ -131,7 +131,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
             />
           )}
           {item.type === DefaultItemType.number && (
-            <DialNumberInput
+            <NumberInput
               id={`entity-default-value-${index}`}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
@@ -141,11 +141,11 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
             />
           )}
           {item.type === DefaultItemType.boolean && (
-            <DialSelectField
+            <Select
               value={String(item.value)}
               id={`entity-default-value=${index}`}
               options={booleans}
-              label={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               onChange={onChangeValue}
               disabled={disabled}
             />

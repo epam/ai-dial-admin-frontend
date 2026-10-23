@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import ReactECharts from 'echarts-for-react';
-import { NoDataContent, SegmentedControl, DialSelect } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, SegmentedControl, Select } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 
 import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
@@ -97,16 +97,18 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
         />
         <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <div className="w-[200px]">
-            <DialSelect
+            <Select
               prefix={`${t(descriptor.xLabelKey)}: `}
+              ariaLabel={t(descriptor.xLabelKey)}
               options={xOptions.map((c) => ({ value: c, label: labelFor(c) }))}
               value={xField ?? undefined}
               onChange={(v) => onChangeConfig({ ...config, xField: v as string })}
             />
           </div>
           <div className="w-[200px]">
-            <DialSelect
+            <Select
               prefix={`${t(descriptor.yLabelKey)}: `}
+              ariaLabel={t(descriptor.yLabelKey)}
               options={yOptions.map((c) => ({ value: c, label: labelFor(c) }))}
               value={yField ?? undefined}
               onChange={(v) => onChangeConfig({ ...config, yField: v as string })}

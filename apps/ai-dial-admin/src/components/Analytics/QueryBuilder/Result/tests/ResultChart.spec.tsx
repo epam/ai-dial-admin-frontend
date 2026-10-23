@@ -33,26 +33,26 @@ const renderChart = (config: ChartConfig = DEFAULT_CHART_CONFIG, result = RESULT
 describe('QueryBuilder :: ResultChart', () => {
   test('bar labels the selectors as axes with dimension/aggregate defaults', () => {
     renderChart();
-    expect(screen.getByText(/QueryBuilder.ChartXAxis:\s+Deployment/)).toBeInTheDocument();
-    expect(screen.getByText(/QueryBuilder.ChartYAxis:\s+total/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toHaveDisplayValue(/Deployment/);
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toHaveDisplayValue(/total/);
   });
 
   test('dimension columns display by their schema display name, aggregates by their alias', () => {
     renderChart();
-    expect(screen.queryByText(/QueryBuilder.ChartXAxis:\s+deployment/)).not.toBeInTheDocument();
-    expect(screen.getByText(/QueryBuilder.ChartXAxis:\s+Deployment/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).not.toHaveDisplayValue(/\sdeployment$/);
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toHaveDisplayValue(/Deployment/);
   });
 
   test('pie relabels the selectors as Category and Value', () => {
     renderChart({ type: ChartType.Pie, xField: null, yField: null });
-    expect(screen.getByText(/QueryBuilder.ChartCategory/)).toBeInTheDocument();
-    expect(screen.getByText(/QueryBuilder.ChartValue/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartCategory' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartValue' })).toBeInTheDocument();
   });
 
   test('scatter defaults its two axes to distinct numeric columns', () => {
     renderChart({ type: ChartType.Scatter, xField: null, yField: null });
-    expect(screen.getByText(/QueryBuilder.ChartXAxis:\s+total/)).toBeInTheDocument();
-    expect(screen.getByText(/QueryBuilder.ChartYAxis:\s+tokens/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toHaveDisplayValue(/total/);
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toHaveDisplayValue(/tokens/);
   });
 
   test('switching to a compatible type keeps the column picks', async () => {

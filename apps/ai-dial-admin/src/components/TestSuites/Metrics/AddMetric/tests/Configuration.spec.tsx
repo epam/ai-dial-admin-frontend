@@ -7,7 +7,7 @@ import MetricConfiguration from '../Configuration';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialInput: ({ labelProps, value, onChange, error }: any) => (
+  Input: ({ labelProps, value, onChange, error }: any) => (
     <>
       <input
         role="textbox"

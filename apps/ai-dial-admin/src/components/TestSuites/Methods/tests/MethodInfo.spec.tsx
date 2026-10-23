@@ -7,7 +7,7 @@ import MethodInfo from '../MethodInfo';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...((await importOriginal()) as object),
-  DialInput: ({ value, onChange, error, invalid }: any) => (
+  Input: ({ value, onChange, error, invalid }: any) => (
     <div>
       <input
         aria-label="Final path"

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput, Label, DialNumberInput, DialSelect, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Input, Label, NumberInput, Select, Tooltip } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import FileSelectInput from '@/src/components/Common/FileSelectInput/FileSelectInput';
@@ -78,14 +78,15 @@ const VariableRow: FC<Props> = ({
           onChange={(dataField) => onChangeDataField?.(row, dataField)}
         />
       ) : row.effectiveType === TestCaseItemType.NUMBER || row.effectiveType === TestCaseItemType.INTEGER ? (
-        <DialNumberInput
+        <NumberInput
           disabled={readonly}
           integer={row.effectiveType === TestCaseItemType.INTEGER}
           value={strValue}
           onChange={(v) => onChangeValue(row, v !== undefined ? v : '')}
         />
       ) : row.effectiveType === TestCaseItemType.BOOLEAN ? (
-        <DialSelect
+        <Select
+          ariaLabel={row.templateVariable}
           disabled={readonly}
           options={[
             { label: 'true', value: 'true' },
@@ -110,7 +111,7 @@ const VariableRow: FC<Props> = ({
           view={ApplicationRoute.TestSuites}
         />
       ) : (
-        <DialInput disabled={readonly} value={strValue} onChange={(v) => onChangeValue(row, v ?? '')} />
+        <Input disabled={readonly} value={strValue} onChange={(v) => onChangeValue(row, v ?? '')} />
       )}
     </div>
   );

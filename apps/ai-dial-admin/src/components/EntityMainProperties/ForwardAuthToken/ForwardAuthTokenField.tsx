@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-  DialInput,
+  Input,
   Notification,
   NotificationType,
   NotificationVariant,
@@ -91,7 +91,7 @@ const ForwardAuthTokenField = <T extends { displayName?: LocalizedText; forwardA
             variant={NotificationVariant.Error}
             message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)}
           />
-          <DialInput
+          <Input
             id="entityName"
             labelProps={{ label: displayNameKey ? t(displayNameKey as CreateI18nKey) : '' }}
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}

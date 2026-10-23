@@ -14,7 +14,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
   return {
     ...actual,
-    DialSelectField: ({ id, label, value, options, invalid, onChange }: any) => (
+    Select: ({ id, labelProps: { label } = {}, value, options, invalid, onChange }: any) => (
       <div>
         {label !== undefined && <label htmlFor={id}>{label}</label>}
         <select id={id} data-invalid={invalid} value={value} onChange={(event) => onChange(event.target.value)}>
@@ -32,7 +32,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         </div>
       </div>
     ),
-    DialNumberInput: ({ id, labelProps, value, invalid, onChange }: any) => (
+    NumberInput: ({ id, labelProps, value, invalid, onChange }: any) => (
       <div>
         {labelProps?.label !== undefined && <label htmlFor={id}>{labelProps.label}</label>}
         <input

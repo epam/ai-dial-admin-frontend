@@ -33,7 +33,7 @@ The `ServingCreate` modal SHALL accept an optional `sourceType` prop of type `CO
 - **THEN** the created container SHALL have `source: { $type: 'image_reference', imageReference: '<user-input>' }` and `$type: 'mcp'`
 
 ### Requirement: ContainerSource renders Docker image reference field for IMAGE_REFERENCE
-The `ContainerSource` component SHALL render a `DialInput` text field for containers with `source.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE`. The field SHALL store its value in `container.source.imageReference`.
+The `ContainerSource` component SHALL render an `Input` text field for containers with `source.$type === CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE`. The field SHALL store its value in `container.source.imageReference`.
 
 #### Scenario: IMAGE_REFERENCE source shows Docker reference input
 - **WHEN** a container has `source.$type === 'image_reference'`

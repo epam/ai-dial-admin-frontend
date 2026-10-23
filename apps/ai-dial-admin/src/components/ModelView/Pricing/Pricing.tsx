@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 
-import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { SelectOption, Select } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
@@ -95,13 +95,13 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
         'lg:justify-start lg:border-none lg:p-0 lg:mb-0',
       )}
     >
-      <DialSelectField
+      <Select
         value={activeType}
         id="pricing"
         options={items}
+        fieldClassName="w-[220px]"
         className="w-[220px]"
-        containerClassName="w-[220px]"
-        label={t(ModelViewI18nKey.CostUnit)}
+        labelProps={{ label: t(ModelViewI18nKey.CostUnit) }}
         onChange={(type) => onChangePricingType(type as string)}
         disabled={isReadOnlyAdmin}
       />

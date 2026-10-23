@@ -40,7 +40,7 @@ describe('App runner asset :: create form', () => {
     const onChangeEntity = vi.fn();
     renderCreateForm(onChangeEntity, { name: 'runner' } as DialAppRunnerResource);
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
       target: { value: ID_URL },
     });
 
@@ -57,7 +57,7 @@ describe('App runner asset :: create form', () => {
     const onChangeEntity = vi.fn();
     renderCreateForm(onChangeEntity);
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
       target: { value: `${ID_URL}1!` },
     });
 
@@ -68,7 +68,7 @@ describe('App runner asset :: create form', () => {
     const onChangeEntity = vi.fn();
     renderCreateForm(onChangeEntity);
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
       target: { value: ID_URL },
     });
 

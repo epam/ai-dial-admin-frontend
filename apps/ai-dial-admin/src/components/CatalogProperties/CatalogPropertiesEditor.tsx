@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  ErrorText,
-  Spinner,
-  NoDataContent,
-  DialSelect,
-  JsonSchema,
-  SelectSize,
-  SelectVariant,
-} from '@epam/ai-dial-ui-kit';
+import { ErrorText, Spinner, NoDataContent, Select, JsonSchema, ElementSize } from '@epam/ai-dial-ui-kit';
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
@@ -125,11 +117,11 @@ const CatalogPropertiesEditor: FC<Props> = ({
   return (
     <div className="flex flex-col size-full">
       <div className="flex flex-row mb-2">
-        <DialSelect
-          elementId="catalogValuesView"
+        <Select
+          id="catalogValuesView"
           prefix={`${t(CompareI18nKey.View)}: `}
-          size={SelectSize.Sm}
-          variant={SelectVariant.Secondary}
+          ariaLabel={t(CompareI18nKey.View)}
+          size={ElementSize.Small}
           options={viewItems}
           value={view}
           onChange={(value) => setView(value as CatalogValuesView)}

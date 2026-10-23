@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
-import { DialNumberInput, Switch } from '@epam/ai-dial-ui-kit';
+import { NumberInput, Switch } from '@epam/ai-dial-ui-kit';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 
 import { RolesI18nKey } from '@/src/constants/i18n';
@@ -72,7 +72,7 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
       {costLimitExist && (
         <div className="mt-3 pl-[46px] flex flex-row gap-x-3">
           {TOKENS.map(({ key, label }) => (
-            <DialNumberInput
+            <NumberInput
               key={key}
               id={key}
               containerClassName="w-[240px]"

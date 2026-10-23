@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, type ReactNode } from 'react';
 
-import { ButtonAppearance, DialInput, Label, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, Input, Label, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { createEmptyField, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -100,7 +100,7 @@ const MapEntryRow: FC<MapEntryRowProps> = ({
   return (
     <div className="flex flex-col gap-2 rounded border border-primary p-3 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
-        <DialInput
+        <Input
           id={`${field.id}-map-key-${rowIndex}`}
           placeholder={keyPlaceholder}
           value={keyDraft}

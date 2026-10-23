@@ -2,7 +2,7 @@
 
 import { FC, useId, useMemo, useState } from 'react';
 
-import { DialDropdown, Search } from '@epam/ai-dial-ui-kit';
+import { Dropdown, Search } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -22,7 +22,7 @@ interface Props {
 
 // Binds a template variable to a test case column. Two columns of the same type are only told apart
 // by the data behind them, so each row previews the dataset's own first rows on hover; ui-kit's
-// select has no room for that, which is why the list is built on DialDropdown the way CompactSelect
+// select has no room for that, which is why the list is built on Dropdown the way CompactSelect
 // and CategorizedFieldDropdown are, with a trigger that keeps the ui-kit input styling.
 const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange }) => {
   const t = useI18n();
@@ -49,7 +49,7 @@ const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange
   };
 
   return (
-    <DialDropdown
+    <Dropdown
       open={isOpen}
       onOpenChange={onOpenChange}
       disabled={disabled}
@@ -104,7 +104,7 @@ const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange
         </span>
         <IconChevronDown aria-hidden size={18} className="shrink-0 text-secondary" />
       </button>
-    </DialDropdown>
+    </Dropdown>
   );
 };
 

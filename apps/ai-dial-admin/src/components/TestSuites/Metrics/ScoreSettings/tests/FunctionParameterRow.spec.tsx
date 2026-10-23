@@ -28,7 +28,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </div>
   ),
-  DialSelect: ({ options, value, searchable, placeholder, onChange }: any) => (
+  Select: ({ options, value, searchable, placeholder, onChange }: any) => (
     <>
       <select
         role="combobox"

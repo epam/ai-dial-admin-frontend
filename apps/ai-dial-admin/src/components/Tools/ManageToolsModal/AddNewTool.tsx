@@ -6,7 +6,7 @@ import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, Toolset
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import { ButtonAppearance, DangerButton, DialInput } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DangerButton, Input } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 interface Props {
@@ -38,7 +38,7 @@ const AddNewTool: FC<Props> = ({ toolName, error, onDelete, onChange }) => {
         />
       </div>
       <span className="text-primary dial-small block mb-4">{t(ToolsetI18nKey.CustomToolDescription)}</span>
-      <DialInput
+      <Input
         containerClassName={STANDARD_CONTROL_WIDTH}
         id="customToolName"
         labelProps={{ label: t(EntityFieldsI18nKey.ToolName) }}

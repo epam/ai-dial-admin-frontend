@@ -4,7 +4,7 @@ import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/
 import { useI18n } from '@/src/locales/client';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IpRange, IpRangeError, IpRangeProperty } from './types';
-import { ButtonAppearance, DialNumberInput, PrimaryButton, DialInput } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, NumberInput, PrimaryButton, Input } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { IconPlus } from '@tabler/icons-react';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -58,7 +58,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
     <div className={classNames('flex flex-col gap-2 pl-6 pt-2', STANDARD_CONTROL_WIDTH)}>
       {ranges.map((range, index) => (
         <div key={index} className="flex flex-row gap-1 items-start">
-          <DialInput
+          <Input
             containerClassName="flex w-full flex-1"
             labelProps={index === 0 ? { label: t(EntityFieldsI18nKey.IpRange) } : undefined}
             placeholder={t(EntityPlaceholdersI18nKey.IpRange)}
@@ -72,7 +72,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
             disabled={disabled}
           />
           <span className={classNames('text-secondary leading-[40px]', index === 0 && 'mt-6')}>/</span>
-          <DialNumberInput
+          <NumberInput
             id={`mask-${index}`}
             value={range.mask || undefined}
             labelProps={index === 0 ? { label: t(EntityFieldsI18nKey.Mask) } : undefined}

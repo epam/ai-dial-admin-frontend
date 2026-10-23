@@ -1,5 +1,5 @@
 'use client';
-import { Checkbox, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Switch, Select } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -322,12 +322,12 @@ const ApplicationEndpoint: FC<Props> = ({
                   </div>
                 )}
 
-                <DialSelectField
+                <Select
                   id="transport"
                   value={ONLY_HTTP_TRANSPORTS[0].value}
                   options={ONLY_HTTP_TRANSPORTS}
-                  containerClassName="max-w-[160px]"
-                  label={t(EntityFieldsI18nKey.Transport)}
+                  className="max-w-[160px]"
+                  labelProps={{ label: t(EntityFieldsI18nKey.Transport) }}
                   onChange={onChangeMCPTransport}
                   disabled
                 />
@@ -340,15 +340,15 @@ const ApplicationEndpoint: FC<Props> = ({
                   disabled={disabled}
                 />
 
-                <DialSelectField
+                <Select
                   id="configDelivery"
                   value={entity.mcp?.configDelivery}
                   options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
                     value,
                     label: t(MCP_CONFIG_DELIVERY_I18N_MAP[value]),
                   }))}
-                  containerClassName="max-w-[160px]"
-                  label={t(EntityFieldsI18nKey.configDelivery)}
+                  className="max-w-[160px]"
+                  labelProps={{ label: t(EntityFieldsI18nKey.configDelivery) }}
                   onChange={onChangeMCPConfigDelivery}
                   disabled={disabled}
                 />

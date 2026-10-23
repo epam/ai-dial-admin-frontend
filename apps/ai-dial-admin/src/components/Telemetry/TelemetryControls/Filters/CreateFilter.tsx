@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 import classNames from 'classnames';
 
-import { CloseButton, DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { CloseButton, Input, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { BasicI18nKey, ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
@@ -81,7 +81,7 @@ const CreateFilter: FC<Props> = ({
       <>
         {route === ApplicationRoute.Dashboard ? (
           <div className="md:mr-4 md:mb-0 mb-4 min-w-[120px]">
-            <DialSelectField
+            <Select
               value={filterTypeConfig.find((item) => item.value === type)?.value}
               id="type"
               onChange={(type) => setTypeHandler(type as FILTER_TYPE)}
@@ -95,7 +95,7 @@ const CreateFilter: FC<Props> = ({
         )}
       </>
       <div className="md:mr-4 md:mb-0 mb-4 min-w-[160px]">
-        <DialSelectField
+        <Select
           value={filterConditionConfig.find((item) => item.value === condition)?.value}
           id="Condition"
           onChange={(type) => setConditionHandler(type as FILTER_OPERATOR)}
@@ -106,7 +106,7 @@ const CreateFilter: FC<Props> = ({
         {condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual ? (
           <>
             {isDeploymentFilter(type) ? (
-              <DialSelectField
+              <Select
                 value={value}
                 id="entities"
                 onChange={(selected) => setValue(selected as string[])}
@@ -116,7 +116,7 @@ const CreateFilter: FC<Props> = ({
                 placeholder={value.length === 0 ? t(TelemetryI18nKey.SelectEntities) : undefined}
               />
             ) : (
-              <DialSelectField
+              <Select
                 value={value}
                 id="projects"
                 onChange={(selected) => setValue(selected as string[])}
@@ -127,7 +127,7 @@ const CreateFilter: FC<Props> = ({
             )}
           </>
         ) : (
-          <DialInput
+          <Input
             id="filterValue"
             onChange={(v) => setValue([v || ''])}
             placeholder={t(BasicI18nKey.Value)}

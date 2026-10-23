@@ -15,7 +15,7 @@ const setup = (tableType: AnalyticsTableType = AnalyticsTableType.Source) =>
   render(<CreateTablePopup tableType={tableType} tables={tables} onClose={vi.fn()} onCreated={vi.fn()} />);
 
 const nameField = () => screen.getByLabelText(AnalyticsTablesI18nKey.Name, { exact: false });
-// DialInput remounts on re-render, so per-keystroke typing detaches; set the value in one change event.
+// Input remounts on re-render, so per-keystroke typing detaches; set the value in one change event.
 const typeName = (value: string) => fireEvent.change(nameField(), { target: { value } });
 const submitButton = (key: AnalyticsTablesI18nKey) => screen.getByRole('button', { name: key });
 const writeModeRadio = (key: AnalyticsTablesI18nKey) => screen.getByRole('radio', { name: key });

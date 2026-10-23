@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -50,7 +50,7 @@ const Port: FC<Props> = ({ container, setContainer, disabled }) => {
 
   return (
     <div className="flex gap-4">
-      <DialNumberInput
+      <NumberInput
         integer
         containerClassName="max-w-[125px]"
         id="containerPort"

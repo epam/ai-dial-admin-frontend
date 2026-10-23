@@ -8,7 +8,7 @@ Defines how the Image source section behaves in the Deployments / Images UI acro
 
 ### Requirement: Source-type chooser available for all image types
 
-The Image source-type dropdown (`DialSelectField id="sourceType"`) SHALL be rendered for every `IMAGE_TYPE` value (`MCP`, `INTERCEPTOR`, `ADAPTER`, `APPLICATION`) in both the create-image modal and the Properties view, unless suppressed by the MCP Registry flow (described in capability `mcp-registry-images`). The dropdown SHALL offer the same two options for all image types: `IMAGE_SOURCE_TYPE.DOCKER` (label "Docker image") and `IMAGE_SOURCE_TYPE.CODE` (label "Source code").
+The Image source-type dropdown (`Select id="sourceType"`) SHALL be rendered for every `IMAGE_TYPE` value (`MCP`, `INTERCEPTOR`, `ADAPTER`, `APPLICATION`) in both the create-image modal and the Properties view, unless suppressed by the MCP Registry flow (described in capability `mcp-registry-images`). The dropdown SHALL offer the same two options for all image types: `IMAGE_SOURCE_TYPE.DOCKER` (label "Docker image") and `IMAGE_SOURCE_TYPE.CODE` (label "Source code").
 
 #### Scenario: Adapter image in create modal
 - **WHEN** the user opens the create-image modal and selects image type "Adapter"
@@ -115,7 +115,7 @@ When the user changes `image.$type` via the image-type dropdown in the create mo
 
 ### Requirement: Image-type dropdown suppressed when externalRegistryRef is set
 
-The image-type `DialSelectField` SHALL NOT be rendered when `image.source.externalRegistryRef` is present, because non-MCP image types cannot reference the MCP Registry and the user must not be allowed to change image type while the ref exists. Combined with the existing constraint that `externalRegistryRef` is only set inside the MCP Registry flow, this ensures the image-type change UI cannot strand a non-MCP image with a registry ref attached.
+The image-type `Select` SHALL NOT be rendered when `image.source.externalRegistryRef` is present, because non-MCP image types cannot reference the MCP Registry and the user must not be allowed to change image type while the ref exists. Combined with the existing constraint that `externalRegistryRef` is only set inside the MCP Registry flow, this ensures the image-type change UI cannot strand a non-MCP image with a registry ref attached.
 
 #### Scenario: Dropdown hidden for MCP image with registry ref
 - **WHEN** an image has `source.externalRegistryRef` set

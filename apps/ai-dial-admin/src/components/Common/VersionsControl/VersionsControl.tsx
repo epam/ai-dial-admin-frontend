@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -21,13 +21,13 @@ const VersionsControl: FC<Props> = ({ version, setVersion, versions }) => {
   const onChange = useCallback((value: string) => setVersion(value), [setVersion]);
 
   return (
-    <DialSelect
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+    <Select
+      size={ElementSize.Small}
       options={items}
       value={version}
       onChange={(v) => onChange(v as string)}
       prefix={t(CompareI18nKey.Version)}
+      ariaLabel={t(CompareI18nKey.Version)}
     />
   );
 };

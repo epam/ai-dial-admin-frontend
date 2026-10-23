@@ -1,6 +1,6 @@
 'use client';
 
-import { OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -108,9 +108,9 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, entity
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-          <DialSelectField
+          <Select
             id="catalogSchemaId"
-            label={t(EntitiesI18nKey.CatalogSchema)}
+            labelProps={{ label: t(EntitiesI18nKey.CatalogSchema) }}
             placeholder={t(EntityPlaceholdersI18nKey.SelectCatalogSchema)}
             options={dropdownItems}
             value={schemaId ?? ''}

@@ -8,7 +8,7 @@ import { FunctionParameterSource, FunctionParameterSourceType, OverallScoreFunct
 import SpecificFunction from '../SpecificFunction';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialSelectField: ({ id, label, value, options, onChange }: any) => {
+  Select: ({ id, labelProps: { label } = {}, value, options, onChange }: any) => {
     const selected = options.find((option: any) => option.value === value);
 
     return (

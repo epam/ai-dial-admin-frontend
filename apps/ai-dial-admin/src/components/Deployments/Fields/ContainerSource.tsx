@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -130,7 +130,7 @@ const ContainerSource: FC<Props> = ({ container, setContainer, image, isModal = 
             disabled={isDisabled || container.status === CONTAINER_STATUS.RUNNING}
           />
         ) : (
-          <DialInput
+          <Input
             id="imageReference"
             labelProps={{ label: t(EntityFieldsI18nKey.DockerImageReference), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.URI)}

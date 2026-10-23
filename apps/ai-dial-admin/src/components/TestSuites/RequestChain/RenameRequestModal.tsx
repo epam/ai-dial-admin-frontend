@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { ConfirmationPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Input, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -42,7 +42,7 @@ const RenameRequestModal: FC<Props> = ({ isOpen, initialName, onClose, onConfirm
       size={PopupSize.Md}
     >
       <div className="flex flex-col gap-4 px-6 py-4">
-        <DialInput
+        <Input
           id="rename-request-name"
           labelProps={{ label: t(EntityFieldsI18nKey.name) }}
           value={name}

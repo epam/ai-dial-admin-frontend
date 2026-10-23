@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { contentTypes } from '@/src/components/TestSuites/constants/content-type';
 import { BodyContent, getDefaultContentForType } from '@/src/components/TestSuites/utils/body-content';
@@ -56,10 +56,10 @@ const ContentTypeSelect: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   );
 
   return (
-    <DialSelect
+    <Select
       prefix={`${t(BasicI18nKey.ContentType)}: `}
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+      ariaLabel={t(BasicI18nKey.ContentType)}
+      size={ElementSize.Small}
       options={contentTypes}
       value={currentContentType}
       onChange={handleChange}

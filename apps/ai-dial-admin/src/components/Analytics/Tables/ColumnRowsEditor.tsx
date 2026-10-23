@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { GhostButton, DialInput, Label, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Input, Label, Switch, Select } from '@epam/ai-dial-ui-kit';
 
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -72,7 +72,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         const isTopAligned = rowHasError || isEnum;
         return (
           <div key={row.id} className={classNames('flex gap-2', isTopAligned ? 'items-start' : 'items-end')}>
-            <DialInput
+            <Input
               id={`col-name-${row.id}`}
               containerClassName="flex-[2] min-w-[160px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.ColumnName), required: true } : undefined}
@@ -84,7 +84,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               // see TableDetailView's onRenameCell) — so one control fills both DTO fields.
               onChange={(v) => update(row.id, { source_name: v ?? '', name: v ?? '' })}
             />
-            <DialInput
+            <Input
               id={`col-display-name-${row.id}`}
               containerClassName="flex-[2] min-w-[140px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.DisplayName) } : undefined}
@@ -93,7 +93,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               invalid={Boolean(rowError?.display_name)}
               onChange={(v) => update(row.id, { display_name: v ?? '' })}
             />
-            <DialInput
+            <Input
               id={`col-description-${row.id}`}
               containerClassName="flex-[3] min-w-[160px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.Description) } : undefined}
@@ -102,21 +102,20 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               invalid={Boolean(rowError?.description)}
               onChange={(v) => update(row.id, { description: v ?? '' })}
             />
-            <DialSelectField
+            <Select
               id={`col-type-${row.id}`}
-              containerClassName="flex-1 min-w-[140px]"
-              label={first ? t(AnalyticsTablesI18nKey.Type) : undefined}
+              className="flex-1 min-w-[140px]"
+              labelProps={{ label: first ? t(AnalyticsTablesI18nKey.Type) : undefined }}
               options={COLUMN_TYPE_OPTIONS}
               value={row.type}
               onChange={onTypeChange}
             />
             {hasArrayRow &&
               (isArray ? (
-                <DialSelectField
+                <Select
                   id={`col-element-type-${row.id}`}
-                  containerClassName={TYPED_DETAIL_CELL_CLASS}
-                  label={first ? t(AnalyticsTablesI18nKey.ElementType) : undefined}
-                  required
+                  className={TYPED_DETAIL_CELL_CLASS}
+                  labelProps={{ label: first ? t(AnalyticsTablesI18nKey.ElementType) : undefined, required: true }}
                   options={ELEMENT_TYPE_OPTIONS}
                   value={row.element_type}
                   error={rowError?.element_type}
@@ -142,7 +141,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                   {first && <Label label={t(AnalyticsTablesI18nKey.EnumValues)} required />}
                 </div>
               ))}
-            <DialInput
+            <Input
               id={`col-tag-${row.id}`}
               containerClassName="flex-1 min-w-[120px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.Tag) } : undefined}

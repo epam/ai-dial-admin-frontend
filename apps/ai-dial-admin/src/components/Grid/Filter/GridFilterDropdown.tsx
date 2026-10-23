@@ -3,18 +3,10 @@
 import { FC, useEffect, useState } from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
-import {
-  DialDropdown,
-  DialInput,
-  OutlinedButton,
-  DialNumberInput,
-  DialSelect,
-  SelectOption,
-  SelectSize,
-} from '@epam/ai-dial-ui-kit';
+import { Dropdown, Input, OutlinedButton, NumberInput, Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import FilterFunnelButton from '@/src/components/Grid/Filter/FilterFunnelButton';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { GridFilterType } from '@/src/types/grid-filter';
 
@@ -78,27 +70,28 @@ const GridFilterDropdown: FC<Props> = ({
   };
 
   return (
-    <DialDropdown
+    <Dropdown
       open={isOpen}
       onOpenChange={setIsOpen}
       placement="bottom-end"
       renderOverlay={() => (
         <div className="flex flex-col gap-2 p-3 w-[205px] bg-layer-4">
-          <DialSelect
-            size={SelectSize.Sm}
+          <Select
+            ariaLabel={t(QueryBuilderI18nKey.Operator)}
+            size={ElementSize.Small}
             options={operatorOptions}
             value={draftOperator}
             onChange={(next) => onOperatorChange(next as GridFilterType)}
           />
           {isNumeric ? (
-            <DialNumberInput
+            <NumberInput
               placeholder={placeholder}
               value={draftValue}
               iconBefore={<IconSearch size={16} />}
               onChange={(next) => onValueChange(next == null ? '' : String(next))}
             />
           ) : (
-            <DialInput
+            <Input
               placeholder={placeholder}
               value={draftValue}
               iconBefore={<IconSearch size={16} />}
@@ -112,7 +105,7 @@ const GridFilterDropdown: FC<Props> = ({
       )}
     >
       <FilterFunnelButton isActive={isActive} title={title} />
-    </DialDropdown>
+    </Dropdown>
   );
 };
 

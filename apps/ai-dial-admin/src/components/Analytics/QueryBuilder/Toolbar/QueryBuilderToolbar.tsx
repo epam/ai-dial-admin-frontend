@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { PrimaryButton, DialSelect } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton, Select } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -44,8 +44,9 @@ const QueryBuilderToolbar: FC<Props> = ({
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
       <div className="w-[260px]">
-        <DialSelect
+        <Select
           prefix={`${t(QueryBuilderI18nKey.Source)}: `}
+          ariaLabel={t(QueryBuilderI18nKey.Source)}
           options={entities.map((e) => ({ value: e.name, label: e.name }))}
           value={selectedEntityName}
           onChange={(value) => onSelectEntity(value as string)}

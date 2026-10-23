@@ -15,7 +15,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
   return {
     ...actual,
-    DialSelectField: ({ id, label, value, options, onChange }: any) => (
+    Select: ({ id, labelProps: { label } = {}, value, options, onChange }: any) => (
       <div>
         {label !== undefined && <label htmlFor={id}>{label}</label>}
         <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>

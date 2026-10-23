@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox, DialInput, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Input, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconSearch } from '@tabler/icons-react';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 import classNames from 'classnames';
@@ -180,7 +180,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
         </div>
       )}
       {isAvailable && values.length > SEARCH_THRESHOLD && (
-        <DialInput
+        <Input
           id={`value-filter-search-${fieldName}`}
           placeholder={t(SessionsTraceI18nKey.ValueFilterSearch)}
           value={search}

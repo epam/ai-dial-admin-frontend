@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
@@ -19,12 +19,12 @@ const Transport: FC<Props> = ({ container, setContainer, disabled }) => {
   const isDisabled = disabled ?? isEditDisabled(container);
 
   return (
-    <DialSelectField
+    <Select
       id="transport"
       value={container.transport || CONTAINER_TRANSPORTS[0].value}
       options={CONTAINER_TRANSPORTS}
-      containerClassName="max-w-[160px]"
-      label={t(EntityFieldsI18nKey.Transport)}
+      className="max-w-[160px]"
+      labelProps={{ label: t(EntityFieldsI18nKey.Transport), required: true }}
       onChange={(transportId) => {
         const selectedTransport =
           CONTAINER_TRANSPORTS.find((source) => source.value === transportId) || CONTAINER_TRANSPORTS[0];
@@ -34,7 +34,6 @@ const Transport: FC<Props> = ({ container, setContainer, disabled }) => {
           transport: selectedTransport.value as CONTAINER_TRANSPORT,
         });
       }}
-      required
       disabled={isDisabled}
     />
   );

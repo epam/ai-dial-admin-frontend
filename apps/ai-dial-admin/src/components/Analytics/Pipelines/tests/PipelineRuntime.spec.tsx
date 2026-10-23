@@ -341,11 +341,12 @@ describe('PipelineRuntime', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeTruthy();
   });
 
-  // The screen the operator actually meets first: nothing has failed, so no heading over an empty card.
-  test('draws no failures card for a pipeline with no dead letters', () => {
+  // The screen the operator actually meets first: nothing has failed, and the card says so.
+  test('presents the failures card at zero for a pipeline with no dead letters', () => {
     renderRuntime({}, { canDeadLetter: true });
 
-    expect(screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.FailuresTitle })).toBeNull();
+    expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.FailuresTitle })).toBeTruthy();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.FailuresNone)).toBeTruthy();
   });
 
   test('renders the actions its caller supplies in the control bar', () => {

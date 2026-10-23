@@ -1,7 +1,7 @@
 'use client';
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react';
 
-import { Spinner, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Spinner, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -35,11 +35,10 @@ const ExportTopics: FC<Props> = ({ selectedTopics, setSelectedTopics }) => {
   return isLoading ? (
     <Spinner size={18} fullWidth />
   ) : (
-    <DialSelectField
+    <Select
       listClassName="w-[200px]"
-      captionDescription={t(ExportI18nKey.TopicsCaption)}
+      labelProps={{ label: t(EntityFieldsI18nKey.topics), caption: t(ExportI18nKey.TopicsCaption) }}
       id="topics"
-      label={t(EntityFieldsI18nKey.topics)}
       multiple
       onChange={(topics) => {
         setSelectedTopics(topics as string[]);
