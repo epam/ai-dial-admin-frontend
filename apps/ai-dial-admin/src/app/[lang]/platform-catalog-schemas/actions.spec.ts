@@ -71,6 +71,17 @@ describe('Catalog schemas :: server actions', () => {
     expect(result).toEqual(STORAGE_NAME);
   });
 
+  test('Should stop reading content once a batch holds the match', async () => {
+    const resources = Array.from({ length: 12 }, (_, index) => ({ path: `schema-${index}` }));
+    (assetApi.list as any).mockResolvedValue(resources);
+    (assetApi.getContent as any).mockImplementation(async (_token: unknown, _type: unknown, path: string) =>
+      path === 'schema-1' ? { $id: ID } : { $id: `https://dial.epam.com/catalog_schemas/${path}` },
+    );
+
+    expect(await findCatalogSchemaPathById(ID)).toEqual('schema-1');
+    expect(assetApi.getContent).toHaveBeenCalledTimes(5);
+  });
+
   test('Should skip an unreadable resource and report no match as null', async () => {
     (assetApi.list as any).mockResolvedValue([{ path: 'broken' }, { path: 'other' }]);
     (assetApi.getContent as any).mockImplementation(async (_token: unknown, _type: unknown, path: string) => {

@@ -111,8 +111,9 @@ export const getEntityPath = (
         $id?: string;
         _metadata?: { name?: string; path?: string };
       };
-      // A deployment's schema field knows only the declared `$id`; the detail page resolves it as a
-      // config-file schema when no bucket resource has that name. App runners have no such fallback.
+      // A deployment's schema field knows only the declared `$id`. When no bucket resource has that
+      // name, the detail page reads the config-file schema by it, then looks for the bucket resource
+      // declaring it and redirects there. App runners have no such fallback.
       const declaredId = route === ApplicationRoute.PlatformCatalogSchemas ? $id : undefined;
       const storagePath = _metadata?.path ?? path ?? name ?? _metadata?.name ?? declaredId ?? '';
 
