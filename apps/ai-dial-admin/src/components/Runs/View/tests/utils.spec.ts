@@ -957,6 +957,16 @@ describe('Runs View :: executionColumns are right-aligned', () => {
     expect(col.cellClass({ data: { responseStatusCode: 500 } })).toBe('align-right text-error');
     expect(col.cellClass({ data: {} })).toBe('align-right');
   });
+
+  test('Duration column exposes the numeric value so sorting follows real duration, formatted only for display', () => {
+    const col = getExecutionColumn('duration');
+    expect(col.valueGetter({ data: { executionInfo: { durationMs: 471 } } })).toBe(471);
+    expect(col.valueGetter({ data: { execDurationMs: 1300 } })).toBe(1300);
+    expect(col.valueGetter({ data: {} })).toBeNull();
+    expect(col.valueFormatter({ value: 471 })).toBe('471ms');
+    expect(col.valueFormatter({ value: 1300 })).toBe('1.3s');
+    expect(col.valueFormatter({ value: null })).toBe('—');
+  });
 });
 
 describe('Runs View :: createEmptyComparePrimaryRow', () => {
