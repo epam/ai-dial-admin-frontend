@@ -81,6 +81,10 @@ const Endpoint: FC<Props> = ({
     view === ApplicationRoute.PlatformAppRunners;
   const idValidationField = `upstream-id-${index}`;
   const keyValidationField = `upstream-key-${index}`;
+  const interfacesValidationField = `upstream-interfaces-${index}`;
+  const isInterfacesValid =
+    !!endpoint.baseUrl ||
+    Object.values(endpoint.interfaces ?? {}).every((upstreamInterface) => !!upstreamInterface.endpoint);
   const isKeyRequired = isAuthTypeSupported ? !!isBearerKeyRequired : !isKeyOptional;
   const authTypeOptions: SelectOption[] = [
     { value: UpstreamAuthType.API_KEY, label: t(UpstreamEndpointsI18nKey.ApiKey) },
@@ -130,6 +134,18 @@ const Endpoint: FC<Props> = ({
       dispatch({ type: ValidationActionType.RemoveField, field: idValidationField });
     };
   }, [dispatch, idValidationField, isModelView, isIdRequiredForResponses]);
+
+  useEffect(() => {
+    if (isInterfacesHidden) {
+      return;
+    }
+
+    dispatch({ type: ValidationActionType.SetField, field: interfacesValidationField, isValid: isInterfacesValid });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: interfacesValidationField });
+    };
+  }, [dispatch, interfacesValidationField, isInterfacesHidden, isInterfacesValid]);
 
   useEffect(() => {
     if (!isAuthTypeSupported) {
@@ -351,6 +367,7 @@ const Endpoint: FC<Props> = ({
                   onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
                   allowedTypes={MODEL_INTERFACE_TYPES}
                   variant={InterfaceFieldVariant.Endpoint}
+                  upstreamBaseUrl={endpoint.baseUrl}
                   disabled={disabled}
                 />
               )}
@@ -444,6 +461,7 @@ const Endpoint: FC<Props> = ({
                   onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
                   allowedTypes={MODEL_INTERFACE_TYPES}
                   variant={InterfaceFieldVariant.Endpoint}
+                  upstreamBaseUrl={endpoint.baseUrl}
                   disabled={disabled}
                   className="w-full"
                 />

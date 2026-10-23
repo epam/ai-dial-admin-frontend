@@ -26,6 +26,7 @@ import {
 type InterfaceValue = {
   baseUrl?: string;
   base_url?: string;
+  endpoint?: string;
   mode?: InterfaceMode;
   translator?: TranslatorReference;
 };
@@ -744,8 +745,73 @@ describe('InterfacesField — entity base URL fallback', () => {
   });
 });
 
+describe('InterfacesField — upstream endpoint fallback', () => {
+  const getEndpointInputWithRequiredMarker = () =>
+    screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}\\s*\\*$`) });
+  const queryEndpointInputWithRequiredMarker = () =>
+    screen.queryByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}\\s*\\*$`) });
+
+  const ControlledUpstreamFallbackField = ({ initialUpstreamBaseUrl }: { initialUpstreamBaseUrl?: string }) => {
+    const [upstreamBaseUrl, setUpstreamBaseUrl] = useState(initialUpstreamBaseUrl);
+    return (
+      <div>
+        <button onClick={() => setUpstreamBaseUrl((prev) => (prev ? undefined : 'https://upstream'))}>
+          toggle-upstream-base-url
+        </button>
+        <InterfacesField
+          interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined } }}
+          onChangeInterfaces={vi.fn()}
+          allowedTypes={SINGLE_TYPE}
+          variant={InterfaceFieldVariant.Endpoint}
+          upstreamBaseUrl={upstreamBaseUrl}
+        />
+      </div>
+    );
+  };
+
+  test('requires an empty endpoint when the upstream Base URL is absent', () => {
+    render(<ControlledUpstreamFallbackField />);
+
+    expect(getEndpointInputWithRequiredMarker()).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}`,
+      isValid: false,
+    });
+  });
+
+  test('updates an empty endpoint validation when the upstream Base URL changes', async () => {
+    const user = userEvent.setup();
+    render(<ControlledUpstreamFallbackField />);
+    saveValidationDispatch.mockClear();
+
+    await user.click(screen.getByRole('button', { name: 'toggle-upstream-base-url' }));
+
+    expect(queryEndpointInputWithRequiredMarker()).toBeNull();
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).toBeNull();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}`,
+      isValid: true,
+    });
+
+    saveValidationDispatch.mockClear();
+    await user.click(screen.getByRole('button', { name: 'toggle-upstream-base-url' }));
+
+    expect(getEndpointInputWithRequiredMarker()).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}`,
+      isValid: false,
+    });
+  });
+});
+
 describe('InterfacesField — upstream endpoint variant', () => {
-  const getEndpointInput = () => screen.getByRole('textbox', { name: EntityFieldsI18nKey.endpoint });
+  const getEndpointInput = () =>
+    screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.endpoint}(\\s*\\*)?$`) });
 
   test('adding an interface stores an absent endpoint, not an empty string', async () => {
     const user = userEvent.setup();

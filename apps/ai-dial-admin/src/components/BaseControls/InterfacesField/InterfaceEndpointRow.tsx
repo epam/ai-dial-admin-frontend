@@ -24,27 +24,29 @@ interface Props {
   typeLabel: string;
   value: DialUpstreamInterface;
   disabled?: boolean;
+  upstreamBaseUrl?: string;
   onChange: (value: DialUpstreamInterface) => void;
   onDelete: () => void;
 }
 
 // Peer of InterfaceRow for InterfaceFieldVariant.Endpoint: an upstream overrides an interface with its
-// own endpoint/key/extraData rather than one base_url. `endpoint` is optional here — absent, DIAL Core
-// falls back to the upstream's own baseUrl for this interface — so it validates only when non-empty.
-const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, onDelete }: Props) => {
+// own endpoint/key/extraData rather than one base_url. An empty endpoint falls back to the upstream's
+// baseUrl, so it is required only when that fallback is absent.
+const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, upstreamBaseUrl, onChange, onDelete }: Props) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [error, setError] = useState<FieldError | null>(null);
+  const isRequired = !upstreamBaseUrl;
 
   const validate = useCallback(
     (endpoint?: string, shouldShowError = true) => {
-      const urlError = getUrlError(endpoint, t, false);
+      const urlError = getUrlError(endpoint, t, isRequired);
       dispatch({ type: ValidationActionType.SetField, field: fieldId, isValid: !urlError });
       if (shouldShowError) {
         setError(urlError);
       }
     },
-    [dispatch, fieldId, t],
+    [dispatch, fieldId, isRequired, t],
   );
 
   useEffect(() => {
@@ -62,6 +64,11 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetCounter]);
+
+  useEffect(() => {
+    validate(value.endpoint);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upstreamBaseUrl]);
 
   const onChangeEndpoint = useCallback(
     (newValue?: string) => {
@@ -82,7 +89,7 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
           <div className="flex flex-row gap-x-2">
             <DialInput
               id={fieldId}
-              labelProps={{ label: t(EntityFieldsI18nKey.endpoint) }}
+              labelProps={{ label: t(EntityFieldsI18nKey.endpoint), required: isRequired }}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
               value={value.endpoint || ''}
               onChange={onChangeEndpoint}
