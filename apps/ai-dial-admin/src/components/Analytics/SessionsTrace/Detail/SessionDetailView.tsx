@@ -18,6 +18,7 @@ import {
   SessionScope,
   SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
+import { feedbackByResponseId, isFeedbackPartial } from '@/src/utils/analytics/session-detail-fields';
 
 interface Props {
   session: SessionDetailRow;
@@ -35,6 +36,7 @@ interface Props {
 const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups, feedback, bodyGrants, nowMs }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
+  const ratingsByResponseId = useMemo(() => feedbackByResponseId(rows), [rows]);
   // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
   // consumer would give each hook a new object identity and re-fetch on every render.
   const scope = useMemo<SessionScope>(
@@ -56,6 +58,9 @@ const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups,
           spans={trace.spans}
           fieldGroups={trace.fieldGroups}
           bodyGrants={bodyGrants}
+          feedbackByResponseId={ratingsByResponseId}
+          isFeedbackPartial={isFeedbackPartial(rows, feedback?.total ?? null)}
+          isCommentTextReadable={feedback?.isCommentTextReadable ?? false}
           hasLoadError={trace.hasLoadError}
           selectedSpanId={selectedSpanId}
           onSelectSpan={onSelectSpan}

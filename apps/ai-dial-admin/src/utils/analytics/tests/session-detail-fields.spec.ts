@@ -12,6 +12,7 @@ import {
 } from '@/src/models/analytics/sessions-trace';
 import {
   sessionTitle,
+  feedbackByResponseId,
   feedbackRowCounts,
   isFeedbackContested,
   isFeedbackPartial,
@@ -292,5 +293,17 @@ describe('isFeedbackPartial', () => {
 
   test('an absent total cannot be judged partial', () => {
     expect(isFeedbackPartial(rows, null)).toBe(false);
+  });
+});
+
+describe('feedbackByResponseId', () => {
+  test('keys each row by its response id', () => {
+    const row = feedbackRow({ response_id: 'resp-1' });
+
+    expect(feedbackByResponseId([row]).get('resp-1')).toBe(row);
+  });
+
+  test('leaves out a row that names no response', () => {
+    expect(feedbackByResponseId([feedbackRow({ response_id: null }), feedbackRow({ response_id: '' })]).size).toBe(0);
   });
 });
