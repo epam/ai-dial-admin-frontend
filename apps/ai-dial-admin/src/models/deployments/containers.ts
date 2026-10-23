@@ -10,7 +10,22 @@ import {
   SCALING_STRATEGY_TYPE,
 } from '@/src/types/deployments/containers';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialApplicationResource, DialInterceptorResource, DialModelResource } from '@/src/models/dial/resource';
 import { BaseEntity } from '../dial/base-entity';
+
+/** i18n keys for a container's Core asset: the dropdown option beside the admin-backend one, and the Core-only button's entity. */
+export interface ContainerAssetLabels {
+  option: string;
+  entity: string;
+}
+
+/** The Core asset a running container pre-fills in the asset create modal, by the type it serves. */
+export type ContainerAssetTemplate =
+  | Partial<AssetToolset>
+  | Partial<DialModelResource>
+  | Partial<DialInterceptorResource>
+  | Partial<DialApplicationResource>;
 
 export interface Container extends BaseEntity {
   $type: CONTAINER_TYPE;

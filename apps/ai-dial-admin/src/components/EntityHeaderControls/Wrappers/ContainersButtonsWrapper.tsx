@@ -13,6 +13,8 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
+import { CreateAssetRoute } from '@/src/components/Assets/BaseAssetList/types';
+import { AssetFolderContextMap, CreateAssetActionMap } from '@/src/components/Assets/BaseAssetList/utils';
 import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
@@ -27,7 +29,8 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
-import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -37,16 +40,21 @@ import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   getAssetTemplate,
+  getAssetView,
   getEntityRoute,
   getEntityTemplate,
+  getTranslatedAssetEntity,
+  getTranslatedAssetOption,
   getTranslatedEntity,
 } from '@/src/utils/deployments/entity';
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
+import { isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { getErrorNotification } from '@/src/utils/notification';
 
 export interface ContainersButtonsWrapperProps {
@@ -65,6 +73,7 @@ export interface ContainersButtonsWrapperProps {
   createEntity?: (entity: BaseEntity) => Promise<ServerActionResponse>;
   createToolset?: (entity: BaseEntity) => Promise<ServerActionResponse>;
   toolsetNames?: string[];
+  assetNames?: string[];
 }
 
 const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
@@ -81,9 +90,11 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   createToolset,
   entityNames,
   toolsetNames,
+  assetNames,
   transport,
 }) => {
   const t = useI18n();
+  const { featureFlags } = useAppContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -156,17 +167,6 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
     onOpenModal(ModalType.createAsset);
   }, [onOpenModal]);
 
-  const createToolsetOptions: DropdownItem[] = useMemo(() => {
-    return [
-      { key: 'toolset', label: t(EntitiesI18nKey.Toolset), onClick: onOpenCreateModal },
-      {
-        key: 'asset_toolset',
-        label: t(EntitiesI18nKey.AssetToolset),
-        onClick: onOpenCreteAssetModal,
-      },
-    ];
-  }, [onOpenCreateModal, onOpenCreteAssetModal, t]);
-
   useEffect(() => {
     setContainerClassNames(
       classNames(SELECT_ENTITY_HEADER_CLASS, (isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_CLASS),
@@ -192,6 +192,23 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   const createEntityNames = isClassificationToolset ? (toolsetNames ?? []) : (entityNames ?? []);
   const createLabelEntity = isClassificationToolset ? t(EntitiesI18nKey.Toolset) : getTranslatedEntity(route, t);
 
+  // The admin-backend entity and the Core asset are two independent creates; without the admin API
+  // only the Core one is left, so the dropdown collapses to a plain button.
+  const hasAdminCreate = featureFlags.adminApiEnabled && !!activeCreateEntity;
+  const isCreateAvailable = container.status === CONTAINER_STATUS.RUNNING && !isCapabilityBlocked;
+  const assetView = getAssetView(route, container);
+  const assetTemplate = getAssetTemplate(route, container, transport);
+  const assetFolderContext = AssetFolderContextMap[
+    assetView as keyof typeof AssetFolderContextMap
+  ] as () => AssetsFolderContextReader;
+
+  const createOptions: DropdownItem[] = useMemo(() => {
+    return [
+      { key: 'entity', label: createLabelEntity, onClick: onOpenCreateModal },
+      { key: 'asset', label: getTranslatedAssetOption(route, container, t), onClick: onOpenCreteAssetModal },
+    ];
+  }, [container, createLabelEntity, onOpenCreateModal, onOpenCreteAssetModal, route, t]);
+
   return (
     <>
       <div className={containerClassNames}>
@@ -208,27 +225,26 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration.isEditorEnabled && (
               <div className="flex flex-row gap-3">
-                {activeCreateEntity && container.status === CONTAINER_STATUS.RUNNING && !isCapabilityBlocked && (
-                  <>
-                    {route === ApplicationRoute.McpContainers ? (
-                      <ButtonDropdown
-                        label={t(ButtonsI18nKey.Create)}
-                        items={createToolsetOptions}
-                        variant={ButtonVariant.Neutral}
-                        appearance={ButtonAppearance.Outlined}
-                        disabled={!isValid}
-                      />
-                    ) : (
-                      <OutlinedButton
-                        className={buttonsClassNames}
-                        label={t(CreateI18nKey.CreateEntity, { entity: createLabelEntity })}
-                        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-                        onClick={onOpenCreateModal}
-                        disabled={!isValid}
-                      />
-                    )}
-                  </>
-                )}
+                {isCreateAvailable &&
+                  (hasAdminCreate ? (
+                    <ButtonDropdown
+                      label={t(ButtonsI18nKey.Create)}
+                      items={createOptions}
+                      variant={ButtonVariant.Neutral}
+                      appearance={ButtonAppearance.Outlined}
+                      disabled={!isValid}
+                    />
+                  ) : (
+                    <OutlinedButton
+                      className={buttonsClassNames}
+                      label={t(CreateI18nKey.CreateEntity, {
+                        entity: getTranslatedAssetEntity(route, container, t),
+                      })}
+                      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+                      onClick={onOpenCreteAssetModal}
+                      disabled={!isValid}
+                    />
+                  ))}
 
                 <DangerButton
                   className={buttonsClassNames}
@@ -294,13 +310,28 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
       {isModalOpen &&
         modalType === ModalType.createAsset &&
         createPortal(
-          <CreateAsset
-            view={ApplicationRoute.AssetsToolsets}
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            initialValues={getAssetTemplate(route, container, t, transport as CONTAINER_TRANSPORT)}
-            context={useToolsetFolder}
-          />,
+          // Flat platform types (models, interceptors) go through the same create flow as their
+          // Assets list; only the dual-bucket types need the folder-aware asset modal.
+          isFlatPlatformView(assetView) ? (
+            <CreateEntity
+              route={assetView}
+              isModalOpen={isModalOpen}
+              names={assetNames ?? []}
+              onClose={onCloseModal}
+              createEntity={CreateAssetActionMap[assetView as CreateAssetRoute]}
+              initialValues={assetTemplate as Partial<AssetWithVersion>}
+              isModal
+            />
+          ) : (
+            <CreateAsset
+              view={assetView}
+              isModalOpen={isModalOpen}
+              onClose={onCloseModal}
+              initialValues={assetTemplate as Partial<AssetWithVersion>}
+              context={assetFolderContext}
+              isPlatformTarget
+            />
+          ),
           document.body,
         )}
     </>
