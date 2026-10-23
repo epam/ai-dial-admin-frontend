@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
 
-import { Tooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { mergeClasses } from '@/src/utils/merge-classes';
 
@@ -88,7 +88,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">
       {tags.slice(0, visibleCount).map((item, index) => (
         <div key={`shown-${item}-${index}`} ref={setItemRef(index)} className={itemClassName}>
-          {item}
+          <EllipsisTooltip text={item} />
         </div>
       ))}
 
