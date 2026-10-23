@@ -35,6 +35,8 @@ interface Props<V extends InterfaceValue> {
   // The entity-level base URL an interface's empty base_url falls back to; passed through to each
   // row, which makes its own value optional. Absent on surfaces with no such field.
   entityBaseUrl?: string;
+  // The parent upstream Base URL an endpoint-variant interface falls back to when its endpoint is empty.
+  upstreamBaseUrl?: string;
 }
 
 export const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
@@ -60,6 +62,7 @@ const InterfacesField = <V extends InterfaceValue>({
   className,
   translators,
   entityBaseUrl,
+  upstreamBaseUrl,
   view,
 }: Props<V>) => {
   const t = useI18n();
@@ -146,6 +149,7 @@ const InterfacesField = <V extends InterfaceValue>({
                 typeLabel={getInterfaceTypeLabel(t, type)}
                 value={(interfaces[type] as DialUpstreamInterface) || {}}
                 disabled={isReadonly}
+                upstreamBaseUrl={upstreamBaseUrl}
                 onChange={(value) => onChangeValue(type, value as V)}
                 onDelete={() => onDeleteType(type)}
               />

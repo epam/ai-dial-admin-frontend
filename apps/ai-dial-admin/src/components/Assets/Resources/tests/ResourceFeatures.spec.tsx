@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import ResourceFeatures from '../ResourceFeatures';
@@ -8,8 +8,10 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
   useIsReadOnlyAdmin: () => false,
 }));
 
+const mockUseAssetRunnerDetails = vi.hoisted(() => vi.fn());
+
 vi.mock('@/src/components/Assets/Platform/use-asset-runner-details', () => ({
-  useAssetRunnerDetails: () => ({ features: undefined, isLoading: false }),
+  useAssetRunnerDetails: mockUseAssetRunnerDetails,
 }));
 
 vi.mock('@/src/components/BaseControls/Endpoint/Endpoint', () => ({ default: () => null }));
@@ -34,6 +36,28 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 }));
 
 describe('ResourceFeatures', () => {
+  beforeEach(() => {
+    mockUseAssetRunnerDetails.mockReturnValue({ features: undefined, isLoading: false });
+  });
+
+  test('inherits the assistant attachments switch from a runner resolved by schema id', () => {
+    mockUseAssetRunnerDetails.mockReturnValue({
+      features: { 'dial:applicationTypeAssistantAttachmentsInRequestSupported': true },
+      isLoading: false,
+    });
+    render(
+      <ResourceFeatures
+        entity={{ features: {}, application_type_schema_id: 'runner-id' } as DialApplicationResource}
+        onChangeEntity={vi.fn()}
+      />,
+    );
+
+    expect(mockUseAssetRunnerDetails).toHaveBeenCalledWith(undefined, 'runner-id');
+    const toggle = screen.getByRole('switch', { name: 'Features.assistantAttachmentsInRequestSupported' });
+    expect(toggle).toBeDisabled();
+    expect(toggle).toBeChecked();
+  });
+
   test('lays each switch group out without stretching its switches', () => {
     render(<ResourceFeatures entity={{ features: {} } as DialApplicationResource} onChangeEntity={vi.fn()} />);
 

@@ -1,8 +1,20 @@
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+const { saveValidationDispatch } = vi.hoisted(() => ({ saveValidationDispatch: vi.fn() }));
+
+vi.mock('@/src/context/SaveValidationContext', () => ({
+  useSaveValidationContext: () => ({ dispatch: saveValidationDispatch, resetCounter: 0 }),
+  ValidationActionType: {
+    SetField: 'SET_FIELD_VALIDATION',
+    RemoveField: 'REMOVE_FIELD_VALIDATION',
+  },
+}));
 import Endpoint from './Endpoint';
 
 const baseEndpoint = {
@@ -18,6 +30,7 @@ describe('Endpoint', () => {
   let removeEndpoint: any;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     updateEndpoint = vi.fn();
     removeEndpoint = vi.fn();
   });
@@ -260,6 +273,68 @@ describe('Endpoint', () => {
 
     fireEvent.click(screen.getByLabelText('toggle expanded fields'));
     expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+  });
+
+  test('keeps an empty interface endpoint optional when the upstream Base URL is populated', async () => {
+    const user = userEvent.setup();
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={{
+          ...baseEndpoint,
+          id: 'upstream',
+          baseUrl: 'https://upstream',
+          interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined } },
+        }}
+        view={ApplicationRoute.PlatformModels}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'toggle expanded fields' }));
+
+    expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.endpoint })).toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).toBeNull();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: 'upstream-interfaces-0',
+      isValid: true,
+    });
+  });
+
+  test('keeps a missing interface endpoint invalid after upstream details collapse', async () => {
+    const user = userEvent.setup();
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={{
+          ...baseEndpoint,
+          id: 'upstream',
+          interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined } },
+        }}
+        view={ApplicationRoute.PlatformModels}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'toggle expanded fields' }));
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'toggle expanded fields' }));
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: 'upstream-interfaces-0',
+      isValid: false,
+    });
+    expect(saveValidationDispatch).not.toHaveBeenCalledWith({
+      type: 'REMOVE_FIELD_VALIDATION',
+      field: 'upstream-interfaces-0',
+    });
   });
 
   test('does not require the hidden key of an unchanged Bearer upstream', () => {
