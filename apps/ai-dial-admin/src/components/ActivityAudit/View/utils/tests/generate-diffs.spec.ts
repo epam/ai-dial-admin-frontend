@@ -987,6 +987,41 @@ describe('Analytics revision :: generateCurrentResource routes analytics types t
     expect(sections[EntityParameterKeys.COLUMNS][0].diffStatus).toBeUndefined();
   });
 
+  test('passes the resource type through, so the hidden parameters follow it', () => {
+    const older: ActivityAuditEntity = { ...olderTable, permissions: { write: true }, created_at: 't1' };
+    const newer: ActivityAuditEntity = { ...newerTable, permissions: { write: false }, created_at: 't1' };
+
+    const tableParameters = generateCurrentResource(
+      older,
+      newer,
+      ActivityAuditResourceType.TABLE,
+      false,
+    ).properties.map((row) => row.parameter);
+    const pipelineParameters = generateCurrentResource(
+      older,
+      newer,
+      ActivityAuditResourceType.PIPELINE,
+      false,
+    ).properties.map((row) => row.parameter);
+
+    expect(tableParameters).not.toContain('permissions.write');
+    expect(tableParameters).toContain('created_at');
+    expect(pipelineParameters).toContain('permissions.write');
+    expect(pipelineParameters).not.toContain('created_at');
+  });
+
+  test('returns a single empty properties bucket for every analytics type when both snapshots are absent', () => {
+    [
+      ActivityAuditResourceType.TABLE,
+      ActivityAuditResourceType.TABLE_COLUMN,
+      ActivityAuditResourceType.PIPELINE,
+      ActivityAuditResourceType.SAVED_QUERY,
+    ].forEach((type) => {
+      expect(generateCurrentResource(null, null, type, true)).toEqual({ [EntityParameterKeys.PROPERTIES]: [] });
+      expect(generateCurrentResource(null, null, type, false)).toEqual({ [EntityParameterKeys.PROPERTIES]: [] });
+    });
+  });
+
   test('a column whose name matches a container or admin section does not create that section', () => {
     const snapshot: ActivityAuditEntity = {
       name: 'orders',

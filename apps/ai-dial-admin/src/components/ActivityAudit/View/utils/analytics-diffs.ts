@@ -7,7 +7,7 @@ import {
   FlatRow,
   TranslateFn,
 } from '@/src/models/activity-audit';
-import { ActivityAuditEntity, DiffStatus } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { sortKeys } from './compare-helpers';
 import { compareNestedFlatObject, fillNestedFlatObject } from './create-simple-diffs';
 
@@ -24,6 +24,17 @@ export const ANALYTICS_COLUMN_PARAMETERS = [
   'description',
   'sensitive',
 ];
+
+// Snapshot members suppressed per resource type, matched on a leaf's first path
+// segment so `state` hides every `state.*` leaf the service may add.
+const ANALYTICS_HIDDEN_PARAMETERS: Partial<Record<ActivityAuditResourceType, Set<string>>> = {
+  // Resolved from the reader's own roles, so two readers would see different diffs of one revision pair.
+  [ActivityAuditResourceType.TABLE]: new Set(['permissions']),
+  // `state` is runtime position the service never audits; the timestamps duplicate the activity row.
+  [ActivityAuditResourceType.PIPELINE]: new Set(['created_at', 'updated_at', 'state']),
+  // `id` is already the activity's resource identifier; the timestamps duplicate the activity row.
+  [ActivityAuditResourceType.SAVED_QUERY]: new Set(['id', 'created_at', 'updated_at']),
+};
 
 const COLUMN_NAME_PARAMETER = 'name';
 const COLUMNS_BUCKET_PREFIX = `${EntityParameterKeys.COLUMNS}:`;
@@ -93,7 +104,7 @@ export const getSnapshotLeaves = (snapshot?: ActivityAuditEntity | null): Record
 };
 
 /**
- * Project a snapshot to diff rows — one per leaf, no hidden-key set.
+ * Project a snapshot to diff rows — one per leaf.
  *
  * @param {?ActivityAuditEntity} [snapshot] - analytics revision snapshot
  * @param {?string[]} [parameters] - parameter order to emit; both sides of a
@@ -147,25 +158,10 @@ const getExtraColumnParameters = (...columns: (object | undefined)[]): string[] 
 
 const union = (...keyLists: string[][]): string[] => Array.from(new Set(keyLists.flat()));
 
-/**
- * Restore rows the shared comparator dropped for having an empty rendered
- * value — the case an empty collection (`inputs: []`) or an all-empty nested
- * object falls into, since `collectLeaves` renders both as `''`. The
- * comparator's own drop rule stays untouched for every other caller; this
- * only re-inserts a plain, unchanged-looking row for a parameter this
- * snapshot actually carries, so an analytics field is never silently absent.
- *
- * @param {ActivityAuditDiff[]} rows - output of `compareNestedFlatObject` / `fillNestedFlatObject`,
- *   a subsequence of `parameters` in the same order
- * @param {string[]} parameters - every parameter the snapshot(s) carry, in emission order
- * @returns {ActivityAuditDiff[]} - one row per parameter, gaps filled with an empty value
- */
-const restoreEmptyValueRows = (rows: ActivityAuditDiff[], parameters: string[]): ActivityAuditDiff[] => {
-  let cursor = 0;
-  return parameters.map((parameter) => {
-    if (rows[cursor]?.parameter === parameter) return rows[cursor++];
-    return { parameter, value: '' };
-  });
+// A column activity's snapshot is its table's definition, so it is suppressed like the table.
+const getHiddenParameters = (type: ActivityAuditResourceType): Set<string> => {
+  const family = type === ActivityAuditResourceType.TABLE_COLUMN ? ActivityAuditResourceType.TABLE : type;
+  return ANALYTICS_HIDDEN_PARAMETERS[family] ?? new Set();
 };
 
 export const getColumnBucketKey = (name: string): string => `${COLUMNS_BUCKET_PREFIX}${name}`;
@@ -194,12 +190,14 @@ const applyBucketStatus = (result: Record<string, ActivityAuditDiff[]>, status: 
  * @param {ActivityAuditEntity | null} current - the opposite side of the comparison
  * @param {ActivityAuditEntity | null} compare - the side being rendered
  * @param {?boolean} [isCurrent] - true while building the older (Before) side
+ * @param {ActivityAuditResourceType} type - resource type, which picks the hidden-parameter set
  * @returns {Record<string, ActivityAuditDiff[]>} - diff buckets
  */
 export const buildAnalyticsDiff = (
   current: ActivityAuditEntity | null,
   compare: ActivityAuditEntity | null,
-  isCurrent?: boolean,
+  isCurrent: boolean | undefined,
+  type: ActivityAuditResourceType,
 ): Record<string, ActivityAuditDiff[]> => {
   const result: Record<string, ActivityAuditDiff[]> = { properties: [] };
   if (!compare) return result;
@@ -207,7 +205,10 @@ export const buildAnalyticsDiff = (
   const hasBothSides = current != null;
   const currentParameters = Object.keys(getSnapshotLeaves(current));
   const compareParameters = Object.keys(getSnapshotLeaves(compare));
-  const parameters = union(currentParameters, compareParameters).sort(sortKeys);
+  const hiddenParameters = getHiddenParameters(type);
+  const parameters = union(currentParameters, compareParameters)
+    .filter((parameter) => !hiddenParameters.has(parameter.split(PATH_SEPARATOR)[0]))
+    .sort(sortKeys);
 
   if (hasBothSides) {
     compareNestedFlatObject(
@@ -219,7 +220,6 @@ export const buildAnalyticsDiff = (
   } else {
     fillNestedFlatObject(result.properties, snapshotRows(compare, parameters));
   }
-  result.properties = restoreEmptyValueRows(result.properties, parameters);
 
   const currentColumns = getColumnsByName(current);
   const compareColumns = getColumnsByName(compare);
