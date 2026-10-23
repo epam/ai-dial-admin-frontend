@@ -5,6 +5,7 @@ import { IconBraces } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useState } from 'react';
 
+import FeedbackEntry from '@/src/components/Analytics/SessionsTrace/Detail/FeedbackEntry';
 import SessionRailShell from '@/src/components/Analytics/SessionsTrace/Detail/SessionRailShell';
 import SpanFactRow from '@/src/components/Analytics/SessionsTrace/Detail/SpanFactRow';
 import SpanFieldsSection from '@/src/components/Analytics/SessionsTrace/Detail/SpanFieldsSection';
@@ -13,7 +14,12 @@ import FullscreenViewer from '@/src/components/Common/FullscreenViewer/Fullscree
 import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { SessionSpanNode, SpanFactRowProps, SpanFieldGroup } from '@/src/models/analytics/sessions-trace';
+import {
+  SessionFeedbackRow,
+  SessionSpanNode,
+  SpanFactRowProps,
+  SpanFieldGroup,
+} from '@/src/models/analytics/sessions-trace';
 import { ViewerContentType } from '@/src/types/evaluation';
 import { formatSignificantCost } from '@/src/utils/analytics/session-formatting';
 import { spanLabelOf } from '@/src/utils/analytics/session-spans';
@@ -24,9 +30,12 @@ const ICON_SIZE = 16;
 interface Props {
   node: SessionSpanNode | null;
   fieldGroups: SpanFieldGroup[];
+  // The rating of the response this span answered the client with — absent for every span that did not.
+  feedback?: SessionFeedbackRow;
+  isCommentTextReadable?: boolean;
 }
 
-const SessionSpanDetail: FC<Props> = ({ node, fieldGroups }) => {
+const SessionSpanDetail: FC<Props> = ({ node, fieldGroups, feedback, isCommentTextReadable = false }) => {
   const t = useI18n();
   const [openJsonSpanId, setOpenJsonSpanId] = useState<string | null>(null);
   // Tied to the span it was opened on: left open across a change of selection, the dialog would re-title and
@@ -97,6 +106,12 @@ const SessionSpanDetail: FC<Props> = ({ node, fieldGroups }) => {
           <SpanFactRow key={row.label} {...row} />
         ))}
       </div>
+      {feedback && (
+        <section className="flex shrink-0 flex-col gap-1">
+          <h4 className="text-secondary dial-tiny-semi-text">{t(SessionsTraceI18nKey.DetailPanelFeedback)}</h4>
+          <FeedbackEntry row={feedback} isCommentTextReadable={isCommentTextReadable} />
+        </section>
+      )}
       <SpanFieldsSection groups={fieldGroups} row={span} />
       {isJsonOpen && (
         <FullscreenViewer

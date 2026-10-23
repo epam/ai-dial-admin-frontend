@@ -3525,6 +3525,7 @@ export enum SessionsTraceI18nKey {
   TraceOk = 'SessionsTrace.TraceOk',
   TraceFailed = 'SessionsTrace.TraceFailed',
   TraceSpansPartial = 'SessionsTrace.TraceSpansPartial',
+  TraceRatingsPartial = 'SessionsTrace.TraceRatingsPartial',
   TraceLoadFailed = 'SessionsTrace.TraceLoadFailed',
   TraceNoSpans = 'SessionsTrace.TraceNoSpans',
   SpanRecordedAt = 'SessionsTrace.SpanRecordedAt',

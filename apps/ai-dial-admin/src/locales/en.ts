@@ -3832,6 +3832,8 @@ export default {
     TraceOk: 'OK',
     TraceFailed: 'Failed',
     TraceSpansPartial: 'Showing {shown} of {total} spans',
+    TraceRatingsPartial:
+      'Only the most recently rated responses of this session were read, so a span here may carry a rating it does not show.',
     TraceLoadFailed: 'Could not load this trace.',
     TraceNoSpans: 'No spans recorded for this turn.',
     SpanRecordedAt: 'Recorded at',

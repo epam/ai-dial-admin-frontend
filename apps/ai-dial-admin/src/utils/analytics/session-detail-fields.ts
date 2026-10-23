@@ -112,5 +112,10 @@ export const isFeedbackReRated = (row: SessionFeedbackRow): boolean => {
   return first !== null && last !== null && first !== last;
 };
 
+// The rating source is grained by response id, so each id names at most one row. A row with no id cannot be
+// placed on a span and is left out rather than keyed under an empty string a span might also carry.
+export const feedbackByResponseId = (rows: SessionFeedbackRow[]): Map<string, SessionFeedbackRow> =>
+  new Map(rows.flatMap((row) => (row.response_id ? [[row.response_id, row] as const] : [])));
+
 export const isFeedbackPartial = (rows: SessionFeedbackRow[], total: number | null): boolean =>
   total !== null && total > rows.length;
