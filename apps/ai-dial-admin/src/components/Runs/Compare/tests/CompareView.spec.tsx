@@ -53,11 +53,13 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     additionalGridOptions?: { onRowClicked?: (event: { data: unknown }) => void };
   }) => (
     <section aria-label="Data grid">
-      {rowData?.map((row) => (
-        <button key={row.id} type="button" onClick={() => additionalGridOptions?.onRowClicked?.({ data: row })}>
-          {row.testCaseName}
-        </button>
-      ))}
+      {rowData
+        ?.filter((row) => row.id)
+        .map((row) => (
+          <button key={row.id} type="button" onClick={() => additionalGridOptions?.onRowClicked?.({ data: row })}>
+            {row.testCaseName}
+          </button>
+        ))}
     </section>
   ),
 }));
