@@ -44,6 +44,8 @@ interface Props {
   createToolset?: (entity: Toolset) => Promise<ServerActionResponse>;
   entityNames?: string[];
   toolsetNames?: string[];
+  /** Core names (platform bucket + config file) the flat-platform asset create rejects. */
+  assetNames?: string[];
 }
 
 const ContainerView: FC<Props> = ({
@@ -54,6 +56,7 @@ const ContainerView: FC<Props> = ({
   createToolset,
   entityNames,
   toolsetNames,
+  assetNames,
   ...props
 }) => {
   const t = useI18n();
@@ -309,6 +312,7 @@ const ContainerView: FC<Props> = ({
           createToolset={createToolset}
           entityNames={entityNames}
           toolsetNames={toolsetNames}
+          assetNames={assetNames}
         />
 
         <div className="flex-1 overflow-auto min-h-0">

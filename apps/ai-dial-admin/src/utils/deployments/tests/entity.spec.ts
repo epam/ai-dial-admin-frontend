@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   getAssetTemplate,
+  getAssetView,
   getCurrentPolicy,
   getDeploymentEntityKey,
   getEntityId,
@@ -9,6 +10,8 @@ import {
   getEntityTemplate,
   getIdFormat,
   getRouteByType,
+  getTranslatedAssetEntity,
+  getTranslatedAssetOption,
   getTranslatedDeploymentType,
   getTranslatedEntity,
   getTranslatedType,
@@ -18,7 +21,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
 import { CONTAINER_TRANSPORT, CONTAINER_TYPE, INFERENCE_TASK } from '@/src/types/deployments/containers';
-import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
+import { ENTITY_TRANSPORT, SERVING_MCP_ENDPOINT_PATH } from '@/src/constants/deployments/containers';
+import { Container } from '@/src/models/deployments/containers';
+import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
+import { DialModelResourceType } from '@/src/models/dial/resource';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { DialModelType } from '@/src/models/dial/model';
@@ -180,18 +186,136 @@ describe('entity utils', () => {
   });
 
   describe('getAssetTemplate', () => {
-    test('returns asset template', () => {
-      const container = { displayName: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE);
-      expect(template.name).toBe('mycontainer');
-      expect(template.endpoint).toBe('http://url');
-      expect(template.transport).toBe(CONTAINER_TRANSPORT.SSE);
+    const container = (overrides: Partial<Container> = {}) =>
+      ({ name: 'dm-box', displayName: 'My Box', url: 'http://box', ...overrides }) as Container;
+    const chatInterfaces = { [DeploymentInterfaceType.OpenAIChatCompletions]: {} };
+
+    test('keeps the served MCP endpoint and maps the container transport', () => {
+      expect(getAssetTemplate(ApplicationRoute.McpContainers, container(), CONTAINER_TRANSPORT.SSE)).toEqual({
+        name: 'my_box',
+        displayName: 'My Box',
+        endpoint: 'http://box',
+        transport: ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE],
+      });
     });
 
-    test('configures transport for McpContainers', () => {
-      const container = { displayName: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpContainers, container, t, CONTAINER_TRANSPORT.SSE) as any;
-      expect(template.transport).toBe(ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE]);
+    test('leaves the MCP transport unset when the container reports none', () => {
+      expect(getAssetTemplate(ApplicationRoute.McpContainers, container())).toHaveProperty('transport', undefined);
+    });
+
+    test('routes an adapter model through the base URL and a chat interface', () => {
+      expect(getAssetTemplate(ApplicationRoute.AdapterContainers, container())).toEqual({
+        name: 'my_box',
+        displayName: 'My Box',
+        type: DialModelResourceType.Chat,
+        baseUrl: 'http://box',
+        interfaces: chatInterfaces,
+      });
+    });
+
+    test('routes an interceptor through the base URL and a chat interface', () => {
+      expect(getAssetTemplate(ApplicationRoute.InterceptorContainers, container())).toEqual({
+        name: 'my_box',
+        displayName: 'My Box',
+        baseUrl: 'http://box',
+        interfaces: chatInterfaces,
+      });
+    });
+
+    test('routes an application through the snake-case base URL and a chat interface', () => {
+      expect(getAssetTemplate(ApplicationRoute.ApplicationContainers, container())).toEqual({
+        name: 'my_box',
+        displayName: 'My Box',
+        base_url: 'http://box',
+        interfaces: chatInterfaces,
+      });
+    });
+
+    test('gives a text-generation serving the full OpenAI v1 endpoint and its own override name', () => {
+      (getEndpointPrefix as any).mockReturnValue('openai/v1');
+      (getEndpointPostfix as any).mockReturnValue('/chat/completions');
+
+      expect(
+        getAssetTemplate(ApplicationRoute.ModelServings, container({ inferenceTask: INFERENCE_TASK.TEXT_GENERATION })),
+      ).toEqual({
+        name: 'my_box',
+        displayName: 'My Box',
+        type: DialModelResourceType.Chat,
+        endpoint: 'http://box/openai/v1/chat/completions',
+        overrideName: 'dm-box',
+      });
+    });
+
+    test('gives a text-classification serving an MCP toolset on the streamable-HTTP transport', () => {
+      expect(
+        getAssetTemplate(
+          ApplicationRoute.ModelServings,
+          container({ inferenceTask: INFERENCE_TASK.TEXT_CLASSIFICATION }),
+        ),
+      ).toEqual({
+        name: 'my_box',
+        displayName: 'My Box',
+        endpoint: `http://box${SERVING_MCP_ENDPOINT_PATH}`,
+        transport: ToolsetTransport.HTTP,
+      });
+    });
+
+    test.each([ApplicationRoute.AdapterContainers, ApplicationRoute.InterceptorContainers])(
+      'sets no roles, upstreams or override name for %s',
+      (route) => {
+        const template = getAssetTemplate(route, container()) as Record<string, unknown>;
+        expect(template).not.toHaveProperty('userRoles');
+        expect(template).not.toHaveProperty('user_roles');
+        expect(template).not.toHaveProperty('upstreams');
+        expect(template).not.toHaveProperty('overrideName');
+      },
+    );
+
+    test.each([undefined, ''])('never emits an empty URL string when the container URL is %j', (url) => {
+      const serving = getAssetTemplate(ApplicationRoute.ModelServings, container({ url })) as any;
+      const adapter = getAssetTemplate(ApplicationRoute.AdapterContainers, container({ url })) as any;
+      const application = getAssetTemplate(ApplicationRoute.ApplicationContainers, container({ url })) as any;
+      const mcp = getAssetTemplate(ApplicationRoute.McpContainers, container({ url })) as any;
+
+      expect(serving.endpoint).toBeUndefined();
+      expect(adapter.baseUrl).toBeUndefined();
+      expect(application.base_url).toBeUndefined();
+      expect(mcp.endpoint).toBeUndefined();
+    });
+  });
+
+  describe('getAssetView', () => {
+    test.each([
+      [ApplicationRoute.AdapterContainers, undefined, ApplicationRoute.PlatformModels],
+      [ApplicationRoute.InterceptorContainers, undefined, ApplicationRoute.PlatformInterceptors],
+      [ApplicationRoute.ApplicationContainers, undefined, ApplicationRoute.AssetsApplications],
+      [ApplicationRoute.McpContainers, undefined, ApplicationRoute.AssetsToolsets],
+      [ApplicationRoute.ModelServings, INFERENCE_TASK.TEXT_GENERATION, ApplicationRoute.PlatformModels],
+      [ApplicationRoute.ModelServings, INFERENCE_TASK.TEXT_CLASSIFICATION, ApplicationRoute.AssetsToolsets],
+    ])('maps %s (%s) to %s', (route, inferenceTask, expected) => {
+      expect(getAssetView(route, { inferenceTask } as Container)).toBe(expected);
+    });
+  });
+
+  describe('getTranslatedAssetOption', () => {
+    test.each([
+      [ApplicationRoute.AdapterContainers, EntitiesI18nKey.AssetModel],
+      [ApplicationRoute.InterceptorContainers, EntitiesI18nKey.AssetInterceptor],
+      [ApplicationRoute.ApplicationContainers, EntitiesI18nKey.AssetApplication],
+      [ApplicationRoute.McpContainers, EntitiesI18nKey.AssetToolset],
+    ])('labels the %s asset option %s', (route, expected) => {
+      expect(getTranslatedAssetOption(route, {} as Container, t)).toBe(expected);
+    });
+  });
+
+  describe('getTranslatedAssetEntity', () => {
+    test.each([
+      [ApplicationRoute.AdapterContainers, EntitiesI18nKey.Model],
+      [ApplicationRoute.InterceptorContainers, EntitiesI18nKey.Interceptor],
+      [ApplicationRoute.ApplicationContainers, EntitiesI18nKey.Application],
+      [ApplicationRoute.McpContainers, EntitiesI18nKey.Toolset],
+    ])('labels the %s Core-only create %s', (route, expected) => {
+      expect(getTranslatedAssetEntity(route, {} as Container, t)).toBe(expected);
     });
   });
 

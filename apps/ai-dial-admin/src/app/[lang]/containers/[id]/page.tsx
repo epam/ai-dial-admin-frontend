@@ -6,9 +6,11 @@ import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import { createApplication, getApplications } from '@/src/app/[lang]/applications/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import { createToolset } from '@/src/app/[lang]/toolsets/actions';
+import { getContainerAssetNames } from '@/src/app/actions/container-asset-names';
 import { getContainer, getContainers, getImage } from '@/src/app/actions/deployments';
 import { adaptersApi, interceptorsApi, toolSetsApi } from '@/src/app/api/api';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
+import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Container } from '@/src/models/deployments/containers';
@@ -18,7 +20,9 @@ import { errorObjLog } from '@/src/server/logger';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getContainerKind } from '@/src/utils/deployments/containers';
+import { getAssetView } from '@/src/utils/deployments/entity';
 import { decodeVariables } from '@/src/utils/deployments/variables';
+import { getIsAdminApiEnabled } from '@/src/utils/env/get-admin-api-toggle';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 
@@ -59,8 +63,17 @@ const CREATE_ENTITY: Partial<Record<CONTAINER_TYPE, ContainerViewCreateEntity>> 
   [CONTAINER_TYPE.APPLICATION]: createApplication,
 };
 
+// A fresh folder state per page, so the folder-aware asset modal opens on its own roots rather than
+// on wherever the matching Assets list was last left. Models and interceptors are flat and need none.
+// Every folder provider comes from `createFolderContext`, so they share one component type.
+const ASSET_FOLDER_PROVIDER: Partial<Record<CONTAINER_TYPE, typeof ToolsetFolderProvider>> = {
+  [CONTAINER_TYPE.MCP]: ToolsetFolderProvider,
+  [CONTAINER_TYPE.APPLICATION]: AppsFolderProvider,
+};
+
 export default async function Page(params: Params) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const isAdminApiEnabled = getIsAdminApiEnabled();
 
   let container: Container | null = null;
   let containers: Container[] | null = null;
@@ -92,7 +105,9 @@ export default async function Page(params: Params) {
       }
       image = imageResponse.response as Image;
     }
-    entityNames = await getEntityNames(container.$type, token);
+    if (isAdminApiEnabled) {
+      entityNames = await getEntityNames(container.$type, token);
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch container page');
   }
@@ -103,20 +118,25 @@ export default async function Page(params: Params) {
     notFound();
   }
 
+  // Outside the admin-backend `try`: a failing admin call must not cost the Core name check.
+  const assetNames = await getContainerAssetNames(getAssetView(kind, container));
+
   const view = (
     <ContainerView
       container={decodeVariables(container)}
       image={image ?? void 0}
       route={kind}
       names={containers?.map((item) => item.name as string).filter((name) => name !== container.name) || []}
-      createEntity={CREATE_ENTITY[container.$type]}
+      createEntity={isAdminApiEnabled ? CREATE_ENTITY[container.$type] : undefined}
       entityNames={entityNames}
+      assetNames={assetNames}
     />
   );
+  const AssetFolderProvider = ASSET_FOLDER_PROVIDER[container.$type];
 
   return (
     <SaveValidationContextProvider>
-      {container.$type === CONTAINER_TYPE.MCP ? <ToolsetFolderProvider>{view}</ToolsetFolderProvider> : view}
+      {AssetFolderProvider ? <AssetFolderProvider>{view}</AssetFolderProvider> : view}
     </SaveValidationContextProvider>
   );
 }
