@@ -33,6 +33,7 @@
   --background-color-control-neutral-active: var(--bg-control-neutral-active, #d1dbea);
   --background-color-control-neutral-default: var(--bg-control-neutral-default, #acb3c3);
   --background-color-control-inverted: var(--bg-control-inverted, #57647a);
+  --background-color-overlay: var(--bg-overlay, #fcfcfc80);
   --background-color-control-error: var(--bg-control-error, #ae2f2f);
   --background-color-control-error-hover: var(--bg-control-error-hover, #bf3939);
   --background-color-control-error-active: var(--bg-control-error-active, #cc4545);
