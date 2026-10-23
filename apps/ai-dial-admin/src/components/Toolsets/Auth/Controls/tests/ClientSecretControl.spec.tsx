@@ -133,6 +133,24 @@ describe('ClientSecretControl — stored secret hint', () => {
     });
   });
 
+  test('hides the reveal toggle while a hint is present and the value is empty', () => {
+    render(<ClientSecretControl clientSecret="" hasSecretHint />);
+
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  test('shows the reveal toggle once a new secret is typed over a hint', () => {
+    render(<ClientSecretControl clientSecret="typed-secret" hasSecretHint />);
+
+    expect(screen.getByRole('button')).toBeTruthy();
+  });
+
+  test('shows the reveal toggle when there is no hint', () => {
+    render(<ClientSecretControl clientSecret="" />);
+
+    expect(screen.getByRole('button')).toBeTruthy();
+  });
+
   test('returns to the valid unchanged state when a typed secret is cleared', () => {
     const { rerender } = render(<ClientSecretControl clientSecret="typed-secret" hasSecretHint />);
     rerender(<ClientSecretControl clientSecret="" hasSecretHint />);

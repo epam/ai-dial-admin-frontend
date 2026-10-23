@@ -1511,7 +1511,7 @@ export default {
     Tier: 'Enter tier',
     ClientId: 'Enter client ID',
     ClientSecret: 'Enter client secret',
-    ClientSecretMasked: '••••',
+    ClientSecretMasked: '••••••••••••',
     TokenEndpoint: 'Enter token endpoint',
     AuthorizationEndpoint: 'Enter authorization endpoint',
     UpstreamEndpoint: 'Enter upstream endpoint',
