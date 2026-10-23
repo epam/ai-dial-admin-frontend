@@ -2,6 +2,7 @@ import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { buildTreeFromParentPointer } from '@/src/components/Common/TreeGrid/utils';
 import { FILTERABLE_SPAN_KINDS } from '@/src/constants/analytics/sessions-trace';
 import {
+  SessionFeedbackRow,
   SessionSpanRow,
   HopEmphasis,
   HopNodeData,
@@ -187,4 +188,36 @@ export const flattenHopTree = (tree: HopTreeNode[]): HopTreeRow[] => {
   walk(tree, [], 0);
 
   return rows;
+};
+
+// Ratings attach to spans by an exact join on the span's own response id, never by position: the rating source
+// is grained by the response id the client was answered under, and an in-turn hop normally records its
+// upstream's own id, which no rating names. That is a property of the recorded data, not a guarantee — an
+// application that relays its model's stream unchanged records the model's id on both hops. So each rated
+// response is placed on one span only, the shallowest that carries it: the hop nearest the client is the one
+// that answered it. Siblings at that depth keep start order, so the earliest wins.
+export const attributeFeedbackToSpans = (
+  tree: HopTreeNode[],
+  byResponseId?: Map<string, SessionFeedbackRow>,
+): Map<string, SessionFeedbackRow> => {
+  const bySpanId = new Map<string, SessionFeedbackRow>();
+  if (!byResponseId?.size) {
+    return bySpanId;
+  }
+
+  const placed = new Set<string>();
+  let level = tree;
+  while (level.length) {
+    for (const { span } of level) {
+      const responseId = span?.response_id;
+      const row = responseId ? byResponseId.get(responseId) : undefined;
+      if (span && responseId && row && !placed.has(responseId)) {
+        placed.add(responseId);
+        bySpanId.set(span.core_span_id, row);
+      }
+    }
+    level = level.flatMap(({ children }) => children);
+  }
+
+  return bySpanId;
 };

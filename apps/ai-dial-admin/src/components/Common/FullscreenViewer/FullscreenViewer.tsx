@@ -51,7 +51,7 @@ const FullscreenViewer: FC<Props> = ({ isOpen, title, content, contentType, onCl
       portalId="FullscreenCodeViewer"
       open={isOpen}
       size={PopupSize.Lg}
-      className="h-[80vh]"
+      className="md:h-[80vh]"
     >
       <div className="flex flex-col h-full">
         <div className="flex-1 min-h-0">

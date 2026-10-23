@@ -57,7 +57,7 @@ const GlobalFirewallCompareModal: FC<Props> = ({ action, prevDomains, nextDomain
       portalId="GlobalFirewallCompare"
       open={isOpen}
       size={PopupSize.Lg}
-      className="h-[800px]"
+      className="md:h-[800px]"
       headerDivider
       footerDivider
     >

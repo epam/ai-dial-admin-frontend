@@ -9,6 +9,7 @@ import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { toMillis } from '@/src/utils/analytics/session-formatting';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import {
+  SessionFeedbackRow,
   SessionSpanNode,
   SessionTraceFigures,
   HopBodyGrants,
@@ -525,5 +526,122 @@ describe('SessionSpanDetail — grouped fields', () => {
     // The viewer itself is Monaco, which renders nothing in jsdom — so the assertion is that the dialog
     // opened and is named by the hop whose record it holds.
     expect(screen.getByRole('dialog')).toHaveTextContent('switchyard-model');
+  });
+});
+
+describe('SessionTraceView — ratings', () => {
+  const RATED_ROOT = span({ response_id: 'resp-rated' });
+  // An in-turn hop carries its upstream's own response id, which no rating names.
+  const UPSTREAM_HOP = { ...CHILD, response_id: 'resp-upstream' };
+  const FEEDBACK: SessionFeedbackRow = {
+    response_id: 'resp-rated',
+    first_rate_time: 1787218900000,
+    last_rate_time: 1787218900000,
+    rate_pos_count: 0,
+    rate_zero_count: 0,
+    rate_neg_count: 1,
+    rate_distinct_count: 1,
+    comment_count: 0,
+  };
+  const BY_RESPONSE_ID = new Map([['resp-rated', FEEDBACK]]);
+
+  const renderRated = (props: Partial<ComponentProps<typeof SessionTraceView>> = {}) =>
+    render(
+      <SessionTraceView
+        readKey={READ_KEY}
+        bodyGrants={GRANTS}
+        figures={FIGURES}
+        spans={[RATED_ROOT, UPSTREAM_HOP]}
+        fieldGroups={FIELD_GROUPS}
+        feedbackByResponseId={BY_RESPONSE_ID}
+        hasLoadError={false}
+        selectedSpanId={null}
+        onSelectSpan={vi.fn()}
+        onClose={vi.fn()}
+        {...props}
+      />,
+    );
+
+  const treeRow = (name: RegExp) =>
+    within(screen.getByRole('group', { name: SessionsTraceI18nKey.StreamLabel })).getByRole('button', { name });
+
+  test('the span that answered the rated response shows its rating in the tree', () => {
+    renderRated();
+
+    expect(within(treeRow(/switchyard-model/)).getByText(SessionsTraceI18nKey.RatingDownTotal)).toBeInTheDocument();
+  });
+
+  test('a span whose response no rating names shows none', () => {
+    renderRated();
+
+    expect(within(treeRow(/text-embedding-3/)).queryByText(SessionsTraceI18nKey.RatingDownTotal)).toBeNull();
+  });
+
+  test('no span shows a rating when the trace was opened without a session', () => {
+    renderRated({ feedbackByResponseId: undefined });
+
+    expect(screen.queryByText(SessionsTraceI18nKey.RatingDownTotal)).toBeNull();
+  });
+
+  test('the rated span detail states its rating', () => {
+    renderRated({ selectedSpanId: RATED_ROOT.core_span_id });
+
+    expect(screen.getByText(SessionsTraceI18nKey.DetailRatedResponse)).toBeInTheDocument();
+    expect(screen.getByText(SessionsTraceI18nKey.DetailRatingNegative)).toBeInTheDocument();
+  });
+
+  test('a response id relayed down the chain is rated on the shallowest span only', () => {
+    renderRated({ spans: [RATED_ROOT, { ...CHILD, response_id: 'resp-rated' }] });
+
+    expect(screen.getAllByText(SessionsTraceI18nKey.RatingDownTotal)).toHaveLength(1);
+    expect(within(treeRow(/switchyard-model/)).getByText(SessionsTraceI18nKey.RatingDownTotal)).toBeInTheDocument();
+  });
+
+  test('says a rating may be missing when the session rating list is partial', () => {
+    renderRated({ isFeedbackPartial: true });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceRatingsPartial)).toBeInTheDocument();
+  });
+
+  test('makes no partial claim when the rating list is complete', () => {
+    renderRated();
+
+    expect(screen.queryByText(SessionsTraceI18nKey.TraceRatingsPartial)).toBeNull();
+  });
+
+  test('the rated span detail names the comment text only for a caller who may read it', () => {
+    const commented = new Map([['resp-rated', { ...FEEDBACK, comment_count: 1, comment_sample: 'Wrong figures' }]]);
+    const { rerender } = renderRated({
+      selectedSpanId: RATED_ROOT.core_span_id,
+      feedbackByResponseId: commented,
+      isCommentTextReadable: true,
+    });
+
+    expect(screen.getByText(/Wrong figures/)).toBeInTheDocument();
+
+    rerender(
+      <SessionTraceView
+        readKey={READ_KEY}
+        bodyGrants={GRANTS}
+        figures={FIGURES}
+        spans={[RATED_ROOT, UPSTREAM_HOP]}
+        fieldGroups={FIELD_GROUPS}
+        feedbackByResponseId={commented}
+        isCommentTextReadable={false}
+        hasLoadError={false}
+        selectedSpanId={RATED_ROOT.core_span_id}
+        onSelectSpan={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/Wrong figures/)).toBeNull();
+    expect(screen.getByText(new RegExp(SessionsTraceI18nKey.DetailCommentRestricted))).toBeInTheDocument();
+  });
+
+  test('an unrated span detail has no rating section', () => {
+    renderRated({ selectedSpanId: UPSTREAM_HOP.core_span_id });
+
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailRatedResponse)).toBeNull();
   });
 });

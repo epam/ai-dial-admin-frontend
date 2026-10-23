@@ -596,6 +596,9 @@ export interface SessionSpanRow {
   mcp_method?: string | null;
   mcp_tool_call_name?: string | null;
   execution_path?: string[] | null;
+  // What a rating joins on: the rating source is grained by the response id the client was answered under,
+  // so only the span that answered the client carries a rated one.
+  response_id?: string | null;
 }
 
 // The outcome axis. One member, because there is no "succeeded" control to offer: the turn's own status

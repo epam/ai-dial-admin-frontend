@@ -69,7 +69,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
       portalId="SelectAppRunnerModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[750px]"
+      className="md:h-[750px]"
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Apply),

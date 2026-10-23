@@ -69,9 +69,9 @@ vi.mock('@/src/components/Common/StepperModalButtons/StepperModalButtons', () =>
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   PopupSize: { Lg: 'Lg' },
   StepStatus: { VALID: 'VALID' },
-  Popup: ({ header, open, children, footer }: any) =>
+  Popup: ({ header, open, children, footer, className }: any) =>
     open ? (
-      <div role="dialog" aria-label={header}>
+      <div role="dialog" aria-label={header} className={className}>
         <h2>{header}</h2>
         {children}
         {footer}
@@ -135,6 +135,17 @@ describe('AddMetricModal', () => {
     expect(screen.getByRole('dialog', { name: TestSuitesI18nKey.AddMetric })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'steps' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'metric-selection' })).toBeInTheDocument();
+  });
+
+  test('sets a desktop-prefixed height so the ui-kit md:h-auto does not size the modal to its content', () => {
+    render(
+      <AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} metricDeclarations={metricDeclarations} />,
+    );
+
+    const dialog = screen.getByRole('dialog', { name: TestSuitesI18nKey.AddMetric });
+
+    expect(dialog).toHaveClass('md:h-[800px]');
+    expect(dialog).not.toHaveClass('h-[800px]');
   });
 
   test('loads metric latest version after selection in add mode', async () => {

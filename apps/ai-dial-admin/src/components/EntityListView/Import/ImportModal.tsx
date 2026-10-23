@@ -261,7 +261,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
       closeOnOutsideClick={false}
       header={getModalTitle(route, t)}
       portalId="ImportModal"
-      className="h-[660px]"
+      className="md:h-[660px]"
       open={isModalOpen}
       footer={
         <StepperModalButtons

@@ -193,7 +193,7 @@ const AddMetricModal: FC<Props> = ({
       portalId="AddMetricModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]"
+      className="md:h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]"
       headerDivider
       footerDivider
       footer={

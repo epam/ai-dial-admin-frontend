@@ -225,7 +225,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
       portalId="ManageToolsModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[800px]"
+      className="md:h-[800px]"
       headerDivider
       footerDivider
       mainButtons={[
