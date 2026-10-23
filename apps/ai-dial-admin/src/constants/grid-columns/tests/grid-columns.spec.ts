@@ -53,6 +53,7 @@ import { AUDIT_ENUM_VALUES_FILTER } from '@/src/components/ActivityAudit/List/au
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
   NO_BORDER_CLASS: 'NO_BORDER_CLASS',
+  ACTIONS_COLUMN_CEL_ID: 'actionsColumn',
 }));
 
 describe('Constants :: grid columns', () => {
