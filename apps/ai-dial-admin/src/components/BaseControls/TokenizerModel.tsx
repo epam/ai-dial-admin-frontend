@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { useCallback } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -44,7 +44,7 @@ const TokenizerModelControl = <T extends { tokenizerModel?: string }>({ entity, 
   );
 
   return (
-    <DialInput
+    <Input
       id="tokenizerModel"
       containerClassName={STANDARD_CONTROL_WIDTH}
       labelProps={{ label: t(EntityFieldsI18nKey.tokenizerModel) }}

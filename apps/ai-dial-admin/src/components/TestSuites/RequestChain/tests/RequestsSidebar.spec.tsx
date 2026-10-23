@@ -76,7 +76,7 @@ describe('RequestsSidebar', () => {
     await user.click(getActionsTrigger(1));
     await user.click(screen.getByRole('menuitem', { name: ActionMenuOperationI18nKey.Rename }));
 
-    // DialInput remounts on re-render, so per-keystroke typing detaches; set the value in one change event.
+    // Input remounts on re-render, so per-keystroke typing detaches; set the value in one change event.
     fireEvent.change(screen.getByDisplayValue('Second request'), { target: { value: 'Renamed' } });
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
 

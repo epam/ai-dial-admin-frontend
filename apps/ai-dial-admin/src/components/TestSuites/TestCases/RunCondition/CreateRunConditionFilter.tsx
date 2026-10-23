@@ -1,6 +1,6 @@
 'use client';
 
-import { GhostButton, DialInput, DialSelectField, ElementSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Input, ElementSize, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconX } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
@@ -132,7 +132,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
     <div className="flex flex-col gap-2 bg-layer-0 rounded p-2 z-50 shadow">
       <div className="flex items-center gap-2">
         <div className={FIELD_COL}>
-          <DialSelectField
+          <Select
             id="run-condition-field"
             value={draft.field || undefined}
             options={fieldSelectOptions}
@@ -143,7 +143,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
         {firstPredicate ? (
           <>
             <div className={OPERATOR_COL}>
-              <DialSelectField
+              <Select
                 id="operator-0"
                 value={firstPredicate.operator}
                 options={operatorOptions}
@@ -151,7 +151,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
               />
             </div>
             <div className={VALUE_COL}>
-              <DialInput
+              <Input
                 id="value-0"
                 value={firstPredicate.value}
                 placeholder={t(BasicI18nKey.Value)}
@@ -191,7 +191,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
                 ) : null}
               </div>
               <div className={OPERATOR_COL}>
-                <DialSelectField
+                <Select
                   id={`operator-${i + 1}`}
                   value={predicate.operator}
                   options={operatorOptions}
@@ -199,7 +199,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
                 />
               </div>
               <div className={VALUE_COL}>
-                <DialInput
+                <Input
                   id={`value-${i + 1}`}
                   value={predicate.value}
                   placeholder={t(BasicI18nKey.Value)}

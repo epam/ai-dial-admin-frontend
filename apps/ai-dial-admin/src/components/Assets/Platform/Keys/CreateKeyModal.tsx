@@ -1,6 +1,6 @@
 'use client';
 
-import { Popup, DialInput } from '@epam/ai-dial-ui-kit';
+import { Popup, Input } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
@@ -177,7 +177,7 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
       >
         <div className="flex flex-col px-6 py-4 gap-y-8">
           <IdControl entity={asset} names={names} onChangeEntity={onChangeName} />
-          <DialInput
+          <Input
             id="project"
             labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.Project)}

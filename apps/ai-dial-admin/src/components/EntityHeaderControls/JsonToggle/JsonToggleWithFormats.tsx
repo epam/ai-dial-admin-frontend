@@ -2,9 +2,9 @@
 
 import { FC } from 'react';
 
-import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -59,9 +59,9 @@ const JsonToggleWithFormats: FC<Props> = ({
   return (
     <JsonToggles isEditorEnabled={isEditorEnabled} isEditorDisabled={isEditorDisabled} onToggleEditor={onToggleEditor}>
       {isEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) && !onHideFormatSelector?.() ? (
-        <DialSelect
-          size={SelectSize.Sm}
-          variant={SelectVariant.Secondary}
+        <Select
+          ariaLabel={t(ExportI18nKey.ExportFormat)}
+          size={ElementSize.Small}
           options={items}
           value={selectedFormat}
           onChange={(id) => onChangeSelectedFormat?.(id as ExportFormat)}

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { DialInput, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
@@ -124,16 +124,15 @@ const CatalogSchemaCreateProperties: FC<Props> = ({
         isFullWidth={isModal}
         onChangeEntity={({ name }) => onChangeEntity({ ...entity, $id: name })}
       />
-      <DialSelectField
+      <Select
         id="catalog-entity-type"
-        label={t(EntityFieldsI18nKey.catalogEntityType)}
+        labelProps={{ label: t(EntityFieldsI18nKey.catalogEntityType), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.SelectCatalogEntityType)}
         options={entityTypeOptions}
         value={declaredEntityType ?? ''}
-        containerClassName={controlClassName}
+        className={controlClassName}
         disabled={isReadOnlyAdmin}
         onChange={onChangeEntityType}
-        required
       />
       <DisplayNameControl
         displayName={entity['dial:catalogDisplayName']}
@@ -141,7 +140,7 @@ const CatalogSchemaCreateProperties: FC<Props> = ({
         isFullWidth={isModal}
         onChange={(displayName?: string) => onChangeEntity({ ...entity, 'dial:catalogDisplayName': displayName })}
       />
-      <DialInput
+      <Input
         id="catalog-default-locale"
         labelProps={{ label: t(EntityFieldsI18nKey.catalogDefaultLocale) }}
         placeholder={t(EntityPlaceholdersI18nKey.CatalogDefaultLocale)}

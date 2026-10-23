@@ -1,7 +1,7 @@
 import {
   DIAL_ICON_SIZE,
   DIAL_KIT_ICON_STROKE,
-  DialDropdown,
+  Dropdown,
   OutlinedButton,
   PrimaryButton,
   ElementSize,
@@ -34,7 +34,7 @@ const LEGACY_TRIGGER_CLASS =
   'dial-input dial-small-text min-h-[25px] !h-auto !bg-layer-4 w-full gap-2 whitespace-nowrap px-1.5 py-1';
 
 /**
- * `DialDropdown` already paints its floating container — `rounded bg-layer-0 shadow` — so a nested
+ * `Dropdown` already paints its floating container — `rounded bg-layer-0 shadow` — so a nested
  * surface only ever shows through at the corners. The 2.0 look replaces that container's own
  * classes, which is why each one is forced.
  */
@@ -196,7 +196,7 @@ const TimeFilter: FC<Props> = ({
   );
 
   return (
-    <DialDropdown
+    <Dropdown
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
@@ -231,7 +231,7 @@ const TimeFilter: FC<Props> = ({
           )}
         />
       </div>
-    </DialDropdown>
+    </Dropdown>
   );
 };
 

@@ -1,6 +1,6 @@
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { DialSelect, Badge, Tooltip, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, Badge, Tooltip, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { getSectionViewOptions, SectionView } from '@/src/components/TestSuites/Metrics/AddMetric/constants';
 import { CompareI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -34,10 +34,10 @@ const MetricSectionTabs: FC<Props> = ({ title, schema, controlsContent }) => {
             </Tooltip>
           )}
           <div className="w-fit shrink-0">
-            <DialSelect
+            <Select
               prefix={`${t(CompareI18nKey.View)}: `}
-              size={SelectSize.Sm}
-              variant={SelectVariant.Secondary}
+              ariaLabel={t(CompareI18nKey.View)}
+              size={ElementSize.Small}
               options={viewOptions}
               value={activeView}
               onChange={onViewChange}

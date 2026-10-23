@@ -1,6 +1,6 @@
 'use client';
 
-import { Label, SegmentedControl, DialSelect, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
+import { Label, SegmentedControl, Select, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -98,8 +98,9 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
       </div>
 
       {source.$type === FunctionParameterSourceType.TestCase && (
-        <DialSelect
-          elementId={elementId}
+        <Select
+          id={elementId}
+          ariaLabel={t(labelKey)}
           options={testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
           value={source.columnName}
           placeholder={selectPlaceholder}
@@ -110,8 +111,9 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
       )}
 
       {source.$type === FunctionParameterSourceType.Response && (
-        <DialSelect
-          elementId={elementId}
+        <Select
+          id={elementId}
+          ariaLabel={t(labelKey)}
           options={responseColumns?.map((item) => ({ label: item.displayName, value: item.name })) || []}
           value={source.columnName}
           placeholder={selectPlaceholder}
@@ -122,8 +124,9 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
       )}
 
       {source.$type === FunctionParameterSourceType.Metric && (
-        <DialSelect
-          elementId={elementId}
+        <Select
+          id={elementId}
+          ariaLabel={t(labelKey)}
           options={metricOptions.map((option) => ({
             value: option.value,
             label: option.label,

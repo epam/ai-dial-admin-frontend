@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Input, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, SystemPropertiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -80,9 +80,9 @@ const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) =
         {t(SystemPropertiesI18nKey.RateLimitScheduleDescription)}
       </p>
       <div className="flex flex-col gap-4 max-w-[420px]">
-        <DialSelectField
+        <Select
           id="rate-limit-timezone"
-          label={t(SystemPropertiesI18nKey.TimezoneLabel)}
+          labelProps={{ label: t(SystemPropertiesI18nKey.TimezoneLabel) }}
           options={timezoneOptions}
           value={effectiveSchedule.timezone}
           searchable
@@ -90,15 +90,15 @@ const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) =
           disabled={isReadOnlyAdmin}
           onChange={onTimezoneChange}
         />
-        <DialSelectField
+        <Select
           id="rate-limit-week-start-day"
-          label={t(SystemPropertiesI18nKey.WeekStartDayLabel)}
+          labelProps={{ label: t(SystemPropertiesI18nKey.WeekStartDayLabel) }}
           options={weekDayOptions}
           value={effectiveSchedule.weekStartDay}
           disabled={isReadOnlyAdmin}
           onChange={onWeekStartDayChange}
         />
-        <DialInput
+        <Input
           id="rate-limit-reset-time"
           labelProps={{ label: t(SystemPropertiesI18nKey.ResetTimeLabel) }}
           placeholder={t(SystemPropertiesI18nKey.ResetTimePlaceholder)}

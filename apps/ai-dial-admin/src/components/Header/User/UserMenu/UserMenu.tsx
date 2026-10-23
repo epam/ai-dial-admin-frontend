@@ -1,4 +1,4 @@
-import { ConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Dropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
@@ -85,7 +85,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
           {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
         </div>
       ) : (
-        <DialDropdown
+        <Dropdown
           listClassName="!w-[280px]"
           onOpenChange={(open) => setIsOpen(open)}
           items={dropdownItems}
@@ -100,7 +100,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
           <div role="menuitem" className="flex cursor-pointer items-center justify-between gap-2 pr-6">
             <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
           </div>
-        </DialDropdown>
+        </Dropdown>
       )}
       {isLogoutConfirmationOpen && (
         <ConfirmationPopup

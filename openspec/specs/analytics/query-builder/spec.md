@@ -52,7 +52,7 @@ The query page SHALL prefetch, on the server, the queryable entities, the functi
 
 ### Requirement: Query Builder toolbar
 
-The query page SHALL render an in-page toolbar containing, left to right: the source (entity) selector as a plain dropdown (`DialSelectField`, no schema-preview affordance), the shared time filter (`TimeFilter` with the global preset options and a custom-range picker), then right-aligned the query's own actions — Edit, Discard, and Save — followed by Copy and the Run primary action.
+The query page SHALL render an in-page toolbar containing, left to right: the source (entity) selector as a plain dropdown (`Select`, no schema-preview affordance), the shared time filter (`TimeFilter` with the global preset options and a custom-range picker), then right-aligned the query's own actions — Edit, Discard, and Save — followed by Copy and the Run primary action.
 
 Discard and Save SHALL be present only while the page holds unsaved changes; Edit SHALL be present whenever the caller may write the query.
 

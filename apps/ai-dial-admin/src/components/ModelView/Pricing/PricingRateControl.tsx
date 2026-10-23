@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { GhostIconButton, DialInput, Label, DialSelectField, ElementSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, Input, Label, ElementSize, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 import { IconBinaryTree2 } from '@tabler/icons-react';
 
 import PriceControl from '@/src/components/BaseControls/Price';
@@ -150,17 +150,17 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
           disabled={disabled}
           onChange={onChangeField}
         />
-        <DialSelectField
+        <Select
           value={node.test.operator}
           id={`${elementId}-operator`}
           options={operatorOptions}
+          fieldClassName="w-[80px]"
           className="w-[80px]"
-          containerClassName="w-[80px]"
-          label={t(ModelViewI18nKey.Operator)}
+          labelProps={{ label: t(ModelViewI18nKey.Operator) }}
           onChange={(operator) => onChangeOperator(operator as string)}
           disabled={disabled}
         />
-        <DialInput
+        <Input
           id={`${elementId}-value`}
           value={node.test.value}
           labelProps={{ label: t(BasicI18nKey.Value) }}

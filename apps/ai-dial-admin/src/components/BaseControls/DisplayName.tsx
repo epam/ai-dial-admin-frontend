@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -96,7 +96,7 @@ const DisplayNameControl: FC<Props> = ({
     displayNameError ?? (externalError ? { text: externalError, type: ErrorType.EXISTING } : null);
 
   return (
-    <DialInput
+    <Input
       labelProps={{ label: t(EntityFieldsI18nKey.displayName), required }}
       placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
       id="displayName"

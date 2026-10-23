@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInput, DialSelectField, DialInput, SelectOption } from '@epam/ai-dial-ui-kit';
+import { NumberInput, Input, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { EntityCaptionsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Container, ProbeConfig, ProbeProperties } from '@/src/models/deployments/containers';
@@ -154,16 +154,16 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
     <div className="flex flex-col gap-6">
       <h3>{t(EntityFieldsI18nKey.endpoint)}</h3>
       <div className="flex gap-3">
-        <DialSelectField
+        <Select
           id="type"
           disabled={disabled}
-          label={t(EntityFieldsI18nKey.type)}
-          containerClassName="w-[180px]"
+          labelProps={{ label: t(EntityFieldsI18nKey.type) }}
+          className="w-[180px]"
           options={typeOptions}
           value={container.probeProperties?.probe?.$type || typeOptions[0].value}
           onChange={onTypeChange}
         />
-        <DialNumberInput
+        <NumberInput
           id="port"
           labelProps={{ label: t(EntityFieldsI18nKey.Port), required: true }}
           caption={!portError ? t(EntityCaptionsI18nKey.ProbePort) : ''}
@@ -176,7 +176,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
           error={portError?.text}
         />
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
-          <DialInput
+          <Input
             id="path"
             labelProps={{ label: t(EntityFieldsI18nKey.Path), required: true }}
             caption={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}

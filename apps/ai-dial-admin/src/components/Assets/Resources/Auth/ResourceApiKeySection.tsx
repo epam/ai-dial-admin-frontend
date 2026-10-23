@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -43,7 +43,7 @@ const ResourceApiKeySection: FC<Props> = ({ disabled, authSettings, isLoggedIn, 
 
   return (
     <div className="flex flex-col gap-y-4">
-      <DialInput
+      <Input
         id="apiKeyHeader"
         labelProps={{ label: t(EntityFieldsI18nKey.apiKeyHeader), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.Header)}

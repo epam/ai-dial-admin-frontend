@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { CompareI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -26,10 +26,10 @@ const ViewSelector: FC<Props> = ({ view, changeView }) => {
     ];
   }, [t]);
   return (
-    <DialSelect
+    <Select
       prefix={`${t(CompareI18nKey.View)}: `}
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+      ariaLabel={t(CompareI18nKey.View)}
+      size={ElementSize.Small}
       options={items}
       value={view}
       onChange={(v) => changeView(v as ParamsView)}

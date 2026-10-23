@@ -2,14 +2,7 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import {
-  DialInput,
-  DialNumberInput,
-  PasswordInput,
-  DialSelectField,
-  Tooltip,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { Input, NumberInput, PasswordInput, Tooltip, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -235,7 +228,7 @@ const Endpoint: FC<Props> = ({
           )}
         >
           {isModelView && (
-            <DialInput
+            <Input
               disabled={disabled}
               id={`upstream-id-${index}`}
               value={endpoint.id}
@@ -299,12 +292,12 @@ const Endpoint: FC<Props> = ({
                 onChange={onChangeBaseUrl}
               />
               {isAuthTypeSupported && (
-                <DialSelectField
+                <Select
                   disabled={disabled}
                   id={`auth-type-${index}`}
+                  fieldClassName="w-full"
                   className="w-full"
-                  containerClassName="w-full"
-                  label={t(UpstreamEndpointsI18nKey.AuthenticationType)}
+                  labelProps={{ label: t(UpstreamEndpointsI18nKey.AuthenticationType) }}
                   value={endpoint.authType ?? UpstreamAuthType.API_KEY}
                   options={authTypeOptions}
                   onChange={(authType) => onChangeAuthType(authType as string)}
@@ -324,7 +317,7 @@ const Endpoint: FC<Props> = ({
             </>
           )}
 
-          <DialNumberInput
+          <NumberInput
             id={`weight-${index}`}
             disabled={disabled}
             value={endpoint.weight}
@@ -334,7 +327,7 @@ const Endpoint: FC<Props> = ({
             onChange={(weight?: number | string) => updateEndpoint({ ...endpoint, weight })}
           />
 
-          <DialNumberInput
+          <NumberInput
             id={`tier-${index}`}
             disabled={disabled}
             value={endpoint.tier}
@@ -410,12 +403,12 @@ const Endpoint: FC<Props> = ({
             {isAuthTypeSupported && (
               <div className="flex flex-row gap-x-2 w-full">
                 <div className="flex-1 min-w-0">
-                  <DialSelectField
+                  <Select
                     disabled={disabled}
                     id={`auth-type-${index}`}
+                    fieldClassName="w-full"
                     className="w-full"
-                    containerClassName="w-full"
-                    label={t(UpstreamEndpointsI18nKey.AuthenticationType)}
+                    labelProps={{ label: t(UpstreamEndpointsI18nKey.AuthenticationType) }}
                     value={endpoint.authType ?? UpstreamAuthType.API_KEY}
                     options={authTypeOptions}
                     onChange={(authType) => onChangeAuthType(authType as string)}

@@ -6,12 +6,12 @@ import { useRouter } from 'next/navigation';
 
 import {
   Popup,
-  DialInput,
+  Input,
   RadioGroup,
-  DialSelectField,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
+  Select,
 } from '@epam/ai-dial-ui-kit';
 import { toRadioItems } from '@/src/utils/radio-items';
 
@@ -113,7 +113,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
       })}
     >
       <div className="flex flex-col gap-4 p-6">
-        <DialInput
+        <Input
           id="table-name"
           labelProps={{ label: t(AnalyticsTablesI18nKey.Name), required: true }}
           value={form.name}
@@ -121,7 +121,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           invalid={Boolean(nameError)}
           onChange={(v) => update('name', v ?? '')}
         />
-        <DialInput
+        <Input
           id="table-description"
           labelProps={{ label: t(AnalyticsTablesI18nKey.Description) }}
           value={form.description}
@@ -139,10 +139,9 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           />
         )}
         {!isSource && (
-          <DialSelectField
+          <Select
             id="table-source"
-            required
-            label={t(AnalyticsTablesI18nKey.SourceTable)}
+            labelProps={{ label: t(AnalyticsTablesI18nKey.SourceTable), required: true }}
             options={sourceOptions}
             value={form.sourceTable}
             onChange={(v) => update('sourceTable', v as string)}

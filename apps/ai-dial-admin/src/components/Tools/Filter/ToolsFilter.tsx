@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox, DialDropdown } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Dropdown } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
 import { ToolsetI18nKey } from '@/src/constants/i18n';
@@ -20,7 +20,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
-    <DialDropdown
+    <Dropdown
       listClassName="w-[200px]"
       onOpenChange={(open) => setIsDropdownOpen(open)}
       renderOverlay={() => (
@@ -55,7 +55,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
       )}
     >
       <SelectedFilter selectedFilters={selectedFilters} isDropdownOpen={isDropdownOpen} />
-    </DialDropdown>
+    </Dropdown>
   );
 };
 

@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -50,7 +50,7 @@ const ClientIdControl: FC<Props> = ({ clientId, disabled, isLoggedIn, onChange }
   );
 
   return (
-    <DialInput
+    <Input
       id="clientId"
       labelProps={{ label: t(EntityFieldsI18nKey.clientId), required: true }}
       placeholder={t(EntityPlaceholdersI18nKey.ClientId)}

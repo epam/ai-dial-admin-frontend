@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -76,7 +76,7 @@ const CodeUrl: FC<Props> = ({ image, setImage, disabled }) => {
   }, [dispatch]);
 
   return (
-    <DialInput
+    <Input
       labelProps={{ label: t(EntityFieldsI18nKey.SourceURL), required: true }}
       id="codeURL"
       placeholder={t(EntityPlaceholdersI18nKey.URL)}

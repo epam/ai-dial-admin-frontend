@@ -5,7 +5,7 @@ import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import {
   ButtonAppearance,
   DangerButton,
-  DialDropdown,
+  Dropdown,
   GhostButton,
   IconButton,
   LinkButton,
@@ -140,13 +140,13 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
       ) : null}
 
       {isCompact ? (
-        <DialDropdown items={dropdownItems} listClassName="min-w-[200px]" placement="bottom-end">
+        <Dropdown items={dropdownItems} listClassName="min-w-[200px]" placement="bottom-end">
           <IconButton
             aria-label={t(ButtonsI18nKey.ShowMore)}
             icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
             className="inline-flex items-center justify-center border border-primary rounded size-10 shrink-0 text-primary p-0"
           />
-        </DialDropdown>
+        </Dropdown>
       ) : (
         <div className="flex flex-row items-center" style={{ gap: GAP_PX }}>
           {renderExpandedActions()}

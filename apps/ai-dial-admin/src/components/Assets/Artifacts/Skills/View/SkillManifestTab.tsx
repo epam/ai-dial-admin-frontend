@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
@@ -28,7 +28,7 @@ const SkillManifestTab: FC<Props> = ({ name, description, body, onChangeDescript
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DialInput
+      <Input
         disabled
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         labelProps={{ label: t(EntityFieldsI18nKey.name) }}

@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
-import { OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
 import { Container, HuggingFaceModel } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
@@ -92,19 +92,19 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route, 
   return (
     <>
       <div className="flex gap-3">
-        <DialSelectField
+        <Select
           id="modelName"
-          label={t(EntityFieldsI18nKey.HFModelName)}
-          required
+          labelProps={{ label: t(EntityFieldsI18nKey.HFModelName), required: true }}
           placeholder={t(EntityPlaceholdersI18nKey.HFModelName)}
-          inlineSearch={true}
+          searchable
           value={container.source?.modelName}
           customSelectedValue={container.source?.modelName}
           onChange={(value) => onChangeModelName(value as string)}
-          onInlineQueryChange={(value) => onModelNameType(value)}
+          onSearchQueryChange={(value) => onModelNameType(value)}
           options={modelOptions}
           error={modelNameError?.text}
-          containerClassName={containerClassName}
+          invalid={!!modelNameError?.text}
+          className={containerClassName}
           disabled={isDisabled}
         />
         <OutlinedButton

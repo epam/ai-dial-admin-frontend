@@ -1,4 +1,4 @@
-import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { SelectOption, Select } from '@epam/ai-dial-ui-kit';
 import { useCallback } from 'react';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -41,12 +41,12 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number } | { max_retry_
   );
 
   return (
-    <DialSelectField
+    <Select
       disabled={isReadonly}
       id="maxRetryAttempts"
+      fieldClassName="w-[220px]"
       className="w-[220px]"
-      containerClassName="w-[220px]"
-      label={t(EntityFieldsI18nKey.maxRetryAttempts)}
+      labelProps={{ label: t(EntityFieldsI18nKey.maxRetryAttempts) }}
       value={activeMaxAttempts}
       options={items}
       onChange={(value) => onChange(value as string)}

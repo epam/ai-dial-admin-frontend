@@ -10,7 +10,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialSelectField: ({ id, options, onChange, value, disabled }: any) => (
+    Select: ({ id, options, onChange, value, disabled }: any) => (
       <select
         aria-label={id}
         data-testid={`select-${id}`}

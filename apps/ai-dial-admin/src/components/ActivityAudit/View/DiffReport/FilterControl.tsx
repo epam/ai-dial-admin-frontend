@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
-import { DialSelect, SelectVariant, SelectOption, SelectSize } from '@epam/ai-dial-ui-kit';
+import { Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { ActivityAuditI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -33,12 +33,12 @@ const FilterControl: FC<Props> = ({ diffView, setDiffView, isResources }) => {
   );
 
   return (
-    <DialSelect
-      size={SelectSize.Sm}
-      variant={SelectVariant.Secondary}
+    <Select
+      size={ElementSize.Small}
       options={items}
       value={diffView}
       prefix={`${t(CompareI18nKey.View)}: `}
+      ariaLabel={t(CompareI18nKey.View)}
       onChange={(v) => onChange(v as string)}
     />
   );

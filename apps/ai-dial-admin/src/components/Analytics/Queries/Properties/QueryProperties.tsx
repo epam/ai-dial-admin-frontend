@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialInput, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { Input, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { toRadioItems } from '@/src/utils/radio-items';
 
 import type { RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
@@ -58,7 +58,7 @@ const QueryProperties: FC<Props> = ({ form, onChange, isModal }) => {
 
       <DescriptionControl isFullWidth={isModal} onChangeEntity={onChangeDescription} entity={form} />
 
-      <DialInput
+      <Input
         id="query-tag"
         labelProps={{ label: t(QueriesI18nKey.Tag) }}
         value={form.tag}

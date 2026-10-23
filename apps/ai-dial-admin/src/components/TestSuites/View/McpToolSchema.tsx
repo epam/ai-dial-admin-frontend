@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialSelect, DialTabs, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { Select, DialTabs, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -106,10 +106,10 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
       <div className="flex flex-row justify-between items-start mb-3">
         <h3>{t(TestSuitesI18nKey.ToolSchema)}</h3>
         {isSchemaTab && (
-          <DialSelect
+          <Select
             prefix={`${t(CompareI18nKey.View)}: `}
-            size={SelectSize.Sm}
-            variant={SelectVariant.Secondary}
+            ariaLabel={t(CompareI18nKey.View)}
+            size={ElementSize.Small}
             options={viewOptions}
             value={isJsonView ? 'json' : 'table'}
             onChange={onViewSelectChange}

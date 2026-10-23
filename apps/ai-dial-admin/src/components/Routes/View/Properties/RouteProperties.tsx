@@ -1,14 +1,14 @@
 import {
   ButtonAppearance,
-  DialInput,
-  DialNumberInput,
+  Input,
+  NumberInput,
   PrimaryButton,
   RadioGroup,
-  DialSelectField,
   Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
   SelectOption,
+  Select,
 } from '@epam/ai-dial-ui-kit';
 import { toRadioItems } from '@/src/utils/radio-items';
 import classNames from 'classnames';
@@ -265,7 +265,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
         onChange={onChangeOutput}
       />
       <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !route.response && 'hidden')}>
-        <DialNumberInput
+        <NumberInput
           disabled={disabled || isReadOnlyAdmin}
           id="status"
           containerClassName="w-[150px]"
@@ -276,7 +276,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
           error={statusError}
           invalid={!!statusError}
         />
-        <DialInput
+        <Input
           disabled={disabled || isReadOnlyAdmin}
           id="body"
           containerClassName="flex-1"
@@ -301,16 +301,16 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
       </div>
       <MaxRetryAttempts disabled={disabled} entity={route} onChangeEntity={onChange} />
       {isAppRoute && (
-        <DialSelectField
+        <Select
           disabled={disabled || isReadOnlyAdmin}
           placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
           id="permissions"
           multiple={true}
+          fieldClassName={STANDARD_CONTROL_WIDTH}
           className={STANDARD_CONTROL_WIDTH}
-          containerClassName={STANDARD_CONTROL_WIDTH}
           options={permissionsItems}
           value={selectedPermissions}
-          label={t(EntityFieldsI18nKey.permissions)}
+          labelProps={{ label: t(EntityFieldsI18nKey.permissions) }}
           onChange={(values) => onChangePermissions(values as string[])}
         />
       )}
@@ -321,7 +321,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
           orderError ? 'items-center' : 'items-end',
         )}
       >
-        <DialNumberInput
+        <NumberInput
           id="order"
           disabled={disabled || isReadOnlyAdmin}
           containerClassName="w-1/2"

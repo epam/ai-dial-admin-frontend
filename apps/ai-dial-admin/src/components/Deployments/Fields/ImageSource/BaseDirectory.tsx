@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -55,7 +55,7 @@ const BaseDirectory: FC<Props> = ({ image, setImage }) => {
   }, [dispatch, image.source.baseDirectory, resetCounter, t]);
 
   return (
-    <DialInput
+    <Input
       labelProps={{ label: t(EntityFieldsI18nKey.BaseDirectory) }}
       id="baseDirectory"
       placeholder={t(EntityPlaceholdersI18nKey.BaseDirectory)}

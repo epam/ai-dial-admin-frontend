@@ -3,7 +3,7 @@
 import { FC, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialDropdown, EllipsisTooltip, Tooltip, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Dropdown, EllipsisTooltip, Tooltip, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 interface Props {
@@ -33,7 +33,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
   };
 
   return (
-    <DialDropdown
+    <Dropdown
       open={open}
       onOpenChange={setOpen}
       placement="bottom-start"
@@ -94,7 +94,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
         />
         <IconChevronDown size={12} className="shrink-0 text-secondary" />
       </button>
-    </DialDropdown>
+    </Dropdown>
   );
 };
 

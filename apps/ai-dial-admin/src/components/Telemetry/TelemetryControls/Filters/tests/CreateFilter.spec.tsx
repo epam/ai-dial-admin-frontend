@@ -39,7 +39,7 @@ describe('CreateFilter', () => {
       />,
     );
 
-    expect(screen.getByText(TelemetryI18nKey.SelectEntities)).toBeInTheDocument();
-    expect(screen.queryByText(TelemetryI18nKey.SelectProjects)).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(TelemetryI18nKey.SelectEntities)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(TelemetryI18nKey.SelectProjects)).not.toBeInTheDocument();
   });
 });

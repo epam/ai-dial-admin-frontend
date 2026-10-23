@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
 
-import { Label, PrimaryButton, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Label, PrimaryButton, Tooltip, Select } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -174,9 +174,9 @@ const InterfacesField = <V extends InterfaceValue>({
         ))}
 
         {!isReadonly && isSelectingType && (
-          <DialSelectField
+          <Select
             id="interfaceType"
-            containerClassName="max-w-[300px]"
+            className="max-w-[300px]"
             placeholder={t(InterfacesI18nKey.SelectType)}
             options={availableTypes.map((type) => ({ value: type, label: getInterfaceTypeLabel(t, type) }))}
             value=""

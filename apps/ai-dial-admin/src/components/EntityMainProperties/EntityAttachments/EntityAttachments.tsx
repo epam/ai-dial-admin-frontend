@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo } from 'react';
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 
 import AttachmentInput, { AttachmentType } from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -69,7 +69,7 @@ const EntityAttachments = <T extends object>({ entity, onChangeEntity, isAsset }
         onChange={onChangeAttachmentTypes}
       />
       {!!inputAttachmentTypes?.length && (
-        <DialNumberInput
+        <NumberInput
           containerClassName="w-[180px]"
           disabled={isReadOnlyAdmin}
           id="maxAttachment"

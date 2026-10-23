@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { NumberInput, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 import { useCallback, useMemo } from 'react';
 
 import { BasicI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
@@ -76,19 +76,19 @@ const Limits = <T extends { limits?: DialModelLimit }>({ model, onChangeModel }:
 
   return (
     <div className="flex flex-row gap-x-2 items-center">
-      <DialSelectField
+      <Select
         value={activeLimitType}
         id="limits"
         options={items}
+        fieldClassName="w-[220px]"
         className="w-[220px]"
-        containerClassName="w-[220px]"
-        label={t(ModelViewI18nKey.InteractionLimit)}
+        labelProps={{ label: t(ModelViewI18nKey.InteractionLimit) }}
         onChange={(type) => onChangeLimitType(type as string)}
         disabled={isReadOnlyAdmin}
       />
 
       {activeLimitType === LimitType.Total && (
-        <DialNumberInput
+        <NumberInput
           id="totalNum"
           className="flex-1"
           labelProps={{ label: t(ModelViewI18nKey.NumberOfTokens) }}
@@ -102,7 +102,7 @@ const Limits = <T extends { limits?: DialModelLimit }>({ model, onChangeModel }:
 
       {activeLimitType === LimitType.SeparateTokenAndCompletions && (
         <>
-          <DialNumberInput
+          <NumberInput
             id="promptsNum"
             className="flex-1"
             labelProps={{ label: t(ModelViewI18nKey.Prompts) }}
@@ -112,7 +112,7 @@ const Limits = <T extends { limits?: DialModelLimit }>({ model, onChangeModel }:
             containerClassName="w-[150px]"
             disabled={isReadOnlyAdmin}
           />
-          <DialNumberInput
+          <NumberInput
             id="completionsNum"
             className="flex-1"
             labelProps={{ label: t(ModelViewI18nKey.Completions) }}

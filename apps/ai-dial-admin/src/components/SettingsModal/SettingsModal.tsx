@@ -1,4 +1,4 @@
-import { Popup, DialSelectField, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useState } from 'react';
@@ -43,9 +43,9 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
       })}
     >
       <div className="flex flex-col gap-4 p-6">
-        <DialSelectField
+        <Select
           id="themeSelector"
-          label={t(SettingsModalI18nKey.Theme)}
+          labelProps={{ label: t(SettingsModalI18nKey.Theme) }}
           options={allThemes || []}
           value={selectedTheme?.value}
           onChange={(theme) => onChangeTheme(theme as string)}

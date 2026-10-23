@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -21,7 +21,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer, disabled }
   return (
     <Accordion title={t(EntityFieldsI18nKey.Configuration)}>
       <div className="flex flex-col gap-6">
-        <DialInput
+        <Input
           id="command"
           labelProps={{ label: t(EntityFieldsI18nKey.Command) }}
           value={container.command}
@@ -30,7 +30,7 @@ const ContainerConfiguration: FC<Props> = ({ container, setContainer, disabled }
           disabled={isDisabled}
         />
 
-        <DialInput
+        <Input
           id="args"
           labelProps={{ label: t(EntityFieldsI18nKey.Arguments) }}
           value={container.args}

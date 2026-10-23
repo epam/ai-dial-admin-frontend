@@ -17,7 +17,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialSelect: ({ options, value, onChange, prefix }: any) => (
+    Select: ({ options, value, onChange, prefix }: any) => (
       <select aria-label={`select-${prefix ?? ''}`} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
         <option value="" />
         {(options || []).map((opt: any) => (

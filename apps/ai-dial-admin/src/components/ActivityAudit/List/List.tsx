@@ -4,15 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ConfirmationPopup,
-  GhostButton,
-  OutlinedButton,
-  DialSelect,
-  Tooltip,
-  SelectSize,
-  SelectVariant,
-} from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, GhostButton, OutlinedButton, Select, Tooltip, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
@@ -673,10 +665,10 @@ const ActivityAuditList: FC<Props> = ({
     <div className="flex flex-row flex-wrap justify-between w-full">
       {!viewMode && (
         <div className="flex flex-row gap-x-4 h-[40px] items-center">
-          <DialSelect
-            size={SelectSize.Sm}
-            variant={SelectVariant.Secondary}
+          <Select
+            size={ElementSize.Small}
             prefix={`${t(CompareI18nKey.View)}:`}
+            ariaLabel={t(CompareI18nKey.View)}
             options={activityViewOptions}
             value={activityViewType}
             onChange={(val) => onActivityViewChange(val as ActivityAuditView)}
