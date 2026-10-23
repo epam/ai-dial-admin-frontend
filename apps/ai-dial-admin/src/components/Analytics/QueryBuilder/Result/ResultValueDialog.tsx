@@ -70,7 +70,7 @@ const ResultValueDialog: FC<Props> = ({ column, value, onClose }) => {
       open
       header={column}
       size={PopupSize.Lg}
-      className="h-[80vh]"
+      className="md:h-[80vh]"
       onClose={onClose}
       mainButtons={[
         { label: t(ButtonsI18nKey.Close), onClick: onClose },

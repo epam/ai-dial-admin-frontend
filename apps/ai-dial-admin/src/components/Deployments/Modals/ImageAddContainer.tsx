@@ -112,7 +112,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
       header={title}
       portalId="ImageAddContainerModal"
       open={isModalOpen}
-      className="h-[800px]"
+      className="md:h-[800px]"
       size={PopupSize.Lg}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

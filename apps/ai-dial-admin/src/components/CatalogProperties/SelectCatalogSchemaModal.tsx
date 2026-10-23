@@ -91,7 +91,7 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
       portalId="SelectCatalogSchemaModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[750px]"
+      className="md:h-[750px]"
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Apply),
