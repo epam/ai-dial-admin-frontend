@@ -3811,10 +3811,13 @@ count lower than the request is an ordinary outcome and not an error.
 
 The card SHALL distinguish the reasons it is empty, because they call for different acts:
 
-- **no failures at all** — the card SHALL NOT be rendered. A heading over an empty card states that
-  something is missing, where the truth is that nothing has failed; this is the same rule the schedule
-  group follows on a pipeline that has no schedule. The card SHALL likewise be absent before the first
-  read has answered, so it does not appear as an empty frame and then fill.
+- **no failures at all** — the card SHALL be rendered and SHALL state that there are no failures, with
+  no expand control and no re-run control. The card is drawn only for a kind that dead-letters, so its
+  absence cannot be told apart from "this pipeline's failures are not tracked here", and a queue the
+  service has since emptied looks the same as one that never held anything; a zero stated in place
+  answers the question the reader opened the tab with. The card SHALL be absent before the first read has
+  answered: the counters start at zero, and a card drawn then would state "no failures" about a pipeline
+  the service has not yet been asked about.
 - **none on the chosen path, but some on another** — the card SHALL say so, and SHALL NOT offer a second
   control to widen the path. The path select that narrowed it sits directly above the message, already states
   the chosen path, and is the way back; a button beside it repeating the same act was a second control for
@@ -3832,12 +3835,14 @@ The card SHALL distinguish the reasons it is empty, because they call for differ
 Each of these SHALL be announced to assistive technology rather than only drawn, so a reader who changed
 a filter learns the result without hunting for it.
 
-#### Scenario: A pipeline with no failures draws no card
+#### Scenario: A pipeline with no failures states zero
 
-- **GIVEN** an enrichment pipeline the service reports no dead letters for
+- **GIVEN** a model-calling enrichment the service reports no dead letters for
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** no failures card is rendered
-- **AND** no heading for one is rendered in its place
+- **THEN** the failures card is rendered
+- **AND** it states that there are no failures
+- **AND** it offers no control to expand a grid or to re-run anything
+- **AND** the `Runtime` tab carries no error mark
 
 #### Scenario: The card does not appear before the read answers
 

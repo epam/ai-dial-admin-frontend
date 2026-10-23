@@ -100,16 +100,15 @@ const PipelineFailuresCard: FC<Props> = ({ pipeline, failures, isPaused }) => {
     if (counts.total === 0) setIsExpanded(false);
   }, [counts.total]);
 
-  // Nothing to report is reported by not being here. A heading over an empty card states that
-  // something is missing, where the truth is that nothing has failed — the same reason the schedule
-  // group is absent on a pipeline that has no schedule. An absent runner is the same silence: it is a
-  // deployment choice rather than a fault, so it raises no error either.
+  // Zero is stated, not implied by absence. This card is drawn only for a kind that dead-letters, so
+  // a missing card left the reader unable to tell "nothing failed" from "this page does not track
+  // failures".
   //
-  // An outcome keeps the card alive even at zero, because zero is what a successful re-run produces:
-  // without this the card — and the live region inside it — vanished at the moment it had something
-  // to say, and the only confirmation of the action lasted one round trip.
-  const hasNothingToSay = counts.total === 0 && !failures.hasFailed && !requeue.outcome;
-  if (failures.isUnavailable || hasNothingToSay) return null;
+  // Not before the first answer, though: the counters start at zero, and a card drawn then would state
+  // "no failures" about a pipeline nobody has asked yet. An absent runner stays silent too: it is a
+  // deployment choice rather than a fault, so it raises neither a card nor an error.
+  const isAwaitingFirstRead = !failures.hasAnswered && !failures.hasFailed;
+  if (failures.isUnavailable || isAwaitingFirstRead) return null;
 
   return (
     <section
@@ -155,7 +154,7 @@ const PipelineFailuresCard: FC<Props> = ({ pipeline, failures, isPaused }) => {
         </div>
       )}
 
-      {/* What a re-run left behind, when it left nothing. The card is here only to say it. */}
+      {/* Nothing has failed, or a re-run drained what had. */}
       {counts.total === 0 && !failures.hasFailed && (
         <p className="dial-small-text text-secondary">{t(AnalyticsPipelinesI18nKey.FailuresNone)}</p>
       )}
