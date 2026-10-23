@@ -124,3 +124,14 @@ export interface RunCosts {
   avgTestCaseCost: number | null;
   avgMetricEvalCost: number | null;
 }
+
+export interface RunTotalCosts {
+  runId: string;
+  totalCost: number;
+  testCaseCost: number;
+  metricEvalCost: number;
+}
+
+export interface RunsTotalCostsRequest {
+  runIds: string[];
+}

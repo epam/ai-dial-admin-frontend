@@ -32,8 +32,8 @@ interface Props<T extends HeatMapGridRow> {
   gridKey?: string;
   className?: string;
   showColorScale?: boolean;
-  /** Fixes the row height instead of letting it follow whether a cell shows its value. */
   rowHeight?: number;
+  autoHeight?: boolean;
 }
 
 const HeatMapGrid = <T extends HeatMapGridRow>({
@@ -47,6 +47,7 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
   className,
   showColorScale = true,
   rowHeight,
+  autoHeight = false,
 }: Props<T>) => {
   const gridApiRef = useRef<GridApi | null>(null);
 
@@ -61,9 +62,12 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
     [columnDefs, valueColumnIdPrefix],
   );
 
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
   const fitHeatMapColumns = useCallback(
     (api: GridApi) => {
-      const centerViewport = document.querySelector('.heat-map-grid .ag-center-cols-viewport') as HTMLElement | null;
+      const centerViewport = (rootRef.current?.querySelector('.ag-center-cols-viewport') ??
+        document.querySelector('.heat-map-grid .ag-center-cols-viewport')) as HTMLElement | null;
       const availableForValueColumns = centerViewport?.clientWidth ?? 0;
       applyHeatMapColumnWidths(api, availableForValueColumns, valueColumnIdPrefix);
 
@@ -99,6 +103,7 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
       headerHeight: resolveHeatMapHeaderHeight(0, headerLabels),
       hidePaddedHeaderRows: false,
       rowHeight: rowHeight ?? HEAT_MAP_ROW_HEIGHT,
+      ...(autoHeight ? { domLayout: 'autoHeight' as const } : {}),
       suppressHorizontalScroll: false,
       alwaysShowHorizontalScroll: false,
       autoSizeStrategy: undefined,
@@ -135,14 +140,18 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
       },
       postProcessPopup: centerHeatMapTooltipPopup,
     }),
-    [fitHeatMapColumns, headerLabels, rowHeight, valueColumnIdPrefix],
+    [autoHeight, fitHeatMapColumns, headerLabels, rowHeight, valueColumnIdPrefix],
   );
 
   const getRowId = useCallback(({ data }: GetRowIdParams<T>) => data.id, []);
 
   return (
-    <div className={className ?? 'flex flex-col flex-1 min-h-0 h-full overflow-hidden gap-6'}>
-      <div className="flex-1 min-h-0 overflow-hidden heat-map-grid">
+    <div ref={rootRef} className={className ?? 'flex flex-col flex-1 min-h-0 h-full overflow-hidden gap-6'}>
+      <div
+        className={
+          autoHeight ? 'heat-map-grid heat-map-grid--auto-height' : 'flex-1 min-h-0 overflow-hidden heat-map-grid'
+        }
+      >
         <GridView
           key={gridKey}
           columnDefs={fixedWidthColumnDefs}

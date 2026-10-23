@@ -85,7 +85,7 @@ const SIGNIFICANT_DIGITS = 2;
 const SIGNIFICANT_COMPACT_THRESHOLD = 1;
 
 // Only meaningful after a decimal point: on an integer it would turn 20 into 2.
-const stripTrailingZeros = (text: string): string =>
+export const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
 
 export const formatSignificantNumber = (value: number | string): string => {
@@ -111,4 +111,9 @@ export const formatSignificantNumber = (value: number | string): string => {
   // notation below 1e-7, which is what toPrecision would do.
   const decimals = -absAmount.e + SIGNIFICANT_DIGITS - 1;
   return `${sign}${stripTrailingZeros(absAmount.toFixed(decimals))}`;
+};
+
+export const toCount = (value: unknown): number => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
 };

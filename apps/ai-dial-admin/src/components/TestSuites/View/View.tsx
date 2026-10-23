@@ -14,6 +14,7 @@ import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHead
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
+import TrendsPreviewRunsBadge from '@/src/components/TestSuites/Trends/TrendsPreviewRunsBadge';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -46,6 +47,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [selectedTestSuite, setSelectedTestSuite] = useState(structuredClone(originalTestSuite));
   const [isChanged, setIsChanged] = useState(false);
   const [hasTestCaseChanges, setHasTestCaseChanges] = useState(false);
+  const [trendsRunCount, setTrendsRunCount] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
@@ -216,6 +218,13 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     [setSelectedTestSuite, setIsSkipRefresh],
   );
 
+  const onChangeActiveTab = useCallback((tab: EntityViewTab) => {
+    setActiveTab(tab);
+    if (tab !== EntityViewTab.Trends) {
+      setTrendsRunCount(null);
+    }
+  }, []);
+
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -229,8 +238,11 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           tabs={tabs}
           jsonConfiguration={jsonConfiguration}
           activeTab={activeTab}
-          onChangeActiveTab={setActiveTab}
+          onChangeActiveTab={onChangeActiveTab}
           onRemove={removeTestSuite}
+          tabsTrailing={
+            activeTab === EntityViewTab.Trends ? <TrendsPreviewRunsBadge runCount={trendsRunCount} /> : undefined
+          }
         >
           <OutlinedButton
             label={t(ButtonsI18nKey.Run)}
@@ -263,6 +275,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               onChangeDataset={onChangeDataset}
               suiteEtag={etag}
               onStartRun={onStartRunTestSuite}
+              onTrendsRunCountChange={setTrendsRunCount}
             />
           )}
         </div>
