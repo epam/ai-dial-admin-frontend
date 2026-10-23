@@ -366,8 +366,29 @@
     padding: 0 !important;
   }
 
+  // The kit wraps the score renderer in a dropdown trigger (`items-center`) and a
+  // content-sized span. With the number hidden, that span collapses to the 1px
+  // border, so the bucket color never fills the row.
+  .ag-cell > .dial-kit-dropdown {
+    align-items: stretch;
+
+    > span {
+      display: flex;
+      height: 100%;
+      min-height: 0;
+    }
+  }
+
   .ag-body-horizontal-scroll {
     min-height: 12px;
+  }
+}
+
+// GridView wraps the grid in height: 100%. Auto height must follow the rows instead,
+// otherwise the stability heatmap stays inside a fixed viewport and scrolls.
+.heat-map-grid--auto-height {
+  > .size-full {
+    height: auto;
   }
 }
 

@@ -6,15 +6,13 @@ import {
   METRIC_SCORE_NAME_FIELD,
   OVERALL_METRIC_SCORE_NAME,
   RUN_ID_FIELD,
-  TREND_SERIES_COLORS,
   TRENDS_RUN_WINDOW,
   VALUE_FIELD,
 } from '@/src/components/TestSuites/Trends/constants';
 import { MetricTrendGroup, TrendsData, TrendsKpiData, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
+import { roundScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQueryResult } from '@/src/models/evaluation/structured-query';
-
-const roundScore = (value: number): number => Math.round(value * 1000) / 1000;
 
 const runDurationMs = (run: Run | undefined): number | null => {
   if (run?.startedAt == null || run?.completedAt == null) {
@@ -104,6 +102,7 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
               overallScore: meta.overallScore,
               durationMs: runDurationMs(run),
               isFailed: run?.status === RunStatus.FAILED,
+              metricNames: run?.metricNames,
             };
           })
           .sort((a, b) => a.computedAtMs - b.computedAtMs)
@@ -118,27 +117,13 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
             overallScore: null,
             durationMs: runDurationMs(run),
             isFailed: run.status === RunStatus.FAILED,
+            metricNames: run.metricNames,
           }));
 
-  const overallScores = runOrder.map((point) => point.overallScore).filter((score): score is number => score != null);
-
-  const durations = runOrder
-    .map((point) => point.durationMs)
-    .filter((duration): duration is number => duration != null);
-
-  const latest = runOrder[runOrder.length - 1] ?? null;
   const runCount = runOrder.length;
 
   const kpis: TrendsKpiData = {
     runCount,
-    latestOverallScore: latest?.overallScore ?? null,
-    avgRunTimeMs: durations.length
-      ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
-      : null,
-    scoreMin: overallScores.length ? Math.min(...overallScores) : null,
-    scoreMax: overallScores.length ? Math.max(...overallScores) : null,
-    latestScore: latest?.overallScore ?? null,
-    thresholdStats: null,
   };
 
   const groupDiscoveryOrder: string[] = [];
@@ -207,9 +192,9 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
         );
         return {
           name: groupName,
-          series: seriesNames.map((seriesName, index) => ({
+          series: seriesNames.map((seriesName) => ({
             name: seriesName,
-            color: TREND_SERIES_COLORS[index % TREND_SERIES_COLORS.length],
+            color: '',
             values: seriesMap.get(seriesName) ?? Array(runOrder.length).fill(null),
           })),
         };
@@ -223,12 +208,6 @@ export const emptyTrendsData = (): TrendsData => ({
   runOrder: [],
   kpis: {
     runCount: 0,
-    latestOverallScore: null,
-    avgRunTimeMs: null,
-    scoreMin: null,
-    scoreMax: null,
-    latestScore: null,
-    thresholdStats: null,
   },
   statistics: [],
   byStatistic: {},
