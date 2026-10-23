@@ -53,9 +53,13 @@ const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, ha
     [onChange, validate],
   );
 
+  // The stored secret is never returned, so there is nothing to reveal until the user types a new one.
+  const isToggleHidden = hasSecretHint && !clientSecret;
+
   return (
     <PasswordInput
       id="clientSecret"
+      isToggleHidden={isToggleHidden}
       labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
       placeholder={t(
         hasSecretHint ? EntityPlaceholdersI18nKey.ClientSecretMasked : EntityPlaceholdersI18nKey.ClientSecret,

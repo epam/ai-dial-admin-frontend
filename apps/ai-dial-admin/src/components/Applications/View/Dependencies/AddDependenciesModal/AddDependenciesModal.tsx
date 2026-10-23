@@ -49,7 +49,7 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
       header={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
       portalId="AddDependencyEntities"
       open={isModalOpen}
-      className="h-[800px]"
+      className="md:h-[800px]"
       size={PopupSize.Lg}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

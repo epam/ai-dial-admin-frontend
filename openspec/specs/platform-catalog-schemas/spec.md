@@ -418,7 +418,9 @@ name-only entries, and offer no mutating or folder action. It SHALL navigate row
 ordinary encoded `$id` detail address without `configFile=true`.
 
 The existing detail resolver SHALL read the API-written resource first and, when no resource exists,
-read the configuration-file population by `$id`; a file-defined result SHALL render read-only. The
+read the configuration-file population by `$id`; a file-defined result SHALL render read-only. When
+neither read finds the schema, the resolver SHALL look for the API-written resource whose body declares
+that `$id` and redirect to that resource's storage-path address. The
 `file` root SHALL not alter this resolver or introduce a new detail route.
 
 #### Scenario: File root exposes file-defined schemas
@@ -440,6 +442,11 @@ read the configuration-file population by `$id`; a file-defined result SHALL ren
 
 - **WHEN** a user follows a deployment's catalog-schema selection to its detail view, and that `$id` has no API-written resource
 - **THEN** the schema the configuration file declares is shown
+
+#### Scenario: A schema a deployment points at opens when its storage name differs from its `$id`
+
+- **WHEN** a user follows a deployment's catalog-schema selection to its detail view, and the API-written resource declaring that `$id` is stored under a different name
+- **THEN** the browser is redirected to the resource's storage-path address, and the schema opens editable as it does from its grid row
 
 #### Scenario: A file-declared schema is read-only
 

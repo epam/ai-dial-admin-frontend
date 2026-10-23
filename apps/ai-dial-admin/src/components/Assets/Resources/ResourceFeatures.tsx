@@ -28,19 +28,19 @@ interface Props {
 const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { features, isLoading } = useAssetRunnerDetails(appRunner);
+  const { features, isLoading } = useAssetRunnerDetails(appRunner, entity.application_type_schema_id);
 
   const fullRunner = useMemo(() => {
     if (features) {
       return {
         ...appRunner,
         ...features,
-      };
+      } as DialApplicationScheme;
     }
     return appRunner;
   }, [appRunner, features]);
 
-  const isFeaturesLoading = isLoading && !!appRunner;
+  const isFeaturesLoading = isLoading;
 
   const onSwitch = useCallback(
     (value: boolean, key: keyof DialApplicationResourceFeatures) => {

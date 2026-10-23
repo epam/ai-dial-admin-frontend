@@ -56,7 +56,7 @@ const FullscreenDiffViewer: FC<Props> = ({
       portalId="FullscreenDiffViewer"
       open={isOpen}
       size={PopupSize.Lg}
-      className="h-[80vh]"
+      className="md:h-[80vh]"
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center px-4 py-2 shrink-0 dial-tiny-text border-b border-secondary">

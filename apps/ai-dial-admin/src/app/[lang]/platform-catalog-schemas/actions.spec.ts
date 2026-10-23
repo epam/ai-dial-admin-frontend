@@ -10,6 +10,7 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteCatalogSchemas,
   createCatalogSchema,
+  findCatalogSchemaPathById,
   getAllCatalogSchemas,
   getCatalogSchema,
   getCatalogSchemaById,
@@ -55,6 +56,42 @@ describe('Catalog schemas :: server actions', () => {
     await getAllCatalogSchemas();
 
     expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.CATALOG_SCHEMA, '');
+  });
+
+  test('Should find the bucket resource whose body declares the $id', async () => {
+    (assetApi.list as any).mockResolvedValue([{ path: 'other' }, { path: STORAGE_NAME }]);
+    (assetApi.getContent as any).mockImplementation(async (_token: unknown, _type: unknown, path: string) =>
+      path === STORAGE_NAME ? { $id: ID } : { $id: 'https://dial.epam.com/catalog_schemas/other' },
+    );
+
+    const result = await findCatalogSchemaPathById(ID);
+
+    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.CATALOG_SCHEMA, '');
+    expect(assetApi.getContent).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.CATALOG_SCHEMA, STORAGE_NAME);
+    expect(result).toEqual(STORAGE_NAME);
+  });
+
+  test('Should stop reading content once a batch holds the match', async () => {
+    const resources = Array.from({ length: 12 }, (_, index) => ({ path: `schema-${index}` }));
+    (assetApi.list as any).mockResolvedValue(resources);
+    (assetApi.getContent as any).mockImplementation(async (_token: unknown, _type: unknown, path: string) =>
+      path === 'schema-1' ? { $id: ID } : { $id: `https://dial.epam.com/catalog_schemas/${path}` },
+    );
+
+    expect(await findCatalogSchemaPathById(ID)).toEqual('schema-1');
+    expect(assetApi.getContent).toHaveBeenCalledTimes(5);
+  });
+
+  test('Should skip an unreadable resource and report no match as null', async () => {
+    (assetApi.list as any).mockResolvedValue([{ path: 'broken' }, { path: 'other' }]);
+    (assetApi.getContent as any).mockImplementation(async (_token: unknown, _type: unknown, path: string) => {
+      if (path === 'broken') {
+        throw new Error('Forbidden');
+      }
+      return { $id: 'https://dial.epam.com/catalog_schemas/other' };
+    });
+
+    expect(await findCatalogSchemaPathById(ID)).toBeNull();
   });
 
   test('Should create under the percent-encoded storage name', async () => {

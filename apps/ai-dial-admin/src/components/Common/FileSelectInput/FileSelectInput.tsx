@@ -66,7 +66,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
               portalId="fileSelect"
               open={isModalOpen}
               onClose={() => setIsModalOpen(false)}
-              className="h-[800px]"
+              className="md:h-[800px]"
               size={PopupSize.Lg}
               mainButtons={getFormPopupButtons({
                 cancelLabel: t(ButtonsI18nKey.Cancel),

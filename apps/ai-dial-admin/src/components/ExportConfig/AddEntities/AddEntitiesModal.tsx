@@ -67,7 +67,7 @@ const AddEntitiesModal: FC<Props> = ({
       portalId="AddExportEntities"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[800px]"
+      className="md:h-[800px]"
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Add),

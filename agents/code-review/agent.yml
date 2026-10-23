@@ -1,0 +1,23 @@
+# Enabled: the dispatcher discovers `agents/*/agent.yml` and skips only
+# underscore-prefixed directories. To disable without reverting, set the repo
+# variable STAGE_CODE_REVIEW_ENABLED=false.
+#
+# Requires the `code-review-and-quality` skill (the `skill:` below is invoked as
+# `/code-review-and-quality`) plus either DIAL_CORE_URL + DIAL_API_KEY, or
+# ANTHROPIC_API_KEY.
+contract_version: '0.1'
+name: code-review
+skill: code-review-and-quality
+agent_version: '0.1.0'
+description: 'AI code review wrapping the local code-review-and-quality skill.'
+triggers: [pull_request]
+allowed_tools: 'Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Skill'
+# Pinned to the model this org's DIAL deployment is known to serve (the same one
+# claude-security-review.yml routes to). Bump once a newer deployment is
+# confirmed available in DIAL — the name here is used as `anthropic.<model>`
+# when DIAL_CORE_URL is set, so an unavailable deployment fails the run.
+model: claude-sonnet-4-6
+phase: pilot
+cost_class: light
+publish_inline_comments: true
+diff_mode: incremental

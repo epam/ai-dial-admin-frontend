@@ -5,6 +5,7 @@ import { IconCheck, IconChevronDown, IconChevronRight, IconSubtask } from '@tabl
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import RatingCounts from '@/src/components/Analytics/SessionsTrace/RatingCounts';
 import { useTreeExpansion } from '@/src/components/Common/TreeGrid/use-tree-expansion';
 import {
   COST_TEXT_CLASS,
@@ -30,8 +31,10 @@ import {
   HopOutcomeFilter,
   HopTreeNode,
   HopTreeRow,
+  SessionFeedbackRow,
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
+import { feedbackRowCounts } from '@/src/utils/analytics/session-detail-fields';
 import {
   formatCompactNumber,
   formatHopDuration,
@@ -116,6 +119,7 @@ const RowFacts: FC<FactsProps> = ({ facts }) => {
 interface RowProps {
   row: HopTreeRow;
   rowElementId: (nodeId: string) => string;
+  feedback?: SessionFeedbackRow;
   isSelected: boolean;
   isEmphasisActive: boolean;
   onSelect: (coreSpanId: string) => void;
@@ -125,6 +129,7 @@ interface RowProps {
 const HopTreeRowView: FC<RowProps> = ({
   row,
   rowElementId,
+  feedback,
   isSelected,
   isEmphasisActive,
   onSelect,
@@ -170,6 +175,9 @@ const HopTreeRowView: FC<RowProps> = ({
           </span>
         )}
       </span>
+      {/* Inside the row's button, so it must stay free of controls: `feedbackRowCounts` carries no
+          `provable_down`, which keeps `RatingCounts` from rendering its caveat button here. */}
+      {feedback && <RatingCounts counts={feedbackRowCounts(feedback)} className="shrink-0" />}
       {/* Persistent, and independent of the current emphasis: a failure must not be reachable only by having
           filtered for one. It sits beside the node's kind rather than replacing it. */}
       {node.isFailed && (
@@ -245,11 +253,14 @@ const HopTreeRowView: FC<RowProps> = ({
 
 interface Props {
   tree: HopTreeNode[];
+  // Keyed by span id, so a rating already placed on one span is never matched again on another. Absent where
+  // the trace was opened without a session to read ratings from; no row then states one.
+  feedbackBySpanId?: Map<string, SessionFeedbackRow>;
   selectedSpanId: string | null;
   onSelectSpan: (coreSpanId: string) => void;
 }
 
-const SessionEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) => {
+const SessionEventStream: FC<Props> = ({ tree, feedbackBySpanId, selectedSpanId, onSelectSpan }) => {
   const t = useI18n();
   const treeId = useId();
   const [emphasis, setEmphasis] = useState<HopEmphasis | null>(null);
@@ -364,6 +375,7 @@ const SessionEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) =
             key={row.node.id}
             row={row}
             rowElementId={rowElementId}
+            feedback={row.node.span ? feedbackBySpanId?.get(row.node.span.core_span_id) : undefined}
             isSelected={row.node.span !== null && row.node.span.core_span_id === selectedSpanId}
             isEmphasisActive={emphasis !== null}
             onSelect={onSelectSpan}

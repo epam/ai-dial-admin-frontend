@@ -106,6 +106,18 @@ describe('CatalogSchemaCreateProperties', () => {
     expect(screen.getByRole('textbox', { name: /id/i })).toBeDisabled();
   });
 
+  /**
+   * Core names a config-file schema by its key, which is the `$id` URL, so the slashes in it are not
+   * the user's to fix on the details view.
+   */
+  test('Should not flag forbidden characters under the read-only name of a config-file schema', () => {
+    const $id = 'https://dial.epam.com/catalog_schemas/agent';
+    renderForm(schema({ $id, name: $id }), false);
+
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toBeDisabled();
+    expect(screen.queryByText(ErrorI18nKey.ForbiddenChars)).not.toBeInTheDocument();
+  });
+
   test('Should report a malformed default locale inline', () => {
     renderForm(schema({ 'dial:defaultLocale': 'EN' }));
 

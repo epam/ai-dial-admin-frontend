@@ -96,8 +96,8 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, entity
   );
 
   /**
-   * The raw `$id`, matching a grid row click: `getUrnForEntity` encodes it once, and the route hands
-   * that segment on undecoded as the Core resource name. Encoding it here too is one level too many.
+   * The raw `$id`: `getUrnForEntity` encodes it once, and the detail page decodes the segment once
+   * before resolving it. Encoding it here too is one level too many.
    */
   const openInNewTab = useCallback(() => {
     const segment = getUrnForEntity(ApplicationRoute.PlatformCatalogSchemas, { $id: schemaId });
