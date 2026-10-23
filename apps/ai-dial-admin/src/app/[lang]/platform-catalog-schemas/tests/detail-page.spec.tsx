@@ -7,11 +7,15 @@ vi.mock('next/navigation', () => ({
   notFound: vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
   }),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT ${url}`);
+  }),
 }));
 
 vi.mock('@/src/app/[lang]/platform-catalog-schemas/actions', () => ({
   getCatalogSchema: vi.fn(),
   getConfigFileCatalogSchema: vi.fn(),
+  findCatalogSchemaPathById: vi.fn(),
 }));
 
 vi.mock('@/src/components/Assets/Platform/CatalogSchemas/View', () => ({
@@ -20,7 +24,11 @@ vi.mock('@/src/components/Assets/Platform/CatalogSchemas/View', () => ({
   ),
 }));
 
-import { getCatalogSchema, getConfigFileCatalogSchema } from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import {
+  findCatalogSchemaPathById,
+  getCatalogSchema,
+  getConfigFileCatalogSchema,
+} from '@/src/app/[lang]/platform-catalog-schemas/actions';
 
 type RenderedElement = { props: { children: { props: Record<string, unknown> } } };
 
@@ -61,7 +69,19 @@ describe('Catalog schema detail page :: resolving either population', () => {
     const rendered = await renderPage();
 
     expect(getConfigFileCatalogSchema).toHaveBeenCalledWith(SCHEMA_ID);
+    expect(findCatalogSchemaPathById).not.toHaveBeenCalled();
     expect(rendered.props.children.props.isConfigFileSource).toBe(true);
+  });
+
+  test('redirects a $id that names no resource to the bucket resource declaring it', async () => {
+    vi.mocked(getCatalogSchema).mockResolvedValue({ success: false });
+    vi.mocked(getConfigFileCatalogSchema).mockResolvedValue({ success: false, failure: {} } as never);
+    vi.mocked(findCatalogSchemaPathById).mockResolvedValue('agent%2Dschema');
+
+    await expect(Page({ params: Promise.resolve({ id: SEGMENT, lang: 'en' }) })).rejects.toThrow(
+      'NEXT_REDIRECT /en/platform-catalog-schemas/agent%252Dschema',
+    );
+    expect(findCatalogSchemaPathById).toHaveBeenCalledWith(SCHEMA_ID);
   });
 
   test('marks a fallback-resolved schema read-only, so a file entry offers no save', async () => {
@@ -76,6 +96,7 @@ describe('Catalog schema detail page :: resolving either population', () => {
   test('reports a schema in neither population as not found', async () => {
     vi.mocked(getCatalogSchema).mockResolvedValue({ success: false });
     vi.mocked(getConfigFileCatalogSchema).mockResolvedValue({ success: false, failure: {} } as never);
+    vi.mocked(findCatalogSchemaPathById).mockResolvedValue(null);
 
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
   });

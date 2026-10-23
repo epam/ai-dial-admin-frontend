@@ -174,6 +174,18 @@ describe('CatalogSchemaField', () => {
     expect(screen.queryByRole('button', { name: 'Buttons.Open' })).toBeNull();
   });
 
+  test('opens the selected schema, addressed by its encoded $id, in a new tab', async () => {
+    const user = userEvent.setup();
+    const open = vi.fn();
+    vi.stubGlobal('open', open);
+    renderField({ schemaId: apiWritten.$id });
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.Open' }));
+
+    expect(open).toHaveBeenCalledWith(`/en/platform-catalog-schemas/${encodeURIComponent(apiWritten.$id)}`, '_blank');
+    vi.unstubAllGlobals();
+  });
+
   test('a read-only admin cannot change the selection', () => {
     isReadOnlyAdmin.mockReturnValue(true);
     renderField({ schemaId: apiWritten.$id });
