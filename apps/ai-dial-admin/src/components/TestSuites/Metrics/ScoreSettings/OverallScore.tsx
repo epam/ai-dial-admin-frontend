@@ -1,6 +1,6 @@
 'use client';
 
-import { DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { Radio } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -103,37 +103,37 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <span className="body-semi text-primary">{t(TestSuitesI18nKey.OverallScoreCalculationMethod)}</span>
-        <p className="small text-secondary">{t(TestSuitesI18nKey.OverallScoreDescription)}</p>
+        <span className="dial-body-semi-text text-primary">{t(TestSuitesI18nKey.OverallScoreCalculationMethod)}</span>
+        <p className="dial-small-text text-secondary">{t(TestSuitesI18nKey.OverallScoreDescription)}</p>
       </div>
 
       <div className="flex flex-col gap-4">
-        <DialRadioButton
-          inputId="overallScoreType-mean"
+        <Radio
+          id="overallScoreType-mean"
           name="overallScoreType"
           value={OverallScoreType.Mean}
-          checked={overallScoreType === OverallScoreType.Mean}
-          label={t(TestSuitesI18nKey.OverallScoreMean)}
+          isSelected={overallScoreType === OverallScoreType.Mean}
+          labelProps={{ label: t(TestSuitesI18nKey.OverallScoreMean) }}
           caption={t(TestSuitesI18nKey.OverallScoreMeanFormula)}
           onChange={onSelectMean}
         />
 
-        <DialRadioButton
-          inputId="overallScoreType-weighted-mean"
+        <Radio
+          id="overallScoreType-weighted-mean"
           name="overallScoreType"
           value={OverallScoreType.WeightedMean}
-          checked={overallScoreType === OverallScoreType.WeightedMean}
-          label={t(TestSuitesI18nKey.OverallScoreWeightedMean)}
+          isSelected={overallScoreType === OverallScoreType.WeightedMean}
+          labelProps={{ label: t(TestSuitesI18nKey.OverallScoreWeightedMean) }}
           caption={t(TestSuitesI18nKey.OverallScoreWeightedMeanFormula)}
           onChange={onSelectWeightedMean}
         />
 
-        <DialRadioButton
-          inputId="overallScoreType-function"
+        <Radio
+          id="overallScoreType-function"
           name="overallScoreType"
           value={OverallScoreType.Function}
-          checked={overallScoreType === OverallScoreType.Function}
-          label={t(TestSuitesI18nKey.OverallScoreFunction)}
+          isSelected={overallScoreType === OverallScoreType.Function}
+          labelProps={{ label: t(TestSuitesI18nKey.OverallScoreFunction) }}
           onChange={onSelectFunction}
         />
       </div>

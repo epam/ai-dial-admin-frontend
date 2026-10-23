@@ -18,7 +18,7 @@ interface Props {
  */
 const CodeSnippet: FC<Props> = ({ title, value, className }) => (
   <div className={classNames('border border-secondary rounded overflow-hidden shrink-0', className)}>
-    <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 tiny">
+    <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 dial-tiny-text">
       <span className="text-secondary font-mono">{title}</span>
       <CopyButton value={value} valueLabel={title} size={ElementSize.Small} />
     </div>

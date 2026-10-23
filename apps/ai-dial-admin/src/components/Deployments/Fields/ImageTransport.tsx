@@ -1,5 +1,6 @@
 import { FC } from 'react';
-import { DialRadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { Image } from '@/src/models/deployments/images';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -24,17 +25,17 @@ const ImageTransport: FC<Props> = ({ image, setImage }) => {
   }
 
   return (
-    <DialRadioGroup
-      fieldTitle={t(EntityFieldsI18nKey.TransportType)}
-      elementId="transport"
-      radioButtons={imageTransports}
+    <RadioGroup
+      labelProps={{ label: t(EntityFieldsI18nKey.TransportType) }}
+      id="transport"
+      items={toRadioItems(imageTransports)}
       onChange={(id) =>
         setImage({
           ...image,
           transportType: id as IMAGE_TRANSPORT_TYPE,
         })
       }
-      activeRadioButton={image.transportType || imageTransports[0].id}
+      value={image.transportType || imageTransports[0].id}
       orientation={RadioGroupOrientation.Column}
       disabled={isReadOnlyAdmin}
     />

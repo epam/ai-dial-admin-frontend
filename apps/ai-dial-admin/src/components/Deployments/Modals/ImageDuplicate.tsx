@@ -1,12 +1,13 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  DialConfirmationPopup,
-  DialRadioGroup,
+  ConfirmationPopup,
+  RadioGroup,
   DialInput,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import { debounce } from 'lodash';
 import semver from 'semver';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
@@ -161,7 +162,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   }, [copyImage.name, names]);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       onClose={onClose}
       header={title}
       portalId="ImageDuplicateModal"
@@ -175,11 +176,11 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       size={PopupSize.Md}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-y-8">
-        <DialRadioGroup
-          radioButtons={duplicationTypes}
-          activeRadioButton={duplicationType}
-          elementId="duplicationTypes"
-          fieldTitle={t(EntitiesI18nKey.DuplicationType)}
+        <RadioGroup
+          items={toRadioItems(duplicationTypes)}
+          value={duplicationType}
+          id="duplicationTypes"
+          labelProps={{ label: t(EntitiesI18nKey.DuplicationType) }}
           orientation={RadioGroupOrientation.Column}
           onChange={onChangeDuplicationType}
         />
@@ -203,7 +204,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           onChange={onChangeVersion}
         />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

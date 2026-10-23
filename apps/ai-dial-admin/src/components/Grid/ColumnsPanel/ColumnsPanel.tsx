@@ -1,10 +1,9 @@
 'use client';
 
-import { DialCheckbox, DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { CloseButton, Checkbox, GhostButton } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { ColumnLeaf } from '@/src/components/Grid/utils';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { COLUMN_PANEL_PREFIX } from '@/src/constants/grid-columns/grid-columns';
@@ -35,10 +34,7 @@ const ColumnsPanel: FC<Props> = ({
   const t = useI18n();
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const onCheckedChange = useCallback(
-    (_value?: boolean, id?: string) => toggleColumnVisibility?.(id?.replace(COLUMN_PANEL_PREFIX, '')),
-    [toggleColumnVisibility],
-  );
+  const onCheckedChange = useCallback((field: string) => toggleColumnVisibility?.(field), [toggleColumnVisibility]);
 
   const [, drop] = useDrop(() => ({ accept: 'column' }));
 
@@ -55,9 +51,9 @@ const ColumnsPanel: FC<Props> = ({
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
           {showResetButton && (
-            <DialGhostButton className="mr-4" label={t(ButtonsI18nKey.ResetToDefault)} onClick={onReset} />
+            <GhostButton className="mr-4" label={t(ButtonsI18nKey.ResetToDefault)} onClick={onReset} />
           )}
-          {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
+          {toggleColumnsPanel && <CloseButton ariaLabel={t(ButtonsI18nKey.Close)} onClose={toggleColumnsPanel} />}
         </div>
       </div>
       <div ref={ref} className="flex-1 flex flex-col p-6 overflow-y-auto">
@@ -69,11 +65,11 @@ const ColumnsPanel: FC<Props> = ({
                 <li key={col.field}>
                   <DraggableItem id={col.field} findItem={onFind} moveItem={onMove}>
                     <div className="flex flex-col">
-                      <DialCheckbox
-                        label={col.headerName}
+                      <Checkbox
+                        labelProps={{ label: col.headerName }}
                         id={`${COLUMN_PANEL_PREFIX}${col.field}`}
-                        checked={!col.hide}
-                        onChange={onCheckedChange}
+                        isSelected={!col.hide}
+                        onChange={() => onCheckedChange(col.field)}
                       />
                       {col.groupName && <span className="pl-6 dial-tiny-text text-secondary">{col.groupName}</span>}
                     </div>

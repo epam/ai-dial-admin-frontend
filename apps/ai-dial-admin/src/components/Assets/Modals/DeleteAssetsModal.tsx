@@ -3,7 +3,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import { ConfirmationPopupVariant, DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import {
   DialFile,
   DialFileManager,
@@ -163,7 +163,7 @@ const DeleteAssetsModal: FC<Props> = ({
   ]);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       header={getDeleteModalTitle(view, t, itemsToDelete.length, hasFoldersToDelete)}
       open={isOpen}
       confirmLabel={t(ButtonsI18nKey.Delete)}
@@ -175,7 +175,7 @@ const DeleteAssetsModal: FC<Props> = ({
       className="bg-layer-2"
     >
       {getDeleteModalContent()}
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

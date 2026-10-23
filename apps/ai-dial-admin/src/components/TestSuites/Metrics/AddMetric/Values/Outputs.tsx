@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialTag } from '@epam/ai-dial-ui-kit';
+import { Badge, BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 
@@ -16,10 +16,7 @@ const MetricOutputs: FC<Props> = ({ fields, title }) => {
       <div className="flex flex-col gap-3">
         {fields.map((field) => (
           <div key={field.id} className="flex flex-col gap-1">
-            <DialTag
-              label={field.name}
-              className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0 w-fit"
-            />
+            <Badge label={field.name} variant={BadgeVariant.Filled} color={BadgeColor.Violet} />
             {field.description ? (
               <span className="dial-tiny-text text-secondary" title={field.description}>
                 {field.description}

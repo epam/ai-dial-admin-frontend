@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { GetItemError } from '@/src/models/error';
@@ -134,7 +134,7 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
       </ul>
       {addTitle && (
         <div>
-          <DialGhostButton
+          <GhostButton
             className="self-start"
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={addTitle}

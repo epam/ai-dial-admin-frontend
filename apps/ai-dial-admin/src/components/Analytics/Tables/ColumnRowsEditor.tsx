@@ -1,14 +1,7 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import {
-  DialGhostButton,
-  DialInput,
-  DialLabel,
-  DialRemoveButton,
-  DialSelectField,
-  DialSwitch,
-} from '@epam/ai-dial-ui-kit';
+import { GhostButton, DialInput, Label, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
 
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -17,6 +10,7 @@ import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
 import { createColumnRow, isNullableLockedType } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow, ColumnRowError } from '@/src/models/analytics/tables-ui';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   rows: ColumnRow[];
@@ -27,7 +21,7 @@ interface Props {
 
 // Vertical offset for the trailing (label-less) Nullable/Sensitive/remove-button group on the first row
 // when it has an error: with items-start (see rowHasError below), that group would otherwise sit flush
-// with the OTHER fields' labels instead of their inputs. The value matches DialLabel's rendered height
+// with the OTHER fields' labels instead of their inputs. The value matches Label's rendered height
 // (text line + its bottom margin) — same offset as the equivalent fix in Routes/Paths/Path.tsx.
 const LABEL_ROW_OFFSET_CLASS = 'mt-[22px]';
 
@@ -131,7 +125,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 />
               ) : (
                 <div className={classNames(TYPED_DETAIL_CELL_CLASS, 'self-start')}>
-                  {first && <DialLabel label={t(AnalyticsTablesI18nKey.ElementType)} required />}
+                  {first && <Label label={t(AnalyticsTablesI18nKey.ElementType)} required />}
                 </div>
               ))}
             {hasEnumRow &&
@@ -145,7 +139,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 />
               ) : (
                 <div className={classNames(TYPED_DETAIL_CELL_CLASS, 'self-start')}>
-                  {first && <DialLabel label={t(AnalyticsTablesI18nKey.EnumValues)} required />}
+                  {first && <Label label={t(AnalyticsTablesI18nKey.EnumValues)} required />}
                 </div>
               ))}
             <DialInput
@@ -163,26 +157,26 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 isTopAligned && first && LABEL_ROW_OFFSET_CLASS,
               )}
             >
-              <DialSwitch
-                switchId={`col-nullable-${row.id}`}
-                label={t(AnalyticsTablesI18nKey.Nullable)}
+              <Switch
+                id={`col-nullable-${row.id}`}
+                labelProps={{ label: t(AnalyticsTablesI18nKey.Nullable) }}
                 isOn={!isNullableLocked && row.nullable}
                 disabled={isNullableLocked}
                 onChange={(value) => update(row.id, { nullable: value })}
               />
-              <DialSwitch
-                switchId={`col-sensitive-${row.id}`}
-                label={t(AnalyticsTablesI18nKey.Sensitive)}
+              <Switch
+                id={`col-sensitive-${row.id}`}
+                labelProps={{ label: t(AnalyticsTablesI18nKey.Sensitive) }}
                 isOn={row.sensitive}
                 onChange={(value) => update(row.id, { sensitive: value })}
               />
-              <DialRemoveButton onClick={() => onChange(rows.filter((r) => r.id !== row.id))} />
+              <RemoveButton onClick={() => onChange(rows.filter((r) => r.id !== row.id))} />
             </div>
           </div>
         );
       })}
       <div>
-        <DialGhostButton
+        <GhostButton
           label={t(AnalyticsTablesI18nKey.AddColumn)}
           onClick={() => onChange([...rows, createColumnRow()])}
         />

@@ -1,7 +1,10 @@
 'use client';
 
 import { FC, useCallback, useEffect, useRef, useState, MouseEvent } from 'react';
-import { DialTag, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Tag, SelectOption } from '@epam/ai-dial-ui-kit';
+
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   items: string[];
@@ -19,6 +22,10 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
   const itemsRef = useRef<HTMLDivElement[]>([]);
   const hiddenCountRef = useRef<HTMLDivElement | null>(null);
   const [visibleCount, setVisibleCount] = useState(items.length);
+  const t = useI18n();
+
+  const getLabel = (item: string) => options.find((o) => o.value === item)?.label ?? item;
+  const getRemoveLabel = (item: string) => `${t(ButtonsI18nKey.Remove)} ${getLabel(item)}`;
 
   const setItemRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -75,10 +82,11 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
     <div ref={containerRef} className="flex gap-1 overflow-hidden w-full">
       {items.slice(0, visibleCount).map((item, index) => (
         <div key={`shown-${item}-${index}`} ref={setItemRef(index)}>
-          <DialTag
+          <Tag
             key={item}
-            label={options.find((o) => o.value === item)?.label ?? item}
+            label={getLabel(item)}
             closable
+            removeLabel={getRemoveLabel(item)}
             onRemove={(e) => handleRemoveTag?.(e, item)}
             className="max-w-full"
           />
@@ -87,24 +95,25 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
 
       {visibleCount < items.length && (
         <div ref={hiddenCountRef}>
-          <DialTag key={'tags-count'} label={`+${items.length - visibleCount}`} className="max-w-full" />
+          <Tag key={'tags-count'} label={`+${items.length - visibleCount}`} className="max-w-full" />
         </div>
       )}
 
       <div className="absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap">
         {items.map((item, index) => (
           <div key={`hidden-${item}-${index}`} ref={setItemRef(index)} className={'inline-block'}>
-            <DialTag
+            <Tag
               key={item}
-              label={options.find((o) => o.value === item)?.label ?? item}
+              label={getLabel(item)}
               closable
+              removeLabel={getRemoveLabel(item)}
               onRemove={(e) => handleRemoveTag?.(e, item)}
               className="max-w-full"
             />
           </div>
         ))}
         <div ref={hiddenCountRef} className={'inline-block'}>
-          <DialTag key={'tags-count'} label={`+${items.length}`} className="max-w-full" />
+          <Tag key={'tags-count'} label={`+${items.length}`} className="max-w-full" />
         </div>
       </div>
     </div>

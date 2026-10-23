@@ -5,7 +5,7 @@ import { FC } from 'react';
 import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';
 import { useTheme } from '@/src/context/ThemeContext';
 import { EDITOR_THEMES } from '@/src/types/editor';
-import { DialLabel } from '@epam/ai-dial-ui-kit';
+import { Label } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   original?: string;
@@ -24,7 +24,7 @@ const DiffField: FC<Props> = ({ original, modified, label, className, language }
 
   return (
     <div className={classNames('flex flex-col w-full flex-1 relative gap-y-1 bg-layer-2 pt-2 pl-3', className)}>
-      <DialLabel label={label} htmlFor="diffField" />
+      <Label label={label} htmlFor="diffField" />
       <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         <DiffEditor
           keepCurrentModifiedModel={true}

@@ -1,15 +1,9 @@
 'use client';
 
-import {
-  DialEllipsisTooltip,
-  DialGhostIconButton,
-  DialNoDataContent,
-  ElementSize,
-  GhostButton,
-} from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, GhostIconButton, NoDataContent, ElementSize, GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown, IconChevronRight, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useId, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useTreeExpansion } from '@/src/components/Common/TreeGrid/use-tree-expansion';
 import {
@@ -162,7 +156,7 @@ const HopTreeRowView: FC<RowProps> = ({
           <span className="truncate text-primary dial-small-semi-text">{label}</span>
         ) : (
           <span className="min-w-0 text-primary dial-small-semi-text">
-            <DialEllipsisTooltip text={label} />
+            <EllipsisTooltip text={label} />
           </span>
         )}
         {/* What the hop did and what it recorded, on one line beneath who did it. An MCP row states its
@@ -211,7 +205,7 @@ const HopTreeRowView: FC<RowProps> = ({
       <div className={cardClassName}>
         <span aria-hidden className={classNames('ml-1 h-7 shrink-0 border-l-2', railClassOf(type, node.isFailed))} />
         {children.length > 0 ? (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={
               expanded ? (
@@ -273,6 +267,22 @@ const SessionEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) =
 
   const rowElementId = useCallback((nodeId: string) => `${treeId}-${nodeId.replace(/\s+/g, '_')}`, [treeId]);
 
+  // Once per trace: a trace can open on a span deep in a long tree — an entity's own call — and a selection
+  // below the fold reads as no selection. Later selections are the reader's own clicks, already on screen.
+  const scrolledTreeRef = useRef<HopTreeNode[] | null>(null);
+  useEffect(() => {
+    if (scrolledTreeRef.current === tree || selectedSpanId === null) {
+      return;
+    }
+
+    const selectedRow = rows.find(({ node }) => node.span?.core_span_id === selectedSpanId);
+
+    if (selectedRow) {
+      scrolledTreeRef.current = tree;
+      document.getElementById(rowElementId(selectedRow.node.id))?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [tree, rows, selectedSpanId, rowElementId]);
+
   const onEmphasise = useCallback(
     (next: HopEmphasis) => setEmphasis((current) => (current === next ? null : next)),
     [],
@@ -281,10 +291,10 @@ const SessionEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) =
   if (!tree.length) {
     return (
       <div className="flex flex-1 flex-col justify-center bg-layer-1">
-        <DialNoDataContent
+        <NoDataContent
           icon={<IconSubtask size={EMPTY_ICON_SIZE} aria-hidden />}
           title={t(SessionsTraceI18nKey.TraceNoSpans)}
-          containerClassName="max-w-[520px] self-center p-6"
+          className="max-w-[520px] self-center p-6"
           titleClassName="dial-tiny-semi-text"
           descriptionClassName="dial-small-text"
         />

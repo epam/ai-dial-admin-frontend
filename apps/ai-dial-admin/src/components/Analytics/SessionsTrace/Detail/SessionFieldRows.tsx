@@ -1,6 +1,6 @@
 'use client';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC } from 'react';
 
@@ -37,7 +37,7 @@ const FieldValue: FC<ValueProps> = ({ field: { state, text }, className, isClamp
   if (isClamped) {
     return (
       <span className={classNames('min-w-0', className)}>
-        <DialEllipsisTooltip text={text} contentClassName="break-all" />
+        <EllipsisTooltip text={text} contentClassName="break-all" />
       </span>
     );
   }

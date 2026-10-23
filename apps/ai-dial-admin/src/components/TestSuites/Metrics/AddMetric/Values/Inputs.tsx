@@ -1,4 +1,5 @@
-import { DialLabel, DialSegmentedControl, DialTag, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Label, SegmentedControl, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
+import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import AttributeSamplesPreview from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSamplesPreview';
@@ -10,7 +11,7 @@ import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metri
 import { ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
-import { getBindingColumnType, isBindingTypeMismatched } from '../utils';
+import { getBindingColumnType, getInputAcceptedTypes, isBindingTypeMismatched, isColumnTypeAccepted } from '../utils';
 import MetricControl from './MetricControl';
 import MetricSectionTabs from './MetricSectionTabs';
 import TypedBindingSelect from './TypedBindingSelect';
@@ -51,6 +52,7 @@ const MetricInputs: FC<Props> = ({
           binding={bindings?.find((b) => b.property === field.name)}
           selectedTestSuite={selectedTestSuite}
           testCaseSchema={testCaseSchema}
+          inputSchema={schema as JSONSchema7 | undefined}
           samples={samples}
           onChange={(binding) => {
             const updatedBindings = bindings?.map((b) => (b.property === field.name ? binding : b));
@@ -69,9 +71,14 @@ const InputsHint: FC = () => {
   return <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.InputsHint)}</p>;
 };
 
-const getExpectedTypeLabel = ({ type, itemsType }: SchemaFieldRow): string => {
-  const label = formatDataTypeLabel(type);
-  return type === 'array' && itemsType ? `${label}<${formatDataTypeLabel(itemsType)}>` : label;
+const getExpectedTypeLabel = ({ type, itemsType }: SchemaFieldRow, acceptedTypes: string[]): string => {
+  if (acceptedTypes.length > 1) {
+    return acceptedTypes.map(formatDataTypeLabel).join(' | ');
+  }
+  const label = formatDataTypeLabel(acceptedTypes[0]);
+  return type === 'array' && itemsType && acceptedTypes[0] === 'array'
+    ? `${label}<${formatDataTypeLabel(itemsType)}>`
+    : label;
 };
 
 const MetricInput: FC<{
@@ -79,13 +86,14 @@ const MetricInput: FC<{
   binding?: MetricBinding;
   selectedTestSuite?: TestSuite;
   testCaseSchema?: TestCaseSchema[];
+  inputSchema?: JSONSchema7;
   samples?: AttributeSamples;
   onChange: (binding: MetricBinding) => void;
-}> = ({ field, binding, selectedTestSuite, testCaseSchema, samples, onChange }) => {
+}> = ({ field, binding, selectedTestSuite, testCaseSchema, inputSchema, samples, onChange }) => {
   const t = useI18n();
   const selectPlaceholder = t(EntityPlaceholdersI18nKey.Select);
 
-  const bindingTypeOptions = useMemo<SegmentedControlOption<MetricBindingType>[]>(
+  const bindingTypeOptions = useMemo<SegmentedControlItem<MetricBindingType>[]>(
     () => [
       { value: MetricBindingType.TestCase, label: t(TestSuitesI18nKey.TestCase) },
       { value: MetricBindingType.Response, label: t(TestSuitesI18nKey.ResponseColumn) },
@@ -124,8 +132,10 @@ const MetricInput: FC<{
     [onChange, binding],
   );
 
+  const acceptedTypes = useMemo(() => getInputAcceptedTypes(field, inputSchema), [field, inputSchema]);
+
   const testCaseOptions = useMemo(() => {
-    const schema = testCaseSchema ?? [];
+    const schema = (testCaseSchema ?? []).filter((item) => isColumnTypeAccepted(acceptedTypes, item.type));
     return schema.map((item) => {
       const values = samples?.valuesByField[item.name] ?? [];
       return toTypedSelectOption({
@@ -147,7 +157,7 @@ const MetricInput: FC<{
             : undefined,
       });
     });
-  }, [testCaseSchema, samples]);
+  }, [testCaseSchema, samples, acceptedTypes]);
 
   const responseColumns = useMemo<ResponseColumn[]>(
     () => (selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : []),
@@ -155,53 +165,45 @@ const MetricInput: FC<{
   );
 
   const responseOptions = useMemo(() => {
-    return responseColumns.map((item) =>
-      toTypedSelectOption({
-        value: item.name,
-        label: item.displayName,
-        type: item.type,
-        interactiveTooltip: {
-          content: (
-            <div className="flex flex-col gap-1 min-w-[200px] text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-primary truncate">{item.displayName}</span>
-                <span className="text-secondary">{formatDataTypeLabel(item.type)}</span>
+    return responseColumns
+      .filter((item) => isColumnTypeAccepted(acceptedTypes, item.type))
+      .map((item) =>
+        toTypedSelectOption({
+          value: item.name,
+          label: item.displayName,
+          type: item.type,
+          interactiveTooltip: {
+            content: (
+              <div className="flex flex-col gap-1 min-w-[200px] text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-primary truncate">{item.displayName}</span>
+                  <span className="text-secondary">{formatDataTypeLabel(item.type)}</span>
+                </div>
+                {item.expression ? <p className="text-secondary break-all">{item.expression}</p> : null}
               </div>
-              {item.expression ? <p className="text-secondary break-all">{item.expression}</p> : null}
-            </div>
-          ),
-        },
-      }),
-    );
-  }, [responseColumns]);
+            ),
+          },
+        }),
+      );
+  }, [responseColumns, acceptedTypes]);
 
   const selectedColumnType = getBindingColumnType(binding, testCaseSchema, responseColumns);
-  const hasTypeMismatch = isBindingTypeMismatched(field, binding, testCaseSchema, responseColumns);
-  const expectedTypeLabel = getExpectedTypeLabel(field);
+  const hasTypeMismatch = isBindingTypeMismatched(field, binding, testCaseSchema, responseColumns, inputSchema);
   const typeMismatchError =
     hasTypeMismatch && selectedColumnType != null
       ? t(TestSuitesI18nKey.InputTypeMismatch, {
-          expected: expectedTypeLabel,
+          expected: getExpectedTypeLabel(field, acceptedTypes),
           actual: formatDataTypeLabel(selectedColumnType),
         })
       : undefined;
 
   return (
     <div className="flex flex-col gap-1">
-      <DialLabel
-        label={
-          <span className="flex items-center gap-2">
-            <span>{field.name}</span>
-            <DialTag label={expectedTypeLabel} className="shrink-0" />
-          </span>
-        }
-        caption={field.description}
-        required={field.required}
-      />
+      <Label label={field.name} caption={field.description} required={field.required} />
       <div className="w-fit mb-2">
-        <DialSegmentedControl
-          ariaLabel={field.name}
-          options={bindingTypeOptions}
+        <SegmentedControl
+          aria-label={field.name}
+          items={bindingTypeOptions}
           value={activeTab}
           onChange={onBindingTypeChange}
         />

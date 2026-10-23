@@ -8,20 +8,20 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialCheckbox: ({ id, label, checked, onChange, disabled }: any) => (
+    Checkbox: ({ id, labelProps: { label } = {}, isSelected, onChange, disabled }: any) => (
       <label>
         <input
           type="checkbox"
           aria-label={label}
           data-testid={`checkbox-${id}`}
-          checked={!!checked}
+          checked={!!isSelected}
           disabled={!!disabled}
-          onChange={(e) => onChange(e.target.checked, id)}
+          onChange={(e) => onChange(e.target.checked)}
         />
         {label}
       </label>
     ),
-    DialSwitch: ({ switchId, isOn, onChange, label, disabled }: any) => (
+    Switch: ({ id: switchId, isOn, onChange, labelProps: { label } = {}, disabled }: any) => (
       <label>
         <input
           type="checkbox"

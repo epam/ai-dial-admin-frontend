@@ -51,8 +51,8 @@ const sampleImage = {
   version: '1.2.1',
 } as Image;
 
-// DialInputPopup renders a <button aria-label="open-popup"> that toggles the popup.
-const getPopupTrigger = () => screen.getByRole('button', { name: /open-popup/i });
+// InputPopup renders a read-only textbox that opens the popup.
+const getPopupTrigger = () => screen.getByRole('textbox');
 
 describe('InternalImageField', () => {
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe('InternalImageField', () => {
     render(
       <InternalImageField container={baseContainer()} image={sampleImage} route={ApplicationRoute.McpContainers} />,
     );
-    expect(screen.getByText('Github (1.2.1)')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Github (1.2.1)')).toBeInTheDocument();
   });
 
   test('renders the field label using ContainersI18nKey.ContainerImage', () => {

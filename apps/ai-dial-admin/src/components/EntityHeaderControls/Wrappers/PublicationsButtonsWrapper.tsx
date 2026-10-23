@@ -7,12 +7,13 @@ import { createPortal } from 'react-dom';
 import {
   NotificationVariant,
   ButtonAppearance,
-  DialNotification,
-  DialConfirmationPopup,
-  DialDangerButton,
-  DialNeutralButton,
-  DialPrimaryButton,
-  DialTextarea,
+  Notification,
+  NotificationType,
+  ConfirmationPopup,
+  DangerButton,
+  OutlinedButton,
+  PrimaryButton,
+  Textarea,
 } from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -214,7 +215,8 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     if (isAddAction(action) && !entity.rules?.length) {
       return (
         <div className="flex flex-col gap-2 px-6 py-4">
-          <DialNotification
+          <Notification
+            type={NotificationType.SectionMessage}
             variant={NotificationVariant.Info}
             message={<span className="text-sm">{t(PublicationsI18nKey.PublishWarningTitle)}</span>}
           />
@@ -237,7 +239,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-                  <DialDangerButton
+                  <DangerButton
                     className={buttonsClassName}
                     label={t(ButtonsI18nKey.Delete)}
                     appearance={ButtonAppearance.Outlined}
@@ -246,14 +248,14 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                   />
                   {!isOnlyDeleteAvailable && (
                     <>
-                      <DialNeutralButton
+                      <OutlinedButton
                         className={buttonsClassName}
                         label={t(ButtonsI18nKey.Decline)}
                         onClick={() => setIsOpenDeclineModal(true)}
                         iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
                       />
                       {isAddAction(action) && (
-                        <DialPrimaryButton
+                        <PrimaryButton
                           className={classNames(buttonsClassName, approveButtonClassName)}
                           label={t(ButtonsI18nKey.Publish)}
                           onClick={() => setIsOpenApproveModal(true)}
@@ -261,7 +263,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                         />
                       )}
                       {action === ActionType.DELETE && (
-                        <DialPrimaryButton
+                        <PrimaryButton
                           className={classNames(buttonsClassName, approveButtonClassName)}
                           label={t(ButtonsI18nKey.Unpublish)}
                           onClick={() => setIsOpenApproveModal(true)}
@@ -279,7 +281,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
       </div>
       {isDeleteModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isDeleteModalOpen}
             header={t(DeleteI18nKey.Title, { entity: t(PublicationsI18nKey.Publication) })}
             onConfirm={remove}
@@ -294,7 +296,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
         )}
       {isApproveModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isApproveModalOpen}
             header={t(keys.ApproveModalTitle)}
             onConfirm={approve}
@@ -306,12 +308,12 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             description={t(keys.ApproveDescription)}
           >
             {publishWarning}
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
       {isDeclineModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isDeclineModalOpen}
             header={t(keys.DeclineModalTitle)}
             onConfirm={decline}
@@ -322,7 +324,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             confirmLabel={t(ButtonsI18nKey.Decline)}
           >
             <div className="px-6">
-              <DialTextarea
+              <Textarea
                 id="reason"
                 labelProps={{ label: t(PublicationsI18nKey.DeclineReason) }}
                 placeholder={t(PublicationsI18nKey.DeclineReasonPlaceholder)}
@@ -332,7 +334,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                 error={declineErrorMessage}
               />
             </div>
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
     </>

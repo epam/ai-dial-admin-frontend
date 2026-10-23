@@ -1,5 +1,6 @@
 import { ColDef, ColGroupDef, ColumnState } from 'ag-grid-community';
 
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import { applyColumnStateOrderToTreeColDefs } from '@/src/components/Grid/utils';
 import {
   DEFAULT_COMPARE_DELTA_HEADER,
@@ -116,8 +117,9 @@ const nestMetricGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef =>
   const groupKey = group.headerName ?? '';
 
   return {
+    // Spreading the grid's group levels keeps their header renderer, which `flattenGroupedNode` hands back to the grid.
+    ...group,
     headerName: groupKey,
-    // Spreading the grid's metric level keeps its header renderer, which `flattenGroupedNode` hands back to the grid.
     children: (group.children as ColGroupDef[]).map((metricGroup) => {
       const leaves = getChildren(metricGroup);
       const metricKey = metricGroup.headerName ?? '';
@@ -144,6 +146,7 @@ const nestExtractedGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef
     headerName: EXTRACTED_GROUP_HEADER,
     children: fieldKeys.map((key) => ({
       headerName: key,
+      headerGroupComponent: EllipsisHeaderGroup,
       children: wrapRunLeaves(leaves, `extracted_${key}`, runs),
     })),
   };

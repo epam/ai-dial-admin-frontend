@@ -4,9 +4,10 @@ import { FC, ReactNode, useMemo } from 'react';
 import Grafana from '@/public/images/icons/grafana.svg';
 import {
   NotificationVariant,
-  DialNotification,
-  DialLoader,
-  DialNeutralButton,
+  Notification,
+  NotificationType,
+  Spinner,
+  OutlinedButton,
   ElementSize,
 } from '@epam/ai-dial-ui-kit';
 
@@ -54,7 +55,7 @@ const JsonCollapsible: FC<{
       growOnOpen={growOnOpen}
     >
       {isLoading ? (
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
           <JsonEditor entity={entity ?? null} options={{ wordWrap }} readonly={true} />
@@ -188,9 +189,9 @@ const TryOutResponsePreview: FC<Props> = ({
   return (
     <>
       {isSelectedRequestSkipped ? null : (
-        <DialNotification message={alertMessage} variant={alertVariant}>
+        <Notification type={NotificationType.SectionMessage} message={alertMessage} variant={alertVariant}>
           {bannerGrafanaUrl && (
-            <DialNeutralButton
+            <OutlinedButton
               size={ElementSize.Small}
               className="w-fit"
               iconBefore={<Grafana />}
@@ -198,7 +199,7 @@ const TryOutResponsePreview: FC<Props> = ({
               onClick={() => window.open(bannerGrafanaUrl, '_blank')}
             />
           )}
-        </DialNotification>
+        </Notification>
       )}
 
       {usesHistorySections ? (

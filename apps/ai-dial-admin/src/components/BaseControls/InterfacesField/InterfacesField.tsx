@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
 
-import { DialLabel, DialPrimaryButton, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Label, PrimaryButton, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -119,8 +119,8 @@ const InterfacesField = <V extends InterfaceValue>({
   return (
     <div className={classNames('flex flex-col gap-y-2')}>
       <div className="flex items-center gap-x-2">
-        <DialLabel label={t(InterfacesI18nKey.Interfaces)} />
-        <DialTooltip
+        <Label label={t(InterfacesI18nKey.Interfaces)} />
+        <Tooltip
           tooltip={
             <div className="flex flex-col gap-1">
               <div>{isEndpointVariant ? t(InterfacesI18nKey.InfoEndpoint) : t(InterfacesI18nKey.InfoBaseUrl)}</div>
@@ -128,7 +128,7 @@ const InterfacesField = <V extends InterfaceValue>({
           }
         >
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
-        </DialTooltip>
+        </Tooltip>
       </div>
 
       <div
@@ -182,7 +182,7 @@ const InterfacesField = <V extends InterfaceValue>({
 
         {!isReadonly && showAddButton && (
           <div className="flex flex-1 justify-end">
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.AddInterface)}
               onClick={onAddClick}

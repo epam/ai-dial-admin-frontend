@@ -2,7 +2,7 @@
 
 import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
-import { DialLinkButton, DialNeutralButton, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { LinkButton, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -51,26 +51,22 @@ const ExpandableText: FC<Props> = ({ lines, children, className, popupHeader }) 
         {children}
       </div>
       {(isOverflowing || isExpanded) && (
-        <DialLinkButton
+        <LinkButton
           onClick={popupHeader ? () => setIsPopupOpen(true) : () => setIsExpanded((prev) => !prev)}
           label={!popupHeader && isExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}
         />
       )}
       {popupHeader && (
-        <DialPopup
+        <Popup
           open={isPopupOpen}
           onClose={() => setIsPopupOpen(false)}
           header={popupHeader}
           portalId="ExpandableTextPreview"
           size={PopupSize.Md}
-          footer={
-            <div className="flex justify-end px-6 py-4">
-              <DialNeutralButton label={t(ButtonsI18nKey.Close)} onClick={() => setIsPopupOpen(false)} />
-            </div>
-          }
+          mainButtons={[{ label: t(ButtonsI18nKey.Close), onClick: () => setIsPopupOpen(false) }]}
         >
           <div className="px-6 py-4">{children}</div>
-        </DialPopup>
+        </Popup>
       )}
     </div>
   );

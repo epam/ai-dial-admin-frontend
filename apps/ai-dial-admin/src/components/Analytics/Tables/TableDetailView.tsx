@@ -10,13 +10,15 @@ import {
   ButtonAppearance,
   ButtonVariant,
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
-  DialFormPopup,
-  DialGhostButton,
+  ConfirmationPopup,
+  EllipsisTooltip,
+  Popup,
+  GhostButton,
   PopupSize,
   Tabs,
 } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { IconPlugConnected } from '@tabler/icons-react';
 
 import {
@@ -499,7 +501,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                   disableSave={!isEditorEnabled && !draft.canMaterialize}
                   onDiscard={onDiscard}
                   onSave={onTryToSave}
-                  isDesignSystem2
                 />
               )}
               {isJsonViewOnly && (
@@ -508,9 +509,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                     buttonLabel={t(ButtonsI18nKey.Copy)}
                     valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
                     value={copyValue}
-                    isDesignSystem2
                   />
-                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                 </>
               )}
               {!isChangeBarShown && !isJsonViewOnly && (
@@ -554,12 +554,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                       {/* Not permission-gated: on an active table it opens a read-only view of the stored
                           definition and writes nothing, and a system table is the one whose definition is
                           most often read as a document. */}
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                     </>
                   ) : (
-                    canModify && (
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
-                    )
+                    canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                   )}
                 </>
               )}
@@ -575,7 +573,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       {isActive ? activeSurface : draftSurface}
 
       {confirmOpen && (
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open={confirmOpen}
           variant={ConfirmationPopupVariant.Danger}
           header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}
@@ -584,7 +582,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
               <span>{t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}</span>
               <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
                 <span className="text-secondary shrink-0">{t(AnalyticsTablesI18nKey.Name)}:</span>
-                <DialEllipsisTooltip text={name} />
+                <EllipsisTooltip text={name} />
               </div>
             </div>
           }
@@ -595,46 +593,51 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       )}
 
       {addOpen && (
-        <DialFormPopup
+        <Popup
           open={addOpen}
           portalId="qb-add-columns"
           size={PopupSize.Lg}
           header={t(AnalyticsTablesI18nKey.AddColumns)}
-          submitLabel={t(AnalyticsTablesI18nKey.AddColumns)}
-          disableSubmitButton={toTableColumns(addColumns).length === 0 || hasColumnRowErrors(addColumnErrors)}
           onClose={() => setAddOpen(false)}
-          onSubmit={() => void onSubmitAddColumns()}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(AnalyticsTablesI18nKey.AddColumns),
+            isSubmitDisabled: toTableColumns(addColumns).length === 0 || hasColumnRowErrors(addColumnErrors),
+            onCancel: () => setAddOpen(false),
+            onSubmit: () => void onSubmitAddColumns(),
+          })}
         >
           <div className="max-h-[70vh] overflow-auto p-6">
             <ColumnRowsEditor rows={addColumns} errors={addColumnErrors} onChange={setAddColumns} />
           </div>
-        </DialFormPopup>
+        </Popup>
       )}
 
       {writeOpen && (
-        <DialFormPopup
+        <Popup
           open={writeOpen}
           portalId="qb-write-rows"
           size={PopupSize.Lg}
           header={t(AnalyticsTablesI18nKey.AddRows)}
-          submitLabel={t(AnalyticsTablesI18nKey.InsertRows)}
-          disableSubmitButton={!parseRowsJson(rowsJson)}
           onClose={() => setWriteOpen(false)}
-          onSubmit={() => void onSubmitWriteRows()}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(AnalyticsTablesI18nKey.InsertRows),
+            isSubmitDisabled: !parseRowsJson(rowsJson),
+            onCancel: () => setWriteOpen(false),
+            onSubmit: () => void onSubmitWriteRows(),
+          })}
         >
           <div className="flex flex-col gap-3 p-6">
             <div className="flex flex-col items-start gap-1 border-l-2 border-tertiary pl-3">
               <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.AddRowsPurpose)}</p>
-              <DialGhostButton
-                label={t(AnalyticsTablesI18nKey.WriteProgrammatically)}
-                onClick={onWriteProgrammatically}
-              />
+              <GhostButton label={t(AnalyticsTablesI18nKey.WriteProgrammatically)} onClick={onWriteProgrammatically} />
             </div>
             <div className="h-[320px] overflow-hidden rounded border border-primary">
               <JsonEditorBase value={rowsJson} onChange={(v) => setRowsJson(v ?? '')} />
             </div>
           </div>
-        </DialFormPopup>
+        </Popup>
       )}
 
       {editColumn && (

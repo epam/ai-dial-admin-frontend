@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, Ref, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent, PrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
@@ -191,7 +191,7 @@ const ParametersTab: FC<Props> = ({
           </div>
           <div className="flex flex-row gap-4">
             {paramsView === ParamsView.TABLE && !isReadOnlyAdmin && (
-              <DialPrimaryButton
+              <PrimaryButton
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}
                 onClick={() => setIsAddClicked(true)}
@@ -202,7 +202,7 @@ const ParametersTab: FC<Props> = ({
       )}
       <div className="flex-1 min-h-0">
         {isSchemeLoading ? (
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
         ) : (
           <>
             {paramsView !== ParamsView.UI && isEditorEnabled && (
@@ -228,7 +228,7 @@ const ParametersTab: FC<Props> = ({
             {paramsView === ParamsView.FORM && !isEditorEnabled && (
               <div className="size-full overflow-y-auto">
                 {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
-                  <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+                  <NoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
                 ) : (
                   <div key={discardKey} className="flex-1 min-h-0 p-4 bg-layer-0">
                     <SchemaUiRenderer

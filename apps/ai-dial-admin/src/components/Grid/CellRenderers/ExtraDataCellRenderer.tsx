@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import { DialFileIcon } from '@epam/ai-dial-ui-kit';
+import { DialItemType, FileIcon } from '@epam/ai-dial-ui-kit';
 
 import { isJSON } from '@/src/utils/validation/is-valid-json';
 
@@ -10,7 +10,7 @@ const ExtraDataCellRenderer: FC<ICellRendererParams> = (props: ICellRendererPara
   return (
     <div className="h-6 w-full flex items-center justify-between">
       <div className="truncate mr-2">{props.value}</div>
-      {isJson && <DialFileIcon extension="json" className="text-secondary" />}
+      {isJson && <FileIcon type={DialItemType.File} name="file.json" decorative className="text-secondary" />}
     </div>
   );
 };

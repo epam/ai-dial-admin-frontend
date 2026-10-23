@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -61,13 +61,13 @@ const BindingsSection: FC<BindingsSectionProps> = ({ label, bindings, isExpanded
               <span className="truncate">{binding.property}</span>
               <span
                 className={classNames(
-                  'inline-block text-[9px] font-semibold px-[5px] py-px rounded-sm uppercase tracking-wide leading-[14px]',
+                  'inline-block text-[9px] font-semibold px-[5px] py-px rounded-xs uppercase tracking-wide leading-[14px]',
                   chipClass,
                 )}
               >
                 {binding.source.$type}
               </span>
-              <DialEllipsisTooltip text={value} />
+              <EllipsisTooltip text={value} />
             </div>
           );
         })}

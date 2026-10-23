@@ -4,7 +4,8 @@ import { describe, expect, test } from 'vitest';
 import { MISSING_VALUE_DISPLAY } from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
-import { RUNS_COLUMN } from '../grid-columns';
+import RunCostCellRenderer from '@/src/components/Grid/CellRenderers/RunCostCellRenderer';
+import { RUNS_COLUMN, SUITE_RUNS_COLUMN } from '../grid-columns';
 
 const START = 1700000000000;
 const COMPLETED = START + 125000;
@@ -62,6 +63,13 @@ describe('RUNS_COLUMN — Cost', () => {
   test('shows the run’s own cost, not a fabricated one', () => {
     expect(getValue('cost', SETTLED_RUN)).toBe(0.42);
     expect(displayedValue('cost', SETTLED_RUN)).toBe('$0.42');
+  });
+
+  test('uses the spinner-aware renderer only on the suite Runs tab', () => {
+    const suiteCost = SUITE_RUNS_COLUMN.find((col) => col.colId === 'cost') as ColDef;
+
+    expect(suiteCost.cellRenderer).toBe(RunCostCellRenderer);
+    expect(columnOf('cost').cellRenderer).not.toBe(RunCostCellRenderer);
   });
 });
 

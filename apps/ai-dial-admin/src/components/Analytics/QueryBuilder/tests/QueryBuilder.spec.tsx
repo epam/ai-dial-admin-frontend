@@ -122,7 +122,7 @@ describe('QueryBuilder', () => {
     expect(screen.getByText(/dial_usage_log/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Sort' })).toBeInTheDocument();
   });
@@ -131,7 +131,7 @@ describe('QueryBuilder', () => {
     renderBuilder({ initialEntities: [], initialEntityName: '', initialFields: [] });
 
     expect(screen.getByText('QueryBuilder.EntitiesLoadFailed')).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'QueryBuilder.ViewForm' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'QueryBuilder.ViewForm' })).not.toBeInTheDocument();
   });
 
   test('mode switcher swaps projection and aggregate sections without DISTINCT controls', async () => {
@@ -140,7 +140,7 @@ describe('QueryBuilder', () => {
 
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Select' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.AggregateMode' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.AggregateMode' }));
 
     expect(screen.getByRole('heading', { name: /QueryBuilder.GroupBy/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /QueryBuilder\.Aggregate/ })).toBeInTheDocument();
@@ -171,11 +171,11 @@ describe('QueryBuilder', () => {
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.CollapsePanel' }));
 
-    expect(screen.queryByRole('tab', { name: 'QueryBuilder.ViewForm' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'QueryBuilder.ViewForm' })).not.toBeInTheDocument();
     expect(localStorage.getItem('query-builder-rail-collapsed')).toBe('true');
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.OpenPanel/ }));
-    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' })).toBeInTheDocument();
     expect(localStorage.getItem('query-builder-rail-collapsed')).toBe('false');
   });
 
@@ -187,7 +187,7 @@ describe('QueryBuilder', () => {
     });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
 
     const editor = (await screen.findByLabelText('sql-editor')) as HTMLTextAreaElement;
     expect(translateQuery).toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe('QueryBuilder', () => {
     vi.mocked(translateQuery).mockResolvedValue({ success: false, errorMessage: 'include_total not expressible' });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
 
     const editor = (await screen.findByLabelText('sql-editor')) as HTMLTextAreaElement;
     expect(editor.value).toBe('');
@@ -209,7 +209,7 @@ describe('QueryBuilder', () => {
   });
 
   const typeSql = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
     await user.click(editor);
@@ -232,7 +232,7 @@ describe('QueryBuilder', () => {
     renderBuilder();
 
     await typeSql(user, 'SELECT project_id FROM dial_usage_log');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
 
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
     expect((await screen.findByLabelText('json-editor')) as HTMLTextAreaElement).toHaveDisplayValue(
@@ -240,7 +240,7 @@ describe('QueryBuilder', () => {
     );
 
     // The SQL buffer was cleared, so returning to SQL re-seeds it from the builder translation.
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     expect(await screen.findByLabelText('sql-editor')).toHaveDisplayValue(/FROM\s+dial_usage_log/);
   });
 
@@ -251,12 +251,12 @@ describe('QueryBuilder', () => {
     renderBuilder();
 
     await typeSql(user, 'SELECT project_id FROM dial_usage_log WHERE project_id = 1');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
 
     expect(await screen.findByText('QueryBuilder.NotShownInBuilder')).toBeInTheDocument();
     expect(screen.getByLabelText('json-editor')).toHaveDisplayValue(/"op": "or"/);
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
   });
 
@@ -267,7 +267,7 @@ describe('QueryBuilder', () => {
     renderBuilder();
 
     await typeSql(user, 'SELECT a.x FROM conversations a JOIN dial_usage_log b ON b.chat_id = a.chat_id');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionJson')).toBeInTheDocument();
@@ -288,7 +288,7 @@ describe('QueryBuilder', () => {
     renderBuilder();
 
     await typeSql(user, 'SELECT bad');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
 
     const editor = await screen.findByLabelText('json-editor');
@@ -301,9 +301,9 @@ describe('QueryBuilder', () => {
     vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     await screen.findByLabelText('sql-editor');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
 
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
     expect(await screen.findByLabelText('json-editor')).toHaveDisplayValue(/"entity": "dial_usage_log"/);
@@ -325,12 +325,12 @@ describe('QueryBuilder', () => {
     });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
     await user.click(editor);
     await user.paste('SELECT project_id FROM dial_usage_log');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     // No discard prompt — the SQL was translated and shown in the builder.
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
@@ -344,12 +344,12 @@ describe('QueryBuilder', () => {
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, errorMessage: 'unsupported construct' });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
     await user.click(editor);
     await user.paste('SELECT bad');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionBuilder')).toBeInTheDocument();
@@ -378,7 +378,7 @@ describe('QueryBuilder', () => {
     renderBuilder();
 
     await typeSql(user, 'SELECT project_id AS project');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
@@ -391,12 +391,12 @@ describe('QueryBuilder', () => {
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
     await user.click(editor);
     await user.paste('SELECT bad');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
     await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
 
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
@@ -407,9 +407,9 @@ describe('QueryBuilder', () => {
     vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     await screen.findByLabelText('sql-editor');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
@@ -420,7 +420,7 @@ describe('QueryBuilder', () => {
     const user = userEvent.setup();
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     const editor = screen.getByLabelText('json-editor');
     await user.clear(editor);
     await user.paste(DEEP_JSON);
@@ -428,7 +428,7 @@ describe('QueryBuilder', () => {
     expect(screen.getByText('QueryBuilder.NotShownInBuilder')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
     expect(screen.getByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
   });
 
@@ -436,7 +436,7 @@ describe('QueryBuilder', () => {
     const user = userEvent.setup();
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     const editor = screen.getByLabelText('json-editor');
     await user.clear(editor);
     await user.paste('{ not json');
@@ -506,12 +506,12 @@ describe('QueryBuilder AI view', () => {
   test('offers the AI view only when the query assistant is enabled', () => {
     setQueryAssistantEnabled(false);
     const { unmount } = renderBuilder();
-    expect(screen.queryByRole('tab', { name: 'QueryBuilder.ViewAi' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'QueryBuilder.ViewAi' })).not.toBeInTheDocument();
     unmount();
 
     setQueryAssistantEnabled(true);
     renderBuilder();
-    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' })).toBeInTheDocument();
   });
 
   test('toolbar Run and Copy are hidden while the AI view is active; entity and time controls remain', async () => {
@@ -520,7 +520,7 @@ describe('QueryBuilder AI view', () => {
     renderBuilder();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
 
     expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Buttons.Copy' })).not.toBeInTheDocument();
@@ -534,7 +534,7 @@ describe('QueryBuilder AI view', () => {
       success: true,
       response: { choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content } }] },
     } as never);
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
     await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
     return screen.findByRole('button', { name: 'QueryBuilder.Run' });
@@ -586,7 +586,7 @@ describe('QueryBuilder AI view', () => {
     const runButton = await sendMessage(user, '```sql\nSELECT 1 WHERE project_id = ~p1~\n```');
     await user.click(runButton);
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     const jsonEditor = (await screen.findByRole('textbox', { name: 'json-editor' })) as HTMLTextAreaElement;
     await vi.waitFor(() => expect(jsonEditor.value).toContain('p1'));
   });
@@ -745,8 +745,8 @@ describe('QueryBuilder AI view', () => {
     await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
     await vi.waitFor(() => expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled());
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
 
     expect(screen.getByText('cost by deployment')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
@@ -788,7 +788,7 @@ describe('QueryBuilder AI view', () => {
     vi.mocked(generateQuery).mockRejectedValue(new Error('network'));
 
     renderBuilder();
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
     await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
 
@@ -804,7 +804,7 @@ describe('QueryBuilder AI view', () => {
     vi.mocked(generateQuery).mockReturnValue(new Promise((resolve) => (resolveReply = resolve)) as never);
 
     renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
     await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
 
@@ -875,7 +875,7 @@ describe('QueryBuilder AI view', () => {
     await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
     await vi.waitFor(() => expect(runSqlMock).toHaveBeenCalledWith('SELECT 1'));
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
@@ -895,7 +895,7 @@ describe('QueryBuilder AI view', () => {
     await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
     await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
     expect(translateSqlToQuery).toHaveBeenCalledOnce();
@@ -911,9 +911,9 @@ describe('QueryBuilder AI view', () => {
     renderBuilder();
     await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
 
-    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' })).toBeDisabled();
     resolveTranslation({ success: false, status: 400 });
-    await vi.waitFor(() => expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' })).toBeEnabled());
+    await vi.waitFor(() => expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' })).toBeEnabled());
   });
 
   test('SQL edited, left for the AI view, and then taken to the Builder is translated first', async () => {
@@ -923,13 +923,13 @@ describe('QueryBuilder AI view', () => {
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
 
     renderBuilder();
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
     await user.click(editor);
     await user.paste('SELECT bad');
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(translateSqlToQuery).toHaveBeenCalledWith('SELECT bad');
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
@@ -947,7 +947,7 @@ describe('QueryBuilder :: SQL view Run', () => {
   ];
 
   const runSql = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     await user.clear(editor);
     await user.click(editor);
@@ -976,7 +976,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     expect(runSqlMock).toHaveBeenCalled();
     expect(translateSqlToQuery).toHaveBeenCalled();
 
-    await user.click(await screen.findByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(await screen.findByRole('radio', { name: 'QueryBuilder.ViewChart' }));
     expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
     expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
   });
@@ -1002,7 +1002,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     await runSql(user, 'SELECT sum(a) / count(*) AS avg_a FROM dial_usage_log');
     await screen.findByText('grid rows: 2');
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
     expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
   });
 
@@ -1034,7 +1034,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     const user = userEvent.setup();
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     expect(await screen.findByLabelText('json-editor')).toHaveDisplayValue(/"value": "2"/);
 
     await user.click(screen.getByRole('button', { name: /Last 2d/i }));
@@ -1053,7 +1053,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     });
     renderBuilder({ initialEntities: [...ENTITIES, { name: 'dial_sessions' }] });
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Source/ }));
     await user.click(screen.getByRole('option', { name: 'dial_sessions' }));
 
@@ -1068,7 +1068,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     const user = userEvent.setup();
     renderBuilder();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
     const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
     // A body the builder cannot hold marks the buffer as diverged — it is the user's from here on.
     // `fireEvent.change` rather than typing: user-event reads `{` as its own key syntax.
@@ -1094,7 +1094,7 @@ describe('QueryBuilder — Export CSV', () => {
   });
 
   const runSqlView = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     const editor = await screen.findByLabelText('sql-editor');
     fireEvent.change(editor, { target: { value: sql } });
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));

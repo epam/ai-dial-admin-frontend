@@ -1,8 +1,10 @@
 'use client';
 
-import { DialCheckbox, DialFormPopup, DialPasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Checkbox, PasswordInput, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
 import { FC, useMemo, useState } from 'react';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import {
   ButtonsI18nKey,
   EntityFieldsI18nKey,
@@ -68,40 +70,42 @@ const ResourceLoginPopup: FC<Props> = ({
   }, [type, loginOrganization, loginUser, apiKeyValue]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(ToolsetI18nKey.LogIn)}
       portalId="LogInPopup"
       open={isModalOpen}
-      onSubmit={handleSubmit}
-      submitLabel={t(ToolsetI18nKey.LogIn)}
-      onCancel={onClose}
       size={PopupSize.Sm}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={disableSubmitButton}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ToolsetI18nKey.LogIn),
+        isSubmitDisabled: disableSubmitButton,
+        onCancel: onClose,
+        onSubmit: handleSubmit,
+      })}
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         {showOrganizationCheckbox && (
-          <DialCheckbox
+          <Checkbox
             id="organization-login-checkbox"
-            label={orgLabel ?? t(ToolsetI18nKey.Organization)}
-            checked={loginOrganization}
+            labelProps={{ label: orgLabel ?? t(ToolsetI18nKey.Organization) }}
+            isSelected={loginOrganization}
             onChange={handleOrganizationChange}
             disabled={!showUserCheckbox}
           />
         )}
         {showUserCheckbox && (
-          <DialCheckbox
+          <Checkbox
             id="personal-login-checkbox"
-            label={userLabel ?? t(ToolsetI18nKey.Personal)}
-            checked={loginUser}
+            labelProps={{ label: userLabel ?? t(ToolsetI18nKey.Personal) }}
+            isSelected={loginUser}
             onChange={handleUserChange}
             disabled={!showOrganizationCheckbox}
           />
         )}
 
         {type === ToolsetAuthType.API_KEY && (
-          <DialPasswordInput
+          <PasswordInput
             id="apiKeyValue"
             labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
@@ -112,7 +116,7 @@ const ResourceLoginPopup: FC<Props> = ({
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

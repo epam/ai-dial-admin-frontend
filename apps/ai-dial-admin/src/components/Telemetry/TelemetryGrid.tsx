@@ -1,4 +1,4 @@
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { FC, useEffect, useState } from 'react';
 
@@ -88,7 +88,7 @@ const TelemetryGrid: FC<Props> = ({
         <h3>{title}</h3>
       </div>
       {loading ? (
-        <DialLoader size={24} />
+        <Spinner size={24} fullWidth />
       ) : (
         <div className="flex-1 min-h-0">
           <GridView emptyDataProps={{ title: t(BasicI18nKey.NoData) }} rowData={data} columnDefs={columnDefs} />

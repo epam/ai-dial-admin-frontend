@@ -125,6 +125,7 @@ describe('panel-columns', () => {
     const extractedGroup = panelTree.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColDef;
     const answerGroup = getChildren(extractedGroup).find((col) => col.headerName === 'answer') as ColDef;
 
+    expect((answerGroup as ColGroupDef).headerGroupComponent).toBe(EllipsisHeaderGroup);
     expect(getChildren(answerGroup)).toHaveLength(2);
     expect(getColId(getChildren(answerGroup)[0])).toBe('extracted_answer');
     expect(getColId(getChildren(answerGroup)[1])).toBe('cmp_extracted_answer');
@@ -154,6 +155,7 @@ describe('panel-columns', () => {
     const metricGroup = flattened.find((col) => col.headerName === 'Overall Accuracy') as ColDef;
     const precisionGroup = getChildren(metricGroup)[0];
 
+    expect((metricGroup as ColGroupDef).headerGroupComponent).toBe(EllipsisHeaderGroup);
     expect(precisionGroup.headerName).toBe('Precision');
     expect((precisionGroup as ColGroupDef).headerGroupComponent).toBe(EllipsisHeaderGroup);
     expect(getChildren(precisionGroup).map(getColId)).toEqual([
@@ -170,6 +172,7 @@ describe('panel-columns', () => {
     const answerGroup = getChildren(extractedGroup)[0];
 
     expect(answerGroup.headerName).toBe('answer');
+    expect((answerGroup as ColGroupDef).headerGroupComponent).toBe(EllipsisHeaderGroup);
     expect(getChildren(answerGroup).map(getColId)).toEqual(['extracted_answer', 'cmp_extracted_answer']);
     expect(getChildren(answerGroup).every((leaf) => leaf.context == null)).toBe(true);
   });

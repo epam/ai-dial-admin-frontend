@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import Cloud from '@/public/images/icons/cloud.svg';
@@ -26,7 +26,7 @@ const DomainList: FC<Props> = ({ domains, errors }) => {
             </span>
             <p className={classNames('dial-body-text', hasError ? 'text-error' : 'text-primary')}>{domain}</p>
             {hasError && (
-              <DialTooltip
+              <Tooltip
                 tooltip={
                   <div className="flex flex-col gap-1">
                     {domainErrors.map((message, i) => (
@@ -36,7 +36,7 @@ const DomainList: FC<Props> = ({ domains, errors }) => {
                 }
               >
                 <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-label={domain} />
-              </DialTooltip>
+              </Tooltip>
             )}
           </li>
         );

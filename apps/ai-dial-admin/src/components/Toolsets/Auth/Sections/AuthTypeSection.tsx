@@ -1,4 +1,5 @@
-import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -97,12 +98,12 @@ const AuthTypeSection: FC<Props> = ({
       {isSelected && config.id !== ToolsetAuthType.NONE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
           {config.id === ToolsetAuthType.OAUTH && view === ApplicationRoute.AssetsToolsets && (
-            <DialRadioGroup
-              elementId="auth"
+            <RadioGroup
+              id="auth"
               disabled={disabled}
-              activeRadioButton={selectedAuthType}
+              value={selectedAuthType}
               orientation={RadioGroupOrientation.Row}
-              radioButtons={radioLogin}
+              items={toRadioItems(radioLogin)}
               onChange={onChangeAuth}
             />
           )}

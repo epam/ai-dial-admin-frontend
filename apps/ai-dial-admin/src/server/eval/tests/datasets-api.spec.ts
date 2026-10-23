@@ -299,4 +299,26 @@ describe('Server :: DatasetsApi', () => {
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
+
+  test('Should call downloadDatasetFile via streamRequest', async () => {
+    const streamResponse = new Response(null, { status: 200 });
+    const streamSpy = vi.spyOn(instance as any, 'streamRequest').mockResolvedValue(streamResponse);
+
+    const result = await instance.downloadDatasetFile('dataset-1', 'notes.pdf', TOKEN_MOCK);
+
+    expect(streamSpy).toHaveBeenCalledWith(`${DATASET_FILES_URL('dataset-1')}/notes.pdf`, 'notes.pdf', TOKEN_MOCK);
+    expect(result).toBe(streamResponse);
+  });
+
+  test('Should encode file name in downloadDatasetFile', async () => {
+    const streamSpy = vi.spyOn(instance as any, 'streamRequest').mockResolvedValue(new Response(null, { status: 200 }));
+
+    await instance.downloadDatasetFile('dataset-1', 'a#b?c/d.txt', TOKEN_MOCK);
+
+    expect(streamSpy).toHaveBeenCalledWith(
+      `${DATASET_FILES_URL('dataset-1')}/a%23b%3Fc%2Fd.txt`,
+      'a#b?c/d.txt',
+      TOKEN_MOCK,
+    );
+  });
 });

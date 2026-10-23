@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
@@ -169,7 +169,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       {!isReadOnlyAdmin && (
         <>
           {!!createEntity && (
-            <DialPrimaryButton
+            <PrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.create)}

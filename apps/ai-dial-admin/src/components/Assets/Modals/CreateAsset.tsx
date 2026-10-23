@@ -1,7 +1,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialCollapsibleSidebar, DialFormPopup, DialLabelledText, DialLoader, PopupSize } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, Popup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { CreateAssetActionMap, PlatformCreateAssetActionMap } from '@/src/components/Assets/BaseAssetList/utils';
@@ -164,35 +166,33 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   }, [isPlatformDualBucketCreate]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={getCreateEntityTitle(view, t)}
       portalId="CreateAsset"
       size={PopupSize.Lg}
       className="h-[750px]"
       open={isModalOpen}
-      onSubmit={() => onSubmit()}
-      onCancel={onClose}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isValid}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !isValid,
+        onCancel: onClose,
+        onSubmit: () => onSubmit(),
+      })}
     >
       <div className="flex flex-row px-6 py-4 h-full">
         <div className="flex flex-row gap-4 flex-1 min-h-0">
-          <DialCollapsibleSidebar
-            width={360}
-            title={t(FoldersI18nKey.Folders)}
-            containerClassName="border border-primary"
-          >
+          <CollapsibleSidebar width={360} title={t(FoldersI18nKey.Folders)} className="border border-primary">
             <FolderList context={context} rootPaths={rootPaths} />
-          </DialCollapsibleSidebar>
+          </CollapsibleSidebar>
           <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4 overflow-auto">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">
               <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />
             </div>
             {isLoadingFolder ? (
-              <DialLoader size={40} />
+              <Spinner size={40} fullWidth />
             ) : (
               <AssetProperties
                 view={view}
@@ -206,7 +206,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
           </div>
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -79,6 +79,8 @@ When the cell's value text is hidden (see the hidden-value requirement below), t
 right-and-bottom border in the bucket's accent color — the hidden-value case needs a visible
 boundary, since there is no digit left to otherwise mark where one cell ends and the next begins.
 A zero delta (no bucket) SHALL draw a neutral right border on a neutral background instead.
+A missing-value cell (the em dash) has no bucket either and SHALL draw the same neutral right border
+whether its dash is visible or hidden, so adjacent missing-value cells stay visibly separated.
 
 #### Scenario: Visible score cells blend into one continuous field
 - **WHEN** a consumer renders a score cell whose value text is visible
@@ -91,6 +93,10 @@ A zero delta (no bucket) SHALL draw a neutral right border on a neutral backgrou
 #### Scenario: Zero delta draws a neutral border
 - **WHEN** a consumer renders a delta cell whose value is exactly `0`
 - **THEN** the cell shows a neutral background with a neutral right border and no bucket accent
+
+#### Scenario: Missing-value cell draws a neutral border
+- **WHEN** a consumer renders a missing-value cell with its dash visible
+- **THEN** the cell draws a neutral right border, separating it from its neighbors
 
 ### Requirement: Value text adapts to the column width
 A cell rendering under this contract SHALL size its value text to the width of its column so the text

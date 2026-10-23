@@ -2,7 +2,7 @@
 
 import { FC, MouseEvent, useCallback } from 'react';
 import { IconInfoCircle } from '@tabler/icons-react';
-import { DialIconButton } from '@epam/ai-dial-ui-kit';
+import { IconButton } from '@epam/ai-dial-ui-kit';
 
 import { useAppContext } from '@/src/context/AppContext';
 import Hint from '@/src/components/Common/Sidebar/Hint';
@@ -26,7 +26,7 @@ const HeaderWithHintButton: FC<Props> = ({ displayName, hintText, hintTitle }) =
 
   return (
     <div className="flex items-center w-full justify-end gap-x-3">
-      <DialIconButton className="p-0 size-auto" icon={<IconInfoCircle size={14} />} onClick={onClick} />
+      <IconButton className="p-0 size-auto" icon={<IconInfoCircle size={14} />} onClick={onClick} />
       {displayName}
     </div>
   );

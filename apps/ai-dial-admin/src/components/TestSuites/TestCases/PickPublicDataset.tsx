@@ -3,10 +3,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  DialNotification,
-  DialPopup,
   DialSteps,
+  Notification,
+  NotificationType,
   NotificationVariant,
+  Popup,
   PopupSize,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
@@ -17,8 +18,8 @@ import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/colum
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import ListEntities from '@/src/components/ListView/List';
-import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DATASETS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { OnCellChange } from '@/src/types/grid-cell';
@@ -135,7 +136,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
   }, [selectedDataset, onConfirm]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(TestSuitesI18nKey.AttachDataset)}
       portalId="PickPublicDatasetModal"
@@ -144,7 +145,11 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[600px]">
         {showWarning && (
-          <DialNotification variant={NotificationVariant.Warning} message={t(TestSuitesI18nKey.AttachDatasetWarning)} />
+          <Notification
+            type={NotificationType.SectionMessage}
+            variant={NotificationVariant.Warning}
+            message={t(TestSuitesI18nKey.AttachDatasetWarning)}
+          />
         )}
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onChangeStep} />
         <div className="flex-1 min-h-0">
@@ -181,7 +186,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
         onNextStep={onNextStep}
         isLoading={isLoadingPreview}
       />
-    </DialPopup>
+    </Popup>
   );
 };
 

@@ -12,7 +12,7 @@ vi.mock('echarts-for-react', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+  EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
 describe('MetricTrendCard', () => {

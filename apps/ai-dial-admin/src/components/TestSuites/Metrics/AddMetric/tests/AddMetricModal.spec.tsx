@@ -69,7 +69,7 @@ vi.mock('@/src/components/Common/StepperModalButtons/StepperModalButtons', () =>
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   PopupSize: { Lg: 'Lg' },
   StepStatus: { VALID: 'VALID' },
-  DialPopup: ({ header, open, children, footer }: any) =>
+  Popup: ({ header, open, children, footer }: any) =>
     open ? (
       <div role="dialog" aria-label={header}>
         <h2>{header}</h2>
@@ -87,13 +87,13 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       ))}
     </nav>
   ),
-  DialLoader: () => <div role="progressbar" aria-label="loading" />,
-  DialNeutralButton: ({ label, onClick }: any) => (
+  Spinner: () => <div role="progressbar" aria-label="loading" />,
+  OutlinedButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>
   ),
-  DialPrimaryButton: ({ label, onClick, disabled }: any) => (
+  PrimaryButton: ({ label, onClick, disabled }: any) => (
     <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>

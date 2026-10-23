@@ -1,4 +1,4 @@
-import { DialLoader, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialTabs } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { previewAnalyticsExportConfig } from '@/src/app/[lang]/export-config/actions';
@@ -57,7 +57,7 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
   const columnDefs = useMemo(() => getAnalyticsPreviewColDefs(t, selectedTab), [t, selectedTab]);
 
   if (isLoading) {
-    return <DialLoader size={50} />;
+    return <Spinner size={50} fullWidth />;
   }
 
   return (

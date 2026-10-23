@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLabel, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { Label, Radio } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
@@ -98,37 +98,37 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
   return (
     <div className="flex flex-col w-full relative gap-3">
-      <DialLabel label={label} required={required} htmlFor={id} />
+      <Label label={label} required={required} htmlFor={id} />
 
       <div className="flex flex-col gap-3">
-        <DialRadioButton
+        <Radio
           disabled={isReadOnlyAdmin}
-          inputId={`${id}-none`}
+          id={`${id}-none`}
           name={`${id}-attachment-options`}
           value={AttachmentType.NONE}
-          checked={selectedRadio === AttachmentType.NONE}
+          isSelected={selectedRadio === AttachmentType.NONE}
           onChange={() => handleRadioChange(AttachmentType.NONE)}
-          label={t(AttachmentsI18nKey.NoAttachments)}
+          labelProps={{ label: t(AttachmentsI18nKey.NoAttachments) }}
         />
 
-        <DialRadioButton
+        <Radio
           disabled={isReadOnlyAdmin}
-          inputId={`${id}-all`}
+          id={`${id}-all`}
           name={`${id}-attachment-options`}
           value={AttachmentType.ALL}
-          checked={selectedRadio === AttachmentType.ALL}
+          isSelected={selectedRadio === AttachmentType.ALL}
           onChange={() => handleRadioChange(AttachmentType.ALL)}
-          label={t(AttachmentsI18nKey.AllAttachments)}
+          labelProps={{ label: t(AttachmentsI18nKey.AllAttachments) }}
         />
 
-        <DialRadioButton
+        <Radio
           disabled={isReadOnlyAdmin}
-          inputId={`${id}-specific`}
+          id={`${id}-specific`}
           name={`${id}-attachment-options`}
           value={AttachmentType.SPECIFIC}
-          checked={selectedRadio === AttachmentType.SPECIFIC}
+          isSelected={selectedRadio === AttachmentType.SPECIFIC}
           onChange={() => handleRadioChange(AttachmentType.SPECIFIC)}
-          label={t(AttachmentsI18nKey.SpecificAttachments)}
+          labelProps={{ label: t(AttachmentsI18nKey.SpecificAttachments) }}
         />
       </div>
 

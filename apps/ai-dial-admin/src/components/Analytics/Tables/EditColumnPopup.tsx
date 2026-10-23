@@ -4,7 +4,9 @@ import { FC, useState } from 'react';
 
 import { noop } from 'lodash';
 
-import { DialFormPopup, DialInput, DialSwitch, PopupSize, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Popup, DialInput, Switch, PopupSize, Tooltip } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { IconLock } from '@tabler/icons-react';
 
 import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
@@ -78,15 +80,19 @@ const EditColumnPopup: FC<Props> = ({
   const enumValues = column.type === AnalyticsFieldType.Enum ? (column.enum_values ?? []) : [];
 
   return (
-    <DialFormPopup
+    <Popup
       open
       portalId="qb-column-edit"
       size={PopupSize.Sm}
       header={t(AnalyticsTablesI18nKey.EditColumnTitle)}
-      submitLabel={t(ButtonsI18nKey.Save)}
-      disableSubmitButton={!patch}
       onClose={onClose}
-      onSubmit={() => patch && onSubmit(patch)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Save),
+        isSubmitDisabled: !patch,
+        onCancel: onClose,
+        onSubmit: () => patch && onSubmit(patch),
+      })}
     >
       <div className="flex flex-col gap-4 p-6">
         <DialInput
@@ -130,18 +136,18 @@ const EditColumnPopup: FC<Props> = ({
             <span className="dial-small-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesImmutable)}</span>
           </div>
         )}
-        <DialSwitch
-          switchId="column-edit-nullable"
-          label={t(AnalyticsTablesI18nKey.Nullable)}
+        <Switch
+          id="column-edit-nullable"
+          labelProps={{ label: t(AnalyticsTablesI18nKey.Nullable) }}
           isOn={Boolean(column.nullable)}
           disabled
           caption={t(AnalyticsTablesI18nKey.ColumnNullableFixed)}
           onChange={noop}
         />
         <div className="flex items-start gap-2">
-          <DialSwitch
-            switchId="column-edit-sensitive"
-            label={t(AnalyticsTablesI18nKey.Sensitive)}
+          <Switch
+            id="column-edit-sensitive"
+            labelProps={{ label: t(AnalyticsTablesI18nKey.Sensitive) }}
             isOn={values.sensitive}
             disabled={sensitiveDisabled || isSensitiveLocked}
             caption={getSensitiveCaption()}
@@ -154,7 +160,7 @@ const EditColumnPopup: FC<Props> = ({
           )}
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
-import { Run, RunTargetKind } from '@/src/models/evaluation/run';
+import { COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import { Run, RunStatus, RunTargetKind } from '@/src/models/evaluation/run';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
-import { resolveRunTarget } from '../run-list-values';
+import { isRunCostCalculating, resolveRunTarget, withCostWaitStart } from '../run-list-values';
 
 describe('resolveRunTarget', () => {
   test('resolves a model deployment by its type', () => {
@@ -73,5 +74,87 @@ describe('resolveRunTarget', () => {
   test('returns null for a missing or null run', () => {
     expect(resolveRunTarget(undefined)).toBeNull();
     expect(resolveRunTarget(null)).toBeNull();
+  });
+});
+
+describe('isRunCostCalculating', () => {
+  const NOW = 1_700_000_000_000;
+  const settledRun: Run = { status: RunStatus.COMPLETED, completedAt: NOW - 60_000 };
+
+  test('is calculating for a freshly settled run with no cost', () => {
+    expect(isRunCostCalculating(settledRun, NOW)).toBe(true);
+  });
+
+  test.each([RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])('covers a %s run', (status) => {
+    expect(isRunCostCalculating({ ...settledRun, status }, NOW)).toBe(true);
+  });
+
+  test.each([RunStatus.PENDING, RunStatus.RUNNING, RunStatus.CANCELLING])(
+    'is not calculating for a %s run, which has nothing to aggregate yet',
+    (status) => {
+      expect(isRunCostCalculating({ ...settledRun, status }, NOW)).toBe(false);
+    },
+  );
+
+  test('is not calculating once the run has a cost, zero included', () => {
+    expect(isRunCostCalculating({ ...settledRun, totalCost: 0.5 }, NOW)).toBe(false);
+    expect(isRunCostCalculating({ ...settledRun, totalCost: 0 }, NOW)).toBe(false);
+  });
+
+  test('is not calculating without a completion time', () => {
+    expect(isRunCostCalculating({ ...settledRun, completedAt: undefined }, NOW)).toBe(false);
+  });
+
+  test('is not calculating for an MCP-tool suite, which never gets a cost', () => {
+    const run: Run = { ...settledRun, suiteSnapshot: { suiteType: SuiteType.McpTool } };
+    expect(isRunCostCalculating(run, NOW)).toBe(false);
+  });
+
+  test('stops calculating once the wait window has elapsed', () => {
+    const run: Run = { ...settledRun, completedAt: NOW - COST_FETCH_MAX_WAIT_MS };
+    expect(isRunCostCalculating(run, NOW)).toBe(false);
+    expect(isRunCostCalculating({ ...settledRun, completedAt: NOW - COST_FETCH_MAX_WAIT_MS + 1 }, NOW)).toBe(true);
+  });
+
+  test('extends the window by the grace period', () => {
+    const run: Run = { ...settledRun, completedAt: NOW - COST_FETCH_MAX_WAIT_MS };
+    expect(isRunCostCalculating(run, NOW, 5_000)).toBe(true);
+  });
+
+  test('returns false for a missing run', () => {
+    expect(isRunCostCalculating(undefined, NOW)).toBe(false);
+    expect(isRunCostCalculating(null, NOW)).toBe(false);
+  });
+
+  test('opens the window at costWaitStartedAt, so a long-finished run still calculates', () => {
+    const run: Run = { ...settledRun, completedAt: NOW - 24 * 60 * 60 * 1000, costWaitStartedAt: NOW - 1000 };
+    expect(isRunCostCalculating(run, NOW)).toBe(true);
+  });
+
+  test('closes the window COST_FETCH_MAX_WAIT_MS after costWaitStartedAt', () => {
+    const run: Run = { ...settledRun, costWaitStartedAt: NOW - COST_FETCH_MAX_WAIT_MS };
+    expect(isRunCostCalculating(run, NOW)).toBe(false);
+  });
+
+  test('calculates for a settled run with a wait start but no completion time', () => {
+    const run: Run = { status: RunStatus.FAILED, costWaitStartedAt: NOW };
+    expect(isRunCostCalculating(run, NOW)).toBe(true);
+  });
+});
+
+describe('withCostWaitStart', () => {
+  const NOW = 1_700_000_000_000;
+
+  test('stamps settled runs that have no cost', () => {
+    const [run] = withCostWaitStart([{ id: 'a', status: RunStatus.COMPLETED, completedAt: 1 }], NOW);
+    expect(run.costWaitStartedAt).toBe(NOW);
+  });
+
+  test('leaves runs with a cost, unsettled runs and already stamped runs untouched', () => {
+    const priced: Run = { id: 'a', status: RunStatus.COMPLETED, totalCost: 0 };
+    const running: Run = { id: 'b', status: RunStatus.RUNNING };
+    const stamped: Run = { id: 'c', status: RunStatus.COMPLETED, costWaitStartedAt: 5 };
+
+    expect(withCostWaitStart([priced, running, stamped], NOW)).toEqual([priced, running, stamped]);
   });
 });

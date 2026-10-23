@@ -4,13 +4,13 @@ import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
 import {
   ButtonAppearance,
-  DialDangerButton,
+  DangerButton,
   DialDropdown,
-  DialGhostButton,
-  DialIconButton,
-  DialLinkButton,
-  DialNeutralButton,
-  DialPrimaryButton,
+  GhostButton,
+  IconButton,
+  LinkButton,
+  OutlinedButton,
+  PrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical } from '@tabler/icons-react';
@@ -46,15 +46,15 @@ const renderExpandedAction = (action: AdaptiveHeaderAction, buttonsClassName?: s
 
   let button;
   if (action.appearance === 'link') {
-    button = <DialLinkButton key={key} {...common} />;
+    button = <LinkButton key={key} {...common} />;
   } else if (action.appearance === 'danger') {
-    button = <DialDangerButton key={key} {...common} appearance={ButtonAppearance.Outlined} />;
+    button = <DangerButton key={key} {...common} appearance={ButtonAppearance.Outlined} />;
   } else if (action.appearance === 'ghost') {
-    button = <DialGhostButton key={key} {...common} />;
+    button = <GhostButton key={key} {...common} />;
   } else if (action.appearance === 'primary') {
-    button = <DialPrimaryButton key={key} {...common} />;
+    button = <PrimaryButton key={key} {...common} />;
   } else {
-    button = <DialNeutralButton key={key} {...common} />;
+    button = <OutlinedButton key={key} {...common} />;
   }
 
   if (!action.dividerAfter) {
@@ -112,7 +112,7 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
     label: (
       <div className="text-secondary flex-row flex size-full gap-3 items-center">
         {action.icon}
-        <span className="text-primary small">{action.label}</span>
+        <span className="text-primary dial-small-text">{action.label}</span>
       </div>
     ),
     onClick: action.onClick,
@@ -141,7 +141,7 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
 
       {isCompact ? (
         <DialDropdown items={dropdownItems} listClassName="min-w-[200px]" placement="bottom-end">
-          <DialIconButton
+          <IconButton
             aria-label={t(ButtonsI18nKey.ShowMore)}
             icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
             className="inline-flex items-center justify-center border border-primary rounded size-10 shrink-0 text-primary p-0"

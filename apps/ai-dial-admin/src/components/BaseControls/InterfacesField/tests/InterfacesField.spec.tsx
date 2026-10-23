@@ -82,7 +82,7 @@ const MULTI_TYPES = [
 const SINGLE_TYPE = [DeploymentInterfaceType.OpenAIChatCompletions];
 
 const getBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
-// DialLabel renders the required marker as a `*` span inside the label, so it lands in the input's
+// Label renders the required marker as a `*` span inside the label, so it lands in the input's
 // accessible name.
 const getBaseUrlInputWithRequiredMarker = () =>
   screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });

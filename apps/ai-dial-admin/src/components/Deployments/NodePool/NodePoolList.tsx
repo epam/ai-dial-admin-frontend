@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useMemo, useState } from 'react';
-import { DialNoDataContent, DialSearch } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, Search } from '@epam/ai-dial-ui-kit';
 
 import { DeploymentsI18nKey } from '@/src/constants/i18n';
 import { NodePool } from '@/src/models/deployments/node-pools';
@@ -40,10 +40,10 @@ const NodePoolList: FC<Props> = ({ pools, selectedId, onSelect }) => {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <DialSearch
+      <Search
         id="node-pool-search"
         value={search}
-        onChange={setSearch}
+        onChange={(value) => setSearch(value ?? '')}
         placeholder={t(DeploymentsI18nKey.NodePoolSearchPlaceholder)}
       />
       <div className="flex flex-1 flex-col overflow-hidden rounded border border-primary">
@@ -63,7 +63,7 @@ const NodePoolList: FC<Props> = ({ pools, selectedId, onSelect }) => {
           />
           {filteredPools.length === 0 && pools.length > 0 ? (
             <li className="flex items-center justify-center py-10">
-              <DialNoDataContent title={t(DeploymentsI18nKey.NodePoolNoMatches)} />
+              <NoDataContent title={t(DeploymentsI18nKey.NodePoolNoMatches)} />
             </li>
           ) : (
             filteredPools.map((pool) => (

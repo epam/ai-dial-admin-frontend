@@ -3,10 +3,10 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  DialLoader,
-  DialNeutralButton,
-  DialPopup,
-  DialPrimaryButton,
+  Spinner,
+  OutlinedButton,
+  Popup,
+  PrimaryButton,
   DialSteps,
   PopupSize,
   Step,
@@ -187,19 +187,20 @@ const AddMetricModal: FC<Props> = ({
   );
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={isEditMode ? t(TestSuitesI18nKey.EditMetric) : t(TestSuitesI18nKey.AddMetric)}
       portalId="AddMetricModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]"
-      dividers
+      headerDivider
+      footerDivider
       footer={
         isEditMode ? (
           <div className="flex flex-row items-center gap-2 px-6 py-4 justify-end">
-            <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-            <DialPrimaryButton label={t(ButtonsI18nKey.Confirm)} disabled={!isStep2Valid} onClick={onFinishClick} />
+            <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+            <PrimaryButton label={t(ButtonsI18nKey.Confirm)} disabled={!isStep2Valid} onClick={onFinishClick} />
           </div>
         ) : (
           <StepperModalButtons
@@ -216,8 +217,8 @@ const AddMetricModal: FC<Props> = ({
         {!isEditMode && <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onStepChange} />}
 
         <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
-          {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <DialLoader size={44} />}
-          {currentStepId === MetricStep.Configuration && isMetricDetailsLoading && <DialLoader size={44} />}
+          {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <Spinner size={44} fullWidth />}
+          {currentStepId === MetricStep.Configuration && isMetricDetailsLoading && <Spinner size={44} fullWidth />}
           {currentStepId === MetricStep.AddMetric && !isMetricDeclarationsLoading && (
             <MetricSelection
               metrics={metricDeclarations || []}
@@ -249,7 +250,7 @@ const AddMetricModal: FC<Props> = ({
           )}
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 export default AddMetricModal;

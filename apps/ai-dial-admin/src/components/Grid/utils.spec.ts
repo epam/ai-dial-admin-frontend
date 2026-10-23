@@ -8,6 +8,7 @@ import {
   haveColDefsSamePanelState,
   applyColumnStateOrderToTreeColDefs,
   haveTreeColDefsSamePanelState,
+  withColumnWidths,
 } from './utils';
 import { GRID_COLUMNS_KEY } from './constants';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
@@ -372,5 +373,37 @@ describe('Grid :: haveTreeColDefsSamePanelState', () => {
     const colDefs = [{ field: 'name' }, { field: 'status' }];
 
     expect(haveTreeColDefsSamePanelState(colDefs, [{ field: 'name' }])).toBe(false);
+  });
+});
+
+describe('Grid :: withColumnWidths', () => {
+  test('returns the same column defs when there are no widths', () => {
+    const colDefs = [{ field: 'name' }];
+
+    expect(withColumnWidths(colDefs, undefined)).toBe(colDefs);
+    expect(withColumnWidths(colDefs, {})).toBe(colDefs);
+  });
+
+  test('pins the width of a column by colId or field and releases its flex', () => {
+    const result = withColumnWidths(
+      [{ field: 'name', flex: 1 }, { field: 'status', colId: 'state' }, { field: 'score' }],
+      { name: 240, state: 90 },
+    );
+
+    expect(result[0]).toMatchObject({ width: 240, flex: 0, suppressSizeToFit: true });
+    expect(result[1]).toMatchObject({ width: 90, flex: 0, suppressSizeToFit: true });
+    expect(result[2]).toEqual({ field: 'score' });
+  });
+
+  test('reaches columns inside groups and keeps the group itself untouched', () => {
+    const [group] = withColumnWidths(
+      [{ headerName: 'Metrics', children: [{ field: 'accuracy' }, { field: 'recall' }] } as ColDef],
+      { recall: 300 },
+    );
+
+    expect(group).toMatchObject({
+      headerName: 'Metrics',
+      children: [{ field: 'accuracy' }, { field: 'recall', width: 300, flex: 0, suppressSizeToFit: true }],
+    });
   });
 });

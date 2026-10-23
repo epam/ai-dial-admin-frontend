@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconPlus } from '@tabler/icons-react';
 import Cloud from '@/public/images/icons/cloud.svg';
-import { DialButtonDropdown, DialGhostButton, DialPrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonDropdown, GhostButton, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image } from '@/src/models/deployments/images';
@@ -80,7 +80,7 @@ const HeaderButtons: FC<Props> = ({ route, isReadOnlyAdmin }) => {
   return (
     <>
       <div className="flex gap-4">
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.GlobalFirewall)}
           iconBefore={<Cloud {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => handleModalOpen(ModalType.globalFirewall)}
@@ -88,9 +88,9 @@ const HeaderButtons: FC<Props> = ({ route, isReadOnlyAdmin }) => {
 
         {!isReadOnlyAdmin &&
           (featureFlags.mcpRegistryEnabled ? (
-            <DialButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)} />
+            <ButtonDropdown items={dropdownItems} label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)} />
           ) : (
-            <DialPrimaryButton
+            <PrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.addImage)}

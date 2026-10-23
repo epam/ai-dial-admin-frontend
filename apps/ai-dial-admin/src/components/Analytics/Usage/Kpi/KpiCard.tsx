@@ -4,7 +4,7 @@ import { CSSProperties, FC } from 'react';
 
 import classNames from 'classnames';
 
-import { Badge, DialLoader } from '@epam/ai-dial-ui-kit';
+import { Badge, Spinner } from '@epam/ai-dial-ui-kit';
 
 import DeltaBadge from '@/src/components/Analytics/Usage/Delta/DeltaBadge';
 import Sparkline from '@/src/components/Analytics/Usage/Kpi/Sparkline';
@@ -26,7 +26,7 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed }) =>
 
   const renderFigure = () => {
     if (isLoading) {
-      return <DialLoader size={24} />;
+      return <Spinner size={24} fullWidth />;
     }
 
     // A failure and an empty window read the same on a card: no figure to state. What went wrong

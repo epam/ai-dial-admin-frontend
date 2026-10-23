@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import classNames from 'classnames';
 
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -63,12 +63,12 @@ const PlaceholderTokens: FC<Props> = ({ tokens, label, caption }) => {
           >
             {/* The names say little on their own, so each carries what it renders — on hover and on focus,
                 rather than through a `title`, which the keyboard never reaches. */}
-            <DialTooltip tooltip={token.description} hideTooltip={!token.description}>
+            <Tooltip tooltip={token.description} hideTooltip={!token.description}>
               <span>
                 {`{{${token.name}}}`}
                 {IS_MARKED_REQUIRED[token.state] && <span className="ml-1">*</span>}
               </span>
-            </DialTooltip>
+            </Tooltip>
           </li>
         ))}
       </ul>

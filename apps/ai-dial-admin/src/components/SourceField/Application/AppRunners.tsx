@@ -1,20 +1,14 @@
 'use client';
 
-import {
-  DialInputPopup,
-  DialLabel,
-  DialLoader,
-  DialNeutralButton,
-  DialSelectField,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { DialSelectField, Label, OutlinedButton, SelectOption, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -122,7 +116,7 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
   return !isEntityImmutable ? (
     isRunnerResolving ? (
       <div className="relative w-full h-10">
-        <DialLoader size={18} />
+        <Spinner size={18} fullWidth />
       </div>
     ) : (
       <DialSelectField
@@ -142,8 +136,8 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-          <DialLabel label={label} required htmlFor="sourceEntity" />
-          <DialInputPopup
+          <Label label={label} required htmlFor="sourceEntity" />
+          <InputPopup
             disabled={isFieldDisabled || isRunnerResolving}
             placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
             open={isModalOpen}
@@ -158,10 +152,10 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
               sourceEntities={runners}
               columns={LIST_RUNNER_COLUMNS}
             />
-          </DialInputPopup>
+          </InputPopup>
         </div>
         {currentValue && (
-          <DialNeutralButton
+          <OutlinedButton
             label={isMobile ? '' : t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
             onClick={openInNewTab}

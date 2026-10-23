@@ -341,6 +341,7 @@ const getComparedMetricGroupColumns = (
 ): ColGroupDef[] =>
   Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
+    headerGroupComponent: EllipsisHeaderGroup,
     children: Object.keys(groupValues).map((key) => ({
       headerName: key,
       headerGroupComponent: EllipsisHeaderGroup,
@@ -369,6 +370,7 @@ const getComparedExtractedGroupColumn = (
     headerName: EXTRACTED_GROUP_HEADER,
     children: keys.map((key) => ({
       headerName: key,
+      headerGroupComponent: EllipsisHeaderGroup,
       children: buildRunColumns(runs, hideHighlights, (context) => buildRunExtractedColumn(context, key)),
     })),
   };

@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { SegmentedControl, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   statistics: string[];
@@ -16,7 +16,7 @@ interface Props {
  * Renders nothing when there are no statistics or no selection.
  */
 const MetricStatisticControl: FC<Props> = ({ statistics, value, onChange, ariaLabel }) => {
-  const options = useMemo<SegmentedControlOption[]>(
+  const options = useMemo<SegmentedControlItem[]>(
     () => statistics.map((statistic) => ({ value: statistic, label: statistic })),
     [statistics],
   );
@@ -25,7 +25,7 @@ const MetricStatisticControl: FC<Props> = ({ statistics, value, onChange, ariaLa
     return null;
   }
 
-  return <DialSegmentedControl ariaLabel={ariaLabel} options={options} value={value} onChange={onChange} />;
+  return <SegmentedControl aria-label={ariaLabel} items={options} value={value} onChange={onChange} />;
 };
 
 export default MetricStatisticControl;

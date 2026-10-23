@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { ButtonAppearance, DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { Checkbox, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 
 import { getStatusLabel } from '@/src/components/Common/RunStatus/utils';
@@ -76,11 +76,11 @@ const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, api }) => {
 
   return (
     <div className="flex w-[205px] flex-col gap-2 bg-layer-4 p-3">
-      <DialCheckbox
+      <Checkbox
         id="run-status-filter-all"
-        checked={areAllSelected}
-        indeterminate={selected.length > 0 && !areAllSelected}
-        label={t(BasicI18nKey.SelectAll)}
+        isSelected={areAllSelected}
+        isIndeterminate={selected.length > 0 && !areAllSelected}
+        labelProps={{ label: t(BasicI18nKey.SelectAll) }}
         onChange={onToggleAll}
       />
       <div
@@ -89,22 +89,17 @@ const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, api }) => {
         className="flex flex-col gap-2 border-t border-tertiary pt-2"
       >
         {ALL_RUN_STATUSES.map((status) => (
-          <DialCheckbox
+          <Checkbox
             key={status}
             id={`run-status-filter-${status}`}
-            checked={selected.includes(status)}
-            label={getStatusLabel(status, t)}
+            isSelected={selected.includes(status)}
+            labelProps={{ label: getStatusLabel(status, t) }}
             onChange={(isSelected) => onToggle(status, isSelected)}
           />
         ))}
       </div>
       <div className="flex items-center justify-end">
-        <DialNeutralButton
-          appearance={ButtonAppearance.Outlined}
-          label={t(ButtonsI18nKey.Reset)}
-          disabled={!selected.length}
-          onClick={onReset}
-        />
+        <OutlinedButton label={t(ButtonsI18nKey.Reset)} disabled={!selected.length} onClick={onReset} />
       </div>
     </div>
   );

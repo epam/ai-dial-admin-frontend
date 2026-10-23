@@ -48,7 +48,7 @@ The deployment import SHALL accept a single ZIP archive file via multipart form-
 - **THEN** the File Type radio group (Archive / JSON / Separate Files) SHALL NOT be displayed
 
 ### Requirement: Deployment import preview not available
-The Configuration step (step 2) SHALL show a "Preview not available" state for deployment import using `DialNoDataContent` with `IconEyeOff`, matching the pattern used in export for Active Config format.
+The Configuration step (step 2) SHALL show a "Preview not available" state for deployment import using `NoDataContent` with `IconEyeOff`, matching the pattern used in export for Active Config format.
 
 #### Scenario: Configuration step for deployment import
 - **WHEN** the user proceeds to step 2 with "Deployments" config scope

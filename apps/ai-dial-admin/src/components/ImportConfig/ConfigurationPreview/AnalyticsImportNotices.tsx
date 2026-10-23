@@ -1,5 +1,5 @@
 'use client';
-import { DialCheckbox, DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Notification, NotificationType, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { getReusedNames, hasFailRow } from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
@@ -27,7 +27,8 @@ const AnalyticsImportNotices: FC<Props> = ({
     switch (result.outcome) {
       case CatalogImportOutcome.COMPLETED:
         return (
-          <DialNotification
+          <Notification
+            type={NotificationType.SectionMessage}
             variant={NotificationVariant.Success}
             title={t(ImportI18nKey.AnalyticsResultCompleted)}
             message={t(ImportI18nKey.AnalyticsResultCompletedReminder)}
@@ -35,11 +36,16 @@ const AnalyticsImportNotices: FC<Props> = ({
         );
       case CatalogImportOutcome.ROLLED_BACK:
         return (
-          <DialNotification variant={NotificationVariant.Error} message={t(ImportI18nKey.AnalyticsResultRolledBack)} />
+          <Notification
+            type={NotificationType.SectionMessage}
+            variant={NotificationVariant.Error}
+            message={t(ImportI18nKey.AnalyticsResultRolledBack)}
+          />
         );
       default:
         return (
-          <DialNotification
+          <Notification
+            type={NotificationType.SectionMessage}
             variant={NotificationVariant.Error}
             message={t(ImportI18nKey.AnalyticsResultRollbackFailed)}
           />
@@ -56,7 +62,8 @@ const AnalyticsImportNotices: FC<Props> = ({
   return (
     <>
       {!!preview.validation_errors?.length && (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Error}
           title={t(ImportI18nKey.AnalyticsValidationErrorsHeading)}
           message={
@@ -70,10 +77,15 @@ const AnalyticsImportNotices: FC<Props> = ({
         />
       )}
       {hasFailRow(preview) && (
-        <DialNotification variant={NotificationVariant.Warning} message={t(ImportI18nKey.AnalyticsSkipHint)} />
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Warning}
+          message={t(ImportI18nKey.AnalyticsSkipHint)}
+        />
       )}
       {!!preview.env_specific?.length && (
-        <DialNotification
+        <Notification
+          type={NotificationType.SectionMessage}
           variant={NotificationVariant.Info}
           title={t(ImportI18nKey.AnalyticsEnvSpecificHeading)}
           message={
@@ -86,10 +98,10 @@ const AnalyticsImportNotices: FC<Props> = ({
         />
       )}
       {!!reusedNames.length && (
-        <DialCheckbox
+        <Checkbox
           id="acknowledgeReusedNames"
-          checked={isReusedNamesAcknowledged}
-          label={t(ImportI18nKey.AnalyticsReusedNamesConfirm, { names: reusedNames.join(', ') })}
+          isSelected={isReusedNamesAcknowledged}
+          labelProps={{ label: t(ImportI18nKey.AnalyticsReusedNamesConfirm, { names: reusedNames.join(', ') }) }}
           onChange={() => onChangeReusedNamesAcknowledged(!isReusedNamesAcknowledged)}
         />
       )}

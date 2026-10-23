@@ -6,9 +6,9 @@ import { createPortal } from 'react-dom';
 import {
   ButtonAppearance,
   ButtonVariant,
-  DialButtonDropdown,
-  DialDangerButton,
-  DialPrimaryButton,
+  ButtonDropdown,
+  DangerButton,
+  PrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import { IconDownload, IconPlus, IconTrashX } from '@tabler/icons-react';
@@ -45,7 +45,7 @@ const DatasetTestCasesHeader: FC<Props> = ({
 
   return (
     <div className="flex gap-4">
-      <DialButtonDropdown
+      <ButtonDropdown
         label={t(ButtonsI18nKey.Import)}
         items={importItems}
         variant={ButtonVariant.Primary}
@@ -53,7 +53,7 @@ const DatasetTestCasesHeader: FC<Props> = ({
       />
 
       {onExport && (
-        <DialPrimaryButton
+        <PrimaryButton
           label={t(ButtonsI18nKey.Export)}
           iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onExport}
@@ -61,14 +61,14 @@ const DatasetTestCasesHeader: FC<Props> = ({
         />
       )}
 
-      <DialPrimaryButton
+      <PrimaryButton
         label={t(ButtonsI18nKey.Add)}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={onAdd}
       />
 
       {showBatchDelete && (
-        <DialDangerButton
+        <DangerButton
           label={t(ButtonsI18nKey.Delete)}
           appearance={ButtonAppearance.Outlined}
           iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}

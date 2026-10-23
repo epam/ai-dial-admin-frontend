@@ -3,22 +3,24 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  DialGhostButton,
-  DialGhostIconButton,
-  DialNeutralButton,
-  DialNotification,
-  DialPopup,
-  DialPrimaryButton,
   DialSteps,
   ElementSize,
+  GhostButton,
+  GhostIconButton,
+  Notification,
+  NotificationType,
   NotificationVariant,
+  OutlinedButton,
+  Popup,
   PopupSize,
+  PrimaryButton,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft, IconArrowNarrowRight, IconChevronLeft, IconRefresh } from '@tabler/icons-react';
 import { isEqual } from 'lodash';
 
 import Methods from '@/src/components/TestSuites/Methods/Methods';
+import TemplateVariablesDoc from '@/src/components/TestSuites/RequestTemplate/components/TemplateVariablesDoc';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
 import {
   getDefaultRequestTemplateFor,
@@ -28,12 +30,11 @@ import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { Deployment } from '@/src/models/evaluation/deployment';
 import { DialRoute } from '@/src/models/dial/route';
+import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { JsonataVariable } from '@/src/models/jsonata';
 import { EDIT_REQUEST_STEPS, EditRequestStep } from './constants';
-import TemplateVariablesDoc from '@/src/components/TestSuites/RequestTemplate/components/TemplateVariablesDoc';
 
 export interface EditRequestWizardProps {
   testSuite: TestSuite;
@@ -126,7 +127,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
     <div className="flex flex-row items-center justify-between gap-2 px-6 py-4">
       <div>
         {isConfigurationStep && (
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.Back)}
             onClick={() => onChangeStep(EditRequestStep.Methods)}
             iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}
@@ -136,7 +137,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
 
       <div className="flex flex-row items-center gap-4">
         {isConfigurationStep && isBodyEdited && (
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.ResetToDefault)}
             onClick={onResetToDefault}
             iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
@@ -144,11 +145,11 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
         )}
 
         <div className="flex gap-2">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
           {isConfigurationStep ? (
-            <DialPrimaryButton label={t(ButtonsI18nKey.Save)} onClick={handleSave} disabled={!isMethodValid} />
+            <PrimaryButton label={t(ButtonsI18nKey.Save)} onClick={handleSave} disabled={!isMethodValid} />
           ) : (
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.Next)}
               onClick={() => onChangeStep(EditRequestStep.Configuration)}
               iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
@@ -164,7 +165,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
     if (!showVarReferences) return t(TestSuitesI18nKey.EditRequest);
     return (
       <div className="flex gap-4 items-center">
-        <DialGhostIconButton
+        <GhostIconButton
           icon={<IconChevronLeft />}
           size={ElementSize.Small}
           onClick={() => setShowVarReferences(false)}
@@ -176,9 +177,10 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
   }, [showVarReferences, t]);
 
   return (
-    <DialPopup
+    <Popup
       portalId="EditRequestWizard"
       header={<PopupHeader />}
+      ariaLabel={t(TestSuitesI18nKey.EditRequest)}
       open={isOpen}
       onClose={onClose}
       size={PopupSize.Lg}
@@ -197,7 +199,8 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
               onChange={setCurrentSuite}
               takenColumnNames={takenColumnNames}
             >
-              <DialNotification
+              <Notification
+                type={NotificationType.SectionMessage}
                 message={t(TestSuitesI18nKey.MethodChangeWarning)}
                 variant={NotificationVariant.Warning}
               />
@@ -221,7 +224,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
           </div>
         )}
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

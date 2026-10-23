@@ -3,7 +3,7 @@
 import { FC, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialDropdown, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconCheck, IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
@@ -86,7 +86,7 @@ const GroupHeader: FC<GroupHeaderProps> = ({ expanded, count, textClassName, dot
     ) : (
       <IconChevronRight size={12} className="shrink-0" />
     )}
-    {dot && <span aria-hidden className={classNames('size-1.5 rounded-sm', dot)} />}
+    {dot && <span aria-hidden className={classNames('size-1.5 rounded-xs', dot)} />}
     <span className="min-w-0 flex-1 truncate">{label}</span>
     <span className="shrink-0 normal-case text-secondary">{count}</span>
   </button>
@@ -190,7 +190,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
                 />
                 {isExpanded(FUNCTIONS_GROUP_KEY) &&
                   visibleFunctions.map((fn) => (
-                    <DialTooltip
+                    <Tooltip
                       key={fn.name}
                       hideTooltip={!fn.hint}
                       tooltip={fn.hint}
@@ -224,7 +224,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
                         <span className="shrink-0 font-mono dial-tiny-text text-primary">{fn.label}</span>
                         <span className="min-w-0 flex-1 truncate dial-tiny-text text-secondary">{fn.hint}</span>
                       </button>
-                    </DialTooltip>
+                    </Tooltip>
                   ))}
               </div>
             )}

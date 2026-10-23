@@ -1,11 +1,4 @@
-import {
-  Button,
-  ButtonAppearance,
-  ButtonVariant,
-  DialIconButton,
-  DialNeutralButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { Button, ButtonAppearance, ButtonVariant, ElementSize, IconButton } from '@epam/ai-dial-ui-kit';
 import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 
@@ -21,18 +14,9 @@ interface Props {
   className?: string;
   value?: string;
   size?: ElementSize;
-  /** Draws the labelled button with the 2.0 button instead of the 1.0 one. Off by default; a page opts in with its own migration. */
-  isDesignSystem2?: boolean;
 }
 
-const CopyButton: FC<Props> = ({
-  buttonLabel,
-  value,
-  valueLabel,
-  className,
-  size = ElementSize.Standard,
-  isDesignSystem2,
-}) => {
+const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size = ElementSize.Standard }) => {
   const { showNotification } = useNotification();
   const t = useI18n();
 
@@ -44,38 +28,31 @@ const CopyButton: FC<Props> = ({
   const onClick = useCallback(() => {
     if (valueLabel && value) {
       navigator.clipboard.writeText(value);
-      const customTitle = <p className="small-text-semi">{`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>;
+      const customTitle = (
+        <p className="dial-small-semi-text">{`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>
+      );
       showNotification(getCopyToClipboardNotification(customTitle));
     }
   }, [value, valueLabel, showNotification, t]);
 
-  if (buttonLabel && isDesignSystem2) {
-    return (
-      <Button
-        variant={ButtonVariant.Neutral}
-        appearance={ButtonAppearance.Outlined}
-        label={buttonLabel}
-        iconBefore={<IconCopy size={16} aria-hidden />}
-        onClick={onClick}
-      />
-    );
-  }
+  const iconSize = size === ElementSize.Small ? 16 : 20;
 
   return buttonLabel ? (
-    <DialNeutralButton
+    <Button
+      variant={ButtonVariant.Neutral}
+      appearance={ButtonAppearance.Outlined}
       label={buttonLabel}
-      onClick={onClick}
-      aria-label={copyLabel}
-      iconBefore={<IconCopy stroke={2} size={size === ElementSize.Small ? 16 : 20} />}
+      iconBefore={<IconCopy stroke={2} size={iconSize} aria-hidden />}
       size={size}
+      onClick={onClick}
     />
   ) : (
-    <DialIconButton
+    <IconButton
       className={classNames('cursor-pointer h-[20px] w-[20px] text-secondary hover:text-accent-primary', className)}
       aria-label={copyLabel}
       size={size}
       onClick={onClick}
-      icon={<IconCopy stroke={2} size={size === ElementSize.Small ? 16 : 20} />}
+      icon={<IconCopy stroke={2} size={iconSize} aria-hidden />}
     />
   );
 };

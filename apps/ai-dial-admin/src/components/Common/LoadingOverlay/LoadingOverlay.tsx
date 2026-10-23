@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 const LOADER_SIZE = 40;
@@ -15,7 +15,7 @@ interface Props {
 // only that one, floating over this overlay while everything around it was covered.
 const LoadingOverlay: FC<Props> = ({ label }) => (
   <div role="status" aria-live="polite" className="absolute inset-0 z-20 flex items-center justify-center bg-layer-2">
-    <DialLoader size={LOADER_SIZE} />
+    <Spinner size={LOADER_SIZE} fullWidth />
     <span className="sr-only">{label}</span>
   </div>
 );

@@ -1,5 +1,6 @@
 import { ColDef, ColumnState, FilterModel } from 'ag-grid-community';
 
+import { ColumnWidths } from '@/src/components/Grid/models';
 import {
   CompareRunSlot,
   RUN_COMPARE_PRIMARY_INDEX,
@@ -38,6 +39,7 @@ export interface ExecutionResultsTabUiState {
   panelColDefs: ColDef[];
   filterModel: FilterModel | null;
   columnState: ColumnState[] | null;
+  columnWidths: ColumnWidths;
   results: AnalyticsResult[] | null;
   comparedResults: AnalyticsResult[] | null;
 }

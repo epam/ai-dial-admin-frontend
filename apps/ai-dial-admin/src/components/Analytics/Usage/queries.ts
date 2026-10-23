@@ -81,12 +81,19 @@ const deploymentPresent = (): QueryFilterNode => eq(hasDeployment(), value('true
 const globalRouteCall = (): QueryFilterNode => and(eq(field('event_kind'), value('')), not(deploymentPresent()));
 
 /**
+ * A tool call: the one MCP method that executes anything. Shared with the entity trace listing, so a toolset's
+ * Traces tab and its MCP view cannot disagree about what a call to it is.
+ */
+export const mcpToolCallFilter = (): QueryFilterNode =>
+  and(eq(field('event_kind'), value(MCP_EVENT_KIND)), eq(field('mcp_method'), value(MCP_TOOL_CALL_METHOD)));
+
+/**
  * Which rows each view is about. LLM and Routes share one predicate for the global route calls, so a
  * row cannot fall into both views, or into neither, by the two definitions drifting apart.
  */
 const viewFilter = (view: UsageView): QueryFilterNode => {
   if (view === UsageView.Mcp) {
-    return and(eq(field('event_kind'), value(MCP_EVENT_KIND)), eq(field('mcp_method'), value(MCP_TOOL_CALL_METHOD)));
+    return mcpToolCallFilter();
   }
 
   if (view === UsageView.Routes) {

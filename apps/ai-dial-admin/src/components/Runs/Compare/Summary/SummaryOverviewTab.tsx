@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import Analytics from '@/src/components/Runs/Compare/Summary/Analytics';
 import DistributionSection from '@/src/components/Runs/Compare/Summary/DistributionSection';
@@ -67,7 +67,7 @@ const SummaryOverviewTab: FC<Props> = ({
   if (!primaryRun || !comparedRun) {
     return (
       <div className="flex size-full items-center justify-center">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }
@@ -99,7 +99,7 @@ const SummaryOverviewTab: FC<Props> = ({
       </div>
       {hasNoMatchingTestCases ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
-          <DialNoDataContent title={t(EntitiesI18nKey.NoResults)} />
+          <NoDataContent title={t(EntitiesI18nKey.NoResults)} />
         </div>
       ) : (
         <div className={SUMMARY_PANELS_GRID_CLASS}>

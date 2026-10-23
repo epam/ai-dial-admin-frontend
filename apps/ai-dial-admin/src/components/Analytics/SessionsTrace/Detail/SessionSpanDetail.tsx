@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconBraces } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useState } from 'react';
@@ -75,7 +75,7 @@ const SessionSpanDetail: FC<Props> = ({ node, fieldGroups }) => {
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <h3 className="break-all text-primary dial-base-semi-text">{label}</h3>
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconBraces size={ICON_SIZE} aria-hidden />}
             aria-label={t(SessionsTraceI18nKey.SpanJsonOpen)}

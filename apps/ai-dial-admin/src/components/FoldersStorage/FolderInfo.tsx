@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
 import RulesList from '@/src/components/Rules/RulesList';
@@ -74,13 +74,13 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   if (isFetching) {
     return (
       <div className="flex size-full items-center justify-center bg-layer-3 rounded">
-        <DialLoader size={40} />
+        <Spinner size={40} fullWidth />
       </div>
     );
   }
 
   return !currentFolder ? (
-    <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
+    <NoDataContent title={t(EntitiesI18nKey.NoFolders)} />
   ) : (
     <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
       <FolderInfoHeader

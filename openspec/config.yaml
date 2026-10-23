@@ -7,7 +7,7 @@ context: |
   - Monorepo: Nx
   - Framework: Next.js 15 (App Router with [lang] i18n via next-international)
   - Language: TypeScript 5.9 (strict mode)
-  - UI: React 19, Tailwind CSS 3 (preferred), SCSS (for external component overrides)
+  - UI: React 19, Tailwind CSS 4 (preferred), SCSS (for external component overrides)
   - Auth: next-auth v4
   - State: React Context + custom hooks (no external state management)
   - API: Next.js server actions + occasional API routes

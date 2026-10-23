@@ -3,8 +3,8 @@
 import { FC, useId, useMemo } from 'react';
 
 import { ColDef } from 'ag-grid-community';
-import { DialLoader, DialNoDataContent, DialSegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
-import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent, SegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
+import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -75,7 +75,7 @@ const ResultArea: FC<Props> = ({
     return QueryBuilderI18nKey.ChartNoValueColumn;
   };
 
-  const viewOptions: SegmentedControlOption<QueryResultView>[] = [
+  const viewOptions: SegmentedControlItem<QueryResultView>[] = [
     { value: QueryResultView.Table, label: t(QueryBuilderI18nKey.ViewTable) },
     { value: QueryResultView.Chart, label: t(QueryBuilderI18nKey.ViewChart) },
   ];
@@ -90,9 +90,9 @@ const ResultArea: FC<Props> = ({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <DialSegmentedControl
-          ariaLabel={t(QueryBuilderI18nKey.ResultViewSwitcher)}
-          options={viewOptions}
+        <SegmentedControl
+          aria-label={t(QueryBuilderI18nKey.ResultViewSwitcher)}
+          items={viewOptions}
           value={view}
           onChange={onChangeView}
         />
@@ -111,7 +111,7 @@ const ResultArea: FC<Props> = ({
               iconBefore={
                 isExporting ? (
                   <span aria-hidden>
-                    <DialLoader fullWidth={false} size={BASE_BUTTON_ICON_PROPS.size} className="text-secondary" />
+                    <Spinner fullWidth={false} size={BASE_BUTTON_ICON_PROPS.size} />
                   </span>
                 ) : (
                   <IconDownload {...BASE_BUTTON_ICON_PROPS} aria-hidden />
@@ -133,17 +133,17 @@ const ResultArea: FC<Props> = ({
 
       <div className="flex min-h-0 flex-1 flex-col">
         {isRunning ? (
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
         ) : !hasResult ? (
-          <DialNoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
+          <NoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
         ) : isChartView ? (
           chartAvailable && meta ? (
             <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={onChangeChartConfig} />
           ) : (
-            <DialNoDataContent title={t(chartUnavailableKey())} />
+            <NoDataContent title={t(chartUnavailableKey())} />
           )
         ) : !rows.length ? (
-          <DialNoDataContent title={t(QueryBuilderI18nKey.NoRows)} />
+          <NoDataContent title={t(QueryBuilderI18nKey.NoRows)} />
         ) : (
           <div className="min-h-0 flex-1">
             <GridView columnDefs={columns as ColDef[]} rowData={rows} />

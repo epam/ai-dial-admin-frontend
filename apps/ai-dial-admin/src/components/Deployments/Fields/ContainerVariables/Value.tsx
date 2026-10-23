@@ -1,5 +1,5 @@
 import { FC, memo, useCallback } from 'react';
-import { DialPasswordInput, DialInput, DialLabel } from '@epam/ai-dial-ui-kit';
+import { PasswordInput, DialInput, Label } from '@epam/ai-dial-ui-kit';
 
 import { EnvVariableValue } from '@/src/models/deployments/variables';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -44,12 +44,12 @@ const ContainerVariableValue: FC<Props> = ({
 
   return (
     <div className="flex-1 min-w-0 flex flex-col gap-y-1">
-      {fieldName && <DialLabel label={fieldName} htmlFor={`value_${index}`} />}
+      {fieldName && <Label label={fieldName} htmlFor={`value_${index}`} />}
       <div className="flex flex-row gap-x-2 items-start">
         <div className="flex-1 min-w-0">
           {value.$type === VALUE_TYPE.SIMPLE &&
             (isSecure ? (
-              <DialPasswordInput
+              <PasswordInput
                 id={`value_${index}`}
                 value={value.value}
                 placeholder={t(EntityPlaceholdersI18nKey.Value)}

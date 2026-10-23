@@ -21,7 +21,7 @@ The Target step SHALL display four tabs: "Applications", "Models", "MCP", and "R
 
 #### Scenario: MCP tab shows loading state
 - **WHEN** the MCP deployments request is in-flight
-- **THEN** the system SHALL display a `DialLoader` in place of the grid
+- **THEN** the system SHALL display a `Spinner` in place of the grid
 
 #### Scenario: MCP tab shows empty state
 - **WHEN** the API returns no MCP-capable deployments
@@ -113,7 +113,7 @@ Step 3 for MCP_TOOL suites SHALL display a `McpTool` component that fetches and 
 
 #### Scenario: Tool step shows loading state
 - **WHEN** the tools request is in-flight
-- **THEN** the system SHALL display a `DialLoader`
+- **THEN** the system SHALL display a `Spinner`
 
 #### Scenario: Tool step shows empty state
 - **WHEN** no tools are returned for the selected deployment

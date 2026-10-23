@@ -5,10 +5,9 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import {
   DialInput,
   DialNumberInput,
-  DialPasswordInput,
-  DialRemoveButton,
+  PasswordInput,
   DialSelectField,
-  DialTooltip,
+  Tooltip,
   SelectOption,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
@@ -38,6 +37,7 @@ import {
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   index: number;
@@ -195,7 +195,7 @@ const Endpoint: FC<Props> = ({
       <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-primary p-3 lg:border-none lg:p-0">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
-            <h3 className="small flex items-center">
+            <h3 className="dial-small-text flex items-center">
               {!isExpanded ? (
                 <IconChevronRight className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
               ) : (
@@ -204,9 +204,9 @@ const Endpoint: FC<Props> = ({
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
             {!isExpanded && (
-              <DialTooltip tooltip={endpoint.endpoint || '—'}>
-                <p className="max-w-[220px] truncate tiny text-secondary mt-3">{endpoint.endpoint || '—'}</p>
-              </DialTooltip>
+              <Tooltip tooltip={endpoint.endpoint || '—'}>
+                <p className="max-w-[220px] truncate dial-tiny-text text-secondary mt-3">{endpoint.endpoint || '—'}</p>
+              </Tooltip>
             )}
           </div>
         )}
@@ -294,7 +294,7 @@ const Endpoint: FC<Props> = ({
                   onChange={(authType) => onChangeAuthType(authType as string)}
                 />
               )}
-              <DialPasswordInput
+              <PasswordInput
                 disabled={disabled}
                 id={`key-${index}`}
                 value={endpoint.key}
@@ -375,7 +375,7 @@ const Endpoint: FC<Props> = ({
               </div>
               {!isAuthTypeSupported && (
                 <div className="flex-1 min-w-0">
-                  <DialPasswordInput
+                  <PasswordInput
                     disabled={disabled}
                     id={`key-${index}`}
                     value={endpoint.key}
@@ -405,7 +405,7 @@ const Endpoint: FC<Props> = ({
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <DialPasswordInput
+                  <PasswordInput
                     disabled={disabled}
                     id={`key-${index}`}
                     value={endpoint.key}
@@ -454,7 +454,7 @@ const Endpoint: FC<Props> = ({
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 self-start">
-          <DialRemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
+          <RemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
         </div>
       )}
     </div>

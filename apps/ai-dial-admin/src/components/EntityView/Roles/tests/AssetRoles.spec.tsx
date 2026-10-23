@@ -84,7 +84,7 @@ describe('AssetRoles', () => {
       />,
     );
 
-    await user.click(screen.getByRole('checkbox', { hidden: true }));
+    await user.click(screen.getByRole('switch', { hidden: true }));
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith({ userRoles: [] });
@@ -102,7 +102,7 @@ describe('AssetRoles', () => {
       />,
     );
 
-    await user.click(screen.getByRole('checkbox', { hidden: true }));
+    await user.click(screen.getByRole('switch', { hidden: true }));
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange).toHaveBeenCalledWith({ userRoles: undefined });

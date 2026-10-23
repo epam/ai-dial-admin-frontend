@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Tooltip, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -74,10 +74,12 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
   return (
     <div className="flex flex-wrap items-center gap-1">
       <div className="flex items-center gap-0.5 mr-1">
-        <span className="small-text-semi text-secondary whitespace-nowrap">{t(TestSuitesI18nKey.RunCondition)}</span>
-        <DialTooltip tooltip={t(TestSuitesI18nKey.RunConditionTooltip)}>
+        <span className="dial-small-semi-text text-secondary whitespace-nowrap">
+          {t(TestSuitesI18nKey.RunCondition)}
+        </span>
+        <Tooltip tooltip={t(TestSuitesI18nKey.RunConditionTooltip)}>
           <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
-        </DialTooltip>
+        </Tooltip>
       </div>
       {filters.map((filter, index) => (
         <RunConditionChip
@@ -89,6 +91,7 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
         />
       ))}
       <FilterEditorPopover
+        placement="right"
         isComplete={isRunConditionFilterComplete(draft)}
         onCommit={onAdd}
         onCancel={onCancelAdd}
@@ -96,7 +99,7 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
           <CreateRunConditionFilter draft={draft} fieldOptions={fieldOptions} onChange={setDraft} onClear={onClose} />
         )}
       >
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           size={ElementSize.Small}

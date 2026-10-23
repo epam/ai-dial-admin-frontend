@@ -2,7 +2,7 @@
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconReplace } from '@tabler/icons-react';
 
 import { GridOptions, RowClassParams } from 'ag-grid-community';
@@ -67,7 +67,7 @@ const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFi
           <div className="flex flex-col gap-4">
             <div className="flex flex-row justify-between items-center">
               <h3>{t(DeploymentsI18nKey.GlobalWhitelist)}</h3>
-              <DialGhostButton
+              <GhostButton
                 label={t(CompareI18nKey.CompareChanges)}
                 iconBefore={<IconReplace {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onOpenCompare}

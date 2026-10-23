@@ -1,7 +1,9 @@
 import { FC, useCallback, useState } from 'react';
 
-import { DialFormPopup, DialInputPopup, DialLabel, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Label, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import OverflowValueTooltip from '@/src/components/Common/OverflowValueTooltip/OverflowValueTooltip';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -47,9 +49,9 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
   return (
     <FileFolderProvider>
       <div className="flex flex-col gap-y-1">
-        {label && <DialLabel label={label} htmlFor={elementId} />}
+        {label && <Label label={label} htmlFor={elementId} />}
         <OverflowValueTooltip text={filePath}>
-          <DialInputPopup
+          <InputPopup
             disabled={disabled || isReadOnlyAdmin}
             open={isModalOpen}
             selectedValue={filePath}
@@ -59,18 +61,20 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
             editable
             onValueChange={onChangeValue}
           >
-            <DialFormPopup
+            <Popup
               header={t(TestSuitesI18nKey.SelectDocument)}
               portalId="fileSelect"
               open={isModalOpen}
-              cancelLabel={t(ButtonsI18nKey.Cancel)}
-              submitLabel={t(ButtonsI18nKey.Confirm)}
-              onSubmit={onConfirm}
-              disableSubmitButton={!selectedFilePath}
               onClose={() => setIsModalOpen(false)}
-              onCancel={() => setIsModalOpen(false)}
               className="h-[800px]"
               size={PopupSize.Lg}
+              mainButtons={getFormPopupButtons({
+                cancelLabel: t(ButtonsI18nKey.Cancel),
+                submitLabel: t(ButtonsI18nKey.Confirm),
+                isSubmitDisabled: !selectedFilePath,
+                onCancel: () => setIsModalOpen(false),
+                onSubmit: onConfirm,
+              })}
             >
               <div className="size-full flex flex-col">
                 {showTabs && (
@@ -97,8 +101,8 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
                   )}
                 </div>
               </div>
-            </DialFormPopup>
-          </DialInputPopup>
+            </Popup>
+          </InputPopup>
         </OverflowValueTooltip>
       </div>
     </FileFolderProvider>

@@ -46,7 +46,7 @@ The `ContainerNodePool` field SHALL render exactly one of two states at a time: 
 #### Scenario: Loading state
 
 - **WHEN** pools are being fetched
-- **THEN** the field body SHALL render a `DialLoader` (size 32) and no action button
+- **THEN** the field body SHALL render a `Spinner` (size 32, `fullWidth`) and no action button
 
 #### Scenario: Ready state with no selection
 
@@ -102,7 +102,7 @@ The selector display SHALL prefer the live `NodePool` from the loaded list when 
 The selector modal SHALL be composed of three components:
 
 - `Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — the `DialPopup` shell (`PopupSize.Lg`, fixed-height container) with Cancel / Apply footer buttons; owns the pending selection and resets it to the field's current `nodePoolId` on every open.
-- `Deployments/NodePool/NodePoolList.tsx` — the `DialSearch` input plus a `<ul>` of radio rows including the pinned "Any node pool" entry; owns the search query, which is reset to empty on every mount (i.e., every modal open).
+- `Deployments/NodePool/NodePoolList.tsx` — the `Search` input plus a `<ul>` of radio rows including the pinned "Any node pool" entry; owns the search query, which is reset to empty on every mount (i.e., every modal open).
 - `Deployments/NodePool/NodePoolItem.tsx` — a single radio row, wrapped in a `<label htmlFor=...>` so clicking anywhere in the row toggles the radio.
 
 #### Scenario: Modal lists "Any node pool" plus one row per loaded pool
@@ -125,7 +125,7 @@ The selector modal SHALL be composed of three components:
 #### Scenario: No matches but pools exist
 
 - **WHEN** the search yields zero pool matches but the loaded list is non-empty
-- **THEN** the modal SHALL render `DeploymentsI18nKey.NodePoolNoMatches` via `DialNoDataContent` below the "Any" row
+- **THEN** the modal SHALL render `DeploymentsI18nKey.NodePoolNoMatches` via `NoDataContent` below the "Any" row
 
 #### Scenario: Apply submits the pending id; Cancel discards
 
@@ -138,7 +138,7 @@ The selector modal SHALL be composed of three components:
 
 ### Requirement: Accessibility and string handling
 
-All user-facing strings in the field and modal SHALL flow through `useI18n()`. Truncated text SHALL expose the full content via the `title` attribute so it is reachable without truncation. Radio rows SHALL use native `<label>` + `DialRadioButton` semantics so they are keyboard-operable and screen-reader-friendly.
+All user-facing strings in the field and modal SHALL flow through `useI18n()`. Truncated text SHALL expose the full content via the `title` attribute so it is reachable without truncation. Radio rows SHALL use native `<label>` + `Radio` semantics so they are keyboard-operable and screen-reader-friendly.
 
 #### Scenario: No hardcoded user-visible strings
 

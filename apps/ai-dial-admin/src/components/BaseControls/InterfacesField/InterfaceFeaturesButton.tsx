@@ -2,7 +2,9 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialFormPopup, DialLabel, DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Popup, Label, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import {
   modelResourceFeatureLabelMap,
@@ -62,16 +64,18 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
 
   return (
     <>
-      <DialNeutralButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
-      <DialFormPopup
+      <OutlinedButton label={t(ButtonsI18nKey.Features)} onClick={onOpen} disabled={disabled || isReadOnlyAdmin} />
+      <Popup
         onClose={onCancel}
         header={t(ButtonsI18nKey.Features)}
         portalId={`${fieldId}-features-modal`}
         open={isOpen}
-        submitLabel={t(ButtonsI18nKey.Apply)}
-        onSubmit={onApply}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        onCancel={onCancel}
+        mainButtons={getFormPopupButtons({
+          cancelLabel: t(ButtonsI18nKey.Cancel),
+          submitLabel: t(ButtonsI18nKey.Apply),
+          onCancel: onCancel,
+          onSubmit: onApply,
+        })}
       >
         <div className="px-6 py-4 flex flex-col gap-y-8 max-h-[60vh] overflow-auto">
           {textFeatures.map((key) => (
@@ -90,20 +94,20 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
           />
           {switchGroups.map(({ title, keys }) => (
             <div key={title} className="flex flex-col gap-y-3">
-              <DialLabel label={t(title)} />
+              <Label label={t(title)} />
               {keys.map((key) => (
-                <DialSwitch
+                <Switch
                   key={key}
                   isOn={!!draft[key]}
-                  label={t(featureLabelMap[key])}
-                  switchId={`${fieldId}-${key}`}
+                  labelProps={{ label: t(featureLabelMap[key]) }}
+                  id={`${fieldId}-${key}`}
                   onChange={(value) => setDraft((prev) => ({ ...prev, [key]: value }))}
                 />
               ))}
             </div>
           ))}
         </div>
-      </DialFormPopup>
+      </Popup>
     </>
   );
 };

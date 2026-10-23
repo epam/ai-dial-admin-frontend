@@ -2,7 +2,7 @@
 
 import { FC, MouseEvent, useCallback, useId, useMemo, useState } from 'react';
 
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { Editor } from '@monaco-editor/react';
 import { IconChevronRight, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -50,7 +50,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
     <>
       <div className="border border-secondary rounded overflow-hidden shrink-0">
         {/* Only the title toggles: copy and fullscreen are buttons of their own and cannot nest inside it. */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 tiny select-none">
+        <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 dial-tiny-text select-none">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors"
@@ -65,11 +65,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
             <span className="dial-tiny-text text-secondary opacity-60 font-mono">{size}</span>
             <CopyButton value={formatted} valueLabel={title} size={ElementSize.Small} />
             {!hideFullscreen && (
-              <DialGhostIconButton
-                size={ElementSize.Small}
-                icon={<IconMaximize size={16} />}
-                onClick={onOpenFullscreen}
-              />
+              <GhostIconButton size={ElementSize.Small} icon={<IconMaximize size={16} />} onClick={onOpenFullscreen} />
             )}
           </span>
         </div>

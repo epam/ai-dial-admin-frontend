@@ -44,7 +44,7 @@ const ToolContent: FC<Props> = ({ tool, view }) => {
 
   return (
     <div className="flex flex-col mt-4 gap-4">
-      {tool.description && <p className="body">{tool.description}</p>}
+      {tool.description && <p className="dial-body-text">{tool.description}</p>}
       {view === ParamsView.TABLE ? (
         <>
           {!!inputSchema.length && (

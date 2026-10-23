@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNotification, DialPrimaryButton, DialSwitch, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, PrimaryButton, Switch, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -122,17 +122,17 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
             {t(TabsI18nKey.Roles)}: {displayedCount}
           </h1>
           {!isReadOnlyAdmin && (
-            <DialSwitch
+            <Switch
               isOn={isSpecificRoles}
-              label={t(RolesI18nKey.AvailableSpecificRoles)}
-              switchId="specificRoles"
+              labelProps={{ label: t(RolesI18nKey.AvailableSpecificRoles) }}
+              id="specificRoles"
               onChange={onSwitchSpecificRoles}
             />
           )}
         </div>
 
         {!isReadOnlyAdmin && isSpecificRoles && (
-          <DialPrimaryButton
+          <PrimaryButton
             label={t(RolesI18nKey.AddRoles)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenModal}
@@ -150,7 +150,11 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
       </div>
 
       {isAssetUnavailable(asset.userRoles) && (
-        <DialNotification variant={NotificationVariant.Info} message={t(getNoAvailableTitle(view))} />
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Info}
+          message={t(getNoAvailableTitle(view))}
+        />
       )}
 
       <AddEntitiesGrid

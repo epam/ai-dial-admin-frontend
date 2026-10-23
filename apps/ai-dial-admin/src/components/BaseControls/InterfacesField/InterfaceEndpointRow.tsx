@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialInput, DialPasswordInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { DialInput, PasswordInput } from '@epam/ai-dial-ui-kit';
 
 import ExtraDataField from '@/src/components/UpstreamEndpoints/ExtraData/ExtraDataField';
 import {
@@ -17,6 +17,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialUpstreamInterface } from '@/src/models/dial/model';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   fieldId: string;
@@ -90,7 +91,7 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
               invalid={!!error}
               containerClassName={STANDARD_CONTROL_WIDTH}
             />
-            <DialPasswordInput
+            <PasswordInput
               id={`${fieldId}-key`}
               labelProps={{ label: t(UpstreamEndpointsI18nKey.Key) }}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
@@ -118,7 +119,7 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
             />
           </div>
         </div>
-        {!disabled && <DialRemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} className="mt-7" />}
+        {!disabled && <RemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} className="mt-7" />}
       </div>
     </div>
   );

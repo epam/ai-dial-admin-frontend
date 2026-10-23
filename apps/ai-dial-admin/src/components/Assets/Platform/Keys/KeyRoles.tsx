@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNeutralButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, NoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -78,7 +78,7 @@ const KeyRoles = ({ asset, roles, onChange }: Props) => {
     <div className="flex flex-col gap-4 h-full">
       {!isReadOnlyAdmin && (
         <div>
-          <DialNeutralButton
+          <OutlinedButton
             title={t(RolesI18nKey.AddRoles)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenModal}
@@ -89,7 +89,7 @@ const KeyRoles = ({ asset, roles, onChange }: Props) => {
       {selectedRoles.length ? (
         <GridView rowData={selectedRoles} columnDefs={columnDefs} />
       ) : (
-        <DialNoDataContent title={t(KeysI18nKey.BearerRolesNotAvailable)} />
+        <NoDataContent title={t(KeysI18nKey.BearerRolesNotAvailable)} />
       )}
 
       <AddEntitiesGrid

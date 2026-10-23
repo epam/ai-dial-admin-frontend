@@ -3,7 +3,7 @@
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, ButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import {
   IconDatabaseExport,
   IconDatabaseImport,
@@ -151,7 +151,7 @@ const HeaderButtons: FC<Props> = ({
         <AdaptiveHeaderActions
           actions={adaptiveActions}
           prefix={
-            <DialButtonDropdown
+            <ButtonDropdown
               label={t(TestSuitesI18nKey.More)}
               items={moreItems}
               variant={ButtonVariant.Primary}

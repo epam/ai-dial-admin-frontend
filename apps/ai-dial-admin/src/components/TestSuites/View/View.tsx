@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
@@ -232,7 +232,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           onChangeActiveTab={setActiveTab}
           onRemove={removeTestSuite}
         >
-          <DialNeutralButton
+          <OutlinedButton
             label={t(ButtonsI18nKey.Run)}
             iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onStartRunTestSuite}

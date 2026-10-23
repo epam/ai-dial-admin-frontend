@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
-import { DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { Checkbox, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { GetItemError } from '@/src/models/error';
@@ -97,10 +97,10 @@ const CheckboxList: FC<Props> = ({
       <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
         {list.map((item, index) => (
           <li key={`item_${index}`}>
-            <DialCheckbox
-              checked={selectedItems.includes(item)}
+            <Checkbox
+              isSelected={selectedItems.includes(item)}
               id={index.toString()}
-              label={item}
+              labelProps={{ label: item }}
               onChange={(v) => onChangeSelectedItems(item, v)}
             />
           </li>
@@ -123,7 +123,7 @@ const CheckboxList: FC<Props> = ({
 
       {addTitle && (
         <div>
-          <DialNeutralButton
+          <OutlinedButton
             className="self-start"
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={addTitle}

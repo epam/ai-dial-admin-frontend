@@ -2,7 +2,7 @@ import { ColumnState } from 'ag-grid-community';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
-import { getColumnsStateFromStorage, saveColumnsStateToStorage } from '@/src/components/Grid/utils';
+import { getColumnsStateFromStorage, mergeColumnOrder, saveColumnsStateToStorage } from '@/src/components/Grid/utils';
 
 const STORAGE_KEY = 'runs-v2';
 const DEFAULT_SORTS: ColumnState[] = [{ colId: 'startedAt', sort: 'desc' }];
@@ -34,5 +34,29 @@ describe('getColumnsStateFromStorage', () => {
       columns: DEFAULT_SORTS,
       filters: {},
     });
+  });
+
+  test.each(['{not json', 'null', '"text"'])('falls back to the defaults when the stored entry is %s', (stored) => {
+    localStorage.setItem(`${GRID_COLUMNS_KEY}${STORAGE_KEY}`, stored);
+
+    expect(getColumnsStateFromStorage(STORAGE_KEY, DEFAULT_SORTS)).toEqual({
+      columns: DEFAULT_SORTS,
+      filters: {},
+    });
+  });
+});
+
+describe('mergeColumnOrder', () => {
+  test('keeps the stored slots of columns that are not shown and appends new ones', () => {
+    const stored: ColumnState[] = [{ colId: 'a' }, { colId: 'b' }, { colId: 'c' }];
+    const current: ColumnState[] = [{ colId: 'c' }, { colId: 'a' }, { colId: 'd' }];
+
+    expect(mergeColumnOrder(current, stored)).toEqual([{ colId: 'c' }, { colId: 'b' }, { colId: 'a' }, { colId: 'd' }]);
+  });
+
+  test('returns the current order when nothing is stored', () => {
+    const current: ColumnState[] = [{ colId: 'a' }, { colId: 'b' }];
+
+    expect(mergeColumnOrder(current, [])).toEqual(current);
   });
 });

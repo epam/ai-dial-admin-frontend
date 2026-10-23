@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DialFile as FileManagerFile, DialFoldersTree } from '@epam/ai-dial-react-file-manager';
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -106,10 +106,10 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
     <div className="flex-1 size-full overflow-y-auto">
       {isFetching ? (
         <div className="flex size-full items-center justify-center">
-          <DialLoader size={40} />
+          <Spinner size={40} fullWidth />
         </div>
       ) : showNoFolders ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
+        <NoDataContent title={t(EntitiesI18nKey.NoFolders)} />
       ) : (
         <DialFoldersTree
           // Admin nodes are what `toggleFolder` expects; the tree hands back the same objects it was given.

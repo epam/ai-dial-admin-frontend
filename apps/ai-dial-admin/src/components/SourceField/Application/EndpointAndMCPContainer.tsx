@@ -1,5 +1,5 @@
 'use client';
-import { DialCheckbox, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -58,9 +58,8 @@ const EndpointAndMCPContainer: FC<Props> = ({
   }, [entityKey]);
 
   const toggleCheckbox = useCallback(
-    (value?: boolean, id?: string) => {
-      if (!id) return;
-      const newCheckboxStates = { ...checkboxStates, [id]: !!value };
+    (id: SourceType, value: boolean) => {
+      const newCheckboxStates = { ...checkboxStates, [id]: value };
       setCheckboxStates(newCheckboxStates);
 
       onChangeEntity({
@@ -147,11 +146,11 @@ const EndpointAndMCPContainer: FC<Props> = ({
   return (
     <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
       <div className="flex flex-col w-full gap-4">
-        <DialCheckbox
-          checked={checkboxStates[SourceType.CHAT_ENDPOINT]}
-          label={t(SourceI18nKey.ChatEndpoint)}
+        <Checkbox
+          isSelected={checkboxStates[SourceType.CHAT_ENDPOINT]}
+          labelProps={{ label: t(SourceI18nKey.ChatEndpoint) }}
           id={SourceType.CHAT_ENDPOINT}
-          onChange={toggleCheckbox}
+          onChange={(value) => toggleCheckbox(SourceType.CHAT_ENDPOINT, value)}
           disabled={
             isReadOnlyAdmin || (checkboxStates[SourceType.CHAT_ENDPOINT] && !checkboxStates[SourceType.MCP_ENDPOINT])
           }
@@ -187,11 +186,11 @@ const EndpointAndMCPContainer: FC<Props> = ({
       </div>
 
       <div className="flex flex-col w-full gap-4">
-        <DialCheckbox
-          checked={checkboxStates[SourceType.MCP_ENDPOINT]}
-          label={t(SourceI18nKey.McpEndpoint)}
+        <Checkbox
+          isSelected={checkboxStates[SourceType.MCP_ENDPOINT]}
+          labelProps={{ label: t(SourceI18nKey.McpEndpoint) }}
           id={SourceType.MCP_ENDPOINT}
-          onChange={toggleCheckbox}
+          onChange={(value) => toggleCheckbox(SourceType.MCP_ENDPOINT, value)}
           disabled={
             isReadOnlyAdmin || (checkboxStates[SourceType.MCP_ENDPOINT] && !checkboxStates[SourceType.CHAT_ENDPOINT])
           }
@@ -225,10 +224,10 @@ const EndpointAndMCPContainer: FC<Props> = ({
               disabled
             />
 
-            <DialSwitch
-              switchId="forwardPerRequestKey"
+            <Switch
+              id="forwardPerRequestKey"
               isOn={entity?.['dial:applicationTypeMcp']?.['dial:forwardPerRequestKey']}
-              label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+              labelProps={{ label: t(EntityFieldsI18nKey.forwardPerRequestKey) }}
               onChange={onChangeForwardPerRequestKey}
               disabled={isReadOnlyAdmin}
             />

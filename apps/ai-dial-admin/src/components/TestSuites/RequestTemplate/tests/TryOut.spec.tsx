@@ -79,20 +79,20 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     NotificationVariant: { Success: 'success', Error: 'error' },
-    DialNotification: ({ message, variant }: { message: string; variant: string }) => <div>{message}</div>,
-    DialCloseButton: ({ onClose }: { onClose: () => void }) => (
+    Notification: ({ message, variant }: { message: string; variant: string }) => <div>{message}</div>,
+    CloseButton: ({ onClose }: { onClose: () => void }) => (
       <button type="button" onClick={onClose}>
         Close
       </button>
     ),
-    DialGhostButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
-    DialLoader: () => <div>Loading...</div>,
-    DialNeutralButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
+    GhostButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
+    Spinner: () => <div>Loading...</div>,
+    OutlinedButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
       <button type="button" onClick={onClick}>
         {label}
       </button>
     ),
-    DialPrimaryButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
+    PrimaryButton: ({ label, onClick }: { label: string; onClick: () => void }) => (
       <button type="button" onClick={onClick}>
         {label}
       </button>

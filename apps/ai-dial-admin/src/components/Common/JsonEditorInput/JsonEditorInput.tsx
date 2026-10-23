@@ -1,6 +1,9 @@
-import { DialErrorText, DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { ErrorText, Label, Popup } from '@epam/ai-dial-ui-kit';
+
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -100,8 +103,8 @@ const JsonEditorInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-1">
-      {label && <DialLabel label={label} htmlFor={elementId} />}
-      <DialInputPopup
+      {label && <Label label={label} htmlFor={elementId} />}
+      <InputPopup
         disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}
         selectedValue={committedJsonValue}
@@ -109,25 +112,27 @@ const JsonEditorInput: FC<Props> = ({
         emptyValueText={t(BasicI18nKey.NoData)}
         inputClassName={inputClassName}
       >
-        <DialFormPopup
+        <Popup
           onClose={onCancelModal}
           header={t(EntityPlaceholdersI18nKey.Object)}
           portalId="jsonInputModal"
           open={isModalOpen}
-          submitLabel={t(ButtonsI18nKey.Apply)}
-          onSubmit={onApply}
-          cancelLabel={t(ButtonsI18nKey.Cancel)}
-          onCancel={onCancelModal}
-          disableSubmitButton={(!isValid && !disableValidation) || !!parseError}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(ButtonsI18nKey.Apply),
+            isSubmitDisabled: (!isValid && !disableValidation) || !!parseError,
+            onCancel: onCancelModal,
+            onSubmit: onApply,
+          })}
         >
           <div className="px-6 py-4 flex flex-col gap-1">
             <div className="h-[540px] max-h-[35vh]">
               <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
             </div>
-            {disableValidation && parseError && <DialErrorText text={parseError} />}
+            {disableValidation && parseError && <ErrorText text={parseError} />}
           </div>
-        </DialFormPopup>
-      </DialInputPopup>
+        </Popup>
+      </InputPopup>
     </div>
   );
 };

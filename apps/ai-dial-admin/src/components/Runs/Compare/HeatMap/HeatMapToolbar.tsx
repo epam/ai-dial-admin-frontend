@@ -1,14 +1,15 @@
 'use client';
 
 import {
-  DialCheckbox,
+  Checkbox,
   DialDropdown,
-  DialEllipsisTooltip,
-  DialSearch,
-  DialSegmentedControl,
-  DialTooltip,
+  EllipsisTooltip,
+  Search,
+  SegmentedControl,
+  Tooltip,
   ElementSize,
-  SegmentedControlOption,
+  SegmentedControlItem,
+  TooltipPlacement,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
@@ -102,7 +103,7 @@ const HeatMapToolbar: FC<Props> = ({
     [onSelectedMetricGroupsChange, selectedMetricGroups, availableMetricGroups],
   );
 
-  const colorDisplayOptions = useMemo<SegmentedControlOption<HeatMapColorDisplayMode>[]>(
+  const colorDisplayOptions = useMemo<SegmentedControlItem<HeatMapColorDisplayMode>[]>(
     () => [
       { value: HeatMapColorDisplayMode.Absolute, label: t(RunsI18nKey.RunCompareAbsoluteValues) },
       { value: HeatMapColorDisplayMode.Delta, label: t(RunsI18nKey.RunCompareDelta) },
@@ -122,10 +123,10 @@ const HeatMapToolbar: FC<Props> = ({
           <div className="bg-layer-0 rounded shadow flex flex-col w-[280px]">
             {isSearchVisible && (
               <div className="pt-2 px-2 pb-1">
-                <DialSearch
+                <Search
                   id="heat-map-metrics-search"
                   value={metricsSearchQuery}
-                  onChange={setMetricsSearchQuery}
+                  onChange={(value) => setMetricsSearchQuery(value ?? '')}
                   placeholder={t(BasicI18nKey.Search)}
                   size={ElementSize.Small}
                 />
@@ -133,11 +134,11 @@ const HeatMapToolbar: FC<Props> = ({
             )}
             {showAllCheckbox && (
               <div className="flex h-[34px] items-center px-3">
-                <DialCheckbox
-                  checked={allCheckState === MetricGroupsCheckState.Checked}
-                  indeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
+                <Checkbox
+                  isSelected={allCheckState === MetricGroupsCheckState.Checked}
+                  isIndeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
                   id="heat-map-metrics-all"
-                  label={t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll)}
+                  labelProps={{ label: t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll) }}
                   onChange={onToggleAll}
                 />
               </div>
@@ -149,20 +150,20 @@ const HeatMapToolbar: FC<Props> = ({
 
                 return (
                   <div key={groupKey} className="flex h-[34px] items-center pl-10 pr-3">
-                    <DialTooltip
+                    <Tooltip
                       tooltip={minOneSelectedTooltip}
                       hideTooltip={!isLastSelected}
-                      placement="top"
+                      placement={TooltipPlacement.Top}
                       triggerClassName="flex min-w-0"
                     >
-                      <DialCheckbox
-                        checked={isChecked}
+                      <Checkbox
+                        isSelected={isChecked}
                         disabled={isLastSelected}
                         id={`heat-map-metric-${groupKey}`}
-                        label={groupKey}
+                        labelProps={{ label: groupKey }}
                         onChange={(value) => onToggleGroup(groupKey, value)}
                       />
-                    </DialTooltip>
+                    </Tooltip>
                   </div>
                 );
               })}
@@ -173,10 +174,10 @@ const HeatMapToolbar: FC<Props> = ({
         <button
           type="button"
           disabled={isMetricsDropdownDisabled}
-          className="inline-flex items-center gap-1 rounded-sm bg-layer-3 px-1.5 py-1 dial-small-text text-primary max-w-[280px] disabled:opacity-70 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1 rounded-xs bg-layer-3 px-1.5 py-1 dial-small-text text-primary max-w-[280px] disabled:opacity-70 disabled:cursor-not-allowed"
           aria-disabled={isMetricsDropdownDisabled}
         >
-          <DialEllipsisTooltip text={triggerLabel} className="truncate" />
+          <EllipsisTooltip text={triggerLabel} className="truncate" />
           {chevronIcon}
         </button>
       </DialDropdown>
@@ -185,11 +186,11 @@ const HeatMapToolbar: FC<Props> = ({
         <span className="dial-small-text text-secondary whitespace-nowrap">
           {t(RunsI18nKey.RunCompareColorDisplay)}
         </span>
-        <DialSegmentedControl
-          options={colorDisplayOptions}
+        <SegmentedControl
+          items={colorDisplayOptions}
           value={colorDisplayMode}
           onChange={onColorDisplayModeChange}
-          ariaLabel={t(RunsI18nKey.RunCompareColorDisplay)}
+          aria-label={t(RunsI18nKey.RunCompareColorDisplay)}
         />
       </div>
     </div>

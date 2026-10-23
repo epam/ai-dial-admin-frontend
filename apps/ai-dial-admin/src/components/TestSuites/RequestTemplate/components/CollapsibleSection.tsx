@@ -1,7 +1,7 @@
 'use client';
 import { FC, PropsWithChildren, ReactNode, useCallback, useId, useState } from 'react';
 
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -49,7 +49,7 @@ const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
         </button>
         {headerIcon}
         {fullViewContent && (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconMaximize size={16} aria-hidden />}
             onClick={() => setIsFullscreen(true)}

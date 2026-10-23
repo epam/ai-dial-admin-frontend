@@ -29,7 +29,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<any>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialConfirmationPopup: ({ open, header, onConfirm, onClose, confirmLabel, disableConfirmButton, children }: any) =>
+    ConfirmationPopup: ({ open, header, onConfirm, onClose, confirmLabel, disableConfirmButton, children }: any) =>
       open ? (
         <div role="dialog" aria-label={header}>
           {children}

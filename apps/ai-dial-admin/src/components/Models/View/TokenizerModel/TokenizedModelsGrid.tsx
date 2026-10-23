@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useRef, useState } from 'react';
 
 import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
@@ -69,7 +69,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   };
 
   return isLoading ? (
-    <DialLoader size={40} />
+    <Spinner size={40} fullWidth />
   ) : (
     <GridView columnDefs={BASE_COLUMNS} rowData={data} additionalGridOptions={options} onGridReady={onGridReady} />
   );

@@ -18,6 +18,6 @@ describe('EntityIcon', () => {
 
   test('renders Field and None if no iconUrl and disabled', () => {
     render(<IconControl disabled />);
-    expect(screen.getByText(BasicI18nKey.None)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(BasicI18nKey.None)).toBeInTheDocument();
   });
 });

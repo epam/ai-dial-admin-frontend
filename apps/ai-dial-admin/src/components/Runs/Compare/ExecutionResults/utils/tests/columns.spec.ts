@@ -192,6 +192,15 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     });
   });
 
+  test('extracted field groups truncate with a tooltip so a long key stays readable', () => {
+    const cols = getCompareColumnsCompare([makeRow({ extractedColumns: { answer: 'yes' } })]);
+    const extractedGroup = cols.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColGroupDef;
+    const [answerGroup] = extractedGroup.children as ColGroupDef[];
+
+    expect(answerGroup.headerName).toBe('answer');
+    expect(answerGroup.headerGroupComponent).toBe(EllipsisHeaderGroup);
+  });
+
   test('extracted columns highlight when values differ between runs', () => {
     type ExtractedCol = {
       colId?: string;
@@ -306,6 +315,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const cols = getCompareColumnsCompare(rows, undefined, DEFAULT_COMPARE_DELTA_HEADER);
     const metricGroup = cols[3] as {
       headerName: string;
+      headerGroupComponent?: unknown;
       children: {
         headerName: string;
         headerGroupComponent?: unknown;
@@ -326,6 +336,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     };
 
     expect(metricGroup.headerName).toBe('Overall Accuracy');
+    expect(metricGroup.headerGroupComponent).toBe(EllipsisHeaderGroup);
     expect(metricGroup.children.map((metric) => metric.headerName)).toEqual(['Precision', 'Recall']);
 
     const [primary, secondary, delta] = metricGroup.children[0].children;

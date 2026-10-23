@@ -1,5 +1,5 @@
 'use client';
-import { DialNoDataContent, DialNoDataContentProps } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, DialNoDataContentProps } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -44,6 +44,8 @@ const GridView = <T extends object>({
   additionalGridOptions,
   showColumnsPanel,
   storageKey,
+  columnWidths,
+  onColumnWidthsChange,
   toggleColumnsPanel,
   onGridReady,
   getIsEmptyData,
@@ -244,7 +246,7 @@ const GridView = <T extends object>({
   return (
     <div className="size-full relative">
       {isEmptyData && emptyDataProps ? (
-        <DialNoDataContent {...emptyDataProps} />
+        <NoDataContent {...emptyDataProps} />
       ) : (
         <>
           <AgGridWrapper
@@ -252,6 +254,8 @@ const GridView = <T extends object>({
             rowData={rowData}
             additionalGridOptions={additionalGridOptions}
             storageKey={storageKey}
+            columnWidths={columnWidths}
+            onColumnWidthsChange={onColumnWidthsChange}
             onGridReady={handleGridReady}
             isLiveData={isLiveData}
             getRowId={getRowId}

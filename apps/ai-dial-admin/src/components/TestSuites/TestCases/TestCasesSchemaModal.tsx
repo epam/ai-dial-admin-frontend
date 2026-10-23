@@ -1,4 +1,4 @@
-import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -27,7 +27,7 @@ const TestCasesSchemaModal: FC<Props> = ({ isModalOpen, initialSchema, onClose, 
   }, []);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       onClose={onClose}
       header={t(TestSuitesI18nKey.TestCaseSchema)}
       portalId="SchemaManagerModal"
@@ -47,7 +47,7 @@ const TestCasesSchemaModal: FC<Props> = ({ isModalOpen, initialSchema, onClose, 
           isSkipRefresh={isSkipRefresh}
         />
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

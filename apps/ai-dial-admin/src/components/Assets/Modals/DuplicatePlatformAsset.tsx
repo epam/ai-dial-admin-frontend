@@ -1,4 +1,6 @@
-import { DialFormPopup, DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import { Popup, PasswordInput } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/actions';
@@ -184,16 +186,18 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
   }, [bearerKeys, clonedAsset, isRunner, isSchemaResource, onDuplicate, t, view]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={getCloneTitle(view, t)}
       portalId="DuplicatePlatformAsset"
       open={isModalOpen}
-      onSubmit={onDuplicateClick}
-      onCancel={onClose}
-      disableSubmitButton={!isValid || hasMissingBearerKey}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: !isValid || hasMissingBearerKey,
+        onCancel: onClose,
+        onSubmit: onDuplicateClick,
+      })}
     >
       <div className="flex flex-col px-6 py-4 gap-y-8">
         {isSchemaResource && (
@@ -217,7 +221,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
         />
         {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}
         {bearerUpstreamIndexes.map((index) => (
-          <DialPasswordInput
+          <PasswordInput
             key={index}
             id={`bearer-key-${index}`}
             value={bearerKeys[index]}
@@ -227,7 +231,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
           />
         ))}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

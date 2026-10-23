@@ -7,7 +7,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import ExpandableText from './ExpandableText';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLinkButton: ({ label, onClick }: any) => (
+  LinkButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>

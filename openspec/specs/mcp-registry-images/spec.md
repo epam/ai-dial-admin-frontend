@@ -20,7 +20,7 @@ The entire image MCP Registry flow SHALL be gated behind the existing `MCP_REGIS
 
 ### Requirement: Images page entry point as dropdown
 
-The Images page "Add" button SHALL become a `DialButtonDropdown` when the feature flag is enabled. Dropdown items are always both present — the dropdown itself is conditionally rendered based on the flag.
+The Images page "Add" button SHALL become a `ButtonDropdown` when the feature flag is enabled. Dropdown items are always both present — the dropdown itself is conditionally rendered based on the flag.
 
 #### Scenario: Add Image option
 - **WHEN** user clicks "Add Image" from the dropdown

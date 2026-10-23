@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react';
 
-import { DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconButton, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { getAuditResourceHref } from '@/src/components/ActivityAudit/View/Header/utils';
@@ -47,9 +47,9 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
           activity.resourceType !== ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST && (
             <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
               <div className="flex flex-row gap-1 items-center">
-                <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>
+                <Tooltip tooltip={activity.resourceId}>{activity.resourceId}</Tooltip>
                 {activity.activityType !== ActivityAuditType.Delete && resourceHref && (
-                  <DialIconButton
+                  <IconButton
                     onClick={() => openResourceInNewTab(resourceHref)}
                     className="text-secondary size-auto"
                     aria-label={t(ActivityAuditI18nKey.OpenResourceInNewTab)}

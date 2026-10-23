@@ -35,6 +35,8 @@ describe('Notification', () => {
 
   test('does not render description if not provided', () => {
     render(<Notification id="id" type={NotificationType.prepare} title="Prepare" onClose={vi.fn()} />);
-    expect(screen.queryByText('tiny text-secondary break-words whitespace-pre-wrap mt-2')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('dial-tiny-text text-secondary break-words whitespace-pre-wrap mt-2'),
+    ).not.toBeInTheDocument();
   });
 });

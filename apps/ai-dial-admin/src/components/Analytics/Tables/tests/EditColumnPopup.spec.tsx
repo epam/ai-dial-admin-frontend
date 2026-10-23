@@ -28,8 +28,8 @@ const renderPopup = (props?: Partial<Parameters<typeof EditColumnPopup>[0]>) => 
   return { onSubmit, onClose };
 };
 
-const nullableSwitch = () => screen.getAllByRole('checkbox')[0];
-const sensitiveSwitch = () => screen.getAllByRole('checkbox')[1];
+const nullableSwitch = () => screen.getAllByRole('switch')[0];
+const sensitiveSwitch = () => screen.getAllByRole('switch')[1];
 
 const setInput = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -238,7 +238,7 @@ describe('EditColumnPopup', () => {
       for (const value of ['pending', 'running', 'failed']) {
         expect(screen.getAllByText(value).length).toBeGreaterThan(0);
       }
-      expect(screen.queryByRole('button', { name: 'open-popup' })).toBeNull();
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).toBeNull();
     });
 
     // Presenting the restriction is the point — without it the closed domain is invisible, and an operator

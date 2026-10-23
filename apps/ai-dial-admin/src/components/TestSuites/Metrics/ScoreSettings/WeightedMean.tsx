@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
@@ -70,9 +70,9 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
 
   return (
     <div className="mt-4 rounded bg-layer-2 p-4 max-h-80 overflow-y-auto">
-      <span className="tiny-semi text-secondary">{t(TestSuitesI18nKey.OverallScoreWeightedMean)}</span>
+      <span className="dial-tiny-semi-text text-secondary">{t(TestSuitesI18nKey.OverallScoreWeightedMean)}</span>
 
-      {isEmpty && <p className="mt-2 tiny text-error">{t(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)}</p>}
+      {isEmpty && <p className="mt-2 dial-tiny-text text-error">{t(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)}</p>}
 
       {weights.map((weight, index) => (
         <WeightRow
@@ -88,7 +88,7 @@ const WeightedMean: FC<Props> = ({ weights, metrics, onChange }) => {
 
       {canAddRow && (
         <div className="mt-3">
-          <DialGhostButton
+          <GhostButton
             label={t(ButtonsI18nKey.Add)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAdd}

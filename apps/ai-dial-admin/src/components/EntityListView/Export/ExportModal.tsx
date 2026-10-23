@@ -3,14 +3,15 @@
 import { FC, useState } from 'react';
 
 import {
-  DialNeutralButton,
-  DialPopup,
-  DialPrimaryButton,
-  DialRadioGroup,
+  OutlinedButton,
+  Popup,
+  PrimaryButton,
+  RadioGroup,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -36,7 +37,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   const [exportType, setExportType] = useState(exportTypeRadio[0].id);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={getModalTitle(route, t)}
       portalId="ExportModal"
@@ -44,20 +45,20 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
       size={PopupSize.Sm}
     >
       <div className="flex p-6 h-full flex-col">
-        <DialRadioGroup
-          radioButtons={exportTypeRadio}
-          activeRadioButton={exportType}
-          elementId="type"
-          fieldTitle={t(ExportI18nKey.ExportFormat)}
+        <RadioGroup
+          items={toRadioItems(exportTypeRadio)}
+          value={exportType}
+          id="type"
+          labelProps={{ label: t(ExportI18nKey.ExportFormat) }}
           orientation={RadioGroupOrientation.Column}
           onChange={setExportType}
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton label={t(ButtonsI18nKey.Export)} onClick={() => onApply?.(exportType as ImportFileType)} />
+        <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <PrimaryButton label={t(ButtonsI18nKey.Export)} onClick={() => onApply?.(exportType as ImportFileType)} />
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

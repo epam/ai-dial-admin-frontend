@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialSwitch, DialTag, Tooltip } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Switch, Badge, BadgeColor, BadgeVariant, Tooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -82,6 +82,7 @@ interface Props {
   dataset: Dataset | null;
   suiteEtag?: string;
   onChangeDataset?: (dataset: Dataset, etag?: string) => void;
+  isActive?: boolean;
 }
 
 const STRUCTURAL_FIELDS = ['testCaseName', 'enabled', '_turnIndex'];
@@ -96,6 +97,7 @@ const TestCasesList: FC<Props> = ({
   suiteEtag,
   dataset,
   onChangeDataset,
+  isActive = true,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -547,6 +549,12 @@ const TestCasesList: FC<Props> = ({
   }, [onOpenDeleteModal]);
 
   useEffect(() => {
+    if (!isActive) {
+      sidebar.closeSidebar();
+    }
+  }, [isActive]);
+
+  useEffect(() => {
     return () => sidebar.closeSidebar();
   }, []);
 
@@ -659,10 +667,7 @@ const TestCasesList: FC<Props> = ({
 
   const datasetTag = isPrivate && (
     <Tooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
-      <DialTag
-        label={t(DatasetsI18nKey.VisibilityPrivate)}
-        className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
-      />
+      <Badge label={t(DatasetsI18nKey.VisibilityPrivate)} variant={BadgeVariant.Filled} color={BadgeColor.Violet} />
     </Tooltip>
   );
 
@@ -674,10 +679,10 @@ const TestCasesList: FC<Props> = ({
         additionalGridOptions={gridOptions}
         listLabel={t(TabsI18nKey.TestCases)}
         listLabelAddon={
-          <DialSwitch
-            switchId="view-only-included-in-run"
+          <Switch
+            id="view-only-included-in-run"
             isOn={showIncludedOnly}
-            label={t(TestSuitesI18nKey.ViewOnlyIncludedInRun, { count: includedCount })}
+            labelProps={{ label: t(TestSuitesI18nKey.ViewOnlyIncludedInRun, { count: includedCount }) }}
             onChange={setShowIncludedOnly}
           />
         }
@@ -736,7 +741,7 @@ const TestCasesList: FC<Props> = ({
         )}
       {isBatchDeleteModalOpen &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isBatchDeleteModalOpen}
             header={t(DeleteI18nKey.Title, { entity: t(TabsI18nKey.TestCases) })}
             onConfirm={onBatchDelete}

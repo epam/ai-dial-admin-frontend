@@ -1,13 +1,7 @@
 'use client';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  DialCloseButton,
-  DialGhostButton,
-  DialLoader,
-  DialNeutralButton,
-  DialPrimaryButton,
-} from '@epam/ai-dial-ui-kit';
+import { CloseButton, GhostButton, Spinner, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -68,7 +62,7 @@ const TryOutResponseBody: FC<{
       growOnOpen={growOnOpen}
     >
       {isRequestSend ? (
-        <DialLoader />
+        <Spinner size={18} fullWidth />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
           <JsonEditor entity={response?.body as object} options={{ wordWrap: 'off' }} readonly={true} />
@@ -178,14 +172,14 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
               <h1>{t(ButtonsI18nKey.TryOut)}</h1>
               {response ? (
                 <div className="flex flex-row items-center gap-4">
-                  <DialGhostButton
+                  <GhostButton
                     disabled={isRequestSend}
                     label={t(ButtonsI18nKey.Restart)}
                     iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onSendRequest}
                   />
                   {!testCaseId && (
-                    <DialNeutralButton
+                    <OutlinedButton
                       iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                       label={t(ButtonsI18nKey.Change)}
                       onClick={() => {
@@ -198,7 +192,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
               ) : null}
             </div>
 
-            <DialCloseButton onClose={onClose} />
+            <CloseButton onClose={onClose} />
           </div>
           <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
         </div>
@@ -251,8 +245,8 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
             </div>
             {!response ? (
               <div className="flex justify-end gap-x-4 pt-4 border-t border-secondary">
-                <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-                <DialPrimaryButton
+                <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+                <PrimaryButton
                   label={t(ButtonsI18nKey.SendRequest)}
                   onClick={() => onSendRequest()}
                   disabled={isRequestSend}

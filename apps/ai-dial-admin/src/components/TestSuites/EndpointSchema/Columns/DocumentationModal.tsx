@@ -1,13 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import {
-  ButtonAppearance,
-  DialNeutralButton,
-  DialPopup,
-  DialPrimaryButton,
-  ElementSize,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, OutlinedButton, Popup, PrimaryButton, ElementSize, PopupSize } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
@@ -81,19 +74,20 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
   }, [schema]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(JsonAtaI18nKey.JSONAtaDoc)}
       portalId="JSONAtaDocumentationModal"
       open={isModalOpen}
       size={PopupSize.Md}
       className="h-[800px]"
-      dividers={true}
+      headerDivider
+      footerDivider
     >
       <div className="h-full px-6 py-4 flex flex-col">
         <div className="flex flex-row items-center justify-between">
-          <span className="body text-secondary">{t(JsonAtaI18nKey.JsonAtaDescription)}</span>
-          <DialNeutralButton
+          <span className="dial-body-text text-secondary">{t(JsonAtaI18nKey.JsonAtaDescription)}</span>
+          <OutlinedButton
             size={ElementSize.Small}
             label={t(JsonAtaI18nKey.OpenFullDoc)}
             iconBefore={<IconExternalLink size={14} />}
@@ -118,7 +112,7 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
           <div className="text-sm">{t(JsonAtaI18nKey.MoreResources)}</div>
           <div className="flex flex-row items-center gap-3 justify-center">
             {RESOURCE_LINKS.map(({ labelKey, url }) => (
-              <DialPrimaryButton
+              <PrimaryButton
                 key={url}
                 iconBefore={<IconExternalLink size={14} />}
                 size={ElementSize.Small}
@@ -130,7 +124,7 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
           </div>
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { DialRemoveButton, DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight, IconGripVertical } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -17,6 +17,7 @@ import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
 import Value from '@/src/components/Deployments/Fields/ContainerVariables/Value';
 import { useColumnDragDrop } from '@/src/components/Deployments/Fields/ContainerVariables/use-column-drag-drop';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   index: number;
@@ -138,7 +139,7 @@ const Variable: FC<Props> = ({
       <div className="flex min-w-0 flex-1 flex-col rounded border border-primary p-3 lg:contents">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer lg:hidden" onClick={toggleCollapse}>
-            <h3 className="small flex items-center">
+            <h3 className="dial-small-text flex items-center">
               <i className="text-icon-primary mr-2">
                 {isCollapsed ? (
                   <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
@@ -149,7 +150,7 @@ const Variable: FC<Props> = ({
               {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
             </h3>
             {isCollapsed && (
-              <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">{variable.name}</p>
+              <p className="max-w-[220px] md:max-w-1/2 truncate dial-tiny-text text-secondary mt-3">{variable.name}</p>
             )}
           </div>
         )}
@@ -218,12 +219,12 @@ const Variable: FC<Props> = ({
                 />
               </div>
               <div className="hidden lg:flex">
-                <DialRemoveButton onClick={onRemove} disabled={disabled} />
+                <RemoveButton onClick={onRemove} disabled={disabled} />
               </div>
             </div>
           </div>
           <div className="lg:hidden">
-            <DialRemoveButton onClick={onRemove} disabled={disabled} />
+            <RemoveButton onClick={onRemove} disabled={disabled} />
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialInput, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import InterfaceDefaultsButton from '@/src/components/BaseControls/InterfacesField/InterfaceDefaultsButton';
 import InterfaceFeaturesButton from '@/src/components/BaseControls/InterfacesField/InterfaceFeaturesButton';
@@ -22,6 +22,7 @@ import { FieldError } from '@/src/models/error';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrlError } from '@/src/utils/validation/url-error';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props<V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue> {
   fieldId: string;
@@ -198,7 +199,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             />
           )}
         </div>
-        {!disabled && <DialRemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />}
+        {!disabled && <RemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />}
       </div>
 
       {isAsset && (

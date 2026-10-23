@@ -119,6 +119,6 @@ describe('sessions list row navigation', () => {
 
   test('rows are served by the datasource, and the view owns the empty state', () => {
     expect(options.datasource).toBeDefined();
-    expect(options.suppressNoRowsOverlay).toBe(true);
+    expect(options.suppressOverlays).toEqual(['noRows', 'noMatchingRows']);
   });
 });

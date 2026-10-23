@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
-import { DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { Container, HuggingFaceModel } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
@@ -107,7 +107,7 @@ const HfModelNameField: FC<Props> = ({ container, setContainer, isModal, route, 
           containerClassName={containerClassName}
           disabled={isDisabled}
         />
-        <DialNeutralButton
+        <OutlinedButton
           onClick={handleModalOpen}
           label={t(ButtonsI18nKey.HFRegistry)}
           iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}

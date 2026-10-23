@@ -79,7 +79,7 @@ describe('SessionsToolbar', () => {
 });
 
 describe('SessionsToolbar :: feedback filter', () => {
-  const segment = (name: string) => screen.getByRole('tab', { name });
+  const segment = (name: string) => screen.getByRole('radio', { name });
 
   test('offers all four feedback states', () => {
     renderToolbar();
@@ -106,14 +106,14 @@ describe('SessionsToolbar :: feedback filter', () => {
   test('shows the current feedback state rather than owning it', () => {
     renderToolbar({ feedback: FeedbackFilter.Negative });
 
-    expect(segment(SessionsTraceI18nKey.FeedbackNegative)).toHaveAttribute('aria-selected', 'true');
-    expect(segment(SessionsTraceI18nKey.FeedbackAll)).toHaveAttribute('aria-selected', 'false');
+    expect(segment(SessionsTraceI18nKey.FeedbackNegative)).toHaveAttribute('aria-checked', 'true');
+    expect(segment(SessionsTraceI18nKey.FeedbackAll)).toHaveAttribute('aria-checked', 'false');
   });
 
   test('defaults to All, which narrows nothing', () => {
     renderToolbar();
 
-    expect(segment(SessionsTraceI18nKey.FeedbackAll)).toHaveAttribute('aria-selected', 'true');
+    expect(segment(SessionsTraceI18nKey.FeedbackAll)).toHaveAttribute('aria-checked', 'true');
   });
 
   // The placeholder must name only what search reaches: the session id and the project.

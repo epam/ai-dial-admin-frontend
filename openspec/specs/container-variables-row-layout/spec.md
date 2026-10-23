@@ -62,7 +62,7 @@ The file-upload button SHALL be rendered as a real flex sibling of the Value inp
 
 #### Scenario: File-upload button visible next to the Value input
 - **WHEN** any variable row is rendered at a viewport width ≥ 1024 px
-- **THEN** the file-upload `DialNeutralButton` SHALL be rendered immediately to the right of the Value input within the same grid cell, with a small (~8 px) gap between them
+- **THEN** the file-upload `OutlinedButton` SHALL be rendered immediately to the right of the Value input within the same grid cell, with a small (~8 px) gap between them
 
 #### Scenario: File-upload triggers file selection and updates the variable value
 - **WHEN** the user clicks the file-upload button in a variable row and selects a file
@@ -139,17 +139,17 @@ The `FileButton` SHALL be rendered as a direct flex sibling of the input/pill *i
 #### Scenario: File-upload button stays aligned with the file pill when an error caption is shown
 
 - **WHEN** a variable row holds a file-typed value whose `fileName` fails validation and the field component renders the inline error caption below the file pill, at any viewport width
-- **THEN** the file-upload `DialNeutralButton`'s `getBoundingClientRect().top` SHALL equal the file pill's `getBoundingClientRect().top` (within 1 px tolerance)
+- **THEN** the file-upload `OutlinedButton`'s `getBoundingClientRect().top` SHALL equal the file pill's `getBoundingClientRect().top` (within 1 px tolerance)
 
 #### Scenario: File-upload button stays aligned with the text input regardless of mount type
 
 - **WHEN** a variable row holds a simple text value (secure or non-secure) at any viewport width
-- **THEN** the file-upload `DialNeutralButton`'s `getBoundingClientRect().top` SHALL equal the value input's `getBoundingClientRect().top` (within 1 px tolerance)
+- **THEN** the file-upload `OutlinedButton`'s `getBoundingClientRect().top` SHALL equal the value input's `getBoundingClientRect().top` (within 1 px tolerance)
 
 #### Scenario: Field component continues to own its error caption
 
 - **WHEN** any inline validation error is shown for the Value (file pill)
-- **THEN** the error caption SHALL be rendered by the field component itself (`ValueFile`'s `DialErrorText`); the `Value` component and the `Variable` row SHALL NOT render an external `DialErrorText` for the field
+- **THEN** the error caption SHALL be rendered by the field component itself (`ValueFile`'s `ErrorText`); the `Value` component and the `Variable` row SHALL NOT render an external `ErrorText` for the field
 
 ### Requirement: Drag-grip stays aligned to the Name input top at lg+ when an error caption is shown
 

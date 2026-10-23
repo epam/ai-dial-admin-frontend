@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton, DialSearch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Search } from '@epam/ai-dial-ui-kit';
 import { IconAlertTriangle, IconColumns2 } from '@tabler/icons-react';
 import { FC } from 'react';
 
@@ -44,10 +44,10 @@ const SessionsToolbar: FC<Props> = ({
   return (
     <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-3">
       <div className="min-w-[280px] max-w-[420px] flex-1">
-        <DialSearch
+        <Search
           id="sessions-search"
           value={search}
-          onChange={onSearchChange}
+          onChange={(value) => onSearchChange(value ?? '')}
           placeholder={t(SessionsTraceI18nKey.SearchPlaceholder)}
         />
       </div>
@@ -59,7 +59,7 @@ const SessionsToolbar: FC<Props> = ({
       />
       <div className="ml-auto flex flex-wrap items-center gap-4">
         <FeedbackFilterControl feedback={feedback} onFeedbackChange={onFeedbackChange} />
-        <DialGhostButton
+        <GhostButton
           label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}

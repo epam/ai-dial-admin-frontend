@@ -2,11 +2,12 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   NotificationVariant,
-  DialNotification,
-  DialLoader,
-  DialNoDataContent,
-  DialPrimaryButton,
-  DialSwitch,
+  Notification,
+  NotificationType,
+  Spinner,
+  NoDataContent,
+  PrimaryButton,
+  Switch,
 } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
@@ -277,7 +278,7 @@ const Tools: FC<Props> = ({
   }, []);
 
   if (loading) {
-    return <DialLoader size={40} />;
+    return <Spinner size={40} fullWidth />;
   }
 
   return (
@@ -289,9 +290,9 @@ const Tools: FC<Props> = ({
         </h1>
 
         {showManagementButtons && (
-          <DialSwitch
-            switchId="useAllTools"
-            label={t(ToolsetI18nKey.UseAllTools)}
+          <Switch
+            id="useAllTools"
+            labelProps={{ label: t(ToolsetI18nKey.UseAllTools) }}
             isOn={useAllTools}
             onChange={onUseAllToolsSwitch}
           />
@@ -314,7 +315,7 @@ const Tools: FC<Props> = ({
             </div>
           )}
           {!useAllTools && showManagementButtons && (
-            <DialPrimaryButton
+            <PrimaryButton
               label={t(ButtonsI18nKey.ManageTool)}
               iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={onOpenModal}
@@ -327,7 +328,7 @@ const Tools: FC<Props> = ({
         <div className="flex flex-col gap-6 overflow-y-auto h-full">
           {!displayTools?.length ? (
             <div className="flex items-center justify-center h-full">
-              <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+              <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
             </div>
           ) : (
             <div className="flex flex-col gap-6">
@@ -354,9 +355,13 @@ const Tools: FC<Props> = ({
       </div>
 
       {isNotSavedToolset && !disabled && (
-        <DialNotification variant={NotificationVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Info}
+          message={t(ToolsetI18nKey.ToolsWarning)}
+        />
       )}
-      {!useAllTools && !disabled && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+      {!useAllTools && !disabled && <span className="dial-tiny-text text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
       {isModalOpen && (
         <ManageToolsModal
           isModalOpen={isModalOpen}

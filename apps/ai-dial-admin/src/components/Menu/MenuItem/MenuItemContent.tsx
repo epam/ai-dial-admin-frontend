@@ -1,4 +1,4 @@
-import { DialEllipsisTooltip, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import Link from 'next/link';
 import { FC, useEffect, useRef } from 'react';
@@ -39,10 +39,10 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   );
 
   return (
-    <DialTooltip
+    <Tooltip
       triggerClassName={classNames('w-full', !isSidebarOpen && 'flex justify-center')}
       tooltip={t(menuItem.key)}
-      placement="right"
+      placement={TooltipPlacement.Right}
       hideTooltip={isSidebarOpen}
     >
       <Link
@@ -54,10 +54,10 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
         href={menuItem.href}
       >
         {ItemIcon && <ItemIcon className="shrink-0" size={MENU_ITEM_ICON_SIZE} stroke={1.5} aria-hidden />}
-        {isSidebarOpen && <DialEllipsisTooltip className="flex-1 min-w-0" text={t(menuItem.key)} />}
+        {isSidebarOpen && <EllipsisTooltip className="flex-1 min-w-0" text={t(menuItem.key)} />}
         {menuItem.badge && isSidebarOpen ? <MenuBadgeTag badge={menuItem.badge} /> : null}
       </Link>
-    </DialTooltip>
+    </Tooltip>
   );
 };
 

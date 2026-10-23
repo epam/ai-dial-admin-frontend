@@ -1,8 +1,9 @@
-import { DialInput, DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialSelectField, Label, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
@@ -27,11 +28,11 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
-import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -147,8 +148,8 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
         ) : (
           <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-              <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
-              <DialInputPopup
+              <Label label={t(SourceI18nKey.Container)} required htmlFor="containers" />
+              <InputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedContainer?.displayName || currentContainer?.displayName}
@@ -169,10 +170,10 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
                   containers={containers}
                   isModalOpen={isModalOpen}
                 />
-              </DialInputPopup>
+              </InputPopup>
             </div>
             {entity.source?.containerId && featureFlags.deploymentsEnabled && !disabled && (
-              <DialNeutralButton
+              <OutlinedButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={isMobile ? '' : t(ButtonsI18nKey.Open)}

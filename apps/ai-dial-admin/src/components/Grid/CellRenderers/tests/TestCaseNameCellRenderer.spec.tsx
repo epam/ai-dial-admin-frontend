@@ -13,8 +13,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
-    DialTag: ({ label }: { label: string }) => <span>{label}</span>,
+    EllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+    Badge: ({ label }: { label: string }) => <span>{label}</span>,
   };
 });
 

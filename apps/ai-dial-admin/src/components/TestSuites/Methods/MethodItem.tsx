@@ -5,7 +5,7 @@ import { FC, useCallback } from 'react';
 import classNames from 'classnames';
 
 import { TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   index: number;
@@ -30,10 +30,10 @@ const MethodItem: FC<Props> = ({ index, item, isActive, onClick, label }) => {
       )}
       onClick={onMethodClick}
     >
-      <span className="tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
+      <span className="dial-tiny-text bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
         {item.method}
       </span>{' '}
-      <DialEllipsisTooltip text={label ?? item.relativeUrlPattern} />
+      <EllipsisTooltip text={label ?? item.relativeUrlPattern} />
     </button>
   );
 };

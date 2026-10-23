@@ -1,10 +1,12 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialErrorText, DialTag } from '@epam/ai-dial-ui-kit';
+import { ErrorText, Tag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 
 export interface MultiValueOption {
   label: string;
@@ -32,6 +34,7 @@ const MultiValueAutocomplete: FC<Props> = ({
   onAdd,
   onRemove,
 }) => {
+  const t = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [wraps, setWraps] = useState(false);
@@ -128,7 +131,13 @@ const MultiValueAutocomplete: FC<Props> = ({
           className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
         >
           {selected.map((att, idx) => (
-            <DialTag key={att.value} label={att.label} closable onRemove={handleRemoveItem(idx)} />
+            <Tag
+              key={att.value}
+              label={att.label}
+              closable
+              removeLabel={`${t(ButtonsI18nKey.Remove)} ${att.label}`}
+              onRemove={handleRemoveItem(idx)}
+            />
           ))}
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
             <input
@@ -137,7 +146,7 @@ const MultiValueAutocomplete: FC<Props> = ({
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               disabled={isReadOnlyAdmin}
-              className="outline-none border-none w-full flex-1 p-1 dial-input h-auto"
+              className="outline-hidden border-none w-full flex-1 p-1 dial-input h-auto"
               placeholder={placeholder || ''}
             />
           </div>
@@ -152,8 +161,8 @@ const MultiValueAutocomplete: FC<Props> = ({
           onHightLightSuggestion={handleSetHighlight}
         />
       )}
-      {!isReadOnlyAdmin && <DialErrorText text={error} />}
-      {caption && <div className="text-secondary tiny pt-2">{caption}</div>}
+      {!isReadOnlyAdmin && <ErrorText text={error} />}
+      {caption && <div className="text-secondary dial-tiny-text pt-2">{caption}</div>}
     </div>
   );
 };

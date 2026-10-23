@@ -4,17 +4,12 @@ import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/
 import { useI18n } from '@/src/locales/client';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IpRange, IpRangeError, IpRangeProperty } from './types';
-import {
-  ButtonAppearance,
-  DialNumberInput,
-  DialPrimaryButton,
-  DialRemoveButton,
-  DialInput,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialNumberInput, PrimaryButton, DialInput } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { IconPlus } from '@tabler/icons-react';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getIpAddressError, getIPMaskError } from '@/src/utils/validation/ip-error';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   ranges: IpRange[];
@@ -91,7 +86,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
             disabled={disabled}
           />
           {!disabled && (
-            <DialRemoveButton
+            <RemoveButton
               className={classNames(index === 0 && 'mt-7')}
               onClick={() => {
                 onRemoveRange(index);
@@ -101,7 +96,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
         </div>
       ))}
       {!disabled && (
-        <DialPrimaryButton
+        <PrimaryButton
           className="w-fit mt-2"
           appearance={ButtonAppearance.Link}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}

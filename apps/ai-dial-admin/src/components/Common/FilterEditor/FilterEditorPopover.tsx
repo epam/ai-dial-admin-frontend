@@ -3,6 +3,7 @@
 import {
   autoUpdate,
   FloatingFocusManager,
+  Placement,
   shift,
   useClick,
   useDismiss,
@@ -10,7 +11,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import { cloneElement, FC, ReactElement, ReactNode, useCallback, useState } from 'react';
+import { cloneElement, FC, KeyboardEvent, ReactElement, ReactNode, useCallback, useState } from 'react';
 
 interface Props {
   isComplete: boolean;
@@ -18,14 +19,22 @@ interface Props {
   onCancel: () => void;
   children: ReactElement;
   editor: (onClose: () => void) => ReactNode;
+  placement?: Placement;
 }
 
-const FilterEditorPopover: FC<Props> = ({ isComplete, onCommit, onCancel, children, editor }) => {
+const FilterEditorPopover: FC<Props> = ({
+  isComplete,
+  onCommit,
+  onCancel,
+  children,
+  editor,
+  placement = 'bottom-start',
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
-    placement: 'bottom-start',
+    placement,
     middleware: [shift()],
     whileElementsMounted: autoUpdate,
   });
@@ -47,6 +56,15 @@ const FilterEditorPopover: FC<Props> = ({ isComplete, onCommit, onCancel, childr
     },
   });
 
+  const onEditorKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    if (isComplete) {
+      onCommit();
+    }
+    onClose();
+  };
+
   const { getFloatingProps, getReferenceProps } = useInteractions([click, dismiss, role]);
 
   return (
@@ -57,7 +75,11 @@ const FilterEditorPopover: FC<Props> = ({ isComplete, onCommit, onCancel, childr
       {isOpen ? (
         <div aria-expanded={isOpen}>
           <FloatingFocusManager context={context}>
-            <div ref={refs.setFloating} style={{ ...floatingStyles, zIndex: 50 }} {...getFloatingProps()}>
+            <div
+              ref={refs.setFloating}
+              style={{ ...floatingStyles, zIndex: 50 }}
+              {...getFloatingProps({ onKeyDown: onEditorKeyDown })}
+            >
               {editor(onClose)}
             </div>
           </FloatingFocusManager>

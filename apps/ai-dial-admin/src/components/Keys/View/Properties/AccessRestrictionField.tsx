@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialLabel, DialRadioButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Label, Radio, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { KeysI18nKey } from '@/src/constants/i18n';
@@ -142,44 +142,41 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | 
 
   return (
     <div className="flex flex-col w-full relative gap-1">
-      <DialLabel label={t(KeysI18nKey.RestrictionFieldLabel)} htmlFor={elementId} />
+      <Label label={t(KeysI18nKey.RestrictionFieldLabel)} htmlFor={elementId} />
 
       <div className="flex flex-col gap-4">
-        <DialRadioButton
-          inputId={`${elementId}-allow-all`}
+        <Radio
+          id={`${elementId}-allow-all`}
           name={`${elementId}-restriction-options`}
           value={RestrictionType.ALLOW_ALL}
-          checked={selectedRadio === RestrictionType.ALLOW_ALL}
+          isSelected={selectedRadio === RestrictionType.ALLOW_ALL}
           onChange={() => handleRadioChange(RestrictionType.ALLOW_ALL)}
-          label={t(KeysI18nKey.AllowAllRestriction)}
+          labelProps={{ label: t(KeysI18nKey.AllowAllRestriction) }}
           disabled={disabled}
         />
 
-        <DialRadioButton
-          inputId={`${elementId}-block-all`}
+        <Radio
+          id={`${elementId}-block-all`}
           name={`${elementId}-restriction-options`}
           value={RestrictionType.BLOCK_ALL}
-          checked={selectedRadio === RestrictionType.BLOCK_ALL}
+          isSelected={selectedRadio === RestrictionType.BLOCK_ALL}
           onChange={() => handleRadioChange(RestrictionType.BLOCK_ALL)}
-          label={t(KeysI18nKey.BlockAllRestriction)}
+          labelProps={{ label: t(KeysI18nKey.BlockAllRestriction) }}
           disabled={disabled}
         />
 
         <div className="flex items-center gap-1">
-          <DialRadioButton
-            inputId={`${elementId}-ranges`}
+          <Radio
+            id={`${elementId}-ranges`}
             name={`${elementId}-restriction-options`}
             value={RestrictionType.RANGES}
-            checked={selectedRadio === RestrictionType.RANGES}
+            isSelected={selectedRadio === RestrictionType.RANGES}
             onChange={() => handleRadioChange(RestrictionType.RANGES)}
-            label={t(KeysI18nKey.RangesRestriction)}
+            labelProps={{ label: t(KeysI18nKey.RangesRestriction) }}
             disabled={disabled}
           />
           {showMaskNotice && (
-            <DialTooltip
-              tooltip={<span>{t(KeysI18nKey.IpRangesMaskNotice)}</span>}
-              triggerClassName="flex items-center"
-            >
+            <Tooltip tooltip={<span>{t(KeysI18nKey.IpRangesMaskNotice)}</span>} triggerClassName="flex items-center">
               <button
                 type="button"
                 aria-label={t(KeysI18nKey.IpRangesMaskNotice)}
@@ -187,7 +184,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | 
               >
                 <IconInfoCircle size={INFO_ICON_SIZE} aria-hidden />
               </button>
-            </DialTooltip>
+            </Tooltip>
           )}
         </div>
       </div>

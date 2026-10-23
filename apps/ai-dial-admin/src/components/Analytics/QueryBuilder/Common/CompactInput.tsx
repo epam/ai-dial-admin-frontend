@@ -41,7 +41,7 @@ const CompactInput: FC<Props> = ({ value, onChange, ariaLabel, placeholder, clas
       aria-label={ariaLabel}
       inputMode={numeric ? 'numeric' : decimal ? 'decimal' : undefined}
       className={classNames(
-        'h-[26px] bg-transparent font-mono dial-tiny-text text-primary outline-none placeholder:text-secondary',
+        'h-[26px] bg-transparent font-mono dial-tiny-text text-primary outline-hidden placeholder:text-secondary',
         (numeric || decimal) && 'text-center',
         prefix ? 'min-w-0 flex-1 px-0' : 'rounded border border-primary bg-layer-2 px-2 focus:border-accent-primary',
         !prefix && className,

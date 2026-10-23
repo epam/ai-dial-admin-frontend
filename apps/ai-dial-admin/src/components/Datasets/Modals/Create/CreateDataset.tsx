@@ -1,6 +1,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
 import { getDatasetByName } from '@/src/app/[lang]/datasets/actions';
 import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
@@ -36,21 +38,24 @@ const CreateDataset: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   }, [dataset.name, t]);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(DatasetsI18nKey.CreateDataset)}
       portalId="CreateDatasetModal"
       open={isModalOpen}
       size={PopupSize.Md}
-      onSubmit={onSubmit}
-      submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isValid || nameExistsError !== undefined || !dataset.name}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Create),
+        isSubmitDisabled: !isValid || nameExistsError !== undefined || !dataset.name,
+        onCancel: onClose,
+        onSubmit: onSubmit,
+      })}
     >
       <div className="flex flex-col py-4 px-6 gap-y-6">
         <DatasetProperties dataset={dataset} onChange={setDataset} nameExistsError={nameExistsError} isModal />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

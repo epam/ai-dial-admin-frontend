@@ -1,6 +1,6 @@
 'use client';
 
-import { DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { SegmentedControl, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconThumbDown, IconThumbUp } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
@@ -17,7 +17,7 @@ interface Props {
 const FeedbackFilterControl: FC<Props> = ({ feedback, onFeedbackChange }) => {
   const t = useI18n();
 
-  const options = useMemo<SegmentedControlOption<FeedbackFilter>[]>(
+  const options = useMemo<SegmentedControlItem<FeedbackFilter>[]>(
     () => [
       { value: FeedbackFilter.All, label: t(SessionsTraceI18nKey.FeedbackAll) },
       {
@@ -38,11 +38,11 @@ const FeedbackFilterControl: FC<Props> = ({ feedback, onFeedbackChange }) => {
   return (
     <div className="flex items-center gap-2">
       <span className="dial-small-text text-secondary whitespace-nowrap">{t(SessionsTraceI18nKey.Feedback)}</span>
-      <DialSegmentedControl
-        options={options}
+      <SegmentedControl
+        items={options}
         value={feedback}
         onChange={onFeedbackChange}
-        ariaLabel={t(SessionsTraceI18nKey.Feedback)}
+        aria-label={t(SessionsTraceI18nKey.Feedback)}
       />
     </div>
   );

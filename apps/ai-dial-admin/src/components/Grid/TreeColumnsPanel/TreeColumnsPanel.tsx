@@ -1,13 +1,12 @@
 'use client';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { CloseButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconGripVertical } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -103,15 +102,15 @@ const TreeColumnsPanelDiffSwitches: FC<TreeColumnsPanelDiffSection> = ({
 }) => (
   <div className="flex flex-col gap-4 mb-4 pb-4">
     <h3 className="dial-tiny-text text-secondary">{differencesTitle}</h3>
-    <DialSwitch
-      switchId={`${switchIdPrefix}-view-differences-only`}
-      label={viewDifferencesOnlyLabel}
+    <Switch
+      id={`${switchIdPrefix}-view-differences-only`}
+      labelProps={{ label: viewDifferencesOnlyLabel }}
       isOn={viewDifferencesOnly}
       onChange={onViewDifferencesOnlyChange}
     />
-    <DialSwitch
-      switchId={`${switchIdPrefix}-hide-highlights`}
-      label={hideHighlightsLabel}
+    <Switch
+      id={`${switchIdPrefix}-hide-highlights`}
+      labelProps={{ label: hideHighlightsLabel }}
       isOn={hideHighlights}
       onChange={onHideHighlightsChange}
     />
@@ -174,7 +173,7 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
     <div className={panelClassName} onClick={(e) => e.stopPropagation()} role="toolbar" aria-label={panelTitle}>
       <div className="flex flex-row justify-between py-4 px-6 items-center h-[70px] border-b border-tertiary">
         <h3 className="flex-1 min-w-0 mr-3">{panelTitle}</h3>
-        {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
+        {toggleColumnsPanel && <CloseButton ariaLabel={t(ButtonsI18nKey.Close)} onClose={toggleColumnsPanel} />}
       </div>
       <div className="flex-1 flex flex-col p-6 overflow-y-auto">
         {topSlot}

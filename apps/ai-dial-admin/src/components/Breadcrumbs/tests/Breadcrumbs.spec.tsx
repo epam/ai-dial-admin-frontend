@@ -14,6 +14,7 @@ const { navigation, appsFolder } = vi.hoisted(() => ({
     setFilePath: vi.fn(),
     fetchedFoldersData: {} as Record<string, unknown[]>,
     fetchFiles: vi.fn(),
+    fetchFolderHierarchy: vi.fn(),
   },
 }));
 
@@ -106,23 +107,23 @@ describe('Components - Breadcrumbs', () => {
       expect(navigation.router.push).toHaveBeenCalledWith('/assets-applications');
     });
 
-    test('Should refresh the clicked folder the way the redirect after a delete does', async () => {
+    test('Should load and expand the whole folder chain of the clicked folder', async () => {
       const user = userEvent.setup();
       appsFolder.fetchedFoldersData = { 'public/team/': [] };
       render(<Breadcrumbs mobile={false} />);
 
       await user.click(screen.getByRole('link', { name: 'team' }));
 
-      expect(appsFolder.fetchFiles).toHaveBeenCalledWith('public/team/');
+      expect(appsFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/', true);
     });
 
-    test('Should refresh a folder the shared context does not hold yet, so the list has its content', async () => {
+    test('Should load the ancestors of a nested folder the shared context does not hold yet', async () => {
       const user = userEvent.setup();
       render(<Breadcrumbs mobile={false} />);
 
       await user.click(screen.getByRole('link', { name: 'sub' }));
 
-      expect(appsFolder.fetchFiles).toHaveBeenCalledWith('public/team/sub/');
+      expect(appsFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/sub/', true);
       expect(navigation.router.push).toHaveBeenCalledWith('/assets-applications');
     });
   });

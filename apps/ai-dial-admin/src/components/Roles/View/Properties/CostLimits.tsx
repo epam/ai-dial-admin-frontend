@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 
 import LimitsControl from '@/src/components/EntityMainProperties/Limits/Limits';
 import { UNLIMITED_VALUE } from '@/src/constants/role';
@@ -45,9 +45,9 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
 
   return (
     <div className="w-full">
-      <DialSwitch
-        switchId="costLimit"
-        label={t(RolesI18nKey.SetCostLimits)}
+      <Switch
+        id="costLimit"
+        labelProps={{ label: t(RolesI18nKey.SetCostLimits) }}
         isOn={costLimitExist}
         onChange={toggleCostLimit}
         disabled={isReadOnlyAdmin}

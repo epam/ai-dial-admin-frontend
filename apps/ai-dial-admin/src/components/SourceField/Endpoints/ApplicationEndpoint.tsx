@@ -1,5 +1,5 @@
 'use client';
-import { DialCheckbox, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialSelectField, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -79,11 +79,10 @@ const ApplicationEndpoint: FC<Props> = ({
   }, [versionKey, isContainerMode]);
 
   const toggleCheckbox = useCallback(
-    (value?: boolean, id?: string) => {
-      if (!id) return;
+    (id: ApplicationEndpointCheckbox, value: boolean) => {
       if (isContainerMode && id === ApplicationEndpointCheckbox.CHAT_ENDPOINT) return;
 
-      const newCheckboxStates = { ...checkboxStates, [id]: !!value };
+      const newCheckboxStates = { ...checkboxStates, [id]: value };
       setCheckboxStates(newCheckboxStates);
 
       if (isContainerMode) {
@@ -209,11 +208,11 @@ const ApplicationEndpoint: FC<Props> = ({
       {!isCodeApp && (
         <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
           <div className="flex flex-col w-full gap-4">
-            <DialCheckbox
-              checked={isContainerMode ? true : checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]}
-              label={t(SourceI18nKey.ChatEndpoint)}
+            <Checkbox
+              isSelected={isContainerMode ? true : checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]}
+              labelProps={{ label: t(SourceI18nKey.ChatEndpoint) }}
               id={ApplicationEndpointCheckbox.CHAT_ENDPOINT}
-              onChange={toggleCheckbox}
+              onChange={(value) => toggleCheckbox(ApplicationEndpointCheckbox.CHAT_ENDPOINT, value)}
               disabled={
                 isContainerMode
                   ? true
@@ -279,11 +278,11 @@ const ApplicationEndpoint: FC<Props> = ({
           </div>
 
           <div className="flex flex-col w-full gap-4">
-            <DialCheckbox
-              checked={checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]}
-              label={t(SourceI18nKey.McpEndpoint)}
+            <Checkbox
+              isSelected={checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]}
+              labelProps={{ label: t(SourceI18nKey.McpEndpoint) }}
               id={ApplicationEndpointCheckbox.MCP_ENDPOINT}
-              onChange={toggleCheckbox}
+              onChange={(value) => toggleCheckbox(ApplicationEndpointCheckbox.MCP_ENDPOINT, value)}
               disabled={
                 isContainerMode
                   ? disabled
@@ -333,10 +332,10 @@ const ApplicationEndpoint: FC<Props> = ({
                   disabled
                 />
 
-                <DialSwitch
-                  switchId="forwardPerRequestKey"
+                <Switch
+                  id="forwardPerRequestKey"
                   isOn={entity.mcp?.forwardPerRequestKey}
-                  label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+                  labelProps={{ label: t(EntityFieldsI18nKey.forwardPerRequestKey) }}
                   onChange={onChangeForwardPerRequestKey}
                   disabled={disabled}
                 />

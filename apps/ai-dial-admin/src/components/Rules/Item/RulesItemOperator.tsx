@@ -23,7 +23,7 @@ const RulesItemOperator: FC<Props> = ({ folderName, isEmpty, isReadonly }) => {
   return (
     <div>
       {isEmpty && isReadonly ? (
-        <span className="small">{message}</span>
+        <span className="dial-small-text">{message}</span>
       ) : (
         <span className="border border-accent-primary rounded bg-accent-primary-alpha inline-block px-2">
           {t(BasicI18nKey.Or)}

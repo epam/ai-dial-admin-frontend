@@ -1,4 +1,4 @@
-import { DialSearch } from '@epam/ai-dial-ui-kit';
+import { Search } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -9,10 +9,17 @@ interface Props {
   onChange: (value: string) => void;
 }
 
-const Search: FC<Props> = ({ initialPattern, onChange }) => {
+const SearchField: FC<Props> = ({ initialPattern, onChange }) => {
   const t = useI18n();
 
-  return <DialSearch id="search" placeholder={t(BasicI18nKey.Search)} value={initialPattern} onChange={onChange} />;
+  return (
+    <Search
+      id="search"
+      placeholder={t(BasicI18nKey.Search)}
+      value={initialPattern}
+      onChange={(value) => onChange(value ?? '')}
+    />
+  );
 };
 
-export default Search;
+export default SearchField;

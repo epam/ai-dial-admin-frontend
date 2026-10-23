@@ -2,17 +2,13 @@
 
 import { FC, useMemo, useState } from 'react';
 
-import {
-  DialFormPopup,
-  DialRadioGroup,
-  PopupSize,
-  RadioButtonWithContent,
-  RadioGroupOrientation,
-} from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize, RadioButtonWithContent, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DatasetDetachMode } from '@/src/types/evaluation';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 interface Props {
   isOpen: boolean;
@@ -41,27 +37,29 @@ const DetachDatasetModal: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
   );
 
   return (
-    <DialFormPopup
+    <Popup
       open={isOpen}
       header={t(TestSuitesI18nKey.DetachFromDataset)}
       portalId="DetachDatasetModal"
       size={PopupSize.Md}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Confirm)}
       onClose={onClose}
-      onCancel={onClose}
-      onSubmit={() => onConfirm(mode)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Confirm),
+        onCancel: onClose,
+        onSubmit: () => onConfirm(mode),
+      })}
     >
       <div className="px-6 py-4">
-        <DialRadioGroup
+        <RadioGroup
           orientation={RadioGroupOrientation.Column}
-          radioButtons={options}
-          activeRadioButton={mode}
-          elementId="detach-mode"
+          items={toRadioItems(options)}
+          value={mode}
+          id="detach-mode"
           onChange={(value) => setMode(value as DatasetDetachMode)}
         />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

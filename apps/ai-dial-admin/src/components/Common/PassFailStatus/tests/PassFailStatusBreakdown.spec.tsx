@@ -9,7 +9,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialTooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
+    Tooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
       <span>
         {children}
         <div role="tooltip">{tooltip}</div>

@@ -1,4 +1,6 @@
-import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useState } from 'react';
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 
@@ -54,23 +56,25 @@ const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, 
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(CreateI18nKey.SelectContainer)}
       portalId="SelectContainer"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[750px]"
-      onSubmit={() => onApply(selectedContainer)}
-      disableSubmitButton={!selectedContainer}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !selectedContainer,
+        onCancel: onClose,
+        onSubmit: () => onApply(selectedContainer),
+      })}
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView columnDefs={SOURCE_CONTAINERS_COLUMNS} additionalGridOptions={options} onGridReady={onGridReady} />
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { ConfirmationPopupVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, ConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -42,7 +42,7 @@ const RunCancelModal: FC<Props> = ({ run, onClose, onCancelRun, onSuccess }) => 
   }, [run.id, onClose, onCancelRun, onSuccess, showNotification, t]);
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       portalId="RunCancelModal"
       onClose={onClose}
       header={t(RunsI18nKey.CancelRunModalTitle)}
@@ -54,7 +54,7 @@ const RunCancelModal: FC<Props> = ({ run, onClose, onCancelRun, onSuccess }) => 
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-2">
         <span className="text-secondary dial-small">{t(RunsI18nKey.CancelRunModalDescription)}</span>
       </div>
-    </DialConfirmationPopup>
+    </ConfirmationPopup>
   );
 };
 

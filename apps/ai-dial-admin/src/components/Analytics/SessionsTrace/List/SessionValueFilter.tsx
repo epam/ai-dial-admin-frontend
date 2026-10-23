@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonAppearance, DialCheckbox, DialInput, DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { Checkbox, DialInput, Spinner, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconSearch } from '@tabler/icons-react';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 import classNames from 'classnames';
@@ -41,7 +41,7 @@ type Props = CustomFilterProps<SessionRow, SessionGridContext, SessionValueFilte
  *
  * The chrome deliberately copies `Grid/Filter/GridFilterDropdown` — the same `bg-layer-4` surface, the same
  * `w-[205px]`/`p-3`/`gap-2` box, the same outlined Reset — because that is the overlay every other filter in
- * this app opens. Rows are the 1.0 `DialCheckbox` with a plain string label and an 8px gap, exactly as
+ * this app opens. Rows are the 1.0 `Checkbox` with a plain string label and an 8px gap, exactly as
  * `Common/Lists/CheckboxList` renders them, so a list of values looks the same here as everywhere else.
  *
  * The checkbox's own typography is left alone. An earlier pass used the 2.0 `Checkbox` — a taller control
@@ -176,7 +176,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
       </span>
       {isLoading && (
         <div aria-hidden className="flex justify-center">
-          <DialLoader size={LOADER_SIZE} fullWidth={false} />
+          <Spinner size={LOADER_SIZE} fullWidth={false} />
         </div>
       )}
       {isAvailable && values.length > SEARCH_THRESHOLD && (
@@ -190,11 +190,11 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
       )}
       {isAvailable && (
         <>
-          <DialCheckbox
+          <Checkbox
             id={`value-filter-all-${fieldName}`}
-            checked={areAllVisibleSelected}
-            indeterminate={selectedVisibleCount > 0 && !areAllVisibleSelected}
-            label={t(SessionsTraceI18nKey.ValueFilterSelectAll)}
+            isSelected={areAllVisibleSelected}
+            isIndeterminate={selectedVisibleCount > 0 && !areAllVisibleSelected}
+            labelProps={{ label: t(SessionsTraceI18nKey.ValueFilterSelectAll) }}
             onChange={onToggleAllVisible}
           />
           <div
@@ -207,10 +207,10 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
                 {/* The value alone is the checkbox's accessible name — it is what a selection means, and a
                     name carrying the count would rename the same option every time the data moves. The
                     count sits outside the label, still readable, as its own trailing element. */}
-                <DialCheckbox
+                <Checkbox
                   id={`value-filter-${fieldName}-${fieldValue.value}`}
-                  checked={selected.includes(fieldValue.value)}
-                  label={fieldValue.value}
+                  isSelected={selected.includes(fieldValue.value)}
+                  labelProps={{ label: fieldValue.value }}
                   onChange={(isSelected) => onToggleValue(fieldValue.value, isSelected)}
                 />
                 {fieldValue.count != null && (
@@ -224,12 +224,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
         </>
       )}
       <div className="flex items-center justify-end">
-        <DialNeutralButton
-          appearance={ButtonAppearance.Outlined}
-          label={t(ButtonsI18nKey.Reset)}
-          disabled={!selected.length && !search}
-          onClick={onReset}
-        />
+        <OutlinedButton label={t(ButtonsI18nKey.Reset)} disabled={!selected.length && !search} onClick={onReset} />
       </div>
     </div>
   );

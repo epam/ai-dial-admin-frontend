@@ -1,6 +1,6 @@
 import { FC, Fragment, ReactNode } from 'react';
 
-import { ButtonAppearance, DialLabel, DialPrimaryButton, DialRemoveButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, Label, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -10,6 +10,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 import MetricPrimitiveConstantInput from './MetricPrimitiveConstantInput';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 export interface NestedMetricFieldRenderProps {
   field: SchemaFieldRow;
@@ -43,7 +44,7 @@ const ARRAY_ROW_CLASS = 'flex items-end gap-2';
 const ArrayItemRow: FC<{ children: ReactNode; onRemove: () => void }> = ({ children, onRemove }) => (
   <div className={ARRAY_ROW_CLASS}>
     <div className="flex-1">{children}</div>
-    <DialRemoveButton onClick={onRemove} />
+    <RemoveButton onClick={onRemove} />
   </div>
 );
 
@@ -56,12 +57,10 @@ const ArrayEditorFrame: FC<{
   const t = useI18n();
   return (
     <div className="flex flex-col gap-y-2">
-      {label && (
-        <DialLabel htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />
-      )}
+      {label && <Label htmlFor={field.id} required={field.required} label={field.name} caption={field.description} />}
       {children}
       <div>
-        <DialPrimaryButton
+        <PrimaryButton
           appearance={ButtonAppearance.Ghost}
           iconBefore={<IconPlus stroke={2} size={16} />}
           onClick={onAdd}

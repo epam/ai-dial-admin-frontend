@@ -1,6 +1,9 @@
 'use client';
 
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 
@@ -87,35 +90,49 @@ const DuplicatePlatformKeyModal: FC<Props> = ({ isOpen, names, entity, onClose }
 
   if (step === DuplicateStep.Name) {
     return (
-      <DialFormPopup
+      <Popup
         open={isOpen}
         header={getCloneTitle(ApplicationRoute.PlatformKeys, t)}
         portalId="DuplicatePlatformKey"
-        isLoading={isLoading}
         onClose={onClose}
-        onCancel={onClose}
-        onSubmit={onSubmit}
-        disableSubmitButton={!isValid}
-        cancelLabel={t(ButtonsI18nKey.Cancel)}
-        submitLabel={t(ButtonsI18nKey.Duplicate)}
+        mainButtons={
+          isLoading
+            ? []
+            : getFormPopupButtons({
+                cancelLabel: t(ButtonsI18nKey.Cancel),
+                submitLabel: t(ButtonsI18nKey.Duplicate),
+                isSubmitDisabled: !isValid,
+                onCancel: onClose,
+                onSubmit: onSubmit,
+              })
+        }
       >
-        <div className="flex flex-col px-6 py-4 gap-y-8">
-          <IdControl entity={{ name }} names={names} onChangeEntity={onChangeName} />
-        </div>
-      </DialFormPopup>
+        {isLoading ? (
+          <PopupLoader />
+        ) : (
+          <>
+            <div className="flex flex-col px-6 py-4 gap-y-8">
+              <IdControl entity={{ name }} names={names} onChangeEntity={onChangeName} />
+            </div>
+          </>
+        )}
+      </Popup>
     );
   }
 
   return (
-    <DialFormPopup
+    <Popup
       open={isOpen}
       header={t(KeysI18nKey.KeyValueRevealTitle)}
       portalId="DuplicatePlatformKeyReveal"
       onClose={onCloseAndNavigate}
-      onCancel={onCloseAndNavigate}
-      onSubmit={onCloseAndNavigate}
-      cancelLabel={t(ButtonsI18nKey.Close)}
-      submitClassName="hidden"
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Close),
+        submitLabel: t(ButtonsI18nKey.Create),
+        submitClassName: 'hidden',
+        onCancel: onCloseAndNavigate,
+        onSubmit: onCloseAndNavigate,
+      })}
     >
       <div className="flex flex-col gap-4 px-6 py-4">
         <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
@@ -124,7 +141,7 @@ const DuplicatePlatformKeyModal: FC<Props> = ({ isOpen, names, entity, onClose }
           <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={createdKeyValue} />
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

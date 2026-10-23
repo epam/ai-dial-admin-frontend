@@ -3,7 +3,7 @@
 import classNames from 'classnames';
 import { FC, useMemo, useState } from 'react';
 
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import ReactECharts from 'echarts-for-react';
 
 import { TREND_TAG_BG_COLORS } from '@/src/components/TestSuites/Trends/constants';
@@ -68,7 +68,7 @@ const MetricTrendCard: FC<Props> = ({ group, runOrder }) => {
               }}
             >
               <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: series.color }} />
-              <DialEllipsisTooltip text={series.name} className="min-w-0" />
+              <EllipsisTooltip text={series.name} className="min-w-0" />
             </button>
           );
         })}

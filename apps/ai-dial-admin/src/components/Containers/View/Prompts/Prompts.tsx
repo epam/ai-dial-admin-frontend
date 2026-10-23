@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
 import { Prompt } from '@/src/models/deployments/containers';
 import { getContainerPrompts } from '@/src/app/actions/deployments';
@@ -32,7 +32,7 @@ const Prompts: FC<Props> = ({ containerId }) => {
   }, [containerId]);
 
   if (!loading && !prompts?.length) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.NoPrompts)} />;
+    return <NoDataContent title={t(EntitiesI18nKey.NoPrompts)} />;
   }
 
   return (

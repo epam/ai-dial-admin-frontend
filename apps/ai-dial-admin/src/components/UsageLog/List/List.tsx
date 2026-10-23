@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useMemo } from 'react';
 
@@ -26,7 +26,7 @@ interface Props {
   onGridReady?: (event: GridReadyEvent) => void;
 }
 
-const NoRowsOverlay: FC<{ title: string }> = ({ title }) => <DialNoDataContent title={title} />;
+const NoRowsOverlay: FC<{ title: string }> = ({ title }) => <NoDataContent title={title} />;
 
 const List: FC<Props> = ({
   route,

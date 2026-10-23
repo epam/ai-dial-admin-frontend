@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -112,7 +112,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         onChangeActiveTab={setActiveTab}
         onRemove={deleteInterceptorTemplate}
       >
-        <DialNeutralButton
+        <OutlinedButton
           label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => setIsModalOpen(true)}

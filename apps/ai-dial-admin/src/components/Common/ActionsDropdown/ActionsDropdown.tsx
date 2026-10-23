@@ -23,7 +23,7 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
     label: (
       <div className="text-secondary flex-row flex size-full gap-2 items-center">
         {item.icon}
-        <span className="text-primary small">{t(item.label)}</span>
+        <span className="text-primary dial-small-text">{t(item.label)}</span>
       </div>
     ),
     onClick: () => item.onClick(data, rowIndex as number),

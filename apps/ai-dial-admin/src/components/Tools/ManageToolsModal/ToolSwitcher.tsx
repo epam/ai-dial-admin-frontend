@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 interface Props {
@@ -33,8 +33,8 @@ const ToolSwitcher: FC<Props> = ({ index, isCustomTool, toolName, isActive, isOn
       onClick={onToolClick}
     >
       <span className="truncate text-primary dial-small">{toolName}</span>
-      <DialSwitch
-        switchId={`${index}-${isCustomTool ? 'custom-tool' : 'tool'}-${toolName}`}
+      <Switch
+        id={`${index}-${isCustomTool ? 'custom-tool' : 'tool'}-${toolName}`}
         isOn={isOn}
         onChange={onToolSwitch}
       />

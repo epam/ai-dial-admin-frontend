@@ -22,7 +22,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialLoader: ({ size }: { size: number }) => <div aria-label={`loading-${size}`} />,
+    Spinner: ({ size }: { size: number }) => <div aria-label={`loading-${size}`} />,
   };
 });
 
@@ -122,6 +122,17 @@ describe('ExecutionResultsTab', () => {
           },
         ],
       });
+    });
+  });
+
+  test('renders a column at the width kept in the tab state', async () => {
+    const { container } = renderExecutionResultsTab({ initialState: { columnWidths: { testCaseName: 333 } } });
+
+    await screen.findByRole('region', { name: 'Data grid' });
+
+    await waitFor(() => {
+      const header = container.querySelector<HTMLElement>('.ag-header-cell[col-id="testCaseName"]');
+      expect(header?.style.width).toBe('333px');
     });
   });
 

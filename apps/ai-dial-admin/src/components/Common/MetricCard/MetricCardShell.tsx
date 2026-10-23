@@ -1,4 +1,4 @@
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
@@ -43,9 +43,9 @@ const MetricCardShell: FC<Props> = ({
     >
       <h3 className="text-primary mb-4">{t(title)}</h3>
       {loading ? (
-        <DialLoader size={24} />
+        <Spinner size={24} fullWidth />
       ) : isEmpty ? (
-        <DialNoDataContent title={emptyReason || t(BasicI18nKey.NoData)} />
+        <NoDataContent title={emptyReason || t(BasicI18nKey.NoData)} />
       ) : (
         <div className="flex flex-1 items-center justify-center min-h-0">{children}</div>
       )}

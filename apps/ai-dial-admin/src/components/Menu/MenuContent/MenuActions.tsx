@@ -1,4 +1,4 @@
-import { DialDropdown, DialIconButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, IconButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import { IconDotsVertical, IconDownload, IconUpload, IconWorldCog } from '@tabler/icons-react';
 
@@ -45,7 +45,7 @@ const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImpo
   return (
     <div>
       <DialDropdown items={dropdownItems} listClassName="w-[150px]">
-        <DialIconButton
+        <IconButton
           aria-label={t(ButtonsI18nKey.Actions)}
           icon={<IconDotsVertical {...MENU_ACTION_ICON_PROPS} />}
           className="cursor-pointer"

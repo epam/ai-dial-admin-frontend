@@ -6,20 +6,20 @@ Define inline warning-icon decoration for two source-related form fields whose c
 
 ### Requirement: Shared WarningIcon component lives under Common
 
-A shared `<WarningIcon />` component SHALL live at `components/Common/WarningIcon/WarningIcon.tsx`. The component SHALL accept a single optional prop `warningText?: string`. When `warningText` is a non-empty string, the component SHALL render a yellow warning icon (`IconAlertTriangleFilled` from `@tabler/icons-react`) with class `text-warning-icon`, wrapped in a `DialTooltip` (placement `bottom`) whose body is `warningText`. When `warningText` is falsy (undefined, null, or empty string), the component SHALL render the icon hidden (no visual presence) and the tooltip trigger SHALL be hidden.
+A shared `<WarningIcon />` component SHALL live at `components/Common/WarningIcon/WarningIcon.tsx`. The component SHALL accept a single optional prop `warningText?: string`. When `warningText` is a non-empty string, the component SHALL render a yellow warning icon (`IconAlertTriangleFilled` from `@tabler/icons-react`) with class `text-warning-icon`, wrapped in a `Tooltip` (placement `TooltipPlacement.Bottom`) whose body is `warningText`. When `warningText` is falsy (undefined, null, or empty string), the component SHALL render the icon hidden (no visual presence) and the tooltip trigger SHALL be hidden.
 
 #### Scenario: Icon renders when warningText is provided
 
 - **WHEN** `<WarningIcon warningText="Container is not running" />` renders
 - **THEN** an `IconAlertTriangleFilled` SHALL be visible with `className` containing `text-warning-icon`
-- **AND** a `DialTooltip` SHALL wrap the icon with placement `bottom`
+- **AND** a `Tooltip` SHALL wrap the icon with placement `bottom`
 - **AND** hovering the icon reveals the tooltip with the text "Container is not running"
 
 #### Scenario: Icon hides when warningText is undefined
 
 - **WHEN** `<WarningIcon warningText={undefined} />` renders
 - **THEN** the rendered `IconAlertTriangleFilled` SHALL include the class `hidden`
-- **AND** the `DialTooltip` trigger SHALL also be hidden
+- **AND** the `Tooltip` trigger SHALL also be hidden
 
 #### Scenario: Icon hides when warningText is an empty string
 
@@ -125,14 +125,14 @@ These keys SHALL be used exclusively for the inline field tooltips. The pre-exis
 The existing top-of-view banners SHALL NOT be modified by this change:
 
 - The `ContainerStatusBanner` (placed below tabs on Models / Applications / Toolsets / Interceptors detail views) keeps its current placement, copy, button, and trigger conditions.
-- The image-not-installed `DialNotification` in `components/Containers/View/TabsContent.tsx` keeps its current placement, two-variant copy (`ImageNotInstalledWarning` / `ImageBuildFailedWarning`), and `Install image` button.
+- The image-not-installed `Notification` in `components/Containers/View/TabsContent.tsx` keeps its current placement, two-variant copy (`ImageNotInstalledWarning` / `ImageBuildFailedWarning`), and `Install image` button.
 
 #### Scenario: ContainerStatusBanner is untouched
 
 - **WHEN** the ContainerStatusBanner component source is read after this change
-- **THEN** the trigger condition, the `DialNotification` props, the i18n keys, and the placement in the four entity Views SHALL be identical to their pre-change state
+- **THEN** the trigger condition, the `Notification` props, the i18n keys, and the placement in the four entity Views SHALL be identical to their pre-change state
 
 #### Scenario: Image not installed banner is untouched
 
 - **WHEN** `Containers/View/TabsContent.tsx` is read after this change
-- **THEN** the `DialNotification` block at the top of the Properties tab SHALL render with the same structure, copy, and `Install image` button as before
+- **THEN** the `Notification` block at the top of the Properties tab SHALL render with the same structure, copy, and `Install image` button as before

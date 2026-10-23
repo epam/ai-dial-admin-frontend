@@ -87,18 +87,18 @@ vi.mock('../MetricCard', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialLoader: () => <div role="progressbar" aria-label="loading" />,
-  DialNoDataContent: ({ title }: any) => (
+  Spinner: () => <div role="progressbar" aria-label="loading" />,
+  NoDataContent: ({ title }: any) => (
     <div role="status" aria-label={title}>
       {title}
     </div>
   ),
-  DialPrimaryButton: ({ label, onClick, disabled }: any) => (
+  PrimaryButton: ({ label, onClick, disabled }: any) => (
     <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>
   ),
-  DialConfirmationPopup: ({ open, onConfirm, confirmLabel }: any) =>
+  ConfirmationPopup: ({ open, onConfirm, confirmLabel }: any) =>
     open ? (
       <div role="dialog" aria-label="delete-metric-confirmation">
         <button type="button" onClick={onConfirm}>

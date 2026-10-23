@@ -2,14 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import {
-  DialGhostIconButton,
-  DialInput,
-  DialLabel,
-  DialSelectField,
-  ElementSize,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, DialInput, Label, DialSelectField, ElementSize, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconBinaryTree2 } from '@tabler/icons-react';
 
 import PriceControl from '@/src/components/BaseControls/Price';
@@ -119,7 +112,7 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
         />
         {!disabled && (
           <div className="h-10 flex items-center">
-            <DialGhostIconButton
+            <GhostIconButton
               size={ElementSize.Small}
               icon={<IconBinaryTree2 size={16} aria-hidden />}
               aria-pressed={false}
@@ -135,9 +128,9 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
   return (
     <div role="group" aria-label={`${label} ${t(ModelViewI18nKey.ConditionalRate)}`} className="flex flex-col gap-y-2">
       <div className="flex items-center gap-x-2">
-        <DialLabel label={` ${label} · ${t(ModelViewI18nKey.ConditionalRate)}`} />
+        <Label label={` ${label} · ${t(ModelViewI18nKey.ConditionalRate)}`} />
         {!disabled && (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconBinaryTree2 size={16} aria-hidden />}
             aria-pressed

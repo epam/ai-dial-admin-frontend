@@ -2,7 +2,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -84,7 +84,7 @@ const AddEntitiesButton: FC<Props> = ({
 
   return (
     <>
-      <DialNeutralButton
+      <OutlinedButton
         label={buttonTitle}
         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
         onClick={() => onClick(selectedTab)}

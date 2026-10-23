@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { ButtonAppearance, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
 
 import ArgumentTemplate from '@/src/components/TestSuites/ArgumentTemplate/ArgumentTemplate';
@@ -55,7 +55,7 @@ const McpMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => 
             )}
           </div>
           <div className="flex flex-row gap-3 items-center">
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
               appearance={ButtonAppearance.Ghost}
               label={t(TestSuitesI18nKey.ChangeTool)}

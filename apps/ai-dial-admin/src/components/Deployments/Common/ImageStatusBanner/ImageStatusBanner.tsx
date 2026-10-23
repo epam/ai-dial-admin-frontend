@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconBlocks } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
@@ -65,7 +65,7 @@ const ImageStatusBanner: FC<Props> = ({ image }) => {
         message={t(messageKey, { imageName: image.name ?? '', imageVersion: image.version })}
       >
         {!isReadOnlyAdmin && (
-          <DialNeutralButton
+          <OutlinedButton
             className="shrink-0"
             size={ElementSize.Small}
             label={t(ContainersI18nKey.InstallImage)}

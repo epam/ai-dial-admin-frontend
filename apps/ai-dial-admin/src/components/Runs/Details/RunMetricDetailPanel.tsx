@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialGhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, Spinner, Switch, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 
@@ -70,14 +70,14 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
       className="lg:w-full w-full"
     >
       <div className="flex flex-row gap-4 items-center justify-end mb-2">
-        <DialSwitch
+        <Switch
           isOn={isJsonView}
-          label={t(EntitiesI18nKey.JSONViewer)}
-          switchId="jsonViewer"
+          labelProps={{ label: t(EntitiesI18nKey.JSONViewer) }}
+          id="jsonViewer"
           onChange={() => setIsJsonView(!isJsonView)}
         />
         {onSwitchMode && (
-          <DialGhostIconButton
+          <GhostIconButton
             size={ElementSize.Small}
             icon={<IconLayoutBottombar size={16} />}
             onClick={onSwitchMode}
@@ -91,7 +91,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
       ) : (
         <>
           {isLoading ? (
-            <DialLoader size={40} />
+            <Spinner size={40} fullWidth />
           ) : (
             <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-6 mt-4 pr-2">
               <ExecutionStatusBar

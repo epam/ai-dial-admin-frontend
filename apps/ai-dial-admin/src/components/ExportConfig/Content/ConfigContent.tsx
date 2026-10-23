@@ -1,5 +1,5 @@
 'use client';
-import { DialLoader, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, DialTabs } from '@epam/ai-dial-ui-kit';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getEntities } from '@/src/app/[lang]/export-config/actions';
@@ -87,7 +87,7 @@ const ConfigContent: FC<Props> = ({
           )}
           <div className="flex-1 min-h-0">
             {isLoadingData ? (
-              <DialLoader size={50} />
+              <Spinner size={50} fullWidth />
             ) : (
               <ConfigContentGrid
                 selectedTab={selectedTab as EntityType}

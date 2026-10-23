@@ -17,7 +17,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
+    Spinner: ({ size }: any) => <div aria-label={`loading-${size}`} />,
     DialAnalyticsCard: ({ title, compareValues, delta, deltaPositive, deltaUnit }: any) => (
       <div role="region" aria-label={typeof title === 'string' ? title : undefined}>
         <div>{title}</div>

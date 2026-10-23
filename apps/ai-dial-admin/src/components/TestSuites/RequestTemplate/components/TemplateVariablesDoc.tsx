@@ -11,7 +11,7 @@ const TemplateVariablesDoc: FC = () => {
 
   return (
     <div className="px-6 py-4 flex flex-col gap-6 z-50">
-      <span className="body text-secondary whitespace-pre-line">
+      <span className="dial-body-text text-secondary whitespace-pre-line">
         {t(TestSuitesI18nKey.TemplateVariablesDescription)}
       </span>
       <div className="flex flex-col text-sm">
@@ -25,8 +25,8 @@ const TemplateVariablesDoc: FC = () => {
             key={row.format}
             className="flex flex-row items-center gap-2 border-b border-tertiary last:border-0 py-5"
           >
-            <span className="w-1/4 shrink-0 px-3 font-mono tiny text-primary">{row.format}</span>
-            <span className="w-1/4 shrink-0 px-3 font-mono tiny text-primary">{row.example}</span>
+            <span className="w-1/4 shrink-0 px-3 font-mono dial-tiny-text text-primary">{row.format}</span>
+            <span className="w-1/4 shrink-0 px-3 font-mono dial-tiny-text text-primary">{row.example}</span>
             <span className="text-primary px-3">{row.description}</span>
           </div>
         ))}
@@ -35,7 +35,7 @@ const TemplateVariablesDoc: FC = () => {
         <span className="text-base font-semibold">{t(TestSuitesI18nKey.TemplateVariablesSupportedTypes)}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {TEMPLATE_VARIABLE_TYPES.map((type) => (
-            <span key={type} className="font-mono tiny p-1 bg-layer-3 rounded border border-primary">
+            <span key={type} className="font-mono dial-tiny-text p-1 bg-layer-3 rounded border border-primary">
               {type}
             </span>
           ))}

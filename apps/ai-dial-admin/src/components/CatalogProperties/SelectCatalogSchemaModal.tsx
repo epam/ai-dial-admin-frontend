@@ -1,7 +1,9 @@
-import { DialCheckbox, DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useMemo, useState } from 'react';
-import { GridOptions } from 'ag-grid-community';
+import { Checkbox, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
+import { GridOptions } from 'ag-grid-community';
+import { FC, useCallback, useMemo, useState } from 'react';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
@@ -83,18 +85,20 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
   const onToggleAllKinds = useCallback((value?: boolean) => setIsShowingAllKinds(!!value), []);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(EntitiesI18nKey.CatalogSchema)}
       portalId="SelectCatalogSchemaModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[750px]"
-      onSubmit={() => onApply(selectedSchema)}
-      disableSubmitButton={!selectedSchema}
-      submitLabel={t(ButtonsI18nKey.Apply)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      onCancel={onClose}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Apply),
+        isSubmitDisabled: !selectedSchema,
+        onCancel: onClose,
+        onSubmit: () => onApply(selectedSchema),
+      })}
     >
       <div className="flex flex-col gap-y-4 px-6 py-4 h-full">
         <div className="flex-1 min-h-0">
@@ -112,15 +116,15 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
           />
         </div>
         {!!entityType && (
-          <DialCheckbox
+          <Checkbox
             id="showAllCatalogEntityKinds"
-            label={t(EntitiesI18nKey.ShowAllCatalogEntityKinds)}
-            checked={isShowingAllKinds}
+            labelProps={{ label: t(EntitiesI18nKey.ShowAllCatalogEntityKinds) }}
+            isSelected={isShowingAllKinds}
             onChange={onToggleAllKinds}
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { ButtonAppearance, DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { Checkbox, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 
 import { EnumFilterValue } from '@/src/components/ActivityAudit/List/models';
@@ -62,31 +62,26 @@ const EnumValuesFilter: FC<Props> = ({ model, onModelChange, api, colDef, values
 
   return (
     <div className="flex w-[205px] flex-col gap-2 bg-layer-4 p-3">
-      <DialCheckbox
+      <Checkbox
         id={`${colDef.field}-filter-all`}
-        checked={areAllSelected}
-        indeterminate={selected.length > 0 && !areAllSelected}
-        label={t(BasicI18nKey.SelectAll)}
+        isSelected={areAllSelected}
+        isIndeterminate={selected.length > 0 && !areAllSelected}
+        labelProps={{ label: t(BasicI18nKey.SelectAll) }}
         onChange={onToggleAll}
       />
       <div role="group" aria-label={colDef.headerName} className="flex flex-col gap-2 border-t border-tertiary pt-2">
         {values.map(({ value, label }) => (
-          <DialCheckbox
+          <Checkbox
             key={value}
             id={`${colDef.field}-filter-${value}`}
-            checked={selected.includes(value)}
-            label={label}
+            isSelected={selected.includes(value)}
+            labelProps={{ label: label }}
             onChange={(isSelected) => onToggle(value, isSelected)}
           />
         ))}
       </div>
       <div className="flex items-center justify-end">
-        <DialNeutralButton
-          appearance={ButtonAppearance.Outlined}
-          label={t(ButtonsI18nKey.Reset)}
-          disabled={!selected.length}
-          onClick={onReset}
-        />
+        <OutlinedButton label={t(ButtonsI18nKey.Reset)} disabled={!selected.length} onClick={onReset} />
       </div>
     </div>
   );

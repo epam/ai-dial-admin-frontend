@@ -2,7 +2,7 @@
 
 import { FC, useId, useMemo, useState } from 'react';
 
-import { DialDropdown, DialSearch } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, Search } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -58,11 +58,11 @@ const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange
       renderOverlay={() => (
         <div className="flex max-h-[352px] min-w-[144px] flex-col overflow-hidden rounded bg-layer-0 shadow-lg">
           <div className="shrink-0 px-3 py-1">
-            <DialSearch
+            <Search
               id={`${listboxId}-search`}
               value={search}
               placeholder={t(BasicI18nKey.Search)}
-              onChange={setSearch}
+              onChange={(value) => setSearch(value ?? '')}
             />
           </div>
           <div

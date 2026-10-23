@@ -1,4 +1,6 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { Popup } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
@@ -146,20 +148,22 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   }, []);
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(getCloneTitle(view, t))}
       portalId="CloneEntity"
       open={isModalOpen}
-      onSubmit={onDuplicateClick}
-      onCancel={onClose}
-      disableSubmitButton={(isUniqueNameError != null && isUniqueNameError) || !isValid}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ButtonsI18nKey.Duplicate),
+        isSubmitDisabled: (isUniqueNameError != null && isUniqueNameError) || !isValid,
+        onCancel: onClose,
+        onSubmit: onDuplicateClick,
+      })}
     >
       <div className="flex flex-col px-6 py-4">
         {!!duplicateModalDescriptionMap[view] && (
-          <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
+          <div className="text-secondary dial-small-text mb-4">{t(duplicateModalDescriptionMap[view])}</div>
         )}
         <div className="flex flex-col gap-y-8">
           <IdControl
@@ -188,7 +192,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
           )}
         </div>
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 export default DuplicateEntity;

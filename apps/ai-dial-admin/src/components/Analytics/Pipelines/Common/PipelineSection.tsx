@@ -21,7 +21,7 @@ const PipelineSection: FC<Props> = ({ id, title, description, isExpanded, childr
   );
 
   return id ? (
-    <div id={id} tabIndex={-1} className="outline-none">
+    <div id={id} tabIndex={-1} className="outline-hidden">
       {section}
     </div>
   ) : (

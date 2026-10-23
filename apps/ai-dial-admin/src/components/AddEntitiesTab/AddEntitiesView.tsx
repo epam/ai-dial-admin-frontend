@@ -1,4 +1,4 @@
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -138,7 +138,7 @@ const AddEntitiesView: FC<Props> = ({
             {viewTitle || t(TabsI18nKey.Entities)}: {data.length}
           </h1>
           {onAdd && !isReadOnlyAdmin && (
-            <DialPrimaryButton
+            <PrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenModal}

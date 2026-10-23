@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { useAppContext } from '@/src/context/AppContext';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { useLogout } from '@/src/hooks/use-logout';
 import { UserIcon } from './UserMenu/UserIcon';
 import UserMenu from './UserMenu/UserMenu';
@@ -20,10 +20,7 @@ const UserMobile: FC<Props> = ({ isEnableAuth }) => {
         <div className="flex h-[59px] items-center gap-3 px-4 border-b border-tertiary">
           <UserIcon className="mx-2" />
 
-          <DialEllipsisTooltip
-            contentClassName="grow"
-            text={<span data-qa="username">{session?.user?.name ?? ''}</span>}
-          />
+          <EllipsisTooltip contentClassName="grow" text={<span data-qa="username">{session?.user?.name ?? ''}</span>} />
         </div>
         <UserMenu isMobile={true} isEnableAuth={isEnableAuth} />
       </div>

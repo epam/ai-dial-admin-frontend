@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialIconButton } from '@epam/ai-dial-ui-kit';
+import { IconButton } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
@@ -42,7 +42,7 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion, isOnl
   );
 
   return (
-    <div className="hidden lg:flex absolute bottom-0 right-0 caption text-right pr-6 pb-1 text-secondary tiny">
+    <div className="hidden lg:flex absolute bottom-0 right-0 dial-caption-text text-right pr-6 pb-1 text-secondary dial-tiny-text">
       <span className="mr-1">Admin: [FE]{process.env.NEXT_PUBLIC_APP_VERSION}</span>
       {isOnlyFE ? (
         <span className="mr-1 flex flex-row">
@@ -59,7 +59,7 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion, isOnl
               onClick={() => setIsModalOpen(true)}
             >
               {coreVersion}
-              <DialIconButton
+              <IconButton
                 disabled={!coreVersions}
                 className="size-auto"
                 icon={

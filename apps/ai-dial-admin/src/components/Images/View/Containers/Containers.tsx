@@ -1,4 +1,4 @@
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -130,7 +130,7 @@ const Containers: FC<Props> = ({ image, route, versions, disabled }) => {
         }}
         storageKey={`${route}/related`}
       >
-        {installed && !disabled && <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
+        {installed && !disabled && <PrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />}
       </ListEntities>
       {isModalOpen &&
         createPortal(

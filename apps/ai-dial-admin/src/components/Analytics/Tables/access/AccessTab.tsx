@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, ButtonVariant, DialEllipsisTooltip, Search } from '@epam/ai-dial-ui-kit';
+import { Button, ButtonVariant, EllipsisTooltip, Search } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconUsersGroup } from '@tabler/icons-react';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -93,7 +93,7 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         cellRenderer: ({ data }: ICellRendererParams<RoleRow>) => {
           if (!data) return null;
           if (data.rowsKind === RowsCellKind.Policy && data.filter) {
-            return <DialEllipsisTooltip className="font-mono" text={summarizeFilter(data.filter)} />;
+            return <EllipsisTooltip className="font-mono" text={summarizeFilter(data.filter)} />;
           }
 
           return (

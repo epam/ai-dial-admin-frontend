@@ -13,7 +13,7 @@ import {
 import ContainerStartupProbe from '../ContainerStartupProbe';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialSwitch: ({ label, isOn, onChange, caption }: any) => (
+  Switch: ({ labelProps: { label } = {}, isOn, onChange, caption }: any) => (
     <label>
       <span>{label}</span>
       {caption && <span>{caption}</span>}

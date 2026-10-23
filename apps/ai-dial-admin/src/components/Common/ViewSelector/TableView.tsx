@@ -14,7 +14,7 @@ const TableView: FC<Props> = ({ title, columnDefs, rowData }) => {
   return (
     <div className="flex flex-col">
       <div className="flex flex-row justify-between mb-2">
-        <p className="small text-secondary">{title}</p>
+        <p className="dial-small-text text-secondary">{title}</p>
       </div>
       <GridView columnDefs={columnDefs} rowData={rowData} />
     </div>

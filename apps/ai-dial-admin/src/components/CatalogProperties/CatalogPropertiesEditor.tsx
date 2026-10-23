@@ -1,9 +1,9 @@
 'use client';
 
 import {
-  DialErrorText,
-  DialLoader,
-  DialNoDataContent,
+  ErrorText,
+  Spinner,
+  NoDataContent,
   DialSelect,
   JsonSchema,
   SelectSize,
@@ -92,15 +92,15 @@ const CatalogPropertiesEditor: FC<Props> = ({
   );
 
   if (!schemaId) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.NoCatalogSchemaSelected)} />;
+    return <NoDataContent title={t(EntitiesI18nKey.NoCatalogSchemaSelected)} />;
   }
 
   if (isLoading) {
-    return <DialLoader size={40} />;
+    return <Spinner size={40} fullWidth />;
   }
 
   if (hasReadFailed) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.CatalogSchemaUnavailable)} />;
+    return <NoDataContent title={t(EntitiesI18nKey.CatalogSchemaUnavailable)} />;
   }
 
   const undeclaredBanner = !!undeclared.length && (
@@ -117,7 +117,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
     return (
       <div className="flex flex-col size-full">
         {undeclaredBanner}
-        <DialNoDataContent title={t(EntitiesI18nKey.NoCatalogProperties)} />
+        <NoDataContent title={t(EntitiesI18nKey.NoCatalogProperties)} />
       </div>
     );
   }
@@ -139,7 +139,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
       {!!otherErrors.length && (
         <div className="flex flex-col mb-2">
           {otherErrors.map((error) => (
-            <DialErrorText key={`${error.field}-${error.message}`} text={error.message} />
+            <ErrorText key={`${error.field}-${error.message}`} text={error.message} />
           ))}
         </div>
       )}

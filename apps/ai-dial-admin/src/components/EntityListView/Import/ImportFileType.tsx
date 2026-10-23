@@ -1,21 +1,22 @@
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import {
-  DialFileIcon,
-  DialLabel,
+  DialItemType,
+  FileIcon,
+  Label,
   DialLoadFileAreaField,
-  DialRadioGroup,
-  DialSwitch,
+  RadioGroup,
+  Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { isAssetView } from '@/src/utils/is-view';
@@ -54,28 +55,28 @@ const ImportFileTypeSelector: FC<Props> = ({
   }, [t, route]);
 
   const getFileIcon = (name: string) => {
-    return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
+    return <FileIcon type={DialItemType.File} name={name} decorative />;
   };
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col gap-4 mt-6">
-        <DialRadioGroup
-          fieldTitle={t(ImportI18nKey.FileType)}
+        <RadioGroup
+          labelProps={{ label: t(ImportI18nKey.FileType) }}
           orientation={RadioGroupOrientation.Column}
-          radioButtons={fileTypes}
-          activeRadioButton={fileType}
-          elementId="file-type"
+          items={toRadioItems(fileTypes)}
+          value={fileType}
+          id="file-type"
           onChange={onChangeFileType}
         />
 
         {isAssetView(route) && (
           <div className="flex flex-col gap-y-1">
-            <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
-            <DialSwitch
+            <Label label={ignorePathsTitle} htmlFor="ignorePaths" />
+            <Switch
               isOn={ignorePaths}
-              label={t(ImportI18nKey.PathsIgnore)}
-              switchId="ignorePaths"
+              labelProps={{ label: t(ImportI18nKey.PathsIgnore) }}
+              id="ignorePaths"
               onChange={setIgnorePaths}
             />
           </div>
@@ -92,7 +93,9 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             maxFilesCount={1}
             multiple={false}
-            iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
+            iconBeforeInput={
+              <FileIcon type={DialItemType.File} name="file.zip" decorative className="text-secondary" />
+            }
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes={APPLICATION_ZIP_TYPES_STR}
@@ -111,7 +114,9 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyTextSecondLine={t(BasicI18nKey.Or)}
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             files={files}
-            iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
+            iconBeforeInput={
+              <FileIcon type={DialItemType.File} name="file.json" decorative className="text-secondary" />
+            }
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}

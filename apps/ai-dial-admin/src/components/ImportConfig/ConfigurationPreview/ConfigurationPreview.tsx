@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { DialPrimaryButton, DialLoader, DialTabs, DialTooltip, TabModel } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton, Spinner, DialTabs, Tooltip, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import {
@@ -161,7 +161,7 @@ const ConfigurationPreview: FC<Props> = ({
 
   const importingOverlay = isImporting && (
     <div className="size-full absolute bg-blackout z-10">
-      <DialLoader size={45} />
+      <Spinner size={45} fullWidth />
     </div>
   );
 
@@ -184,8 +184,8 @@ const ConfigurationPreview: FC<Props> = ({
     if (isLoading) {
       return (
         <div className="flex flex-col size-full justify-center items-center">
-          <DialLoader size={45} className="h-auto" />
-          <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
+          <Spinner size={45} className="h-auto" fullWidth />
+          <p className="mt-3 text-primary dial-small-text">{t(ImportI18nKey.ConfigurationParsing)}</p>
         </div>
       );
     }
@@ -225,14 +225,14 @@ const ConfigurationPreview: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary py-4 px-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <DialTooltip tooltip={blockedTooltip} hideTooltip={!isErrorOnlyDisable && !isAnalyticsBlockedByIssues}>
-          <DialPrimaryButton
+        <Tooltip tooltip={blockedTooltip} hideTooltip={!isErrorOnlyDisable && !isAnalyticsBlockedByIssues}>
+          <PrimaryButton
             label={t(ButtonsI18nKey.Import)}
             disabled={isImportDisabled || isImporting}
             iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onImportFile}
           />
-        </DialTooltip>
+        </Tooltip>
       </div>
       <div className="flex-1 min-h-0">{renderBody()}</div>
     </div>

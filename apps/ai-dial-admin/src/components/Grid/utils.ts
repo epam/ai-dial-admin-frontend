@@ -1,6 +1,7 @@
-import { ColDef, ColGroupDef, ColumnState, FilterModel } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ColumnState, FilterModel, GridApi } from 'ag-grid-community';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { GRID_COLUMNS_KEY } from './constants';
+import { ColumnWidths } from './models';
 
 export interface GridModel {
   columns: ColumnState[];
@@ -9,18 +10,134 @@ export interface GridModel {
   sizedColIds?: string[];
 }
 
+// `flex: 0` because a column with `flex` ignores `width`; `suppressSizeToFit` keeps the grid's own fit off it.
+export const withColumnWidths = (columnDefs: ColDef[], widths: ColumnWidths | undefined): ColDef[] => {
+  if (!widths || Object.keys(widths).length === 0) {
+    return columnDefs;
+  }
+
+  return columnDefs.map((col) => {
+    const children = (col as ColGroupDef).children;
+    if (Array.isArray(children)) {
+      return { ...col, children: withColumnWidths(children as ColDef[], widths) } as ColDef;
+    }
+
+    const width = widths[(col.colId ?? col.field) as string];
+    return width == null ? col : { ...col, width, flex: 0, suppressSizeToFit: true };
+  });
+};
+
 export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;
 
 export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) => {
   setToLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`, JSON.stringify(model));
 };
 
+const parseStoredModel = (stored: string): Partial<GridModel> => {
+  try {
+    const parsed = JSON.parse(stored);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    // A corrupted entry starts the grid from its defaults instead of failing its render.
+    return {};
+  }
+};
+
 export const getColumnsStateFromStorage = (storageKey: string, defaultSorts: ColumnState[]): GridModel => {
-  const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
-  const parsed = JSON.parse(model);
+  const parsed = parseStoredModel(getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}');
   // `filters` must stay an object: `applyGridState` hands it straight to `setFilterModel`, which
   // reads it as a colId -> model map.
-  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: {} };
+  return Object.values(parsed).length > 0 ? (parsed as GridModel) : { columns: defaultSorts, filters: {} };
+};
+
+export const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
+  toColumnLeaves(columnDefs ?? [])
+    .filter((col) => col.sort)
+    .map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState);
+
+export const loadPersistedModel = (storageKey: string | undefined, defaultSorts: ColumnState[]): GridModel | null =>
+  storageKey ? getColumnsStateFromStorage(storageKey, defaultSorts) : null;
+
+const withoutStoredWidth = ({ width: __width, ...column }: ColumnState): ColumnState => column;
+
+const pickFields = (column: ColumnState, fields: (keyof ColumnState)[]): ColumnState => ({
+  ...Object.fromEntries(fields.filter((field) => field in column).map((field) => [field, column[field]])),
+  colId: column.colId,
+});
+
+export const columnStateToStore = (
+  columns: ColumnState[],
+  sizedColIds: ReadonlySet<string>,
+  persistedFields?: (keyof ColumnState)[],
+): ColumnState[] =>
+  columns.map((column) => {
+    const picked = persistedFields ? pickFields(column, persistedFields) : column;
+    return column.colId && sizedColIds.has(column.colId) ? picked : withoutStoredWidth(picked);
+  });
+
+// A column the grid is not showing right now (compact view, a folder with fewer columns) keeps its stored
+// slot; the shown columns fill the slots shown columns held, in their current order; new ones go last.
+export const mergeColumnOrder = (current: ColumnState[], stored: ColumnState[]): ColumnState[] => {
+  const currentIds = new Set(current.map((column) => column.colId));
+  const pending = [...current];
+  const slotted = stored.map((column) => (currentIds.has(column.colId) ? pending.shift() : column));
+  return [...slotted.filter((column): column is ColumnState => column !== undefined), ...pending];
+};
+
+// ag-Grid lets `flex` win over `width`, so a dragged column drops its flex share to keep the stored width.
+const columnStateToApply = (model: GridModel): ColumnState[] => {
+  const sized = new Set(model.sizedColIds ?? []);
+  return model.columns.map((column) =>
+    column.colId && sized.has(column.colId) ? { ...column, flex: null } : withoutStoredWidth(column),
+  );
+};
+
+export const applyGridState = (
+  gridApi: GridApi,
+  model: GridModel | null,
+  defaultSorts: ColumnState[],
+  shouldApplyOrder = false,
+) => {
+  if (model) {
+    gridApi.setFilterModel(model.filters);
+    const state = columnStateToApply(model);
+    gridApi.applyColumnState(shouldApplyOrder ? { state, applyOrder: true } : { state });
+  } else {
+    gridApi.applyColumnState({ state: defaultSorts });
+  }
+};
+
+type ColumnFactory = (...args: unknown[]) => ColDef;
+
+// The file-manager list hands the grid column factories typed as `ColDef`, and its library calls them on
+// every column rebuild — so a factory's definition is unknown until then.
+const isColumnFactory = (col: unknown): col is ColumnFactory => typeof col === 'function';
+
+const mergeStoredColumnDef = (col: ColDef, stored: ColumnState[], sized: ReadonlySet<string>): ColDef => {
+  const id = col.colId ?? col.field;
+  const fromStorage = stored?.find((s) => s.colId === id);
+  if (!fromStorage) return { ...col, sort: undefined };
+  // `sortType` is column state only; as a column definition property ag-Grid reports it as invalid.
+  const { width, sortType: __sortType, ...stateWithoutWidth } = fromStorage;
+  const keepWidth = typeof width === 'number' && sized.has(fromStorage.colId);
+  return {
+    ...stateWithoutWidth,
+    ...col,
+    sort: undefined,
+    // `null`, not `undefined`: a merged definition skips undefined values, so `defaultColDef.flex` would win.
+    ...(keepWidth ? { suppressSizeToFit: true, width, flex: null } : {}),
+  } as ColDef;
+};
+
+export const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[], sizedColIds: string[]): ColDef[] => {
+  const sized = new Set(sizedColIds);
+  return columnDefs.map((col) =>
+    // Wrapped rather than skipped: a rebuild re-applies the definition's own `flex`, which would put a
+    // dragged width restored only through the grid api back to a flex share.
+    isColumnFactory(col)
+      ? (((...args: unknown[]) => mergeStoredColumnDef(col(...args), stored, sized)) as unknown as ColDef)
+      : mergeStoredColumnDef(col, stored, sized),
+  );
 };
 
 export const applyColumnStateOrderToColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {

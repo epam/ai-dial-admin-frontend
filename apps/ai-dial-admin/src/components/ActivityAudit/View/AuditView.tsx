@@ -4,13 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  DialIconButton,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
-  DialNeutralButton,
-  DialSwitch,
-} from '@epam/ai-dial-ui-kit';
+import { IconButton, ConfirmationPopup, EllipsisTooltip, OutlinedButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -214,14 +208,14 @@ const AuditView: FC<Props> = ({
         {!isModalView && (
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
-              <DialEllipsisTooltip text={activity.activityId} />
+              <EllipsisTooltip text={activity.activityId} />
               <CopyButton value={activity.activityId} valueLabel={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
               {canRollbackResource && (
-                <DialNeutralButton
+                <OutlinedButton
                   iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(RollbackI18nKey.Resource)}
                   onClick={onOpenModal}
@@ -230,11 +224,11 @@ const AuditView: FC<Props> = ({
                 />
               )}
               <div className="w-px h-6 bg-layer-4"></div>
-              <DialSwitch
-                switchId="jsonView"
+              <Switch
+                id="jsonView"
                 isOn={isJsonView}
                 onChange={() => setIsJsonView(!isJsonView)}
-                label="JSON"
+                labelProps={{ label: 'JSON' }}
               />
             </div>
           </div>
@@ -245,9 +239,9 @@ const AuditView: FC<Props> = ({
               {isModalView && (
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
-                    <DialEllipsisTooltip text={activity.activityId} />
+                    <EllipsisTooltip text={activity.activityId} />
                     {activity.activityId && (
-                      <DialIconButton
+                      <IconButton
                         onClick={() => openActivityInNewTab(activity)}
                         className="text-secondary size-auto"
                         icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
@@ -258,11 +252,11 @@ const AuditView: FC<Props> = ({
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
                     <FilterControl diffView={diffView} setDiffView={setDiffView} />
                     <div className="w-px h-6 bg-layer-4"></div>
-                    <DialSwitch
-                      switchId="jsonView"
+                    <Switch
+                      id="jsonView"
                       isOn={isJsonView}
                       onChange={() => setIsJsonView(!isJsonView)}
-                      label="JSON"
+                      labelProps={{ label: 'JSON' }}
                     />
                   </div>
                 </>
@@ -293,7 +287,7 @@ const AuditView: FC<Props> = ({
       </div>
       {isOpenModal &&
         createPortal(
-          <DialConfirmationPopup
+          <ConfirmationPopup
             open={isOpenModal}
             isLoading={isLoading}
             header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
@@ -301,14 +295,14 @@ const AuditView: FC<Props> = ({
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
           >
-            <div className="text-secondary small-150 px-6 py-4">
+            <div className="text-secondary dial-small-paragraph-text px-6 py-4">
               <p>
                 <span>{t(RollbackI18nKey.ConfirmSelectionRollbackDescription)}</span>
                 <span className="important-text-part">{formatDateTimeToLocalString(activity?.epochTimestampMs)}</span>
               </p>
               <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
             </div>
-          </DialConfirmationPopup>,
+          </ConfirmationPopup>,
           document.body,
         )}
     </>

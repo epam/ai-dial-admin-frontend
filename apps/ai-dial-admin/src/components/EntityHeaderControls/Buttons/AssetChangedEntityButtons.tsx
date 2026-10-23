@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
@@ -85,7 +85,7 @@ const AssetChangedEntityButtons: FC<Props> = ({
         saveLabel={t(ButtonsI18nKey.Save)}
       >
         {!isAddedVersion && !isVersionlessView && (
-          <DialNeutralButton
+          <OutlinedButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}

@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { DialPrimaryButton, DialSelect } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton, DialSelect } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -60,7 +60,7 @@ const QueryBuilderToolbar: FC<Props> = ({
       <div className="flex flex-1 items-center justify-end gap-4">
         {children}
         {showRun && (
-          <DialPrimaryButton
+          <PrimaryButton
             label={t(QueryBuilderI18nKey.Run)}
             iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
             disabled={runDisabled}

@@ -2,14 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  DialCheckbox,
-  DialCloseButton,
-  DialInput,
-  DialNeutralButton,
-  DialPrimaryButton,
-  DialSelectField,
-} from '@epam/ai-dial-ui-kit';
+import { Checkbox, CloseButton, DialInput, OutlinedButton, PrimaryButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -49,7 +42,7 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
     <div className="flex flex-col gap-2">
       <div className="flex flex-row justify-between">
         <h3>{t(isNew ? BasicI18nKey.AddField : TestSuitesI18nKey.EditField)}</h3>
-        <DialCloseButton onClose={onClose} />
+        <CloseButton onClose={onClose} />
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex flex-row gap-4">
@@ -72,10 +65,10 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
             required
           />
           <div className="flex items-end pb-2">
-            <DialCheckbox
+            <Checkbox
               id="schema-field-required"
-              label={t(BasicI18nKey.Required)}
-              checked={editableField.required}
+              labelProps={{ label: t(BasicI18nKey.Required) }}
+              isSelected={editableField.required}
               onChange={(checked) => setEditableField({ ...editableField, required: !!checked })}
             />
           </div>
@@ -88,8 +81,8 @@ const EditSchemaField: FC<Props> = ({ field, isNew, existingNames, onSave, onClo
           onChange={(value) => setEditableField({ ...editableField, description: value || '' })}
         />
         <div className="w-full flex flex-row gap-4 justify-end">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton label={t(ButtonsI18nKey.Save)} onClick={onSaveField} disabled={isSaveDisabled} />
+          <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <PrimaryButton label={t(ButtonsI18nKey.Save)} onClick={onSaveField} disabled={isSaveDisabled} />
         </div>
       </div>
     </div>

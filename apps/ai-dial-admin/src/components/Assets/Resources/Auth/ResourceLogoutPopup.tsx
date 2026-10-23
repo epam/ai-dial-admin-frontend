@@ -1,6 +1,8 @@
 'use client';
 
-import { DialFormPopup, DialCheckbox, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
@@ -38,38 +40,40 @@ const ResourceLogoutPopup: FC<Props> = ({
   };
 
   return (
-    <DialFormPopup
+    <Popup
       onClose={onClose}
       header={t(ToolsetI18nKey.LogOut)}
       portalId="ResourceLogoutPopup"
       open={isModalOpen}
-      onSubmit={handleConfirm}
-      submitLabel={t(ToolsetI18nKey.LogOut)}
-      onCancel={onClose}
       size={PopupSize.Sm}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!logoutUser && !logoutOrganization}
+      mainButtons={getFormPopupButtons({
+        cancelLabel: t(ButtonsI18nKey.Cancel),
+        submitLabel: t(ToolsetI18nKey.LogOut),
+        isSubmitDisabled: !logoutUser && !logoutOrganization,
+        onCancel: onClose,
+        onSubmit: handleConfirm,
+      })}
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         <p className="text-sm">{t(ToolsetI18nKey.SelectLogoutLevels)}</p>
         {isLoggedInAsUser && (
-          <DialCheckbox
+          <Checkbox
             id="personal-logout-checkbox"
-            label={userLabel ?? t(ToolsetI18nKey.Personal)}
-            checked={logoutUser}
-            onChange={(v) => setLogoutUser(!!v)}
+            labelProps={{ label: userLabel ?? t(ToolsetI18nKey.Personal) }}
+            isSelected={logoutUser}
+            onChange={setLogoutUser}
           />
         )}
         {isLoggedInAsOrganization && (
-          <DialCheckbox
+          <Checkbox
             id="organization-logout-checkbox"
-            label={orgLabel ?? t(ToolsetI18nKey.Organization)}
-            checked={logoutOrganization}
-            onChange={(v) => setLogoutOrganization(!!v)}
+            labelProps={{ label: orgLabel ?? t(ToolsetI18nKey.Organization) }}
+            isSelected={logoutOrganization}
+            onChange={setLogoutOrganization}
           />
         )}
       </div>
-    </DialFormPopup>
+    </Popup>
   );
 };
 

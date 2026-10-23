@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DIAL_ICON_SIZE, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DIAL_ICON_SIZE, Spinner, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -32,7 +32,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({
         {leading !== StatusBadgeLeading.None && (
           <span className="flex size-3 shrink-0 items-center justify-center" aria-hidden>
             {leading === StatusBadgeLeading.Spinner ? (
-              <DialLoader size={12} fullWidth={false} iconClassName={textClassName} />
+              <Spinner size={12} fullWidth={false} />
             ) : (
               <span className="size-[6px] rounded-full bg-[currentColor]" />
             )}
@@ -41,7 +41,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({
         <span>{label}</span>
       </div>
       {hint && (
-        <DialTooltip tooltip={hint}>
+        <Tooltip tooltip={hint}>
           <button
             type="button"
             aria-label={t(StatusBadgeI18nKey.Details)}
@@ -49,7 +49,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({
           >
             <IconInfoCircle size={DIAL_ICON_SIZE.SM} aria-hidden />
           </button>
-        </DialTooltip>
+        </Tooltip>
       )}
       {trailing}
     </div>

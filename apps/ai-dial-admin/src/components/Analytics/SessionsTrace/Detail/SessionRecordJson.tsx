@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconBraces } from '@tabler/icons-react';
 import { FC, useState } from 'react';
 
@@ -26,7 +26,7 @@ const SessionRecordJson: FC<Props> = ({ session }) => {
 
   return (
     <>
-      <DialGhostIconButton
+      <GhostIconButton
         size={ElementSize.Small}
         icon={<IconBraces size={ICON_SIZE} aria-hidden />}
         aria-label={t(SessionsTraceI18nKey.SessionJsonOpen)}

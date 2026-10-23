@@ -3,7 +3,7 @@
 import { FC, ReactNode } from 'react';
 
 import classNames from 'classnames';
-import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconLayoutSidebarRightCollapse } from '@tabler/icons-react';
 
 import { QUERY_BUILDER_RAIL_WIDTH_CLASS } from '@/src/constants/analytics/query-builder';
@@ -28,7 +28,7 @@ const BuilderRail: FC<Props> = ({ onCollapse, switcher, children }) => {
       )}
     >
       <div className="flex items-center gap-2 border-b border-primary px-3 py-2">
-        <DialGhostIconButton
+        <GhostIconButton
           size={ElementSize.Small}
           aria-label={t(QueryBuilderI18nKey.CollapsePanel)}
           icon={<IconLayoutSidebarRightCollapse size={18} />}

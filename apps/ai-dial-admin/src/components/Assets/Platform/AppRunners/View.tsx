@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, ButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
@@ -191,7 +191,7 @@ const AppRunnerAssetView: FC<Props> = ({
         onRemove={removeRunner}
         getAssetContext={useAppRunnersFolder}
       >
-        <DialButtonDropdown
+        <ButtonDropdown
           label={t(ButtonsI18nKey.Create)}
           items={createItems}
           variant={ButtonVariant.Neutral}

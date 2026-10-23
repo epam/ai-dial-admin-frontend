@@ -1,10 +1,11 @@
-import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, Label, OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -126,8 +127,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className="flex gap-2">
             <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-              <DialLabel label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
-              <DialInputPopup
+              <Label label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
+              <InputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedAdapter?.displayName || selectedAdapter?.name || ''}
@@ -143,10 +144,10 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                   adapters={adapters}
                   isModalOpen={isModalOpen}
                 />
-              </DialInputPopup>
+              </InputPopup>
             </div>
             {entity.source?.adapterName && !disabled && (
-              <DialNeutralButton
+              <OutlinedButton
                 iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
                 className={classNames(error ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 label={isMobile ? '' : t(ButtonsI18nKey.Open)}

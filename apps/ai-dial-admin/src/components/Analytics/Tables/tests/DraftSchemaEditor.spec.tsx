@@ -10,7 +10,7 @@ import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
 
-// Render DialTooltip content inline so the hint message is queryable (the real component only mounts
+// Render Tooltip content inline so the hint message is queryable (the real component only mounts
 // its content on hover, via a portal), and swap DialSelectField for a native select so options and
 // selection are queryable by role — the real one renders a custom listbox. Labels here are ReactNodes
 // (label text + info tooltip), so the association is by `id` rather than an aria-label string.
@@ -18,7 +18,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialTooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
+    Tooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
       <>
         {children}
         {tooltip}

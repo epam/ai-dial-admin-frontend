@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 
-import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, ConditionalResizableContainer, Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
 import {
@@ -164,12 +164,12 @@ const Methods: FC<Props> = ({
   };
 
   return isLoading ? (
-    <DialLoader size={40} />
+    <Spinner size={40} fullWidth />
   ) : (
     <div className="size-full flex flex-col gap-4">
       <div className="flex-1 min-h-0 overflow-auto">
         <div className="flex flex-row size-full gap-2">
-          <DialConditionalResizableContainer
+          <ConditionalResizableContainer
             defaultWidth={sidebarCurrentWidth}
             width={sidebarCurrentWidth}
             onResizeStop={setSidebarCurrentWidth}
@@ -178,9 +178,9 @@ const Methods: FC<Props> = ({
             maxWidth={600}
             enabled={isSidebarOpened}
           >
-            <DialCollapsibleSidebar
+            <CollapsibleSidebar
               width={sidebarCurrentWidth}
-              containerClassName="border border-primary h-full"
+              className="border border-primary h-full"
               title={t(TestSuitesI18nKey.Methods)}
               isOpened={isSidebarOpened}
               onToggle={setIsSidebarOpened}
@@ -221,8 +221,8 @@ const Methods: FC<Props> = ({
                   );
                 })}
               </div>
-            </DialCollapsibleSidebar>
-          </DialConditionalResizableContainer>
+            </CollapsibleSidebar>
+          </ConditionalResizableContainer>
           <div className="flex-1 min-w-0 border border-primary rounded">
             {activeMethodIndex != null && (
               <MethodInfo

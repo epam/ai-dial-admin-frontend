@@ -3,13 +3,15 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
-  DialPrimaryButton,
+  PrimaryButton,
   RadioButtonWithContent,
-  DialRadioGroup,
+  RadioGroup,
   RadioGroupOrientation,
   DialLoadFileAreaField,
-  DialFileIcon,
+  DialItemType,
+  FileIcon,
 } from '@epam/ai-dial-ui-kit';
+import { toRadioItems } from '@/src/utils/radio-items';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
 import { getConfigScopes } from '@/src/components/Common/ConfigScopeSelector/utils';
@@ -119,22 +121,22 @@ const Files: FC<Props> = ({
     switch (configScope) {
       case ExportComponentType.DEPLOYMENTS:
         return (
-          <DialRadioGroup
-            radioButtons={DEPLOYMENT_IMPORT_RESOLUTIONS(t)}
-            activeRadioButton={deploymentResolution}
-            elementId="deploymentConflictResolution"
-            fieldTitle={t(ImportI18nKey.ConflictResolution)}
+          <RadioGroup
+            items={toRadioItems(DEPLOYMENT_IMPORT_RESOLUTIONS(t))}
+            value={deploymentResolution}
+            id="deploymentConflictResolution"
+            labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
             orientation={RadioGroupOrientation.Column}
             onChange={onChangeDeploymentResolution}
           />
         );
       case ExportComponentType.ANALYTICS:
         return (
-          <DialRadioGroup
-            radioButtons={ANALYTICS_IMPORT_RESOLUTIONS(t)}
-            activeRadioButton={analyticsPolicy}
-            elementId="analyticsConflictResolution"
-            fieldTitle={t(ImportI18nKey.ConflictResolution)}
+          <RadioGroup
+            items={toRadioItems(ANALYTICS_IMPORT_RESOLUTIONS(t))}
+            value={analyticsPolicy}
+            id="analyticsConflictResolution"
+            labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
             orientation={RadioGroupOrientation.Column}
             onChange={(value) => onChangeAnalyticsPolicy(value as CatalogResolutionPolicy)}
           />
@@ -142,20 +144,20 @@ const Files: FC<Props> = ({
       default:
         return (
           <>
-            <DialRadioGroup
-              radioButtons={IMPORT_RESOLUTIONS(t)}
-              activeRadioButton={activeResolution}
-              elementId="conflictResolution"
-              fieldTitle={t(ImportI18nKey.ConflictResolution)}
+            <RadioGroup
+              items={toRadioItems(IMPORT_RESOLUTIONS(t))}
+              value={activeResolution}
+              id="conflictResolution"
+              labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
               orientation={RadioGroupOrientation.Column}
               onChange={onChangeResolution}
             />
             <div className="h-[104px]">
-              <DialRadioGroup
-                radioButtons={IMPORT_FILE_TYPES(t)}
-                activeRadioButton={fileType}
-                elementId="fileType"
-                fieldTitle={t(ImportI18nKey.FileType)}
+              <RadioGroup
+                items={toRadioItems(IMPORT_FILE_TYPES(t))}
+                value={fileType}
+                id="fileType"
+                labelProps={{ label: t(ImportI18nKey.FileType) }}
                 orientation={RadioGroupOrientation.Column}
                 onChange={onChangeFileType}
               />
@@ -178,7 +180,7 @@ const Files: FC<Props> = ({
           files={files.length === 0 ? files : [files[0]]}
           multiple={false}
           fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
-          iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
+          iconBeforeInput={<FileIcon type={DialItemType.File} name="file.json" decorative className="text-secondary" />}
           acceptTypes=".json, application/json"
           onChange={onChangeFile}
         />
@@ -197,7 +199,7 @@ const Files: FC<Props> = ({
           multiple={false}
           fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
           fileCountError={t(ImportI18nKey.ArchiveDescription)}
-          iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
+          iconBeforeInput={<FileIcon type={DialItemType.File} name="file.zip" decorative className="text-secondary" />}
           acceptTypes=".zip, application/x-zip-compressed, application/zip"
           onChange={onChangeFile}
         />
@@ -211,7 +213,7 @@ const Files: FC<Props> = ({
         emptyTextSecondLine={t(BasicI18nKey.Or)}
         emptyButtonLabel={t(ButtonsI18nKey.Browse)}
         files={files}
-        iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
+        iconBeforeInput={<FileIcon type={DialItemType.File} name="file.json" decorative className="text-secondary" />}
         acceptTypes="application/JSON"
         fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
         isInvalid={isLargeFile}
@@ -227,7 +229,7 @@ const Files: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Files)}</h1>
-        <DialPrimaryButton
+        <PrimaryButton
           label={t(ButtonsI18nKey.Next)}
           disabled={!isFilesValid}
           iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}

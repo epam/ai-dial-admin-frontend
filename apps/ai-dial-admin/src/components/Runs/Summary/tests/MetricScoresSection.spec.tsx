@@ -9,10 +9,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
-    DialSegmentedControl: ({ options, value, onChange }: any) => (
+    Spinner: ({ size }: any) => <div aria-label={`loading-${size}`} />,
+    SegmentedControl: ({ items, value, onChange }: any) => (
       <div role="tablist">
-        {(options || []).map((option: any) => (
+        {(items || []).map((option: any) => (
           <button
             key={option.value}
             role="tab"

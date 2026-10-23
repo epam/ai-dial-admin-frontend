@@ -4,11 +4,11 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import {
   ButtonAppearance,
-  DialCollapsibleSidebar,
-  DialNeutralButton,
-  DialNoDataContent,
-  DialPopup,
-  DialPrimaryButton,
+  ButtonVariant,
+  CollapsibleSidebar,
+  NoDataContent,
+  Popup,
+  PrimaryButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -219,26 +219,30 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
   }, [toolsConfig, customToolsConfig, isApplicationTools, isAssetToolset, originalEntity, onConfirm, onClose]);
 
   return (
-    <DialPopup
+    <Popup
       onClose={onClose}
       header={t(ToolsetI18nKey.ManageTools)}
       portalId="ManageToolsModal"
       open={isModalOpen}
       size={PopupSize.Lg}
       className="h-[800px]"
-      dividers
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton label={t(ButtonsI18nKey.Confirm)} onClick={onConfirmChanges} disabled={!isValid} />
-        </div>
-      }
+      headerDivider
+      footerDivider
+      mainButtons={[
+        { label: t(ButtonsI18nKey.Cancel), onClick: onClose },
+        {
+          label: t(ButtonsI18nKey.Confirm),
+          variant: ButtonVariant.Primary,
+          disabled: !isValid,
+          onClick: onConfirmChanges,
+        },
+      ]}
     >
       <div className="h-full px-6 py-4 flex flex-1 min-h-0">
-        <DialCollapsibleSidebar
+        <CollapsibleSidebar
           width={280}
           title={t(ToolsetI18nKey.Tools)}
-          containerClassName="bg-layer-3 mr-2 h-full border border-primary"
+          className="bg-layer-3 mr-2 h-full border border-primary"
         >
           <Search onChange={(search) => setPattern(search)} />
           <div className="border-b border-primary pb-1">
@@ -260,14 +264,14 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
               </>
             ) : (
               <div className="py-3">
-                <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+                <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
               </div>
             )}
           </div>
           <div>
             <div className="flex flex-row justify-between items-center mt-2 pr-[4px]">
               <span className="dial-tiny text-secondary">{t(ToolsetI18nKey.OtherInAToolset)}</span>
-              <DialPrimaryButton
+              <PrimaryButton
                 appearance={ButtonAppearance.Link}
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Add)}
@@ -291,11 +295,11 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
               </>
             ) : (
               <div className="py-2">
-                <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
+                <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
               </div>
             )}
           </div>
-        </DialCollapsibleSidebar>
+        </CollapsibleSidebar>
         <div className="border border-primary p-4 w-full overflow-auto">
           {activeCustomTool && (
             <AddNewTool
@@ -316,7 +320,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
           )}
         </div>
       </div>
-    </DialPopup>
+    </Popup>
   );
 };
 

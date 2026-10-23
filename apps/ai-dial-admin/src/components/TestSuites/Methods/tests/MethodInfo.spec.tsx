@@ -18,7 +18,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
       {error ? <span role="alert">{error}</span> : null}
     </div>
   ),
-  DialNoDataContent: ({ title }: any) => <div>{title}</div>,
+  NoDataContent: ({ title }: any) => <div>{title}</div>,
 }));
 
 vi.mock('@/src/components/Common/ViewSelector/ViewSelector', () => ({ __esModule: true, default: () => null }));

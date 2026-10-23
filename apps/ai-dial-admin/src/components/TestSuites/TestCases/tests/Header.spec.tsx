@@ -8,7 +8,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialButtonDropdown: ({ label, items }: any) => (
+    ButtonDropdown: ({ label, items }: any) => (
       <div>
         <span>{label}</span>
         {items?.map((item: any) => (

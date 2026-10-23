@@ -17,8 +17,8 @@ const clamp = (value: number): number => Math.min(1, Math.max(0, value));
  * share is a small share, not a bad one.
  */
 const ShareBar: FC<Props> = ({ value, className }) => (
-  <span className={classNames('block h-1.5 w-full overflow-hidden rounded-sm bg-layer-4', className)} aria-hidden>
-    <span className="block h-full rounded-sm bg-accent-primary" style={{ width: `${clamp(value) * 100}%` }} />
+  <span className={classNames('block h-1.5 w-full overflow-hidden rounded-xs bg-layer-4', className)} aria-hidden>
+    <span className="block h-full rounded-xs bg-accent-primary" style={{ width: `${clamp(value) * 100}%` }} />
   </span>
 );
 

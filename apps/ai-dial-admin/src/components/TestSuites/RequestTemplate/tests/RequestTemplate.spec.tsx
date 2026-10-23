@@ -11,7 +11,7 @@ let capturedTabClick: (id: string) => void;
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   ButtonAppearance: { Ghost: 'ghost' },
-  DialPrimaryButton: ({ label, onClick }: any) => (
+  PrimaryButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>
@@ -28,18 +28,18 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       </nav>
     );
   },
-  DialNeutralButton: ({ label, onClick, iconBefore }: any) => (
+  OutlinedButton: ({ label, onClick, iconBefore }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>
   ),
-  DialNoDataContent: ({ title, description }: { title?: string; description?: string }) => (
+  NoDataContent: ({ title, description }: { title?: string; description?: string }) => (
     <div role="status">
       <span>{title}</span>
       {description ? <span>{description}</span> : null}
     </div>
   ),
-  DialSwitch: ({ switchId, label, isOn, onChange }: any) => (
+  Switch: ({ id: switchId, labelProps: { label } = {}, isOn, onChange }: any) => (
     <button
       type="button"
       role="switch"

@@ -1,11 +1,15 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialInputPopup, DialLabel, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Label, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+
 import { JSONSchema7 } from 'json-schema';
 
+import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import JsonataEditor from '@/src/components/Common/JsonataEditor/JsonataEditor';
 import { SchemaTreeSelectResult } from '@/src/components/Common/SchemaGrid/models';
-import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { MAX_JSONATA_EXPRESSION_SYMBOLS } from '@/src/constants/validation';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { JsonataVariable } from '@/src/models/jsonata';
@@ -41,6 +45,8 @@ const JsonAtaInput: FC<Props> = ({
 
   const [expression, setExpression] = useState(value);
   const [type, setType] = useState<string | undefined>(undefined);
+
+  const isTooLong = expression.length > MAX_JSONATA_EXPRESSION_SYMBOLS;
 
   const editorOptions = useMemo(() => ({ ...EDITOR_HINTS_OFF_OPTIONS, ariaLabel: header }), [header]);
 
@@ -80,30 +86,32 @@ const JsonAtaInput: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-1">
-      {label && <DialLabel label={label} htmlFor={elementId} />}
-      <DialInputPopup
+      {label && <Label label={label} htmlFor={elementId} />}
+      <InputPopup
         disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}
         selectedValue={value}
         onOpen={onOpenModal}
         inputClassName={inputClassName}
       >
-        <DialFormPopup
+        <Popup
           onClose={onCancelModal}
           header={header}
           portalId="jsonAtaInputModal"
           open={isModalOpen}
           size={PopupSize.Lg}
-          onSubmit={onApply}
-          submitLabel={t(ButtonsI18nKey.Apply)}
-          cancelLabel={t(ButtonsI18nKey.Cancel)}
-          onCancel={onCancelModal}
-          disableSubmitButton={!expression}
+          mainButtons={getFormPopupButtons({
+            cancelLabel: t(ButtonsI18nKey.Cancel),
+            submitLabel: t(ButtonsI18nKey.Apply),
+            isSubmitDisabled: !expression || isTooLong,
+            onCancel: onCancelModal,
+            onSubmit: onApply,
+          })}
         >
           <div className="px-6 py-4 h-[512px] flex flex-row gap-x-3">
             <ReferenceFieldsPanel responseSchema={responseSchema} onSelect={onPickFromSchema} />
             <div className="flex flex-col flex-1 basis-0 min-w-0 min-h-0 gap-y-1">
-              <DialLabel label={header} />
+              <Label label={header} />
               <div className="flex-1 min-h-0 py-2 bg-layer-2 rounded overflow-hidden border border-secondary">
                 <JsonataEditor
                   value={expression}
@@ -112,10 +120,15 @@ const JsonAtaInput: FC<Props> = ({
                   variables={variables}
                 />
               </div>
+              {isTooLong && (
+                <span role="alert" className="text-error dial-tiny-text">
+                  {t(BasicI18nKey.FieldValueTooLong, { field: header, limit: MAX_JSONATA_EXPRESSION_SYMBOLS })}
+                </span>
+              )}
             </div>
           </div>
-        </DialFormPopup>
-      </DialInputPopup>
+        </Popup>
+      </InputPopup>
     </div>
   );
 };

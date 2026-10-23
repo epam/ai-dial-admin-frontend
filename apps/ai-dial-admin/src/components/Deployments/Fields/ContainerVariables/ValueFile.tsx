@@ -6,8 +6,7 @@ import { FieldError } from '@/src/models/error';
 import { VALUE_TYPE } from '@/src/types/deployments/variables';
 import { getFileNameError } from '@/src/utils/deployments/validation';
 import { downloadFile } from '@/src/utils/download';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { DialErrorText, DialFileIcon, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { ErrorText, DialItemType, FileIcon, IconButton, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -74,20 +73,20 @@ const ValueFile: FC<Props> = ({ value, index, ariaLabel, onValueChange, disabled
           error ? 'border-error' : 'border-primary',
         )}
       >
-        <DialTooltip tooltip={value.fileName}>
+        <Tooltip tooltip={value.fileName} triggerClassName="flex-1 min-w-0">
           <div className="flex flex-row gap-x-3 text-accent-primary w-full items-center" onClick={handleFileDownload}>
-            <DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />
+            <FileIcon type={DialItemType.File} name={value.fileName as string} decorative />
             <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
           </div>
-        </DialTooltip>
-        <DialIconButton
+        </Tooltip>
+        <IconButton
           icon={<IconX {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onClearFile}
           disabled={disabled}
           className="size-auto"
         />
       </div>
-      <DialErrorText text={error?.text} />
+      <ErrorText text={error?.text} />
     </div>
   );
 };
