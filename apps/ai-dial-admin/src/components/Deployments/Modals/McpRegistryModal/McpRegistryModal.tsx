@@ -79,7 +79,7 @@ const McpRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, fetchServe
       open={isModalOpen}
       header={t(ContainersI18nKey.SelectMcpServerFromRegistry)}
       onClose={onClose}
-      className="h-[800px]"
+      className="md:h-[800px]"
       size={PopupSize.Lg}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

@@ -132,7 +132,7 @@ const ContainerChangeImage: FC<Props> = ({
       header={modalTitle}
       portalId="ContainerChangeImageModal"
       open={isModalOpen}
-      className="lg:max-w-[55%] md:max-w-[75%] h-[600px]"
+      className="lg:max-w-[55%] md:max-w-[75%] md:h-[600px]"
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Apply),

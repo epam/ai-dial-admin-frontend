@@ -34,7 +34,7 @@ const FullscreenValueViewer: FC<Props> = ({ isOpen, fieldLabel, value, onClose }
       portalId="FullscreenValueViewer"
       open={isOpen}
       size={PopupSize.Lg}
-      className="h-[80vh]"
+      className="md:h-[80vh]"
     >
       <div className="flex flex-col flex-1 min-h-0 overflow-auto px-6 py-4">
         <pre className="text-primary dial-small-text whitespace-pre-wrap break-words font-mono">{displayText}</pre>

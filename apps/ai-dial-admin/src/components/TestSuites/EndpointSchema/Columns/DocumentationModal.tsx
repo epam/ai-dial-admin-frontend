@@ -80,7 +80,7 @@ const DocumentationModal: FC<Props> = ({ schema, isModalOpen, onClose }) => {
       portalId="JSONAtaDocumentationModal"
       open={isModalOpen}
       size={PopupSize.Md}
-      className="h-[800px]"
+      className="md:h-[800px]"
       headerDivider
       footerDivider
     >

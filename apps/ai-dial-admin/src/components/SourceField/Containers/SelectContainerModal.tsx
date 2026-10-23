@@ -62,7 +62,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, containers, isModalOpen, 
       portalId="SelectContainer"
       open={isModalOpen}
       size={PopupSize.Lg}
-      className="h-[750px]"
+      className="md:h-[750px]"
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Apply),

@@ -44,7 +44,7 @@ const HFRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, preselected
       open={isModalOpen}
       header={t(ContainersI18nKey.SelectModelFromRegistry)}
       onClose={onClose}
-      className="h-[800px]"
+      className="md:h-[800px]"
       size={PopupSize.Lg}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
