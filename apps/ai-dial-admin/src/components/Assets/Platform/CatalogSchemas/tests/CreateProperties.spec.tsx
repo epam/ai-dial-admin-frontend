@@ -114,7 +114,7 @@ describe('CatalogSchemaCreateProperties', () => {
     const $id = 'https://dial.epam.com/catalog_schemas/agent';
     renderForm(schema({ $id, name: $id }), false);
 
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}(required)` })).toBeDisabled();
     expect(screen.queryByText(ErrorI18nKey.ForbiddenChars)).not.toBeInTheDocument();
   });
 
