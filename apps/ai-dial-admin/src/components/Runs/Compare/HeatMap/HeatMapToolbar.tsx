@@ -2,7 +2,7 @@
 
 import {
   Checkbox,
-  DialDropdown,
+  Dropdown,
   EllipsisTooltip,
   Search,
   SegmentedControl,
@@ -115,7 +115,7 @@ const HeatMapToolbar: FC<Props> = ({
 
   return (
     <div className="flex items-center gap-4 shrink-0">
-      <DialDropdown
+      <Dropdown
         listClassName="w-[280px]"
         disabled={isMetricsDropdownDisabled}
         onOpenChange={onMetricsDropdownOpenChange}
@@ -180,7 +180,7 @@ const HeatMapToolbar: FC<Props> = ({
           <EllipsisTooltip text={triggerLabel} className="truncate" />
           {chevronIcon}
         </button>
-      </DialDropdown>
+      </Dropdown>
 
       <div className="flex items-center gap-1">
         <span className="dial-small-text text-secondary whitespace-nowrap">

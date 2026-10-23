@@ -1,4 +1,4 @@
-import { DialSelect } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { TelemetryI18nKey } from '@/src/constants/i18n';
@@ -14,8 +14,9 @@ interface Props {
 const Refresh: FC<Props> = ({ selectedValue, onChange, disabled }) => {
   const t = useI18n();
   return (
-    <DialSelect
+    <Select
       prefix={t(TelemetryI18nKey.AutoRefresh)}
+      ariaLabel={t(TelemetryI18nKey.AutoRefresh)}
       options={refreshOptionsConfig}
       value={selectedValue}
       disabled={disabled}

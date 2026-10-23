@@ -1,4 +1,4 @@
-import { Popup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { Popup, Input, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useState } from 'react';
@@ -59,7 +59,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, routeNames, onClose, onCreate }) 
       })}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
-        <DialInput
+        <Input
           id="name"
           labelProps={{ label: t(EntityFieldsI18nKey.displayName) }}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}

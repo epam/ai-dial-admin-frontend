@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialSelectField, Label, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Label, OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -98,18 +98,17 @@ const Templates = <T extends DialModel | DialInterceptor>({
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="flex flex-col w-full">
-            <DialSelectField
+            <Select
               options={runners.map((runner) => ({
                 value: runner.name as string,
                 label: runner.displayName || runner.name || '',
               }))}
               searchable
-              required
+              labelProps={{ label: t(SourceI18nKey.InterceptorTemplate), required: true }}
               onChange={(value) => onSelect(value as string)}
               id="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
-              label={t(SourceI18nKey.InterceptorTemplate)}
               disabled={disabled}
             />
           </div>

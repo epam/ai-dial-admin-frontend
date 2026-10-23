@@ -1,6 +1,6 @@
 import { FC, ReactNode, useState } from 'react';
 import classNames from 'classnames';
-import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { Dropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -35,9 +35,9 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
 
   return (
     <div>
-      <DialDropdown items={dropdownItems} open={isOpen} onOpenChange={setIsOpen}>
+      <Dropdown items={dropdownItems} open={isOpen} onOpenChange={setIsOpen}>
         <ActionTrigger {...props} isOpen={isOpen} />
-      </DialDropdown>
+      </Dropdown>
     </div>
   );
 };

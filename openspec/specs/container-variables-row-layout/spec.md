@@ -18,7 +18,7 @@ At viewport widths of `lg` (≥ 1024px) and above, every editable control in a v
 
 #### Scenario: Mount type select aligns with text inputs in the same row
 - **WHEN** any variable row is rendered at a viewport width ≥ 1024 px
-- **THEN** the Mount type `DialSelectField` control SHALL have the same top y-coordinate as the Name input in the same row (regression test for the 6 px drift in issue #3223)
+- **THEN** the Mount type `Select` control SHALL have the same top y-coordinate as the Name input in the same row (regression test for the 6 px drift in issue #3223)
 
 ### Requirement: Column labels render once per list
 
@@ -134,7 +134,7 @@ Each input control in a variable row SHALL carry an `aria-label` naming its colu
 
 ### Requirement: File-upload button is rendered inside the Value cell, aligned with the input/pill row
 
-The `FileButton` SHALL be rendered as a direct flex sibling of the input/pill *inside* the `Value` component's own column, not as a flex sibling of `Value` itself. The inner row containing the input/pill and the file-upload button SHALL use cross-axis alignment `items-start`. Because the `Value` component renders the field's label (when present) *above* the inner row — not inside `DialInput` / `ValueFile` — the top edge of the inner row is the input/pill's top edge. As a result, the file-upload button's top edge SHALL stay aligned with the input/pill's top edge regardless of whether the field component renders a validation error caption below the input/pill.
+The `FileButton` SHALL be rendered as a direct flex sibling of the input/pill *inside* the `Value` component's own column, not as a flex sibling of `Value` itself. The inner row containing the input/pill and the file-upload button SHALL use cross-axis alignment `items-start`. Because the `Value` component renders the field's label (when present) *above* the inner row — not inside `Input` / `ValueFile` — the top edge of the inner row is the input/pill's top edge. As a result, the file-upload button's top edge SHALL stay aligned with the input/pill's top edge regardless of whether the field component renders a validation error caption below the input/pill.
 
 #### Scenario: File-upload button stays aligned with the file pill when an error caption is shown
 

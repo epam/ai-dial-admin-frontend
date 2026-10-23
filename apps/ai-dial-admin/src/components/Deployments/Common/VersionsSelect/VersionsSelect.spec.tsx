@@ -32,7 +32,7 @@ describe('Common components :: VersionsSelect', () => {
       <VersionsSelect versions={versions as ImageVersion[]} selected="v1" onChange={onChange} onClick={onClick} />,
     );
 
-    const select = screen.getByRole('button');
+    const select = screen.getByRole('combobox', { name: 'Compare.Version' });
     expect(select).toBeInTheDocument();
     await userEvent.click(select);
   });

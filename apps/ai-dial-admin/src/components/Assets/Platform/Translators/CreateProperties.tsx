@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { getInterfaceTypeLabel } from '@/src/components/BaseControls/InterfacesField/InterfacesField';
@@ -96,27 +96,25 @@ const TranslatorCreateProperties: FC<Props> = ({ entity, names, isUniqueNameErro
           isFullWidth={isModal}
         />
       )}
-      <DialSelectField
+      <Select
         id="translator-in"
-        label={t(EntityFieldsI18nKey.translatorIn)}
+        labelProps={{ label: t(EntityFieldsI18nKey.translatorIn), required: true }}
         placeholder={t(InterfacesI18nKey.SelectType)}
         options={interfaceOptions}
         value={entity.in ?? ''}
-        containerClassName={controlClassName}
+        className={controlClassName}
         disabled={isReadOnlyAdmin}
         onChange={onChangeIn}
-        required
       />
-      <DialSelectField
+      <Select
         id="translator-out"
-        label={t(EntityFieldsI18nKey.translatorOut)}
+        labelProps={{ label: t(EntityFieldsI18nKey.translatorOut), required: true }}
         placeholder={t(InterfacesI18nKey.SelectType)}
         options={interfaceOptions}
         value={entity.out ?? ''}
-        containerClassName={controlClassName}
+        className={controlClassName}
         disabled={isReadOnlyAdmin}
         onChange={onChangeOut}
-        required
       />
       <EndpointControl
         id="baseUrl"

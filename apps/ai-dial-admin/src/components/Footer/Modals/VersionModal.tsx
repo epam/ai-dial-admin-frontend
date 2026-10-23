@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Popup, DialSelectField, DialInput, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Popup, Input, PopupSize, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
@@ -114,15 +114,15 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
     >
       <div className="px-6 py-4">
         <div className="flex flex-row gap-x-4">
-          <DialSelectField
-            containerClassName="w-[160px]"
+          <Select
+            className="w-[160px]"
             id="definitionType"
             options={definitionTypes}
             value={definition}
-            label={t(CoreVersionModalI18nKey.DefinitionType)}
+            labelProps={{ label: t(CoreVersionModalI18nKey.DefinitionType) }}
             onChange={(value) => setDefinition(value as string)}
           />
-          <DialInput
+          <Input
             id="version"
             labelProps={{ label: t(EntityFieldsI18nKey.version), caption: captionDescription }}
             value={version}

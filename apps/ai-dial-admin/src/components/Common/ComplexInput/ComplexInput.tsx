@@ -1,6 +1,6 @@
 'use client';
 
-import { DialInput, DialInputProps } from '@epam/ai-dial-ui-kit';
+import { Input, InputProps } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -10,7 +10,7 @@ import { useI18n } from '@/src/locales/client';
 import { mergeClasses } from '@/src/utils/merge-classes';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
-interface Props extends DialInputProps {
+interface Props extends InputProps {
   value?: string;
   label: string;
   error?: string;
@@ -26,7 +26,7 @@ const ComplexInput: FC<Props> = ({ fullValue, label, value, isFullWidth, copyabl
   return (
     <div className="flex items-end gap-2">
       <div className={mergeClasses('flex items-end gap-2', isFullWidth && 'w-full')}>
-        <DialInput
+        <Input
           labelProps={{ label, required }}
           value={value}
           containerClassName={mergeClasses(

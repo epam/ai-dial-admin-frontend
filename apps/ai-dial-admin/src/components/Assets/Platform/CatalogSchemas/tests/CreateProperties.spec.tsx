@@ -9,7 +9,7 @@ import CatalogSchemaCreateProperties from '../CreateProperties';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  DialSelectField: ({ id, label, value, options, onChange }: any) => (
+  Select: ({ id, labelProps: { label } = {}, value, options, onChange }: any) => (
     <div>
       <label htmlFor={id}>{label}</label>
       <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>

@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
-import { GhostButton, DialInput, Label } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Input, Label } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -65,7 +65,7 @@ const AddTool: FC<Props> = ({ entity, onChangeEntity }) => {
       <Label label={t(EntityFieldsI18nKey.allowedTools)} />
       {(entity?.['dial:applicationTypeMcp']?.['dial:allowedTools'] || []).map((item, index) => (
         <div key={index} className="flex gap-x-2 items-end">
-          <DialInput
+          <Input
             id={`mcp-container-tool-${index}`}
             containerClassName="w-full"
             value={item}

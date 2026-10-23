@@ -1,6 +1,6 @@
 'use client';
 
-import { Notification, NotificationType, DialSelectField, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, NotificationVariant, Select } from '@epam/ai-dial-ui-kit';
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -81,9 +81,9 @@ const SpecificFunction: FC<Props> = ({
     <div className="mt-4 flex flex-col gap-4 rounded bg-layer-2 p-4">
       <span className="dial-tiny-semi-text text-secondary">{t(TestSuitesI18nKey.OverallScoreFunction)}</span>
 
-      <DialSelectField
+      <Select
         id="overallScoreFunctionName"
-        label={t(TestSuitesI18nKey.OverallScoreFunctionLabel)}
+        labelProps={{ label: t(TestSuitesI18nKey.OverallScoreFunctionLabel) }}
         value={functionName}
         options={functionOptions}
         onChange={onFunctionNameChange}

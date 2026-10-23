@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialNumberInput, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { NumberInput, Select } from '@epam/ai-dial-ui-kit';
 
 import { Container } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -128,17 +128,17 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
     <Accordion title={t(EntityFieldsI18nKey.Autoscaling)} errorIndicator={isSectionInvalid}>
       <div className="flex flex-col gap-6">
         <div className="flex gap-4 flex-col lg:flex-row">
-          <DialSelectField
+          <Select
             id="scaleToZero"
             options={scalingOptions}
             value={container.scaling?.scaleToZeroDelaySeconds?.toString() || scalingOptions[0].value}
             onChange={onScaleDelayChange}
-            label={t(ContainersI18nKey.ScaleToZero)}
-            containerClassName="max-w-[280px]"
+            labelProps={{ label: t(ContainersI18nKey.ScaleToZero) }}
+            className="max-w-[280px]"
             disabled={isDisabled}
           />
           <div className="flex gap-4">
-            <DialNumberInput
+            <NumberInput
               integer
               id="minScale"
               value={container.scaling?.minReplicas}
@@ -152,7 +152,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
               error={replicasError?.text}
               invalid={!!replicasError}
             />
-            <DialNumberInput
+            <NumberInput
               integer
               id="maxScale"
               min={1}
@@ -168,7 +168,7 @@ const ContainerAutoscaling: FC<Props> = ({ container, setContainer, disabled }) 
         </div>
         {showStrategy && (
           <div className="flex">
-            <DialNumberInput
+            <NumberInput
               id="threshold"
               value={container.scaling?.strategy?.threshold}
               onChange={onThresholdChange}

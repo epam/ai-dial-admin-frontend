@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { DialInput, Switch } from '@epam/ai-dial-ui-kit';
+import { Input, Switch } from '@epam/ai-dial-ui-kit';
 
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
@@ -162,14 +162,14 @@ const MetricConfiguration: FC<Props> = ({
           <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-5">
             <div className="flex flex-col gap-4">
               <p className="dial-small-semi text-primary">{t(TabsI18nKey.Properties)}</p>
-              <DialInput
+              <Input
                 labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
                 value={metricName}
                 error={metricNameError}
                 invalid={!!metricNameError}
                 onChange={onChangeName}
               />
-              <DialInput
+              <Input
                 labelProps={{ label: t(TestSuitesI18nKey.Condition) }}
                 caption={t(TestSuitesI18nKey.ConditionHint)}
                 placeholder="$exists(response.answer)"

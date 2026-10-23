@@ -1,6 +1,6 @@
 'use client';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -130,21 +130,20 @@ const DeploymentProperties: FC<Props> = ({
         />
       )}
 
-      <DialSelectField
+      <Select
         id="displayName"
-        label={t(EntityFieldsI18nKey.displayName)}
+        labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-        inlineSearch
-        required
+        searchable
         value={entity.displayName}
         customSelectedValue={entity.displayName}
         onChange={(value) => onChangeDisplayName(value as string)}
-        onInlineQueryChange={(value) => onChangeDisplayName(value)}
         error={displayNameError}
+        invalid={!!displayNameError}
         options={uniq(namesConfiguration.names)
           .sort()
           .map((name) => ({ value: name, label: name }))}
-        containerClassName={!isEntityImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH}
+        className={!isEntityImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH}
         disabled={isReadOnlyAdmin}
       />
       {isEntitiesWithDisplayVersion(view) && (

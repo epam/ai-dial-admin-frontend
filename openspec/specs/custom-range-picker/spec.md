@@ -54,9 +54,9 @@ The system SHALL derive the telemetry time-range cap from `GET /api/v1/metrics/d
 - **WHEN** the calendar renders
 - **THEN** dates after today SHALL be disabled and the forward navigation arrow SHALL be hidden on the current month
 
-### Requirement: TimeFilter layout with DialSelect and footer flyout
+### Requirement: TimeFilter layout with Select and footer flyout
 
-`TimeFilter` SHALL use `DialSelect` for native preset rendering with a Custom row in the `footer` slot. The calendar panel SHALL fly out to the right. A local `isCustom` state SHALL manage UI display without prop drilling.
+`TimeFilter` SHALL use `Select` for native preset rendering with a Custom row in the `footer` slot. The calendar panel SHALL fly out to the right. A local `isCustom` state SHALL manage UI display without prop drilling.
 
 #### Scenario: Preset click commits immediately
 - **WHEN** user clicks a preset row

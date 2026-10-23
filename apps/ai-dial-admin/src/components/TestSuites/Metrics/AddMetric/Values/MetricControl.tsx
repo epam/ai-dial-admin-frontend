@@ -1,4 +1,4 @@
-import { Label, DialSelect } from '@epam/ai-dial-ui-kit';
+import { Label, Select } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
@@ -77,8 +77,8 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, nestedInArray 
             >
               {getDataTypeIcon('array')}
             </span>
-            <DialSelect
-              elementId={field.id}
+            <Select
+              id={field.id}
               multiple
               options={enumArrayOptions}
               placeholder={selectPlaceholder}

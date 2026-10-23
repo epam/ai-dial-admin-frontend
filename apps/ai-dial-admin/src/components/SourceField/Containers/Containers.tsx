@@ -1,4 +1,4 @@
-import { DialInput, DialSelectField, Label, OutlinedButton } from '@epam/ai-dial-ui-kit';
+import { Input, Label, OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -130,18 +130,17 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
       <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="flex flex-col w-full">
-            <DialSelectField
+            <Select
               options={containers.map((container) => ({
                 value: container.name as string,
                 label: container.displayName as string,
               }))}
-              required
+              labelProps={{ label: t(EntityFieldsI18nKey.container), required: true }}
               searchable
               onChange={(container) => onSelect(container as string)}
               id="source-type"
               value={selectedContainerName}
               placeholder={t(CreateI18nKey.SelectContainer)}
-              label={t(EntityFieldsI18nKey.container)}
               disabled={disabled || !featureFlags.deploymentsEnabled}
             />
           </div>
@@ -194,7 +193,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
       )}
       {entity.source?.containerId && selectedContainer && isModal && view === ApplicationRoute.Adapters && (
         <div className="flex flex-col gap-y-8">
-          <DialInput
+          <Input
             id="completionEndpointPath"
             labelProps={{ label: t(EntityFieldsI18nKey.completionEndpointPath) }}
             placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpointPath)}
@@ -206,7 +205,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
               });
             }}
           />
-          <DialInput
+          <Input
             id="responsesEndpointPath"
             labelProps={{ label: t(EntityFieldsI18nKey.responsesEndpointPath) }}
             placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpointPath)}

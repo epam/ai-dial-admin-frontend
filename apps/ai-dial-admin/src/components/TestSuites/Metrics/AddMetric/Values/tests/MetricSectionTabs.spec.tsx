@@ -6,9 +6,8 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import MetricSectionTabs from '../MetricSectionTabs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  SelectSize: { Sm: 'sm' },
-  SelectVariant: { Secondary: 'secondary' },
-  DialSelect: ({ options, value, onChange, prefix }: any) => (
+  ElementSize: { Small: 'small' },
+  Select: ({ options, value, onChange, prefix }: any) => (
     <select aria-label="section-view" value={value} data-prefix={prefix} onChange={(e) => onChange(e.target.value)}>
       {options.map((option: any) => (
         <option key={option.value} value={option.value}>

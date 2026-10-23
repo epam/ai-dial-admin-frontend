@@ -65,7 +65,7 @@ describe('CatalogSchemaField', () => {
     const user = userEvent.setup();
     renderField();
 
-    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
 
     expect(screen.getByText(apiWritten.$id)).toBeTruthy();
     expect(screen.getByText(fileDeclared.$id)).toBeTruthy();
@@ -75,7 +75,7 @@ describe('CatalogSchemaField', () => {
     const user = userEvent.setup();
     renderField();
 
-    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
 
     expect(screen.getByText(apiWritten['dial:catalogDisplayName'] as string)).toBeTruthy();
     expect(screen.getByText(apiWritten.$id)).toBeTruthy();
@@ -89,7 +89,7 @@ describe('CatalogSchemaField', () => {
     const namesake: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': 'Model card' };
     renderField({ options: [apiWritten, namesake] });
 
-    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
 
     expect(screen.getAllByText('Model card')).toHaveLength(2);
     expect(screen.getAllByText(apiWritten.$id)).toHaveLength(1);
@@ -101,7 +101,7 @@ describe('CatalogSchemaField', () => {
     const unnamed: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': '' };
     renderField({ options: [unnamed] });
 
-    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
 
     expect(screen.getAllByText(unnamed.$id)).toHaveLength(1);
   });
@@ -111,7 +111,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ onChange });
 
-    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
     await user.click(screen.getByText(fileDeclared.$id));
 
     expect(onChange).toHaveBeenCalledWith(fileDeclared.$id);
@@ -134,7 +134,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
     await user.click(screen.getAllByText(apiWritten.$id).at(-1)!);
 
     expect(onChange).not.toHaveBeenCalled();
@@ -156,7 +156,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
     await user.click(screen.getByText(BasicI18nKey.None));
 
     expect(onChange).toHaveBeenCalledWith(undefined);
@@ -221,7 +221,7 @@ describe('CatalogSchemaField — filtered to an entity kind', () => {
     const user = userEvent.setup();
     renderField();
 
-    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
 
     expect(screen.getByText(apiWritten.$id)).toBeTruthy();
     expect(screen.getByText(kindless.$id)).toBeTruthy();
@@ -232,7 +232,7 @@ describe('CatalogSchemaField — filtered to an entity kind', () => {
     const user = userEvent.setup();
     renderField({ schemaId: fileDeclared.$id });
 
-    await user.click(screen.getByRole('button', { name: `Agent card ${fileDeclared.$id}` }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(EntitiesI18nKey.CatalogSchema) }));
 
     expect(screen.getAllByText(fileDeclared.$id).length).toBeGreaterThan(0);
   });

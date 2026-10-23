@@ -52,7 +52,7 @@ describe('Translator asset :: create form', () => {
     const onChangeEntity = vi.fn();
     renderCreateForm(onChangeEntity);
 
-    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.baseUrl}*` }), {
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.baseUrl}(required)` }), {
       target: { value: 'http://dial-bedrock-translator/to-responses' },
     });
 

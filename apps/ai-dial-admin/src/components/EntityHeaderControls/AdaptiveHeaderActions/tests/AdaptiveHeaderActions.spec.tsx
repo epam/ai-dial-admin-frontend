@@ -11,7 +11,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<typeof import('@epam/ai-dial-ui-kit')>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialDropdown: ({ items, children }: { items: unknown[]; children: React.ReactNode }) => {
+    Dropdown: ({ items, children }: { items: unknown[]; children: React.ReactNode }) => {
       dropdownItemsSpy(items);
       return <div data-testid="overflow-dropdown">{children}</div>;
     },

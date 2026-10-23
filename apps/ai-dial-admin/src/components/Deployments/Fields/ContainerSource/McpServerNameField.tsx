@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { OutlinedButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -149,6 +149,11 @@ const McpServerNameField: FC<Props> = ({
       // change is recognised as stale; the options fetch stays debounced. Ignore the
       // kit's post-selection echo (it re-emits the label/name of the value we just
       // committed) so it doesn't drop the version from a freshly applied pick.
+      // The select also reports an empty query when its list closes after a pick; that is not user
+      // input, and treating it as intent would drop the lookup the pick just started.
+      if (!value) {
+        return;
+      }
       const committedName = latestIntentRef.current.split('@')[0];
       if (value !== committedName) {
         latestIntentRef.current = value;
@@ -182,19 +187,19 @@ const McpServerNameField: FC<Props> = ({
   return (
     <>
       <div className="flex gap-3 w-full">
-        <DialSelectField
+        <Select
           id="mcpServerName"
-          label={t(EntityFieldsI18nKey.McpServerName)}
-          required
+          labelProps={{ label: t(EntityFieldsI18nKey.McpServerName), required: true }}
           placeholder={t(EntityPlaceholdersI18nKey.McpServerName)}
-          inlineSearch={true}
+          searchable
           value={serverName}
           customSelectedValue={serverName}
           onChange={(value) => onChangeServerName(value as string)}
-          onInlineQueryChange={handleInlineQueryChange}
+          onSearchQueryChange={handleInlineQueryChange}
           options={serverOptions}
           error={serverNameError?.text}
-          containerClassName={containerClassName}
+          invalid={!!serverNameError?.text}
+          className={containerClassName}
           disabled={disabled}
         />
         <OutlinedButton

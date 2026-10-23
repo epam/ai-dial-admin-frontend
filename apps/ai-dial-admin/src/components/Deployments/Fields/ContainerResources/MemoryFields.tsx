@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
@@ -149,7 +149,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer, disabled }) => {
 
   return (
     <div className="flex gap-2 flex-col lg:flex-row">
-      <DialNumberInput
+      <NumberInput
         id="memoryRequest"
         containerClassName="w-[180px]"
         labelProps={{ label: t(EntityFieldsI18nKey.MemoryRequest) }}
@@ -160,7 +160,7 @@ const MemoryFields: FC<Props> = ({ container, setContainer, disabled }) => {
         disabled={isDisabled}
         onChange={onChangeRequest}
       />
-      <DialNumberInput
+      <NumberInput
         id="memoryLimit"
         containerClassName="w-[180px]"
         labelProps={{ label: t(EntityFieldsI18nKey.MemoryLimit) }}

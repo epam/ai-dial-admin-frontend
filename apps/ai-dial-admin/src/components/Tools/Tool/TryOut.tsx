@@ -5,11 +5,10 @@ import {
   CloseButton,
   Spinner,
   PrimaryButton,
-  DialSelect,
+  Select,
   JsonSchema,
   SelectOption,
-  SelectSize,
-  SelectVariant,
+  ElementSize,
 } from '@epam/ai-dial-ui-kit';
 
 import { tryOutTool } from '@/src/app/[lang]/applications/actions';
@@ -120,10 +119,10 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="flex flex-row items-center justify-between mb-4">
             <h3>{t(BasicI18nKey.Request)}</h3>
-            <DialSelect
+            <Select
               prefix={`${t(CompareI18nKey.View)}: `}
-              size={SelectSize.Sm}
-              variant={SelectVariant.Secondary}
+              ariaLabel={t(CompareI18nKey.View)}
+              size={ElementSize.Small}
               options={items}
               value={responseView}
               onChange={(v) => setResponseView(v as ParamsView)}

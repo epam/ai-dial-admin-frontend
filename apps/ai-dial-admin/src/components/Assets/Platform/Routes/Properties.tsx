@@ -2,8 +2,8 @@
 
 import {
   ButtonAppearance,
-  DialInput,
-  DialNumberInput,
+  Input,
+  NumberInput,
   PrimaryButton,
   RadioGroup,
   Switch,
@@ -185,7 +185,7 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
           onChange={onChangeOutput}
         />
         <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !asset.response && 'hidden')}>
-          <DialNumberInput
+          <NumberInput
             disabled={isReadOnlyAdmin}
             id="status"
             containerClassName="w-[150px]"
@@ -196,7 +196,7 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
             error={statusError}
             invalid={!!statusError}
           />
-          <DialInput
+          <Input
             disabled={isReadOnlyAdmin}
             id="body"
             containerClassName="flex-1"
@@ -223,7 +223,7 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
         </div>
         <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
         <div className={classNames('flex gap-x-2 flex-row items-end', STANDARD_CONTROL_WIDTH)}>
-          <DialNumberInput
+          <NumberInput
             id="order"
             disabled={isReadOnlyAdmin}
             containerClassName="w-1/2"

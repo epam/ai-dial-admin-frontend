@@ -1,6 +1,6 @@
 'use client';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import { getInterfaceTypeLabel } from '@/src/components/BaseControls/InterfacesField/InterfacesField';
@@ -47,9 +47,9 @@ const TranslatorField = ({ fieldId, type, translator, translators, disabled, onC
 
   return (
     <div className="flex flex-col gap-y-2 w-full">
-      <DialSelectField
+      <Select
         id={`${fieldId}-translator`}
-        label={t(InterfacesI18nKey.Translator)}
+        labelProps={{ label: t(InterfacesI18nKey.Translator) }}
         placeholder={t(InterfacesI18nKey.SelectTranslator)}
         options={options}
         value={selectedValue}
@@ -67,9 +67,9 @@ const TranslatorField = ({ fieldId, type, translator, translators, disabled, onC
             endpoint={translator.baseUrl}
             onChange={(baseUrl) => onChange({ ...translator, baseUrl: baseUrl ?? '' })}
           />
-          <DialSelectField
+          <Select
             id={`${fieldId}-translator-out`}
-            label={t(EntityFieldsI18nKey.translatorOut)}
+            labelProps={{ label: t(EntityFieldsI18nKey.translatorOut) }}
             options={outTypeOptions.map((outType) => ({ value: outType, label: getInterfaceTypeLabel(t, outType) }))}
             value={translator.out}
             disabled={disabled}

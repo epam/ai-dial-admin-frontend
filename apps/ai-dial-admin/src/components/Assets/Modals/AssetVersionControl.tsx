@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { GhostButton, Spinner, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Spinner, Select, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -119,10 +119,10 @@ const AssetVersionControl: FC<Props> = ({
     <>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <DialSelect
+          <Select
             prefix={`${t(EntityFieldsI18nKey.version)}: `}
-            size={SelectSize.Sm}
-            variant={SelectVariant.Secondary}
+            ariaLabel={t(EntityFieldsI18nKey.version)}
+            size={ElementSize.Small}
             options={items}
             value={asset._metadata?.version}
             disabled={isVersionLoading}

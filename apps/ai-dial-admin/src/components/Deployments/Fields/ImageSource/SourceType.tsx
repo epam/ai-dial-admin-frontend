@@ -1,5 +1,5 @@
 import { FC, useCallback } from 'react';
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { IMAGE_SOURCE_TYPE, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
@@ -104,22 +104,22 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion, regist
   return (
     <div className="flex gap-x-4">
       {isModal && !image.source?.externalRegistryRef && (
-        <DialSelectField
+        <Select
           id="imagesType"
-          containerClassName="w-[220px]"
+          className="w-[220px]"
           value={image.$type}
           options={imageTypesList}
-          label={t(EntityFieldsI18nKey.type)}
+          labelProps={{ label: t(EntityFieldsI18nKey.type) }}
           onChange={onImageTypeChange}
           disabled={isReadOnlyAdmin}
         />
       )}
-      <DialSelectField
+      <Select
         id="sourceType"
-        containerClassName="w-[220px]"
+        className="w-[220px]"
         value={image.source.$type}
         options={sourcesList}
-        label={t(EntitiesI18nKey.SourceType)}
+        labelProps={{ label: t(EntitiesI18nKey.SourceType) }}
         onChange={onSourceTypeChange}
         disabled={isReadOnlyAdmin || isRegistryDisabled}
       />

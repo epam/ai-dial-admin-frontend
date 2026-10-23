@@ -1,6 +1,6 @@
 'use client';
 
-import { DialNumberInput, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { NumberInput, Select } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -113,9 +113,9 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
   return (
     <div className="mt-3 flex flex-row items-start gap-2">
       <div className="min-w-0 flex-1">
-        <DialSelectField
+        <Select
           id={`overallScoreMetric_${index}`}
-          label={index === 0 ? t(TestSuitesI18nKey.OverallScoreMetricLabel) : undefined}
+          labelProps={{ label: index === 0 ? t(TestSuitesI18nKey.OverallScoreMetricLabel) : undefined }}
           value={metricValue}
           options={metricOptions}
           searchable
@@ -125,7 +125,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
         />
       </div>
       <div className="w-[100px]">
-        <DialNumberInput
+        <NumberInput
           id={`overallScoreWeight_${index}`}
           labelProps={index === 0 ? { label: t(TestSuitesI18nKey.OverallScoreWeightLabel) } : undefined}
           step={0.01}

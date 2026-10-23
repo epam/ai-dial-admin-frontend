@@ -7,7 +7,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 import SelectCellRenderer from '../SelectCellRenderer';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialSelect: ({ value, onChange, options = [] }: any) => (
+  Select: ({ value, onChange, options = [] }: any) => (
     <select role="combobox" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
       {options.map((option: any) => (
         <option key={option.value} value={option.value}>

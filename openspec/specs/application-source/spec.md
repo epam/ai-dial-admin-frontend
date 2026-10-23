@@ -40,7 +40,7 @@ The legacy enum name `ApplicationSourceType` MUST remain exported as an alias of
 
 ### Requirement: Regular Applications use the shared SourceField component
 
-`DialApplication` editing (every Applications-family view **except `ApplicationRoute.AssetsApplications`**, which renders `ResourceSourceField` instead) SHALL render `components/SourceField/SourceField.tsx` as its source editor, using the same dropdown selector (`DialSelectField`) used by Models, Toolsets, Adapters, and Interceptors.
+`DialApplication` editing (every Applications-family view **except `ApplicationRoute.AssetsApplications`**, which renders `ResourceSourceField` instead) SHALL render `components/SourceField/SourceField.tsx` as its source editor, using the same dropdown selector (`Select`) used by Models, Toolsets, Adapters, and Interceptors.
 
 The regular Applications source dropdown (`ApplicationRoute.Applications`) MUST offer exactly three options in this scope:
 

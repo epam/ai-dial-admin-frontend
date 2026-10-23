@@ -1,12 +1,12 @@
 'use client';
 
 import { FC } from 'react';
-import { GhostButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Select, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
 import { getVersionsList } from '@/src/utils/deployments/images';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -14,10 +14,9 @@ interface Props {
   selected: string;
   onChange: (id: string) => void;
   onClick?: () => void;
-  variant?: SelectVariant;
 }
 
-const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = SelectVariant.Secondary, onClick }) => {
+const VersionsSelect: FC<Props> = ({ onChange, versions, selected, onClick }) => {
   const t = useI18n();
 
   if (!versions.length) {
@@ -25,10 +24,10 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = Sel
   }
 
   return (
-    <DialSelect
+    <Select
+      ariaLabel={t(CompareI18nKey.Version)}
       options={getVersionsList(versions)}
-      variant={variant}
-      size={SelectSize.Sm}
+      size={ElementSize.Small}
       value={selected}
       className="px-2"
       onChange={(id) => {

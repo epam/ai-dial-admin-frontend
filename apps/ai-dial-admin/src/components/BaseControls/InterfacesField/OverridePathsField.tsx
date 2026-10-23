@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { GhostButton, DialInput, Label, DialSelectField, Tooltip } from '@epam/ai-dial-ui-kit';
+import { GhostButton, Input, Label, Tooltip, Select } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { OVERRIDE_PATH_OPERATIONS } from '@/src/components/BaseControls/InterfacesField/constants';
@@ -109,7 +109,7 @@ const OverridePathsField = ({ fieldId, type, value, disabled, onChange }: Props)
 
         return (
           <div key={operation.key} className="flex items-end gap-x-2">
-            <DialInput
+            <Input
               id={`${fieldId}-override-${operation.key}`}
               labelProps={{ label: operation.key }}
               placeholder={operation.defaultPath}
@@ -131,9 +131,9 @@ const OverridePathsField = ({ fieldId, type, value, disabled, onChange }: Props)
       })}
 
       {!disabled && isSelecting && (
-        <DialSelectField
+        <Select
           id={`${fieldId}-override-select`}
-          containerClassName="max-w-[300px]"
+          className="max-w-[300px]"
           placeholder={t(InterfacesI18nKey.SelectOverridePath)}
           options={availableOperations.map((operation) => ({ value: operation.key, label: operation.key }))}
           value=""

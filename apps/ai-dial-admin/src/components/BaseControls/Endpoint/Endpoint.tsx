@@ -1,4 +1,4 @@
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
@@ -114,7 +114,7 @@ const EndpointControl: FC<Props> = ({
   ) : isDisabled ? (
     <ComplexInput id={id} label={label} value={endpoint || ''} copyable disabled isFullWidth={isFullWidth} />
   ) : (
-    <DialInput
+    <Input
       prefix={prefix}
       id={id}
       value={endpoint || ''}

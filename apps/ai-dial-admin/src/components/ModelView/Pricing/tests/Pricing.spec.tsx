@@ -12,11 +12,11 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
   useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
 }));
 
-// Only the select is replaced — the real DialNumberInput is kept so the price fields behave as they
+// Only the select is replaced — the real NumberInput is kept so the price fields behave as they
 // do in the app (a cleared field emits null, which is what distinguishes "unset" from "0").
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  DialSelectField: ({ id, label, value, options, onChange, disabled }: any) => (
+  Select: ({ id, labelProps: { label } = {}, value, options, onChange, disabled }: any) => (
     <div>
       <label htmlFor={id}>{label}</label>
       <select id={id} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>

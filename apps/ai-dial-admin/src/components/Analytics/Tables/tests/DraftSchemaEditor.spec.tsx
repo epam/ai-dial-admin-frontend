@@ -11,7 +11,7 @@ import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/an
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
 
 // Render Tooltip content inline so the hint message is queryable (the real component only mounts
-// its content on hover, via a portal), and swap DialSelectField for a native select so options and
+// its content on hover, via a portal), and swap Select for a native select so options and
 // selection are queryable by role — the real one renders a custom listbox. Labels here are ReactNodes
 // (label text + info tooltip), so the association is by `id` rather than an aria-label string.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -25,7 +25,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
       </>
     ),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    DialSelectField: ({ id, label, options, value, onChange, multiple, error }: any) => (
+    Select: ({ id, labelProps: { label } = {}, options, value, onChange, multiple, error }: any) => (
       <div>
         <label htmlFor={id}>{label}</label>
         <select

@@ -10,7 +10,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialSelect: ({ value, onChange, options, prefix }: any) => (
+    Select: ({ value, onChange, options, prefix }: any) => (
       <select
         role="combobox"
         aria-label={prefix}

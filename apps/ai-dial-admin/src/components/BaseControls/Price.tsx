@@ -1,4 +1,4 @@
-import { DialNumberInput } from '@epam/ai-dial-ui-kit';
+import { NumberInput } from '@epam/ai-dial-ui-kit';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 import { FC, InputEvent, useEffect, useState } from 'react';
 
@@ -40,7 +40,7 @@ const PriceControl: FC<Props> = ({ elementId, label, value, onChange, ...props }
   const onBlur = () => setIsEditing(false);
 
   return (
-    <DialNumberInput
+    <NumberInput
       id={elementId}
       labelProps={{ label }}
       iconBefore={<IconCurrencyDollar className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />}

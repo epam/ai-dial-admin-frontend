@@ -197,7 +197,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
     expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByLabelText('sql-editor')).toHaveValue(composite.sql);
-    expect(screen.getByText(/QueryBuilder.Source:\s+conversations/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/conversations/);
     expect(screen.queryByText('QueryBuilder.SchemaLoadFailed')).not.toBeInTheDocument();
   });
 

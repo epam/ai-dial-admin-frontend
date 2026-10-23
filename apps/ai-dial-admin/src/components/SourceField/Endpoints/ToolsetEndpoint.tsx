@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Select } from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
@@ -56,11 +56,11 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
         />
       )}
       {!isModal && (
-        <DialSelectField
+        <Select
           disabled={isDisabled}
-          label={t(EntityFieldsI18nKey.transport)}
+          labelProps={{ label: t(EntityFieldsI18nKey.transport) }}
           id="transport"
-          containerClassName="w-[180px]"
+          className="w-[180px]"
           value={toolsetTransport}
           options={toolsetTransports}
           onChange={(transport) => onChange?.({ ...entity, transport: transport as ToolsetTransport })}

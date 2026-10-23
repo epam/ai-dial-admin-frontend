@@ -52,7 +52,7 @@ The `<ContainerSource>` component inside `ContainerFields.tsx` SHALL render unco
 #### Scenario: IMAGE_REFERENCE still renders the docker/MCP registry input
 
 - **WHEN** a container has `source.$type === 'image_reference'`
-- **THEN** `ContainerSource` SHALL render either `McpServerNameField` (when `externalRegistryRef` is present) or the `imageReference` `DialInput` (otherwise)
+- **THEN** `ContainerSource` SHALL render either `McpServerNameField` (when `externalRegistryRef` is present) or the `imageReference` `Input` (otherwise)
 
 #### Scenario: HUGGINGFACE still renders HFModelNameField
 
