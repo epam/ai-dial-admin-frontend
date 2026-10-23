@@ -22,7 +22,7 @@ const AddTestCase: FC<Props> = ({ isModalOpen, onClose, onAdd }) => {
       onClose={onClose}
       header="add test case"
       portalId="AddTestCase"
-      className="h-[660px]"
+      className="md:h-[660px]"
       open={isModalOpen}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

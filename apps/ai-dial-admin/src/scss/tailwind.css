@@ -13,6 +13,9 @@
 
 @source '../**/*.{html,js,ts,tsx,yaml}';
 @source '../../../../node_modules/@epam/ai-dial-ui-kit/dist';
+/* Scanned for the same reason as the kit: the library reveals row actions with `opacity-0 group-hover/grid-row:opacity-100`,
+   and the `important` utilities above make the base class win unless its hover variant is emitted `!important` too. */
+@source '../../../../node_modules/@epam/ai-dial-react-file-manager/dist';
 
 /* Tailwind v3 preflight behaviour that v4 dropped. */
 @layer base {

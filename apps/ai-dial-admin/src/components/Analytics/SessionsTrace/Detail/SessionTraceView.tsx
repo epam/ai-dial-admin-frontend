@@ -16,6 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import {
   SessionTraceFigures,
   HopBodyGrants,
+  SessionFeedbackRow,
   SpanFieldGroup,
   SpanFieldRow,
 } from '@/src/models/analytics/sessions-trace';
@@ -33,7 +34,7 @@ import {
   spanBodyTabsOf,
   spanKindOf,
 } from '@/src/utils/analytics/session-spans';
-import { buildHopTree } from '@/src/utils/analytics/session-span-tree';
+import { attributeFeedbackToSpans, buildHopTree } from '@/src/utils/analytics/session-span-tree';
 
 const ICON_SIZE = 16;
 
@@ -72,6 +73,13 @@ interface Props {
   // read itself. Empty where that schema could not be read.
   fieldGroups: SpanFieldGroup[];
   bodyGrants: HopBodyGrants;
+  // The session's ratings by response id. Absent where the trace was opened without a session — an entity's
+  // listing — so no span states a rating there.
+  feedbackByResponseId?: Map<string, SessionFeedbackRow>;
+  // The session's rating list is capped, so a rated response past the cap is missing from the map above and its
+  // span reads as unrated. Stated once for the trace rather than on every span that might be one.
+  isFeedbackPartial?: boolean;
+  isCommentTextReadable?: boolean;
   hasLoadError: boolean;
   selectedSpanId: string | null;
   onSelectSpan: (coreSpanId: string) => void;
@@ -85,6 +93,9 @@ const SessionTraceView: FC<Props> = ({
   spans,
   fieldGroups,
   bodyGrants,
+  feedbackByResponseId,
+  isFeedbackPartial = false,
+  isCommentTextReadable,
   hasLoadError,
   selectedSpanId,
   onSelectSpan,
@@ -93,6 +104,10 @@ const SessionTraceView: FC<Props> = ({
   const t = useI18n();
 
   const tree = useMemo(() => buildHopTree(spans), [spans]);
+  const feedbackBySpanId = useMemo(
+    () => attributeFeedbackToSpans(tree, feedbackByResponseId),
+    [tree, feedbackByResponseId],
+  );
   const selectedSpan = spans.find(({ core_span_id }) => core_span_id === selectedSpanId) ?? null;
   const selected = useMemo(
     () =>
@@ -127,7 +142,12 @@ const SessionTraceView: FC<Props> = ({
       <NoDataContent title={t(SessionsTraceI18nKey.TraceLoadFailed)} />
     </div>
   ) : (
-    <SessionEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
+    <SessionEventStream
+      tree={tree}
+      feedbackBySpanId={feedbackBySpanId}
+      selectedSpanId={selectedSpanId}
+      onSelectSpan={onSelectSpan}
+    />
   );
 
   const bodies =
@@ -207,6 +227,10 @@ const SessionTraceView: FC<Props> = ({
         </p>
       )}
 
+      {feedbackByResponseId && isFeedbackPartial && (
+        <p className="dial-tiny-text text-secondary">{t(SessionsTraceI18nKey.TraceRatingsPartial)}</p>
+      )}
+
       {/* A withheld body column is a fixed fact about this account, so it is stated once for the whole view.
           Repeating it inside every hop would explain the same thing again on every click. */}
       {withheldKey && (
@@ -223,7 +247,12 @@ const SessionTraceView: FC<Props> = ({
             stream
           )}
         </div>
-        <SessionSpanDetail node={selected} fieldGroups={fieldGroups} />
+        <SessionSpanDetail
+          node={selected}
+          fieldGroups={fieldGroups}
+          feedback={selectedSpanId === null ? undefined : feedbackBySpanId.get(selectedSpanId)}
+          isCommentTextReadable={isCommentTextReadable}
+        />
       </div>
     </div>
   );

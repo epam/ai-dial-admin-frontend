@@ -184,7 +184,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
       header={getCreateEntityTitle(view, t)}
       portalId="CreateAsset"
       size={PopupSize.Lg}
-      className="h-[750px]"
+      className="md:h-[750px]"
       open={isModalOpen}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

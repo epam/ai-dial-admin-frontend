@@ -52,7 +52,7 @@ const AddEntitiesGrid = <T extends object>({
       header={modalTitle}
       portalId="AddEntity"
       open={isModalOpen}
-      className="h-[800px]"
+      className="md:h-[800px]"
       size={PopupSize.Lg}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

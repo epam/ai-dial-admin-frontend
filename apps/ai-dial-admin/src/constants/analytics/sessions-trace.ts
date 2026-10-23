@@ -149,6 +149,7 @@ export const SPAN_BASE_FIELDS: UsageLogField[] = [
   UsageLogField.McpMethod,
   UsageLogField.McpToolCallName,
   UsageLogField.ExecutionPath,
+  UsageLogField.ResponseId,
 ];
 
 // The one column the groups drop: the baggage table's copy of the request time is non-nullable, so an event

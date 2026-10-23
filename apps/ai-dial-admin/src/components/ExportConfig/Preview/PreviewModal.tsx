@@ -167,7 +167,7 @@ const PreviewModal: FC<Props> = ({
       header={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       open={isModalOpen}
-      className="h-[754px]"
+      className="md:h-[754px]"
       size={PopupSize.Lg}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),

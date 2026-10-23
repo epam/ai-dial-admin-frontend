@@ -44,7 +44,7 @@ const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, is
       header={t(RunsI18nKey.RunCompareSelectRun)}
       portalId="SelectCompareRunModal"
       size={PopupSize.Lg}
-      className="h-[750px]"
+      className="md:h-[750px]"
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Confirm),

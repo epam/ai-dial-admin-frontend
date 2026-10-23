@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  SessionFeedbackRow,
   SessionSpanRow,
   HopFactsShape,
   HopNodeKind,
@@ -9,6 +10,7 @@ import {
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
 import {
+  attributeFeedbackToSpans,
   buildHopTree,
   countMatchingNodes,
   countMatchableNodes,
@@ -432,5 +434,43 @@ describe('flattenHopTree', () => {
     const expanded = tree.map((node) => ({ ...node, expanded: true }));
 
     expect(flattenHopTree(expanded).map(({ isLastChild }) => isLastChild)).toEqual([true, false, true]);
+  });
+});
+
+describe('attributeFeedbackToSpans', () => {
+  const RATED = { response_id: 'resp-rated' } as SessionFeedbackRow;
+  const BY_RESPONSE_ID = new Map([['resp-rated', RATED]]);
+
+  test('places a rating on the span that recorded its response id', () => {
+    const tree = buildHopTree([
+      hop('entry', { response_id: 'resp-rated' }),
+      hop('model', { core_parent_span_id: 'entry', response_id: 'resp-upstream' }),
+    ]);
+
+    expect([...attributeFeedbackToSpans(tree, BY_RESPONSE_ID)]).toEqual([['entry', RATED]]);
+  });
+
+  test('places a relayed response id on the shallowest span only', () => {
+    const tree = buildHopTree([
+      hop('model', { core_parent_span_id: 'entry', response_id: 'resp-rated', request_time: 1100 }),
+      hop('entry', { response_id: 'resp-rated', request_time: 1000 }),
+    ]);
+
+    expect([...attributeFeedbackToSpans(tree, BY_RESPONSE_ID).keys()]).toEqual(['entry']);
+  });
+
+  test('places a response id shared by siblings on the earliest', () => {
+    const tree = buildHopTree([
+      hop('later', { response_id: 'resp-rated', request_time: 2000 }),
+      hop('earlier', { response_id: 'resp-rated', request_time: 1000 }),
+    ]);
+
+    expect([...attributeFeedbackToSpans(tree, BY_RESPONSE_ID).keys()]).toEqual(['earlier']);
+  });
+
+  test('places nothing without ratings to join', () => {
+    const tree = buildHopTree([hop('entry', { response_id: 'resp-rated' })]);
+
+    expect(attributeFeedbackToSpans(tree).size).toBe(0);
   });
 });
