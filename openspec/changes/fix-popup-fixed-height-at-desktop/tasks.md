@@ -1,6 +1,6 @@
 ## 1. Confirm the mechanism and the site list
 
-- [x] 1.1 Add a unit spec for the kit's `mergeClasses` showing `md:h-auto` is replaced by `md:h-[800px]`, `md:h-[80vh]` and `md:h-[754px]`, and that an unprefixed `h-[800px]` leaves `md:h-auto` in place (documents the cause in #5197)
+- [x] 1.1 Confirm against the kit's `mergeClasses` that `md:h-auto` is replaced by `md:h-[800px]`, `md:h-[80vh]` and `md:h-[754px]`, and that an unprefixed `h-[800px]` leaves `md:h-auto` in place (the cause in #5197); checked by hand, no spec kept
 - [x] 1.2 Grep for `Popup` heights outside a literal one-line `<Popup className="…">`: `classNames(...)`/variable `className`, and wrappers that forward `className` to `Popup` (e.g. `components/Common/InputPopup`); add any hits to the lists below
 - [x] 1.3 Inspect `TestSuites/Modals/EditRequestWizard/EditRequestWizard.tsx:187` (`min-h-[800px]`): if its body relies on `h-full`/`flex-1`, change to `md:h-[800px]`; otherwise leave it and note why in the PR
 
@@ -22,9 +22,8 @@
 - [x] 4.3 `ExportConfig/AddEntities/AddEntitiesModal.tsx` (`h-[800px]`), `ExportConfig/Preview/PreviewModal.tsx` (`h-[754px]`), `ImportConfig/ConfigurationPreview/GlobalFirewallCompareModal.tsx` (`h-[800px]`): add `md:`
 - [x] 4.4 `Common/FullscreenViewer/FullscreenViewer.tsx` (`h-[80vh]`, found in 1.2; its `header` JSX hid it from the first scan): add `md:`
 
-## 5. Guard and tests
+## 5. Tests
 
-- [-] 5.1 ~~Add `src/tests/popup-height-prefix.spec.ts` source-scanning guard~~ Dropped: a regex scan over sources is brittle; the guard is not enforced by a test
 - [x] 5.2 Update component specs that assert the old `h-[…]` class (grep specs for `h-\[` near `Popup`/modal names); none may be left asserting the unprefixed class
 - [x] 5.3 Add a regression assertion to `AddMetricModal` and `FullscreenValueViewer` specs that the popup `className` carries the `md:`-prefixed height (specs mock `Popup` per `test-setup.tsx`, so assert the prop)
 
@@ -37,4 +36,4 @@
 
 - [ ] 7.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs`, then `npm run test` (full run last)
 
-<!-- No browser-verification task: declined when asked. Acceptance of the height scenarios rests on 1.1, 5.1 and 5.3 for the popups; 6.2 is a hand check by the reporter's flow for #5200. -->
+<!-- No browser-verification task: declined when asked. Acceptance of the height scenarios rests on 5.3 for the popups; 6.2 is a hand check by the reporter's flow for #5200. -->

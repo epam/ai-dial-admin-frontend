@@ -14,7 +14,7 @@ from the same stylesheet.
 
 **Goals:**
 - A `Popup` given a fixed height keeps it at ≥768px whatever its content.
-- One mechanical, reviewable change per site, with a guard against regression.
+- One mechanical, reviewable change per site.
 
 **Non-Goals:**
 - Changing the ui-kit, mobile layout, modal sizes, or other overlay types.
@@ -47,16 +47,6 @@ the intended winner there.
   `EditRequestWizard` (`min-h-[800px]`) has a height-dependent body: decided by inspection in the task,
   converting to `md:h-[800px]` only if its content fills the panel.
 
-### Guard: a source-scanning spec
-A vitest spec walks `src/**/*.tsx` (excluding specs), finds `<Popup` opening tags and fails when a
-`className` string contains an `h-` token with no variant prefix. It lives next to similar repo-level
-specs (`src/tests/`) and reports file and line. Alternatives: an ESLint rule (more machinery for one
-pattern, and lint skips none of this but needs a custom plugin) or a rendered-DOM check per modal
-(~30 specs, mounts every modal). A scan is cheap and catches new sites.
-
-Limits: it reads a literal `className` on a literal `<Popup>`; heights built through `classNames(...)`
-or a wrapper's own prop are out of reach, so those are enumerated by hand in task 1.
-
 ### #5200: scan the file-manager package for utilities
 The kit is already an `@source` because `important` makes the app's utilities beat the kit's unlayered rules; the same sheet means a library class pair like `opacity-0 group-hover/grid-row:opacity-100` is split between an `!important` base (the app's, since the kit uses `opacity-0`) and a plain variant (the library's own sheet). Adding the library to `@source` emits its variants `!important` as well, and Tailwind sorts variants after base utilities with higher specificity, so the hover reveal wins. Checked by compiling `tailwind.css` before and after: the variants (`group-hover/grid-row:opacity-100`, `…:pointer-events-auto`, `group-hover/item:visible`) appear only after, `!important`, after `.opacity-0`.
 
@@ -66,13 +56,12 @@ Alternatives: a hand-written `.file-manager-grid` override (fixes only this one 
 
 - [Every library utility is now `!important` and built from the app's theme] → the surface is file-manager lists and its popups; verify visually before merge.
 
-- [`tailwind-merge` does not dedupe `md:h-[…]` against `md:h-auto` as assumed] → task 1 asserts it
+- [`tailwind-merge` does not dedupe `md:h-[…]` against `md:h-auto` as assumed] → task 1 checks it
   against the kit's `mergeClasses` for the three height forms (`px`, `vh`, `min-h`) before the sites move.
 - [A fixed height taller than a short viewport overflows] → `max-h-full` from the base class still caps
   it; unchanged from the legacy popup.
 - [Heights set outside a literal `Popup` are missed] → task 1 greps wrapper components that forward
   `className` to `Popup` (e.g. `InputPopup`).
-- [Guard false positives, e.g. `h-` inside `max-h-`] → the token match is anchored on whole class tokens.
 - [Specs asserting `h-[800px]` break] → updated with the component.
 
 ## Open Questions

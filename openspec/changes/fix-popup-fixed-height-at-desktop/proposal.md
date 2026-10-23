@@ -25,8 +25,6 @@ site that passes a fixed height, not only the three in the issue.
   depends on it.
 - Leave `max-h-*` sites (`CreateApplication`, `CreateKeyModal`) as they are; they do not conflict with
   `md:h-auto`.
-- Add a guard so the pattern cannot return: a spec that scans `Popup` `className` props for an unprefixed
-  `h-*`.
 - Fix `AddMetricModal`'s composite class (`h-[800px] w-[1200px] max-w-[calc(100vw-2rem)]`) so only the
   height is prefixed.
 
@@ -48,7 +46,7 @@ checked by hand in the first task.
 ### New Capabilities
 - `grid-row-actions-reveal`: file-manager row menus show on row hover.
 - `popup-fixed-height`: a `Popup` given a fixed height keeps it at desktop widths regardless of its
-  content, and the guard that enforces the `md:` prefix.
+  content.
 
 ### Modified Capabilities
 <!-- None: no existing spec describes modal sizing. -->

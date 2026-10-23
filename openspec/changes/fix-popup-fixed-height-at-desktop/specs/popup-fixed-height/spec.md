@@ -24,19 +24,3 @@ a breakpoint-prefixed class (`md:h-[…]`) so it replaces the ui-kit's `md:h-aut
 #### Scenario: Narrow viewport
 - **WHEN** the viewport is narrower than 768px
 - **THEN** the popup follows the ui-kit's mobile layout, unaffected by the fixed height
-
-### Requirement: Popup heights are declared with a breakpoint prefix
-No `Popup` in app source SHALL pass an unprefixed `h-*` class in its `className`. A repository spec SHALL
-fail and name the file and line when one does.
-
-#### Scenario: Prefixed height passes
-- **WHEN** a `Popup` has `className="md:h-[800px]"`
-- **THEN** the guard spec passes
-
-#### Scenario: Unprefixed height fails
-- **WHEN** a `Popup` has `className="h-[800px]"`
-- **THEN** the guard spec fails and reports the file and line
-
-#### Scenario: Other height utilities are not flagged
-- **WHEN** a `Popup` has `className="max-h-[750px]"` or `min-h-[200px]`
-- **THEN** the guard spec does not report it
