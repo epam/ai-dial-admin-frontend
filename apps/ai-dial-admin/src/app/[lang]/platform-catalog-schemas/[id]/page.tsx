@@ -1,21 +1,24 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import CatalogSchemaView from '@/src/components/Assets/Platform/CatalogSchemas/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import { errorObjLog } from '@/src/server/logger';
-import { getCatalogSchema, getConfigFileCatalogSchema } from '../actions';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { findCatalogSchemaPathById, getCatalogSchema, getConfigFileCatalogSchema } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { params: Promise<{ id: string }> }) {
+export default async function Page(params: { params: Promise<{ id: string; lang?: string }> }) {
   let etag = DEFAULT_ETAG;
   let schema: DialCatalogSchemaResource | null = null;
   let isConfigFileSchema = false;
+  let storagePath: string | null = null;
+  const { id: path, lang } = await params.params;
 
   try {
-    const path = (await params.params).id;
     const result = await getCatalogSchema(decodeURIComponent(path), etag);
     etag = result?.etag || DEFAULT_ETAG;
     schema = result?.success ? (result.response as DialCatalogSchemaResource) : null;
@@ -29,8 +32,20 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       isConfigFileSchema = schema != null;
       etag = DEFAULT_ETAG;
     }
+
+    // A deployment's schema field knows only the `$id`, which a bucket resource's storage name need
+    // not match. The match is sent on to its canonical address, so save and etag work as from the grid.
+    if (schema == null) {
+      storagePath = await findCatalogSchemaPathById(decodeURIComponent(path));
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch catalog schema data');
+  }
+
+  // Outside the `try`: `redirect` throws, and the catch above would swallow it.
+  if (storagePath != null) {
+    const segment = getUrnForEntity(ApplicationRoute.PlatformCatalogSchemas, { path: storagePath });
+    redirect(lang ? `/${lang}${segment}` : segment);
   }
 
   if (schema == null) {

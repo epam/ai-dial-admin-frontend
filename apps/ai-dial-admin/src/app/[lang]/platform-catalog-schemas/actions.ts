@@ -34,6 +34,9 @@ const INVALID_ID_ERROR: ServerActionResponse = {
   )}, which DIAL Core cannot store.`,
 };
 
+/** Content reads in flight at once while matching a `$id` to its bucket resource. */
+const SCHEMA_CONTENT_READ_BATCH = 5;
+
 const checkSchemaId = (id?: string): ServerActionResponse | null => {
   if (!id?.trim()) {
     return MISSING_ID_ERROR;
@@ -126,6 +129,38 @@ export async function getCatalogSchemaById(id: string): Promise<ServerActionResp
 export async function getConfigFileCatalogSchemas() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return configFileApi.listNames(token, ConfigFileEntityType.CatalogSchemas);
+}
+
+/**
+ * Finds the storage path of the bucket resource that declares this `$id`. A bucket schema is stored
+ * under the name an admin typed, the bucket listing carries no `$id`, and Core has no lookup from
+ * `$id` to that name — so this costs the listing plus up to one content read per resource, issued
+ * in small batches and stopped at the first match. Only for when the cheaper reads by path and from
+ * the configuration file have both missed.
+ */
+export async function findCatalogSchemaPathById(id: string): Promise<string | null> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const resources = await assetApi.list(token, ResourceType.CATALOG_SCHEMA, '');
+
+  for (let start = 0; start < resources.length; start += SCHEMA_CONTENT_READ_BATCH) {
+    const batch = resources.slice(start, start + SCHEMA_CONTENT_READ_BATCH);
+    const declaredIds = await Promise.all(
+      batch.map(async ({ path }) => {
+        try {
+          const content = await assetApi.getContent<{ $id?: string }>(token, ResourceType.CATALOG_SCHEMA, path);
+          return content?.$id;
+        } catch {
+          return undefined;
+        }
+      }),
+    );
+    const index = declaredIds.indexOf(id);
+    if (index !== -1) {
+      return batch[index].path;
+    }
+  }
+
+  return null;
 }
 
 /** Reads the schema Core's configuration file declares under this `$id`, keyed as Core keys it. */
