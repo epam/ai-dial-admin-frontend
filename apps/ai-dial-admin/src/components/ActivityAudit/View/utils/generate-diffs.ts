@@ -172,8 +172,8 @@ export const generateCurrentResource = (
   isCurrent?: boolean,
   t?: (str: string) => string,
 ): Record<string, ActivityAuditDiff[]> => {
-  if (isAnalyticsResource(type)) {
-    return buildAnalyticsDiff(current, compare, isCurrent);
+  if (type && isAnalyticsResource(type)) {
+    return buildAnalyticsDiff(current, compare, isCurrent, type);
   }
 
   const result: Record<string, ActivityAuditDiff[]> = {

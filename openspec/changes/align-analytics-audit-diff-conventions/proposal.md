@@ -61,7 +61,9 @@ None.
   the snapshot` changes on two points — a row is emitted per field that carries a value on at least
   one side of the comparison, and the prohibition on a hidden-key list is replaced by the per-resource
   set above. Its `Every field of a table snapshot appears in the diff` scenario and siblings are
-  reworded, not removed.
+  reworded, not removed. `An analytics revision diff groups the definition and each column
+  separately` gets the same qualifier on its list of column attributes — it promised "every attribute
+  that column carries", which is the wording #4486 was filed against.
 
 ## Impact
 

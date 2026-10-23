@@ -64,8 +64,8 @@ being hidden.
 #### Scenario: A pipeline or saved-query snapshot is rendered field by field
 
 - **WHEN** the detail page renders a `Pipeline` or a `SavedQuery` revision
-- **THEN** every field of that snapshot that holds a value is displayed as a row in the definition
-  group
+- **THEN** every field of that snapshot that holds a value, other than the fields suppressed for its
+  resource type, is displayed as a row in the definition group
 - **AND** no column group is rendered for it
 
 #### Scenario: A table's permissions are not shown
@@ -93,3 +93,30 @@ being hidden.
 - **THEN** `permissions` is omitted, as it is for a `Table` activity
 - **AND** the suppression follows the snapshot's resource family, not the activity's resource type
   alone
+
+### Requirement: An analytics revision diff groups the definition and each column separately
+
+A table snapshot's fields SHALL be grouped: the table-definition fields — every field other than
+`columns` — under a single group, and the columns under a `Columns` section holding **one group per
+column**. A column group SHALL exist for every column name present in either revision, the groups
+SHALL be ordered by column name, and each SHALL list every attribute that column carries (`name`,
+`type`, `element_type`, `enum_values`, `nullable`, `tag`, `display_name`, `description`,
+`sensitive`) **that holds a value on at least one side of the comparison** — an attribute empty on
+both sides produces no row, by the same rule the table-definition group follows.
+
+Each column group SHALL be headed by the name of the column it describes, so a reader can tell which
+column a group is about without reading its rows.
+
+#### Scenario: Each column is its own group headed by its name
+
+- **GIVEN** a table revision whose snapshot carries the columns `amount` and `total`
+- **WHEN** the detail page renders it
+- **THEN** the diff shows one group headed `Column amount` and one headed `Column total`
+- **AND** each lists that column's own attributes
+- **AND** the table-definition fields are shown in a separate group above them
+
+#### Scenario: Column groups are ordered by column name
+
+- **GIVEN** a table revision whose snapshot lists the columns `total`, `amount`, `id` in that order
+- **WHEN** the detail page renders it
+- **THEN** the column groups appear in the order `amount`, `id`, `total`

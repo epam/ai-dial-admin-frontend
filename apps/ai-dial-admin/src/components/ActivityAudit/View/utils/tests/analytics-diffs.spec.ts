@@ -1,7 +1,7 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { CompareI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
-import { ActivityAuditEntity, DiffStatus } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test, vi } from 'vitest';
 import {
   ANALYTICS_COLUMN_PARAMETERS,
@@ -52,8 +52,9 @@ const newerTable: ActivityAuditEntity = {
 };
 
 // An enrich pipeline's snapshot, shaped as the analytics backend serves one: scalars, a nested
-// `trigger` object, an array of binding objects, and three collections (`inputs`,
-// `input_bindings`, `state.unclamped_reads`) that are empty on both revisions.
+// `trigger` object, an array of binding objects, and collections (`inputs`, `input_bindings`) that
+// are empty on both revisions and so produce no row. `state` is present but empty, as a revision
+// read leaves it, so it produces no row either.
 const olderPipeline: ActivityAuditEntity = {
   name: 'daily_enrich',
   kind: 'enrich',
@@ -77,11 +78,35 @@ const newerPipeline: ActivityAuditEntity = {
   updated_at: '2026-01-02T00:00:00Z',
 };
 
+const olderSavedQuery: ActivityAuditEntity = {
+  id: 'f3a1c2d4',
+  name: 'weekly_cost',
+  query: 'SELECT 1',
+  owner_id: 'user-1',
+  owner_email: 'owner@example.com',
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+};
+
+// Newer revision: ownership transferred, which an audit must surface.
+const newerSavedQuery: ActivityAuditEntity = {
+  ...olderSavedQuery,
+  owner_id: 'user-2',
+  owner_email: 'next@example.com',
+  updated_at: '2026-01-02T00:00:00Z',
+};
+
 // AuditView convention: BEFORE pass renders the older revision, AFTER pass the newer one.
-const beforePass = (newer: ActivityAuditEntity | null, older: ActivityAuditEntity | null) =>
-  buildAnalyticsDiff(newer, older, true);
-const afterPass = (older: ActivityAuditEntity | null, newer: ActivityAuditEntity | null) =>
-  buildAnalyticsDiff(older, newer, false);
+const beforePass = (
+  newer: ActivityAuditEntity | null,
+  older: ActivityAuditEntity | null,
+  type = ActivityAuditResourceType.TABLE,
+) => buildAnalyticsDiff(newer, older, true, type);
+const afterPass = (
+  older: ActivityAuditEntity | null,
+  newer: ActivityAuditEntity | null,
+  type = ActivityAuditResourceType.TABLE,
+) => buildAnalyticsDiff(older, newer, false, type);
 
 describe('Activity audit :: snapshotRows', () => {
   test('emits one row per scalar field with the snapshot value', () => {
@@ -253,27 +278,103 @@ describe('Activity audit :: buildAnalyticsDiff', () => {
     const older: ActivityAuditEntity = { name: 'daily_rollup', schedule: '0 2 * * *', enabled: true };
     const newer: ActivityAuditEntity = { name: 'daily_rollup', schedule: '0 3 * * *', enabled: true };
 
-    const result = afterPass(older, newer);
+    const result = afterPass(older, newer, ActivityAuditResourceType.PIPELINE);
 
     expect(Object.keys(result)).toEqual([EntityParameterKeys.PROPERTIES]);
     expect(rowFor(result.properties, 'schedule')?.diffStatus).toBe(DiffStatus.CHANGED);
     expect(rowFor(result.properties, 'enabled')?.value).toBe('true');
   });
 
-  test('emits a row for every field an enrich-pipeline snapshot carries, empty collections included', () => {
-    const result = afterPass(olderPipeline, newerPipeline);
+  test('emits a row for every pipeline field holding a value, and none for one empty on both sides', () => {
+    const result = afterPass(olderPipeline, newerPipeline, ActivityAuditResourceType.PIPELINE);
     const emitted = parametersOf(result.properties);
+    const notEmitted = new Set(['inputs', 'input_bindings', 'state', 'created_at', 'updated_at']);
 
-    const missingFields = Object.keys(olderPipeline).filter(
-      (field) => !emitted.some((parameter) => parameter === field || parameter.startsWith(`${field}.`)),
-    );
+    const missingFields = Object.keys(olderPipeline)
+      .filter((field) => !notEmitted.has(field))
+      .filter((field) => !emitted.some((parameter) => parameter === field || parameter.startsWith(`${field}.`)));
 
     expect(missingFields).toEqual([]);
+    expect(emitted).not.toContain('inputs');
+    expect(emitted).not.toContain('input_bindings');
+  });
+
+  test('emits no row for a table field empty on both sides', () => {
+    const older: ActivityAuditEntity = { ...olderTable, description: '', partition_by: {} };
+    const newer: ActivityAuditEntity = { ...newerTable, description: '', partition_by: {} };
+
+    const emitted = parametersOf(afterPass(older, newer).properties);
+
+    expect(emitted).not.toContain('description');
+    expect(emitted.some((parameter) => parameter.startsWith('partition_by'))).toBe(false);
+    expect(emitted).toContain('name');
+  });
+
+  test('emits no row for a column attribute empty on both sides', () => {
+    const snapshot: ActivityAuditEntity = {
+      name: 'orders',
+      columns: [{ name: 'amount', type: 'INT', enum_values: [], description: '' }],
+    };
+
+    const bucket = afterPass(snapshot, snapshot)[getColumnBucketKey('amount')];
+
+    expect(parametersOf(bucket)).toEqual(['name', 'type']);
+  });
+
+  test('keeps a one-sided column bucket with placeholder rows only for attributes it carries', () => {
+    const bucket = beforePass(newerTable, olderTable)[getColumnBucketKey('total')];
+
+    expect(parametersOf(bucket)).toEqual(['name', 'type']);
+    expect(bucket.every((row) => row.diffStatus === DiffStatus.MIRROR)).toBe(true);
+  });
+
+  test('suppresses a table snapshot permissions and keeps its other fields', () => {
+    const older: ActivityAuditEntity = { ...olderTable, permissions: { write: true, modify: true } };
+    const newer: ActivityAuditEntity = { ...newerTable, permissions: { write: true, modify: false } };
+
+    const emitted = parametersOf(afterPass(older, newer, ActivityAuditResourceType.TABLE).properties);
+
+    expect(emitted.some((parameter) => parameter.startsWith('permissions'))).toBe(false);
+    expect(emitted).toContain('name');
+    expect(emitted).toContain('partition_by.granularity');
+  });
+
+  test('suppresses permissions on a column activity like its table', () => {
+    const older: ActivityAuditEntity = { ...olderTable, permissions: { write: true } };
+
+    const emitted = parametersOf(afterPass(older, older, ActivityAuditResourceType.TABLE_COLUMN).properties);
+
+    expect(emitted.some((parameter) => parameter.startsWith('permissions'))).toBe(false);
+  });
+
+  test('suppresses a pipeline timestamps and state but keeps generation', () => {
+    const older: ActivityAuditEntity = { ...olderPipeline, state: { cursor_version: 4, lag_seconds: 10 } };
+    const newer: ActivityAuditEntity = { ...newerPipeline, state: { cursor_version: 5, lag_seconds: 2 } };
+
+    const emitted = parametersOf(afterPass(older, newer, ActivityAuditResourceType.PIPELINE).properties);
+
+    expect(emitted).not.toContain('created_at');
+    expect(emitted).not.toContain('updated_at');
+    expect(emitted.some((parameter) => parameter.startsWith('state'))).toBe(false);
+    expect(emitted).toContain('generation');
+  });
+
+  test('suppresses a saved query identifier and timestamps but keeps its owner', () => {
+    const result = afterPass(olderSavedQuery, newerSavedQuery, ActivityAuditResourceType.SAVED_QUERY);
+    const emitted = parametersOf(result.properties);
+
+    expect(emitted).not.toContain('id');
+    expect(emitted).not.toContain('created_at');
+    expect(emitted).not.toContain('updated_at');
+    expect(rowFor(result.properties, 'owner_id')?.diffStatus).toBe(DiffStatus.CHANGED);
+    expect(rowFor(result.properties, 'owner_email')?.diffStatus).toBe(DiffStatus.CHANGED);
   });
 
   test('returns only an empty properties bucket when the rendered side is absent', () => {
     expect(beforePass(newerTable, null)).toEqual({ [EntityParameterKeys.PROPERTIES]: [] });
-    expect(buildAnalyticsDiff(null, null, false)).toEqual({ [EntityParameterKeys.PROPERTIES]: [] });
+    expect(buildAnalyticsDiff(null, null, false, ActivityAuditResourceType.TABLE)).toEqual({
+      [EntityParameterKeys.PROPERTIES]: [],
+    });
   });
 
   test('fills and stamps every row when the opposite side is absent', () => {
