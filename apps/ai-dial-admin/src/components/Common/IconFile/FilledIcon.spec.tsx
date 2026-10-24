@@ -7,4 +7,9 @@ describe('Common components :: FilledIcon', () => {
     render(<FilledIcon fileUrl="/test.png" onChange={vi.fn()} />);
     expect(screen.getByAltText('entityImage')).toBeInTheDocument();
   });
+
+  test('Should draw the image on the entity-icon plate', () => {
+    render(<FilledIcon fileUrl="/test.png" onChange={vi.fn()} disabled />);
+    expect(screen.getByAltText('entityImage').parentElement).toHaveClass('bg-entity-icon');
+  });
 });
