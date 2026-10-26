@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getModelsTokenizers, getModelsTopics } from '@/src/app/[lang]/models/actions';
 import TokenizerModelControl from '@/src/components/BaseControls/TokenizerModel';
 import TopicsControl from '@/src/components/BaseControls/Topics';
-import { ButtonsI18nKey, EntityFieldsI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { DialModelResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import ModelAssetProperties from '../Properties';
@@ -39,14 +39,14 @@ describe('Model asset :: no admin-backend dependency', () => {
    */
   const openTopics = async () => {
     const user = userEvent.setup();
-    await user.click(screen.getByRole('textbox'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
   };
 
   test('Should request the topic catalogue on an entity surface (control for the two below)', async () => {
     render(<TopicsControl entity={{ topics: [] }} view={ApplicationRoute.Models} onChange={vi.fn()} />);
     await openTopics();
 
-    expect(getModelsTopics).toHaveBeenCalled();
+    await vi.waitFor(() => expect(getModelsTopics).toHaveBeenCalledOnce());
   });
 
   test('Should not request the topic catalogue on the model asset surface', async () => {
@@ -68,9 +68,9 @@ describe('Model asset :: no admin-backend dependency', () => {
     await openTopics();
 
     // Typed entry is the whole point of the unlink: with no catalogue, this is the only way in.
-    await user.click(screen.getByText(TopicsI18nKey.AddTopic));
-    await user.type(screen.getByRole('textbox'), 'typed-topic');
-    await user.click(screen.getByText(ButtonsI18nKey.Apply));
+    await user.click(screen.getByRole('button', { name: TopicsI18nKey.AddTopic }));
+    await user.type(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Topic), 'typed-topic');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Apply }));
 
     expect(onChange).toHaveBeenCalledWith({ descriptionKeywords: ['typed-topic'] });
   });

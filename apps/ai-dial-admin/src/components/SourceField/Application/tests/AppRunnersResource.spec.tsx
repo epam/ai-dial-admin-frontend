@@ -23,22 +23,38 @@ vi.mock('@/src/utils/schema', () => ({
   getSchemaDefaults: vi.fn(() => ({ propA: 'default-a' })),
 }));
 
-vi.mock('@epam/ai-dial-ui-kit', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
-  return {
-    ...actual,
-    Select: ({ id, options, onChange, value, labelProps: { label } = {} }: any) => (
-      <select aria-label={label || id} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
-        <option value="">--</option>
-        {options?.map((o: any) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    ),
-  };
-});
+vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
+  PICKER_RUNNER_COLUMNS: vi.fn(() => []),
+}));
+
+vi.mock('@epam/ai-dial-ui-kit', () => ({
+  Select: ({ id, options, onChange, value, labelProps: { label } = {} }: any) => (
+    <select aria-label={label || id} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+      <option value="">--</option>
+      {options?.map((o: any) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  ),
+  Label: ({ label, htmlFor }: any) => <label htmlFor={htmlFor}>{label}</label>,
+  OutlinedButton: ({ label, onClick, disabled }: any) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
+  ),
+  Spinner: () => <span role="status" />,
+}));
+
+vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
+  default: ({ selectedValue, children }: any) => (
+    <>
+      <input readOnly value={selectedValue ?? ''} />
+      {children}
+    </>
+  ),
+}));
 
 // The grid is not under test; the immutable branch only needs its trigger.
 vi.mock('@/src/components/SourceField/Application/SelectAppRunnersModal', () => ({
@@ -183,8 +199,9 @@ describe('AppRunnersResource', () => {
   });
 
   describe('open in a new tab', () => {
-    const openUrl = async (selectedValue: string) => {
+    const expectOpenUrl = async (selectedValue: string, expectedUrl: RegExp) => {
       const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+      const user = userEvent.setup();
       render(
         <AppRunnersResource
           selectedValue={selectedValue}
@@ -193,20 +210,18 @@ describe('AppRunnersResource', () => {
           isEntityImmutable
         />,
       );
-      await userEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
-      const url = open.mock.calls[0][0] as string;
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
+
+      expect(open).toHaveBeenCalledWith(expect.stringMatching(expectedUrl), '_blank');
       open.mockRestore();
-      return url;
     };
 
     test('a Platform runner opens by storage path', async () => {
-      expect(await openUrl(ASSET_ID)).toMatch(/\/platform-app-runners\/http%253A%252F%252Fasdqwe$/);
+      await expectOpenUrl(ASSET_ID, /\/platform-app-runners\/http%253A%252F%252Fasdqwe$/);
     });
 
     test('a configuration-file runner opens in config-file mode', async () => {
-      expect(await openUrl('urn:runner:entity')).toMatch(
-        /\/platform-app-runners\/urn%3Arunner%3Aentity\?configFile=true$/,
-      );
+      await expectOpenUrl('urn:runner:entity', /\/platform-app-runners\/urn%3Arunner%3Aentity\?configFile=true$/);
     });
   });
 });
