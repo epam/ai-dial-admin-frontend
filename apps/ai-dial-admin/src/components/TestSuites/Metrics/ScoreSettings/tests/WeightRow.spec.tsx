@@ -32,15 +32,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         </div>
       </div>
     ),
-    NumberInput: ({ id, labelProps, value, invalid, onChange }: any) => (
+    Input: ({ id, labelProps, value, invalid, onChange }: any) => (
       <div>
         {labelProps?.label !== undefined && <label htmlFor={id}>{labelProps.label}</label>}
-        <input
-          id={id}
-          data-invalid={invalid}
-          value={value ?? ''}
-          onChange={(event) => onChange(event.target.value === '' ? undefined : event.target.value)}
-        />
+        <input id={id} data-invalid={invalid} value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
       </div>
     ),
   };
@@ -74,6 +69,14 @@ describe('WeightRow', () => {
     expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreMetricLabel)).toBeInTheDocument();
     expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightLabel)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Remove })).toBeInTheDocument();
+  });
+
+  test('formats the default weight as 1.0', () => {
+    const row: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 1 };
+
+    render(<WeightRow index={0} row={row} availableOptions={availableOptions} onUpdate={vi.fn()} onRemove={vi.fn()} />);
+
+    expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightLabel)).toHaveValue('1.0');
   });
 
   test('clicking remove calls onRemove with the row index', async () => {
@@ -123,6 +126,36 @@ describe('WeightRow', () => {
     fireEvent.change(weightInput, { target: { value: '0.8' } });
 
     expect(onUpdate).toHaveBeenLastCalledWith({ ...initialRow, weight: 0.8 }, 0);
+    expect(weightInput).toHaveValue('0.8');
+  });
+
+  test('keeps the entered whole number without appending a decimal place', () => {
+    const initialRow: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 1 };
+
+    render(
+      <ControlledWeightRow index={0} initialRow={initialRow} availableOptions={availableOptions} onRemove={vi.fn()} />,
+    );
+
+    const weightInput = screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightLabel);
+    fireEvent.change(weightInput, { target: { value: '' } });
+    fireEvent.change(weightInput, { target: { value: '1' } });
+
+    expect(weightInput).toHaveValue('1');
+  });
+
+  test('keeps a trailing decimal point while entering a fractional weight', () => {
+    const initialRow: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 1 };
+
+    render(
+      <ControlledWeightRow index={0} initialRow={initialRow} availableOptions={availableOptions} onRemove={vi.fn()} />,
+    );
+
+    const weightInput = screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightLabel);
+    fireEvent.change(weightInput, { target: { value: '1.' } });
+    expect(weightInput).toHaveValue('1.');
+
+    fireEvent.change(weightInput, { target: { value: '1.5' } });
+    expect(weightInput).toHaveValue('1.5');
   });
 
   test('clearing the weight updates the row to an undefined weight', () => {
