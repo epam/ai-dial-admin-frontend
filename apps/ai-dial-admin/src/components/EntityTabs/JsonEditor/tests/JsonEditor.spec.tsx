@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { useId } from 'react';
+import { useEffect, useId } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { JSONEditorError } from '@/src/types/editor';
@@ -11,8 +11,13 @@ let capturedOnChange: (value?: string) => void;
 let capturedOnValidate: ((errors?: JSONEditorError[]) => void) | undefined;
 let capturedOnValidates: Array<(errors?: JSONEditorError[]) => void> = [];
 
+const editorMock = vi.hoisted(() => ({ mountCount: 0 }));
+
 vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
   default: ({ value, onChange, onValidateJSON }: any) => {
+    useEffect(() => {
+      editorMock.mountCount += 1;
+    }, []);
     capturedValue = value;
     capturedOnChange = onChange;
     capturedOnValidate = onValidateJSON;
@@ -74,6 +79,7 @@ describe('JSONEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedOnValidates = [];
+    editorMock.mountCount = 0;
     mocks.notifications = [];
   });
 
@@ -106,12 +112,37 @@ describe('JSONEditor', () => {
       expect(capturedValue).toBe(JSON.stringify(replaced, null, 4));
     });
 
+    test('remounts when an equivalent entity is replaced externally by default', () => {
+      const { rerender } = render(<JSONEditor entity={entity} setSelectedEntity={mockSetSelectedEntity} />);
+      const initialMountCount = editorMock.mountCount;
+
+      rerender(<JSONEditor entity={{ ...entity }} setSelectedEntity={mockSetSelectedEntity} />);
+
+      expect(editorMock.mountCount).toBe(initialMountCount + 1);
+    });
+
     test('parses a change and reports the parsed entity', () => {
       render(<JSONEditor entity={entity} setSelectedEntity={mockSetSelectedEntity} />);
 
       capturedOnChange('{"id":"9"}');
 
       expect(mockSetSelectedEntity).toHaveBeenCalledWith(expect.objectContaining({ id: '9' }));
+    });
+
+    test('keeps the editor mounted when the parent recreates the edited entity', () => {
+      const { rerender } = render(<JSONEditor entity={entity} setSelectedEntity={mockSetSelectedEntity} />);
+      const initialMountCount = editorMock.mountCount;
+
+      capturedOnChange('{"name":"Updated","id":"1"}');
+      rerender(
+        <JSONEditor
+          entity={{ name: 'Updated', id: '1' }}
+          setSelectedEntity={mockSetSelectedEntity}
+          shouldPreserveEditorOnEquivalentEntityChange
+        />,
+      );
+
+      expect(editorMock.mountCount).toBe(initialMountCount);
     });
 
     test('ignores a change that does not parse', () => {
