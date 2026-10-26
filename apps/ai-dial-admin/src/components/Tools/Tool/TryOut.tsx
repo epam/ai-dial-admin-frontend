@@ -127,6 +127,7 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
               value={responseView}
               onChange={(v) => setResponseView(v as ParamsView)}
               disabled={isEmptyRequest}
+              className="w-auto"
             />
           </div>
           <div className="flex-1 basis-0 min-h-0 overflow-y-auto flex flex-col">
