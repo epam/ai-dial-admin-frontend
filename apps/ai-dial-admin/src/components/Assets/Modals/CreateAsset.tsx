@@ -41,6 +41,8 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { DialResource } from '@/src/models/dial/resource';
 
+const PLATFORM_ROOT_PATH = `${PLATFORM_ROOT_FOLDER}/`;
+
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
@@ -89,18 +91,17 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, sho
 
   // The folder context opens on the last physical root (`public/`); move to `platform/` once, after
   // the initial roots load, and leave any later choice to the user.
-  const platformRootPath = `${PLATFORM_ROOT_FOLDER}/`;
-  const isPlatformRootLoaded = folderContext?.fetchedFoldersData[platformRootPath] != null;
+  const isPlatformRootLoaded = folderContext?.fetchedFoldersData[PLATFORM_ROOT_PATH] != null;
   const hasOpenedOnPlatformRef = useRef(false);
   useEffect(() => {
     if (!shouldOpenOnPlatform || hasOpenedOnPlatformRef.current || !isPlatformRootLoaded) {
       return;
     }
     hasOpenedOnPlatformRef.current = true;
-    if (filePath !== platformRootPath) {
-      folderContext?.setFilePath(platformRootPath);
+    if (filePath !== PLATFORM_ROOT_PATH) {
+      folderContext?.setFilePath(PLATFORM_ROOT_PATH);
     }
-  }, [shouldOpenOnPlatform, isPlatformRootLoaded, filePath, folderContext, platformRootPath]);
+  }, [shouldOpenOnPlatform, isPlatformRootLoaded, filePath, folderContext]);
 
   const [currentEntity, setCurrentEntity] = useState<DialResource>({
     ...initialValues,

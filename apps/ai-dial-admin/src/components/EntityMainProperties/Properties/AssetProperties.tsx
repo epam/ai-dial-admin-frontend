@@ -70,6 +70,8 @@ const AssetProperties: FC<Props> = ({
     if (isVersionShown) {
       validateVersion(entity.version);
     }
+    // `validateVersion` is left out on purpose: its identity changes with every entity field, so
+    // listing it would re-run this check on unrelated edits such as the description.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVersionShown, takenVersionsKey, entity.name, entity.version]);
 

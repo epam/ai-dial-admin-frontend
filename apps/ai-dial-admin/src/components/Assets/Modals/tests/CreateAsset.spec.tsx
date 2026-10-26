@@ -308,6 +308,7 @@ describe('CreateAsset — opens on platform', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     assetPropertiesCalls.length = 0;
+    assetPropertiesMounts = 0;
     folderListCalls.length = 0;
   });
 
