@@ -98,11 +98,18 @@ The Method tab SHALL show an "Extracted response fields" section for the current
 in a plain bordered box, listing the response-field extraction grid (display name, JSON path, data
 type) with its "Add" and "JSONata Expression Reference" actions. It SHALL NOT show a method/path
 schema switcher or a request/response schema editing view — those live in the "Edit request" wizard.
+The data-type selector SHALL offer only the backend-supported response-column types: `STRING`,
+`BOOLEAN`, `NUMBER`, `FILE`, `INTEGER`, `OBJECT`, and `ARRAY`.
 
 #### Scenario: Section shows only the extracted-fields grid
 - **WHEN** the user views the Method tab
 - **THEN** the "Extracted response fields" section shows the fields grid directly, with no tabs for
   switching to a request or response schema view
+
+#### Scenario: Response-column type selector excludes unsupported types
+- **WHEN** the user opens the data-type selector for an extracted response field
+- **THEN** it offers only `STRING`, `BOOLEAN`, `NUMBER`, `FILE`, `INTEGER`, `OBJECT`, and `ARRAY`
+- **THEN** it does not offer `NULL`
 
 ### Requirement: Dynamic Configuration removed from the Test Cases tab
 The Test Cases tab SHALL NOT render a Dynamic Configuration / template variable binding section. Editing
