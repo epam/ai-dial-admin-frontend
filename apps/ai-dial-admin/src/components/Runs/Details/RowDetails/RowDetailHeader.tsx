@@ -4,8 +4,9 @@ import { IconAdjustmentsHorizontal, IconLayoutBottombar, IconLayoutSidebarRight 
 import { FC } from 'react';
 
 import classNames from 'classnames';
-import { CloseButton, GhostButton, GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { CloseButton, GhostButton, GhostIconButton, ElementSize, LinkButton } from '@epam/ai-dial-ui-kit';
 
+import Grafana from '@/public/images/icons/grafana.svg';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -18,6 +19,7 @@ interface Props {
   isDisplayOpen: boolean;
   position: SidebarPosition;
   onSwitchDisplayMode: () => void;
+  grafanaUrl?: string;
 }
 
 const RowDetailHeader: FC<Props> = ({
@@ -27,6 +29,7 @@ const RowDetailHeader: FC<Props> = ({
   isDisplayOpen,
   position,
   onSwitchDisplayMode,
+  grafanaUrl,
 }) => {
   const t = useI18n();
 
@@ -36,6 +39,13 @@ const RowDetailHeader: FC<Props> = ({
     <div className="flex items-center justify-between gap-4 shrink-0 px-6 py-4">
       <h3 className="dial-h3 text-primary truncate">{title}</h3>
       <div className="flex items-center gap-4 shrink-0">
+        {grafanaUrl && (
+          <LinkButton
+            iconBefore={<Grafana />}
+            label={t(RunsI18nKey.GrafanaDetails)}
+            onClick={() => window.open(grafanaUrl, '_blank')}
+          />
+        )}
         <GhostButton
           label={t(RunsI18nKey.RunCompareDisplay)}
           iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}

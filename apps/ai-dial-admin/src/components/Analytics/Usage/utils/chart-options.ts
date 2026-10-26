@@ -3,6 +3,7 @@ import { EChartsOption } from 'echarts-for-react/src/types';
 import { BucketPoint } from '@/src/components/Analytics/Usage/models';
 import { GROUPING_LOCALE } from '@/src/components/Analytics/Usage/utils/format';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
+import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 
 // The page's text colour at 7%, so the lines stay faint on either theme's background.
 const gridLineColor = (colors: ChartColors): string => `${colors.value}12`;
@@ -42,20 +43,6 @@ const valueAxis = (colors: ChartColors) => ({
   axisLabel: { ...axisLabelStyle(colors), hideOverlap: true, formatter: (value: number) => formatChartNumber(value) },
   splitLine: { lineStyle: { color: gridLineColor(colors) } },
 });
-
-/**
- * ECharts renders its tooltip as a real DOM node, so the theme's own CSS variables reach it — the
- * default light panel is what made every tooltip on this dark page white. The axis pointer is drawn
- * into the chart instead and needs a literal colour.
- */
-const TOOLTIP_STYLE = {
-  backgroundColor: 'var(--bg-layer-sunken, #EEF1F7)',
-  borderColor: 'var(--stroke-primary, #57647A)',
-  borderWidth: 1,
-  padding: [6, 10],
-  textStyle: { color: 'var(--text-primary, #161B2D)', fontSize: 12 },
-  extraCssText: 'border-radius:4px;box-shadow:0 4px 12px var(--shadow-md, #2764D90F);',
-};
 
 interface AxisTooltipParam {
   axisValue: string;
@@ -132,7 +119,7 @@ export const buildTimeSeriesOptions = (
   },
   yAxis: valueAxis(colors),
   tooltip: {
-    ...TOOLTIP_STYLE,
+    ...CHART_TOOLTIP_STYLE,
     trigger: 'axis',
     axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     // A single series needs no colour marker to say which one it is.
@@ -176,7 +163,7 @@ export const buildSplitSeriesOptions = (
   },
   yAxis: valueAxis(colors),
   tooltip: {
-    ...TOOLTIP_STYLE,
+    ...CHART_TOOLTIP_STYLE,
     trigger: 'axis',
     axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     formatter: axisTooltip(periods, true),
@@ -220,7 +207,7 @@ export const buildBarOptions = (
   },
   yAxis: valueAxis(colors),
   tooltip: {
-    ...TOOLTIP_STYLE,
+    ...CHART_TOOLTIP_STYLE,
     trigger: 'axis',
     axisPointer: { type: 'shadow' },
     formatter: axisTooltip(periods),
@@ -255,7 +242,7 @@ export const buildLatencyOptions = (
   },
   yAxis: valueAxis(colors),
   tooltip: {
-    ...TOOLTIP_STYLE,
+    ...CHART_TOOLTIP_STYLE,
     trigger: 'axis',
     axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     formatter: axisTooltip(periods, true),
@@ -343,7 +330,7 @@ const DONUT_BLUR_OPACITY = 0.25;
  */
 export const buildDonutOptions = (slices: DonutSlice[]): EChartsOption => ({
   tooltip: {
-    ...TOOLTIP_STYLE,
+    ...CHART_TOOLTIP_STYLE,
     trigger: 'item',
     formatter: ({ marker, name, value, data }: ItemTooltipParam) => {
       const share = data.shareLabel ? ` (${data.shareLabel})` : '';

@@ -12,6 +12,8 @@
   --background-color-layer-sunken: var(--bg-layer-sunken, #eef1f7);
   --background-color-layer-base: var(--bg-layer-base, #f5f7fa);
   --background-color-layer-raised: var(--bg-layer-raised, #fcfcfc);
+  /* The plate behind an entity's icon image: vendor logos are often a dark glyph on transparency, so a dark theme lightens it. */
+  --background-color-entity-icon: var(--bg-entity-icon, var(--bg-layer-sunken, #eef1f7));
   --background-color-error: var(--bg-error, #f3d6d8);
   --background-color-warning: var(--bg-warning, #faf0cf);
   --background-color-info: var(--bg-info, #e1eaf9);
@@ -33,6 +35,7 @@
   --background-color-control-neutral-active: var(--bg-control-neutral-active, #d1dbea);
   --background-color-control-neutral-default: var(--bg-control-neutral-default, #acb3c3);
   --background-color-control-inverted: var(--bg-control-inverted, #57647a);
+  --background-color-overlay: var(--bg-overlay, #fcfcfc80);
   --background-color-control-error: var(--bg-control-error, #ae2f2f);
   --background-color-control-error-hover: var(--bg-control-error-hover, #bf3939);
   --background-color-control-error-active: var(--bg-control-error-active, #cc4545);

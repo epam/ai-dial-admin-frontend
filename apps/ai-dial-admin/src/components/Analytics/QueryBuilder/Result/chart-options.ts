@@ -3,6 +3,7 @@ import { EChartsOption } from 'echarts-for-react/src/types';
 import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
+import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
 import { ChartBuildContext, ChartType, PieSlice } from '@/src/models/analytics/query-builder';
 
@@ -68,17 +69,9 @@ export const bucketTopSlices = (
   return [...slices.slice(0, maxSlices), { name: otherLabel, value: other }];
 };
 
-const tooltipStyle = (colors: ChartColors) => ({
-  backgroundColor: 'var(--bg-control-neutral, #FCFCFC)',
-  borderColor: 'var(--bg-control-neutral, #FCFCFC)',
-  borderWidth: 1,
-  padding: [8, 12],
-  textStyle: { color: colors.value, fontSize: 12 },
-});
-
 const baseOptions = (colors: ChartColors, xData: string[], yField: string): EChartsOption => ({
   title: { show: false },
-  tooltip: { trigger: 'axis', ...tooltipStyle(colors) },
+  tooltip: { trigger: 'axis', ...CHART_TOOLTIP_STYLE },
   xAxis: {
     type: 'category',
     data: xData,
@@ -144,7 +137,7 @@ export const buildPieChartOptions = (
   otherLabel: string,
 ): EChartsOption => ({
   title: { show: false },
-  tooltip: { trigger: 'item', ...tooltipStyle(colors) },
+  tooltip: { trigger: 'item', ...CHART_TOOLTIP_STYLE },
   series: [
     {
       type: 'pie',
@@ -197,7 +190,7 @@ export const buildScatterChartOptions = (
     title: { show: false },
     tooltip: {
       trigger: 'item',
-      ...tooltipStyle(colors),
+      ...CHART_TOOLTIP_STYLE,
       formatter: (params: { name?: string; value: unknown[] }) => {
         const head = params.name ? `${params.name}<br/>` : '';
         return `${head}${xLabel}: ${renderCell(params.value[0])}<br/>${yLabel}: ${renderCell(params.value[1])}`;

@@ -316,6 +316,14 @@
   }
 }
 
+// AG Grid's native `tooltipValueGetter` bubble is themed from the grid (bordered, grid colours); the
+// element qualifier outranks its single-class rule so it matches the ui-kit tooltip instead.
+div.ag-tooltip {
+  @apply bg-control-inverted text-control-inverted border-0 rounded-lg px-3 py-2 shadow-xs max-w-[376px];
+  font-size: 14px;
+  line-height: 20px;
+}
+
 // Heat-map tooltips render in AG Grid's popup parent (often outside `.heat-map-grid`).
 // When anchored above a cell, move the caret under the body (via order — Tailwind's
 // `flex-col` would otherwise win over `flex-direction: column-reverse`) and flip it.
