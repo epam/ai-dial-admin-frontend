@@ -1,6 +1,6 @@
 'use client';
 
-import { NumberInput, Select } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -27,6 +27,9 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
 
   const [metricError, setMetricError] = useState<FieldError | null>(null);
   const [weightError, setWeightError] = useState<FieldError | null>(null);
+  const [weightInputValue, setWeightInputValue] = useState<string | undefined>(() =>
+    formatWeightedMeanWeightInputValue(row.weight)?.toString(),
+  );
 
   const hasMetricBeenTouched = useRef(false);
   const hasWeightBeenTouched = useRef(false);
@@ -100,8 +103,10 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
   );
 
   const onWeightChange = useCallback(
-    (value?: number | string) => {
-      onUpdate({ ...row, weight: value === undefined ? (undefined as unknown as number) : Number(value) }, index);
+    (value?: string) => {
+      setWeightInputValue(value);
+      const weight = value === undefined || value === '' ? undefined : Number(value);
+      onUpdate({ ...row, weight: weight as number }, index);
     },
     [index, onUpdate, row],
   );
@@ -125,11 +130,12 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
         />
       </div>
       <div className="w-[100px]">
-        <NumberInput
+        <Input
           id={`overallScoreWeight_${index}`}
+          type="text"
           labelProps={index === 0 ? { label: t(TestSuitesI18nKey.OverallScoreWeightLabel) } : undefined}
-          step={0.01}
-          value={formatWeightedMeanWeightInputValue(row.weight)}
+          inputMode="decimal"
+          value={weightInputValue}
           invalid={!!weightError}
           error={weightError?.text}
           onChange={onWeightChange}
