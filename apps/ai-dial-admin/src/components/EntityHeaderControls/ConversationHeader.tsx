@@ -9,7 +9,7 @@ import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ConversationButtonsWrapper, { ConversationButtonsWrapperProps } from './Wrappers/ConversationButtonsWrapper';
 import { DialConversation } from '@/src/models/dial/conversation';
-import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
+import HeaderIdBlock from '@/src/components/EntityHeaderControls/HeaderIdBlock';
 
 interface Props extends ConversationButtonsWrapperProps<DialConversation> {
   tabs: TabItem[];
@@ -23,7 +23,7 @@ const ConversationHeader: FC<Props> = ({ children, tabs, activeTab, onChangeActi
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(false)}>
-        <ReadonlyId value={props.entity._metadata?.name || ''} />
+        <HeaderIdBlock id={props.entity._metadata?.name || ''} />
         <ConversationButtonsWrapper {...props}>{children}</ConversationButtonsWrapper>
       </div>
       <Tabs isEditorEnabled={false} tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />
