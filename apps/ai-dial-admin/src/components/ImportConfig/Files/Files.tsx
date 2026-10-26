@@ -7,10 +7,11 @@ import {
   RadioButtonWithContent,
   RadioGroup,
   RadioGroupOrientation,
-  DialLoadFileAreaField,
   DialItemType,
   FileIcon,
 } from '@epam/ai-dial-ui-kit';
+
+import FileUploadField from '@/src/components/Common/FileUploadField/FileUploadField';
 import { toRadioItems } from '@/src/utils/radio-items';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
@@ -170,7 +171,7 @@ const Files: FC<Props> = ({
   const renderFileArea = () => {
     if (isAnalytics) {
       return (
-        <DialLoadFileAreaField
+        <FileUploadField
           elementId="localFile"
           fieldTitle={t(ImportI18nKey.File)}
           emptyTextFirstLine={t(ImportI18nKey.AnalyticsDropBundle)}
@@ -188,7 +189,7 @@ const Files: FC<Props> = ({
     }
     if (isDeployments || fileType === ImportFileType.ARCHIVE) {
       return (
-        <DialLoadFileAreaField
+        <FileUploadField
           elementId="localFile"
           fieldTitle={t(ImportI18nKey.File)}
           emptyTextFirstLine={t(ImportI18nKey.DropZip)}
@@ -206,7 +207,7 @@ const Files: FC<Props> = ({
       );
     }
     return (
-      <DialLoadFileAreaField
+      <FileUploadField
         elementId="localFile"
         fieldTitle={t(ImportI18nKey.Files)}
         emptyTextFirstLine={t(ImportI18nKey.DropFiles)}

@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { getHeaderClassName } from '@/src/utils/entities/view';
@@ -12,7 +12,7 @@ import { DialConversation } from '@/src/models/dial/conversation';
 import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 
 interface Props extends ConversationButtonsWrapperProps<DialConversation> {
-  tabs: TabModel[];
+  tabs: TabItem[];
   activeTab: EntityViewTab;
   children?: ReactNode;
 

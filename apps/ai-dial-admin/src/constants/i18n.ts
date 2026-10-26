@@ -775,6 +775,9 @@ export enum TabsI18nKey {
   InputSchema = 'Tabs.InputSchema',
   OutputSchema = 'Tabs.OutputSchema',
   Schema = 'Tabs.Schema',
+  StatusError = 'Tabs.StatusError',
+  StatusWarning = 'Tabs.StatusWarning',
+  ListLabel = 'Tabs.ListLabel',
 }
 
 export enum InterceptorsI18nKey {

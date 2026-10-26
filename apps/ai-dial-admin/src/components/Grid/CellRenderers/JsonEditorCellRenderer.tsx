@@ -1,7 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import classNames from 'classnames';
 
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 
@@ -43,7 +42,8 @@ const JsonEditorCellRenderer: FC<JsonCellRendererParams> = ({
       <JsonEditorInput
         value={localValue as object}
         onChangeValue={onChangeValue}
-        inputClassName={classNames('h-8', hasError && 'dial-input-error')}
+        inputClassName={hasError && 'dial-kit-input-error'}
+        wrapperClassName="h-8 py-0"
         disableValidation={disableValidation}
         disabled={disabled}
       />

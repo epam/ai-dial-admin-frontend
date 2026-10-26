@@ -222,7 +222,7 @@ A batch of smaller fixes to the same surfaces touched by D7, found via code revi
   it to compute `disableSubmitButton` on the Add-rows popup, so **Insert rows** is disabled the moment
   the JSON becomes invalid rather than only failing after a click.
 - **`invalid` prop gap**: traced in the compiled `@epam/ai-dial-ui-kit` bundle — `DialInput`'s red-border
-  styling (`dial-input-error`) is applied only from the `invalid` boolean prop; the `error` prop only
+  styling (`dial-kit-input-error`) is applied only from the `invalid` boolean prop; the `error` prop only
   renders the message text below the field (its doc comment claiming `error` "also adds error styling"
   does not match the actual implementation). `ColumnRowsEditor.tsx`, `CreateTablePopup.tsx`, and
   `EditColumnPopup.tsx` were all passing `error` without `invalid`, so validation errors showed text but

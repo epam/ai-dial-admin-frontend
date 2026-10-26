@@ -733,6 +733,9 @@ export default {
     InputSchema: 'Input Schema',
     OutputSchema: 'Output Schema',
     Schema: 'Schema',
+    StatusError: 'Error',
+    StatusWarning: 'Warning',
+    ListLabel: 'Sections',
   },
   ModelAsset: {
     InvalidTitle: 'Not served',

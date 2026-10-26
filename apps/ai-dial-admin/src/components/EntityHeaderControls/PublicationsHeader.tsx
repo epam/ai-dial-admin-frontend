@@ -1,7 +1,7 @@
 'use client';
 import { ReactNode } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { Publication } from '@/src/models/dial/publications';
@@ -10,7 +10,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import PublicationsButtonsWrapper, { PublicationsButtonsWrapperProps } from './Wrappers/PublicationsButtonsWrapper';
 
 interface Props<T> extends PublicationsButtonsWrapperProps<T> {
-  tabs: TabModel[];
+  tabs: TabItem[];
   activeTab: EntityViewTab;
   onChangeActiveTab: (tab: EntityViewTab) => void;
   warning: ReactNode | null;

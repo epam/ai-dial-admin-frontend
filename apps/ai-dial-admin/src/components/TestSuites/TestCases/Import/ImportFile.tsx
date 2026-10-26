@@ -1,6 +1,6 @@
 'use client';
 
-import { Spinner, DialLoadFileArea, Popup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Spinner, FileDropzone, Popup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo, useState } from 'react';
 
@@ -40,6 +40,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
   const [testCases, setTestCases] = useState<object[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [warnings, setWarnings] = useState<CaseWarning[]>([]);
+  const [isFormatRejected, setIsFormatRejected] = useState(false);
   const [importMode, setImportMode] = useState(TestCaseImportMode.OVERRIDE);
   const [conflictStrategy, setConflictStrategy] = useState(TestCaseConflictStrategy.FAIL);
 
@@ -58,6 +59,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
   const currentStep = useMemo(() => steps.find((s) => s.id === currentStepId), [steps, currentStepId]);
 
   const onChangeFile = (files: File[]) => {
+    setIsFormatRejected(false);
     const body = new FormData();
 
     const file = files[0] as File;
@@ -101,13 +103,13 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
           {currentStepId === STEP_FILE && (
             <>
               {!testCases && !isLoading && (
-                <DialLoadFileArea
-                  acceptTypes={TEST_CASES_IMPORT_ACCEPT_TYPES}
-                  emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
-                  emptyTextSecondLine={t(BasicI18nKey.Or)}
-                  emptyButtonLabel={t(ButtonsI18nKey.Browse)}
+                <FileDropzone
+                  accept={TEST_CASES_IMPORT_ACCEPT_TYPES}
+                  label={t(ImportI18nKey.DropAnyFile)}
+                  description={`${t(BasicI18nKey.Or)} ${t(ButtonsI18nKey.Browse)}`}
+                  errorText={isFormatRejected ? t(ImportI18nKey.FileErrorType) : undefined}
                   onChange={onChangeFile}
-                  multiple={false}
+                  onReject={() => setIsFormatRejected(true)}
                 />
               )}
               {isLoading && <Spinner size={44} fullWidth />}

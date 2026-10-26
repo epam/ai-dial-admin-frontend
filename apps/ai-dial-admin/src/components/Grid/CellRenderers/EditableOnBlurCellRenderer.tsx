@@ -76,7 +76,7 @@ const EditableOnBlurCellRenderer = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
-      className={classNames('leading-[18px] h-[32px] dial-input px-2 py-1', error && 'dial-input-error')}
+      className={classNames('leading-[18px] h-[32px] dial-kit-input px-2 py-1', error && 'dial-kit-input-error')}
     />
   );
 };

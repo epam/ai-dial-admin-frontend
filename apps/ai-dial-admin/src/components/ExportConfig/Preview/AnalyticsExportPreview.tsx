@@ -1,4 +1,4 @@
-import { Spinner, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, Tabs } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { previewAnalyticsExportConfig } from '@/src/app/[lang]/export-config/actions';
@@ -8,7 +8,7 @@ import {
   getAnalyticsPreviewTabs,
 } from '@/src/components/ExportConfig/analytics-utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -63,10 +63,11 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="mb-3">
-        <DialTabs
+        <Tabs
           tabs={tabs}
-          activeTab={selectedTab}
-          onClick={(tab) => setSelectedTab(tab as AnalyticsExportPreviewTab)}
+          activeTabId={selectedTab}
+          onTabChange={(tab) => setSelectedTab(tab as AnalyticsExportPreviewTab)}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
         />
       </div>
       <div className="flex-1 min-h-0">

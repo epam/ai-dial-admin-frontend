@@ -1,6 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialItemType, FileIcon, Spinner, DialLoadFileAreaField } from '@epam/ai-dial-ui-kit';
+import { DialItemType, FileIcon, Spinner } from '@epam/ai-dial-ui-kit';
+
+import FileUploadField from '@/src/components/Common/FileUploadField/FileUploadField';
 import { SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { ColDef, GridOptions } from 'ag-grid-community';
 
@@ -171,7 +173,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
   return (
     <div className="flex flex-col gap-4 py-4 px-6 flex-1 min-h-0">
       <div className="h-[200px] shrink-0">
-        <DialLoadFileAreaField
+        <FileUploadField
           elementId="importFiles"
           fieldTitle={t(ImportI18nKey.Files)}
           emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
@@ -182,9 +184,6 @@ const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, 
           fileFormatError={t(ImportI18nKey.FileErrorType)}
           onChange={onChangeFile}
           dynamicIcon={getFileIcon}
-          // deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
-          // addButtonLabel={t(ButtonsI18nKey.Add)}
-          // additionalActionButtons={<PrimaryButton label={t(ButtonsI18nKey.Upload)} onClick={onUpload} />}
           multiple={false}
         />
       </div>

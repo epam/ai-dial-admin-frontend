@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
@@ -11,7 +11,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ImagesButtonsWrapper, { ImagesButtonsWrapperProps } from './Wrappers/ImagesButtonsWrapper';
 
 interface Props extends ImagesButtonsWrapperProps {
-  tabs: TabModel[];
+  tabs: TabItem[];
   activeTab: EntityViewTab;
   children?: ReactNode;
 

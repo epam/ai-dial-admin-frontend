@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import {
   getCoreInterceptor,
@@ -49,7 +49,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   const getReqRef = useRef(useProtectedRequest());
   const { featureFlags } = useAppContext();
 
-  const tabs: TabModel[] = getInterceptorTabs(t, featureFlags);
+  const tabs: TabItem[] = getInterceptorTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(structuredClone(originalInterceptor));

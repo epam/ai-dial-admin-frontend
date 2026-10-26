@@ -1,6 +1,6 @@
 'use client';
 
-import { GhostIconButton, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostIconButton, Tabs, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -21,7 +21,7 @@ import {
   ConnectTab,
 } from '@/src/components/Analytics/Tables/ConnectPanel/models';
 import { useModalFocus } from '@/src/components/Analytics/Tables/ConnectPanel/use-modal-focus';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
@@ -136,7 +136,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
           {readOnlyReason ? (
             <p className="dial-tiny-text text-secondary pb-3">{t(READ_ONLY_NOTICE_KEY[readOnlyReason])}</p>
           ) : (
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
+            <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={onChangeTab} ariaLabel={t(TabsI18nKey.ListLabel)} />
           )}
         </div>
 

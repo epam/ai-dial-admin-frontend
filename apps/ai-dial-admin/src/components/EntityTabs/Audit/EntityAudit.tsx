@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { Tabs } from '@epam/ai-dial-ui-kit';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import EntityTraceListing from '@/src/components/Analytics/EntityTraces/EntityTraceListing';
@@ -47,11 +47,12 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
       <div className="bg-layer-3 h-full w-[296px] p-4 relative">
         <h1 className="mb-4">{t(TabsI18nKey.Audit)}</h1>
         <div className="flex-1 min-h-0 relative">
-          <DialTabs
-            activeTab={activeTab}
+          <Tabs
+            activeTabId={activeTab}
             tabs={tabs}
-            onClick={(tab) => setActiveTab(tab)}
+            onTabChange={(tab) => setActiveTab(tab)}
             orientation={TabOrientation.Vertical}
+            ariaLabel={t(TabsI18nKey.ListLabel)}
           />
         </div>
       </div>
