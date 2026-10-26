@@ -449,6 +449,28 @@ describe('buildDimensionSearchClause', () => {
   test('searches the dimension alone elsewhere', () => {
     expect(buildDimensionSearchClause(BreakdownTab.Models, 'gpt')).toMatchObject({ op: QueryOperator.Ico });
   });
+
+  test('asks for the empty value too when the term is in the fallback label', () => {
+    expect(buildDimensionSearchClause(BreakdownTab.Projects, 'NO proj', 'No Project')).toMatchObject({
+      op: QueryLogicalOperator.Or,
+      args: [
+        { op: QueryOperator.Ico, args: [{ name: 'project_id' }, { value: 'NO proj' }] },
+        {
+          op: QueryOperator.Eq,
+          args: [
+            { name: 'not_empty', args: [{ name: 'project_id' }] },
+            { value_type: 'boolean', value: 'false' },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('keeps to the dimension when the term is not in the fallback label', () => {
+    expect(buildDimensionSearchClause(BreakdownTab.Applications, 'rag', 'Direct call')).toMatchObject({
+      op: QueryOperator.Ico,
+    });
+  });
 });
 
 describe('the Routes view dimensions', () => {

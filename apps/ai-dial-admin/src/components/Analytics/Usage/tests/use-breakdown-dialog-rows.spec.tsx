@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
-import { StructuredQuery } from '@/src/models/analytics/query';
+import { QueryOperator, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
 const runQueryMock = vi.fn(
@@ -136,6 +136,28 @@ describe('useBreakdownDialogRows', () => {
     });
 
     expect(JSON.stringify(queryOf(0).filter)).toContain('gpt');
+  });
+
+  test('finds the fallback bucket by the label it is listed under', async () => {
+    const { result } = renderRows({
+      tab: BreakdownTab.Applications,
+      fallbackLabel: 'Direct call',
+      searchTerm: 'direct',
+    });
+
+    await act(async () => {
+      await result.current.datasource.getRows(getRowsParams(0, 25));
+    });
+
+    expect(JSON.stringify(queryOf(0).filter)).toContain(
+      JSON.stringify({
+        op: QueryOperator.Eq,
+        args: [
+          { type: 'fn', name: 'not_empty', args: [{ type: 'field', name: 'parent_deployment' }] },
+          { type: 'value', value_type: 'boolean', value: 'false' },
+        ],
+      }),
+    );
   });
 
   test('asks the previous window for the block own values, once comparison is on', async () => {
