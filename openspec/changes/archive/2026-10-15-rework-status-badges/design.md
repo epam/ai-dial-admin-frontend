@@ -18,7 +18,7 @@ Current state that shapes the approach:
   statuses) in the Summary tab and, icon-only, in the Runs grid.
 - `CoreSyncStatusBadge` is a separate uppercase pill with its own map; the diff modal reuses it.
 - Figma gives the whole set in one pill system: 12px leading slot (dot or spinner, or none for sync),
-  `px-2 py-0.5`, 120px radius, tiny-semi text; trailing 24px icon buttons for hint and diff; a status row
+  `px-2 py-0.5`, 120px radius, dial-tiny-semi-text text; trailing 24px icon buttons for hint and diff; a status row
   with 20px between badges, 4px above the title.
 
 ## Goals / Non-Goals

@@ -2,7 +2,7 @@
 
 - [x] 1.1 Extract `MetricCard.tsx` (layer-2 shell, header Base ghost Delete/Edit, description, Condition / Configuration / Outputs / Inputs rows)
 - [x] 1.2 Update `MetricBindingsDisplay` for 84px labels (no colon) and full-width long tags
-- [x] 1.3 Metric-card Show more (tiny-semi + chevron) via `MetricCardDescription`; leave shared `ExpandableText` unchanged
+- [x] 1.3 Metric-card Show more (dial-tiny-semi-text + chevron) via `MetricCardDescription`; leave shared `ExpandableText` unchanged
 - [x] 1.4 Wire `Metrics.tsx` to render `MetricCard` per bound metric
 
 ## 2. Tests

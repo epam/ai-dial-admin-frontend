@@ -67,12 +67,6 @@ describe('parseTrendsData', () => {
     expect(parsed.runOrder.map((point) => point.isFailed)).toEqual([false, false]);
     expect(parsed.kpis).toEqual({
       runCount: 2,
-      latestOverallScore: 0.8,
-      avgRunTimeMs: 500,
-      scoreMin: 0.4,
-      scoreMax: 0.8,
-      latestScore: 0.8,
-      thresholdStats: null,
     });
     expect(parsed.statistics).toEqual(['AVG']);
     expect(parsed.byStatistic.AVG).toHaveLength(1);
@@ -134,8 +128,6 @@ describe('parseTrendsData', () => {
     ]);
 
     expect(parsed.kpis.runCount).toBe(1);
-    expect(parsed.kpis.latestOverallScore).toBeNull();
-    expect(parsed.kpis.avgRunTimeMs).toBe(400);
     expect(parsed.runOrder).toEqual([
       {
         runId: 'run-1',

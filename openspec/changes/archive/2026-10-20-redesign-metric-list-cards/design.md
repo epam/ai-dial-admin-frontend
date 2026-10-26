@@ -19,7 +19,7 @@ The Metrics tab already loads each bound metric with description, condition, bin
 1. **Extract `MetricCard`** — Keeps `Metrics.tsx` orchestration-only; card owns presentation.
 2. **Reuse `getBindingDisplayValue`** — Configuration/Inputs tags stay `{property}: {value}`; long values (≥80 chars or containing newlines) use `w-full whitespace-pre-wrap`.
 3. **Outputs = schema property keys** — Same source as ScoreSettings (`Object.keys(outputSchema.properties)`); hide the row when empty.
-4. **MetricCardDescription** — Card-local clamp + Show more control (tiny-semi accent + chevron per Figma). Shared `ExpandableText` stays on `DialLinkButton` for other call sites.
+4. **MetricCardDescription** — Card-local clamp + Show more control (dial-tiny-semi-text accent + chevron per Figma). Shared `ExpandableText` stays on `DialLinkButton` for other call sites.
 5. **Ghost Base actions** — `DialGhostButton` Base + 20px icons (error Delete, accent Edit), matching Overall Score card patterns.
 
 ## Risks / Trade-offs

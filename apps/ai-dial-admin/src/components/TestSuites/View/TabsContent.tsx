@@ -29,6 +29,7 @@ interface Props {
   onChangeDataset?: (dataset: Dataset) => void;
   suiteEtag?: string;
   onStartRun?: () => void;
+  onTrendsRunCountChange?: (runCount: number | null) => void;
 }
 
 const TabsContent: FC<Props> = ({
@@ -44,6 +45,7 @@ const TabsContent: FC<Props> = ({
   onChangeDataset,
   suiteEtag,
   onStartRun,
+  onTrendsRunCountChange,
 }) => {
   const isTestCasesActive = activeTab === EntityViewTab.TestCases;
 
@@ -76,7 +78,13 @@ const TabsContent: FC<Props> = ({
         />
       </KeepAliveTab>
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
-      {activeTab === EntityViewTab.Trends && <Trends selectedTestSuite={selectedTestSuite} onStartRun={onStartRun} />}
+      {activeTab === EntityViewTab.Trends && (
+        <Trends
+          selectedTestSuite={selectedTestSuite}
+          onStartRun={onStartRun}
+          onTrendsRunCountChange={onTrendsRunCountChange}
+        />
+      )}
       {activeTab === EntityViewTab.Metrics && (
         <Metrics selectedTestSuite={selectedTestSuite} dataset={dataset} onChange={onChange} />
       )}
