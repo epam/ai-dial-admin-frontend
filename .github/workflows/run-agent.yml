@@ -85,6 +85,11 @@ jobs:
             base="${DIAL_CORE_URL%/}/${DIAL_ROUTE_PATH:-anthropic}"
             { echo "ANTHROPIC_BASE_URL=${base}"
               echo "ANTHROPIC_AUTH_TOKEN=${DIAL_API_KEY}"
+              # DIAL Core takes the key from API-KEY first. Without it, the Bearer value
+              # goes through JWT validation and fails with "401 Bad Authorization header";
+              # @anthropic-ai/sdk >= 1.0.0 sends even `apiKey` as Bearer, so this header
+              # is what keeps DIAL auth working across SDK versions.
+              echo "ANTHROPIC_CUSTOM_HEADERS=API-KEY: ${DIAL_API_KEY}"
               echo "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
               echo "SDLC_DIAL_MODE=1"
               if [ -n "${DIAL_MODEL:-}" ]; then echo "SDLC_DIAL_MODEL=${DIAL_MODEL}"; fi
