@@ -1,6 +1,6 @@
 'use client';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem, TabStatus } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -32,7 +32,7 @@ import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { decodeVariables } from '@/src/utils/deployments/variables';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getDeploymentsViewTabs, getTabStatusProps } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -68,7 +68,7 @@ const ContainerView: FC<Props> = ({
 
   const imageNotInstalled = isImageNotInstalled(image);
 
-  const [tabs, setTabs] = useState<TabModel[]>(
+  const [tabs, setTabs] = useState<TabItem[]>(
     getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled, featureFlags),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
@@ -158,7 +158,11 @@ const ContainerView: FC<Props> = ({
       try {
         const data = JSON.parse(event.data) as KubEvent;
         if (data.eventType === KubEventType.WARNING) {
-          setTabs((prev) => prev.map((tab) => (tab.id === EntityViewTab.Events ? { ...tab, invalid: true } : tab)));
+          setTabs((prev) =>
+            prev.map((tab) =>
+              tab.id === EntityViewTab.Events ? { ...tab, ...getTabStatusProps(t, TabStatus.Error) } : tab,
+            ),
+          );
         }
         setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
       } catch (e) {

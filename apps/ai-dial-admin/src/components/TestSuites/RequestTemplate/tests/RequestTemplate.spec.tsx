@@ -16,12 +16,12 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
-  DialTabs: ({ tabs, activeTab, onClick }: any) => {
-    capturedTabClick = onClick;
+  Tabs: ({ tabs, activeTabId, onTabChange }: any) => {
+    capturedTabClick = onTabChange;
     return (
       <nav aria-label="tabs">
         {tabs.map((tab: any) => (
-          <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} onClick={() => onClick(tab.id)}>
+          <button key={tab.id} type="button" aria-pressed={activeTabId === tab.id} onClick={() => onTabChange(tab.id)}>
             {tab.label}
           </button>
         ))}

@@ -1,8 +1,10 @@
 import { ColDef, ICellRendererParams, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
+import { JSONSchema7 } from 'json-schema';
 import { ReactElement } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import {
   CONTENT_FIT_COLUMN_IDS,
+  getColumnsGridColumns,
   getTestCaseColumns,
   getSchemaFieldGridColumns,
   getValidityStatusColumn,
@@ -44,6 +46,25 @@ const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRI
 });
 
 const makeSuite = (): TestSuite => ({});
+
+describe('getColumnsGridColumns', () => {
+  test('should offer only backend-supported response column types', () => {
+    const responseSchema: JSONSchema7 = { type: 'object' };
+    const columns = getColumnsGridColumns(responseSchema, vi.fn());
+    const typeColumn = columns.find((column) => column.colId === 'type');
+    const items = typeColumn?.cellRendererParams?.items;
+
+    expect(items).toEqual([
+      { value: TestCaseItemType.STRING, label: 'string' },
+      { value: TestCaseItemType.NUMBER, label: 'number' },
+      { value: TestCaseItemType.INTEGER, label: 'integer' },
+      { value: TestCaseItemType.BOOLEAN, label: 'boolean' },
+      { value: TestCaseItemType.OBJECT, label: 'object' },
+      { value: TestCaseItemType.ARRAY, label: 'array' },
+      { value: TestCaseItemType.FILE, label: 'file' },
+    ]);
+  });
+});
 
 describe('getTestCaseColumns', () => {
   const onCellChange = vi.fn();

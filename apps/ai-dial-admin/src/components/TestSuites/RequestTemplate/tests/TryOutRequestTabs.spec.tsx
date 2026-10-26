@@ -7,14 +7,14 @@ import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import TryOutRequestTabs from '../components/TryOutRequestTabs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialTabs: ({
+  Tabs: ({
     tabs,
-    activeTab,
-    onClick,
+    activeTabId,
+    onTabChange,
   }: {
     tabs: { id: string; label: string }[];
-    activeTab: string;
-    onClick: (id: string) => void;
+    activeTabId: string;
+    onTabChange: (id: string) => void;
   }) => (
     <div>
       {tabs.map((tab) => (
@@ -22,8 +22,8 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
           key={tab.id}
           type="button"
           role="tab"
-          aria-selected={tab.id === activeTab}
-          onClick={() => onClick(tab.id)}
+          aria-selected={tab.id === activeTabId}
+          onClick={() => onTabChange(tab.id)}
         >
           {tab.label}
         </button>

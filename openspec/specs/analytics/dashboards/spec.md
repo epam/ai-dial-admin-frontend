@@ -1639,6 +1639,11 @@ it becomes a request, since the field reports every keystroke, and SHALL be part
 the list: a new term drops the blocks in hand and reads from the first one again. Closing the dialog
 SHALL clear it.
 
+A fallback bucket SHALL be found by the words it is listed under: a term contained in its label —
+`No Project`, `Direct call` — SHALL match the rows whose dimension is empty as well as the rows whose
+value contains the term. The bucket's value is an absence, so matching the term against the value
+alone would leave a row the reader can see unreachable by the name it carries.
+
 The ranking SHALL carry the dimension as its last key, so a block is a stable slice of it: two rows
 holding the same figure would otherwise be free to come back in either order, and the same row could
 arrive in two blocks or in none.
@@ -1685,6 +1690,12 @@ than a name — SHALL state none either.
 - **WHEN** the reader searches for a value ranked below every loaded block
 - **THEN** the rows are read again from the first block, narrowed by that term
 - **AND** the matching row is listed
+
+#### Scenario: The search finds the fallback bucket by its label
+
+- **GIVEN** the dialog is open on the `Projects` tab and calls made outside any project are in the window
+- **WHEN** the reader searches for `no proj`
+- **THEN** the `No Project` row is listed
 
 #### Scenario: A term that matches nothing is stated by the grid
 

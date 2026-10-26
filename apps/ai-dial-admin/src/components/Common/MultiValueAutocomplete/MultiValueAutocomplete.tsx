@@ -125,7 +125,7 @@ const MultiValueAutocomplete: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col gap-y-1', STANDARD_CONTROL_WIDTH)}>
-      <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
+      <div className={classNames('dial-kit-input h-auto min-h-[40px] p-[6px]', error && 'dial-kit-input-error')}>
         <div
           ref={containerRef}
           className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -146,7 +146,7 @@ const MultiValueAutocomplete: FC<Props> = ({
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               disabled={isReadOnlyAdmin}
-              className="outline-hidden border-none w-full flex-1 p-1 dial-input h-auto"
+              className="outline-hidden border-none w-full flex-1 p-1 dial-kit-input h-auto"
               placeholder={placeholder || ''}
             />
           </div>

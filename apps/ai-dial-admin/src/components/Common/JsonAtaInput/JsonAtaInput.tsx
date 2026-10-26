@@ -23,6 +23,7 @@ interface Props {
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
+  wrapperClassName?: string;
   /** Extra variables suggested alongside the response schema's fields. */
   variables?: JsonataVariable[];
   onChangeValue: (expression: string, type?: string) => void;
@@ -35,6 +36,7 @@ const JsonAtaInput: FC<Props> = ({
   label,
   elementId,
   inputClassName,
+  wrapperClassName,
   variables,
   onChangeValue,
 }) => {
@@ -93,6 +95,7 @@ const JsonAtaInput: FC<Props> = ({
         selectedValue={value}
         onOpen={onOpenModal}
         inputClassName={inputClassName}
+        wrapperClassName={wrapperClassName}
       >
         <Popup
           onClose={onCancelModal}

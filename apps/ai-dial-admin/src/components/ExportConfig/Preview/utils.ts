@@ -1,7 +1,7 @@
 import { DEPLOYMENT_ENTITY_TABS } from '@/src/components/ExportConfig/deployment-utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 import {
   getApplicationsForEntitiesGrid,
   getModelsForEntitiesGrid,
@@ -27,15 +27,15 @@ import { DeploymentExportComponentType, DeploymentExportEntityType } from '@/src
  * @param {boolean} isIncludeSecret - is include secret data in export'
  * @param {ExportFormat} exportFormat - is export format - core or admin'
  * @param {(t: string) => string} t - function for translate
- * @returns { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } result - array of data and tabs
+ * @returns { tabs: TabItem[]; convertedData: Record<string, EntitiesGridData[]> } result - array of data and tabs
  */
 export const getPreviewTabs = (
   data: Record<string, EntitiesGridData[]>,
   isIncludeSecret: boolean,
   exportFormat: ExportFormat | undefined,
   t: (v: string) => string,
-): { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } => {
-  const tabs: TabModel[] = [];
+): { tabs: TabItem[]; convertedData: Record<string, EntitiesGridData[]> } => {
+  const tabs: TabItem[] = [];
   const convertedData: Record<string, EntitiesGridData[]> = {};
 
   Object.keys(data).forEach((key) => {
@@ -171,7 +171,7 @@ const toImageGridData = (item: ExportComponentInfo): EntitiesGridData => ({
 export const getDeploymentExportPreviewTabs = (
   data: DeploymentExportPreviewResponse,
   t: (v: string) => string,
-): { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } => {
+): { tabs: TabItem[]; convertedData: Record<string, EntitiesGridData[]> } => {
   const grouped: Record<string, EntitiesGridData[]> = {};
 
   for (const deployment of data.deployments) {
@@ -188,7 +188,7 @@ export const getDeploymentExportPreviewTabs = (
     grouped[entityType].push(toImageGridData(image));
   }
 
-  const tabs: TabModel[] = [];
+  const tabs: TabItem[] = [];
   const convertedData: Record<string, EntitiesGridData[]> = {};
 
   for (const { id, labelKey } of DEPLOYMENT_ENTITY_TABS) {

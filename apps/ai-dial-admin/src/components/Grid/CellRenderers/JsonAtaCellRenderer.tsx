@@ -35,6 +35,7 @@ const JsonAtaCellRenderer: FC<JsonAtaCellRendererParams> = ({
         disabled={disabled}
         responseSchema={responseSchema}
         variables={variables}
+        wrapperClassName="h-8 py-0"
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { ButtonAppearance, OutlinedButton, NoDataContent, PrimaryButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, OutlinedButton, NoDataContent, PrimaryButton, Tabs } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
@@ -12,7 +12,7 @@ import { ContentType } from '@/src/components/TestSuites/constants/content-type'
 import { getBodyText } from '@/src/components/TestSuites/utils/body-content';
 import { EntityViewTab, getTestSuiteRequestTemplateTabs } from '@/src/utils/tabs/utils';
 import TabsContent, { TabsContentRef } from './tabs/TabsContent';
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import ContentTypeSelect from './components/ContentTypeSelect';
 import JsonataToggle from './components/JsonataToggle';
 
@@ -98,7 +98,12 @@ const RequestTemplate: FC<Props> = ({
       {isEndpointConfigured ? (
         <>
           <div className="flex flex-row justify-between items-start mb-3">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            <Tabs
+              tabs={tabs}
+              activeTabId={activeTab}
+              onTabChange={onChangeActiveTab}
+              ariaLabel={t(TabsI18nKey.ListLabel)}
+            />
             {showAddButton && (
               <OutlinedButton iconBefore={<IconPlus />} label={t(ButtonsI18nKey.Add)} onClick={onAddRow} />
             )}

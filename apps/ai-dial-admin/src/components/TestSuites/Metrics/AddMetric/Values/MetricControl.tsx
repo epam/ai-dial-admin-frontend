@@ -82,7 +82,7 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, nestedInArray 
               multiple
               options={enumArrayOptions}
               placeholder={selectPlaceholder}
-              className="[&_.dial-input]:!pl-10"
+              className="[&_.dial-kit-input]:!pl-10"
               value={(binding?.source.value as string[] | undefined) ?? []}
               onChange={(v) => onChangeValue(field.name, v as string[])}
             />

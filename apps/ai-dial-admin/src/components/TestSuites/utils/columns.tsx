@@ -10,7 +10,7 @@ import {
 } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
 
-import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatus';
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
@@ -626,7 +626,7 @@ export const getColumnsGridColumns = (
       suppressSizeToFit: true,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        items: getSchemaTypes().map((type) => ({ value: type.toUpperCase(), label: type })),
+        items: Object.values(TestCaseItemType).map((type) => ({ value: type, label: type.toLowerCase() })),
         onChange,
       },
       valueFormatter: ({ value }) => value.toLowerCase(),

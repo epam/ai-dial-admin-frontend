@@ -113,9 +113,9 @@ const SingleValueAutocomplete: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
       {label && <Label htmlFor={elementId} label={label} />}
-      <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
+      <div className={classNames('dial-kit-input h-auto min-h-[40px] p-[6px]', error && 'dial-kit-input-error')}>
         <div className="flex flex-wrap items-center gap-2">
           {value && (
             <div className="flex max-w-full min-w-0 items-center">
@@ -141,7 +141,7 @@ const SingleValueAutocomplete: FC<Props> = ({
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               disabled={disabled}
-              className="outline-hidden border-none w-full flex-1 p-1 dial-input h-auto"
+              className="outline-hidden border-none w-full flex-1 p-1 dial-kit-input h-auto"
               placeholder={placeholder || ''}
             />
           </div>

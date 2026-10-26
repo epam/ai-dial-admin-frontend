@@ -1,7 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import InternalImageField from '@/src/components/Deployments/Fields/ContainerSource/InternalImageField';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
@@ -51,8 +53,8 @@ const sampleImage = {
   version: '1.2.1',
 } as Image;
 
-// InputPopup renders a read-only textbox that opens the popup.
-const getPopupTrigger = () => screen.getByRole('textbox');
+// InputPopup opens through its accessible Open button.
+const getPopupTrigger = () => screen.getByRole('button', { name: ButtonsI18nKey.Open });
 
 describe('InternalImageField', () => {
   beforeEach(() => {
@@ -73,22 +75,24 @@ describe('InternalImageField', () => {
     expect(screen.getByText(/Containers\.ContainerImage/)).toBeInTheDocument();
   });
 
-  test('clicking the input popup trigger opens the ContainerChangeImage modal', () => {
+  test('clicking the input popup trigger opens the ContainerChangeImage modal', async () => {
+    const user = userEvent.setup();
     render(
       <InternalImageField container={baseContainer()} image={sampleImage} route={ApplicationRoute.McpContainers} />,
     );
     expect(screen.queryByRole('dialog', { name: 'change-image-modal' })).toBeNull();
-    fireEvent.click(getPopupTrigger());
+    await user.click(getPopupTrigger());
     expect(screen.getByRole('dialog', { name: 'change-image-modal' })).toBeInTheDocument();
   });
 
-  test('clicking while image is undefined does not open the modal', () => {
+  test('hides the input popup trigger while image is undefined', () => {
     render(<InternalImageField container={baseContainer()} route={ApplicationRoute.McpContainers} />);
-    fireEvent.click(getPopupTrigger());
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).toBeNull();
     expect(screen.queryByRole('dialog', { name: 'change-image-modal' })).toBeNull();
   });
 
-  test('clicking while disabled prop is true does not open the modal', () => {
+  test('hides the input popup trigger while disabled', () => {
     render(
       <InternalImageField
         container={baseContainer()}
@@ -97,17 +101,19 @@ describe('InternalImageField', () => {
         disabled
       />,
     );
-    fireEvent.click(getPopupTrigger());
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).toBeNull();
     expect(screen.queryByRole('dialog', { name: 'change-image-modal' })).toBeNull();
   });
 
   test('applying a new id calls updateContainer with spread source and refreshes router', async () => {
+    const user = userEvent.setup();
     updateContainerMock.mockResolvedValue({ success: true });
     render(
       <InternalImageField container={baseContainer()} image={sampleImage} route={ApplicationRoute.McpContainers} />,
     );
-    fireEvent.click(getPopupTrigger());
-    fireEvent.click(screen.getByText('Apply'));
+    await user.click(getPopupTrigger());
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
 
     await vi.waitFor(() => {
       expect(updateContainerMock).toHaveBeenCalledWith(
@@ -122,6 +128,7 @@ describe('InternalImageField', () => {
   });
 
   test('apply failure shows an error notification and does not refresh', async () => {
+    const user = userEvent.setup();
     updateContainerMock.mockResolvedValue({
       success: false,
       errorHeader: 'Error',
@@ -131,8 +138,8 @@ describe('InternalImageField', () => {
     render(
       <InternalImageField container={baseContainer()} image={sampleImage} route={ApplicationRoute.McpContainers} />,
     );
-    fireEvent.click(getPopupTrigger());
-    fireEvent.click(screen.getByText('Apply'));
+    await user.click(getPopupTrigger());
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
 
     await vi.waitFor(() => {
       expect(showNotificationMock).toHaveBeenCalled();

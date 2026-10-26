@@ -1,4 +1,4 @@
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -26,7 +26,7 @@ const TAB_TO_COMPONENT_TYPE: Record<AnalyticsExportEntityType, CatalogComponentT
 
 const ANALYTICS_TAB_IDS = new Set<string>(Object.values(AnalyticsExportEntityType));
 
-export const getAnalyticsTabs = (t: (v: string) => string): TabModel[] =>
+export const getAnalyticsTabs = (t: (v: string) => string): TabItem[] =>
   ANALYTICS_ENTITY_TABS.map(({ id, labelKey }) => ({ id, label: t(labelKey) }));
 
 export const getAnalyticsColDefs = (remove?: (entity?: EntitiesGridData) => void): ColDef[] => {
@@ -60,7 +60,7 @@ const PREVIEW_TABS: { id: AnalyticsExportPreviewTab; labelKey: string }[] = [
   { id: AnalyticsExportPreviewTab.SKIPPED, labelKey: ExportI18nKey.AnalyticsSkipped },
 ];
 
-export const getAnalyticsPreviewTabs = (t: (v: string) => string): TabModel[] =>
+export const getAnalyticsPreviewTabs = (t: (v: string) => string): TabItem[] =>
   PREVIEW_TABS.map(({ id, labelKey }) => ({ id, label: t(labelKey) }));
 
 const PREVIEW_COLUMN_KEYS: Record<AnalyticsExportPreviewTab, { field: string; labelKey: string }[]> = {

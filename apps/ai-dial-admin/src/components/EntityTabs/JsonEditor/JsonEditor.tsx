@@ -2,6 +2,7 @@
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
+import { isEqual } from 'lodash';
 import type { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -25,7 +26,19 @@ interface Props<T> {
   options?: editor.IStandaloneEditorConstructionOptions;
   text?: string;
   onChangeText?: (text: string) => void;
+  shouldPreserveEditorOnEquivalentEntityChange?: boolean;
 }
+
+const isSameJSONEntity = <T extends object>(first: T, second: T | null) => {
+  if (second == null) {
+    return false;
+  }
+
+  const firstJSON = JSON.stringify(first);
+  const secondJSON = JSON.stringify(second);
+
+  return firstJSON !== undefined && secondJSON !== undefined && isEqual(JSON.parse(firstJSON), JSON.parse(secondJSON));
+};
 
 const EntityJsonEditor = <T extends object>({
   entity,
@@ -36,6 +49,7 @@ const EntityJsonEditor = <T extends object>({
   options,
   text,
   onChangeText,
+  shouldPreserveEditorOnEquivalentEntityChange,
 }: Props<T>) => {
   const isTextControlled = text !== undefined;
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -83,13 +97,16 @@ const EntityJsonEditor = <T extends object>({
     if (!entity) {
       return;
     }
-    if (entity === lastEntityFromEditorRef.current) {
+    if (
+      entity === lastEntityFromEditorRef.current ||
+      (shouldPreserveEditorOnEquivalentEntityChange && isSameJSONEntity(entity, lastEntityFromEditorRef.current))
+    ) {
       return;
     }
     lastEntityFromEditorRef.current = entity;
     setEntityModel(JSON.stringify(entity, null, 4));
     setEditorInstanceKey((key) => key + 1);
-  }, [entity, isTextControlled]);
+  }, [entity, isTextControlled, shouldPreserveEditorOnEquivalentEntityChange]);
 
   const onChangeJSON = useCallback(
     (updatedConfig?: string) => {

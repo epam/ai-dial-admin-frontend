@@ -43,7 +43,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
     <div
       ref={ref}
       className={classNames(
-        'flex-1 flex flex-row items-center dial-input py-2 px-3',
+        'flex-1 flex flex-row items-center dial-kit-input py-2 px-3',
         isRuleError && 'border-error',
         isRuleNew && 'border-accent-secondary',
       )}

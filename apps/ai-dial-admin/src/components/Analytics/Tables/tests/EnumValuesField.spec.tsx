@@ -90,7 +90,7 @@ describe('EnumValuesField', () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(<EnumValuesField rowId="col-1" values={[]} onChange={onChange} />);
-      await user.click(screen.getByRole('textbox'));
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
       return { user, onChange, dialog: screen.getByRole('dialog') };
     };
 
