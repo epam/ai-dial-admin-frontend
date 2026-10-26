@@ -49,7 +49,7 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, size = 80, onChange }) => {
 
   const getImageSrc = () => {
     return (
-      <div className="bg-layer-sunken rounded-md group relative hover:border-hover shrink-0" style={{ width: size }}>
+      <div className="bg-entity-icon rounded-md group relative hover:border-hover shrink-0" style={{ width: size }}>
         <Image
           role="icon"
           src={getIconPath(src)}
