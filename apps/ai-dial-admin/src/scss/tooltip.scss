@@ -4,7 +4,7 @@
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
 }
 
-// The kit's legacy `Dial*` components (DialInput, DialLabelledText, DialSelect, DialTabs, DialDropdown,
+// The kit's legacy `Dial*` components (DialInput, DialLabelledText, DialSelect, DialDropdown,
 // DialAnalytics*) still portal the 1.0 bubble: bordered, theme-coloured, no `data-placement`. Restyle it
 // to the 2.0 bubble so every tooltip reads the same. The app compiles the kit's utilities as `!important`
 // inside `@layer utilities`, and a layered `!important` beats an unlayered one — so this lives in the same

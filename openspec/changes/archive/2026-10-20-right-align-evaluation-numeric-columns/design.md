@@ -24,7 +24,7 @@ not one, and each needs its own fix:
    still adds `headerClass` where it's free and correct, and accepts the no-op elsewhere rather than
    reworking those header components for a cosmetic label tweak.
 3. **Non-ag-grid renderers whose root fills the cell** — `EditableCellRenderer`'s `<input>` has
-   `width: 100%` from the `dial-input` design-system class, and `HeatMapValueCellRenderer`'s root is
+   `width: 100%` from the `dial-kit-input` design-system class, and `HeatMapValueCellRenderer`'s root is
    `flex ... size-full`. A ColDef `cellClass` cannot right-align content inside either: the flex
    `justify-content` on the ag-grid cell has nothing to push against once the child already fills the
    cell. These need the alignment class applied *inside* the renderer.

@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { PrimaryButton, Spinner, DialTabs, Tooltip, TabModel } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton, Spinner, Tabs, Tooltip, TabItem } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import {
@@ -19,7 +19,7 @@ import {
 import DeploymentConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/DeploymentConfigurationGrid';
 import ValidationBanner from '@/src/components/ImportConfig/ConfigurationPreview/ValidationBanner';
 import { ValidationSummary } from '@/src/models/deployments/import';
-import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -70,7 +70,7 @@ const ConfigurationPreview: FC<Props> = ({
   const onValidationChangeRef = useRef(onValidationChange);
   const getReqRef = useRef(useProtectedRequest());
 
-  const [tabs, setTabs] = useState<TabModel[]>([]);
+  const [tabs, setTabs] = useState<TabItem[]>([]);
   const [selectedTab, setSelectedTab] = useState('');
   const [data, setData] = useState<Record<string, BaseEntity[]>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -198,7 +198,12 @@ const ConfigurationPreview: FC<Props> = ({
           </div>
         )}
         <div className="mb-3">
-          <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+          <Tabs
+            tabs={tabs}
+            activeTabId={selectedTab}
+            onTabChange={(tab) => setSelectedTab(tab)}
+            ariaLabel={t(TabsI18nKey.ListLabel)}
+          />
         </div>
         {isDeployments ? (
           <DeploymentConfigurationGrid

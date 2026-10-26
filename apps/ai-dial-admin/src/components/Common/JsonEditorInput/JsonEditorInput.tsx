@@ -16,6 +16,7 @@ interface Props {
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
+  wrapperClassName?: string;
   onChangeValue: (json: object) => void;
   disableValidation?: boolean;
 }
@@ -26,6 +27,7 @@ const JsonEditorInput: FC<Props> = ({
   label,
   elementId,
   inputClassName,
+  wrapperClassName,
   onChangeValue,
   disableValidation,
 }) => {
@@ -111,6 +113,7 @@ const JsonEditorInput: FC<Props> = ({
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.NoData)}
         inputClassName={inputClassName}
+        wrapperClassName={wrapperClassName}
       >
         <Popup
           onClose={onCancelModal}

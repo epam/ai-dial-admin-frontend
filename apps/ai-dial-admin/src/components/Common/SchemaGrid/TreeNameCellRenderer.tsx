@@ -63,7 +63,7 @@ const TreeNameCellRenderer = ({
             setValue?.(e.target.value);
             onChangeName(e.target.value, data);
           }}
-          className="leading-[18px] h-[32px] dial-input px-2 py-1 flex-1 min-w-0"
+          className="leading-[18px] h-[32px] dial-kit-input px-2 py-1 flex-1 min-w-0"
         />
       ) : (
         <div>{inputValue}</div>

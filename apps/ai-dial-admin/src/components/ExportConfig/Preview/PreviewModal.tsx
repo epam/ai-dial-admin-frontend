@@ -1,4 +1,4 @@
-import { Checkbox, DialTabs, Popup, PopupSize, Spinner, TabModel } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Tabs, Popup, PopupSize, Spinner, TabItem } from '@epam/ai-dial-ui-kit';
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -9,7 +9,7 @@ import { getDeploymentColDefs } from '@/src/components/ExportConfig/deployment-u
 import AnalyticsExportPreview from '@/src/components/ExportConfig/Preview/AnalyticsExportPreview';
 import { getDeploymentExportPreviewTabs, getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ButtonsI18nKey, EntitiesI18nKey, ExportI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, ExportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -47,7 +47,7 @@ const PreviewModal: FC<Props> = ({
   const getReqRef = useRef(useProtectedRequest());
   const [isIncludeSecret, setIsIncludeSecret] = useState<boolean>(false);
   const [isIncludeGlobalFirewall, setIsIncludeGlobalFirewall] = useState<boolean>(false);
-  const [tabs, setTabs] = useState<TabModel[]>([]);
+  const [tabs, setTabs] = useState<TabItem[]>([]);
   const [data, setData] = useState<Record<string, EntitiesGridData[]>>({});
   const [selectedTab, setSelectedTab] = useState('');
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -134,7 +134,12 @@ const PreviewModal: FC<Props> = ({
       return (
         <div className="flex flex-col h-full">
           <div className="mb-3">
-            <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+            <Tabs
+              tabs={tabs}
+              activeTabId={selectedTab}
+              onTabChange={(tab) => setSelectedTab(tab)}
+              ariaLabel={t(TabsI18nKey.ListLabel)}
+            />
           </div>
           <div className="flex-1 min-h-0">
             <GridView
@@ -150,7 +155,12 @@ const PreviewModal: FC<Props> = ({
     return (
       <div className="flex flex-col h-full">
         <div className="mb-3">
-          <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+          <Tabs
+            tabs={tabs}
+            activeTabId={selectedTab}
+            onTabChange={(tab) => setSelectedTab(tab)}
+            ariaLabel={t(TabsI18nKey.ListLabel)}
+          />
         </div>
         <div className="flex-1 min-h-0">
           <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />

@@ -34,7 +34,7 @@ const TextFilterCell: FC<Props> = ({
       <IconSearch width={12} height={12} className="shrink-0" />
       <input
         type="text"
-        className="w-full border-0 dial-tiny dial-input px-2 py-0 bg-transparent outline-hidden"
+        className="w-full border-0 dial-tiny dial-kit-input px-2 py-0 bg-transparent outline-hidden"
         value={searchQuery}
         onChange={onSearchChange}
         placeholder={searchPlaceholder}

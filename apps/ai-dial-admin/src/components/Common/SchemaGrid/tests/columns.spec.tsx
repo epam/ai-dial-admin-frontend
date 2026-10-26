@@ -159,7 +159,7 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
     test('Should not flag an empty order on a required row when the schema kind does not require it', () => {
       const container = renderOrder(orderOf(columnsFor(CATALOG_SCHEMA_META_COLUMNS)), row({ required: true }));
 
-      expect(container.querySelector('.dial-input-error')).toBeNull();
+      expect(container.querySelector('.dial-kit-input-error')).toBeNull();
     });
 
     test('Should flag an empty order on an optional row when the schema kind requires it', () => {
@@ -167,7 +167,7 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
 
       const container = renderOrder(orderOf(columns), row({ required: false }));
 
-      expect(container.querySelector('.dial-input-error')).toBeTruthy();
+      expect(container.querySelector('.dial-kit-input-error')).toBeTruthy();
     });
 
     test('Should not flag a filled order when the schema kind requires it', () => {
@@ -175,7 +175,7 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
 
       const container = renderOrder(orderOf(columns), row(), 1);
 
-      expect(container.querySelector('.dial-input-error')).toBeNull();
+      expect(container.querySelector('.dial-kit-input-error')).toBeNull();
     });
   });
 

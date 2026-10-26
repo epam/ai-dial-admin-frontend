@@ -57,7 +57,7 @@ Alternatives: `Select` with a custom overlay (it is a list picker, not a modal t
 Points to watch (checked in the first task, before the 12 sites move):
 - Whether 2.0 `TagInput` can render read-only and click-through to open. If it cannot, the array mode keeps a small local tag row.
 - The legacy trigger had the fixed names `open-popup` and `input-popup-field`; specs query those. The wrapper takes its names from `elementId` and the field label instead, and the four specs follow.
-- `inputClassName` is used at several sites for width and the legacy error class (`dial-input-error`); both become `containerClassName` and `invalid`.
+- `inputClassName` is used at several sites for width and the legacy error class (`dial-kit-input-error`); both become `containerClassName` and `invalid`.
 
 ### Mechanics
 Order: `Popup` sites first (pure rename), then the shared form-popup helpers and the `DialFormPopup` sites, then `InputPopup` and its sites. Each step is its own PR-sized commit group. Specs keep asserting by role and accessible name per `testing.md`; any spec that mocks one of the three names by string is updated with its component. Import from `@epam/ai-dial-ui-kit` for `Popup`; import the local helpers and `InputPopup` via `@/components/Common/...`.

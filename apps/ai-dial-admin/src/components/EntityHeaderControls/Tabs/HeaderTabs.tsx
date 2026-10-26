@@ -2,18 +2,22 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { Tabs, TabItem } from '@epam/ai-dial-ui-kit';
 
+import { TabsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
-  tabs: TabModel[];
+  tabs: TabItem[];
   activeTab: EntityViewTab;
   isEditorEnabled?: boolean;
   onChangeActiveTab: (tab: EntityViewTab) => void;
 }
 
-const Tabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onChangeActiveTab }) => {
+const HeaderTabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onChangeActiveTab }) => {
+  const t = useI18n();
+
   const onChange = useCallback(
     (tab: string) => {
       if (tab !== activeTab) {
@@ -28,10 +32,10 @@ const Tabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onChangeAct
   return (
     showTabs && (
       <div className="flex-1 min-w-0 mr-3">
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChange} />
+        <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={onChange} ariaLabel={t(TabsI18nKey.ListLabel)} />
       </div>
     )
   );
 };
 
-export default Tabs;
+export default HeaderTabs;

@@ -1,5 +1,5 @@
 import { ColDef } from 'ag-grid-community';
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -23,7 +23,7 @@ export const DEPLOYMENT_ENTITY_TABS: { id: DeploymentExportEntityType; labelKey:
   { id: DeploymentExportEntityType.IMAGE, labelKey: MenuI18nKey.Images },
 ];
 
-export const getDeploymentTabs = (t: (v: string) => string): TabModel[] => {
+export const getDeploymentTabs = (t: (v: string) => string): TabItem[] => {
   return DEPLOYMENT_ENTITY_TABS.map(({ id, labelKey }) => ({
     id,
     label: t(labelKey),

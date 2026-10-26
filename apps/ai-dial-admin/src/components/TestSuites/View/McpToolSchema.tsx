@@ -2,20 +2,20 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Select, DialTabs, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
+import { Select, Tabs, SelectOption, ElementSize, TabStatus } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import TableView from '@/src/components/Common/ViewSelector/TableView';
 import Columns from '@/src/components/TestSuites/EndpointSchema/Columns/Columns';
 import { TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { CompareI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { CompareI18nKey, EntitiesI18nKey, TestSuitesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { findDuplicateResponseColumnName } from '@/src/utils/evaluation/request-chain';
-import { EntityViewTab, getMcpToolSchemaTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getMcpToolSchemaTabs, getTabStatusProps } from '@/src/utils/tabs/utils';
 import { convertSchemaToTable } from '@/src/utils/schema';
 
 const COLUMN_UNIQUENESS_FIELD = 'columnUniqueness';
@@ -48,7 +48,9 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
   const tabs = useMemo(
     () =>
       getMcpToolSchemaTabs(t).map((tab) =>
-        tab.id === EntityViewTab.Columns ? { ...tab, invalid: !!duplicateColumn } : tab,
+        tab.id === EntityViewTab.Columns
+          ? { ...tab, ...getTabStatusProps(t, duplicateColumn ? TabStatus.Error : undefined) }
+          : tab,
       ),
     [t, duplicateColumn],
   );
@@ -118,7 +120,7 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
       </div>
 
       <div className="flex flex-row justify-between items-start mb-3">
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
+        <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={onChangeTab} ariaLabel={t(TabsI18nKey.ListLabel)} />
       </div>
 
       {isSchemaTab ? (

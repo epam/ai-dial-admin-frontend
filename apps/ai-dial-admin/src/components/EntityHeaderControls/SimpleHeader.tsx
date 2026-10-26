@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import EntityValidityBadge from '@/src/components/Common/EntityValidityBadge/EntityValidityBadge';
 import { EntityValidityInput } from '@/src/components/Common/EntityValidityBadge/models';
@@ -23,7 +23,7 @@ interface Entity extends EntityValidityInput {
 }
 
 interface Props<T> extends SimpleButtonsWrapperProps<T> {
-  tabs?: TabModel[];
+  tabs?: TabItem[];
   activeTab?: EntityViewTab;
   children?: ReactNode;
   leadingActions?: ReactNode;

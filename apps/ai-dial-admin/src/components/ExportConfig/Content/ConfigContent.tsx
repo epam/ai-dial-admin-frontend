@@ -1,11 +1,12 @@
 'use client';
-import { Spinner, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, Tabs } from '@epam/ai-dial-ui-kit';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getEntities } from '@/src/app/[lang]/export-config/actions';
 import AddEntitiesButton from '@/src/components/ExportConfig/AddEntities/AddEntitiesButton';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
 import { getActualTabs } from '@/src/components/ExportConfig/Content/utils';
+import { TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig } from '@/src/models/export';
@@ -64,7 +65,14 @@ const ConfigContent: FC<Props> = ({
 
   return (
     <div className="flex-1 min-w-0 bg-layer-3 rounded p-4 flex flex-col h-full">
-      {selectedTab && <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />}
+      {selectedTab && (
+        <Tabs
+          tabs={tabs}
+          activeTabId={selectedTab}
+          onTabChange={(tab) => setSelectedTab(tab)}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
+        />
+      )}
       <div className="flex-1 min-h-0 mt-4">
         <div className="h-full flex flex-col">
           {selectedTab && (

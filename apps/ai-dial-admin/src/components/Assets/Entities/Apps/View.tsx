@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { createApp, getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -75,7 +75,7 @@ const AppView: FC<Props> = ({
 
   const { visualizerConnector, featureFlags } = useAppContext();
 
-  const [tabs, setTabs] = useState<TabModel[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags));
+  const [tabs, setTabs] = useState<TabItem[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags));
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);

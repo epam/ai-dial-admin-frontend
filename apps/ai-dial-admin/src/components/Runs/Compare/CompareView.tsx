@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { GhostButton, GhostIconButton, Switch, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Switch, Tabs, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
@@ -37,7 +37,7 @@ import {
   isMatchedCompareRow,
   mergeByTestCaseId,
 } from '@/src/components/Runs/View/utils';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { RunsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
@@ -433,7 +433,12 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       </div>
 
       <div className="flex items-center justify-between gap-4 shrink-0">
-        <DialTabs tabs={compareTabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        <Tabs
+          tabs={compareTabs}
+          activeTabId={activeTab}
+          onTabChange={onChangeActiveTab}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
+        />
         {activeTab === CompareViewTab.HeatMap && (
           <HeatMapToolbar
             availableMetricGroups={availableMetricGroups}

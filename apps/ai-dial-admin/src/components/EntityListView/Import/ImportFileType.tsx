@@ -4,12 +4,13 @@ import {
   DialItemType,
   FileIcon,
   Label,
-  DialLoadFileAreaField,
   RadioGroup,
   Switch,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+
+import FileUploadField from '@/src/components/Common/FileUploadField/FileUploadField';
 import { toRadioItems } from '@/src/utils/radio-items';
 
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
@@ -84,7 +85,7 @@ const ImportFileTypeSelector: FC<Props> = ({
       </div>
       <div className="mt-6 flex-1 min-h-0">
         {fileType === ImportFileType.ARCHIVE && (
-          <DialLoadFileAreaField
+          <FileUploadField
             elementId="importArchive"
             files={files?.[0] ? [files[0]] : []}
             fieldTitle={t(ImportI18nKey.File)}
@@ -107,7 +108,7 @@ const ImportFileTypeSelector: FC<Props> = ({
           />
         )}
         {fileType === ImportFileType.JSON && (
-          <DialLoadFileAreaField
+          <FileUploadField
             elementId="importJSON"
             fieldTitle={t(ImportI18nKey.Files)}
             emptyTextFirstLine={t(ImportI18nKey.DropFiles)}
@@ -132,7 +133,7 @@ const ImportFileTypeSelector: FC<Props> = ({
           />
         )}
         {fileType === ImportFileType.FILES && (
-          <DialLoadFileAreaField
+          <FileUploadField
             elementId="importFiles"
             fieldTitle={t(ImportI18nKey.Files)}
             emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}

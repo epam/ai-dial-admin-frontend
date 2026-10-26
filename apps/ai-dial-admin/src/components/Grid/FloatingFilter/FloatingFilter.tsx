@@ -65,7 +65,7 @@ const FloatingFilter = (props: IFloatingFilterParams) => {
       <IconSearch width={12} height={12} className="" />
       <input
         type="text"
-        className="w-full border-0 dial-tiny dial-input px-3 py-2"
+        className="w-full border-0 dial-tiny dial-kit-input px-3 py-2"
         value={value}
         onChange={onInputChanged}
         placeholder={t(BasicI18nKey.Search)}

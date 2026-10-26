@@ -25,7 +25,10 @@ vi.mock('@/src/hooks/use-application-file-export', () => ({
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   FileIcon: () => null,
   Spinner: () => <div>loader</div>,
-  DialLoadFileAreaField: () => <div>upload-area</div>,
+}));
+
+vi.mock('@/src/components/Common/FileUploadField/FileUploadField', () => ({
+  default: () => <div>upload-area</div>,
 }));
 
 vi.mock('@epam/ai-dial-react-file-manager', () => ({

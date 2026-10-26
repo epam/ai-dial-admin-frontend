@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 import {
   getCoreApplication,
   removeApplication,
@@ -56,7 +56,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const getReqRef = useRef(useProtectedRequest());
   const { visualizerConnector, featureFlags } = useAppContext();
 
-  const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t, featureFlags));
+  const [tabs, setTabs] = useState<TabItem[]>(getApplicationTabs(t, featureFlags));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
 

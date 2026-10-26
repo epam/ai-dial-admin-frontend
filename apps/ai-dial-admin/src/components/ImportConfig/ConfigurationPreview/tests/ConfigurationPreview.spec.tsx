@@ -3,6 +3,7 @@ import { ExportComponentType } from '@/src/types/export';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { DeploymentImportPreviewResponse } from '@/src/models/deployments/preview';
@@ -33,20 +34,20 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     Tooltip: ({ children }: { children: ReactNode; tooltip?: ReactNode }) => <>{children}</>,
-    DialTabs: ({
+    Tabs: ({
       tabs,
-      onClick,
+      onTabChange,
     }: {
-      tabs: Array<{ id: string; label: ReactNode; invalid?: boolean }>;
-      onClick: (id: string) => void;
+      tabs: Array<{ id: string; label: ReactNode; status?: string }>;
+      onTabChange: (id: string) => void;
     }) => (
       <div data-testid="tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            data-invalid={tab.invalid ? 'true' : 'false'}
-            onClick={() => onClick(tab.id)}
+            data-invalid={tab.status === TabStatus.Error ? 'true' : 'false'}
+            onClick={() => onTabChange(tab.id)}
           >
             {tab.label}
           </button>

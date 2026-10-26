@@ -63,18 +63,18 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialTabs: ({
+    Tabs: ({
       tabs,
-      activeTab,
-      onClick,
+      activeTabId,
+      onTabChange,
     }: {
       tabs: Array<{ id: string; label: string }>;
-      activeTab: string;
-      onClick: (id: string) => void;
+      activeTabId: string;
+      onTabChange: (id: string) => void;
     }) => (
       <div role="tablist">
         {tabs.map(({ id, label }) => (
-          <button key={id} role="tab" aria-selected={activeTab === id} onClick={() => onClick(id)}>
+          <button key={id} role="tab" aria-selected={activeTabId === id} onClick={() => onTabChange(id)}>
             {label}
           </button>
         ))}

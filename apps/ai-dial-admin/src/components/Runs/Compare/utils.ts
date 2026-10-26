@@ -1,4 +1,4 @@
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import { getDatasetTestSuites } from '@/src/app/[lang]/datasets/actions';
 import { getRunsQuery } from '@/src/app/[lang]/runs/actions';
@@ -105,7 +105,7 @@ export const fetchCompareCandidateRuns = async (testSuiteId: string): Promise<Co
   );
 };
 
-export const getCompareViewTabs = (t: (key: string) => string): TabModel[] => [
+export const getCompareViewTabs = (t: (key: string) => string): TabItem[] => [
   {
     id: CompareViewTab.SummaryOverview,
     label: t(RunsI18nKey.RunCompareTabSummaryOverview),
