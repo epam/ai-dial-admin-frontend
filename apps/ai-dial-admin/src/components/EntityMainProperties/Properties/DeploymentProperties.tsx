@@ -1,6 +1,5 @@
 'use client';
 
-import { Select } from '@epam/ai-dial-ui-kit';
 import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -10,6 +9,7 @@ import DescriptionControl from '@/src/components/BaseControls/Description';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import IntroControl from '@/src/components/BaseControls/Intro';
 import VersionControl from '@/src/components/BaseControls/Version';
+import AutocompleteInput from '@/src/components/Common/AutocompleteInput/AutocompleteInput';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { APPLICATION_SOURCE_ITEMS, getSourceItems } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -59,6 +59,14 @@ const DeploymentProperties: FC<Props> = ({
   const namesConfiguration = useMemo(() => {
     return getNamesConfigurations(names);
   }, [names]);
+
+  const displayNameSuggestions = useMemo(
+    () =>
+      uniq(namesConfiguration.names)
+        .sort()
+        .map((name) => ({ value: name, label: name })),
+    [namesConfiguration.names],
+  );
 
   const isVersionOptional = useMemo(() => {
     return !namesConfiguration.names.includes(entity.displayName as string);
@@ -130,19 +138,16 @@ const DeploymentProperties: FC<Props> = ({
         />
       )}
 
-      <Select
+      <AutocompleteInput
         id="displayName"
         labelProps={{ label: t(EntityFieldsI18nKey.displayName), required: true }}
         placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-        searchable
-        value={entity.displayName}
-        customSelectedValue={entity.displayName}
-        onChange={(value) => onChangeDisplayName(value as string)}
+        value={entity.displayName ?? ''}
+        suggestions={displayNameSuggestions}
+        openOnFocus
+        onChange={onChangeDisplayName}
         error={displayNameError}
         invalid={!!displayNameError}
-        options={uniq(namesConfiguration.names)
-          .sort()
-          .map((name) => ({ value: name, label: name }))}
         className={!isEntityImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH}
         disabled={isReadOnlyAdmin}
       />
