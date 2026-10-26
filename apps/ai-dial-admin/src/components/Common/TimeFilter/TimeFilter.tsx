@@ -31,7 +31,7 @@ import { formatDate } from '@/src/utils/time-filter/period-label';
  */
 const MODERN_TRIGGER_CLASS = 'dial-kit-input dial-kit-input-small !w-auto gap-x-1 px-2';
 const LEGACY_TRIGGER_CLASS =
-  'dial-input dial-small-text min-h-[25px] !h-auto !bg-layer-4 w-full gap-2 whitespace-nowrap px-1.5 py-1';
+  'dial-kit-input dial-small-text min-h-[25px] !h-auto !bg-layer-4 w-full gap-2 whitespace-nowrap px-1.5 py-1';
 
 /**
  * `Dropdown` already paints its floating container — `rounded bg-layer-0 shadow` — so a nested

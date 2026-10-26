@@ -1,5 +1,5 @@
 'use client';
-import { Spinner, OutlinedButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { Spinner, OutlinedButton, Tabs, TabItem } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { getAvailableEntities } from '@/src/components/AddEntitiesTab/utils';
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ExportI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -19,7 +19,7 @@ import { ExportFormat } from '@/src/types/export';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
-  tabs: TabModel[];
+  tabs: TabItem[];
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
   loadCandidates: (tab: string) => Promise<ServerActionResponse<EntitiesGridData[]>>;
@@ -148,7 +148,14 @@ const TabbedSelectionContent: FC<Props> = ({
 
   return (
     <div className="flex-1 min-w-0 bg-layer-3 rounded p-4 flex flex-col h-full">
-      {selectedTab && <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />}
+      {selectedTab && (
+        <Tabs
+          tabs={tabs}
+          activeTabId={selectedTab}
+          onTabChange={(tab) => setSelectedTab(tab)}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
+        />
+      )}
       <div className="flex-1 min-h-0 mt-4">
         <div className="h-full flex flex-col">
           {selectedTab && (

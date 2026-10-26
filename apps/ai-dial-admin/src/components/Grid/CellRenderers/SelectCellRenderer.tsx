@@ -56,13 +56,13 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
   return (
     <div className="h-8 w-full overflow-hidden">
       <Select
-        className="min-h-[32px] h-8 overflow-hidden px-2 py-1"
         options={items || []}
         selectAll={params.isMulti}
         value={params.isMulti ? multipleValues : localValue}
         multiple={params.isMulti}
         onChange={(value) => onChangeValue(value as string)}
         customMultiSelectTagsRenderer={params.customMultiSelectTagsRenderer}
+        fieldClassName="h-8 py-0"
       />
     </div>
   );

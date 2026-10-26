@@ -1,5 +1,5 @@
 'use client';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { Tabs } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -12,7 +12,7 @@ import {
   getAnalyticsImportTabs,
 } from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
 import { AnalyticsImportRow } from '@/src/components/ImportConfig/ConfigurationPreview/models';
-import { EntitiesI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
@@ -52,10 +52,11 @@ const AnalyticsImportGrid: FC<Props> = ({ rows, hasResult }) => {
   return (
     <>
       <div className="mb-3">
-        <DialTabs
+        <Tabs
           tabs={tabs}
-          activeTab={selectedTab}
-          onClick={(tab) => setSelectedTab(tab as AnalyticsImportPreviewTab)}
+          activeTabId={selectedTab}
+          onTabChange={(tab) => setSelectedTab(tab as AnalyticsImportPreviewTab)}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
         />
       </div>
       <div className="flex-1 min-h-0">

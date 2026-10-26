@@ -19,3 +19,10 @@ Every JSON or JSONata editor that receives its Monaco construction options throu
 
 - **WHEN** a shared JSON-editor consumer supplies options in addition to the shared defaults
 - **THEN** its supplied options SHALL remain effective while sticky scrolling remains disabled unless that consumer explicitly overrides it
+
+### Requirement: Shared JSON editors preserve focus during edits
+When a consumer enables equivalent-entity preservation, the shared JSON editor SHALL preserve its mounted editor instance when an edit is reflected back through a parent as equivalent JSON data, so typing does not reset focus or scroll position.
+
+#### Scenario: Editing metric configuration in JSON mode
+- **WHEN** an administrator types valid JSON in the Test Suite metric configuration editor
+- **THEN** the editor SHALL retain focus and its current scroll position as the updated configuration is reflected by the parent

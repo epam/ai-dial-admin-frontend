@@ -3,7 +3,7 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig } from '@/src/models/export';
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 import { ExportFormat, ExportType } from '@/src/types/export';
 import { EntityType } from '@/src/types/entity-type';
 
@@ -40,17 +40,17 @@ export const getDataWithoutItem = (
  * @param {ExportFormat} selectedFormat - export format
  * @param {ExportDependenciesConfig} config - dependencies config
  * @param {(v: string) => string} t - translate function
- * @returns {TabModel[]} - correct export grid tabs
+ * @returns {TabItem[]} - correct export grid tabs
  */
 export const getActualTabs = (
   exportType: ExportType,
   selectedFormat: ExportFormat,
   config: ExportDependenciesConfig,
   t: (v: string) => string,
-): TabModel[] => {
+): TabItem[] => {
   const dependencies = exportType === ExportType.Custom ? fulDependenciesConfig : config;
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
-  const tabs: TabModel[] = [];
+  const tabs: TabItem[] = [];
   if (dependencies.models) {
     tabs.push({ id: EntityType.MODEL, label: t(MenuI18nKey.Models) });
   }

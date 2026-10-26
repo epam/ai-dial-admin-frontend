@@ -1,6 +1,7 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
 import ImportFileModal from '../ImportFile';
 
@@ -20,7 +21,7 @@ describe('ImportFileModal', () => {
       />,
     );
 
-    const input = document.getElementById('file') as HTMLInputElement;
+    const input = screen.getByLabelText(new RegExp(ImportI18nKey.DropAnyFile)) as HTMLInputElement;
     expect(input.accept).toContain('text/csv');
     APPLICATION_ZIP_TYPES.forEach((type) => expect(input.accept).toContain(type));
   });

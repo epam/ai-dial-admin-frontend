@@ -2,16 +2,16 @@
 
 import { FC, ReactNode } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
-import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
+import HeaderIdBlock from '@/src/components/EntityHeaderControls/HeaderIdBlock';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ContainersButtonsWrapper, { ContainersButtonsWrapperProps } from './Wrappers/ContainersButtonsWrapper';
 
 interface Props extends ContainersButtonsWrapperProps {
-  tabs: TabModel[];
+  tabs: TabItem[];
   activeTab: EntityViewTab;
   children?: ReactNode;
   onChangeActiveTab: (tab: EntityViewTab) => void;
@@ -23,7 +23,7 @@ const ContainersHeader: FC<Props> = ({ jsonConfiguration, children, tabs, active
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        {!isEditorEnabled && <ReadonlyId value={props.container.name || ''} />}
+        {!isEditorEnabled && <HeaderIdBlock id={props.container.name || ''} />}
         <ContainersButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
           {children}
         </ContainersButtonsWrapper>

@@ -2,9 +2,9 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { Tabs, TabItem } from '@epam/ai-dial-ui-kit';
 
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TestSuitesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getRequestCount, getRequestLabel } from '@/src/utils/evaluation/request-chain';
@@ -19,7 +19,7 @@ const TryOutRequestTabs: FC<Props> = ({ testSuite, selectedIndex, onSelect }) =>
   const t = useI18n();
   const requestWord = t(TestSuitesI18nKey.Request);
 
-  const tabs: TabModel[] = useMemo(
+  const tabs: TabItem[] = useMemo(
     () =>
       Array.from({ length: getRequestCount(testSuite) }, (_, index) => ({
         id: String(index),
@@ -28,7 +28,14 @@ const TryOutRequestTabs: FC<Props> = ({ testSuite, selectedIndex, onSelect }) =>
     [testSuite, requestWord],
   );
 
-  return <DialTabs tabs={tabs} activeTab={String(selectedIndex)} onClick={(id) => onSelect(Number(id))} />;
+  return (
+    <Tabs
+      tabs={tabs}
+      activeTabId={String(selectedIndex)}
+      onTabChange={(id) => onSelect(Number(id))}
+      ariaLabel={t(TabsI18nKey.ListLabel)}
+    />
+  );
 };
 
 export default TryOutRequestTabs;

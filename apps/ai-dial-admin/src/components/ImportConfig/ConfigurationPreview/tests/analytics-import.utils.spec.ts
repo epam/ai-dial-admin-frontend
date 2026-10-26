@@ -1,5 +1,6 @@
 import { GridApi, IRowNode } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 
 import {
   getAnalyticsImportColDefs,
@@ -58,7 +59,7 @@ describe('getAnalyticsImportTabs', () => {
       t,
     );
 
-    expect(getAnalyticsImportTabs(rows, t).map(({ id, invalid }) => [id, invalid])).toEqual([
+    expect(getAnalyticsImportTabs(rows, t).map(({ id, status }) => [id, status === TabStatus.Error])).toEqual([
       [AnalyticsImportPreviewTab.TABLES, false],
       [AnalyticsImportPreviewTab.PIPELINES, true],
       [AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES, false],

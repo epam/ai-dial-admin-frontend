@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -86,14 +87,14 @@ describe('Model asset :: detail view tab set', () => {
 
   test('Should show a warning on the Roles tab when rolesWarning is true', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, true);
-    expect(tabs.find((tab) => tab.id === EntityViewTab.Roles)?.warning).toBe(true);
+    expect(tabs.find((tab) => tab.id === EntityViewTab.Roles)?.status).toBe(TabStatus.Warning);
   });
 
   test.each([false, undefined])(
     'Should not show a warning on the Roles tab when rolesWarning is %s',
     (rolesWarning) => {
       const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, rolesWarning);
-      expect(tabs.find((tab) => tab.id === EntityViewTab.Roles)?.warning).toBeFalsy();
+      expect(tabs.find((tab) => tab.id === EntityViewTab.Roles)?.status).toBeUndefined();
     },
   );
 });

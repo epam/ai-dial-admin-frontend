@@ -5,6 +5,7 @@ import { ImportConfigurationAction } from '@/src/types/import';
 import { ExportConfigComponentType, ValidationError, ValidationState } from '@/src/types/deployments/import';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { describe, expect, test } from 'vitest';
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 import {
   buildErrorsByTab,
   filterArtifactErrors,
@@ -422,7 +423,7 @@ describe('ConfigurationPreview.utils', () => {
         );
       });
       expect(validationSummary).toEqual({ totalFailed: 0, errorsByTab: {} });
-      expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.invalid).toBe(false);
+      expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.status).toBeUndefined();
     });
 
     test('mixed valid/invalid → only failing rows are FAILED; tab marked invalid', () => {
@@ -441,7 +442,7 @@ describe('ConfigurationPreview.utils', () => {
       expect(echoMeta.validationState).toBe(ValidationState.FAILED);
       expect(gptMeta.validationState).toBe(ValidationState.VALIDATED);
       expect(validationSummary.totalFailed).toBe(1);
-      expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.invalid).toBe(true);
+      expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.status).toBe(TabStatus.Error);
     });
 
     test('firewall errors are grouped by domain, counted in totalFailed, and mark the firewall tab invalid', () => {
@@ -472,7 +473,7 @@ describe('ConfigurationPreview.utils', () => {
       });
       expect(validationSummary.totalFailed).toBe(3);
       expect(validationSummary.errorsByTab).toEqual({ [DeploymentExportEntityType.MCP_CONTAINER]: 1 });
-      expect(tabs.find((tab) => tab.id === GLOBAL_FIREWALL_TAB_ID)?.invalid).toBe(true);
+      expect(tabs.find((tab) => tab.id === GLOBAL_FIREWALL_TAB_ID)?.status).toBe(TabStatus.Error);
     });
 
     test('clean firewall → empty error map, tab not invalid', () => {
@@ -483,7 +484,7 @@ describe('ConfigurationPreview.utils', () => {
 
       expect(firewallErrorsByDomain).toEqual({});
       expect(validationSummary.totalFailed).toBe(0);
-      expect(tabs.find((tab) => tab.id === GLOBAL_FIREWALL_TAB_ID)?.invalid).toBe(false);
+      expect(tabs.find((tab) => tab.id === GLOBAL_FIREWALL_TAB_ID)?.status).toBeUndefined();
     });
 
     test('IMAGE-tab join: error matches by next.name even after row.name is clobbered', () => {

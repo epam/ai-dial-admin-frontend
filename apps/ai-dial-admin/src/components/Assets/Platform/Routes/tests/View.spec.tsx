@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { updateRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { DialRouteResource } from '@/src/models/dial/resource';
@@ -77,7 +78,9 @@ describe('RouteAssetView', () => {
     const { container } = render(<RouteAssetView etag="etag" originalRoute={route({ userRoles })} roles={[]} />);
 
     const tabs = JSON.parse(container.querySelector('[data-tabs]')!.getAttribute('data-tabs')!);
-    expect(tabs.find((tab: { id: string }) => tab.id === EntityViewTab.Roles).warning).toBe(expectedWarning);
+    expect(tabs.find((tab: { id: string }) => tab.id === EntityViewTab.Roles).status === TabStatus.Warning).toBe(
+      expectedWarning,
+    );
   });
 
   test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {

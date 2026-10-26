@@ -1,6 +1,6 @@
 import { ComponentProps, ReactNode } from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { JSONSchema7 } from 'json-schema';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -157,7 +157,9 @@ describe('JsonAtaInput', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply }).hasAttribute('disabled')).toBe(false);
 
-    await user.type(screen.getByRole('textbox'), 'a');
+    fireEvent.change(screen.getByRole('textbox'), {
+      target: { value: 'a'.repeat(MAX_JSONATA_EXPRESSION_SYMBOLS + 1) },
+    });
 
     expect(screen.getByRole('alert').textContent).toContain(BasicI18nKey.FieldValueTooLong);
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply }).hasAttribute('disabled')).toBe(true);
