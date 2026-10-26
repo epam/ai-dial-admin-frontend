@@ -7,6 +7,7 @@ import { DIAL_ICON_SIZE, IconButton, Input, TagInput } from '@epam/ai-dial-ui-ki
 import { IconArrowsDiagonal } from '@tabler/icons-react';
 
 import { InputPopupProps } from '@/src/components/Common/InputPopup/models';
+import OverflowValueTooltip from '@/src/components/Common/OverflowValueTooltip/OverflowValueTooltip';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -80,20 +81,22 @@ const InputPopup: FC<InputPopupProps> = ({
     }
 
     return (
-      <Input
-        id={elementId}
-        value={text}
-        placeholder={placeholder ?? emptyValueText}
-        readOnly={!editable}
-        disabled={disabled}
-        invalid={isInvalid}
-        error={errorText}
-        iconBefore={iconBefore}
-        iconAfter={getIconAfter()}
-        containerClassName={inputClassName}
-        onChange={editable ? (value) => onValueChange?.(value ?? '') : undefined}
-        wrapperClassName={wrapperClassName}
-      />
+      <OverflowValueTooltip text={String(text ?? '')}>
+        <Input
+          id={elementId}
+          value={text}
+          placeholder={placeholder ?? emptyValueText}
+          readOnly={!editable}
+          disabled={disabled}
+          invalid={isInvalid}
+          error={errorText}
+          iconBefore={iconBefore}
+          iconAfter={getIconAfter()}
+          containerClassName={inputClassName}
+          onChange={editable ? (value) => onValueChange?.(value ?? '') : undefined}
+          wrapperClassName={wrapperClassName}
+        />
+      </OverflowValueTooltip>
     );
   };
 
