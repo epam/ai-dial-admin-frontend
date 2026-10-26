@@ -147,7 +147,7 @@ export const useBreakdownDialogRows = ({
           const { result, error, isCancelled } = await runQuery(
             buildTabQuery(baseScope, tab, limit, {
               offset: params.startRow,
-              rowClauses: term ? [buildDimensionSearchClause(tab, term)] : [],
+              rowClauses: term ? [buildDimensionSearchClause(tab, term, presentation.current.fallbackLabel)] : [],
               // The grid re-reads from the first block when its sort changes; the order is the
               // backend's, over the whole dimension, never a reorder of the blocks in hand.
               ...toTabSort(tab, params.sortModel),

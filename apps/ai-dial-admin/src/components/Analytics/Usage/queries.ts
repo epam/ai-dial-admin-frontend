@@ -424,12 +424,28 @@ const groupNameMeasures = () => [
  *
  * A qualified tab searches both of its columns: a row there is a tool on a server, and a reader
  * typing a server name means the tools it serves, not nothing at all.
+ *
+ * The row without a value is listed under its fallback label — `No Project`, `Direct call` — while
+ * its column is empty, so a term found in that label asks for the empty value as well. "Empty" is
+ * `not_empty` turning false rather than a comparison with `''`: the log stores a missing project as
+ * an empty string but a missing parent deployment as null, which no equality matches.
  */
-export const buildDimensionSearchClause = (tab: BreakdownTab, term: string): QueryFilterNode => {
+export const buildDimensionSearchClause = (
+  tab: BreakdownTab,
+  term: string,
+  fallbackLabel?: string,
+): QueryFilterNode => {
   const match = (name: string): QueryFilterNode => ({ op: QueryOperator.Ico, args: [columnExpr(name), value(term)] });
   const columns = tabColumns(tab);
+  const clause = columns.length > 1 ? or(...columns.map(match)) : match(columns[0]);
 
-  return columns.length > 1 ? or(...columns.map(match)) : match(columns[0]);
+  if (!fallbackLabel?.toLowerCase().includes(term.toLowerCase())) {
+    return clause;
+  }
+
+  const isEmpty = eq(fn('not_empty', [columnExpr(BREAKDOWN_TAB_COLUMN[tab])]), value('false', QueryValueType.Boolean));
+
+  return or(clause, isEmpty);
 };
 
 /**

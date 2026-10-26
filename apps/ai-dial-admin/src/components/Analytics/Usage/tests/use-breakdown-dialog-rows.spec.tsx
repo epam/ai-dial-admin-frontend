@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
-import { StructuredQuery } from '@/src/models/analytics/query';
+import { QueryLogicalOperator, QueryOperator, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
 const runQueryMock = vi.fn(
@@ -136,6 +136,35 @@ describe('useBreakdownDialogRows', () => {
     });
 
     expect(JSON.stringify(queryOf(0).filter)).toContain('gpt');
+  });
+
+  test('finds the fallback bucket by the label it is listed under', async () => {
+    const { result } = renderRows({
+      tab: BreakdownTab.Applications,
+      fallbackLabel: 'Direct call',
+      searchTerm: 'direct',
+    });
+
+    await act(async () => {
+      await result.current.datasource.getRows(getRowsParams(0, 25));
+    });
+
+    // The view's clause and the window's two bounds lead the filter; the search term follows them.
+    const searchClause = (queryOf(0).filter as { args: unknown[] }).args[3];
+
+    expect(searchClause).toMatchObject({
+      op: QueryLogicalOperator.Or,
+      args: [
+        { op: QueryOperator.Ico, args: [{ name: 'parent_deployment' }, { value: 'direct' }] },
+        {
+          op: QueryOperator.Eq,
+          args: [
+            { name: 'not_empty', args: [{ name: 'parent_deployment' }] },
+            { value_type: 'boolean', value: 'false' },
+          ],
+        },
+      ],
+    });
   });
 
   test('asks the previous window for the block own values, once comparison is on', async () => {
