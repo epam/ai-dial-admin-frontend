@@ -14,10 +14,10 @@ that container serves:
 | --- | --- |
 | ADAPTER | model in the `platform` bucket |
 | INTERCEPTOR | interceptor in the `platform` bucket |
-| APPLICATION | application in the `platform` bucket |
-| MCP | toolset in the `platform` bucket |
+| APPLICATION | application in the `platform` (default) or `public` bucket |
+| MCP | toolset in the `platform` (default) or `public` bucket |
 | Model Serving, text generation | model in the `platform` bucket |
-| Model Serving, text classification | toolset in the `platform` bucket |
+| Model Serving, text classification | toolset in the `platform` (default) or `public` bucket |
 
 Choosing the option SHALL open the same create modal the asset type's own Assets list uses, pre-filled
 per "Core asset template per container type", so the written body carries no field that list would
@@ -29,6 +29,25 @@ admin-backend entity. A container that is not RUNNING SHALL offer no create acti
 - **WHEN** a user opens a RUNNING adapter container and chooses the Core option
 - **THEN** the asset create modal opens for a model
 - **AND** saving it writes one model to the `platform` bucket and makes no admin-backend request
+
+#### Scenario: Toolset and application creates open on the platform bucket
+
+- **WHEN** a user chooses the Core option on a RUNNING MCP or application container while Catalog is
+  enabled
+- **THEN** the asset create modal shows the `platform` and `public` roots in its folder tree
+- **AND** `platform` is selected when the modal opens
+
+#### Scenario: A toolset or application can be created in the public bucket
+
+- **WHEN** the user selects a folder under `public` in that modal and saves
+- **THEN** the asset is written to the selected `public` folder with the version the modal shows,
+  carrying the same routing fields as the platform create
+
+#### Scenario: Public bucket only when Catalog is disabled
+
+- **WHEN** Catalog is disabled and a user chooses the Core option on a RUNNING MCP or application
+  container
+- **THEN** the modal shows only the `public` root and creates there, as the Assets list does
 
 #### Scenario: Stopped container offers nothing
 
@@ -99,7 +118,7 @@ starts unavailable to end-users, as its "defaults to unavailable" requirement st
 
 - **WHEN** a user saves an application created from an application container whose `url` is `U`
 - **THEN** the written application has `base_url` `U` and a chat-completions interface
-- **AND** it is written to the `platform` bucket
+- **AND** it is written to the bucket selected in the modal, `platform` unless the user picked `public`
 
 #### Scenario: MCP toolset keeps the served endpoint
 
@@ -127,9 +146,11 @@ starts unavailable to end-users, as its "defaults to unavailable" requirement st
 ### Requirement: Core asset names are validated against Core
 
 The Core create modal SHALL reject, as the user types, a `name` that already exists for that asset
-type in Core. The check SHALL cover both the `platform` bucket and the configuration-file
-population. A configuration-file name SHALL be rejected even though Core accepts the write, because
-the write would replace that entity. The check SHALL read names from Core only and SHALL NOT call
+type in Core. For a `platform` destination the check SHALL cover both the `platform` bucket and the
+configuration-file population. A configuration-file name SHALL be rejected there even though Core
+accepts the write, because the write would replace that entity. For a `public` destination the check
+SHALL cover the selected folder only, as the Assets list does, because a public asset is addressed by
+its folder path and cannot replace a configuration-file entity. The check SHALL read names from Core only and SHALL NOT call
 the admin backend.
 
 The existing name rules SHALL still apply (`getErrorForName`: length 2–255, no `% / \ ;`, no
@@ -150,6 +171,12 @@ stay open.
 - **WHEN** an interceptor named `X` exists only in Core's configuration file and the user types `X`
   in the Core interceptor create modal
 - **THEN** the "This ID already exists" error is shown immediately and Save is disabled
+
+#### Scenario: A configuration-file name is allowed in the public bucket
+
+- **WHEN** a toolset named `X` exists only in Core's configuration file and the user selects a
+  `public` folder in the Core toolset create modal and types `X`
+- **THEN** no duplicate error is shown for `X`
 
 #### Scenario: Name held by another type
 

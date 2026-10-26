@@ -39,3 +39,11 @@
 ## 8. Quality gates
 
 - [x] 8.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test`; fix every failure
+
+## 9. Follow-up: both buckets for toolsets and applications
+
+- [x] 9.1 In `components/Assets/Modals/CreateAsset.tsx`, replace `isPlatformTarget` with `shouldOpenOnPlatform`: keep every root from `getRootFolders`, select `platform/` once after the initial roots load (only when that root exists), and merge the `file/` names into the duplicate list only while the selected folder is `platform/`
+- [x] 9.2 Pass `shouldOpenOnPlatform` from `ContainersButtonsWrapper.tsx` instead of `isPlatformTarget`
+- [x] 9.3 Update `CreateAsset.spec.tsx` and `ContainersButtonsWrapper.spec.tsx`: all three roots kept, platform selected on load, public selectable, config-file names reserved on platform only, Catalog-off keeps public only
+- [x] 9.4 Run the `spec-browser-verify` skill for the new and changed `container-core-assets` scenarios (platform default, public create, public name check, Catalog off) with the admin API configured; it spawns the `spec-verification-gate` sub-agent against the local app via the Playwright MCP. Resolve every `fail` verdict before the change is complete
+- [x] 9.5 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test`; fix every failure

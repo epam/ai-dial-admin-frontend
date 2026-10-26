@@ -3,6 +3,7 @@ import { createApp, createPlatformApplication } from '@/src/app/[lang]/assets-ap
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
@@ -48,12 +49,20 @@ interface CapturedAssetPropertiesProps {
 }
 
 const assetPropertiesCalls: CapturedAssetPropertiesProps[] = [];
-vi.mock('@/src/components/EntityMainProperties/Properties/AssetProperties', () => ({
-  default: (props: CapturedAssetPropertiesProps) => {
-    assetPropertiesCalls.push(props);
-    return <div>AssetPropertiesStub</div>;
-  },
-}));
+// Counts mounts, so a test can tell a remount (fresh ID validation) from a plain re-render.
+let assetPropertiesMounts = 0;
+vi.mock('@/src/components/EntityMainProperties/Properties/AssetProperties', async () => {
+  const { useEffect } = await import('react');
+  return {
+    default: (props: CapturedAssetPropertiesProps) => {
+      assetPropertiesCalls.push(props);
+      useEffect(() => {
+        assetPropertiesMounts += 1;
+      }, []);
+      return <div>AssetPropertiesStub</div>;
+    },
+  };
+});
 
 const folderListCalls: { rootPaths?: string[] }[] = [];
 vi.mock('@/src/components/Common/FolderList/FolderList', () => ({
@@ -196,8 +205,10 @@ describe('CreateAsset', () => {
     await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBe(DEFAULT_NEW_ENTITY_VERSION));
     expect(lastAssetProperties().hideVersionField).toBe(false);
 
+    // The restored version's validity belongs to AssetProperties, which checks it against the
+    // folder; the modal itself must not mark it valid over that result.
     const { dispatch } = useSaveValidationContext();
-    expect(dispatch).toHaveBeenCalledWith({
+    expect(dispatch).not.toHaveBeenCalledWith({
       type: ValidationActionType.SetField,
       field: 'version',
       isValid: true,
@@ -293,57 +304,133 @@ describe('CreateAsset', () => {
   });
 });
 
-describe('CreateAsset — platform target', () => {
+describe('CreateAsset — opens on platform', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     assetPropertiesCalls.length = 0;
+    assetPropertiesMounts = 0;
     folderListCalls.length = 0;
   });
 
-  // The selected `platform/` root plus the already-fetched synthetic `file/` root, as a fresh folder
-  // context holds them right after the initial root batch.
-  const makePlatformContext = () =>
-    ({
+  // A fresh folder context right after the initial root batch: every root fetched, the selected
+  // folder given by `filePath` (the context's own default is the last physical root, `public/`).
+  const makeRootsContext = (filePath: string) => {
+    const setFilePath = vi.fn();
+    const ctx = {
       ...makeContext().ctx,
-      filePath: 'platform/',
+      filePath,
+      setFilePath,
       fetchedFoldersData: {
         'platform/': [{ name: 'in-platform', path: 'platform/in-platform' }],
+        'public/': [{ name: 'in-public', path: 'public/in-public' }],
         'file/': [{ name: 'in-config-file', path: 'file/in-config-file' }],
       },
-    }) as unknown as AssetsFolderContextReader;
+    } as unknown as AssetsFolderContextReader;
+    return { ctx, setFilePath };
+  };
 
-  const renderPlatformTarget = (view: ApplicationRoute, isPlatformTarget?: boolean) =>
+  const renderOnRoot = (view: ApplicationRoute, filePath: string, shouldOpenOnPlatform?: boolean) => {
+    const { ctx, setFilePath } = makeRootsContext(filePath);
     render(
       <CreateAsset
         view={view}
         isModalOpen={true}
-        context={makePlatformContext}
-        isPlatformTarget={isPlatformTarget}
+        context={() => ctx}
+        shouldOpenOnPlatform={shouldOpenOnPlatform}
         onClose={vi.fn()}
       />,
     );
+    return { setFilePath };
+  };
 
-  test('rejects a name held only by the configuration file', () => {
-    renderPlatformTarget(ApplicationRoute.PlatformInterceptors, true);
+  test('keeps both buckets in the folder tree', () => {
+    renderOnRoot(ApplicationRoute.AssetsToolsets, 'public/', true);
+
+    expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'platform/', 'public/']);
+  });
+
+  test('selects the platform root once the roots have loaded', () => {
+    const { setFilePath } = renderOnRoot(ApplicationRoute.AssetsToolsets, 'public/', true);
+
+    expect(setFilePath).toHaveBeenCalledExactlyOnceWith('platform/');
+  });
+
+  test('leaves the selected folder alone for other callers', () => {
+    const { setFilePath } = renderOnRoot(ApplicationRoute.AssetsToolsets, 'public/');
+
+    expect(setFilePath).not.toHaveBeenCalled();
+  });
+
+  test('rejects a configuration-file name while platform is the destination', () => {
+    renderOnRoot(ApplicationRoute.AssetsApplications, 'platform/', true);
 
     expect(lastAssetProperties().names).toEqual(['in-platform', 'in-config-file']);
   });
 
+  test('allows a configuration-file name in the public bucket', () => {
+    renderOnRoot(ApplicationRoute.AssetsApplications, 'public/', true);
+
+    expect(lastAssetProperties().names).toEqual(['in-public']);
+  });
+
   test('keeps the selected-folder names only for other callers', () => {
-    renderPlatformTarget(ApplicationRoute.PlatformInterceptors);
+    renderOnRoot(ApplicationRoute.AssetsApplications, 'platform/');
 
     expect(lastAssetProperties().names).toEqual(['in-platform']);
   });
 
-  test('drops the public root so a dual-bucket create opens on platform', () => {
-    renderPlatformTarget(ApplicationRoute.AssetsToolsets, true);
+  test('stays on public with Catalog disabled, as there is no platform root', () => {
+    const { featureFlags } = useAppContext();
+    featureFlags.catalogEnabled = false;
+    try {
+      const { ctx, setFilePath } = makeRootsContext('public/');
+      const withoutPlatform = {
+        ...ctx,
+        fetchedFoldersData: { 'public/': [], 'file/': [] },
+      } as unknown as AssetsFolderContextReader;
+      render(
+        <CreateAsset
+          view={ApplicationRoute.AssetsToolsets}
+          isModalOpen={true}
+          context={() => withoutPlatform}
+          shouldOpenOnPlatform
+          onClose={vi.fn()}
+        />,
+      );
 
-    expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'platform/']);
+      expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'public/']);
+      expect(setFilePath).not.toHaveBeenCalled();
+    } finally {
+      featureFlags.catalogEnabled = true;
+    }
   });
 
-  test('keeps every root of a dual-bucket view for other callers', () => {
-    renderPlatformTarget(ApplicationRoute.AssetsToolsets);
+  test('re-validates the ID when the destination folder changes', () => {
+    const { ctx } = makeRootsContext('platform/');
+    let currentCtx = ctx;
+    const { rerender } = render(
+      <CreateAsset
+        view={ApplicationRoute.AssetsToolsets}
+        isModalOpen={true}
+        context={() => currentCtx}
+        shouldOpenOnPlatform
+        onClose={vi.fn()}
+      />,
+    );
+    const mountsOnPlatform = assetPropertiesMounts;
 
-    expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'platform/', 'public/']);
+    currentCtx = { ...ctx, filePath: 'public/' } as unknown as AssetsFolderContextReader;
+    rerender(
+      <CreateAsset
+        view={ApplicationRoute.AssetsToolsets}
+        isModalOpen={true}
+        context={() => currentCtx}
+        shouldOpenOnPlatform
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(assetPropertiesMounts).toBe(mountsOnPlatform + 1);
+    expect(lastAssetProperties().names).toEqual(['in-public']);
   });
 });

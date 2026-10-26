@@ -12,12 +12,14 @@ admin backend with no guard.
   INTERCEPTOR containers becomes a dropdown with two independent options, as MCP already has
   (`ContainersButtonsWrapper` `createToolsetOptions`):
   - the existing admin-backend entity (adapter / application / interceptor);
-  - a new Core asset: a **model** for an adapter container, and an application or interceptor in
-    the `platform` bucket for the other two.
+  - a new Core asset: a **model** for an adapter container, an interceptor in the `platform`
+    bucket, and an application in the `platform` or `public` bucket.
   Each click creates exactly one entity. Nothing is written to both stores.
 - Model Serving detail page (`/model-servings/[id]`): the text-generation "Create model" action gets
   the same two options (admin-backend model / Core model). The text-classification toolset action
   gets an admin-backend toolset or a Core toolset.
+- Toolsets and applications can be created in either bucket. The modal opens on `platform` and keeps
+  `public` selectable in its folder tree.
 - Without the admin API (`DIAL_ADMIN_API_URL` unset, `getIsAdminApiEnabled()` false), the page shows
   one plain button for the Core option, labelled with the entity name and no "Asset" prefix. An
   adapter container's button reads "Create model". The page makes no admin-backend call.
@@ -60,7 +62,7 @@ admin backend with no guard.
 - No removal of the admin-backend options. They go when the backend is switched off, which the
   `adminApiEnabled` gate already handles.
 - No new asset create form. The existing `CreateAsset` modal and the platform create actions are
-  reused. The modal gains one optional prop for the platform-only target.
+  reused. The modal gains one optional prop that opens it on the `platform` root.
 
 ## Impact
 
