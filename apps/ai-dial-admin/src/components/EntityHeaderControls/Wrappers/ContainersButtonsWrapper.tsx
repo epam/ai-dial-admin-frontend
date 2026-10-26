@@ -329,7 +329,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
               onClose={onCloseModal}
               initialValues={assetTemplate as Partial<AssetWithVersion>}
               context={assetFolderContext}
-              isPlatformTarget
+              shouldOpenOnPlatform
             />
           ),
           document.body,

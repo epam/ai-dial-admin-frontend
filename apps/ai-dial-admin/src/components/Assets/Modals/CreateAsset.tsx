@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CollapsibleSidebar, Popup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
 
@@ -12,7 +12,6 @@ import FolderList from '@/src/components/Common/FolderList/FolderList';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
@@ -48,14 +47,15 @@ interface Props {
   initialValues?: Partial<AssetWithVersion>;
   context?: () => AssetsFolderContextReader<AssetListItem>;
   /**
-   * Creates into the `platform` bucket only and also rejects names Core's configuration file holds:
-   * an API write under such a name replaces that entity rather than failing.
+   * Opens on the `platform` root (both buckets stay selectable) and, while `platform` is the
+   * destination, also rejects names Core's configuration file holds: an API write under such a name
+   * replaces that entity rather than failing.
    */
-  isPlatformTarget?: boolean;
+  shouldOpenOnPlatform?: boolean;
   onClose: () => void;
 }
 
-const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isPlatformTarget, onClose }) => {
+const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, shouldOpenOnPlatform, onClose }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
@@ -65,9 +65,15 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
   const filePath = folderContext?.filePath as string;
   const folderItems = folderContext?.fetchedFoldersData[filePath];
   const hasFetchError = folderContext?.hasFetchError;
-  const configFileItems = isPlatformTarget ? folderContext?.fetchedFoldersData[`${FILE_ROOT_FOLDER}/`] : undefined;
+  // A public asset is addressed by its folder path, so only a platform destination can collide with
+  // a config-file entity.
+  const configFileItems =
+    shouldOpenOnPlatform && isPlatformBucketPath(filePath)
+      ? folderContext?.fetchedFoldersData[`${FILE_ROOT_FOLDER}/`]
+      : undefined;
   const names = [...filterNames(folderItems), ...filterNames(configFileItems)];
-  const versionsMap = getVersionsPerName((folderItems ?? []) as AssetWithVersion[]);
+  // Stable per folder: AssetProperties re-validates the version whenever this changes.
+  const versionsMap = useMemo(() => getVersionsPerName((folderItems ?? []) as AssetWithVersion[]), [folderItems]);
   const isLoadingFolder = folderItems == null && !hasFetchError;
 
   // Applications and Toolsets are the dual-bucket views — the selected destination folder is what
@@ -76,14 +82,25 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
 
   // Both bucket roots for dual-bucket views (platform only when the Catalog menu group is enabled),
   // the single root for every other view — the same resolution the file manager sidebar uses.
-  // A platform target drops the public root, so the platform root is the one the create opens on.
-  // With Catalog off there is no platform root to keep, and the create falls back to public.
-  const rootPaths = useMemo(() => {
-    const roots = getRootFolders(view, featureFlags.catalogEnabled);
-    const targetRoots =
-      isPlatformTarget && roots.includes(PLATFORM_ROOT_FOLDER) ? roots.filter((root) => root !== ROOT_FOLDER) : roots;
-    return targetRoots.map((root) => `${root}/`);
-  }, [view, featureFlags.catalogEnabled, isPlatformTarget]);
+  const rootPaths = useMemo(
+    () => getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`),
+    [view, featureFlags.catalogEnabled],
+  );
+
+  // The folder context opens on the last physical root (`public/`); move to `platform/` once, after
+  // the initial roots load, and leave any later choice to the user.
+  const platformRootPath = `${PLATFORM_ROOT_FOLDER}/`;
+  const isPlatformRootLoaded = folderContext?.fetchedFoldersData[platformRootPath] != null;
+  const hasOpenedOnPlatformRef = useRef(false);
+  useEffect(() => {
+    if (!shouldOpenOnPlatform || hasOpenedOnPlatformRef.current || !isPlatformRootLoaded) {
+      return;
+    }
+    hasOpenedOnPlatformRef.current = true;
+    if (filePath !== platformRootPath) {
+      folderContext?.setFilePath(platformRootPath);
+    }
+  }, [shouldOpenOnPlatform, isPlatformRootLoaded, filePath, folderContext, platformRootPath]);
 
   const [currentEntity, setCurrentEntity] = useState<DialResource>({
     ...initialValues,
@@ -140,7 +157,12 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
 
   useEffect(() => {
     setCurrentEntity((prev) => ({ ...prev, folderId: filePath }));
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+    // Once the folder has loaded, the mounted ID control owns `name` validity: it validates against
+    // that folder's names on mount, and this effect runs after it, so dispatching here would overwrite
+    // a "taken" result. Until then no form is shown, and submit stays blocked.
+    if (isLoadingFolder) {
+      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: false });
+    }
 
     if (view === ApplicationRoute.AssetsApplications || view === ApplicationRoute.AssetsToolsets) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentEntity.displayName });
@@ -168,13 +190,11 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
       return prev.version == null ? ({ ...prev, version: DEFAULT_NEW_ENTITY_VERSION } as DialResource) : prev;
     });
     // A hidden version field must not gate submit — `RemoveField` also clears whatever validity a
-    // public interlude registered for it. Back on public the version is the restored default, valid
-    // by construction; AssetProperties re-validates it on edit.
-    dispatch(
-      isPlatformDualBucketCreate
-        ? { type: ValidationActionType.RemoveField, field: 'version' }
-        : { type: ValidationActionType.SetField, field: 'version', isValid: true },
-    );
+    // public interlude registered for it. Back on public, AssetProperties validates the restored
+    // default against the folder; marking it valid here would overwrite that result.
+    if (isPlatformDualBucketCreate) {
+      dispatch({ type: ValidationActionType.RemoveField, field: 'version' });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlatformDualBucketCreate]);
 
@@ -208,6 +228,11 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, isP
               <Spinner size={40} fullWidth />
             ) : (
               <AssetProperties
+                // The ID field validates on input and on mount only; remounting per folder re-checks the
+                // name against the new folder's population (a config-file name is taken on `platform/`
+                // but free on `public/`, and each public folder holds its own names). The version is
+                // re-checked by AssetProperties itself.
+                key={filePath}
                 view={view}
                 entity={currentEntity as unknown as AssetWithVersion}
                 onChangeEntity={onChangeEntity}

@@ -30,10 +30,10 @@ vi.mock('@/src/components/EntityListView/CreateEntity/CreateEntity', () => ({
   ),
 }));
 vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({
-  default: ({ view, isPlatformTarget }: any) => (
+  default: ({ view, shouldOpenOnPlatform }: any) => (
     <div>
       <span>asset-view:{view}</span>
-      <span>asset-platform-target:{String(!!isPlatformTarget)}</span>
+      <span>asset-opens-on-platform:{String(!!shouldOpenOnPlatform)}</span>
     </div>
   ),
 }));
@@ -175,7 +175,7 @@ describe('ContainersButtonsWrapper Core asset option', () => {
     await user.click(adminOption(EntitiesI18nKey.AssetApplication));
 
     expect(screen.getByText(`asset-view:${ApplicationRoute.AssetsApplications}`)).toBeInTheDocument();
-    expect(screen.getByText('asset-platform-target:true')).toBeInTheDocument();
+    expect(screen.getByText('asset-opens-on-platform:true')).toBeInTheDocument();
   });
 
   test('labels the adapter container asset option as a model', () => {

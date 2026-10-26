@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -59,6 +59,20 @@ const AssetProperties: FC<Props> = ({
     [dispatch, entity, t, versionsMap],
   );
 
+  const isVersionShown = !hideVersionField && !isVersionless;
+
+  // Re-check on mount and whenever the name or the folder's versions change, not only on a version
+  // edit: a create can move to another folder, or type a name, with the version already filled in.
+  // A value key, not the map itself: callers may rebuild the map on every render, and a fresh object
+  // here would re-dispatch on each one.
+  const takenVersionsKey = entity.name ? (versionsMap?.[entity.name] ?? []).join('|') : '';
+  useEffect(() => {
+    if (isVersionShown) {
+      validateVersion(entity.version);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVersionShown, takenVersionsKey, entity.name, entity.version]);
+
   const onChangeVersion = useCallback(
     (version?: string) => {
       onChangeEntity({ ...entity, version } as AssetWithVersion);
@@ -90,7 +104,7 @@ const AssetProperties: FC<Props> = ({
         />
       )}
 
-      {!hideVersionField && !isVersionless && (
+      {isVersionShown && (
         <VersionControl
           isFullWidth={!isEntityImmutable}
           version={entity.version}

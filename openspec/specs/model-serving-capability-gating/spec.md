@@ -53,6 +53,8 @@ On the Model-Serving container detail page (`/model-servings/[id]`), the "Create
 - `NONE` SHALL show no create action.
 - A container without an `inferenceTask` value SHALL retain current behavior (offer "Create model").
 
+When the admin API is available, each offered action SHALL be a dropdown of the admin-backend entity and the Core asset of the same type. When the admin API is unavailable, it SHALL be a single button that creates the Core asset. Labels and templates SHALL follow `container-core-assets`.
+
 The create action SHALL continue to require the container be in the running state, as today.
 
 #### Scenario: Text-generation container offers model creation
@@ -69,6 +71,16 @@ The create action SHALL continue to require the container be in the running stat
 
 - **WHEN** a user opens a running container with `inferenceTask = NONE`
 - **THEN** the page shows no create action
+
+#### Scenario: Both variants with the admin API
+
+- **WHEN** `DIAL_ADMIN_API_URL` is set and a user opens a running container with `inferenceTask = TEXT_GENERATION`
+- **THEN** the Create action is a dropdown offering the admin-backend model and "Asset model"
+
+#### Scenario: Core-only without the admin API
+
+- **WHEN** `DIAL_ADMIN_API_URL` is unset and a user opens a running container with `inferenceTask = TEXT_GENERATION`
+- **THEN** the page shows one "Create model" button that opens the Core model create modal
 
 ### Requirement: Toolset created from a classification container uses a fixed MCP template
 

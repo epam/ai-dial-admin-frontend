@@ -126,13 +126,38 @@ The modal follows the type's own Assets list, so the payload is the one that lis
   because `CreateEntity` renders no folder tree to load them.
 - **Dual-bucket types (application, toolset)** keep `CreateAsset`.
 
-`CreateAsset` gains one optional prop, `isPlatformTarget`, which the container flow sets. It does two
-things:
-- It merges the `file/` root's names (already fetched with the initial root batch) into the
-  duplicate list next to the selected folder's. A config-file name must be rejected even though
-  Core would accept it, because the write would silently replace that entity.
-- It drops the `public/` root, so a dual-bucket view (applications, toolsets) opens on `platform/`.
-  With Catalog off there is no platform root to keep, and the create falls back to public as today.
+`CreateAsset` gains one optional prop, `shouldOpenOnPlatform`, which the container flow sets. Both
+buckets stay available, because an admin may publish a container's toolset or application to
+`public` as well (follow-up requirement after the first release, which dropped the public root).
+The prop does two things:
+- It keeps every root (`file`, `platform`, `public`) and selects `platform/` once, after the initial
+  root batch loads, instead of the last physical root (`public/`) the folder context opens by
+  default. The user can still switch to `public` in the tree. With Catalog off there is no platform
+  root, and the create stays on public as today.
+- While the selected folder is `platform/`, it merges the `file/` root's names (already fetched with
+  the initial root batch) into the duplicate list. A config-file name must be rejected there even
+  though Core would accept it, because the write would silently replace that entity. A `public`
+  destination keeps the plain selected-folder check: its assets are addressed by folder path and
+  cannot replace a config-file entity.
+- The properties form is keyed by the selected folder. The shared ID control validates on input and
+  on mount only, so without a remount a name stayed flagged, or unflagged, after the destination
+  changed (found in browser verification). This applies both between buckets and between two public
+  folders. The shared control is left unchanged.
+  - **AssetProperties owns version validity.** It re-checks the version on mount and whenever the
+    name, the version or the folder's versions for that name change. Before, a remount would have
+    cleared a duplicate-version error while Save stayed blocked. `CreateAsset` no longer marks the
+    restored default version valid on the way back to public, because that ran after the child's
+    check and overwrote it. AssetProperties is used only by the two create flows (`CreateAsset`,
+    `CreateApplication`).
+  - **The effect depends on a value key** (the taken versions of the current name), not on the map
+    object. Callers may rebuild the map on every render, and with an object dependency every
+    validation dispatch would re-render and re-run the effect.
+  - **The ID control owns `name` validity once the form is mounted.** `CreateAsset`'s folder effect
+    runs after the child's mount validation. It used to re-dispatch `name` as `!!name`, which marked
+    a taken config-file name valid on `platform/` while its error was shown (found in code review).
+    The effect now dispatches `name` only while the folder is still loading, as invalid.
+- **Alternative rejected:** reordering the roots so `platform` is the last physical one. It would
+  also reorder the tree, putting `platform` below `public` unlike every other Assets view.
 
 Other callers do not pass the prop and keep their behavior.
 
