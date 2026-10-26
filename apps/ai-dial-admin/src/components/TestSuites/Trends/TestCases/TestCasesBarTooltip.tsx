@@ -33,7 +33,7 @@ const TooltipRow: FC<RowProps> = ({ label, value, swatchClass, swatchStyle, inde
       )}
       <span className="dial-tiny-text whitespace-nowrap">{label}</span>
     </span>
-    <span className={`dial-tiny-text tabular-nums ${valueSemiBold ? 'tiny-semi' : ''}`}>{value}</span>
+    <span className={`dial-tiny-text tabular-nums ${valueSemiBold ? 'dial-tiny-semi-text' : ''}`}>{value}</span>
   </div>
 );
 
@@ -71,7 +71,7 @@ const TestCasesBarTooltip: FC<TestCasesBarTooltipProps> = ({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="tiny-semi flex w-fit items-center gap-1 no-underline"
+          className="dial-tiny-semi-text flex w-fit items-center gap-1 no-underline"
           style={{ color: TREND_TOOLTIP_TEXT_ACCENT }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -79,8 +79,8 @@ const TestCasesBarTooltip: FC<TestCasesBarTooltipProps> = ({
           <IconExternalLink {...BASE_BUTTON_ICON_PROPS} width={16} height={16} aria-hidden />
         </a>
         <div className="flex items-start justify-between gap-3">
-          <span className="tiny-semi whitespace-nowrap">{totalLabel}</span>
-          <span className="tiny-semi tabular-nums">{total}</span>
+          <span className="dial-tiny-semi-text whitespace-nowrap">{totalLabel}</span>
+          <span className="dial-tiny-semi-text tabular-nums">{total}</span>
         </div>
       </div>
       {hasThreshold ? (

@@ -25,9 +25,11 @@ const TooltipRow: FC<RowProps> = ({ label, value, swatchClass, emphasize }) => (
       {swatchClass != null && (
         <span className={classNames('size-2 shrink-0 rounded-[2px] border border-primary', swatchClass)} aria-hidden />
       )}
-      <span className={classNames('dial-tiny-text whitespace-nowrap', emphasize && 'tiny-semi')}>{label}</span>
+      <span className={classNames('dial-tiny-text whitespace-nowrap', emphasize && 'dial-tiny-semi-text')}>
+        {label}
+      </span>
     </span>
-    <span className="dial-tiny-text tiny-semi tabular-nums">{value}</span>
+    <span className="dial-tiny-semi-text tabular-nums">{value}</span>
   </div>
 );
 
@@ -60,14 +62,14 @@ const ComboTrendTooltip: FC<Props> = ({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="tiny-semi flex items-center gap-1 no-underline"
+          className="dial-tiny-semi-text flex items-center gap-1 no-underline"
           style={{ color: TREND_TOOLTIP_TEXT_ACCENT }}
           onClick={(event) => event.stopPropagation()}
         >
           <span className="whitespace-nowrap">{point.runName}</span>
           <IconExternalLink {...BASE_BUTTON_ICON_PROPS} width={16} height={16} aria-hidden />
         </a>
-        <span className="tiny-semi whitespace-nowrap tabular-nums">
+        <span className="dial-tiny-semi-text whitespace-nowrap tabular-nums">
           {formatMetricTrendTooltipDate(point.computedAtMs)}
         </span>
       </div>
