@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
@@ -24,6 +24,9 @@ const renderModal = (entity: AssetWithVersion, onDuplicate = vi.fn()) => {
 
   return { onDuplicate };
 };
+
+// A single change event instead of per-key typing: keystroke delivery can drop characters on a slow CI runner.
+const setTextValue = (input: HTMLElement, value: string) => fireEvent.change(input, { target: { value } });
 
 describe('DuplicateAsset', () => {
   afterEach(() => {
@@ -57,8 +60,7 @@ describe('DuplicateAsset', () => {
     expect(screen.getByRole('heading', { name: ToolsetI18nKey.ApiKey })).toBeInTheDocument();
     const headerInput = screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.apiKeyHeader) });
     expect(headerInput).toHaveValue('X-API-Key');
-    await user.clear(headerInput);
-    await user.type(headerInput, 'Authorization');
+    setTextValue(headerInput, 'Authorization');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
     expect(onDuplicate).toHaveBeenCalledWith(
@@ -82,8 +84,7 @@ describe('DuplicateAsset', () => {
     expect(screen.queryByRole('radio')).toBeNull();
     const versionInput = screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.version) });
     expect(versionInput).toHaveValue('stable');
-    await user.clear(versionInput);
-    await user.type(versionInput, 'release candidate');
+    setTextValue(versionInput, 'release candidate');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
     expect(onDuplicate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -95,7 +96,6 @@ describe('DuplicateAsset', () => {
   });
 
   test('rejects the original complete destination but allows the same name with a different version', async () => {
-    const user = userEvent.setup();
     const entity = {
       name: 'app',
       version: 'stable',
@@ -113,12 +113,10 @@ describe('DuplicateAsset', () => {
       />,
     );
     const idInput = screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.id) });
-    await user.clear(idInput);
-    await user.type(idInput, 'app');
+    setTextValue(idInput, 'app');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate })).toBeDisabled();
     const versionInput = screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.version) });
-    await user.clear(versionInput);
-    await user.type(versionInput, 'preview');
+    setTextValue(versionInput, 'preview');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate })).toBeEnabled();
   });
 
