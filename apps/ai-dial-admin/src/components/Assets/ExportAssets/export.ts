@@ -1,4 +1,3 @@
-import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -6,42 +5,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileData } from '@/src/utils/files/grid-data';
 import { isAssetWithVersion, isVersionlessAssetView } from '@/src/utils/is-view';
 
-/**
- * Converts array of Assets into correct row data, joining multiple versions of one asset into a row
- *
- * @param {AssetWithVersion[]} assets - Asset array
- * @param {?AssetWithVersion[]} [exportedAssets] - Asset array of already selected for import
- * @returns {AssetWithVersion[]} - Asset array
- */
+/** Every stored path remains an independent export row. */
 export const generateRowDataForExportGrid = (
-  assets: AssetWithVersion[],
-  exportedAssets?: AssetWithVersion[],
-): AssetWithVersion[] => {
-  const assetMap = assets?.reduce((map, asset) => {
-    const exported = exportedAssets?.filter((p) => p.name === asset.name);
-    const isAddVersion = exported?.some((p) => p.version === asset.version);
-
-    const existingAsset = map.get(asset.name as string);
-    if (existingAsset) {
-      existingAsset.versions?.push(asset.version);
-      if (isAddVersion) {
-        existingAsset.version = existingAsset.version ? `${existingAsset.version}, ${asset.version}` : asset.version;
-      } else {
-        existingAsset.version = exported?.length ? existingAsset.version : asset.version;
-      }
-    } else {
-      map.set(asset.name as string, {
-        ...asset,
-        version: exported?.length && !isAddVersion ? '' : asset.version,
-        versions: [asset.version],
-      });
-    }
-
-    return map;
-  }, new Map<string, AssetWithVersion>());
-
-  return assetMap ? Array.from(assetMap.values()) : [];
-};
+  assets: AssetWithVersion[] = [],
+  _exportedAssets?: AssetWithVersion[],
+): AssetWithVersion[] => assets;
 
 /**
  * Generic function which handles selection items in grid for export
@@ -93,13 +61,7 @@ export const changeExportAssetData = (
   filePath: string,
   exportedAsset: Record<string, AssetWithVersion[]>,
 ): Record<string, AssetWithVersion[]> => {
-  return changeExportData<AssetWithVersion>(
-    selectedAsset,
-    fetchedFoldersData,
-    filePath,
-    exportedAsset,
-    findAssetVersions,
-  );
+  return changeExportData<AssetWithVersion>(selectedAsset, fetchedFoldersData, filePath, exportedAsset, findAssetMatch);
 };
 
 /**
@@ -120,18 +82,10 @@ export const changeExportFileData = (
   return changeExportData<DialFile>(selectedFiles, fetchedFoldersData, filePath, exportedFiles, findFileMatch);
 };
 
-/**
- * Function which find all selected asset version for export
- *
- * @param {AssetWithVersion} asset - selected Asset
- * @param {AssetWithVersion[]} fetched - all assets from folder
- * @returns {AssetWithVersion[]} - Asset array with all selected version
- */
-export const findAssetVersions = (asset: AssetWithVersion, fetched: AssetWithVersion[]): AssetWithVersion[] => {
-  const versions = asset.version.split(STRINGS_DELIMITER);
-  return versions
-    .map((version) => fetched.find((p) => p.name === asset.name && p.version === version) as AssetWithVersion)
-    .filter(Boolean);
+/** Resolves only the explicitly selected complete resource path. */
+export const findAssetMatch = (asset: AssetWithVersion, fetched: AssetWithVersion[]): AssetWithVersion[] => {
+  const match = fetched.find((item) => item.path === asset.path);
+  return match ? [match] : [];
 };
 
 /**

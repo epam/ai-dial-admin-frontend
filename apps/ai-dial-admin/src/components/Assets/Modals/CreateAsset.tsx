@@ -116,14 +116,14 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, sho
     const folderPath = (currentEntity.folderId as string) || `${getRootFolder(view)}/`;
     // `DialResource` no longer declares the flat `AssetWithVersion` identity (`path` moved to the
     // merged read's `_metadata`, which a freshly created entity never has) — hence the double cast.
+    const payload = {
+      ...currentEntity,
+      folderId: folderPath,
+      ...(!isPlatformDualBucketCreate && !isVersionlessAssetView(view) && { display_version: currentEntity.version }),
+    } as unknown as AssetWithVersion;
     const createAsset = isPlatformDualBucketView(view, folderPath)
-      ? () =>
-          PlatformCreateAssetActionMap[view]!({ ...currentEntity, folderId: folderPath } as unknown as AssetWithVersion)
-      : () =>
-          CreateAssetActionMap[view as CreateAssetRoute]({
-            ...currentEntity,
-            folderId: folderPath,
-          } as unknown as AssetWithVersion);
+      ? () => PlatformCreateAssetActionMap[view]!(payload)
+      : () => CreateAssetActionMap[view as CreateAssetRoute](payload);
 
     createAsset().then((res) => {
       if (res.success) {

@@ -3,7 +3,8 @@ import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { ResourceType } from '@/src/types/resource-type';
-import { changePath, extractVersionByPath } from '@/src/utils/files/path';
+import { extractNameAndVersion } from '@/src/server/publications/path';
+import { changePath } from '@/src/utils/files/path';
 
 /**
  * Moves a batch of asset paths (prompts/toolsets/applications/skills), shared across all
@@ -24,8 +25,9 @@ export const moveAssets = (
   const requests = paths.map((path) => {
     let destinationPath = '';
     if (duplicateName) {
-      const version = FOLDER_NESTED_VERSIONLESS_TYPES.has(type) ? '' : extractVersionByPath(path);
-      const newName = version ? `${duplicateName}__${version}` : duplicateName;
+      const sourceLeaf = path.slice(path.lastIndexOf('/') + 1);
+      const version = FOLDER_NESTED_VERSIONLESS_TYPES.has(type) ? undefined : extractNameAndVersion(sourceLeaf).version;
+      const newName = version == null ? duplicateName : `${duplicateName}__${version}`;
       destinationPath = changePath(path, newPath, newName);
     } else {
       destinationPath = changePath(path, newPath);
