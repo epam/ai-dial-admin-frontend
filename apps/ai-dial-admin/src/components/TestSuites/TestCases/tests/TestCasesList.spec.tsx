@@ -4,10 +4,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
 import { CONTENT_FIT_COLUMN_IDS, VALIDITY_STATUS_COLUMN_ID } from '@/src/components/TestSuites/utils/columns';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import * as AppContext from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { ComparisonNode, ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase as TestCaseModel, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { GridRowType } from '@/src/types/grid-row-type';
@@ -33,8 +36,10 @@ let capturedListLabel: unknown = null;
 let capturedDatasetTag: unknown = null;
 let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
 let capturedTurnActionHandlers: Record<string, (row: any) => void> | null = null;
+let capturedDuplicateOperation: ActionMenuOperationDeclaration<GroupedGridRow> | undefined;
 let capturedTestCaseCount: number | null = null;
 let capturedRemoveIconClick: ((row: any) => void) | null = null;
+const { showNotification } = useNotification();
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -45,8 +50,9 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
 }));
 
 vi.mock('@/src/components/Grid/columns/turn-columns', () => ({
-  getTurnActionsColumn: (handlers: any) => {
+  getTurnActionsColumn: (handlers: any, extraItems: ActionMenuOperationDeclaration<GroupedGridRow>[] = []) => {
     capturedTurnActionHandlers = handlers;
+    capturedDuplicateOperation = extraItems[0];
     return { colId: 'action-turns' };
   },
 }));
@@ -162,6 +168,7 @@ describe('TestCasesList', () => {
     capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
+    capturedDuplicateOperation = undefined;
     capturedTestCaseCount = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
   });
@@ -293,6 +300,7 @@ describe('TestCasesList — dirty tracking', () => {
     capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
+    capturedDuplicateOperation = undefined;
     capturedTestCaseCount = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
     vi.mocked(actions.getTestCases).mockResolvedValue({
@@ -382,6 +390,7 @@ describe('TestCasesList — header and included-only filter', () => {
     capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
+    capturedDuplicateOperation = undefined;
     capturedTestCaseCount = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
     vi.mocked(actions.getTestCases).mockResolvedValue(
@@ -516,6 +525,62 @@ describe('TestCasesList — multi-turn grouping', () => {
     multiTurnData: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
   };
 
+  test('duplicates all turns and shared values through the dataset creation action', async () => {
+    const sourceCase: TestCase = {
+      ...multiTurnCase,
+      data: { persona: { name: 'Ada' } },
+      multiTurnData: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
+    };
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([
+        sourceCase,
+        {
+          id: 'existing-copy',
+          testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix}`,
+          createdAt: 0,
+        },
+      ]),
+    );
+    vi.mocked(actions.createTestCase).mockResolvedValue({ success: true });
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+    await vi.waitFor(() => expect(capturedRowData).toHaveLength(2));
+
+    expect(capturedDuplicateOperation?.id).toBe('ActionMenuOperation.Duplicate');
+    await act(async () => {
+      capturedDuplicateOperation?.onClick(capturedRowData![0] as GroupedGridRow);
+    });
+
+    await vi.waitFor(() =>
+      expect(actions.createTestCase).toHaveBeenCalledWith('ds-1', {
+        testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix} 2`,
+        data: { persona: { name: 'Ada' } },
+        multiTurnData: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
+      }),
+    );
+    const [, duplicateBody] = vi.mocked(actions.createTestCase).mock.calls[0];
+    expect(duplicateBody).not.toHaveProperty('id');
+    expect(duplicateBody.data).not.toBe(sourceCase.data);
+    expect(duplicateBody.multiTurnData).not.toBe(sourceCase.multiTurnData);
+    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
+  });
+
+  test('does not add a duplicate action when the dataset is read-only', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([singleTurnCase]));
+
+    render(
+      <TestCasesList
+        selectedTestSuite={suite}
+        onChange={mockOnChange}
+        dataset={{ id: 'ds-1', visibility: DatasetVisibility.PUBLIC }}
+        isReadOnly
+      />,
+    );
+
+    await vi.waitFor(() => expect(capturedRowData).toHaveLength(1));
+    expect(capturedDuplicateOperation).toBeUndefined();
+  });
+
   const singleTurnCase: TestCase = {
     id: 'case-2',
     testCaseName: 'Single turn case',
@@ -533,6 +598,7 @@ describe('TestCasesList — multi-turn grouping', () => {
     capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
+    capturedDuplicateOperation = undefined;
     capturedTestCaseCount = null;
     capturedRemoveIconClick = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);

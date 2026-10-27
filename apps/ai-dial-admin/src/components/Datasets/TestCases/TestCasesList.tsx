@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { ConfirmationPopup, Spinner } from '@epam/ai-dial-ui-kit';
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode, SelectionChangedEvent } from 'ag-grid-community';
+import { cloneDeep } from 'lodash';
 
 import {
   createTestCase,
@@ -26,8 +27,8 @@ import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns
 import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
 import ListEntities from '@/src/components/ListView/List';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { getDuplicateOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { BasicI18nKey, ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useDatasetExport } from '@/src/hooks/use-dataset-export';
 import { useI18n } from '@/src/locales/client';
@@ -36,7 +37,8 @@ import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { remapRenamedFields } from '@/src/utils/evaluation/schema-fields';
-import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
+import { expandTestCasesToRows, getPerTurnFieldNames } from '@/src/utils/evaluation/test-case-grouping';
+import { getUniqueTestCaseCopyName } from '@/src/utils/evaluation/test-case-name';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import DatasetTestCasesHeader from './Header';
 import { useRouter } from 'next/navigation';
@@ -73,6 +75,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
   const [selectedTestCase, setSelectedTestCase] = useState<DatasetTestCase | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<DatasetTestCase[]>([]);
   const onRemoveCaseRef = useRef<(data?: DatasetTestCase) => void>(() => {});
+  const onDuplicateCaseRef = useRef<(row: GroupedGridRow) => void>(() => {});
   const savedSchemaRef = useRef(savedSchema);
 
   const onOpenDeleteModal = useCallback(
@@ -218,7 +221,12 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
             ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
             colId: 'action-remove',
           },
-          getTurnActionsColumn(turnGrid.turnActionHandlers),
+          getTurnActionsColumn(turnGrid.turnActionHandlers, [
+            getDuplicateOperation(
+              (row) => row && onDuplicateCaseRef.current(row),
+              (_api, node) => (node.data as GroupedGridRow | undefined)?.rowType === GridRowType.TURN,
+            ),
+          ]),
         ]);
       });
       if (withRefreshPage) {
@@ -240,6 +248,39 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
 
   const refreshGridRef = useRef(refreshGrid);
   refreshGridRef.current = refreshGrid;
+
+  const onDuplicateCase = useCallback(
+    async (row: GroupedGridRow) => {
+      if (!dataset.id) return;
+
+      const sourceRows = row.rowType === GridRowType.GROUP ? (row.turns ?? []) : [row];
+      const [sourceCase] = collapseRowsToDatasetTestCases(sourceRows, getPerTurnFieldNames(dataset.testCaseSchema));
+      if (!sourceCase) return;
+      const existingNames = turnGrid.groups.flatMap((group) =>
+        group.turns.map((turn) => String(turn.testCaseName ?? '')),
+      );
+
+      try {
+        const response = await createTestCase(dataset.id, {
+          testCaseName: getUniqueTestCaseCopyName(
+            sourceCase.testCaseName ?? '',
+            existingNames,
+            t(BasicI18nKey.DuplicateCopyPostfix),
+          ),
+          data: cloneDeep(sourceCase.data ?? {}),
+          ...(sourceCase.multiTurnData ? { multiTurnData: cloneDeep(sourceCase.multiTurnData) } : {}),
+        });
+        if (response?.success) {
+          refreshGridRef.current();
+        } else {
+          showNotification(getErrorNotification(response?.errorHeader, response?.errorMessage));
+        }
+      } catch (error) {
+        showNotification(getErrorNotification(undefined, error instanceof Error ? error.message : 'Unknown error'));
+      }
+    },
+    [dataset.id, dataset.testCaseSchema, showNotification, t, turnGrid.groups],
+  );
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
@@ -363,6 +404,10 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
   useEffect(() => {
     onRemoveCaseRef.current = onOpenDeleteModal;
   }, [onOpenDeleteModal]);
+
+  useEffect(() => {
+    onDuplicateCaseRef.current = onDuplicateCase;
+  }, [onDuplicateCase]);
 
   return (
     <div className="h-full min-h-0">
