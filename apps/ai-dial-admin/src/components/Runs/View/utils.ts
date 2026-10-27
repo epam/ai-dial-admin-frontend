@@ -209,6 +209,7 @@ const executionColumns: ColDef[] = [
     ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     ...rightAlignedColumn,
+    // Replaces the spread's cellClass: the status tint is added on top of `align-right`.
     cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
   {
@@ -220,6 +221,7 @@ const executionColumns: ColDef[] = [
     ...rightAlignedColumn,
     valueGetter: (params) => params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs ?? null,
     valueFormatter: (params) => getFormattedDuration(params.value ?? undefined),
+    // Replaces the spread's cellClass: the status tint is added on top of `align-right`.
     cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
 ];
