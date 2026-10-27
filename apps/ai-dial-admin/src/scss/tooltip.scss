@@ -3,22 +3,3 @@
   @apply w-[14px] h-[7px] bg-control-inverted;
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
 }
-
-// The kit's legacy `Dial*` components (DialInput, DialLabelledText, DialSelect, DialDropdown,
-// DialAnalytics*) still portal the 1.0 bubble: bordered, theme-coloured, no `data-placement`. Restyle it
-// to the 2.0 bubble so every tooltip reads the same. The app compiles the kit's utilities as `!important`
-// inside `@layer utilities`, and a layered `!important` beats an unlayered one — so this lives in the same
-// layer, where the id selector's specificity decides. The bubble sits inside floating-ui's portal wrapper
-// and is the one element carrying `data-floating-ui-focusable`. Delete once the kit drops the 1.0 tooltip.
-@layer utilities {
-  #tooltip-portal [data-floating-ui-focusable]:not([data-placement]) {
-    @apply bg-control-inverted! text-control-inverted! border-0! rounded-lg! px-3! py-2! shadow-xs! max-w-[376px]!;
-    font-size: 14px !important;
-    line-height: 20px !important;
-
-    > svg {
-      color: var(--bg-control-inverted, #57647a) !important;
-      stroke: var(--bg-control-inverted, #57647a) !important;
-    }
-  }
-}

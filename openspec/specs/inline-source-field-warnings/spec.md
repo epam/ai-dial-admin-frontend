@@ -1,6 +1,6 @@
 ## Purpose
 
-Define inline warning-icon decoration for two source-related form fields whose containing pages already display top-of-view warning banners: the Container source field on entity detail views (Models / Applications / Toolsets / Interceptors) and the Container image field on container detail views. The icon visually anchors the banner's message to the specific field that needs user attention, using a shared `<WarningIcon>` common component built on the ui-kit's `iconBefore` slot for `DialInputPopup`.
+Define inline warning-icon decoration for two source-related form fields whose containing pages already display top-of-view warning banners: the Container source field on entity detail views (Models / Applications / Toolsets / Interceptors) and the Container image field on container detail views. The icon visually anchors the banner's message to the specific field that needs user attention, using a shared `<WarningIcon>` common component built on the ui-kit's `iconBefore` slot for `InputPopup`.
 
 ## Requirements
 
@@ -43,12 +43,12 @@ The legacy file at `components/UpstreamEndpoints/Endpoint/WarningIcon.tsx` SHALL
 
 ### Requirement: Container source field shows warning icon when saved container is not running
 
-The Container source field rendered by `components/SourceField/Containers/Containers.tsx` SHALL render `<WarningIcon warningText={...} />` inside the `DialInputPopup`'s `iconBefore` slot whenever the saved container (the one referenced by `entity.source.containerId`) is present in the fetched container list and has a `status` other than `CONTAINER_STATUS.RUNNING`. The tooltip text SHALL be sourced from `t(ContainersI18nKey.ContainerNotRunningTooltip)` ("Container is not running"). This decoration SHALL apply only to the non-modal popup branch — the modal create-flow branch (which uses `DialSelectField`) is excluded.
+The Container source field rendered by `components/SourceField/Containers/Containers.tsx` SHALL render `<WarningIcon warningText={...} />` inside the `InputPopup`'s `iconBefore` slot whenever the saved container (the one referenced by `entity.source.containerId`) is present in the fetched container list and has a `status` other than `CONTAINER_STATUS.RUNNING`. The tooltip text SHALL be sourced from `t(ContainersI18nKey.ContainerNotRunningTooltip)` ("Container is not running"). This decoration SHALL apply only to the non-modal popup branch — the modal create-flow branch (which uses `Select`) is excluded.
 
 #### Scenario: Stopped container shows the icon
 
 - **WHEN** the field renders for an entity whose saved container has `status === 'stopped'`
-- **THEN** `DialInputPopup` SHALL receive an `iconBefore` containing a `WarningIcon` whose `warningText` resolves to `t(ContainersI18nKey.ContainerNotRunningTooltip)`
+- **THEN** `InputPopup` SHALL receive an `iconBefore` containing a `WarningIcon` whose `warningText` resolves to `t(ContainersI18nKey.ContainerNotRunningTooltip)`
 
 #### Scenario: Pending, crashed, stopping, not_deployed all show the icon
 
@@ -68,7 +68,7 @@ The Container source field rendered by `components/SourceField/Containers/Contai
 #### Scenario: Modal create-flow does not render the icon
 
 - **WHEN** the component renders with `isModal === true`
-- **THEN** the modal branch SHALL render `DialSelectField` without any `WarningIcon` (the modal flow only allows selecting running containers, so the warning state is unreachable there)
+- **THEN** the modal branch SHALL render `Select` without any `WarningIcon` (the modal flow only allows selecting running containers, so the warning state is unreachable there)
 
 ### Requirement: Saved container is preserved beyond display name
 
@@ -82,7 +82,7 @@ The Container source field rendered by `components/SourceField/Containers/Contai
 
 ### Requirement: Container image field shows warning icon when image is not installed
 
-The Container image field rendered by `components/Deployments/Fields/ContainerSource/InternalImageField.tsx` SHALL render `<WarningIcon warningText={...} />` inside the `DialInputPopup`'s `iconBefore` slot whenever `isImageNotInstalled(image)` returns `true`. The tooltip text SHALL be `t(ContainersI18nKey.ImageNotInstalledTooltip)` ("Image is not installed"). When the image is healthy or not provided, the icon SHALL be hidden.
+The Container image field rendered by `components/Deployments/Fields/ContainerSource/InternalImageField.tsx` SHALL render `<WarningIcon warningText={...} />` inside the `InputPopup`'s `iconBefore` slot whenever `isImageNotInstalled(image)` returns `true`. The tooltip text SHALL be `t(ContainersI18nKey.ImageNotInstalledTooltip)` ("Image is not installed"). When the image is healthy or not provided, the icon SHALL be hidden.
 
 The trigger function `isImageNotInstalled` returns `true` for both `IMAGE_STATUS.NOT_BUILT` and `IMAGE_STATUS.BUILD_FAILED`, so a single tooltip covers both sub-states — matching the existing image-not-installed banner that already differentiates copy at the banner level. The icon does not differentiate between the two.
 

@@ -77,7 +77,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         {footer}
       </div>
     ) : null,
-  DialSteps: ({ steps, currentStep, onChangeStep }: any) => (
+  Steps: ({ steps, currentStep, onChangeStep }: any) => (
     <nav aria-label="steps">
       {currentStep}
       {steps.map((step: { id: string }) => (

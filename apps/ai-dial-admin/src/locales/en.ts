@@ -69,6 +69,8 @@ export default {
     Required: 'Required',
     Failed: 'Failed',
     Validated: 'Validated',
+    StepCompleted: 'Completed',
+    StepError: 'Error',
     NoData: 'No Data',
     NoParameters: 'No Parameters',
     NoVariables: 'No Variables',

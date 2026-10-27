@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialAnalyticsBarGroup, Spinner } from '@epam/ai-dial-ui-kit';
+import { AnalyticsBarGroup, Spinner } from '@epam/ai-dial-ui-kit';
 
 import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
@@ -46,7 +46,7 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
     return (
       <div className={METRIC_SCORES_GRID_CLASS}>
         {groups.map((group) => (
-          <DialAnalyticsBarGroup
+          <AnalyticsBarGroup
             key={group.name}
             title={<MetricGroupTitle name={group.name} description={group.description} />}
             data={group.bars}

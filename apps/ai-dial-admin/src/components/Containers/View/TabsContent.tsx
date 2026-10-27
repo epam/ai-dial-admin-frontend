@@ -1,4 +1,4 @@
-import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { LabelledText as KitLabelledText } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -54,9 +54,9 @@ const TabsContent: FC<Props> = ({
   const headerPostfix = useMemo(() => {
     return (
       <>
-        <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
+        <KitLabelledText label={t(EntityFieldsI18nKey.status)}>
           <StatusIndicator status={selectedContainer.status} />
-        </DialLabelledText>
+        </KitLabelledText>
         {selectedContainer.status === CONTAINER_STATUS.RUNNING && selectedContainer.url && (
           <LabelledText label={t(BasicI18nKey.URL)} text={selectedContainer.url} copyable />
         )}
@@ -67,7 +67,7 @@ const TabsContent: FC<Props> = ({
 
   const headerPrefix = useMemo(
     () => (
-      <DialLabelledText
+      <KitLabelledText
         label={t(EntitiesI18nKey.SourceType)}
         text={getContainerSourceTypeLabel(selectedContainer.source, route, t)}
       />
