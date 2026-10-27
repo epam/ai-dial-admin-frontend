@@ -176,15 +176,6 @@
 
     &.align-right {
       @apply justify-end;
-
-      // The kit grid wraps every value in a full-width dropdown trigger, and plain values
-      // in an ellipsis span that carries text-start. justify-end on the cell cannot move
-      // that wrapper. @apply drops !important, and Tailwind emits text-start with it, so
-      // the override has to be important too or the counts stay on the left.
-      .dial-kit-dropdown,
-      .dial-kit-ellipsis-tooltip {
-        @apply text-right!;
-      }
     }
   }
   .ag-cell.ag-cell-first-right-pinned:not(

@@ -208,7 +208,8 @@ const executionColumns: ColDef[] = [
     colId: 'http',
     ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
-    headerClass: 'align-right',
+    ...rightAlignedColumn,
+    // Replaces the spread's cellClass: the status tint is added on top of `align-right`.
     cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
   {
@@ -217,9 +218,10 @@ const executionColumns: ColDef[] = [
     colId: 'duration',
     ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
-    headerClass: 'align-right',
+    ...rightAlignedColumn,
     valueGetter: (params) => params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs ?? null,
     valueFormatter: (params) => getFormattedDuration(params.value ?? undefined),
+    // Replaces the spread's cellClass: the status tint is added on top of `align-right`.
     cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
 ];
