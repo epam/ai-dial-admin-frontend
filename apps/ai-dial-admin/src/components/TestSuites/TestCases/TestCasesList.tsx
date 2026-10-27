@@ -44,8 +44,15 @@ import { hasIncompleteInputBindings } from '@/src/components/TestSuites/utils/te
 import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-test-case';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
-import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { getDuplicateOperation, getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
+import {
+  BasicI18nKey,
+  ButtonsI18nKey,
+  DatasetsI18nKey,
+  DeleteI18nKey,
+  TabsI18nKey,
+  TestSuitesI18nKey,
+} from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useDatasetExport } from '@/src/hooks/use-dataset-export';
@@ -58,7 +65,8 @@ import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/tes
 import { DatasetDetachMode, TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { clearDatasetTestCases } from '@/src/utils/evaluation/clear-dataset-test-cases';
-import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
+import { expandTestCasesToRows, getPerTurnFieldNames } from '@/src/utils/evaluation/test-case-grouping';
+import { getUniqueTestCaseCopyName } from '@/src/utils/evaluation/test-case-name';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import DatasetBanner from './DatasetBanner';
@@ -116,6 +124,7 @@ const TestCasesList: FC<Props> = ({
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
   const [showIncludedOnly, setShowIncludedOnly] = useState(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
+  const onDuplicateCaseRef = useRef<(row: GroupedGridRow) => void>(() => {});
   const refreshVersionRef = useRef(0);
   const newTestCasesRef = useRef(newTestCases);
   newTestCasesRef.current = newTestCases;
@@ -343,7 +352,12 @@ const TestCasesList: FC<Props> = ({
               ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
               colId: 'action-remove',
             },
-            getTurnActionsColumn(turnGrid.turnActionHandlers),
+            getTurnActionsColumn(turnGrid.turnActionHandlers, [
+              getDuplicateOperation(
+                (row) => row && onDuplicateCaseRef.current(row),
+                (_api, node) => (node.data as GroupedGridRow | undefined)?.rowType === GridRowType.TURN,
+              ),
+            ]),
           ]
         : []),
     ],
@@ -382,6 +396,40 @@ const TestCasesList: FC<Props> = ({
       }
     },
     [buildColumnDefs, selectedTestSuite.datasetId, dataset, router, turnGrid.setServerRows],
+  );
+
+  const onDuplicateCase = useCallback(
+    async (row: GroupedGridRow) => {
+      const datasetId = selectedTestSuite.datasetId;
+      if (!datasetId) return;
+
+      const sourceRows = row.rowType === GridRowType.GROUP ? (row.turns ?? []) : [row];
+      const [sourceCase] = collapseRowsToTestCases(sourceRows, getPerTurnFieldNames(dataset?.testCaseSchema));
+      if (!sourceCase) return;
+      const existingNames = turnGrid.groups.flatMap((group) =>
+        group.turns.map((turn) => String(turn.testCaseName ?? '')),
+      );
+
+      try {
+        const response = await createTestCase(datasetId, {
+          testCaseName: getUniqueTestCaseCopyName(
+            sourceCase.testCaseName ?? '',
+            existingNames,
+            t(BasicI18nKey.DuplicateCopyPostfix),
+          ),
+          data: structuredClone(sourceCase.data ?? {}),
+          ...(sourceCase.multiTurnData ? { multiTurnData: structuredClone(sourceCase.multiTurnData) } : {}),
+        });
+        if (response?.success) {
+          refreshGrid();
+        } else {
+          showNotification(getErrorNotification(response?.errorHeader, response?.errorMessage));
+        }
+      } catch (error) {
+        showNotification(getErrorNotification(undefined, error instanceof Error ? error.message : 'Unknown error'));
+      }
+    },
+    [dataset?.testCaseSchema, refreshGrid, selectedTestSuite.datasetId, showNotification, t, turnGrid.groups],
   );
 
   const onGridReady = turnGrid.onGridReady;
@@ -547,6 +595,10 @@ const TestCasesList: FC<Props> = ({
   useEffect(() => {
     onRemoveCaseRef.current = onOpenDeleteModal;
   }, [onOpenDeleteModal]);
+
+  useEffect(() => {
+    onDuplicateCaseRef.current = onDuplicateCase;
+  }, [onDuplicateCase]);
 
   useEffect(() => {
     if (!isActive) {

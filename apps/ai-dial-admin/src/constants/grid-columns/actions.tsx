@@ -107,12 +107,16 @@ export function getSetNoLimitsOperation<T>(
   };
 }
 
-export function getDuplicateOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDuplicateOperation<T>(
+  onClick: (entity?: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconCopy {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperationI18nKey.Duplicate,
     label: ActionMenuOperationI18nKey.Duplicate,
     onClick,
+    hidden,
   };
 }
 
