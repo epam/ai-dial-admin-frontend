@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
+import { encodeCorePath } from '@/src/server/publications/path';
 import { ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { buildToolsetsExport, importToolsetsExport, resolveImportDestination } from '../exim';
@@ -19,6 +20,69 @@ describe('Server :: Toolsets :: exim :: resolveImportDestination', () => {
 });
 
 describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
+  test.each(['%', '%20', 'release candidate', '未来 #?%'])(
+    'serializes and round-trips path version %j without decoding it twice',
+    async (version) => {
+      const path = `public/team/assistant__internal__${version}`;
+      const assetApi = {
+        getMetadata: vi.fn().mockResolvedValue({ nodeType: 'ITEM' }),
+        getMerged: vi.fn().mockResolvedValue({ display_version: 'Spring release' }),
+        list: vi.fn().mockResolvedValue([]),
+        put: vi.fn().mockResolvedValue({ success: true }),
+      } as any;
+      const exported = await buildToolsetsExport(assetApi, {} as any, [path]);
+      expect(exported.toolSets?.[0].id).toBe(`toolsets/${encodeCorePath(path)}`);
+      await importToolsetsExport(assetApi, {} as any, exported, {
+        path: 'public/target/',
+        conflictResolutionStrategy: 'override',
+        flatImport: true,
+      });
+      expect(assetApi.put).toHaveBeenCalledWith(
+        {},
+        ResourceType.TOOLSET,
+        `public/target/assistant__internal__${version}`,
+        { display_version: 'Spring release' },
+        { allowOverride: true },
+      );
+    },
+  );
+  test.each(['Spring release', '', 'stable'])(
+    'round-trips independent display_version %j and only the selected complete path',
+    async (displayVersion) => {
+      const sourcePath = 'public/team/assistant__internal__release candidate';
+      const assetApi = {
+        getMetadata: vi.fn().mockResolvedValue({ url: `toolsets/${sourcePath}`, nodeType: 'ITEM' }),
+        getMerged: vi.fn().mockResolvedValue({
+          display_version: displayVersion,
+          authSettings: { authenticationType: 'oauth', clientSecret: 'secret' },
+          _metadata: { version: 'release candidate' },
+        }),
+        list: vi.fn().mockResolvedValue([]),
+        put: vi.fn().mockResolvedValue({ success: true }),
+      } as any;
+      const exported = await buildToolsetsExport(assetApi, {} as any, [sourcePath]);
+      expect(exported.toolSets).toEqual([
+        {
+          id: `toolsets/${encodeCorePath(sourcePath)}`,
+          display_version: displayVersion,
+          authSettings: { authenticationType: 'oauth', clientSecret: 'secret' },
+        },
+      ]);
+      expect(assetApi.getMerged).toHaveBeenCalledOnce();
+      await importToolsetsExport(assetApi, {} as any, exported, {
+        path: 'public/target/',
+        conflictResolutionStrategy: 'override',
+        flatImport: true,
+      });
+      expect(assetApi.put).toHaveBeenCalledWith(
+        {},
+        ResourceType.TOOLSET,
+        'public/target/assistant__internal__release candidate',
+        { display_version: displayVersion, authSettings: { authenticationType: 'oauth', clientSecret: 'secret' } },
+        { allowOverride: true },
+      );
+    },
+  );
   test('fetches each selected toolset, omits `_metadata`, and keeps authSettings unredacted', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'toolsets/public/folder/name__1.0', nodeType: 'ITEM' }),

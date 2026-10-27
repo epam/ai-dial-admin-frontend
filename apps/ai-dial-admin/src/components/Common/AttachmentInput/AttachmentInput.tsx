@@ -97,10 +97,10 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
   );
 
   return (
-    <div className="flex flex-col w-full relative gap-3">
+    <div className="flex flex-col w-full relative gap-2">
       <Label label={label} required={required} htmlFor={id} />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
         <Radio
           disabled={isReadOnlyAdmin}
           id={`${id}-none`}

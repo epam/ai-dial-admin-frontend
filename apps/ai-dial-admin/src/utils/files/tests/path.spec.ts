@@ -416,6 +416,13 @@ describe('Utils :: files :: updatePathWithName', () => {
 });
 
 describe('Utils :: files :: extractVersionByPath', () => {
+  test('parses only the final delimiter in the final leaf', () => {
+    expect(extractVersionByPath('public/folder__ignored/assistant__internal__release candidate')).toBe(
+      'release candidate',
+    );
+    expect(extractVersionByPath('public/folder__ignored/assistant')).toBeNull();
+    expect(extractVersionByPath('public/assistant__未来 #?%')).toBe('未来 #?%');
+  });
   test('Should extract version from path with double underscore', () => {
     const path = 'folder/item__1.0.0';
     const result = extractVersionByPath(path);

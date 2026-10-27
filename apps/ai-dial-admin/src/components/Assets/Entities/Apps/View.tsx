@@ -6,10 +6,10 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, 
 import { TabItem } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
-import { createApp, getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
+import { moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import TabsContent from '@/src/components/Applications/View/TabsContent';
-import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -24,15 +24,14 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
+import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -42,7 +41,6 @@ import { addTrailingSlash } from '@/src/utils/url';
 interface Props {
   etag: string;
   originalApp: AssetApp;
-  assets: AssetApp[];
   models: DialModel[];
   applications: DialApplication[];
   schemes: DialApplicationScheme[];
@@ -57,7 +55,6 @@ interface Props {
 const AppView: FC<Props> = ({
   etag: initialEtag,
   originalApp,
-  assets,
   models,
   applications,
   schemes,
@@ -84,8 +81,6 @@ const AppView: FC<Props> = ({
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [discardKey, setDiscardKey] = useState(0);
-
-  const [addedVersions, setAddedVersions] = useState<string[]>([]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -141,71 +136,67 @@ const AppView: FC<Props> = ({
 
   const onDiscard = useCallback(() => {
     setIsSkipRefresh(false);
-    setAddedVersions([]);
     setDiscardKey((prev) => prev + 1);
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
 
-  const onSave = useCallback(
-    (newVersion?: string) => {
-      const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
-      let updatedEntity = getEntityForUpdate(selectedApp, originalApp);
-      let updateFunction = updateApp;
-
-      if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity, newVersion) as AssetApp;
-        updateFunction = createApp;
+  const onSave = useCallback(async () => {
+    const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
+    const updatedEntity = getEntityForUpdate(
+      {
+        ...selectedApp,
+        name: originalApp.name,
+        path: originalApp.path,
+        version: originalApp.version,
+        _metadata: originalApp._metadata,
+      },
+      originalApp,
+    );
+    try {
+      const res = await getReqRef.current(updateApp, updatedEntity, etag);
+      if (res.etag) {
+        setEtag(res.etag);
       }
-      getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
-        if (res.etag) {
-          setEtag(res.etag);
-        }
-        if (res.success) {
-          setAddedVersions([]);
-          showNotification(
-            getSuccessNotification(
-              newVersion
-                ? getCreateNotificationTitle(ApplicationRoute.AssetsApplications, t)
-                : getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
-              newVersion
-                ? getCreateNotificationDescription(
-                    ApplicationRoute.AssetsApplications,
-                    updatedEntity.name || updatedEntity._metadata?.name || '',
-                    t,
-                  )
-                : getUpdateNotificationDescription(
-                    ApplicationRoute.AssetsApplications,
-                    updatedEntity.name || updatedEntity._metadata?.name || '',
-                    t,
-                  ),
+      if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
+            getUpdateNotificationDescription(
+              ApplicationRoute.AssetsApplications,
+              updatedEntity.name || updatedEntity._metadata?.name || '',
+              t,
             ),
-          );
-          if (isNeedToMove) {
-            getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
-              const pathsToMove = getListOfPathsToMove(updatedEntity, null, (apps as Asset[]) || []);
-              const newPath = removeTrailingSlash(selectedApp.folderId);
-              moveApps(pathsToMove, newPath).then(() => {
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-                router.push(
-                  getUrnForEntity(ApplicationRoute.AssetsApplications, {
-                    name: updatedEntity.name || updatedEntity._metadata?.name || '',
-                    path: changePath(updatedEntity.path || updatedEntity._metadata?.path || '', newPath),
-                  }),
-                );
-              });
-            });
-          } else {
-            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
-            router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, updatedEntity));
+          ),
+        );
+        if (isNeedToMove) {
+          const originalPath = originalApp.path || originalApp._metadata?.path || '';
+          const newPath = removeTrailingSlash(selectedApp.folderId ?? selectedApp._metadata?.folderId);
+          const [moveResult] = await moveApps([originalPath], newPath);
+          if (!moveResult.success) {
+            showNotification(
+              getErrorNotification(moveResult.errorHeader, moveResult.errorMessage, moveResult.requestId),
+            );
+            return;
           }
-          router.refresh();
+          await fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+          router.push(
+            getUrnForEntity(ApplicationRoute.AssetsApplications, {
+              name: updatedEntity.name || updatedEntity._metadata?.name || '',
+              path: changePath(originalPath, newPath),
+            }),
+          );
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
+          router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, updatedEntity));
         }
-      });
-    },
-    [selectedApp, originalApp, etag, showNotification, t, router, fetchFiles],
-  );
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    } catch (error) {
+      showNotification(getErrorNotification((error as Error).message));
+    }
+  }, [selectedApp, originalApp, etag, showNotification, t, router, fetchFiles]);
 
   const onIframeSaved = useCallback(() => {
     fetchFiles(selectedApp.folderId || selectedApp._metadata?.folderId || '');
@@ -255,17 +246,13 @@ const AppView: FC<Props> = ({
     [onFrameDirtyChange, onFrameValidityChange, onFrameSaveSuccess, onFrameSaveError],
   );
 
-  // A save-as-new-version names an explicit entity action, so it keeps the entity path.
-  const onSaveChanges = useCallback(
-    (newVersion?: string) => {
-      if (isIframeDirty && !newVersion) {
-        onSaveIframe();
-      } else {
-        onSave(newVersion);
-      }
-    },
-    [isIframeDirty, onSave, onSaveIframe],
-  );
+  const onSaveChanges = useCallback(() => {
+    if (isIframeDirty) {
+      onSaveIframe();
+    } else {
+      void onSave();
+    }
+  }, [isIframeDirty, onSave, onSaveIframe]);
 
   const onDiscardChanges = useCallback(() => {
     if (isIframeDirty) {
@@ -288,22 +275,25 @@ const AppView: FC<Props> = ({
       <AssetHeader
         etag={etag}
         view={ApplicationRoute.AssetsApplications}
-        entity={selectedApp}
+        entity={{
+          ...selectedApp,
+          folderId: originalApp.folderId,
+          name: originalApp.name,
+          path: originalApp.path,
+          version: originalApp.version,
+          _metadata: originalApp._metadata,
+        }}
         isChanged={isChanged || isIframeDirty}
         isSaving={isIframeSaving}
         isSaveDisabled={!isIframeValid}
         onDiscard={onDiscardChanges}
         onSave={onSaveChanges}
         tabs={tabs}
-        assets={assets}
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={onChangeActiveTab}
         onRemove={removeApp}
         getAssetContext={useAppsFolder}
-        onChangeAsset={setSelectedApp as (asset: Asset) => void}
-        addedVersions={addedVersions}
-        onChangeAddedVersion={setAddedVersions}
       />
 
       <div className="flex-1 overflow-auto min-h-0">

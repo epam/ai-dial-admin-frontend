@@ -23,6 +23,7 @@ import OptionalValueCellRenderer, {
   MISSING_VALUE_DISPLAY,
 } from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
 import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
+import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
@@ -93,7 +94,6 @@ import {
 import { QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { Publication } from '@/src/models/dial/publications';
 import { getPublicationTypeLabel } from '@/src/utils/publications';
 import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
@@ -492,10 +492,7 @@ export const FILES_COLUMNS: ColDef[] = [
   AUTHOR_COLUMN,
 ];
 
-export const EXPORT_COLUMNS = (
-  onChange: (value: string[], data: unknown, field: string, index: number, isSelected: boolean) => void,
-  route?: ApplicationRoute,
-): ColDef[] => {
+export const EXPORT_COLUMNS = (route?: ApplicationRoute): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
 
   if (isAssetWithVersion(route)) {
@@ -505,12 +502,7 @@ export const EXPORT_COLUMNS = (
       sortable: true,
       filter: true,
       cellClass: NO_BORDER_CLASS,
-      cellRenderer: SelectCellRenderer,
-      cellRendererParams: {
-        getItems: (data: AssetWithVersion) => data.versions?.map((v) => ({ value: v, label: v })),
-        onChange,
-        isMulti: true,
-      },
+      cellRenderer: FormattedValueCellRenderer,
     });
   }
 

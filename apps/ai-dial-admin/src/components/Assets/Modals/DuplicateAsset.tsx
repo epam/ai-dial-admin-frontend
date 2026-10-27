@@ -1,12 +1,10 @@
 import { DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
-import { Popup, RadioButtonWithContent, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
-
+import { Popup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import semver from 'semver';
 
+import AssetVersion from '@/src/components/BaseControls/AssetVersion';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
@@ -26,13 +24,12 @@ import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialApplicationResource, DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DuplicationTypes } from '@/src/types/prompt';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
-import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
-import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/entities/versions';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { isDeploymentAsset, isVersionlessAssetView } from '@/src/utils/is-view';
-import { toRadioItems } from '@/src/utils/radio-items';
 import { addTrailingSlash } from '@/src/utils/url';
+import { getAssetDestinationError, getAssetPathsFromVersions } from '@/src/utils/validation/asset-version';
 
 interface Props {
   view: ApplicationRoute;
@@ -49,7 +46,7 @@ const DuplicateAsset: FC<Props> = ({
   view,
   isModalOpen,
   entity,
-  versionsMap = {},
+  versionsMap,
   context,
   onDuplicate,
   onClose,
@@ -57,165 +54,125 @@ const DuplicateAsset: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
-  // Prompts/conversations are versionless: new-entity duplication only — no "New Version"
-  // radio, no version field, name seeded with the "copy" suffix.
+  const folderContext = context?.();
+  const fetchFiles = folderContext?.fetchFiles;
   const isVersionless = isVersionlessAssetView(view);
-  const initialName = entity.name;
-  const initialFolder = entity._metadata?.folderId;
-  const [duplicationType, setDuplicationType] = useState<string>(
-    isVersionless ? DuplicationTypes.ENTITY : DuplicationTypes.VERSION,
+  const initialFolder = entity.folderId || entity._metadata?.folderId || 'public/';
+  const [clonedAsset, setClonedAsset] = useState<AssetWithVersion | DialPrompt>(() => {
+    const clone = { ...entity, name: getClonedEntityName(entity.name), folderId: initialFolder };
+    if (isVersionless) return clone;
+    const version =
+      (entity as AssetWithVersion)._metadata?.version ||
+      (entity as AssetWithVersion).version ||
+      DEFAULT_NEW_ENTITY_VERSION;
+    return {
+      ...clone,
+      version,
+      display_version: version,
+      _metadata: { ...entity._metadata, folderId: initialFolder, version },
+    } as AssetWithVersion;
+  });
+  const folderId = clonedAsset.folderId || clonedAsset._metadata?.folderId || initialFolder;
+  const destinationItems = folderContext?.fetchedFoldersData?.[folderId];
+  const isLoadingDestination = !isVersionless && !!folderContext && destinationItems == null;
+  const existingPaths = useMemo(
+    () =>
+      destinationItems?.map((item) => item.path) ||
+      getAssetPathsFromVersions(folderId, folderId === initialFolder ? versionsMap : undefined),
+    [destinationItems, folderId, initialFolder, versionsMap],
   );
+  const version = (clonedAsset as AssetWithVersion)._metadata?.version;
+  const versionError = !isVersionless
+    ? getAssetDestinationError(
+        folderId,
+        clonedAsset.name || '',
+        version,
+        view === ApplicationRoute.AssetsToolsets ? ResourceType.TOOLSET : ResourceType.APPLICATION,
+        t,
+        existingPaths,
+      )
+    : null;
 
-  const duplicationTypes: RadioButtonWithContent[] = [
-    { id: DuplicationTypes.VERSION, name: t(EntitiesI18nKey.NewVersion) },
-    { id: DuplicationTypes.ENTITY, name: t(EntitiesI18nKey.NewEntity, { entity: t(duplicateEntityMap[view]) }) },
-  ];
+  useEffect(() => {
+    if (isLoadingDestination) fetchFiles?.(folderId);
+  }, [isLoadingDestination, fetchFiles, folderId]);
 
-  const [clonedAsset, setClonedAsset] = useState<AssetWithVersion | DialPrompt>(() =>
-    isVersionless
-      ? { ...entity, name: getClonedEntityName(entity.name) }
-      : ({
-          ...entity,
-          name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
-          display_name: isDeploymentAsset(view) ? (entity as DeploymentAsset).display_name : void 0,
-          _metadata: {
-            ...entity._metadata,
-            version: getInitialVersion(versionsMap, entity?.name),
-          },
-        } as AssetWithVersion),
-  );
-  const [isInnerValid, setIsInnerValid] = useState(false);
-
-  // `entity` is the row-shaped duplicate source; the `Dial*Resource` reads below only touch real
-  // content fields (`auth_settings`, `external_services`), which that shape also carries — hence the
-  // double casts once its flat identity stopped overlapping `DialResource`.
   const isToolsetWithAuth = useMemo(() => {
-    const assetToolset = entity as unknown as DialToolsetResource;
+    const toolset = entity as unknown as DialToolsetResource;
     return (
-      assetToolset.auth_settings?.authentication_type &&
-      assetToolset.auth_settings.authentication_type !== ToolsetAuthType.NONE
+      toolset.auth_settings?.authentication_type && toolset.auth_settings.authentication_type !== ToolsetAuthType.NONE
     );
   }, [entity]);
-
-  const authType = useMemo(() => {
-    if (!isToolsetWithAuth) return null;
-    return (entity as unknown as DialToolsetResource).auth_settings?.authentication_type || null;
-  }, [isToolsetWithAuth, entity]);
+  const authType = isToolsetWithAuth
+    ? (entity as unknown as DialToolsetResource).auth_settings?.authentication_type
+    : null;
 
   useEffect(() => {
-    const name = clonedAsset.name;
-    const version = clonedAsset?._metadata?.version;
-    setIsInnerValid(
-      isVersionless
-        ? !!name
-        : !!name &&
-            !!version &&
-            semver.valid(version) !== null &&
-            !checkNameVersionCombination(versionsMap, name, version),
-    );
-  }, [clonedAsset, versionsMap, isVersionless]);
-
-  // Initial validation for auth fields
-  useEffect(() => {
-    if (authType === ToolsetAuthType.OAUTH) {
-      (clonedAsset as unknown as DialToolsetResource).auth_settings = {
-        authentication_type: ToolsetAuthType.NONE,
-      };
-    } else if (authType === ToolsetAuthType.API_KEY) {
-      const toolset = entity as unknown as DialToolsetResource;
+    if (authType === ToolsetAuthType.API_KEY) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'authSettings.apiKeyHeader',
-        isValid: !!toolset.auth_settings?.api_key_header,
+        isValid: !!(entity as unknown as DialToolsetResource).auth_settings?.api_key_header,
       });
     }
+    setClonedAsset((previous) => {
+      const cloned = previous as unknown as DialApplicationResource & DialToolsetResource;
+      const externalServices = cloned.external_services;
+      return {
+        ...previous,
+        ...(authType === ToolsetAuthType.OAUTH && { auth_settings: { authentication_type: ToolsetAuthType.NONE } }),
+        ...(externalServices && {
+          external_services: Object.fromEntries(
+            Object.entries(externalServices).map(([key, service]) => [
+              key,
+              service.auth_settings?.authentication_type === ToolsetAuthType.OAUTH
+                ? { ...service, auth_settings: { authentication_type: ToolsetAuthType.NONE } }
+                : service,
+            ]),
+          ),
+        }),
+      };
+    });
+  }, [authType, dispatch, entity]);
 
-    // Core never returns a real client_secret on read, so an OAuth external service copied
-    // verbatim fails Core's write-time validation with a missing-CLIENT_SECRET error.
-    const externalServices = (entity as unknown as DialApplicationResource).external_services;
-    if (externalServices) {
-      (clonedAsset as unknown as DialApplicationResource).external_services = Object.fromEntries(
-        Object.entries(externalServices).map(([key, service]) => [
-          key,
-          service.auth_settings?.authentication_type === ToolsetAuthType.OAUTH
-            ? { ...service, auth_settings: { authentication_type: ToolsetAuthType.NONE } }
-            : service,
-        ]),
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const onChangeVersion = useCallback((version?: string) => {
+    setClonedAsset(
+      (previous) =>
+        ({
+          ...previous,
+          version,
+          display_version: version,
+          _metadata: { ...previous._metadata, version },
+        }) as AssetWithVersion,
+    );
   }, []);
 
-  const onChangeName = useCallback(
-    (display_name?: string) => {
-      setClonedAsset({ ...clonedAsset, display_name } as AssetWithVersion);
-    },
-    [setClonedAsset, clonedAsset],
-  );
+  const onChangePath = useCallback((folderId: string) => {
+    setClonedAsset(
+      (previous) => ({ ...previous, folderId, _metadata: { ...previous._metadata, folderId } }) as AssetWithVersion,
+    );
+  }, []);
 
-  const onChangeVersion = useCallback(
-    (version?: string) => {
-      setClonedAsset({
-        ...clonedAsset,
-        display_version: version,
-        _metadata: {
-          ...clonedAsset._metadata,
-          version,
-        },
-      } as AssetWithVersion);
-    },
-    [setClonedAsset, clonedAsset],
-  );
+  const onChangeApiKeyHeader = useCallback((api_key_header: string) => {
+    setClonedAsset((previous) => {
+      const toolset = previous as unknown as DialToolsetResource;
+      return {
+        ...previous,
+        auth_settings: { ...toolset.auth_settings, api_key_header },
+      } as unknown as AssetWithVersion;
+    });
+  }, []);
 
-  const onChangePath = useCallback(
-    (folderId: string) => {
-      setClonedAsset({
-        ...clonedAsset,
-        _metadata: {
-          ...clonedAsset._metadata,
-          folderId,
-        },
-      } as AssetWithVersion);
-    },
-    [setClonedAsset, clonedAsset],
-  );
-
-  const onChangeDuplicationType = useCallback(
-    (type: string) => {
-      setDuplicationType(type);
-      if (type === DuplicationTypes.VERSION) {
-        setClonedAsset({
-          ...clonedAsset,
-          name: initialName,
-          _metadata: {
-            ...clonedAsset._metadata,
-            version: getInitialVersion(versionsMap, initialName),
-          },
-        } as AssetWithVersion);
-      } else {
-        setClonedAsset({
-          ...clonedAsset,
-          name: entity.name === initialName ? getClonedEntityName(entity.name) : entity.name,
-          _metadata: {
-            folderId: initialFolder,
-            version: DEFAULT_NEW_ENTITY_VERSION,
-          },
-        } as AssetWithVersion);
-      }
-    },
-    [clonedAsset, initialName, initialFolder, entity.name, versionsMap],
-  );
-
-  const onChangeApiKeyHeader = useCallback(
-    (api_key_header: string) => {
-      const toolset = clonedAsset as unknown as DialToolsetResource;
-      setClonedAsset({
-        ...toolset,
-        auth_settings: { ...toolset.auth_settings!, api_key_header },
-      } as unknown as AssetWithVersion);
-    },
-    [clonedAsset],
-  );
+  const onSubmit = () => {
+    if (isLoadingDestination || versionError || !clonedAsset.name || !isValid) return;
+    onDuplicate?.({
+      ...clonedAsset,
+      folderId: addTrailingSlash(folderId),
+      // Synchronize at submission too, including when the seeded version was never edited.
+      ...(!isVersionless && { version, display_version: version }),
+      _metadata: { ...clonedAsset._metadata, folderId: addTrailingSlash(folderId) },
+    } as AssetWithVersion);
+  };
 
   return (
     <Popup
@@ -226,67 +183,49 @@ const DuplicateAsset: FC<Props> = ({
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Duplicate),
-        isSubmitDisabled: !isInnerValid || !isValid,
+        isSubmitDisabled: isLoadingDestination || !!versionError || !clonedAsset.name || !isValid,
         onCancel: onClose,
-        onSubmit: () =>
-          onDuplicate?.({
-            ...clonedAsset,
-            _metadata: {
-              ...clonedAsset._metadata,
-              folderId: addTrailingSlash(clonedAsset._metadata?.folderId),
-            },
-          } as AssetWithVersion),
+        onSubmit,
       })}
     >
       <div className="flex flex-col px-6 py-4 gap-4">
-        {!isVersionless && (
-          <RadioGroup
-            items={toRadioItems(duplicationTypes)}
-            value={duplicationType}
-            id="duplicationTypes"
-            labelProps={{ label: t(EntitiesI18nKey.DuplicationType) }}
-            orientation={RadioGroupOrientation.Column}
-            onChange={onChangeDuplicationType}
-          />
-        )}
-        <IdControl
-          entity={clonedAsset}
-          onChangeEntity={setClonedAsset}
-          disabled={!isVersionless && duplicationType === DuplicationTypes.VERSION}
-          checkEmptySymbols={false}
-        />
+        <IdControl entity={clonedAsset} onChangeEntity={setClonedAsset} checkEmptySymbols={false} />
         {isDeploymentAsset(view) && (
           <DisplayNameControl
             displayName={(clonedAsset as DeploymentAsset).display_name}
-            onChange={onChangeName}
+            onChange={(display_name) => setClonedAsset({ ...clonedAsset, display_name } as AssetWithVersion)}
             required
           />
         )}
         {!isVersionless && (
-          <VersionControl version={(clonedAsset as AssetWithVersion)._metadata?.version} onChange={onChangeVersion} />
+          <AssetVersion
+            version={version}
+            name={clonedAsset.name}
+            folderId={folderId}
+            resourceType={view === ApplicationRoute.AssetsToolsets ? ResourceType.TOOLSET : ResourceType.APPLICATION}
+            existingPaths={existingPaths}
+            onChange={onChangeVersion}
+          />
         )}
-
-        {authType === ToolsetAuthType.API_KEY && <h3>{t(ToolsetI18nKey.ApiKey)}</h3>}
-
         {authType === ToolsetAuthType.API_KEY && (
-          <ApiKeyHeaderControl
-            apiKeyHeader={(clonedAsset as unknown as DialToolsetResource).auth_settings?.api_key_header}
-            onChange={onChangeApiKeyHeader}
-          />
+          <>
+            <h3>{t(ToolsetI18nKey.ApiKey)}</h3>
+            <ApiKeyHeaderControl
+              apiKeyHeader={(clonedAsset as unknown as DialToolsetResource).auth_settings?.api_key_header}
+              onChange={onChangeApiKeyHeader}
+            />
+          </>
         )}
-
-        {duplicationType === DuplicationTypes.ENTITY && (
-          <FilePath
-            value={clonedAsset._metadata?.folderId}
-            label={t(EntitiesI18nKey.FolderStorage)}
-            modalTitle={t(BasicI18nKey.MoveToFolder)}
-            placeholder={t(EntityPlaceholdersI18nKey.Path)}
-            onChange={onChangePath}
-            context={context}
-            onCreateFolder={onCreateFolder}
-            view={view}
-          />
-        )}
+        <FilePath
+          value={folderId}
+          label={t(EntitiesI18nKey.FolderStorage)}
+          modalTitle={t(BasicI18nKey.MoveToFolder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          onChange={onChangePath}
+          context={context}
+          onCreateFolder={onCreateFolder}
+          view={view}
+        />
       </div>
     </Popup>
   );

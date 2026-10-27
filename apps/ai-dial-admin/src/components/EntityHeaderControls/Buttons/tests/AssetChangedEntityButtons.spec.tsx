@@ -13,27 +13,25 @@ const renderButtons = (props?: RenderProps) =>
   render(<AssetChangedEntityButtons {...props} onDiscard={vi.fn()} onSave={vi.fn()} />);
 
 const getSave = () => screen.getByRole('button', { name: ButtonsI18nKey.Save });
-const getSaveAsNewVersion = () => screen.getByRole('button', { name: ButtonsI18nKey.SaveAsNewVersion });
 
 describe('AssetChangedEntityButtons', () => {
-  test('enables Save and Save as new version when nothing blocks saving', () => {
+  test('enables Save without offering a new-version action', () => {
     renderButtons();
 
     expect(getSave()).toBeEnabled();
-    expect(getSaveAsNewVersion()).toBeEnabled();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.SaveAsNewVersion })).toBeNull();
   });
 
-  test('disables Save and Save as new version while a save is pending', () => {
+  test('disables Save while a save is pending', () => {
     renderButtons({ isSaving: true });
 
     expect(getSave()).toBeDisabled();
-    expect(getSaveAsNewVersion()).toBeDisabled();
   });
 
-  test('disables only Save when isSaveDisabled is set', () => {
+  test('disables Save but leaves Discard enabled when the iframe is invalid', () => {
     renderButtons({ isSaveDisabled: true });
 
     expect(getSave()).toBeDisabled();
-    expect(getSaveAsNewVersion()).toBeEnabled();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Discard })).toBeEnabled();
   });
 });

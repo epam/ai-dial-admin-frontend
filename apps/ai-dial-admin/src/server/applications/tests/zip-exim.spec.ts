@@ -10,6 +10,16 @@ import {
 } from '../zip-exim';
 
 describe('Server :: Applications :: zip-exim :: buildApplicationsZip', () => {
+  test('round-trips distinct path versions and independent display versions without changing the archive format', async () => {
+    const document = {
+      applications: [
+        { id: 'applications/public/assistant__internal__release candidate', display_version: 'Spring release' } as any,
+        { id: 'applications/public/assistant__internal__stable', display_version: '' } as any,
+      ],
+    };
+    const blob = await buildApplicationsZip(document);
+    expect(await extractApplicationsFromZip(await blob.arrayBuffer())).toEqual(document);
+  });
   test('wraps the document as a single applications/applications.json entry', async () => {
     const document = { applications: [{ id: 'applications/public/name__1.0', name: 'name' } as any] };
 

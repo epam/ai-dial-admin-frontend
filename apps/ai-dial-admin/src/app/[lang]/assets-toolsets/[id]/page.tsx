@@ -6,8 +6,7 @@ import ToolsetView from '@/src/components/Assets/Entities/Toolsets/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialFileNodeType } from '@/src/models/dial/file';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialRole } from '@/src/models/dial/role';
 import { readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
@@ -16,7 +15,7 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
-import { getConfigFileToolset, getPlatformToolset, getToolset, getToolsets } from '../actions';
+import { getConfigFileToolset, getPlatformToolset, getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +28,6 @@ export default async function Page(params: {
   let oAuthCode = null;
   let etag = DEFAULT_ETAG;
 
-  let toolsets: AssetToolset[] = [];
   let toolset: AssetToolset | null = null;
   let roles: DialRole[] = [];
   const optionWarnings: EntitiesI18nKey[] = [];
@@ -62,10 +60,6 @@ export default async function Page(params: {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as unknown as AssetToolset | null;
       });
-
-      toolsets = ((await getToolsets(toolset?.folderId || toolset?._metadata?.folderId || ''))?.filter(
-        (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
-      ) || []) as AssetToolset[];
     }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch toolset view data');
@@ -98,13 +92,7 @@ export default async function Page(params: {
           isConfigFileSource={isConfigFileMode}
         />
       ) : (
-        <ToolsetView
-          oAuthCode={oAuthCode}
-          etag={etag}
-          originalToolset={toolset}
-          toolsets={toolsets || []}
-          catalogSchemas={catalogSchemas}
-        />
+        <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} catalogSchemas={catalogSchemas} />
       )}
     </SaveValidationContextProvider>
   );
