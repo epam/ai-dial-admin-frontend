@@ -1,6 +1,6 @@
 import {
   Popup,
-  DialLabelledText,
+  LabelledText,
   Spinner,
   Notification,
   NotificationType,
@@ -120,7 +120,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
           <Spinner size={30} fullWidth />
         ) : (
           <>
-            <DialLabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={selectedCountText} />
+            <LabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={selectedCountText} />
             <div className="flex flex-col gap-2">
               <Label htmlFor="numberOfRuns" label={t(TestSuitesI18nKey.NumberOfRuns)} />
               <div className="flex items-center gap-2">

@@ -1,9 +1,10 @@
 'use client';
 
-import { Spinner, FileDropzone, Popup, DialSteps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Spinner, FileDropzone, Popup, Steps, PopupSize, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo, useState } from 'react';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { importTestCasePreview } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -98,7 +99,13 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
       size={PopupSize.Lg}
     >
       <div className="flex flex-col py-4 px-6 gap-y-6 h-[600px]">
-        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStepId} />
+        <Steps
+          steps={steps}
+          currentStep={currentStepId}
+          onChangeStep={setCurrentStepId}
+          ariaLabel={t(TestSuitesI18nKey.ImportFromPC)}
+          statusLabels={getStepStatusLabels(t)}
+        />
         <div className="flex-1 min-h-0 overflow-auto">
           {currentStepId === STEP_FILE && (
             <>

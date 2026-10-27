@@ -5,7 +5,7 @@ How a container's source is presented on its Properties tab: the source type as 
 ## Requirements
 ### Requirement: Source type displayed as read-only label in the info header
 
-The container Properties tab info header SHALL display the container's source type as a read-only `DialLabelledText` whose label is `t(EntitiesI18nKey.SourceType)` and whose value is resolved from the container source and the container type. This label SHALL be rendered for all container types (MCP, Adapter, Application, Interceptor) on `/containers/[id]`, and for Model Servings.
+The container Properties tab info header SHALL display the container's source type as a read-only `LabelledText` whose label is `t(EntitiesI18nKey.SourceType)` and whose value is resolved from the container source and the container type. This label SHALL be rendered for all container types (MCP, Adapter, Application, Interceptor) on `/containers/[id]`, and for Model Servings.
 
 #### Scenario: INTERNAL_IMAGE container shows "Internal {type} Image"
 
@@ -37,8 +37,8 @@ The info header SHALL NOT render the image name and version as a labelled prefix
 #### Scenario: No image prefix in info header
 
 - **WHEN** the Properties tab is open for any container with `source.$type === 'internal_image'`
-- **THEN** the info header SHALL NOT contain a `DialLabelledText` whose label matches `ContainersI18nKey.ContainerImage`
-- **AND** the info header SHALL contain a `DialLabelledText` whose label matches `EntitiesI18nKey.SourceType`
+- **THEN** the info header SHALL NOT contain a `LabelledText` whose label matches `ContainersI18nKey.ContainerImage`
+- **AND** the info header SHALL contain a `LabelledText` whose label matches `EntitiesI18nKey.SourceType`
 
 ### Requirement: Container source rendered as form field for every $type
 
@@ -61,23 +61,23 @@ The `<ContainerSource>` component inside `ContainerFields.tsx` SHALL render unco
 
 ### Requirement: InternalImageField displays image as input-with-modal field
 
-For `INTERNAL_IMAGE` containers, the form body SHALL render an `InternalImageField` component built on `Label` + `DialInputPopup` (the input-with-modal primitive from `@epam/ai-dial-ui-kit`) with the following behavior:
+For `INTERNAL_IMAGE` containers, the form body SHALL render an `InternalImageField` component built on `Label` + `InputPopup` (the local input-with-modal component in `components/Common/InputPopup`) with the following behavior:
 
 - Label: `t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })` (e.g. `"MCP Image"`, `"Adapter Image"`, `"Interceptor Image"`), rendered via `Label` above the input.
-- Selected value: `"<image.name> (<image.version>)"` displayed inside `DialInputPopup`.
-- Built-in expand affordance: `DialInputPopup` renders the whole input as a clickable popup trigger with an expand icon; clicking it opens the popup.
+- Selected value: `"<image.name> (<image.version>)"` displayed inside `InputPopup`.
+- Built-in expand affordance: `InputPopup` renders the whole input as a clickable popup trigger with an expand icon; clicking it opens the popup.
 - The popup's children is the existing `ContainerChangeImage` modal.
-- The popup trigger SHALL be disabled (via `DialInputPopup`'s `disabled` prop) when the container status is `PENDING` or `STOPPING` (preserving the `change-image-button` semantics from the archived spec), when the parent `disabled` prop is true, or when `image` is `undefined`.
+- The popup trigger SHALL be disabled (via `InputPopup`'s `disabled` prop) when the container status is `PENDING` or `STOPPING` (preserving the `change-image-button` semantics from the archived spec), when the parent `disabled` prop is true, or when `image` is `undefined`.
 - Clicking the trigger SHALL open `ContainerChangeImage`; applying a new image id SHALL update the container via the existing `updateContainer` action and refresh the router.
 
 #### Scenario: Field renders image name and version
 
 - **WHEN** `InternalImageField` receives an `image` with `name = 'Github'` and `version = '1.2.1'`
-- **THEN** the rendered `DialInput` value SHALL be `"Github (1.2.1)"`
+- **THEN** the rendered `Input` value SHALL be `"Github (1.2.1)"`
 
 #### Scenario: Clicking the popup trigger opens the change image modal
 
-- **WHEN** the user clicks the `DialInputPopup` trigger on `InternalImageField`
+- **WHEN** the user clicks the `InputPopup` trigger on `InternalImageField`
 - **THEN** `ContainerChangeImage` SHALL open with the current image preselected
 
 #### Scenario: Popup disabled during PENDING
@@ -105,7 +105,7 @@ For `INTERNAL_IMAGE` containers, the form body SHALL render an `InternalImageFie
 #### Scenario: Accessibility
 
 - **WHEN** `InternalImageField` renders
-- **THEN** the `Label` SHALL be associated with the popup input via `htmlFor`/`elementId="internalImage"`, and `DialInputPopup`'s built-in popup trigger button SHALL have an accessible name, satisfying WCAG 2.1 AA: 4.1.2 Name, Role, Value
+- **THEN** the `Label` SHALL be associated with the popup input via `htmlFor`/`elementId="internalImage"`, and `InputPopup`'s built-in popup trigger button SHALL have an accessible name, satisfying WCAG 2.1 AA: 4.1.2 Name, Role, Value
 
 ### Requirement: Centralized source type label utility
 

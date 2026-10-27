@@ -1,17 +1,17 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
+import AssetVersion from '@/src/components/BaseControls/AssetVersion';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import VersionControl from '@/src/components/BaseControls/Version';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getAssetVersionBusinessError } from '@/src/utils/deployments/validation';
 import { isDeploymentAsset, isVersionlessAssetView } from '@/src/utils/is-view';
+import { getAssetPathsFromVersions } from '@/src/utils/validation/asset-version';
 
 interface Props {
   view?: ApplicationRoute;
@@ -21,7 +21,6 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
   isModal?: boolean;
-  /** Applications only — omits the version field/validation for a platform-bucket create (flat, unversioned). */
   hideVersionField?: boolean;
   isUniqueNameError?: boolean;
 }
@@ -38,49 +37,14 @@ const AssetProperties: FC<Props> = ({
   isUniqueNameError,
 }) => {
   const t = useI18n();
-  const { dispatch } = useSaveValidationContext();
-
-  const [versionError, setVersionError] = useState<string | undefined>(void 0);
-
-  // Prompts/conversations are versionless — no version field or validation, mirroring the
-  // platform-bucket `hideVersionField` carve-out for applications.
-  const isVersionless = isVersionlessAssetView(view);
-
-  const isDeployment = useMemo(() => {
-    return isDeploymentAsset(view);
-  }, [view]);
-
-  const validateVersion = useCallback(
-    (version?: string) => {
-      const err = getAssetVersionBusinessError(versionsMap, entity.name, t, version);
-      setVersionError(err?.text);
-      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !err });
-    },
-    [dispatch, entity, t, versionsMap],
-  );
-
-  const isVersionShown = !hideVersionField && !isVersionless;
-
-  // Re-check on mount and whenever the name or the folder's versions change, not only on a version
-  // edit: a create can move to another folder, or type a name, with the version already filled in.
-  // A value key, not the map itself: callers may rebuild the map on every render, and a fresh object
-  // here would re-dispatch on each one.
-  const takenVersionsKey = entity.name ? (versionsMap?.[entity.name] ?? []).join('|') : '';
-  useEffect(() => {
-    if (isVersionShown) {
-      validateVersion(entity.version);
-    }
-    // `validateVersion` is left out on purpose: its identity changes with every entity field, so
-    // listing it would re-run this check on unrelated edits such as the description.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVersionShown, takenVersionsKey, entity.name, entity.version]);
+  const isDeployment = isDeploymentAsset(view);
+  const isVersionShown = !hideVersionField && !isVersionlessAssetView(view);
+  const folderId = entity.folderId || entity._metadata?.folderId || 'public/';
+  const existingPaths = useMemo(() => getAssetPathsFromVersions(folderId, versionsMap), [folderId, versionsMap]);
 
   const onChangeVersion = useCallback(
-    (version?: string) => {
-      onChangeEntity({ ...entity, version } as AssetWithVersion);
-      validateVersion(version);
-    },
-    [entity, onChangeEntity, validateVersion],
+    (version?: string) => onChangeEntity({ ...entity, version, display_version: version }),
+    [entity, onChangeEntity],
   );
 
   return (
@@ -90,7 +54,7 @@ const AssetProperties: FC<Props> = ({
           label={isDeployment ? t(EntityFieldsI18nKey.id) : t(EntityFieldsI18nKey.displayName)}
           placeholder={isDeployment ? t(EntityPlaceholdersI18nKey.Id) : t(EntityPlaceholdersI18nKey.DisplayName)}
           entity={entity}
-          names={names}
+          names={isVersionShown ? undefined : names}
           onChangeEntity={onChangeEntity}
           checkEmptySymbols={false}
           isUniqueNameError={isUniqueNameError}
@@ -107,11 +71,14 @@ const AssetProperties: FC<Props> = ({
       )}
 
       {isVersionShown && (
-        <VersionControl
+        <AssetVersion
           isFullWidth={!isEntityImmutable}
           version={entity.version}
+          name={entity.name}
+          folderId={folderId}
+          resourceType={view === ApplicationRoute.AssetsToolsets ? ResourceType.TOOLSET : ResourceType.APPLICATION}
+          existingPaths={existingPaths}
           onChange={onChangeVersion}
-          error={versionError}
         />
       )}
 

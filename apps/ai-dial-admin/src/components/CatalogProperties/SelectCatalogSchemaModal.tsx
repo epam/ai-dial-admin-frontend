@@ -44,10 +44,14 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
    */
   const isFilteredToOneKind = !!entityType && !isShowingAllKinds;
 
+  /**
+   * Keeps the schema the deployment already points at (`selectedId`), not the in-modal pick: rows
+   * that change on every click make the kit grid re-select its previous row and revert the click.
+   */
   const rowData = useMemo(() => {
     const all = options || [];
-    return isFilteredToOneKind ? filterCatalogSchemaOptionsByEntityType(all, entityType, selectedSchema) : all;
-  }, [options, isFilteredToOneKind, entityType, selectedSchema]);
+    return isFilteredToOneKind ? filterCatalogSchemaOptionsByEntityType(all, entityType, selectedId) : all;
+  }, [options, isFilteredToOneKind, entityType, selectedId]);
 
   const columnDefs = useMemo(() => {
     const columns = isFilteredToOneKind ? CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS() : CATALOG_SCHEMA_PICKER_COLUMNS(t);

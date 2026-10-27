@@ -27,7 +27,7 @@ export const OVERALL_METRIC_SCORE_NAME = 'overall';
 
 /**
  * Distribution histogram: the raw metric-score values are fetched and passed straight to
- * `DialAnalyticsHistogram`, which buckets them into its 12 columns — a dedicated exact-`0` bucket,
+ * `AnalyticsHistogram`, which buckets them into its 12 columns — a dedicated exact-`0` bucket,
  * the ten 0.1-wide bands (`0-0.1` … `0.9-1`), and an exact-`1` band. `DISTRIBUTION_VALUE_ALIAS` is
  * the result column alias; `DISTRIBUTION_ROW_LIMIT` caps how many test-case rows are fetched.
  */

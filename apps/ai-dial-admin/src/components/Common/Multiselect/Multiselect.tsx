@@ -51,7 +51,7 @@ const Multiselect: FC<Props> = ({
   }, [setIsModalState]);
 
   return (
-    <div className={classNames('flex flex-col gap-y-3', className)}>
+    <div className={classNames('flex flex-col gap-y-2', className)}>
       <Label label={label} htmlFor={elementId} required={required} />
       <InputPopup
         invalid={!!errorText}

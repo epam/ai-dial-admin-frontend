@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  DialSteps,
+  Steps,
   ElementSize,
   GhostButton,
   GhostIconButton,
@@ -19,6 +19,7 @@ import {
 import { IconArrowNarrowLeft, IconArrowNarrowRight, IconChevronLeft, IconRefresh } from '@tabler/icons-react';
 import { isEqual } from 'lodash';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import TemplateVariablesDoc from '@/src/components/TestSuites/RequestTemplate/components/TemplateVariablesDoc';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
@@ -188,7 +189,13 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
       footer={showVarReferences ? null : footer}
     >
       <div className="flex flex-col py-4 px-6 gap-y-6 overflow-hidden h-[670px] relative">
-        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onChangeStep} />
+        <Steps
+          steps={steps}
+          currentStep={currentStepId}
+          onChangeStep={onChangeStep}
+          ariaLabel={t(TestSuitesI18nKey.EditRequest)}
+          statusLabels={getStepStatusLabels(t)}
+        />
 
         <div className="grow overflow-hidden">
           {currentStepId === EditRequestStep.Methods && (

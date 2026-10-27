@@ -85,7 +85,7 @@ Each `TabItem` for an artifact tab SHALL set `status: TabStatus.Error` when its 
 ---
 
 ### Requirement: Configuration wizard step reflects validation status
-The `Configuration` step in the import wizard (`DialSteps`) SHALL be marked with `StepStatus.ERROR` when `validationSummary.totalFailed > 0`, and `StepStatus.VALID` otherwise. `validationSummary.totalFailed` SHALL count both artifact-entity failures and `GLOBAL_DOMAIN_WHITELIST` (firewall domain) errors. The status update is driven from `ConfigurationPreview` via an `onValidationChange(hasErrors: boolean)` callback to `ImportConfig`.
+The `Configuration` step in the import wizard (`Steps`) SHALL be marked with `StepStatus.ERROR` when `validationSummary.totalFailed > 0`, and `StepStatus.VALID` otherwise. `validationSummary.totalFailed` SHALL count both artifact-entity failures and `GLOBAL_DOMAIN_WHITELIST` (firewall domain) errors. The status update is driven from `ConfigurationPreview` via an `onValidationChange(hasErrors: boolean)` callback to `ImportConfig`.
 
 #### Scenario: Step turns red when an artifact fails
 - **WHEN** the deployment preview returns at least one artifact validation error

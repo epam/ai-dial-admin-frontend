@@ -31,7 +31,7 @@ export const unionMetricOptions = (primary: MetricOption[], compared: MetricOpti
   return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
 };
 
-/** Unions bar keys; missing side gets explicit null so DialAnalyticsBar can show "—". */
+/** Unions bar keys; missing side gets explicit null so AnalyticsBar can show "—". */
 const alignBarMaps = (
   primaryBars: Record<string, number | null>,
   comparedBars: Record<string, number | null>,

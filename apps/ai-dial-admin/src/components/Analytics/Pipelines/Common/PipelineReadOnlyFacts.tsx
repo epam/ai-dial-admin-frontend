@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialLabelledText, Tooltip } from '@epam/ai-dial-ui-kit';
+import { LabelledText as KitLabelledText, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -76,7 +76,7 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, grainKey }) => {
       <div className="flex flex-row flex-wrap gap-8">
         {isEnrich && (
           <>
-            <DialLabelledText label={grainKeyLabel} text={grainKey || pipeline.grain_key || notSet} />
+            <KitLabelledText label={grainKeyLabel} text={grainKey || pipeline.grain_key || notSet} />
             <LabelledText label={t(AnalyticsPipelinesI18nKey.VersionColumn)} text={pipeline.version_column || notSet} />
           </>
         )}

@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { DialAnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
+import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
 import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
@@ -123,7 +123,7 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
       {overallScore != null && (
-        <DialAnalyticsCard
+        <AnalyticsCard
           className={getCardClassNames()}
           title={t(RunsI18nKey.OverallScore)}
           value={String(overallScore)}
@@ -131,7 +131,7 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
         />
       )}
       {showTestCasesPassed && (
-        <DialAnalyticsCard
+        <AnalyticsCard
           className={getCardClassNames(!hasStatusCounts && !isRunIncomplete)}
           title={t(RunsI18nKey.TestCasesPassed)}
           value={hasStatusCounts ? <PassFailFraction counts={statusCounts} /> : NO_DATA_VALUE}
@@ -139,28 +139,28 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
           error={!hasStatusCounts && !isRunIncomplete}
         />
       )}
-      <DialAnalyticsCard
+      <AnalyticsCard
         className={getCardClassNames(avgSeconds == null && !isRunIncomplete)}
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
         value={avgSeconds != null ? `${avgSeconds} ${t(RunsI18nKey.Seconds)}` : NO_DATA_VALUE}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgSeconds == null && !isRunIncomplete}
       />
-      <DialAnalyticsCard
+      <AnalyticsCard
         className={getCardClassNames(avgMetricEvalSeconds == null && !isRunIncomplete)}
         title={t(RunsI18nKey.AvgMetricEvalLatency)}
         value={avgMetricEvalSeconds != null ? `${avgMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : NO_DATA_VALUE}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgMetricEvalSeconds == null && !isRunIncomplete}
       />
-      <DialAnalyticsCard
+      <AnalyticsCard
         className={getCardClassNames(hasCostError)}
         title={t(RunsI18nKey.TestCaseLlmCost)}
         value={costCardValue(testCaseCostDisplay)}
         description={costDescription}
         error={hasCostError}
       />
-      <DialAnalyticsCard
+      <AnalyticsCard
         className={getCardClassNames(metricEvalCostError)}
         title={t(RunsI18nKey.MetricEvalCost)}
         value={metricEvalCostValue}

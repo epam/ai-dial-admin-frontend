@@ -30,7 +30,7 @@ Until `getRunCosts` has settled the cards, each cost card SHALL show a spinner w
 label as its value and a description of the form `MM:SS elapsed · usually under 2 min`, where
 `MM:SS` is the wall-clock time since the first attempt started. The elapsed counter SHALL keep
 running across retries — it measures the wait, not the current request. The system SHALL NOT use
-`DialAnalyticsCard.isLoading` for this state, because that path hides the description.
+`AnalyticsCard.isLoading` for this state, because that path hides the description.
 
 #### Scenario: Calculating copy while costs are pending
 

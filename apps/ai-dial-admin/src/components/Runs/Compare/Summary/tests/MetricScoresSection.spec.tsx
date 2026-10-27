@@ -32,7 +32,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
       );
     },
     Tooltip: ({ children }: any) => children,
-    DialAnalyticsBarGroup: ({ title, data, compareData, compareLabels, barDescriptions, onBarClick }: any) => {
+    AnalyticsBarGroup: ({ title, data, compareData, compareLabels, barDescriptions, onBarClick }: any) => {
       return createElement(
         'div',
         { role: 'group', 'aria-label': title.props.name },

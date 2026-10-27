@@ -264,7 +264,6 @@ const FilesList = () => {
         preselectedItems={dragAndDropsItems}
         deletedItems={deletedItems}
         onRemove={handleDeleteItems}
-        hasSelectedItems={false}
       />
     </>
   );
