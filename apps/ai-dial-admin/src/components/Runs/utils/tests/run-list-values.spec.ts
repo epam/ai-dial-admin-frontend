@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { COST_AGGREGATION_STALE_AFTER_MS, COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_AGGREGATION_STALE_AFTER_MS } from '@/src/constants/runs';
 import { Run, RunStatus, RunTargetKind } from '@/src/models/evaluation/run';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
 import { isRunCostCalculating, resolveRunTarget, withCostWaitStart } from '../run-list-values';
@@ -160,8 +161,13 @@ describe('withCostWaitStart', () => {
   const NOW = 1_700_000_000_000;
 
   test('stamps settled runs that have no cost', () => {
-    const [run] = withCostWaitStart([{ id: 'a', status: RunStatus.COMPLETED, completedAt: 1 }], NOW);
+    const [run] = withCostWaitStart([{ id: 'a', status: RunStatus.COMPLETED, completedAt: NOW - 60_000 }], NOW);
     expect(run.costWaitStartedAt).toBe(NOW);
+  });
+
+  test('leaves a run that completed over 12 hours ago unstamped', () => {
+    const stale: Run = { id: 'a', status: RunStatus.COMPLETED, completedAt: NOW - COST_AGGREGATION_STALE_AFTER_MS };
+    expect(withCostWaitStart([stale], NOW)).toEqual([stale]);
   });
 
   test('leaves runs with a cost, unsettled runs and already stamped runs untouched', () => {

@@ -6,7 +6,8 @@ import { RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
 import Analytics from '../Analytics';
-import { COST_AGGREGATION_STALE_AFTER_MS, COST_FETCH_POLL_INTERVAL_MS } from '../constants';
+import { COST_AGGREGATION_STALE_AFTER_MS } from '@/src/constants/runs';
+import { COST_FETCH_POLL_INTERVAL_MS } from '../constants';
 
 const executeStructuredQueryMock = vi.fn();
 const getRunCostsMock = vi.fn();

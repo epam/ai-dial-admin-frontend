@@ -1,5 +1,9 @@
-import { COST_AGGREGATION_STALE_AFTER_MS, COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
-import { COST_AGGREGATING_RUN_STATUSES, COST_UNSUPPORTED_SUITE_TYPES } from '@/src/constants/runs';
+import { COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import {
+  COST_AGGREGATING_RUN_STATUSES,
+  COST_AGGREGATION_STALE_AFTER_MS,
+  COST_UNSUPPORTED_SUITE_TYPES,
+} from '@/src/constants/runs';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus, RunTarget, RunTargetKind } from '@/src/models/evaluation/run';
 import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
@@ -95,13 +99,15 @@ export const isRunCostCalculating = (run: Run | null | undefined, now: number, g
 
 /**
  * Opens the cost wait window on settled runs that arrive without a cost, once: a run already stamped
- * keeps its original start, so reusing cached rows never restarts the wait.
+ * keeps its original start, so reusing cached rows never restarts the wait. Stale runs are left
+ * unstamped, since `isRunCostCalculating` never opens a wait for them.
  */
 export const withCostWaitStart = (runs: Run[], now: number): Run[] =>
   runs.map((run) =>
     run.totalCost == null &&
     run.costWaitStartedAt == null &&
-    COST_AGGREGATING_RUN_STATUSES.includes(run.status as RunStatus)
+    COST_AGGREGATING_RUN_STATUSES.includes(run.status as RunStatus) &&
+    !isRunCostStale(run, now)
       ? { ...run, costWaitStartedAt: now }
       : run,
   );

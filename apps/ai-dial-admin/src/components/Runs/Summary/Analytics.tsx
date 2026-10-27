@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
@@ -68,12 +68,14 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   // (see `resolveModelPricing`), so this only ever fires for a model deployment.
   const { deploymentType } = useDeploymentType(run?.suiteSnapshot?.deploymentRef);
   const { isDefinitelyUnpriced } = useModelPricing(run?.suiteSnapshot?.deploymentRef?.id, deploymentType);
+  // Evaluated once per run so a render landing on the 12h boundary can't flip it and restart the fetch.
+  const shouldPollCosts = useMemo(() => !isRunCostStale(run, Date.now()), [run]);
   const canHaveCosts = !isRunInProgress && !isCostUnsupported && !isDefinitelyUnpriced;
   const {
     costs,
     isPending: areCostsPending,
     unavailable: costsUnavailable,
-  } = useRunCosts(run?.id, canHaveCosts, !isRunCostStale(run, Date.now()));
+  } = useRunCosts(run?.id, canHaveCosts, shouldPollCosts);
 
   if (!data) {
     return (
