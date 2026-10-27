@@ -265,17 +265,6 @@
   }
 }
 
-// The kit grid wraps every value in a full-width dropdown trigger, and plain values in an ellipsis
-// span that carries text-start. justify-end on the cell cannot move that wrapper. Tailwind emits
-// text-start as !important inside the utilities layer, and an important layered rule beats an
-// important unlayered one, so the override has to live in that layer too.
-@layer utilities {
-  .ag-root-wrapper .ag-cell.align-right .dial-kit-dropdown,
-  .dial-kit-grid .ag-root-wrapper .ag-cell.align-right .dial-kit-ellipsis-tooltip {
-    text-align: inherit !important;
-  }
-}
-
 .ag-grid-no-checkbox {
   .ag-selection-checkbox {
     @apply hidden;

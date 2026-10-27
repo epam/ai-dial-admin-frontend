@@ -4,6 +4,7 @@ import { ColDef } from 'ag-grid-community';
 
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { currencyValueFormatter, numberValueFormatter, toNumberOrNull } from '@/src/constants/grid-columns/formatters';
+import { GridColumnType } from '@/src/types/grid-column';
 import { formatDateTimeToLocalString, toDateOrNull } from '@/src/utils/formatting/date';
 
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
@@ -20,8 +21,9 @@ export const nameColumnSizing: Partial<ColDef> = { width: 400, minWidth: 260 };
 /** Right-aligns cell and header content. Split out of `numericColumn` so a column with its own
  * `valueGetter`/comparator/filter can opt into alignment alone. */
 export const rightAlignedColumn: Partial<ColDef> = {
-  cellClass: 'align-right text-right',
+  cellClass: 'align-right',
   headerClass: 'align-right',
+  type: GridColumnType.RightAligned,
 };
 
 export const numericColumn: Partial<ColDef> = {

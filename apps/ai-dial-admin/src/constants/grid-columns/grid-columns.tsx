@@ -100,6 +100,7 @@ import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suit
 import { FormDataPart, FormDataType } from '@/src/models/form-data';
 import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { GridColumnType } from '@/src/types/grid-column';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
@@ -1733,6 +1734,7 @@ export const HF_REGISTRY_COLUMNS: ColDef[] = [
     field: 'parameters',
     headerName: 'Parameters',
     hide: false,
+    type: GridColumnType.RightAligned,
     cellClass: 'align-right',
     headerClass: 'align-right',
     comparator: numberValueComparator,

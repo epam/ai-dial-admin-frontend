@@ -1,6 +1,8 @@
 import { ColDef, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
+import { GridColumnType } from '@/src/types/grid-column';
+
 import { numericColumn, priceColumn, dateTimeColumn, rightAlignedColumn } from '../configs';
 
 const callFilterValueGetter = (
@@ -51,8 +53,12 @@ describe('priceColumn.filterValueGetter (inherited from numericColumn)', () => {
 });
 
 describe('rightAlignedColumn', () => {
-  test('only carries the alignment classes', () => {
-    expect(rightAlignedColumn).toEqual({ cellClass: 'align-right', headerClass: 'align-right' });
+  test('only carries the alignment classes and the right-aligned column type', () => {
+    expect(rightAlignedColumn).toEqual({
+      cellClass: 'align-right',
+      headerClass: 'align-right',
+      type: GridColumnType.RightAligned,
+    });
   });
 });
 
