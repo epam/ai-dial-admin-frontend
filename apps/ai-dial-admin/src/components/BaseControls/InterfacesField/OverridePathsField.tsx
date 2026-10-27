@@ -95,7 +95,7 @@ const OverridePathsField = ({ fieldId, type, value, disabled, onChange }: Props)
   const showAddButton = !disabled && !isSelecting && availableOperations.length > 0;
 
   return (
-    <div className="flex flex-col gap-y-3">
+    <div className="flex flex-col gap-y-4">
       <div className="flex items-center gap-x-2">
         <Label label={t(InterfacesI18nKey.OverridePaths)} />
         <Tooltip tooltip={t(InterfacesI18nKey.OverridePathsInfo, TOKEN_PARAMS)}>

@@ -4,7 +4,6 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import {
-  addNewVersion,
   getAgentLinkForConversation,
   getDeleteNotificationContent,
   getEntityForUpdate,
@@ -251,49 +250,6 @@ describe('getEntityForUpdate', () => {
   });
 });
 
-describe('addNewVersion', () => {
-  test('should correctly change version and path if version is numeric', () => {
-    const entity = { folderId: '2', name: 'Prompt', path: 'somePath__0.0.1' } as any;
-    const result = addNewVersion(entity, '1.2.3');
-    expect(result).toEqual({
-      folderId: '2',
-      name: 'Prompt',
-      path: 'somePath__0.0.1',
-      _metadata: {
-        path: 'somePath__1.2.3',
-        version: '1.2.3',
-      },
-    });
-  });
-
-  test('should correctly change version and path if version is not numeric', () => {
-    const entity = { folderId: '2', name: 'Prompt', path: 'somePath__oldVersion' } as any;
-    const result = addNewVersion(entity, 'newVersion');
-    expect(result).toEqual({
-      folderId: '2',
-      name: 'Prompt',
-      path: 'somePath__oldVersion',
-      _metadata: {
-        path: 'somePath__newVersion',
-        version: 'newVersion',
-      },
-    });
-  });
-
-  test('reads the source path from an existing _metadata graft when the flat path is absent', () => {
-    const entity = { folderId: '2', name: 'Prompt', _metadata: { path: 'somePath__0.0.1' } } as any;
-    const result = addNewVersion(entity, '1.2.3');
-    expect(result).toEqual({
-      folderId: '2',
-      name: 'Prompt',
-      _metadata: {
-        path: 'somePath__1.2.3',
-        version: '1.2.3',
-      },
-    });
-  });
-});
-
 describe('getParentPathByFullPath', () => {
   test('should return empty string if there is no parent path', () => {
     const fullPath = '/';
@@ -339,6 +295,22 @@ describe('getDeleteNotificationContent', () => {
     if (key === FileManagerI18nKey.Toolset) return 'Toolset';
     return key;
   };
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'reports the selected complete path and actual row count for %s',
+    (view) => {
+      const files = ['stable', 'release candidate'].map((version) => ({
+        name: 'assistant',
+        version,
+        path: `public/team/assistant__${version}`,
+        folderId: 'public/team/',
+      }));
+      const single = getDeleteNotificationContent(view, [files[0]] as AssetWithVersion[], mockT);
+      expect(single.description).toContain('public/team/assistant__stable');
+      const multiple = getDeleteNotificationContent(view, files as AssetWithVersion[], mockT);
+      expect(multiple.description).toBe('Successfully deleted 2 items');
+    },
+  );
 
   test('should return correct notification for single file delete in Files view', () => {
     const fileNodes = [{ sourceUrl: 'file.txt' }] as any[];

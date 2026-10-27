@@ -21,6 +21,7 @@ import {
 } from '@/src/server/files/circuit-breaker';
 import { gatherResourceUrls, isFolderNode, isTechnicalItem } from '@/src/server/folders/resource-walk';
 import {
+  encodeCorePath,
   decodeCorePath,
   parseEncodedFolderPath,
   parseEncodedVersionedPath,
@@ -86,7 +87,10 @@ export const buildAssetsExport = async <T extends { id?: string; _metadata?: unk
     for (const leafPath of leafPaths) {
       const entity = await assetApi.getMerged<T>(token, config.resourceType, leafPath);
       if (entity) {
-        entities.push({ ...stripMetadata(entity), id: `${RESOURCE_TYPE_PREFIX[config.resourceType]}${leafPath}` } as T);
+        entities.push({
+          ...stripMetadata(entity),
+          id: `${RESOURCE_TYPE_PREFIX[config.resourceType]}${encodeCorePath(leafPath)}`,
+        } as T);
       }
     }
   }

@@ -16,9 +16,11 @@ import IdControl from '@/src/components/BaseControls/Id/Id';
 import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
-import VersionControl from '@/src/components/BaseControls/Version';
+import AssetVersion from '@/src/components/BaseControls/AssetVersion';
+import { ResourceType } from '@/src/types/resource-type';
 import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
@@ -38,15 +40,29 @@ interface Props {
   catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialToolsetResource) => void;
   isPublication?: boolean;
+  publicationFolderId?: string;
 }
 
-const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, onChange, isPublication }) => {
+const ToolsetAssetProperties: FC<Props> = ({
+  selectedToolset,
+  catalogSchemas,
+  onChange,
+  isPublication,
+  publicationFolderId,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // A merged read carries folder and name only in `_metadata`; the create flow seeds them flat.
   const folderId = selectedToolset.folderId ?? selectedToolset._metadata?.folderId ?? '';
   const resourceName = selectedToolset.name || selectedToolset._metadata?.name || '';
+
+  const headerPrefix = !isPlatformBucketPath(folderId) ? (
+    <LabelledText
+      label={t(EntityFieldsI18nKey.version)}
+      text={selectedToolset._metadata?.version ?? selectedToolset.version ?? ''}
+    />
+  ) : undefined;
 
   const headerPostfix = useMemo(() => {
     return (
@@ -59,7 +75,7 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
 
   return (
     <div className="flex flex-col">
-      {!isPublication && <ResourceInfoHeader entity={selectedToolset} postfix={headerPostfix} />}
+      {!isPublication && <ResourceInfoHeader entity={selectedToolset} prefix={headerPrefix} postfix={headerPostfix} />}
       <div className={classNames('flex flex-col gap-y-8', !isPublication && 'mt-8')}>
         {isPublication && (
           <IdControl entity={selectedToolset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
@@ -70,8 +86,21 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
           isFullWidth={false}
           onChange={(display_name) => onChange({ ...selectedToolset, display_name })}
         />
+        {!isPublication && !isPlatformBucketPath(folderId) && (
+          <Input
+            id="assetDisplayVersion"
+            containerClassName={STANDARD_CONTROL_WIDTH}
+            labelProps={{ label: t(EntityFieldsI18nKey.displayVersion) }}
+            value={selectedToolset.display_version ?? ''}
+            onChange={(display_version) => onChange({ ...selectedToolset, display_version: display_version ?? '' })}
+            disabled={isReadOnlyAdmin}
+          />
+        )}
         {isPublication && (
-          <VersionControl
+          <AssetVersion
+            name={resourceName}
+            folderId={publicationFolderId ?? folderId}
+            resourceType={ResourceType.TOOLSET}
             containerClassName="w-[175px]"
             version={selectedToolset._metadata?.version}
             onChange={(version?: string) =>

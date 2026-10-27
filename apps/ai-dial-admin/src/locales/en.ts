@@ -1628,6 +1628,9 @@ export default {
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     MaxNumberError: 'Max allowed number of attachments is {max}',
     ForbiddenChars: 'Field must not contain forbidden characters: {list}',
+    InvalidAssetPath: 'Path segments must not contain /, {, }, double quotes or control characters, or end with a dot.',
+    AssetPathTooLong: 'The complete resource path must not exceed {max} UTF-8 bytes.',
+    AmbiguousAssetVersion: 'Version must not contain __ or start with _.',
     AlphanumericUnderscore:
       'Field must not contain forbidden characters. Only alphanumeric characters and underscore are allowed.',
     SnakeCaseIdentifier:

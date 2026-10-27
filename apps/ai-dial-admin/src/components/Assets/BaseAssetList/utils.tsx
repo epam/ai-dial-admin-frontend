@@ -45,10 +45,9 @@ import {
   getPrompt,
   movePrompts,
 } from '@/src/app/[lang]/prompts/actions';
-import SelectCellRenderer, { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
@@ -80,9 +79,7 @@ import { isFileRootPath, isFlatPlatformView, isPlatformDualBucketView } from '@/
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { SelectOption } from '@epam/ai-dial-ui-kit';
 import {
   DialFileNodeType,
   FileManagerColumnKey,
@@ -91,19 +88,10 @@ import {
 } from '@epam/ai-dial-react-file-manager';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { ReactNode } from 'react';
-import { customMultiSelectTagsRenderer } from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
 import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
 import { ASSET_TYPE_ICONS } from './constants';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
-
-export const getItems = (data: unknown) => {
-  const asset = data as AssetWithVersion;
-  return asset?.versions
-    ?.slice()
-    .sort((a, b) => compareVersions(a, b))
-    .map((v) => ({ value: v, label: v })) as SelectOption[];
-};
 
 /**
  * The asset grid's name column. Built on ui-kit's `NAME_COLUMN` rather than replacing it, because
@@ -147,19 +135,7 @@ export const getAssetNameColumn =
     };
   };
 
-export const getGridColumns = (
-  view: ApplicationRoute,
-  onChange: (
-    value: string | string[],
-    data: unknown,
-    column?: string | undefined,
-    index?: number | undefined,
-    isSelected?: boolean | undefined,
-  ) => void,
-  selectedVersionsMap: Record<string, string[]>,
-  hasSelectedItems: boolean,
-  currentPath?: string,
-) => {
+export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
     field: 'author',
@@ -174,29 +150,7 @@ export const getGridColumns = (
     headerName: 'Version',
     width: 200,
     suppressSizeToFit: true,
-    cellRenderer: (params: SelectCellRendererParams & { data: AssetWithVersion }) => {
-      if (params.data?.versions) {
-        const customSelectedVersions = selectedVersionsMap?.[`${params.data.folderId}${params.data.name}`];
-        const selectValue = customSelectedVersions
-          ? customSelectedVersions.join(STRINGS_DELIMITER)
-          : params.data.selectedVersions.join(STRINGS_DELIMITER);
-        return hasSelectedItems ? (
-          <SelectCellRenderer
-            {...params}
-            data={params.data}
-            value={selectValue}
-            isMulti
-            getItems={getItems}
-            onChange={onChange}
-            customMultiSelectTagsRenderer={customMultiSelectTagsRenderer}
-          />
-        ) : (
-          params.data?.version || ''
-        );
-      } else {
-        return null;
-      }
-    },
+    cellRenderer: FormattedValueCellRenderer,
   };
 
   // Derived from the ui-kit's updated-time column so `createdAt` gets the same epoch-millis cell
@@ -237,13 +191,6 @@ export const getGridColumns = (
   }
 
   return [NAME_COLUMN_DEF, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
-};
-
-export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
-  const prefix = basePath.substring(0, basePath.lastIndexOf('__'));
-  const versions = selectedVersions?.[prefix];
-
-  return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
 };
 
 export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion | DialPrompt => {

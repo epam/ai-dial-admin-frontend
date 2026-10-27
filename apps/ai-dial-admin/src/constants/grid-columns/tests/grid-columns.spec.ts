@@ -477,7 +477,7 @@ describe('Constants :: grid columns', () => {
   });
 
   test('EXPORT_COLUMNS returns expected columns for prompts', () => {
-    const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.Prompts);
+    const cols = EXPORT_COLUMNS(ApplicationRoute.Prompts);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'name')).toBe(true);
     // Prompts are versionless — no Version column, unlike the deployment-asset views.
@@ -485,12 +485,15 @@ describe('Constants :: grid columns', () => {
   });
 
   test('EXPORT_COLUMNS keeps the Version column for the versioned asset views', () => {
-    const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.AssetsApplications);
-    expect(cols.some((c) => c.field === 'version')).toBe(true);
+    const cols = EXPORT_COLUMNS(ApplicationRoute.AssetsApplications);
+    const version = cols.find((c) => c.field === 'version');
+    expect(version?.cellRenderer).toBeDefined();
+    expect(version?.cellRendererParams).toBeUndefined();
+    expect(version?.cellRendererSelector).toBeUndefined();
   });
 
   test('EXPORT_COLUMNS returns expected columns for files', () => {
-    const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.Files);
+    const cols = EXPORT_COLUMNS(ApplicationRoute.Files);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'extension')).toBe(true);
   });

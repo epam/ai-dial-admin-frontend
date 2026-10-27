@@ -70,11 +70,12 @@ const getPrimaryType = (publication: UpdatablePublication): PublishableResourceT
  */
 const withMovedReviewPath = (asset: AssetLike, version?: string): object => {
   const reviewPath = asset._metadata?.path;
+  const content = { ...asset, display_version: version, displayVersion: undefined };
   if (!reviewPath) {
-    return asset;
+    return content;
   }
   return {
-    ...asset,
+    ...content,
     _metadata: { ...asset._metadata, path: replaceVersionedName(reviewPath, asset.name ?? '', version) },
   };
 };

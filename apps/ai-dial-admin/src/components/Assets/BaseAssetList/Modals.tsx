@@ -34,12 +34,10 @@ interface Props {
   preselectedItems?: File[];
   names?: string[];
   versionsMap?: Record<string, string[]>;
-  selectedVersionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
   duplicateItem?: AssetWithVersion | null;
   deletedItems?: DialFile[] | null;
-  hasSelectedItems: boolean;
   getContext: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onImport?: (
@@ -67,13 +65,11 @@ const Modals: FC<Props> = ({
   modalType,
   names,
   versionsMap,
-  selectedVersionsMap,
   runners,
   translators,
   preselectedItems,
   duplicateItem,
   deletedItems,
-  hasSelectedItems = false,
   getContext,
   onClose,
   onImport,
@@ -181,7 +177,6 @@ const Modals: FC<Props> = ({
           onClose={onClose}
           itemsToDelete={deletedItems}
           onRemove={onRemove}
-          selectedVersionsMap={hasSelectedItems ? selectedVersionsMap : undefined}
         />
       )}
       {isModalOpen && modalType === ModalType.export && (

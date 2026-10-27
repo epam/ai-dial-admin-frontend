@@ -11,6 +11,7 @@ import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   changeFilesMap,
+  generateAssetColumnsForImportGrid,
   generateAssetRowDataForImportGrid,
   getExistingFolderItems,
   getImportResults,
@@ -151,6 +152,21 @@ describe('Import :: getMultipleImportStatus', () => {
 });
 
 describe('Import :: generatePromptRowDataForImportGrid', () => {
+  test('decodes an exported text version exactly once for the read-only preview', () => {
+    const map = new Map<string, FileImportMap>([
+      [
+        'item.json',
+        {
+          files: [promptAsset({ id: 'applications/public/assistant__internal__release%20%2520%20%E6%9C%AA%E6%9D%A5' })],
+          isInvalid: false,
+        },
+      ],
+    ]);
+    expect(generateAssetRowDataForImportGrid(map)[0]).toMatchObject({
+      assetName: 'assistant__internal',
+      version: 'release %20 未来',
+    });
+  });
   test('convert to row data without existing prompts', () => {
     const map = new Map<string, FileImportMap>([
       ['item1', { files: [promptAsset({ id: 'id_for_prompt__1.0.0' })], isInvalid: false }],
@@ -305,7 +321,43 @@ describe('Import :: isInvalidJson', () => {
   });
 });
 
+describe('generateAssetColumnsForImportGrid', () => {
+  test('renders incoming Version as noneditable text while keeping the name editable', () => {
+    const columns = generateAssetColumnsForImportGrid(vi.fn());
+    const versionColumn = columns.find((column) => column.field === 'version');
+    expect(versionColumn?.cellRenderer).toBeDefined();
+    expect(versionColumn?.cellRendererSelector).toBeUndefined();
+    expect(versionColumn?.cellRendererParams).toBeUndefined();
+    expect(columns.find((column) => column.field === 'assetName')?.cellRendererSelector).toBeDefined();
+  });
+});
+
 describe('Import :: changeFilesMap', () => {
+  test('renames an imported asset without mutating its suffix or independent display version', () => {
+    const source = {
+      id: 'applications/public/assistant__internal__stable',
+      name: 'assistant__internal',
+      path: 'public/assistant__internal__stable',
+      folderId: 'public/',
+      version: 'stable',
+      display_version: 'Spring release',
+    };
+    const sourceMap = new Map<string, FileImportMap>([['item.json', { files: [source], isInvalid: false }]]);
+    const result = changeFilesMap(
+      sourceMap,
+      assetRow({ name: 'item.json', index: 0 }),
+      'assetName',
+      'renamed',
+      ApplicationRoute.AssetsApplications,
+    );
+    expect(result.get('item.json')?.files[0]).toEqual({
+      ...source,
+      name: 'renamed',
+      id: 'applications/public/renamed__stable',
+    });
+    expect(generateAssetRowDataForImportGrid(result)[0]).toMatchObject({ assetName: 'renamed', version: 'stable' });
+    expect(sourceMap.get('item.json')?.files[0].name).toBe('assistant__internal');
+  });
   let prevMap: Map<string, FileImportMap>;
 
   beforeEach(() => {
@@ -324,7 +376,7 @@ describe('Import :: changeFilesMap', () => {
     ]);
   });
 
-  test('should update the version fields of a versioned asset when field is "version"', () => {
+  test('ignores attempted version edits for a public asset', () => {
     const result = changeFilesMap(
       prevMap,
       assetRow({ name: 'key1', index: 0 }),
@@ -332,12 +384,7 @@ describe('Import :: changeFilesMap', () => {
       'v2',
       ApplicationRoute.AssetsApplications,
     );
-
-    // The versioned row is stored as an asset — read it back with the versioned shape.
-    const updatedFile = result.get('key1')?.files[0] as { version?: string; displayVersion?: string };
-
-    expect(updatedFile.version).toBe('v2');
-    expect(updatedFile.displayVersion).toBe('v2');
+    expect(result.get('key1')?.files[0]).toEqual(prevMap.get('key1')?.files[0]);
   });
 
   test('should leave a prompt unchanged when field is "version" — the versionless grid never edits versions', () => {

@@ -9,7 +9,7 @@ import {
   externalServiceOpsApi,
   toolsetOpsApi,
 } from '@/src/app/api/api';
-import { ROOT_FOLDER } from '@/src/constants/file';
+import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import {
   DialApplicationResource,
   DialExternalServiceAuthSettings,
@@ -31,8 +31,10 @@ import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { getAssetDestinationError } from '@/src/utils/validation/asset-version';
 import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
+import { addTrailingSlash } from '@/src/utils/url';
 import { DialApplication } from '@/src/models/dial/application';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
@@ -83,10 +85,22 @@ export async function createApp(app: DialApplicationResource) {
   // instead (see `DialResource`'s field comments) — resolve both spellings.
   const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
   const version = app.version ?? app._metadata?.version;
-  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
+  const path = `${addTrailingSlash(folderId)}${getVersionedName(app.name || '', version)}`;
+  const isPublicEntity = !isPlatformBucketPath(folderId) && app.name !== TEMP_FOLDER;
+  const versionError = isPublicEntity
+    ? getAssetDestinationError(
+        folderId,
+        app.name || '',
+        version,
+        ResourceType.APPLICATION,
+        () => 'Invalid asset version or resource path',
+      )
+    : null;
+  if (versionError) return validationFailure({ version: versionError.text });
   const asset = {
     ...stripMetadata(app),
-    displayVersion: version,
+    display_version: isPublicEntity ? version : app.display_version,
+    displayVersion: undefined,
     folderId: undefined,
     source: undefined,
     version: undefined,
@@ -125,13 +139,15 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
   // Same flat-vs-`_metadata` resolution as `createApp` — an update's entity is a fetched, merged
   // read whose identity grafts nest under `_metadata`.
   const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
-  const version = app.version ?? app._metadata?.version;
-  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
+  const version = app._metadata?.version ?? app.version;
+  const path = app._metadata?.path || `${addTrailingSlash(folderId)}${getVersionedName(app.name || '', version)}`;
   const cleaned = stripExternalServiceAuthStatuses(stripMetadata(app));
   const application = {
     ...cleaned,
     defaults: { ...cleaned.defaults },
-    display_version: version,
+    display_version: cleaned.display_version,
+    displayVersion: undefined,
+    path: undefined,
     folderId: undefined,
     source: undefined,
     version: undefined,

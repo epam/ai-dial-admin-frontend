@@ -35,7 +35,7 @@ const ReasoningEffortsInput: FC<Props> = ({ values, onChange }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-1">
+    <div className="flex flex-col gap-y-2">
       <Label label={t(FeaturesI18nKey.reasoningEfforts)} />
       <MultiValueAutocomplete
         selected={selected}

@@ -1,5 +1,8 @@
+import { getAssetIdByNameAndVersion } from '@/src/components/EntityListView/HeaderButtons/utils';
+import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import { decodeCorePath } from '@/src/server/publications/path';
 import { getNameVersionForAsset, getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
@@ -144,7 +147,7 @@ export const generateAssetRowDataForImportGrid = (
           const idName = file.id ? getFolderNameAndPath(file.id as string).name : (file.name as string);
           nameData = { name: idName };
         } else if (file.id) {
-          nameData = getNameVersionFromAsset(getFolderNameAndPath(file.id as string).name);
+          nameData = getNameVersionFromAsset(decodeCorePath(getFolderNameAndPath(file.id as string).name));
         } else {
           nameData = { name: file.name as string, version: (file as AssetApp).version as string };
         }
@@ -247,10 +250,7 @@ export const generateAssetColumnsForImportGrid = (
       headerName: 'Version',
       field: 'version',
       cellClass: NO_BORDER_CLASS,
-      cellRendererSelector: (params: ICellRendererParams) => {
-        return !params.data.invalid && !readonly ? { component: EditableCellRenderer } : void 0;
-      },
-      cellRendererParams: { onChange },
+      cellRenderer: FormattedValueCellRenderer,
     });
   }
 
@@ -423,11 +423,12 @@ export const changeFilesMap = (
         }
       }
     } else {
-      if (field === 'version') {
-        (targetFile as AssetApp).version = value;
-        (targetFile as AssetApp).displayVersion = value;
-      } else if (field === 'name' || field === 'assetName') {
-        targetFile.name = value;
+      if ((field === 'name' || field === 'assetName') && targetFile) {
+        updatedValue.files[fileIndex] = {
+          ...targetFile,
+          name: value,
+          id: targetFile.id ? getAssetIdByNameAndVersion(targetFile.id, value) : targetFile.id,
+        };
       }
     }
 

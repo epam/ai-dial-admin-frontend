@@ -8,6 +8,7 @@ import { cleanup, configure } from '@testing-library/react';
 import { ReactNode, useId } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+import { EditorMockProps } from './test-models';
 
 // `findBy*` / `waitFor` default to 1 s, which a loaded runner misses on tests that mount a grid.
 configure({ asyncUtilTimeout: 4_000 });
@@ -186,17 +187,23 @@ vi.mock('echarts-for-react', () => ({
   default: () => <div data-mock="echarts" />,
 }));
 
-// Monaco is heavy and renders nothing readable in jsdom, so the editor becomes the text it was given: a spec
-// asserting on a body shown through it can then find that body. Kept here rather than inline, like the
-// ECharts stub above — several specs render a viewer built on it.
-vi.mock('@monaco-editor/react', () => ({
-  __esModule: true,
-  Editor: ({ value, language }: { value?: string; language?: string }) => <pre data-language={language}>{value}</pre>,
-  DiffEditor: ({ modified, language }: { modified?: string; language?: string }) => (
-    <pre data-language={language}>{modified}</pre>
-  ),
-  default: ({ value, language }: { value?: string; language?: string }) => <pre data-language={language}>{value}</pre>,
-}));
+// Editable Monaco views expose a labeled textarea; read-only viewers keep the readable text stub.
+vi.mock('@monaco-editor/react', () => {
+  const Editor = ({ value, language, onChange, options }: EditorMockProps) =>
+    onChange && !options?.readOnly ? (
+      <textarea aria-label="JSON editor" value={value || ''} onChange={(event) => onChange(event.target.value)} />
+    ) : (
+      <pre data-language={language}>{value}</pre>
+    );
+  return {
+    __esModule: true,
+    Editor,
+    DiffEditor: ({ modified, language }: { modified?: string; language?: string }) => (
+      <pre data-language={language}>{modified}</pre>
+    ),
+    default: Editor,
+  };
+});
 
 // ------------------ Global console ------------------
 const originalConsole = console;

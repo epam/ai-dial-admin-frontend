@@ -68,7 +68,7 @@ const toolsetResource = (overrides: Partial<DialToolsetResource> = {}): DialTool
   version: '1.0',
   _metadata: {
     name: 'my-toolset',
-    path: 'toolsets/public/my-toolset__1.0',
+    path: 'public/my-toolset__1.0',
     folderId: 'public',
     version: '1.0',
     nodeType: DialFileNodeType.ITEM,
@@ -102,6 +102,46 @@ describe('Assets Toolset :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('creates a text version and synchronizes display_version without a semver requirement', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    await createToolset(toolsetResource({ version: 'release candidate', display_version: 'independent old value' }));
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'public/my-toolset__release candidate',
+      expect.objectContaining({ display_version: 'release candidate', displayVersion: undefined }),
+    );
+  });
+
+  test.each(['bad__version', '_preview', 'bad/version', 'preview.'])(
+    'rejects invalid creation version %s before Core',
+    async (version) => {
+      const result = await createToolset(toolsetResource({ version }));
+      expect(result.success).toBe(false);
+      expect(assetApi.put).not.toHaveBeenCalled();
+    },
+  );
+
+  test('ordinary updates preserve independent display version and original metadata identity', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    await updateToolset(
+      {
+        ...assetToolset(),
+        version: 'forged',
+        display_version: 'Spring release',
+        _metadata: { name: 'my-toolset', folderId: 'public/', path: 'public/my-toolset__stable', version: 'stable' },
+      },
+      'etag',
+    );
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'public/my-toolset__stable',
+      expect.objectContaining({ display_version: 'Spring release' }),
+      { etag: 'etag' },
+    );
+  });
+
   test('Should call getToolset action', async () => {
     (assetApi.getMergedWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
 
@@ -128,14 +168,15 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'publicmy-toolset__1.0',
+      'public/my-toolset__1.0',
       {
         name: 'my-toolset',
         folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
         path: undefined,
         version: undefined,
-        displayVersion: '1.0',
+        display_version: undefined,
+        displayVersion: undefined,
       },
       { etag: 'etag' },
     );
@@ -158,7 +199,7 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'publicmy-toolset__1.0',
+      'public/my-toolset__1.0',
       expect.objectContaining({ auth_settings: { client_id: 'id' } }),
       { etag: 'etag' },
     );
@@ -180,7 +221,7 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'publicmy-toolset__1.0',
+      'public/my-toolset__1.0',
       expect.objectContaining({ auth_settings: { client_id: 'id', client_secret: 'typed-secret' } }),
       { etag: 'etag' },
     );
@@ -210,7 +251,7 @@ describe('Assets Toolset :: server actions', () => {
       {
         name: 'my-toolset',
         path: 'toolsets/public/my-toolset__2.0',
-        _metadata: { name: 'my-toolset', path: 'toolsets/public/my-toolset__2.0', folderId: 'public/', version: '2.0' },
+        _metadata: { name: 'my-toolset', path: 'public/my-toolset__2.0', folderId: 'public/', version: '2.0' },
       } as AssetToolset,
       'etag',
     );
@@ -219,7 +260,7 @@ describe('Assets Toolset :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.TOOLSET,
       'public/my-toolset__2.0',
-      expect.objectContaining({ displayVersion: '2.0', folderId: undefined, version: undefined }),
+      expect.objectContaining({ display_version: undefined, folderId: undefined, version: undefined }),
       { etag: 'etag' },
     );
     expect(assetApi.put).toHaveBeenCalledWith(
@@ -290,12 +331,12 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'publicmy-toolset__1.0',
+      'public/my-toolset__1.0',
       expect.objectContaining({
         folderId: undefined,
         version: undefined,
         transport: 'SSE',
-        displayVersion: '1.0',
+        display_version: '1.0',
       }),
     );
     // The whole `_metadata` graft — identity and `nodeType` alike — is deleted before Core sees the
@@ -304,7 +345,7 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'publicmy-toolset__1.0',
+      'public/my-toolset__1.0',
       expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
     );
     expect(result).toBe(RESPONSE_MOCK);

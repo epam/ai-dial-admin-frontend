@@ -8,6 +8,7 @@ import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { importFiles } from '@/src/utils/files/import-files';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
+import { extractNameAndVersion } from '@/src/server/publications/path';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 export const getFormDataForUpload = (files: File[]): { body: FormData; fileSize: number } => {
@@ -25,13 +26,13 @@ export const getFormDataForUpload = (files: File[]): { body: FormData; fileSize:
   };
 };
 
-export const getAssetIdByNameAndVersion = (id: string, name?: string, version?: string) => {
-  const parts = id.split('/');
-  const last = parts[parts.length - 1];
-  const [oldName, oldVersion] = last.split('__');
-
-  parts[parts.length - 1] = `${name || oldName}__${version || oldVersion}`;
-  return parts.join('/');
+export const getAssetIdByNameAndVersion = (id: string, name?: string, _version?: string) => {
+  const lastSlashIndex = id.lastIndexOf('/');
+  const leaf = id.slice(lastSlashIndex + 1);
+  const { name: originalName, version } = extractNameAndVersion(leaf);
+  const suffix = version == null ? '' : `__${version}`;
+  const nextName = name && name !== originalName ? encodeURIComponent(name) : originalName;
+  return `${id.slice(0, lastSlashIndex + 1)}${nextName}${suffix}`;
 };
 
 /** Versionless counterpart (prompts): the new name replaces the last id segment verbatim — no `__` join/split. */
