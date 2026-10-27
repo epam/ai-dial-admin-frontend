@@ -1,5 +1,6 @@
 'use client';
 
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
@@ -65,15 +66,15 @@ const ScoreCellRenderer = ({ value, column, context, mode = ScoreColorMode.Absol
         aria-label={isTextHidden ? MISSING_DISPLAY : undefined}
       >
         {!isTextHidden && (
-          <span
+          <EllipsisTooltip
+            text={text}
             className={classNames(
               (tier ?? DEFAULT_VALUE_TIER).textClassName,
-              'truncate',
+              'min-w-0 max-w-full text-right',
               isMissing ? 'text-secondary' : 'text-primary',
             )}
-          >
-            {text}
-          </span>
+            contentClassName="truncate"
+          />
         )}
       </div>
     );
@@ -102,9 +103,15 @@ const ScoreCellRenderer = ({ value, column, context, mode = ScoreColorMode.Absol
       aria-label={isHidden ? displayText : undefined}
     >
       {tier && (
-        <span className={classNames(tier.textClassName, 'truncate font-semibold', classes?.text ?? 'text-secondary')}>
-          {displayText}
-        </span>
+        <EllipsisTooltip
+          text={displayText}
+          className={classNames(
+            tier.textClassName,
+            'min-w-0 max-w-full font-semibold text-right',
+            classes?.text ?? 'text-secondary',
+          )}
+          contentClassName="truncate"
+        />
       )}
     </div>
   );

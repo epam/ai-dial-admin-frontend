@@ -1,5 +1,7 @@
 import { ColDef } from 'ag-grid-community';
 
+import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
+
 export const STATUS_COLUMN_WIDTH = 40;
 export const RUN_INDEX_COLUMN_WIDTH = 116;
 export const TURN_INDEX_COLUMN_WIDTH = 52;
@@ -40,3 +42,11 @@ export const lockedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWid
   maxWidth: width,
   flex: 0,
 });
+
+/** Leaf headers keep the kit's header typography and gain a tooltip once the label is truncated. */
+export const ELLIPSIS_HEADER_PARAMS = { innerHeaderComponent: EllipsisHeader };
+
+export const RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS = {
+  innerHeaderComponent: EllipsisHeader,
+  innerHeaderComponentParams: { isRightAligned: true },
+};

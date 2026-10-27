@@ -1,3 +1,5 @@
+import { CellClassParams, ICellRendererParams } from 'ag-grid-community';
+
 import { SelectCellRendererParams } from './SelectCellRenderer';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
@@ -27,4 +29,21 @@ export const getAvatarInitials = (name?: string): string | undefined => {
   if (!name || /\p{L}/u.test(name)) return undefined;
 
   return name.replace(/[^\p{N}]/gu, '').slice(0, 2) || undefined;
+};
+
+export const ALIGN_RIGHT_CELL_CLASS = 'align-right';
+
+/**
+ * Whether the column's `cellClass` (a string, a list, or a function of the cell) asks for `align-right`.
+ * A renderer that owns a full-width text span cannot rely on the cell's `justify-end`, so it has to
+ * right-align its own text.
+ */
+export const isRightAlignedCell = (params: Pick<ICellRendererParams, 'colDef'> & Partial<CellClassParams>): boolean => {
+  const cellClass = params.colDef?.cellClass;
+  const resolved = typeof cellClass === 'function' ? cellClass(params as CellClassParams) : cellClass;
+
+  return [resolved ?? []]
+    .flat()
+    .flatMap((className) => className.split(/\s+/))
+    .includes(ALIGN_RIGHT_CELL_CLASS);
 };

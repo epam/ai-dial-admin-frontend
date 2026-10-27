@@ -1,6 +1,21 @@
-import { getAvatarInitials, getItems } from '../utils';
+import { getAvatarInitials, getItems, isRightAlignedCell } from '../utils';
 import { SelectCellRendererParams } from '../SelectCellRenderer';
 import { describe, expect, test } from 'vitest';
+
+describe('Cell renderer :: isRightAlignedCell', () => {
+  test('Should detect align-right in a string, a list and a function cellClass', () => {
+    expect(isRightAlignedCell({ colDef: { cellClass: 'align-right' } })).toBe(true);
+    expect(isRightAlignedCell({ colDef: { cellClass: ['p-0', 'align-right'] } })).toBe(true);
+    expect(isRightAlignedCell({ colDef: { cellClass: () => ['align-right', 'text-success'] } })).toBe(true);
+    expect(isRightAlignedCell({ colDef: { cellClass: () => 'align-right text-success' } })).toBe(true);
+  });
+
+  test('Should be false when the column has no align-right class', () => {
+    expect(isRightAlignedCell({ colDef: {} })).toBe(false);
+    expect(isRightAlignedCell({ colDef: { cellClass: 'other' } })).toBe(false);
+    expect(isRightAlignedCell({ colDef: { cellClass: () => undefined } })).toBe(false);
+  });
+});
 
 describe('Cell renderer :: getItems ', () => {
   test('Should return provided items', () => {
