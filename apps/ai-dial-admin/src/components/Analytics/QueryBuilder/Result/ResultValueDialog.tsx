@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import { ButtonVariant, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { Editor } from '@monaco-editor/react';
+import Editor from '@/src/components/Common/MonacoEditor/Editor';
 import { IconCopy } from '@tabler/icons-react';
 
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';

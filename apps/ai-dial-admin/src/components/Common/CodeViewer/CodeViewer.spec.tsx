@@ -3,10 +3,6 @@ import { describe, expect, test, vi } from 'vitest';
 
 import CodeViewer from './CodeViewer';
 
-vi.mock('@monaco-editor/react', () => ({
-  Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,
-}));
-
 vi.mock('@/src/components/Common/FullscreenViewer/FullscreenViewer', () => ({
   default: ({ isOpen, title }: { isOpen: boolean; title: string }) =>
     isOpen ? <div data-testid="fullscreen-viewer">{title}</div> : null,

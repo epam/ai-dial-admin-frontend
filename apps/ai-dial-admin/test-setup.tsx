@@ -198,6 +198,19 @@ vi.mock('@monaco-editor/react', () => ({
   default: ({ value, language }: { value?: string; language?: string }) => <pre data-language={language}>{value}</pre>,
 }));
 
+// The app's wrappers load the bundled Monaco before mounting the library editor, which jsdom cannot run; they get
+// the same text stubs. Their own specs unmock them.
+vi.mock('@/src/components/Common/MonacoEditor/Editor', () => ({
+  __esModule: true,
+  default: ({ value, language }: { value?: string; language?: string }) => <pre data-language={language}>{value}</pre>,
+}));
+vi.mock('@/src/components/Common/MonacoEditor/DiffEditor', () => ({
+  __esModule: true,
+  default: ({ modified, language }: { modified?: string; language?: string }) => (
+    <pre data-language={language}>{modified}</pre>
+  ),
+}));
+
 // ------------------ Global console ------------------
 const originalConsole = console;
 global.console = {

@@ -4,10 +4,6 @@ import { describe, expect, test, vi } from 'vitest';
 import McpServerDetails from '../McpServerDetails';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
 
-vi.mock('@monaco-editor/react', () => ({
-  Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,
-}));
-
 vi.mock('@/src/components/Common/FullscreenViewer/FullscreenViewer', () => ({
   default: () => null,
 }));
