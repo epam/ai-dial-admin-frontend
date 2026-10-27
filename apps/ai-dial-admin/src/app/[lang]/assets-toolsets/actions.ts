@@ -4,6 +4,9 @@ import { cookies, headers } from 'next/headers';
 
 import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
+import { getI18n } from '@/src/locales/server';
+import { Translate } from '@/src/models/error';
+import { validationFailure } from '@/src/utils/validation/server-action';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import {
@@ -39,21 +42,16 @@ export async function getToolsets(path: string) {
 
 export async function createToolset(toolset: DialToolsetResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const t = (await getI18n()) as Translate;
   // Same flat-vs-`_metadata` resolution as `createApp` in `assets-applications/actions.ts`.
   const folderId = toolset.folderId || toolset._metadata?.folderId || ROOT_FOLDER;
   const version = toolset.version ?? toolset._metadata?.version;
   const path = `${addTrailingSlash(folderId)}${getVersionedName(toolset.name || '', version)}`;
   const isPublicEntity = !isPlatformBucketPath(folderId) && toolset.name !== TEMP_FOLDER;
   const versionError = isPublicEntity
-    ? getAssetDestinationError(
-        folderId,
-        toolset.name || '',
-        version,
-        ResourceType.TOOLSET,
-        () => 'Invalid asset version or resource path',
-      )
+    ? getAssetDestinationError(folderId, toolset.name || '', version, ResourceType.TOOLSET, t)
     : null;
-  if (versionError) return { success: false, errorHeader: 'Validation Error', errorMessage: versionError.text };
+  if (versionError) return validationFailure({ version: versionError.text }, t);
   return assetApi.put(token, ResourceType.TOOLSET, path, {
     ...stripMetadata(toolset),
     auth_settings: toolset.auth_settings && stripClientSecretHint(toolset.auth_settings),

@@ -26,6 +26,11 @@ vi.mock('@/src/locales/client', () => {
   };
 });
 
+vi.mock('@/src/locales/server', () => {
+  const t = (key: string) => key;
+  return { getI18n: vi.fn(async () => t) };
+});
+
 // ------------------ NextAuth ------------------
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => ({ session: { providerId: 'provider' } })),

@@ -1592,6 +1592,7 @@ export default {
   Error: {
     Error: 'Error',
     ServerError: 'Server Error',
+    ValidationError: 'Validation Error',
     EmptyField: 'This field could not be empty',
     RequiredField: 'This field is required',
     ClientSecretMinLength: 'Client secret must be at least {number} characters',

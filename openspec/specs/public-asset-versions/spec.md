@@ -65,6 +65,11 @@ Create, duplicate, and edited publication Version inputs SHALL accept non-semver
 - **WHEN** an entered Version is whitespace-only, contains a forbidden decoded character, or makes the stored leaf end in `.`
 - **THEN** localized validation feedback is displayed and submission is blocked
 
+#### Scenario: Server-side creation validation preserves specific localized reasons
+- **WHEN** application or toolset creation reaches the server action with a blank, ambiguous, path-invalid, or oversized version
+- **THEN** the action returns `{ success: false, errorHeader, errorMessage }` with a localized validation header and the specific localized validation reason
+- **AND** no resource PUT is sent to Core
+
 #### Scenario: Total path length is measured in UTF-8 bytes
 - **WHEN** a version makes the assembled absolute storage path exceed 900 UTF-8 bytes
 - **THEN** submission is blocked even when the version's character count alone is below 900

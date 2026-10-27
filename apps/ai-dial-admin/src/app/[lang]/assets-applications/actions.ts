@@ -17,7 +17,9 @@ import {
   ToolsetAuthType,
 } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
-import { ServerActionResponse } from '@/src/models/server-action';
+import { getI18n } from '@/src/locales/server';
+import { Translate } from '@/src/models/error';
+import { validationFailure } from '@/src/utils/validation/server-action';
 import { buildApplicationsExport, importApplicationsExport } from '@/src/server/applications/exim';
 import { buildApplicationsZip, extractApplicationsFromZip } from '@/src/server/applications/zip-exim';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
@@ -36,14 +38,6 @@ import { getAssetDestinationError } from '@/src/utils/validation/asset-version';
 import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DialApplication } from '@/src/models/dial/application';
-
-function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
-  return {
-    success: false,
-    errorHeader: 'Validation Error',
-    errorMessage: Object.values(errors).filter(Boolean).join(', '),
-  };
-}
 
 // Besides the computed statuses, drops the read-only `client_secret_hint` and an untouched (empty) secret.
 function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
@@ -76,9 +70,10 @@ export async function getApps(path: string) {
 //todo Re-check createEntity modal, to not add unused fields
 export async function createApp(app: DialApplicationResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const t = (await getI18n()) as Translate;
   const validationErrors = validateApp(app as DialApplicationResource);
   if (Object.keys(validationErrors).length > 0) {
-    return validationFailure(validationErrors);
+    return validationFailure(validationErrors, t);
   }
 
   // Create flows seed flat `folderId`/`version`; a fetched entity carries them in `_metadata`
@@ -88,15 +83,9 @@ export async function createApp(app: DialApplicationResource) {
   const path = `${addTrailingSlash(folderId)}${getVersionedName(app.name || '', version)}`;
   const isPublicEntity = !isPlatformBucketPath(folderId) && app.name !== TEMP_FOLDER;
   const versionError = isPublicEntity
-    ? getAssetDestinationError(
-        folderId,
-        app.name || '',
-        version,
-        ResourceType.APPLICATION,
-        () => 'Invalid asset version or resource path',
-      )
+    ? getAssetDestinationError(folderId, app.name || '', version, ResourceType.APPLICATION, t)
     : null;
-  if (versionError) return validationFailure({ version: versionError.text });
+  if (versionError) return validationFailure({ version: versionError.text }, t);
   const asset = {
     ...stripMetadata(app),
     display_version: isPublicEntity ? version : app.display_version,
@@ -133,7 +122,7 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const validationErrors = validateApp(app);
   if (Object.keys(validationErrors).length > 0) {
-    return validationFailure(validationErrors);
+    return validationFailure(validationErrors, (await getI18n()) as Translate);
   }
 
   // Same flat-vs-`_metadata` resolution as `createApp` — an update's entity is a fetched, merged

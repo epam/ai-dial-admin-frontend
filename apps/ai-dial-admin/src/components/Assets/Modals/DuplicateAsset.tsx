@@ -168,6 +168,7 @@ const DuplicateAsset: FC<Props> = ({
     onDuplicate?.({
       ...clonedAsset,
       folderId: addTrailingSlash(folderId),
+      // Synchronize at submission too, including when the seeded version was never edited.
       ...(!isVersionless && { version, display_version: version }),
       _metadata: { ...clonedAsset._metadata, folderId: addTrailingSlash(folderId) },
     } as AssetWithVersion);
@@ -206,12 +207,14 @@ const DuplicateAsset: FC<Props> = ({
             onChange={onChangeVersion}
           />
         )}
-        {authType === ToolsetAuthType.API_KEY && <h3>{t(ToolsetI18nKey.ApiKey)}</h3>}
         {authType === ToolsetAuthType.API_KEY && (
-          <ApiKeyHeaderControl
-            apiKeyHeader={(clonedAsset as unknown as DialToolsetResource).auth_settings?.api_key_header}
-            onChange={onChangeApiKeyHeader}
-          />
+          <>
+            <h3>{t(ToolsetI18nKey.ApiKey)}</h3>
+            <ApiKeyHeaderControl
+              apiKeyHeader={(clonedAsset as unknown as DialToolsetResource).auth_settings?.api_key_header}
+              onChange={onChangeApiKeyHeader}
+            />
+          </>
         )}
         <FilePath
           value={folderId}

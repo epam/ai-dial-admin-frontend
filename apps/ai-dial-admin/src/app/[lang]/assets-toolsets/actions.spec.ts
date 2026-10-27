@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ErrorI18nKey } from '@/src/constants/i18n';
+
 import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/toolsets/exim';
 import * as mcpClientModule from '@/src/server/toolsets/mcp-client';
@@ -113,11 +115,19 @@ describe('Assets Toolset :: server actions', () => {
     );
   });
 
-  test.each(['bad__version', '_preview', 'bad/version', 'preview.'])(
-    'rejects invalid creation version %s before Core',
-    async (version) => {
+  test.each([
+    ['', ErrorI18nKey.RequiredField],
+    ['bad__version', ErrorI18nKey.AmbiguousAssetVersion],
+    ['_preview', ErrorI18nKey.AmbiguousAssetVersion],
+    ['bad/version', ErrorI18nKey.InvalidAssetPath],
+    ['preview.', ErrorI18nKey.InvalidAssetPath],
+    ['a'.repeat(900), ErrorI18nKey.AssetPathTooLong],
+  ])(
+    'returns a localized validation response for invalid creation version %s before Core',
+    async (version, errorMessage) => {
       const result = await createToolset(toolsetResource({ version }));
-      expect(result.success).toBe(false);
+
+      expect(result).toEqual({ success: false, errorHeader: ErrorI18nKey.ValidationError, errorMessage });
       expect(assetApi.put).not.toHaveBeenCalled();
     },
   );

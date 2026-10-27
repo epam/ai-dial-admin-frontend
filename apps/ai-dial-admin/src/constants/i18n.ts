@@ -1231,6 +1231,7 @@ export enum ErrorI18nKey {
   LocaleField = 'Error.LocaleField',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
+  ValidationError = 'Error.ValidationError',
   Error = 'Error.Error',
   DescriptionLength = 'Error.DescriptionLength',
   IntroLength = 'Error.IntroLength',

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import * as formPopupUtils from '@/src/components/Common/FormPopup/utils';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -44,6 +44,30 @@ describe('DuplicateAsset', () => {
     await user.click(submitButton);
 
     expect(onDuplicate).not.toHaveBeenCalled();
+  });
+
+  test('renders the API-key heading and header control together and preserves edits on duplicate', async () => {
+    const user = userEvent.setup();
+    const { onDuplicate } = renderModal({
+      name: 'toolset',
+      version: 'stable',
+      auth_settings: { authentication_type: ToolsetAuthType.API_KEY, api_key_header: 'X-API-Key' },
+    } as unknown as AssetWithVersion);
+
+    expect(screen.getByRole('heading', { name: ToolsetI18nKey.ApiKey })).toBeInTheDocument();
+    const headerInput = screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.apiKeyHeader) });
+    expect(headerInput).toHaveValue('X-API-Key');
+    await user.clear(headerInput);
+    await user.type(headerInput, 'Authorization');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+    expect(onDuplicate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        version: 'stable',
+        display_version: 'stable',
+        auth_settings: { authentication_type: ToolsetAuthType.API_KEY, api_key_header: 'Authorization' },
+      }),
+    );
   });
 
   test('has only a new-entity flow and synchronizes an edited text version', async () => {
