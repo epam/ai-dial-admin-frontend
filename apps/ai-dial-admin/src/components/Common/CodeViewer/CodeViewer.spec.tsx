@@ -5,7 +5,11 @@ import CodeViewer from './CodeViewer';
 
 vi.mock('@/src/components/Common/FullscreenViewer/FullscreenViewer', () => ({
   default: ({ isOpen, title }: { isOpen: boolean; title: string }) =>
-    isOpen ? <div data-testid="fullscreen-viewer">{title}</div> : null,
+    isOpen ? (
+      <div role="dialog" aria-label={title}>
+        {title}
+      </div>
+    ) : null,
 }));
 
 const sampleJson = '{"key":"value","num":42}';
@@ -50,7 +54,7 @@ describe('CodeViewer', () => {
     const fullscreenBtn = buttons[buttons.length - 1];
     fireEvent.click(fullscreenBtn);
 
-    expect(screen.getByTestId('fullscreen-viewer')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Request' })).toBeInTheDocument();
   });
 
   test('Should render copy and fullscreen buttons in header', () => {
@@ -66,6 +70,6 @@ describe('CodeViewer', () => {
     // The collapse toggle and the copy button remain; the maximize button is gone.
     const buttons = container.querySelectorAll('button');
     expect(buttons.length).toBe(2);
-    expect(screen.queryByTestId('fullscreen-viewer')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

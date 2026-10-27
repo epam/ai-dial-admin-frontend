@@ -42,6 +42,8 @@ const loadMessages = async (locale: string) => {
 
 // The JSON language service only produces English, so its markers are rewritten once they land. Writing them
 // back fires this listener again; that pass finds every message already translated and writes nothing.
+// The subscription is never disposed on purpose: Monaco is loaded once per page, and the listener must live as
+// long as it does.
 const translateJsonMarkers = (monaco: BundledMonaco) => {
   monaco.editor.onDidChangeMarkers((uris) => {
     const t = translate;
