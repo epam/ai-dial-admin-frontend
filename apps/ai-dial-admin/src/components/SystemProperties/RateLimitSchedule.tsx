@@ -1,8 +1,8 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, FocusEvent, useCallback, useEffect, useMemo } from 'react';
 
-import { Input, SelectOption, Select } from '@epam/ai-dial-ui-kit';
+import { Calendar, CalendarMode, CalendarValue, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, SystemPropertiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -65,10 +65,22 @@ const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) =
   );
 
   const onResetTimeChange = useCallback(
-    (value?: string) => {
-      onChangeRateLimitSchedule({ ...effectiveSchedule, resetTime: value ?? '' });
+    (value: CalendarValue) => {
+      if (typeof value === 'string') {
+        onChangeRateLimitSchedule({ ...effectiveSchedule, resetTime: value });
+      }
     },
     [effectiveSchedule, onChangeRateLimitSchedule],
+  );
+
+  // Calendar emits only complete times; commit its visible draft on blur so Save cannot use a stale value.
+  const onResetTimeBlur = useCallback(
+    (event: FocusEvent<HTMLInputElement>) => {
+      if (event.currentTarget.value !== effectiveSchedule.resetTime) {
+        onResetTimeChange(event.currentTarget.value);
+      }
+    },
+    [effectiveSchedule.resetTime, onResetTimeChange],
   );
 
   return (
@@ -98,16 +110,27 @@ const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) =
           disabled={isReadOnlyAdmin}
           onChange={onWeekStartDayChange}
         />
-        <Input
-          id="rate-limit-reset-time"
-          labelProps={{ label: t(SystemPropertiesI18nKey.ResetTimeLabel) }}
-          placeholder={t(SystemPropertiesI18nKey.ResetTimePlaceholder)}
-          value={effectiveSchedule.resetTime}
-          error={isResetTimeInvalid ? t(SystemPropertiesI18nKey.ResetTimeInvalid) : undefined}
-          invalid={isResetTimeInvalid}
-          disabled={isReadOnlyAdmin}
-          onChange={onResetTimeChange}
-        />
+        <div className="flex flex-col gap-2">
+          <Calendar
+            id="rate-limit-reset-time"
+            mode={CalendarMode.Time}
+            labelProps={{ label: t(SystemPropertiesI18nKey.ResetTimeLabel) }}
+            placeholder={t(SystemPropertiesI18nKey.ResetTimePlaceholder)}
+            value={effectiveSchedule.resetTime}
+            invalid={isResetTimeInvalid}
+            disabled={isReadOnlyAdmin}
+            showTimePicker
+            onChange={onResetTimeChange}
+            onBlur={onResetTimeBlur}
+            className="gap-y-2"
+            fieldClassName="dial-kit-input py-2 px-3 rounded-lg"
+          />
+          {isResetTimeInvalid && (
+            <p role="alert" className="dial-small-text text-error">
+              {t(SystemPropertiesI18nKey.ResetTimeInvalid)}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

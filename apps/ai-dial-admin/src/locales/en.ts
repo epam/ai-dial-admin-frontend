@@ -703,7 +703,7 @@ export default {
     Conversation: 'Conversation',
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
-    CatalogMetadata: 'Catalog metadata',
+    CatalogMetadata: 'Catalog Metadata',
     ApplicationRunners: 'Application Runners',
     InstallationLog: 'Installation log',
     Instances: 'Instances',

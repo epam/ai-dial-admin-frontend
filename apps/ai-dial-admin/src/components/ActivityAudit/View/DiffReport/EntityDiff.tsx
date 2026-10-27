@@ -28,7 +28,7 @@ const EntityDiff: FC<Props> = ({ currentEntity, compareEntity, type, diffView, c
   const hasSections = Object.keys(sections).length > 0;
 
   return (
-    <div className="flex flex-col size-full min-h-0 mt-8 pt-8">
+    <div className="flex flex-col size-full min-h-0 pt-8">
       {hasSections ? (
         <div className="relative flex-1 min-h-0 mb-4">
           <div
