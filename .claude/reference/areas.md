@@ -114,6 +114,7 @@ The Dashboards item exists in both Analytics and Audit; `/dashboards` belongs to
 | `AdminApiAvailability` | — (route guards on all Admin-API routes) | `Menu`, `Content`, `WelcomeView` |
 | `ConfigFiles` | — (toggle on the seven entity list views) | `Common/ConfigFilesToggle` |
 | `CatalogAvailability` | — (`catalog` token of `DISABLE_MENU_ITEMS` hiding the Core-direct items + dual-bucket root folders) | `Common/FileManager`, `Common/FilePath`, `Menu` |
+| `CatalogProperties` | — (catalog schema picker on entity properties) | `CatalogProperties` |
 
 ---
 
