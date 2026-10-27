@@ -1,7 +1,7 @@
 # toolset-vendor-website-field Specification
 
 ## Purpose
-`vendorWebsite` field support (type, form control) for Toolset only — both regular and asset variants. Added by change `add-intro-vendorwebsite-fields`; URL-format validation removed as a follow-up fix (the field is a plain string, not a validated URL). `vendorWebsite` (camelCase, on `Toolset`) and `vendor_website` (snake_case, on `DialToolsetResource` — Core's wire format for resource entities) are two separate model fields, both fed by the same `VendorWebsiteControl` (a plain `DialInput`, no validation), mounted in `Toolsets/Properties/Properties.tsx` and `Assets/Entities/Toolsets/View/Properties.tsx` respectively.
+`vendorWebsite` field support (type, form control) for Toolset only — both regular and asset variants. Added by change `add-intro-vendorwebsite-fields`; URL-format validation removed as a follow-up fix (the field is a plain string, not a validated URL). `vendorWebsite` (camelCase, on `Toolset`) and `vendor_website` (snake_case, on `DialToolsetResource` — Core's wire format for resource entities) are two separate model fields, both fed by the same `VendorWebsiteControl` (a plain `Input`, no validation), mounted in `Toolsets/Properties/Properties.tsx` and `Assets/Entities/Toolsets/View/Properties.tsx` respectively.
 
 ## Requirements
 

@@ -1,8 +1,9 @@
 'use client';
 
-import { Popup, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Popup, Steps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
   determineFilesType,
@@ -274,7 +275,13 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
       }
     >
       <div className="flex px-6 py-4 h-full flex-col">
-        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStepId} />
+        <Steps
+          steps={steps}
+          currentStep={currentStepId}
+          onChangeStep={setCurrentStepId}
+          ariaLabel={getModalTitle(route, t)}
+          statusLabels={getStepStatusLabels(t)}
+        />
         <div className={currentStepId === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
           <ImportFileTypeSelector
             files={files}

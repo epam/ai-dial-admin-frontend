@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
-import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { LabelledText } from '@epam/ai-dial-ui-kit';
 
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
@@ -98,7 +98,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
           {table.type === AnalyticsTableType.Source ? (
             <>
               {!!table.ordering_key?.length && (
-                <DialLabelledText
+                <LabelledText
                   label={
                     <KeyFieldLabel
                       label={t(AnalyticsTablesI18nKey.OrderingKey)}
@@ -110,7 +110,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
               )}
               {table.partition_by && (
                 <>
-                  <DialLabelledText
+                  <LabelledText
                     label={
                       <KeyFieldLabel
                         label={t(AnalyticsTablesI18nKey.PartitionColumn)}
@@ -119,7 +119,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
                     }
                     text={table.partition_by.column}
                   />
-                  <DialLabelledText
+                  <LabelledText
                     label={
                       <KeyFieldLabel
                         label={t(AnalyticsTablesI18nKey.Granularity)}
@@ -131,7 +131,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
                 </>
               )}
               {table.identity_column && (
-                <DialLabelledText
+                <LabelledText
                   label={
                     <KeyFieldLabel
                       label={t(AnalyticsTablesI18nKey.IdentityColumn)}
@@ -142,7 +142,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
                 />
               )}
               {table.version_column && (
-                <DialLabelledText
+                <LabelledText
                   label={
                     <KeyFieldLabel
                       label={t(AnalyticsTablesI18nKey.VersionColumn)}
@@ -161,10 +161,10 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
               {/* No KeyFieldLabel hint: unlike the keys beside it, the source table is not chosen on the
                   draft surface — it is fixed at create — so there is no explanation to keep in step. */}
               {table.source_table && (
-                <DialLabelledText label={t(AnalyticsTablesI18nKey.SourceTable)} text={table.source_table} />
+                <LabelledText label={t(AnalyticsTablesI18nKey.SourceTable)} text={table.source_table} />
               )}
               {!!table.grain?.grain_key && (
-                <DialLabelledText
+                <LabelledText
                   label={
                     <KeyFieldLabel
                       label={t(AnalyticsTablesI18nKey.GrainKey)}

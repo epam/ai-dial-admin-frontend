@@ -1,7 +1,8 @@
-import { Spinner, Popup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import { Spinner, Popup, Steps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { Container } from '@/src/models/deployments/containers';
 import { ImageGroup } from '@/src/models/deployments/images';
 import { CreateSteps } from '@/src/types/deployments/containers';
@@ -165,7 +166,13 @@ const ContainerCreate: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       }
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[450px]">
-        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
+        <Steps
+          steps={steps}
+          currentStep={currentStepId}
+          onChangeStep={setCurrentStep}
+          ariaLabel={modalTitle}
+          statusLabels={getStepStatusLabels(t)}
+        />
         <>
           {currentStepId === CreateSteps.IMAGE && (
             <>

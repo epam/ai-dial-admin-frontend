@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A single-value text field that suggests values while typing and also accepts its own, drawn in the 2.0 design system. It is the admin app's replacement for the typeable legacy select until ui-kit ships a single-value combobox.
+A single-value text field that suggests values while typing and also accepts its own, drawn in the 2.0 design system. It is the admin app's replacement for a typeable select until ui-kit ships a single-value combobox.
 
 ## Requirements
 

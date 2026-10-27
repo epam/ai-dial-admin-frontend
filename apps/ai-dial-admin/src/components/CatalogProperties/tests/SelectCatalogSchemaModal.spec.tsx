@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ColDef, GridOptions, IRowNode, RowDataUpdatedEvent, RowSelectedEvent } from 'ag-grid-community';
 import { ComponentProps } from 'react';
@@ -210,19 +210,31 @@ describe('SelectCatalogSchemaModal — filtered to an entity kind', () => {
   });
 
   /**
-   * Re-applying the filter must not hide a pick made while it was relaxed: Apply would still commit
-   * that schema, so a grid that dropped it would show nothing selected and commit it anyway.
+   * The kit grid re-selects its previous row whenever `rowData` changes, so new rows on every pick
+   * reverted the pick (#5246).
    */
-  test('keeps a cross-kind pick listed after the filter is re-applied', async () => {
-    const user = userEvent.setup();
+  test('keeps the same rows when a schema is picked', () => {
     renderModal();
+    const rowsBeforePick = capturedGridProps?.rowData;
+
+    act(() => capturedGridProps?.additionalGridOptions?.onRowSelected?.(buildRowSelectedEvent(kindless)));
+
+    expect(capturedGridProps?.rowData).toBe(rowsBeforePick);
+  });
+
+  test('still applies a cross-kind pick that the re-applied filter hides', async () => {
+    const user = userEvent.setup();
+    const onApply = vi.fn();
+    renderModal({ onApply });
     const relax = screen.getByRole('checkbox', { name: EntitiesI18nKey.ShowAllCatalogEntityKinds });
 
     await user.click(relax);
     capturedGridProps?.additionalGridOptions?.onRowSelected?.(buildRowSelectedEvent(fileDeclared));
     await user.click(relax);
+    await user.click(screen.getByRole('button', { name: 'Buttons.Apply' }));
 
-    expect(capturedGridProps?.rowData).toEqual([apiWritten, fileDeclared, kindless]);
+    expect(capturedGridProps?.rowData).toEqual([apiWritten, kindless]);
+    expect(onApply).toHaveBeenCalledWith(fileDeclared.$id);
   });
 
   test('lists every schema once the filter is relaxed', async () => {

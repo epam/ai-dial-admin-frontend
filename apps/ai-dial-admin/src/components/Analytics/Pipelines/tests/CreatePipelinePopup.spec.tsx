@@ -10,7 +10,7 @@ import { PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select the
-// options can be read out of — as the specs did when this was the 1.0 `DialSelectField`.
+// options can be read out of.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

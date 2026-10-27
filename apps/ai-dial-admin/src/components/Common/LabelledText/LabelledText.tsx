@@ -1,4 +1,4 @@
-import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { LabelledText as KitLabelledText } from '@epam/ai-dial-ui-kit';
 import { FC, ReactNode } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -15,7 +15,7 @@ interface Props {
 
 const LabelledText: FC<Props> = ({ label, text, children, tooltip, copyable, copyLabel, className }) => {
   return (
-    <DialLabelledText
+    <KitLabelledText
       className={className}
       label={label}
       text={text}
@@ -23,7 +23,7 @@ const LabelledText: FC<Props> = ({ label, text, children, tooltip, copyable, cop
       postfix={copyable ? <CopyButton value={text || ''} valueLabel={copyLabel || label} /> : null}
     >
       {children}
-    </DialLabelledText>
+    </KitLabelledText>
   );
 };
 

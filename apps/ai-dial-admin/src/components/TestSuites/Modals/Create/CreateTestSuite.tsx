@@ -1,7 +1,7 @@
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  DialSteps,
+  Steps,
   Notification,
   NotificationType,
   NotificationVariant,
@@ -10,6 +10,7 @@ import {
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { getTestSuiteByName } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import Methods from '@/src/components/TestSuites/Methods/Methods';
@@ -173,7 +174,13 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
       size={PopupSize.Lg}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[600px]">
-        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
+        <Steps
+          steps={steps}
+          currentStep={currentStepId}
+          onChangeStep={setCurrentStep}
+          ariaLabel={t(currentEntity ? TestSuitesI18nKey.UpdateTestSuite : TestSuitesI18nKey.CreateTestSuite)}
+          statusLabels={getStepStatusLabels(t)}
+        />
         <div className="flex-1 min-h-0">
           {currentStepId === TestSuitTab.Properties && (
             <TestSuiteProperties

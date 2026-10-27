@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { IconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { IconButton, LabelledText as KitLabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -39,7 +39,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
       {!!run?.testRunName && <LabelledText label={t(EntityFieldsI18nKey.name)} text={run.testRunName} />}
 
       {!!run?.testSuiteId && (
-        <DialLabelledText
+        <KitLabelledText
           label={t(RunsI18nKey.TestSuite)}
           text={testSuite?.name || run.testSuiteId}
           postfix={
@@ -53,7 +53,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
       )}
 
       {!!applicationName && (
-        <DialLabelledText
+        <KitLabelledText
           label={t(RunsI18nKey.Application)}
           text={applicationName}
           postfix={<DeploymentExternalLink suiteContext={deploymentLinkContext ?? null} />}

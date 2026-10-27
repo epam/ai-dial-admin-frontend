@@ -6,7 +6,7 @@ the latest-run KPI strip and chart sections.
 ## Requirements
 ### Requirement: Trends tab-line Preview runs badge
 When the Trends tab is active, the system SHALL render a Preview runs badge on the entity tab line
-(trailing the DialTabs). Preview runs SHALL reflect the Trends-window `runCount`: “Last 10 Runs”
+(trailing the tabs). Preview runs SHALL reflect the Trends-window `runCount`: “Last 10 Runs”
 when at least 10 runs are shown, “Last {N} Runs” when fewer than 10, and “Last 1 Run” when N is 1.
 
 #### Scenario: Preview runs shows full window

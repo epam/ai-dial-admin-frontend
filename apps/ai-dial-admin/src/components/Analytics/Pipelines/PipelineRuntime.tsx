@@ -60,7 +60,7 @@ interface Props {
 }
 
 /**
- * Undoes `DialLabelledText`'s own 200px cap. That default suits a dense form; this tab gives each value
+ * Undoes the kit `LabelledText`'s own 200px cap. That default suits a dense form; this tab gives each value
  * a quarter of the page, and a truncated cursor identity is one nobody can read or copy.
  */
 const UNCAPPED = 'max-w-none';

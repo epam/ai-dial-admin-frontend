@@ -30,7 +30,7 @@ The "Compare changes" button SHALL open `GlobalFirewallCompareModal` showing the
 
 #### Scenario: Compare changes button opens modal
 - **WHEN** user clicks the "Compare changes" button
-- **THEN** `GlobalFirewallCompareModal` SHALL open as a `DialPopup` (size Lg, 800px height, with dividers)
+- **THEN** `GlobalFirewallCompareModal` SHALL open as a `Popup` (size Lg, 800px height, with dividers)
 
 #### Scenario: Modal header shows action and resource type
 - **WHEN** the modal is open

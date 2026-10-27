@@ -101,7 +101,7 @@ The selector display SHALL prefer the live `NodePool` from the loaded list when 
 
 The selector modal SHALL be composed of three components:
 
-- `Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — the `DialPopup` shell (`PopupSize.Lg`, fixed-height container) with Cancel / Apply footer buttons; owns the pending selection and resets it to the field's current `nodePoolId` on every open.
+- `Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — the `Popup` shell (`PopupSize.Lg`, fixed-height container) with Cancel / Apply footer buttons; owns the pending selection and resets it to the field's current `nodePoolId` on every open.
 - `Deployments/NodePool/NodePoolList.tsx` — the `Search` input plus a `<ul>` of radio rows including the pinned "Any node pool" entry; owns the search query, which is reset to empty on every mount (i.e., every modal open).
 - `Deployments/NodePool/NodePoolItem.tsx` — a single radio row, wrapped in a `<label htmlFor=...>` so clicking anywhere in the row toggles the radio.
 
