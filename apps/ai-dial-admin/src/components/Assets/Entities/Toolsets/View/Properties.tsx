@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useId, useMemo } from 'react';
 
 import { Input, Switch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
@@ -51,6 +51,7 @@ const ToolsetAssetProperties: FC<Props> = ({
   publicationFolderId,
 }) => {
   const t = useI18n();
+  const displayVersionId = useId();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // A merged read carries folder and name only in `_metadata`; the create flow seeds them flat.
@@ -88,7 +89,7 @@ const ToolsetAssetProperties: FC<Props> = ({
         />
         {!isPublication && !isPlatformBucketPath(folderId) && (
           <Input
-            id="assetDisplayVersion"
+            id={displayVersionId}
             containerClassName={STANDARD_CONTROL_WIDTH}
             labelProps={{ label: t(EntityFieldsI18nKey.displayVersion) }}
             value={selectedToolset.display_version ?? ''}

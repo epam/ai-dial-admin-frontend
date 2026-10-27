@@ -164,7 +164,7 @@ const DuplicateAsset: FC<Props> = ({
   }, []);
 
   const onSubmit = () => {
-    if (isLoadingDestination || versionError || !isValid) return;
+    if (isLoadingDestination || versionError || !clonedAsset.name || !isValid) return;
     onDuplicate?.({
       ...clonedAsset,
       folderId: addTrailingSlash(folderId),

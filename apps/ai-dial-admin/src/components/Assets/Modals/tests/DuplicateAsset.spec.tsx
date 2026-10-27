@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+
+import * as formPopupUtils from '@/src/components/Common/FormPopup/utils';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -24,6 +26,26 @@ const renderModal = (entity: AssetWithVersion, onDuplicate = vi.fn()) => {
 };
 
 describe('DuplicateAsset', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('rejects an empty name even when the submit button is enabled', async () => {
+    const user = userEvent.setup();
+    const getFormPopupButtons = formPopupUtils.getFormPopupButtons;
+    vi.spyOn(formPopupUtils, 'getFormPopupButtons').mockImplementation((params) =>
+      getFormPopupButtons({ ...params, isSubmitDisabled: false }),
+    );
+    const { onDuplicate } = renderModal({ name: 'app', version: 'stable' } as AssetWithVersion);
+
+    await user.clear(screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.id) }));
+    const submitButton = screen.getByRole('button', { name: ButtonsI18nKey.Duplicate });
+    expect(submitButton).toBeEnabled();
+    await user.click(submitButton);
+
+    expect(onDuplicate).not.toHaveBeenCalled();
+  });
+
   test('has only a new-entity flow and synchronizes an edited text version', async () => {
     const user = userEvent.setup();
     const entity = {

@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useId, useMemo } from 'react';
 
 import classNames from 'classnames';
 
@@ -61,6 +61,7 @@ const ApplicationAssetProperties: FC<Props> = ({
   publicationFolderId,
 }) => {
   const t = useI18n();
+  const displayVersionId = useId();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { codeAppEditorUrl } = useAppContext();
 
@@ -104,7 +105,7 @@ const ApplicationAssetProperties: FC<Props> = ({
         />
         {!isPublication && !isPlatformBucketPath(folderId) && (
           <Input
-            id="assetDisplayVersion"
+            id={displayVersionId}
             containerClassName={STANDARD_CONTROL_WIDTH}
             labelProps={{ label: t(EntityFieldsI18nKey.displayVersion) }}
             value={asset.display_version ?? ''}

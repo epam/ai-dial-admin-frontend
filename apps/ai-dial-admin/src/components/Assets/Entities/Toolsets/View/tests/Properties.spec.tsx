@@ -68,6 +68,21 @@ describe('ToolsetAssetProperties', () => {
     expect(onChange).toHaveBeenLastCalledWith({ ...toolset, display_version: '' });
   });
 
+  test('keeps display version labels associated with distinct inputs across property panels', () => {
+    const toolset = { ...baseToolset, folderId: 'public/' };
+    render(
+      <>
+        <ToolsetAssetProperties selectedToolset={toolset} onChange={vi.fn()} />
+        <ToolsetAssetProperties selectedToolset={toolset} onChange={vi.fn()} />
+      </>,
+    );
+
+    const controls = screen.getAllByRole('textbox', { name: EntityFieldsI18nKey.displayVersion });
+    expect(controls).toHaveLength(2);
+    expect(controls[0].id).not.toBe('');
+    expect(controls[1].id).not.toBe(controls[0].id);
+  });
+
   test('disables display version for a read-only administrator', () => {
     useAppContext().isReadOnlyAdmin = true;
     render(<ToolsetAssetProperties selectedToolset={{ ...baseToolset, folderId: 'public/' }} onChange={vi.fn()} />);
