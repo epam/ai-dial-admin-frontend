@@ -5,7 +5,6 @@ import {
   DialFile,
   DialFileNodeType,
   DialUploadFileItem,
-  FileManagerColumnKey,
   FileManagerGridRow,
 } from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -60,7 +59,6 @@ import {
   BulkDeleteAssetActionMap,
   CreateAssetActionMap,
   ExportAssetActionMap,
-  getAllSelectedItemsPaths,
   GetAssetActionMap,
   getEmptyAsset,
   getEmptyStateContent,
@@ -74,8 +72,9 @@ import {
   PlatformCreateAssetActionMap,
   PlatformGetAssetActionMap,
 } from './utils';
+import { extractNameAndVersion } from '@/src/server/publications/path';
+import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
 import { ImportResult } from '@/src/components/Assets/types';
-import { compareVersions } from '@/src/utils/entities/versions';
 
 interface Props {
   view: ApplicationRoute;
@@ -88,10 +87,8 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
   const [duplicateItem, setDuplicateItem] = useState<AssetWithVersion | null>(null);
-  const [selectedVersionsMap, setSelectedVersionsMap] = useState<Record<string, string[]>>({});
   const [names, setNames] = useState<string[]>([]);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
-  const [hasSelectedItems, setHasSelectedItems] = useState(false);
   const [deletedItems, setDeletedItems] = useState<DialFile[] | null>(null);
   const [exportedItems, setExportedItems] = useState<DialFile[] | null>(null);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set());
@@ -207,17 +204,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
     [view, router, pointerClickModifierRef, filePath],
   );
 
-  const gridItemVersionsChange = useCallback(
-    (value: string | string[], data: unknown) => {
-      const assetData = data as AssetWithVersion;
-      setSelectedVersionsMap({
-        ...selectedVersionsMap,
-        [`${assetData.folderId}${assetData.name}`]: Array.isArray(value) ? value : [value],
-      });
-    },
-    [selectedVersionsMap],
-  );
-
   const handlePathChange = useCallback(
     (nextPath?: string) => {
       if (nextPath) {
@@ -229,7 +215,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
   const handleSelectedPathsChange = useCallback((paths: Set<string>) => {
     setSelectedPaths(paths);
-    setHasSelectedItems(paths.size > 0);
   }, []);
 
   const removeSelection = useCallback(
@@ -244,14 +229,13 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         newPaths.delete(path);
       });
       setSelectedPaths(newPaths);
-      setHasSelectedItems(newPaths.size > 0);
     },
     [selectedPaths],
   );
 
   const columnDefs = useMemo(() => {
-    return getGridColumns(view, gridItemVersionsChange, selectedVersionsMap, hasSelectedItems, filePath);
-  }, [view, gridItemVersionsChange, hasSelectedItems, selectedVersionsMap, filePath]);
+    return getGridColumns(view, filePath);
+  }, [view, filePath]);
 
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
@@ -407,20 +391,27 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
       const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
       files.forEach((file) => {
-        const duplicateName = file.destinationUrl
-          .split('/')
-          .filter((p) => p != null)
-          .pop();
+        const destinationLeaf = file.destinationUrl.split('/').filter(Boolean).pop();
+        const resourceType = getResourceTypeByRoute(view);
+        const sourceLeaf = file.sourceUrl.slice(file.sourceUrl.lastIndexOf('/') + 1);
+        const sourceVersion = extractNameAndVersion(sourceLeaf).version;
+        const versionSuffix = sourceVersion == null ? '' : `__${sourceVersion}`;
+        const hasSourceVersionSuffix = !!(
+          destinationLeaf &&
+          resourceType &&
+          VERSIONED_RESOURCE_TYPES.some((type) => type === resourceType) &&
+          versionSuffix &&
+          destinationLeaf.endsWith(versionSuffix)
+        );
+        const duplicateName = hasSourceVersionSuffix
+          ? destinationLeaf?.slice(0, -versionSuffix.length)
+          : destinationLeaf;
 
         if (sourceFolder !== destinationFolder) {
           // Move file
           const filePaths = [];
           const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
-          // A versionless row is its own whole resource — no per-row version selection to expand.
-          const paths = isVersionlessAssetView(view)
-            ? [file.sourceUrl]
-            : getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
-          filePaths.push(...paths.map((path: string) => path.replaceAll('//', '/')));
+          filePaths.push(file.sourceUrl.replaceAll('//', '/'));
           // A platform-bucket row (AssetsApplications/AssetsToolsets browsed under `platform/`) has
           // no folder concept — Core has no move route for it. `DialCopiedItem` never carries
           // `bucket` (it's a ui-kit drag-event payload, not a row model), so this reads the path
@@ -457,7 +448,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
       return Promise.all(promises);
     },
-    [selectedVersionsMap, view],
+    [view],
   );
 
   const onImport = useCallback(
@@ -510,62 +501,10 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
     [destinationFolder, handleModalClose, fetchFiles, runImport, showNotification, view, t],
   );
 
-  const processAssetsData = useCallback(
-    (assets: AssetWithVersion[]): AssetWithVersion[] => {
-      const processedAssets = assets.map((asset) => {
-        if (asset.nodeType === DialFileNodeType.FOLDER && asset.items) {
-          return { ...asset, items: processAssetsData(asset.items) };
-        }
-        return asset;
-      });
-
-      // A versionless row (prompt/conversation) is a single stored resource — no same-name version
-      // merging, no per-row version selection state.
-      if (isVersionlessAssetView(view)) {
-        return processedAssets;
-      }
-
-      return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
-        if (curr.nodeType === DialFileNodeType.ITEM) {
-          curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
-          const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
-          if (existing) {
-            if (!existing.versions) existing.versions = [];
-            if (!existing.versions.includes(curr.version)) {
-              existing.versions.push(curr.version);
-            }
-            if (compareVersions(curr.version, existing.version) > 0) {
-              existing.path = curr.path;
-              existing.version = curr.version;
-            }
-            existing.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [existing.version];
-          } else {
-            acc.push({ ...curr, versions: [curr.version] });
-          }
-        } else {
-          acc.push(curr);
-        }
-        return acc;
-      }, []);
-    },
-    [selectedVersionsMap, view],
-  );
-
   const onExport = useCallback(
     (fileType: ImportFileType) => {
       setSelectedPaths(new Set());
-      setHasSelectedItems(false);
-      const filePaths: string[] = [];
-      (exportedItems as AssetWithVersion[]).forEach((file) => {
-        if (isVersionlessAssetView(view)) {
-          // A versionless row exports its own plain path — no per-row version expansion.
-          filePaths.push(file.path);
-        } else if (file.selectedVersions) {
-          filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
-        } else {
-          filePaths.push(file.path);
-        }
-      });
+      const filePaths = (exportedItems || []).map((file) => file.path);
 
       const exportAsset = ExportAssetActionMap[view as CrudAssetRoute];
 
@@ -601,27 +540,8 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
       const promises = [];
       if (assets.length > 0) {
-        const isVersionless = isVersionlessAssetView(view);
-        // `etag` is optional here and ignored by every entry except `bulkDeleteSkills`, whose delete
-        // has no content GET to source an etag from and so requires one from the listing row.
-        const assetsPaths: { path: string; etag?: string }[] = [];
-        assets.forEach((asset) => {
-          // A versionless row deletes its own plain path — no per-row version expansion, and no
-          // `__`-prefix key to clear from the version-selection map.
-          const paths = isVersionless ? [asset.path] : getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
-          if (paths.length > 0) {
-            assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag || DEFAULT_ETAG })));
-          } else {
-            assetsPaths.push({ path: asset.path, etag: asset.etag || DEFAULT_ETAG });
-          }
-          if (!isVersionless) {
-            const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
-            setSelectedVersionsMap({
-              ...selectedVersionsMap,
-              [prefix]: [],
-            });
-          }
-        });
+        // Only skills use the optional listing etag for bulk deletion.
+        const assetsPaths = assets.map((asset) => ({ path: asset.path, etag: asset.etag || DEFAULT_ETAG }));
         promises.push(bulkDeleteAsset(assetsPaths));
       }
       const resourceType = getResourceTypeByRoute(view);
@@ -666,7 +586,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
     }
   }, [
     deletedItems,
-    selectedVersionsMap,
     destinationFolder,
     fetchFiles,
     setFilePath,
@@ -706,8 +625,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         onMoveItems={handleMoveItems}
         onOpenInNewTab={handleOpenInNewTab}
         onTableFileClick={handleGridItemClick}
-        filterData={processAssetsData}
-        nonClickableTableColumns={hasSelectedItems ? [FileManagerColumnKey.Version] : []}
         onPathChange={handlePathChange}
         onSelectedPathsChange={handleSelectedPathsChange}
         selectedPaths={selectedPaths}
@@ -726,7 +643,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         runners={runners || []}
         translators={translators}
         versionsMap={versionsMap}
-        selectedVersionsMap={selectedVersionsMap}
         preselectedItems={dragAndDropsItems}
         duplicateItem={duplicateItem}
         deletedItems={deletedItems}
@@ -738,7 +654,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         onDuplicate={handleDuplicate}
         onRemove={onMultipleRemove}
         onCreateFolder={handleCreateFolder}
-        hasSelectedItems={hasSelectedItems}
       />
     </>
   );

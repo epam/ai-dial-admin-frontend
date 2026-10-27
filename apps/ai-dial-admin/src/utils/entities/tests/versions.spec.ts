@@ -1,10 +1,9 @@
 import {
   checkNameVersionCombination,
-  getInitialVersion,
   getNameVersionForAsset,
   getNameVersionFromAsset,
   modifyNameVersionInAsset,
-} from '../versions';
+} from '@/src/utils/entities/versions';
 import { describe, expect, test } from 'vitest';
 
 // These helpers serve the versioned asset views (applications/toolsets) only — prompts and
@@ -77,28 +76,6 @@ describe('Versions utils :: modifyNameVersionInAsset', () => {
   test('Should handle path with name change but no version present', () => {
     const res = modifyNameVersionInAsset('prompts/public/JustName', 'Renamed');
     expect(res).toEqual('prompts/public/Renamed');
-  });
-});
-
-describe('Versions utils :: getInitialVersion', () => {
-  test('Should return latest version + 1', () => {
-    const res = getInitialVersion({ versions: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
-    expect(res).toEqual('1.0.4');
-  });
-
-  test('Should return latest version + 1', () => {
-    const res = getInitialVersion({ versions: ['2.0.1', '1.0.2', '1.0.3'] }, 'versions');
-    expect(res).toEqual('2.0.2');
-  });
-
-  test('Should return empty string', () => {
-    const res = getInitialVersion({ versions1: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
-    expect(res).toEqual('');
-  });
-
-  test('Should return latest version + 1', () => {
-    const res = getInitialVersion({ versions: ['2.0.0-draft', '2.0.draft'] }, 'versions');
-    expect(res).toEqual('1.0.0');
   });
 });
 

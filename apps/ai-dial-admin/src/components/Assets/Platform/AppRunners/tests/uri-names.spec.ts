@@ -43,7 +43,7 @@ describe('App runner asset :: URI-shaped names', () => {
 });
 
 describe('App runner asset :: created time column', () => {
-  const columnsOf = () => getGridColumns(VIEW, () => void 0, {}, false);
+  const columnsOf = () => getGridColumns(VIEW);
 
   test('Should expose createdAt as a locale-aware column factory, not a raw field', () => {
     const createdAt = columnsOf()[2] as unknown as (

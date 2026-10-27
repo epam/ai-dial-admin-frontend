@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { createApp } from '@/src/app/[lang]/assets-applications/actions';
 import { FrameMessageType } from '@/src/components/FrameRenderer/constants';
 import {
   FRAME_ORIGIN,
@@ -15,7 +14,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { NotificationType } from '@/src/models/notification';
-import AppView from '../View';
+import AppView from '@/src/components/Assets/Entities/Apps/View';
 
 const refresh = vi.fn();
 const fetchFiles = vi.fn();
@@ -45,15 +44,7 @@ const application = {
 
 const renderView = () =>
   render(
-    <AppView
-      etag="etag"
-      originalApp={application}
-      assets={[application]}
-      models={[]}
-      applications={[]}
-      schemes={[]}
-      interceptors={[]}
-    />,
+    <AppView etag="etag" originalApp={application} models={[]} applications={[]} schemes={[]} interceptors={[]} />,
   );
 
 const postDirty = (isDirty: boolean) => postFromFrame({ type: FrameMessageType.DirtyState, payload: { isDirty } });
@@ -62,7 +53,7 @@ const postValidity = (isValid: boolean) =>
   postFromFrame({ type: FrameMessageType.ValidityState, payload: { isValid } });
 
 const getSave = () => screen.getByRole('button', { name: ButtonsI18nKey.Save });
-const getSaveAsNewVersion = () => screen.getByRole('button', { name: ButtonsI18nKey.SaveAsNewVersion });
+const getSaveAsNewVersion = () => screen.queryByRole('button', { name: ButtonsI18nKey.SaveAsNewVersion });
 const getDiscard = () => screen.getByRole('button', { name: ButtonsI18nKey.Discard });
 
 describe('AppView — iframe Save and Discard', () => {
@@ -87,6 +78,8 @@ describe('AppView — iframe Save and Discard', () => {
 
     expect(getSave()).toBeEnabled();
     expect(getDiscard()).toBeEnabled();
+    expect(screen.queryByText('1.0.0')).toBeNull();
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 
   test('sends TRIGGER_SAVE instead of saving the entity and disables both save buttons while pending', async () => {
@@ -100,20 +93,15 @@ describe('AppView — iframe Save and Discard', () => {
     expect(postMessage).toHaveBeenCalledWith({ type: FrameMessageType.TriggerSave }, FRAME_ORIGIN);
     expect(protectedRequest).not.toHaveBeenCalled();
     expect(getSave()).toBeDisabled();
-    expect(getSaveAsNewVersion()).toBeDisabled();
+    expect(getSaveAsNewVersion()).toBeNull();
   });
 
-  test('keeps the entity path for Save as new version while the iframe is dirty', async () => {
-    const user = userEvent.setup();
+  test('does not offer Save as new version while the iframe is dirty', () => {
     renderView();
     postDirty(true);
-    const postMessage = spyOnFramePostMessage();
 
-    await user.click(getSaveAsNewVersion());
-    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: ButtonsI18nKey.Create }));
-
-    expect(protectedRequest).toHaveBeenCalledWith(createApp, expect.anything(), 'etag');
-    expect(postMessage).not.toHaveBeenCalled();
+    expect(getSave()).toBeEnabled();
+    expect(getSaveAsNewVersion()).toBeNull();
   });
 
   test('notifies, refetches the folder, refreshes and hides the buttons when the save succeeds', async () => {
@@ -186,7 +174,7 @@ describe('AppView — iframe form validity', () => {
 
     expect(getSave()).toBeDisabled();
     expect(getDiscard()).toBeEnabled();
-    expect(getSaveAsNewVersion()).toBeEnabled();
+    expect(getSaveAsNewVersion()).toBeNull();
   });
 
   test('enables Save again when the form becomes valid', () => {
