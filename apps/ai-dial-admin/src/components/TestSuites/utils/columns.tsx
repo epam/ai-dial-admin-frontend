@@ -448,7 +448,7 @@ export const getVariablesColumns = (
             },
           };
         }
-        if (params.data?.effectiveType == TestCaseItemType.SKILL) {
+        if (params.data?.effectiveType === TestCaseItemType.SKILL) {
           return {
             component: SkillSelectCellRenderer,
             params: {

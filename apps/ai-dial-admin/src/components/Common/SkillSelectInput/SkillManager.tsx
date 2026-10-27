@@ -32,7 +32,7 @@ const SkillManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedSkillPath
     setExpandedFolders,
   } = useSkillFolder();
 
-  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const [loadedPaths, setLoadedPaths] = useState(new Set<string>());
 
   useEffect(() => {
     if ((files == null || files.length === 0) && isModalOpen) {

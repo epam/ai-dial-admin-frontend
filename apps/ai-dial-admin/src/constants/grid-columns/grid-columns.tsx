@@ -1978,9 +1978,7 @@ export const getFormDataColumns = (
         if (params.data?.type === FormDataType.Skill) {
           return {
             component: SkillSelectCellRenderer,
-            params: {
-              onChange: onChange,
-            },
+            params: { onChange },
           };
         }
         return {
