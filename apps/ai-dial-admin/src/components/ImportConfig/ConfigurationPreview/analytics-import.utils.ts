@@ -1,4 +1,4 @@
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem, TabStatus } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridOptions, ICellRendererParams, IRowNode, RowClassParams } from 'ag-grid-community';
 
 import {
@@ -13,6 +13,7 @@ import { CatalogImportEntry, CatalogImportPreview, CatalogImportResult } from '@
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { AnalyticsImportPreviewTab, CatalogImportAction, CatalogImportStatus } from '@/src/types/analytics/import';
 import { ImportConfigurationAction } from '@/src/types/import';
+import { getTabStatusProps } from '@/src/utils/tabs/utils';
 
 const TAB_LABEL_KEYS: Record<AnalyticsImportPreviewTab, string> = {
   [AnalyticsImportPreviewTab.TABLES]: ImportI18nKey.AnalyticsTables,
@@ -97,11 +98,11 @@ export const getAnalyticsImportRows = (
 export const getAnalyticsImportTabs = (
   rows: Record<AnalyticsImportPreviewTab, AnalyticsImportRow[]>,
   t: (key: string) => string,
-): TabModel[] =>
+): TabItem[] =>
   Object.values(AnalyticsImportPreviewTab).map((id) => ({
     id,
     label: t(TAB_LABEL_KEYS[id]),
-    invalid: rows[id].some((row) => row.isInvalid),
+    ...getTabStatusProps(t, rows[id].some((row) => row.isInvalid) ? TabStatus.Error : undefined),
   }));
 
 const column = (field: string, headerName: string): ColDef => ({ field, colId: field, headerName });

@@ -58,10 +58,11 @@ The system SHALL expose one detail page at `/containers/[id]` for viewing and ed
 - **THEN** the page SHALL render the not-found page
 
 #### Scenario: Companion entity per type
-- **WHEN** the user views a container of type ADAPTER, INTERCEPTOR or MCP
-- **THEN** the page SHALL offer to create the linked entity of that type (adapter, interceptor, toolset) and SHALL validate the new entity's name against existing entities of that type
-- **WHEN** the user views a container of type APPLICATION
-- **THEN** the page SHALL NOT display a picker or prompt to create a linked `DialApplication` entity
+- **WHEN** the user views a RUNNING container of type ADAPTER, INTERCEPTOR, APPLICATION or MCP and the admin API is available
+- **THEN** the page SHALL offer to create the linked admin-backend entity of that type (adapter, interceptor, application, toolset), validated against existing admin-backend entities of that type
+- **THEN** the page SHALL also offer to create the Core asset for that container, per `container-core-assets`
+- **WHEN** the admin API is unavailable
+- **THEN** the page SHALL offer only the Core asset, per `container-core-assets`
 
 #### Scenario: Tabs per type
 - **WHEN** the user opens containers of different types

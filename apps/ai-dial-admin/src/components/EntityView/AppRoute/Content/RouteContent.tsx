@@ -1,9 +1,10 @@
 'use client';
 import { FC, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { Tabs } from '@epam/ai-dial-ui-kit';
 
 import RouteProperties from '@/src/components/Routes/View/Properties/RouteProperties';
+import { TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialAppRoute } from '@/src/models/dial/route';
@@ -30,7 +31,12 @@ const RouteContent: FC<Props> = ({ route, disabled, routeNames, onChangeRoute, .
   return (
     <div className="size-full p-4 flex flex-col">
       <div className="mb-4">
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+        <Tabs
+          tabs={tabs}
+          activeTabId={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as EntityViewTab)}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
+        />
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto mt-4 lg:mt-0">

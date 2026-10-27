@@ -24,8 +24,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         ))}
       </div>
     ),
+    Tooltip: ({ children }: any) => <>{children}</>,
     DialAnalyticsBarGroup: ({ title, data, onBarClick }: any) => (
-      <div role="group" aria-label={String(title)}>
+      <div role="group" aria-label={title.props.name}>
+        {title}
         {Object.entries(data || {}).map(([name, value]) => (
           <button key={name} onClick={() => onBarClick?.(name, value)}>
             {name}:{String(value)}

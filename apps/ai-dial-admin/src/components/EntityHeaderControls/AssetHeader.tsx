@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import EntityValidityBadge from '@/src/components/Common/EntityValidityBadge/EntityValidityBadge';
 import { EntityValidityInput } from '@/src/components/Common/EntityValidityBadge/models';
@@ -13,7 +13,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import AssetButtonsWrapper, { AssetButtonsWrapperProps } from './Wrappers/AssetButtonsWrapper';
 
 interface Props extends AssetButtonsWrapperProps {
-  tabs: TabModel[];
+  tabs: TabItem[];
   activeTab: EntityViewTab;
   children?: ReactNode;
 

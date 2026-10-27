@@ -133,9 +133,9 @@ const EditableCellRenderer = ({
           min={min ?? inputProps?.min}
           max={max ?? inputProps?.max}
           className={classNames(
-            'leading-[18px] h-[32px] dial-input px-2 py-1',
-            !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
-            required && (correctValue == null || correctValue === '') && 'dial-input-error',
+            'leading-[18px] h-[32px] dial-kit-input px-2 py-1',
+            !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-kit-input-error',
+            required && (correctValue == null || correctValue === '') && 'dial-kit-input-error',
             isMaxValue && 'placeholder:text-primary',
             isRightAligned && 'text-right',
           )}

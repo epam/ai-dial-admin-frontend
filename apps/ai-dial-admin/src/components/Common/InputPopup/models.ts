@@ -7,6 +7,7 @@ export interface InputPopupProps {
   onOpen: () => void;
   disabled?: boolean;
   inputClassName?: string;
+  wrapperClassName?: string;
   placeholder?: string;
   elementId?: string;
   errorText?: string;

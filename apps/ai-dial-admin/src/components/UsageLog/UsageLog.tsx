@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
-import { OutlinedButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton, Tabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -86,7 +86,12 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
       <div className="flex flex-row h-[40px] justify-between mb-4">
         {!entityView && (
           <div className="flex-1 min-w-0">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            <Tabs
+              tabs={tabs}
+              activeTabId={activeTab}
+              onTabChange={onChangeActiveTab}
+              ariaLabel={t(TabsI18nKey.ListLabel)}
+            />
           </div>
         )}
         <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>

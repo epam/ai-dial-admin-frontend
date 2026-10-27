@@ -1,4 +1,4 @@
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem, TabStatus } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { isNull, startCase } from 'lodash';
 
@@ -31,6 +31,7 @@ import { ImportConfigurationAction } from '@/src/types/import';
 import { ExportConfigComponentType, ValidationError, ValidationState } from '@/src/types/deployments/import';
 import { RowImportMeta, ValidationSummary } from '@/src/models/deployments/import';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
+import { getTabStatusProps } from '@/src/utils/tabs/utils';
 
 const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: string) => string) => {
   return componentItems?.map((componentItem) => ({
@@ -43,7 +44,7 @@ const getPrevItems = (componentItems: FileComponentItem[]) => {
   return componentItems?.map((componentItem) => componentItem?.prev).filter(Boolean);
 };
 
-const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabModel[] => {
+const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabItem[] => {
   return getEntitiesList(t)
     ?.map((entityTab) => {
       const previewItem = preview[entityTab.id];
@@ -265,7 +266,7 @@ export const getDeploymentConfigurationPreview = (
 ): {
   previewData: Record<string, BaseEntity[]>;
   prevData: Record<string, (BaseEntity | undefined)[]>;
-  tabs: TabModel[];
+  tabs: TabItem[];
   globalFirewall: FileComponentItem | null;
   firewallErrorsByDomain: Record<string, string[]>;
   validationSummary: ValidationSummary;
@@ -297,7 +298,7 @@ export const getDeploymentConfigurationPreview = (
 
   const previewData: Record<string, BaseEntity[]> = {};
   const prevData: Record<string, (BaseEntity | undefined)[]> = {};
-  const tabs: TabModel[] = [];
+  const tabs: TabItem[] = [];
 
   for (const { id, labelKey } of DEPLOYMENT_ENTITY_TABS) {
     const entries = grouped[id];
@@ -324,7 +325,7 @@ export const getDeploymentConfigurationPreview = (
       tabs.push({
         id,
         label: `${t(labelKey)}: ${items.length}`,
-        invalid: (errorsByTab[id] ?? 0) > 0,
+        ...getTabStatusProps(t, (errorsByTab[id] ?? 0) > 0 ? TabStatus.Error : undefined),
       });
     }
   }
@@ -334,7 +335,7 @@ export const getDeploymentConfigurationPreview = (
     tabs.push({
       id: GLOBAL_FIREWALL_TAB_ID,
       label: t(DeploymentsI18nKey.GlobalFirewall),
-      invalid: firewallErrors.length > 0,
+      ...getTabStatusProps(t, firewallErrors.length > 0 ? TabStatus.Error : undefined),
     });
   }
 

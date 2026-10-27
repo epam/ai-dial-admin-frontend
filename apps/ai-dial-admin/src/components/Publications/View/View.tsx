@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Notification, NotificationType, NotificationVariant } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, NotificationVariant, TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import { getSkillManifest, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/skills/actions';
@@ -40,7 +40,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { buildSkillManifest, parseSkillManifest, SkillManifest } from '@/src/utils/skill-manifest';
-import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getPublicationViewTabs, getTabStatusProps } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 import { getCorrectPublication, getFormDataForPublication } from './utils';
@@ -195,12 +195,12 @@ const PublicationView = <T extends Publication>({ view, publication, application
     setTabs((prev) => {
       return prev.map((tab) => {
         if (tab.id === EntityViewTab.Permissions) {
-          return { ...tab, warning: isPermissionsChanged };
+          return { ...tab, ...getTabStatusProps(t, isPermissionsChanged ? TabStatus.Warning : undefined) };
         }
         return tab;
       });
     });
-  }, [isPermissionsChanged]);
+  }, [isPermissionsChanged, t]);
 
   useEffect(() => {
     if (selectedPublication.folderId === addTrailingSlash(ROOT_FOLDER) || !selectedPublication.folderId.endsWith('/')) {

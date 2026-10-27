@@ -1,11 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { updateProperties } from '@/src/app/[lang]/system-properties/actions';
 import SystemProperties from '@/src/components/SystemProperties/SystemProperties';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { ValidationActionType } from '@/src/context/SaveValidationContext';
+import {
+  ButtonsI18nKey,
+  EntitiesI18nKey,
+  SystemPropertiesI18nKey,
+  TabsI18nKey,
+  UpdateI18nKey,
+} from '@/src/constants/i18n';
+import { SaveValidationContextProvider, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { GlobalSettings, RateLimitSchedule, WeekDay } from '@/src/models/system-properties';
 
@@ -19,20 +25,23 @@ vi.mock('@/src/context/NotificationContext', () => ({
 
 vi.mock('@/src/app/[lang]/system-properties/actions');
 
-// Save's disabled state comes from the save-validation context, consumed inside ChangedEntityButtons,
-// and the real reporter (RateLimitSchedule) is mocked below — so this controllable stand-in lets the
-// page be exercised at both isValid values. Everything else in the module stays real (the provider,
-// the enum) via importOriginal.
+// Most page tests use controllable validation. Picker integration cases switch to the real hook and
+// provider so blur-to-Save ordering is tested through the actual validation reducer.
 const validationContext = vi.hoisted(() => ({
   isValid: true,
+  isUsingRealSchedule: false,
   dispatch: vi.fn(),
   jsonErrors: [] as unknown[],
   jsonErrorNotifications: [] as unknown[],
 }));
-vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/src/context/SaveValidationContext')>()),
-  useSaveValidationContext: () => validationContext,
-}));
+vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/src/context/SaveValidationContext')>();
+  return {
+    ...original,
+    useSaveValidationContext: () =>
+      validationContext.isUsingRealSchedule ? original.useSaveValidationContext() : validationContext,
+  };
+});
 
 // AG Grid is heavy and not meaningful in jsdom — stand in with a button that fires the same
 // onChangeInterceptors contract the real grid's drag/add/remove handlers all funnel into.
@@ -49,20 +58,29 @@ const VALID_SCHEDULE: RateLimitSchedule = {
   weekStartDay: WeekDay.Sun,
   resetTime: '09:30',
 };
-vi.mock('@/src/components/SystemProperties/RateLimitSchedule', () => ({
-  default: ({
-    schedule,
-    onChangeRateLimitSchedule,
-  }: {
-    schedule?: RateLimitSchedule;
-    onChangeRateLimitSchedule: (schedule: RateLimitSchedule) => void;
-  }) => (
-    <div>
-      <span>schedule-timezone:{schedule?.timezone ?? 'absent'}</span>
-      <button onClick={() => onChangeRateLimitSchedule(VALID_SCHEDULE)}>change-schedule</button>
-    </div>
-  ),
-}));
+vi.mock('@/src/components/SystemProperties/RateLimitSchedule', async (importOriginal) => {
+  const { default: RealRateLimitSchedule } =
+    await importOriginal<typeof import('@/src/components/SystemProperties/RateLimitSchedule')>();
+  return {
+    default: ({
+      schedule,
+      onChangeRateLimitSchedule,
+    }: {
+      schedule?: RateLimitSchedule;
+      onChangeRateLimitSchedule: (schedule: RateLimitSchedule) => void;
+    }) => {
+      if (validationContext.isUsingRealSchedule) {
+        return <RealRateLimitSchedule schedule={schedule} onChangeRateLimitSchedule={onChangeRateLimitSchedule} />;
+      }
+      return (
+        <div>
+          <span>schedule-timezone:{schedule?.timezone ?? 'absent'}</span>
+          <button onClick={() => onChangeRateLimitSchedule(VALID_SCHEDULE)}>change-schedule</button>
+        </div>
+      );
+    },
+  };
+});
 
 const INTERCEPTORS_MOCK: DialInterceptor[] = [];
 
@@ -72,12 +90,14 @@ const renderSystemProperties = (props?: {
   optionWarnings?: EntitiesI18nKey[];
 }) =>
   render(
-    <SystemProperties
-      interceptors={INTERCEPTORS_MOCK}
-      globalSettings={props?.globalSettings ?? null}
-      doesSettingsExist={props?.doesSettingsExist ?? false}
-      optionWarnings={props?.optionWarnings}
-    />,
+    <SaveValidationContextProvider>
+      <SystemProperties
+        interceptors={INTERCEPTORS_MOCK}
+        globalSettings={props?.globalSettings ?? null}
+        doesSettingsExist={props?.doesSettingsExist ?? false}
+        optionWarnings={props?.optionWarnings}
+      />
+    </SaveValidationContextProvider>,
   );
 
 const openRateLimitScheduleTab = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -88,6 +108,7 @@ describe('SystemProperties', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     validationContext.isValid = true;
+    validationContext.isUsingRealSchedule = false;
   });
 
   test('saves with an undefined etag when no settings blob exists yet', async () => {
@@ -232,5 +253,77 @@ describe('SystemProperties', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
 
     expect(screen.getByText('schedule-timezone:America/New_York')).toBeTruthy();
+  });
+
+  test('saves the visually selected time with other settings and the existing success notification', async () => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    vi.mocked(updateProperties).mockResolvedValue({ success: true });
+    renderSystemProperties({
+      doesSettingsExist: true,
+      globalSettings: {
+        globalInterceptors: ['existing-interceptor'],
+        retriableErrorCodes: [500],
+        rateLimitSchedule: VALID_SCHEDULE,
+      },
+    });
+
+    await openRateLimitScheduleTab(user);
+    await user.click(screen.getByRole('button', { name: 'Choose time' }));
+    await user.click(within(screen.getByRole('listbox', { name: 'Hours' })).getByRole('option', { name: '14' }));
+    await user.click(within(screen.getByRole('listbox', { name: 'Minutes' })).getByRole('option', { name: '05' }));
+    expect(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel })).toHaveValue('14:05');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(updateProperties).toHaveBeenCalledWith(
+      {
+        globalInterceptors: ['existing-interceptor'],
+        retriableErrorCodes: [500],
+        rateLimitSchedule: { ...VALID_SCHEDULE, resetTime: '14:05' },
+      },
+      '*',
+    );
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: UpdateI18nKey.NotificationTitle }));
+    expect(routerRefresh).toHaveBeenCalledOnce();
+  });
+
+  test('restores the stored time after discarding a visual selection', async () => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
+
+    await openRateLimitScheduleTab(user);
+    await user.click(screen.getByRole('button', { name: 'Choose time' }));
+    await user.click(within(screen.getByRole('listbox', { name: 'Minutes' })).getByRole('option', { name: '05' }));
+    expect(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel })).toHaveValue('09:05');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+
+    expect(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel })).toHaveValue('09:30');
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
+    expect(updateProperties).not.toHaveBeenCalled();
+  });
+
+  test.each(['', '09'])('blocks Save when the focused time field contains the incomplete draft "%s"', async (draft) => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
+
+    await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
+    await openRateLimitScheduleTab(user);
+    const save = screen.getByRole('button', { name: ButtonsI18nKey.Save });
+    expect(save).toBeEnabled();
+    const resetTime = screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel });
+    await user.clear(resetTime);
+    if (draft) {
+      await user.type(resetTime, draft);
+    }
+    expect(resetTime).toHaveFocus();
+    await user.click(save);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(SystemPropertiesI18nKey.ResetTimeInvalid);
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    expect(updateProperties).not.toHaveBeenCalled();
+    expect(showNotification).not.toHaveBeenCalled();
   });
 });

@@ -156,6 +156,7 @@ const MetricConfiguration: FC<Props> = ({
             <JsonEditor
               entity={metricConfigData as object}
               setSelectedEntity={onChangeMetricConfigData as Dispatch<SetStateAction<MetricConfigurationData>>}
+              shouldPreserveEditorOnEquivalentEntityChange
             />
           </div>
         ) : (

@@ -54,6 +54,7 @@ import {
   MetricStatistic,
   TestCaseStatusCounts,
 } from './models';
+import { toCount } from '@/src/utils/formatting/number-formatting';
 
 /**
  * Query: count of test-case eval scores grouped by threshold `passed` and execution status.
@@ -411,11 +412,6 @@ export const getMetricStatCards = (data: MetricScoresData | null, metricName: st
     }
   }
   return cards;
-};
-
-const toCount = (value: unknown): number => {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
 };
 
 /** True when a snapshotted (or live) overall score threshold is set, including `0`. */

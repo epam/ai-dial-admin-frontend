@@ -1,6 +1,9 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
+import { OutlinedButton } from '@epam/ai-dial-ui-kit';
+import AutocompleteInput from '@/src/components/Common/AutocompleteInput/AutocompleteInput';
+import { FIELD_ALIGNED_BUTTON_CLASS_NAME } from '@/src/components/Deployments/Fields/ContainerSource/constants';
+import { AutocompleteInputOption } from '@/src/components/Common/AutocompleteInput/models';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -12,9 +15,14 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { createPortal } from 'react-dom';
 import McpRegistryModal from '@/src/components/Deployments/Modals/McpRegistryModal/McpRegistryModal';
-import classNames from 'classnames';
 import { McpRegistryFetchFn, McpServer, McpServerResponse } from '@/src/types/deployments/mcp-registry';
 import { ApplicationRoute } from '@/src/types/routes';
+import { MCP_REGISTRY_PAGE_SIZE } from '@/src/constants/deployments/mcp-registry';
+
+// The backend applies the container/image filter page by page and stops after a fixed number of
+// upstream pages, so `limit` is also how much of the registry it scans: a page of 5 left most searches
+// with no match. Both requests ask for a full registry page and the field shows the first few.
+const SUGGESTION_COUNT = 5;
 
 interface Props {
   fetchServers: McpRegistryFetchFn;
@@ -39,8 +47,16 @@ const McpServerNameField: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
-  const [serverOptions, setServerOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
+  const [serverOptions, setServerOptions] = useState<AutocompleteInputOption[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // A typed name reaches `onChangeServerName` only when the field is left or a suggestion is picked.
+  const [serverNameText, setServerNameText] = useState(serverName);
+  const [isLoadingServers, setIsLoadingServers] = useState(false);
+  const latestQueryRef = useRef('');
+
+  useEffect(() => {
+    setServerNameText(serverName);
+  }, [serverName]);
 
   const [serverNameError, setServerNameError] = useState<FieldError | null>(null);
 
@@ -71,7 +87,7 @@ const McpServerNameField: FC<Props> = ({
   const validateAndApplyServer = useCallback(
     (name: string, version?: string) => {
       const intentKey = version ? `${name}@${version}` : name;
-      fetchServers({ search: name, limit: 10 }).then(({ success, response }) => {
+      fetchServers({ search: name, limit: MCP_REGISTRY_PAGE_SIZE }).then(({ success, response }) => {
         if (!success) return;
         // Drop the response if the user has since changed/cleared the input, or
         // picked a different version of the same name.
@@ -124,43 +140,64 @@ const McpServerNameField: FC<Props> = ({
 
   const onServerNameType = useMemo(
     () =>
-      debounce((value: string) => {
+      debounce(async (value: string) => {
+        latestQueryRef.current = value;
         if (value.length <= 2) {
           setServerOptions([]);
+          setIsLoadingServers(false);
           return;
         }
-        fetchServers({ search: value, limit: 5 }).then(({ success, response }) => {
-          if (success) {
-            const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
-            if (servers.length) {
-              setServerOptions(
-                servers.map((s) => ({ value: `${s.name}@${s.version}`, label: s.name, description: s.version })),
-              );
-            }
+        setIsLoadingServers(true);
+        try {
+          const { success, response } = await fetchServers({ search: value, limit: MCP_REGISTRY_PAGE_SIZE });
+          // A slower response for an earlier query must not replace the current one's suggestions.
+          if (latestQueryRef.current !== value) return;
+          const servers = success
+            ? ((response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[])
+            : [];
+          setServerOptions(
+            servers
+              .slice(0, SUGGESTION_COUNT)
+              .map((s) => ({ value: `${s.name}@${s.version}`, label: s.name, description: s.version })),
+          );
+        } finally {
+          if (latestQueryRef.current === value) {
+            setIsLoadingServers(false);
           }
-        });
+        }
       }, 100),
     [fetchServers],
   );
 
-  const handleInlineQueryChange = useCallback(
-    (value: string) => {
+  const onServerNameTextChange = useCallback(
+    (text: string) => {
+      setServerNameText(text);
       // Record intent synchronously so an in-flight lookup that resolves after this
-      // change is recognised as stale; the options fetch stays debounced. Ignore the
-      // kit's post-selection echo (it re-emits the label/name of the value we just
-      // committed) so it doesn't drop the version from a freshly applied pick.
-      // The select also reports an empty query when its list closes after a pick; that is not user
-      // input, and treating it as intent would drop the lookup the pick just started.
-      if (!value) {
-        return;
-      }
-      const committedName = latestIntentRef.current.split('@')[0];
-      if (value !== committedName) {
-        latestIntentRef.current = value;
-      }
-      onServerNameType(value);
+      // change is recognised as stale; the options fetch stays debounced.
+      latestIntentRef.current = text;
+      onServerNameType(text);
     },
     [onServerNameType],
+  );
+
+  const onPickServer = useCallback(
+    (option: AutocompleteInputOption) => {
+      setServerNameText(option.label);
+      onChangeServerName(option.value);
+    },
+    [onChangeServerName],
+  );
+
+  const onCommitServerName = useCallback(
+    (text: string) => {
+      // Leaving the field untouched must not re-resolve an applied server by name alone, which
+      // would swap its version for whichever one the registry lists first.
+      if (text === serverName) {
+        return;
+      }
+      onChangeServerName(text);
+    },
+    [onChangeServerName, serverName],
   );
 
   const handleModalClose = useCallback(() => {
@@ -186,17 +223,19 @@ const McpServerNameField: FC<Props> = ({
 
   return (
     <>
-      <div className="flex gap-3 w-full">
-        <Select
+      <div className="flex items-start gap-3 w-full">
+        <AutocompleteInput
           id="mcpServerName"
           labelProps={{ label: t(EntityFieldsI18nKey.McpServerName), required: true }}
           placeholder={t(EntityPlaceholdersI18nKey.McpServerName)}
-          searchable
-          value={serverName}
-          customSelectedValue={serverName}
-          onChange={(value) => onChangeServerName(value as string)}
-          onSearchQueryChange={handleInlineQueryChange}
-          options={serverOptions}
+          value={serverNameText}
+          suggestions={serverOptions}
+          isLoading={isLoadingServers}
+          shouldFilterSuggestions={false}
+          openOnFocus
+          onChange={onServerNameTextChange}
+          onSelect={onPickServer}
+          onCommit={onCommitServerName}
           error={serverNameError?.text}
           invalid={!!serverNameError?.text}
           className={containerClassName}
@@ -206,7 +245,7 @@ const McpServerNameField: FC<Props> = ({
           onClick={handleModalOpen}
           label={t(ButtonsI18nKey.McpRegistry)}
           iconBefore={<OpenPopup {...BASE_BUTTON_ICON_PROPS} />}
-          className={classNames(serverNameError?.text ? 'self-center mb-1' : 'self-end', 'shrink-0')}
+          className={FIELD_ALIGNED_BUTTON_CLASS_NAME}
           disabled={disabled}
         />
       </div>

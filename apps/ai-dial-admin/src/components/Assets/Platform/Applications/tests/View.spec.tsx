@@ -125,8 +125,10 @@ describe('PlatformApplicationView', () => {
       />,
     );
 
-    const rolesTab = screen.getByRole('tab', { name: TabsI18nKey.Roles });
-    expect(!!rolesTab.querySelector('svg.tabler-icon-alert-triangle')).toBe(expectedWarning);
+    const warnedRolesTab = screen.queryByRole('tab', {
+      name: new RegExp(`${TabsI18nKey.Roles}.*${TabsI18nKey.StatusWarning}`),
+    });
+    expect(!!warnedRolesTab).toBe(expectedWarning);
   });
 
   test('Should mark the entity read-only when config-file-sourced, and clear it on unmount', () => {

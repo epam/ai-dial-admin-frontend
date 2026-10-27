@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { TabModel } from '@epam/ai-dial-ui-kit';
+import { TabItem } from '@epam/ai-dial-ui-kit';
 
 import { AppContextType } from '@/src/context/AppContext';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
@@ -10,7 +10,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ModelView from '../View';
 
 interface SimpleHeaderMockProps {
-  tabs?: TabModel[];
+  tabs?: TabItem[];
 }
 
 const { useAppContextMock, simpleHeaderSpy } = vi.hoisted(() => ({

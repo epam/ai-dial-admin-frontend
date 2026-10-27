@@ -1,6 +1,7 @@
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test, vi } from 'vitest';
 
 import {
@@ -82,6 +83,8 @@ import {
   trendsTab,
   applicationTab,
   routesTab,
+  getTabStatusLabel,
+  getTabStatusProps,
 } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -706,5 +709,33 @@ describe('Entities :: tabs', () => {
 
   test('returns correct file select input tabs', () => {
     expect(getFileSelectInputTabs(t)).toEqual([publicTab(t), applicationTab(t)]);
+  });
+});
+
+describe('tab status', () => {
+  test.each([
+    [TabStatus.Error, TabsI18nKey.StatusError],
+    [TabStatus.Warning, TabsI18nKey.StatusWarning],
+  ])('returns the translated label for %s', (status, key) => {
+    expect(getTabStatusLabel(status, t)).toBe(key);
+  });
+
+  test('getTabStatusProps sets status and statusLabel together', () => {
+    expect(getTabStatusProps(t, TabStatus.Error)).toEqual({
+      status: TabStatus.Error,
+      statusLabel: TabsI18nKey.StatusError,
+    });
+  });
+
+  test('getTabStatusProps clears both fields without a status', () => {
+    expect(getTabStatusProps(t)).toEqual({ status: undefined, statusLabel: undefined });
+  });
+
+  test('propertiesTab and rolesTab carry a warning status only when asked', () => {
+    expect(propertiesTab(t, true)).toMatchObject({ status: TabStatus.Warning, statusLabel: TabsI18nKey.StatusWarning });
+    expect(rolesTab(t, true).status).toBe(TabStatus.Warning);
+    expect(propertiesTab(t).status).toBeUndefined();
+    expect(firewallTab(t, true).status).toBe(TabStatus.Warning);
+    expect(firewallTab(t, false).status).toBeUndefined();
   });
 });

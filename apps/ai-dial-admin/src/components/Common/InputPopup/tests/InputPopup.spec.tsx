@@ -15,31 +15,24 @@ const renderPopup = (props: Partial<InputPopupProps> = {}) => {
 };
 
 describe('InputPopup', () => {
-  test('Should show the selected value and open on click', () => {
+  test('Should show the selected value and open only from the icon button', () => {
     const { onOpen } = renderPopup();
 
     const input = screen.getByRole('textbox');
     expect(input).toHaveValue('Github (1.2.1)');
     fireEvent.click(input);
 
-    expect(onOpen).toHaveBeenCalledTimes(1);
-  });
+    expect(onOpen).not.toHaveBeenCalled();
 
-  test('Should open on Enter and Space', () => {
-    const { onOpen } = renderPopup();
-    const input = screen.getByRole('textbox');
+    fireEvent.click(screen.getByRole('button'));
 
-    fireEvent.keyDown(input, { key: 'Enter' });
-    fireEvent.keyDown(input, { key: ' ' });
-
-    expect(onOpen).toHaveBeenCalledTimes(2);
+    expect(onOpen).toHaveBeenCalledOnce();
   });
 
   test('Should not open when disabled', () => {
     const { onOpen } = renderPopup({ disabled: true });
 
     fireEvent.click(screen.getByRole('textbox'));
-    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
 
     expect(onOpen).not.toHaveBeenCalled();
   });

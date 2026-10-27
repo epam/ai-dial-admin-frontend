@@ -1,13 +1,13 @@
 'use client';
 
-import { FC, KeyboardEvent } from 'react';
+import { FC } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DIAL_ICON_SIZE, IconButton, Input, TagInput } from '@epam/ai-dial-ui-kit';
 import { IconArrowsDiagonal } from '@tabler/icons-react';
-import classNames from 'classnames';
 
 import { InputPopupProps } from '@/src/components/Common/InputPopup/models';
+import OverflowValueTooltip from '@/src/components/Common/OverflowValueTooltip/OverflowValueTooltip';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -19,6 +19,7 @@ const InputPopup: FC<InputPopupProps> = ({
   onOpen,
   disabled = false,
   inputClassName,
+  wrapperClassName,
   placeholder,
   elementId,
   errorText,
@@ -41,20 +42,14 @@ const InputPopup: FC<InputPopupProps> = ({
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onOpenPopup();
-    }
-  };
-
   const openIcon = <IconArrowsDiagonal size={DIAL_ICON_SIZE.SM} aria-hidden />;
 
   const getIconAfter = () => {
     if (disabled) return undefined;
-    if (!editable) return openIcon;
 
-    return <IconButton icon={openIcon} aria-label={t(ButtonsI18nKey.Open)} onClick={onOpenPopup} />;
+    return (
+      <IconButton className="size-auto" icon={openIcon} aria-label={t(ButtonsI18nKey.Open)} onClick={onOpenPopup} />
+    );
   };
 
   const renderTrigger = () => {
@@ -72,33 +67,36 @@ const InputPopup: FC<InputPopupProps> = ({
             fieldClassName={inputClassName}
           />
           {!disabled && (
-            <button
-              type="button"
-              className="absolute inset-0 w-full cursor-pointer"
-              aria-label={t(ButtonsI18nKey.Open)}
-              onClick={onOpenPopup}
-            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <IconButton
+                className="size-auto"
+                icon={openIcon}
+                aria-label={t(ButtonsI18nKey.Open)}
+                onClick={onOpenPopup}
+              />
+            </div>
           )}
         </div>
       );
     }
 
     return (
-      <Input
-        id={elementId}
-        value={text}
-        placeholder={placeholder ?? emptyValueText}
-        readOnly={!editable}
-        disabled={disabled}
-        invalid={isInvalid}
-        error={errorText}
-        iconBefore={iconBefore}
-        iconAfter={getIconAfter()}
-        containerClassName={classNames(inputClassName, { 'cursor-pointer': !editable && !disabled })}
-        onChange={editable ? (value) => onValueChange?.(value ?? '') : undefined}
-        onClick={editable ? undefined : onOpenPopup}
-        onKeyDown={editable ? undefined : onKeyDown}
-      />
+      <OverflowValueTooltip text={String(text ?? '')}>
+        <Input
+          id={elementId}
+          value={text}
+          placeholder={placeholder ?? emptyValueText}
+          readOnly={!editable}
+          disabled={disabled}
+          invalid={isInvalid}
+          error={errorText}
+          iconBefore={iconBefore}
+          iconAfter={getIconAfter()}
+          containerClassName={inputClassName}
+          onChange={editable ? (value) => onValueChange?.(value ?? '') : undefined}
+          wrapperClassName={wrapperClassName}
+        />
+      </OverflowValueTooltip>
     );
   };
 

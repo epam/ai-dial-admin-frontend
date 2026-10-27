@@ -2,7 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Spinner, PrimaryButton, Switch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { Spinner, PrimaryButton, Switch, Tabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -23,7 +23,7 @@ import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import JsonView from '@/src/components/Common/JsonView/JsonView';
-import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -224,10 +224,11 @@ const SystemRollback: FC = () => {
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">
         <div className="pt-6 pb-4">
-          <DialTabs
+          <Tabs
             tabs={tabs}
-            activeTab={selectedTab}
-            onClick={(tab) => setSelectedTab(tab as ActivityAuditResourceType)}
+            activeTabId={selectedTab}
+            onTabChange={(tab) => setSelectedTab(tab as ActivityAuditResourceType)}
+            ariaLabel={t(TabsI18nKey.ListLabel)}
           />
         </div>
         <div className="flex-1 min-h-0 flex flex-row w-full mb-4 mt-2 overflow-auto">

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { CollapsibleSidebar, NoDataContent, DialTabs, TabModel, TabOrientation } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, NoDataContent, Tabs, TabItem, TabOrientation } from '@epam/ai-dial-ui-kit';
 
 import { Pod } from '@/src/models/deployments/containers';
 import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -17,27 +17,20 @@ interface Props {
   pods: Pod[];
 }
 
-function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
-  return pods.map((pod: Pod, index) => ({
-    id: pod?.name || `${index}`,
-    label: (
-      <div className="flex w-full dial-tiny-text justify-between">
-        {`${t(ContainersI18nKey.Pod)} ${index + 1}`}
-        {!!pod?.restartCount && (
-          <p>
-            <span className="text-secondary">{`${t(EntityFieldsI18nKey.Restarts)}:`}</span>
-            <span className="text-primary pl-1">{pod?.restartCount}</span>
-          </p>
-        )}
-      </div>
-    ),
-  }));
+function getPodsTabs(pods: Pod[], t: (key: string) => string): TabItem[] {
+  return pods.map((pod: Pod, index) => {
+    const podLabel = `${t(ContainersI18nKey.Pod)} ${index + 1}`;
+    return {
+      id: pod?.name || `${index}`,
+      label: pod?.restartCount ? `${podLabel} · ${t(EntityFieldsI18nKey.Restarts)}: ${pod.restartCount}` : podLabel,
+    };
+  });
 }
 
 const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
   const t = useI18n();
 
-  const [tabs, setTabs] = useState<TabModel[]>([]);
+  const [tabs, setTabs] = useState<TabItem[]>([]);
   const [activeTab, setActiveTab] = useState<string>('');
 
   const onChangeActiveTab = useCallback(
@@ -67,12 +60,12 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
               title={t(ContainersI18nKey.Pods)}
               className="bg-layer-3 border-transparent mr-0"
             >
-              <DialTabs
+              <Tabs
                 tabs={tabs}
-                activeTab={activeTab}
-                onClick={onChangeActiveTab}
+                activeTabId={activeTab}
+                onTabChange={onChangeActiveTab}
                 orientation={TabOrientation.Vertical}
-                desktopTabClassName="[&>span]:max-w-[320px]"
+                ariaLabel={t(ContainersI18nKey.Pods)}
               />
             </CollapsibleSidebar>
           )}

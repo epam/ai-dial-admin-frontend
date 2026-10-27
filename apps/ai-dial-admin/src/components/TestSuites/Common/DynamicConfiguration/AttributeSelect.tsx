@@ -97,7 +97,7 @@ const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange
         aria-expanded={isOpen}
         aria-controls={listboxId}
         disabled={disabled}
-        className="dial-input flex cursor-pointer items-center justify-between gap-2 px-3 dial-small-text"
+        className="dial-kit-input flex cursor-pointer items-center justify-between gap-2 px-3 dial-small-text"
       >
         <span className={classNames('truncate', value ? 'text-primary' : 'text-secondary')}>
           {value || t(TestSuitesI18nKey.SelectAttribute)}

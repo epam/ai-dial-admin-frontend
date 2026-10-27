@@ -94,8 +94,8 @@ const columnRank = ({ colId }: ColumnState): number => {
 
 // The select column stays first and the actions column last, whatever slot a stored order or a rebuild with
 // another column set (a folder showing fewer columns) left them in.
-export const withUtilityColumnsAtEdges = (columns: ColumnState[]): ColumnState[] =>
-  [...columns].sort((a, b) => columnRank(a) - columnRank(b));
+export const withUtilityColumnsAtEdges = (columns?: ColumnState[]): ColumnState[] =>
+  [...(columns || [])].sort((a, b) => columnRank(a) - columnRank(b));
 
 // Works on the grid's own order: a column the applied state does not list stays where `maintainColumnOrder`
 // slotted it, which for a re-added utility column is next to the surviving data column.

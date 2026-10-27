@@ -39,6 +39,7 @@ const CompareControl: FC<Props> = ({ compareView, setCompareView }) => {
       options={items}
       value={compareView}
       onChange={(v) => onChange(v as string)}
+      className="w-auto"
     />
   );
 };

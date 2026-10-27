@@ -38,17 +38,18 @@ const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>>
               {row.value}
             </span>
           ))}
-          {value.valueRow && (
-            <div className="flex items-center gap-1">
-              <span
-                aria-hidden
-                className={classNames('size-[15px] rounded-xs shrink-0 border', value.valueRow.className)}
-              />
-              <span className="dial-tiny-text text-control-inverted whitespace-nowrap">{value.valueRow.value}</span>
+          {hasValueDisplay && (
+            <div className="flex items-center gap-1 rounded-sm bg-overlay px-0.5">
+              {value.valueRow && (
+                <span
+                  aria-hidden
+                  className={classNames('size-[15px] rounded-xs shrink-0 border', value.valueRow.className)}
+                />
+              )}
+              <span className="dial-tiny-text text-primary whitespace-nowrap">
+                {value.valueRow?.value ?? value.valueText}
+              </span>
             </div>
-          )}
-          {!value.valueRow && value.valueText != null && (
-            <span className="dial-tiny-text text-control-inverted whitespace-nowrap">{value.valueText}</span>
           )}
         </div>
       </div>

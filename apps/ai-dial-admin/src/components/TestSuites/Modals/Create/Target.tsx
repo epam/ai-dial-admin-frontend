@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { Tabs } from '@epam/ai-dial-ui-kit';
 
 import { getDeployments, getRoutes } from '@/src/app/[lang]/test-suites/actions';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
@@ -12,7 +12,7 @@ import {
   MCP_DEPLOYMENTS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { MCP_INTERFACE_FILTER } from '@/src/constants/deployment-interfaces';
-import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, MenuI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, DeploymentType, RouteTarget } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
@@ -132,7 +132,7 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
     <div className="size-full flex flex-col">
       <div className="flex flex-row mb-4 items-center justify-between">
         <div className="flex-1 min-w-0">
-          <DialTabs tabs={tabs} activeTab={activeTab} onClick={setActiveTab} />
+          <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={setActiveTab} ariaLabel={t(TabsI18nKey.ListLabel)} />
         </div>
       </div>
 
