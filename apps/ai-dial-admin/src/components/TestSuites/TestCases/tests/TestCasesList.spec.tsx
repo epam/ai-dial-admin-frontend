@@ -551,18 +551,18 @@ describe('TestCasesList — multi-turn grouping', () => {
       capturedDuplicateOperation?.onClick(capturedRowData![0] as GroupedGridRow);
     });
 
-    await vi.waitFor(() =>
-      expect(actions.createTestCase).toHaveBeenCalledWith('ds-1', {
-        testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix} 2`,
-        data: { persona: { name: 'Ada' } },
-        multiTurnData: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
-      }),
-    );
     const [, duplicateBody] = vi.mocked(actions.createTestCase).mock.calls[0];
     expect(duplicateBody).not.toHaveProperty('id');
     expect(duplicateBody.data).not.toBe(sourceCase.data);
     expect(duplicateBody.multiTurnData).not.toBe(sourceCase.multiTurnData);
-    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => {
+      expect(actions.createTestCase).toHaveBeenCalledWith('ds-1', {
+        testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix} 2`,
+        data: { persona: { name: 'Ada' } },
+        multiTurnData: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
+      });
+      expect(actions.getTestCases).toHaveBeenCalledTimes(2);
+    });
   });
 
   test('does not add a duplicate action when the dataset is read-only', async () => {

@@ -201,25 +201,26 @@ describe('DatasetTestCasesList', () => {
     render(<DatasetTestCasesList dataset={objectPerTurnDataset} />);
     await vi.waitFor(() => expect(capturedRowData).toHaveLength(2));
 
+    expect(capturedDuplicateOperation).toBeDefined();
     expect(capturedDuplicateOperation?.id).toBe('ActionMenuOperation.Duplicate');
     await act(async () => {
       capturedDuplicateOperation?.onClick(capturedRowData![0] as GroupedGridRow);
     });
 
-    await vi.waitFor(() =>
-      expect(actions.createTestCase).toHaveBeenCalledWith('ds-1', {
-        testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix} 2`,
-        data: { shared: { value: 'shared' } },
-        multiTurnData: [{ value: { nested: { value: 1 } } }, { value: { nested: { value: 2 } } }, { value: 'c' }],
-      }),
-    );
     const [, duplicateBody] = vi.mocked(actions.createTestCase).mock.calls[0];
     expect(duplicateBody).not.toHaveProperty('id');
     expect(duplicateBody.data).not.toBe(sourceCase.data);
     expect(duplicateBody.multiTurnData).not.toBe(sourceCase.multiTurnData);
     expect(duplicateBody.multiTurnData?.[0]).not.toBe(sourceCase.multiTurnData?.[0]);
     expect(duplicateBody.multiTurnData?.[0].value).not.toBe(sourceCase.multiTurnData?.[0].value);
-    await vi.waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => {
+      expect(actions.createTestCase).toHaveBeenCalledWith('ds-1', {
+        testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix} 2`,
+        data: { shared: { value: 'shared' } },
+        multiTurnData: [{ value: { nested: { value: 1 } } }, { value: { nested: { value: 2 } } }, { value: 'c' }],
+      });
+      expect(actions.getTestCases).toHaveBeenCalledTimes(2);
+    });
   });
 
   test('notifies when creating a duplicate fails', async () => {

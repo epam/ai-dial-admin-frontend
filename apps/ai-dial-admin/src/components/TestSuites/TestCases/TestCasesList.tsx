@@ -17,7 +17,6 @@ import {
   NewColumnsLoadedEvent,
   SelectionChangedEvent,
 } from 'ag-grid-community';
-import { cloneDeep } from 'lodash';
 
 import {
   createTestCase,
@@ -418,8 +417,8 @@ const TestCasesList: FC<Props> = ({
             existingNames,
             t(BasicI18nKey.DuplicateCopyPostfix),
           ),
-          data: cloneDeep(sourceCase.data ?? {}),
-          ...(sourceCase.multiTurnData ? { multiTurnData: cloneDeep(sourceCase.multiTurnData) } : {}),
+          data: structuredClone(sourceCase.data ?? {}),
+          ...(sourceCase.multiTurnData ? { multiTurnData: structuredClone(sourceCase.multiTurnData) } : {}),
         });
         if (response?.success) {
           refreshGrid();

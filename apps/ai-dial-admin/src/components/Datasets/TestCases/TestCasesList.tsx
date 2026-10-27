@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom';
 
 import { ConfirmationPopup, Spinner } from '@epam/ai-dial-ui-kit';
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode, SelectionChangedEvent } from 'ag-grid-community';
-import { cloneDeep } from 'lodash';
 
 import {
   createTestCase,
@@ -267,8 +266,8 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
             existingNames,
             t(BasicI18nKey.DuplicateCopyPostfix),
           ),
-          data: cloneDeep(sourceCase.data ?? {}),
-          ...(sourceCase.multiTurnData ? { multiTurnData: cloneDeep(sourceCase.multiTurnData) } : {}),
+          data: structuredClone(sourceCase.data ?? {}),
+          ...(sourceCase.multiTurnData ? { multiTurnData: structuredClone(sourceCase.multiTurnData) } : {}),
         });
         if (response?.success) {
           refreshGridRef.current();
