@@ -21,7 +21,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   const descriptionClassName = classNames(!description && 'hidden');
   const rectangleClassName = classNames(
     'rounded-xs border',
-    description ? ' inline-block w-[14px] h-[14px]' : 'w-[24px] h-[24px] flex items-center justify-center',
+    description ? 'inline-block w-[14px] h-[14px]' : 'w-[24px] h-[24px] flex items-center justify-center',
   );
 
   return (

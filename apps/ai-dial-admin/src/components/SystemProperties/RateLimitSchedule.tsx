@@ -76,8 +76,9 @@ const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) =
   // Calendar emits only complete times; commit its visible draft on blur so Save cannot use a stale value.
   const onResetTimeBlur = useCallback(
     (event: FocusEvent<HTMLInputElement>) => {
-      if (event.currentTarget.value !== effectiveSchedule.resetTime) {
-        onResetTimeChange(event.currentTarget.value);
+      const value = event.currentTarget.value;
+      if (value !== effectiveSchedule.resetTime) {
+        onResetTimeChange(value);
       }
     },
     [effectiveSchedule.resetTime, onResetTimeChange],

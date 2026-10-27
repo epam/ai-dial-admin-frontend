@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ComponentProps, useState } from 'react';
 
 import RateLimitSchedule from '@/src/components/SystemProperties/RateLimitSchedule';
@@ -51,6 +51,10 @@ describe('RateLimitSchedule', () => {
     useAppContext().isReadOnlyAdmin = false;
   });
 
+  afterEach(() => {
+    useAppContext().isReadOnlyAdmin = false;
+  });
+
   test('renders the schedule controls with their labels and a time picker', () => {
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
@@ -59,6 +63,11 @@ describe('RateLimitSchedule', () => {
     expect(getResetTime()).toHaveValue('09:30');
     expect(screen.getByRole('button', { name: 'Choose time' })).toBeTruthy();
     expect(screen.getByText(SystemPropertiesI18nKey.RateLimitScheduleDescription)).toBeTruthy();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ValidationActionType.SetField,
+      field: 'rateLimitSchedule',
+      isValid: true,
+    });
   });
 
   test('reflects the stored timezone and week start day', () => {
