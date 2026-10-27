@@ -40,6 +40,7 @@ const FilterControl: FC<Props> = ({ diffView, setDiffView, isResources }) => {
       prefix={`${t(CompareI18nKey.View)}: `}
       ariaLabel={t(CompareI18nKey.View)}
       onChange={(v) => onChange(v as string)}
+      className="w-auto"
     />
   );
 };

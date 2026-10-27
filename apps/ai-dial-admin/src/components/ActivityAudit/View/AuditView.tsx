@@ -233,8 +233,8 @@ const AuditView: FC<Props> = ({
             </div>
           </div>
         )}
-        <div className="flex-1 flex flex-col relative divide-y divide-primary min-h-0">
-          <div className="flex flex-col gap-4">
+        <div className="flex-1 flex flex-col relative min-h-0">
+          <div className="flex flex-col gap-4 pb-8 border-b border-primary">
             <div className="flex flex-row items-center justify-between">
               {isModalView && (
                 <>
@@ -272,7 +272,7 @@ const AuditView: FC<Props> = ({
                 2,
               )}
               original={JSON.stringify(previousRevision || {}, null, 2)}
-              containerClassName="mt-8 pt-8"
+              containerClassName="pt-8"
             />
           ) : (
             <EntityDiff
