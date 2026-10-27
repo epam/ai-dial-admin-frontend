@@ -79,6 +79,19 @@ describe('SkillSelectInput', () => {
     expect(confirm).toBeDisabled();
   });
 
+  test('forgets a cancelled pick, so reopening does not allow confirming a skill the dialog does not show', async () => {
+    const user = userEvent.setup();
+    renderInput();
+
+    await user.click(screen.getByRole('button', { name: 'open' }));
+    await user.click(screen.getByRole('button', { name: 'pick-skill' }));
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    await user.click(screen.getByRole('button', { name: 'open' }));
+
+    expect(screen.getByRole('button', { name: 'Buttons.Confirm' })).toBeDisabled();
+    expect(onChangeValue).not.toHaveBeenCalled();
+  });
+
   test('shows the stored reference and hands the browser the path without the prefix', async () => {
     const user = userEvent.setup();
     renderInput({ value: 'skills/public/my-skill' });

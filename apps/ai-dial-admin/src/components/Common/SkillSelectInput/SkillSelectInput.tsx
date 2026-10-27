@@ -32,6 +32,12 @@ const SkillSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputC
 
   const skillReference = toSkillSelectPath(value);
 
+  const onOpen = useCallback(() => {
+    // A pick that was cancelled must not survive into the next open: the browser would not show it as selected.
+    setSelectedSkillPath(null);
+    setIsModalOpen(true);
+  }, []);
+
   const onConfirm = useCallback(() => {
     onChangeValue(selectedSkillPath ? `${SKILLS_PREFIX}${selectedSkillPath}` : '');
     setIsModalOpen(false);
@@ -47,7 +53,7 @@ const SkillSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputC
             disabled={disabled || isReadOnlyAdmin}
             open={isModalOpen}
             selectedValue={skillReference}
-            onOpen={() => setIsModalOpen(true)}
+            onOpen={onOpen}
             emptyValueText={t(BasicI18nKey.None)}
             inputClassName={inputClassName}
             editable
