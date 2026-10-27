@@ -176,15 +176,6 @@
 
     &.align-right {
       @apply justify-end;
-
-      // The kit grid wraps every value in a full-width dropdown trigger, and plain values
-      // in an ellipsis span that carries text-start. justify-end on the cell cannot move
-      // that wrapper. @apply drops !important, and Tailwind emits text-start with it, so
-      // the override has to be important too or the counts stay on the left.
-      .dial-kit-dropdown,
-      .dial-kit-ellipsis-tooltip {
-        @apply text-right!;
-      }
     }
   }
   .ag-cell.ag-cell-first-right-pinned:not(
@@ -271,6 +262,17 @@
     &.ag-row-hover:not(.ag-full-width-row):before {
       @apply bg-transparent;
     }
+  }
+}
+
+// The kit grid wraps every value in a full-width dropdown trigger, and plain values in an ellipsis
+// span that carries text-start. justify-end on the cell cannot move that wrapper. Tailwind emits
+// text-start as !important inside the utilities layer, and an important layered rule beats an
+// important unlayered one, so the override has to live in that layer too.
+@layer utilities {
+  .ag-root-wrapper .ag-cell.align-right .dial-kit-dropdown,
+  .dial-kit-grid .ag-root-wrapper .ag-cell.align-right .dial-kit-ellipsis-tooltip {
+    text-align: inherit !important;
   }
 }
 

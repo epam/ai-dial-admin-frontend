@@ -20,7 +20,7 @@ export const nameColumnSizing: Partial<ColDef> = { width: 400, minWidth: 260 };
 /** Right-aligns cell and header content. Split out of `numericColumn` so a column with its own
  * `valueGetter`/comparator/filter can opt into alignment alone. */
 export const rightAlignedColumn: Partial<ColDef> = {
-  cellClass: 'align-right',
+  cellClass: 'align-right text-right',
   headerClass: 'align-right',
 };
 
