@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
 import { DialRoute } from '@/src/models/dial/route';
 import { Deployment } from '@/src/models/evaluation/deployment';
@@ -302,18 +302,22 @@ describe('EditRequestWizard', () => {
     const user = userEvent.setup();
     renderWizard({ isNewRequest: true });
 
-    expect(screen.getByRole('button', { name: `2${TestSuitesI18nKey.Configuration}` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: TestSuitesI18nKey.Configuration })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Back }));
 
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.Configuration })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: `${TestSuitesI18nKey.Configuration}${BasicI18nKey.StepCompleted}` }),
+    ).toBeInTheDocument();
   });
 
   test('treats Configuration as already complete when editing an existing request', () => {
     renderWizard({ isNewRequest: false });
 
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.Configuration })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: `${TestSuitesI18nKey.Configuration}${BasicI18nKey.StepCompleted}` }),
+    ).toBeInTheDocument();
   });
 
   test('Save stays enabled on Configuration for a new request even before it has been visited via Next', async () => {

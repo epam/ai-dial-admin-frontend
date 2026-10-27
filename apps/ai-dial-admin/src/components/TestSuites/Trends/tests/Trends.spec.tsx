@@ -37,7 +37,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </button>
   ),
   ElementSize: { Small: 'small' },
-  DialAnalyticsCard: ({ title, value }: { title: string; value?: string }) => (
+  AnalyticsCard: ({ title, value }: { title: string; value?: string }) => (
     <div>
       <span>{title}</span>
       <span>{value}</span>

@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { IconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { IconButton, LabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
@@ -105,7 +105,7 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, runs, primaryTestSuite, co
       )}
 
       {!hasDifferentSuites && !!suiteId && (
-        <DialLabelledText
+        <LabelledText
           label={t(RunsI18nKey.TestSuite)}
           text={suiteName}
           postfix={

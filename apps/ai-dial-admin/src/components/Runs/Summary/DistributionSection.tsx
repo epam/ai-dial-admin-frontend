@@ -4,8 +4,8 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   AnalyticsCardVariant,
-  DialAnalyticsCard,
-  DialAnalyticsHistogram,
+  AnalyticsCard,
+  AnalyticsHistogram,
   Select,
   ElementSize,
   SelectOption,
@@ -94,7 +94,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
     }
     return (
       <div className="flex flex-col gap-4 [&_[data-histogram-y-axis]]:min-w-4">
-        <DialAnalyticsHistogram
+        <AnalyticsHistogram
           title=""
           values={histogramValues ?? []}
           valueTitle={t(RunsI18nKey.DistributionValueTitle)}
@@ -103,7 +103,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
         {statCards.length > 0 && (
           <div className={DISTRIBUTION_STAT_CARDS_GRID_CLASS}>
             {statCards.map((card) => (
-              <DialAnalyticsCard
+              <AnalyticsCard
                 key={card.name}
                 variant={AnalyticsCardVariant.Compact}
                 title={card.name}

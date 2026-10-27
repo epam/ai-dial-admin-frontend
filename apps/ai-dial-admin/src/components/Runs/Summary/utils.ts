@@ -235,7 +235,7 @@ export const splitMetricName = (metricName: string): { group: string; bar: strin
 /**
  * Ensures every configured metric appears in Metric Scores, even when `metric_score_results` has no
  * per-statistic rows (e.g. the metric 422'd on every test case). Missing bars are `null` so
- * `DialAnalyticsBarGroup` can render an em dash. When the run has configured metrics but no
+ * `AnalyticsBarGroup` can render an em dash. When the run has configured metrics but no
  * statistic rows, AVG is seeded so the section has a selectable statistic.
  */
 export const fillUnscoredMetricBars = (data: MetricScoresData, options: MetricOption[]): MetricScoresData => {
@@ -336,7 +336,7 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
 
 /**
  * Query: the raw metric-score values for a run's eval summaries, one row per test case. The values are
- * fed directly to `DialAnalyticsHistogram`, which buckets them into its 12 columns (a dedicated exact-`0`
+ * fed directly to `AnalyticsHistogram`, which buckets them into its 12 columns (a dedicated exact-`0`
  * bucket, ten 0.1-wide bands, and an exact-`1` band). Rows shape: `[{ value: number }]`.
  * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])` so the
  * histogram matches the compared (matched-only) population.
@@ -373,7 +373,7 @@ export const parseComparisonMetricScores = (scores: MetricScoreValue[] | null | 
   });
 
 /**
- * Extracts the raw metric-score values from the distribution rows for `DialAnalyticsHistogram`, which
+ * Extracts the raw metric-score values from the distribution rows for `AnalyticsHistogram`, which
  * buckets them into its 12 columns. Null / non-numeric values (e.g. unscored test cases) are skipped;
  * finite values are clamped to the histogram's 0–1 range so exact `0` and exact `1` land in their
  * dedicated columns.

@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import { IconButton, DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { IconButton, LabelledText } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -36,12 +36,12 @@ const FoldersStorageLabel: FC<Props> = ({ asset }) => {
   );
 
   if (isPlatformBucketPath(folder)) {
-    return <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={removeTrailingSlash(folder)} />;
+    return <LabelledText label={t(EntitiesI18nKey.FolderStorage)} text={removeTrailingSlash(folder)} />;
   }
 
   return (
     folderId && (
-      <DialLabelledText
+      <LabelledText
         label={t(EntitiesI18nKey.FolderStorage)}
         text={removeTrailingSlash(folder)}
         postfix={

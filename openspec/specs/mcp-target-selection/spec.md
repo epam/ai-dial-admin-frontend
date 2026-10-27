@@ -142,7 +142,7 @@ On the MCP method tab of an existing MCP_TOOL suite, a "Change Toolset / Tool" b
 
 #### Scenario: Change Tool modal opens with current selection pre-selected
 - **WHEN** user clicks "Change Toolset / Tool" on the MCP method tab
-- **THEN** a `DialPopup` SHALL open showing the MCP deployments grid with the current `mcpDeploymentRef` pre-selected
+- **THEN** a `Popup` SHALL open showing the MCP deployments grid with the current `mcpDeploymentRef` pre-selected
 - **AND** the tool picker SHALL immediately appear below the grid showing tools for the current deployment with the current `toolRef.name` pre-selected
 
 #### Scenario: Changing deployment in modal resets tool selection

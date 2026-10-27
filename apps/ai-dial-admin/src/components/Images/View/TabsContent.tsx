@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { LabelledText } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
@@ -34,19 +34,19 @@ const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVe
   const sourcesList = SOURCE_TYPES(t);
 
   const headerPrefix = useMemo(() => {
-    return <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(IMAGE_TYPE_I18N_KEYS[selectedImage.$type])} />;
+    return <LabelledText label={t(EntityFieldsI18nKey.type)} text={t(IMAGE_TYPE_I18N_KEYS[selectedImage.$type])} />;
   }, [selectedImage.$type, t]);
 
   const headerPostfix = useMemo(() => {
     return (
       <>
-        <DialLabelledText
+        <LabelledText
           label={t(EntitiesI18nKey.SourceType)}
           text={sourcesList?.find((source) => source.value === selectedImage.source.$type)?.label}
         />
-        <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
+        <LabelledText label={t(EntityFieldsI18nKey.status)}>
           <StatusIndicator status={selectedImage.buildStatus} />
-        </DialLabelledText>
+        </LabelledText>
       </>
     );
   }, [selectedImage.buildStatus, selectedImage.source.$type, sourcesList, t]);
