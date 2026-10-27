@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
 import Metrics from '../Metrics';
 import { MetricBindingType } from '../../../../types/evaluation';
 
@@ -274,6 +274,36 @@ describe('Metrics', () => {
     expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');
     await vi.waitFor(() => expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledTimes(2));
     expect(mockGetTestSuiteMetricsAggregated).toHaveBeenLastCalledWith('suite-1');
+  });
+
+  test('deleting the final metric does not create an unsaved suite change', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    mockGetTestSuiteMetricsAggregated.mockResolvedValueOnce([metric]).mockResolvedValueOnce([]);
+
+    render(
+      <Metrics
+        selectedTestSuite={{
+          ...selectedTestSuite,
+          overallScore: {
+            type: OverallScoreType.WeightedMean,
+            weights: [{ metricName: 'Metric One', outputField: 'score', weight: 1 }],
+          },
+        }}
+        onChange={onChange}
+      />,
+    );
+
+    await screen.findByText('Metric One');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'delete-metric-confirmation' })).getByRole('button', {
+        name: ButtonsI18nKey.Delete,
+      }),
+    );
+
+    expect(await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   test('opens edit modal and updates metric on confirmation', async () => {

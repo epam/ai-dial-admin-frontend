@@ -9,8 +9,10 @@ import {
   StructuredQuery,
 } from '@/src/models/evaluation/structured-query';
 import {
+  OverallScoreMean,
   OverallScoreType,
   OverallScoreWeight,
+  OverallScoreWeightedMean,
   TestCaseOverallScoreConfig,
   TestSuite,
 } from '@/src/models/evaluation/test-suite';
@@ -365,27 +367,85 @@ export const getTestCaseOverallScoreFormulaLabelKey = (suite: TestSuite): string
   }
 };
 
-export const stripMetricFromScoreWeights = (suite: TestSuite, removedMetricName: string): TestSuite => {
+const DEFAULT_OVERALL_SCORE: OverallScoreMean = { type: OverallScoreType.Mean };
+
+const isDefaultOverallScore = (suite: TestSuite): boolean =>
+  (suite.overallScore === undefined || suite.overallScore.type === OverallScoreType.Mean) &&
+  suite.overallScoreThreshold === undefined &&
+  suite.testCaseOverallScore === undefined;
+
+/** Mean of all metrics, no threshold, no nested test-case score. */
+export const resetOverallScoreDefaults = (suite: TestSuite): TestSuite => {
+  if (isDefaultOverallScore(suite)) {
+    return suite;
+  }
+
+  const {
+    overallScoreThreshold: __threshold,
+    testCaseOverallScore: __nested,
+    overallScore: __overall,
+    ...rest
+  } = suite;
+  return { ...rest, overallScore: DEFAULT_OVERALL_SCORE };
+};
+
+const filterWeightedMean = (
+  config: OverallScoreWeightedMean,
+  metricNames: Set<string>,
+): OverallScoreWeightedMean | OverallScoreMean => {
+  const remainingWeights = config.weights.filter((weight) => metricNames.has(weight.metricName));
+
+  if (remainingWeights.length === 0) {
+    return DEFAULT_OVERALL_SCORE;
+  }
+
+  if (remainingWeights.length === config.weights.length) {
+    return config;
+  }
+
+  return { type: OverallScoreType.WeightedMean, weights: remainingWeights };
+};
+
+/**
+ * Drop overall-score rows that reference metrics no longer bound.
+ * When no metrics remain, or weighted mean has no valid rows left, reset to Mean and clear threshold.
+ */
+export const sanitizeOverallScoreForMetricNames = (suite: TestSuite, remainingMetricNames: string[]): TestSuite => {
+  if (remainingMetricNames.length === 0) {
+    return resetOverallScoreDefaults(suite);
+  }
+
+  const names = new Set(remainingMetricNames);
   let next = suite;
 
   if (next.overallScore?.type === OverallScoreType.WeightedMean) {
-    const remainingWeights = next.overallScore.weights.filter((weight) => weight.metricName !== removedMetricName);
-    if (remainingWeights.length !== next.overallScore.weights.length) {
-      next = { ...next, overallScore: { type: OverallScoreType.WeightedMean, weights: remainingWeights } };
+    const sanitized = filterWeightedMean(next.overallScore, names);
+    if (sanitized.type === OverallScoreType.Mean) {
+      next = resetOverallScoreDefaults(next);
+    } else if (sanitized !== next.overallScore) {
+      next = { ...next, overallScore: sanitized };
     }
   }
 
   if (next.testCaseOverallScore?.type === OverallScoreType.WeightedMean) {
-    const remainingWeights = next.testCaseOverallScore.weights.filter(
-      (weight) => weight.metricName !== removedMetricName,
-    );
-    if (remainingWeights.length !== next.testCaseOverallScore.weights.length) {
-      next = {
-        ...next,
-        testCaseOverallScore: { type: OverallScoreType.WeightedMean, weights: remainingWeights },
-      };
+    const sanitized = filterWeightedMean(next.testCaseOverallScore, names);
+    if (sanitized !== next.testCaseOverallScore) {
+      next = { ...next, testCaseOverallScore: sanitized };
     }
   }
 
   return next;
+};
+
+export const stripMetricFromScoreWeights = (suite: TestSuite, removedMetricName: string): TestSuite => {
+  const remainingNames = [
+    ...(suite.overallScore?.type === OverallScoreType.WeightedMean
+      ? suite.overallScore.weights.map((weight) => weight.metricName)
+      : []),
+    ...(suite.testCaseOverallScore?.type === OverallScoreType.WeightedMean
+      ? suite.testCaseOverallScore.weights.map((weight) => weight.metricName)
+      : []),
+  ].filter((name) => name !== removedMetricName);
+
+  return sanitizeOverallScoreForMetricNames(suite, remainingNames);
 };

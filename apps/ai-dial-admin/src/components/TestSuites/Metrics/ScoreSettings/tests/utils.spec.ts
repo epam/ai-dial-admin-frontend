@@ -26,6 +26,7 @@ import {
   isOverallScoreDraftValid,
   normalizeOverallScoreApplyPayload,
   parseFunctionParameterFieldName,
+  sanitizeOverallScoreForMetricNames,
   stripMetricFromScoreWeights,
 } from '../utils';
 
@@ -471,7 +472,54 @@ describe('stripMetricFromScoreWeights', () => {
         type: OverallScoreType.WeightedMean,
         weights: [{ metricName: 'B', outputField: 'score', weight: 1 }],
       },
-      testCaseOverallScore: { type: OverallScoreType.WeightedMean, weights: [] },
+      testCaseOverallScore: { type: OverallScoreType.Mean },
+    });
+  });
+
+  test('resets overall score to mean and clears threshold when the last weighted metric is removed', () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'A', outputField: 'score', weight: 1 }],
+      },
+      overallScoreThreshold: 0.7,
+    };
+
+    expect(stripMetricFromScoreWeights(suite, 'A')).toEqual({
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
+    });
+  });
+});
+
+describe('sanitizeOverallScoreForMetricNames', () => {
+  test('resets function overall score when no metrics remain', () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Function, expression: { entity: 'eval_summaries' } as never },
+      overallScoreThreshold: 0.5,
+    };
+
+    expect(sanitizeOverallScoreForMetricNames(suite, [])).toEqual({
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
+    });
+  });
+
+  test('resets stale weighted mean when remaining metrics do not match weights', () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'Deleted Metric', outputField: 'score', weight: 1 }],
+      },
+      overallScoreThreshold: 0.7,
+    };
+
+    expect(sanitizeOverallScoreForMetricNames(suite, ['Exact Match'])).toEqual({
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
     });
   });
 });
