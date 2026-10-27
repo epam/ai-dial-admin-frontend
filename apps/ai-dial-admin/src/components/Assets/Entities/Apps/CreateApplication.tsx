@@ -28,7 +28,8 @@ import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getAssetVersionBusinessError } from '@/src/utils/deployments/validation';
+import { getAssetDestinationError, getAssetPathsFromVersions } from '@/src/utils/validation/asset-version';
+import { ResourceType } from '@/src/types/resource-type';
 import {
   getCreateEntityTitle,
   getCreateNotificationDescription,
@@ -86,9 +87,10 @@ const CreateApplication: FC<Props> = ({
         displayName: '',
         description: '',
         interfaces: {},
+        folderId: folderContext.filePath,
         ...(isPlatform ? { user_roles: [] } : { version: DEFAULT_NEW_ENTITY_VERSION }),
       }) as DialApplicationResource,
-    [isPlatform],
+    [isPlatform, folderContext.filePath],
   );
   const [step, setStep] = useState(CreateStep.Details);
   const [asset, setAsset] = useState(initialAsset);
@@ -122,6 +124,7 @@ const CreateApplication: FC<Props> = ({
       ...asset,
       name: asset.name?.trim() || '',
       folderId: folderContext.filePath,
+      ...(!isPlatform && { display_version: asset.version }),
     } as unknown as AssetWithVersion;
     const response = await protectedRequest(onCreate, entity, undefined, undefined, false);
     setIsLoading(false);
@@ -135,10 +138,27 @@ const CreateApplication: FC<Props> = ({
     );
     router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, entity));
     onCloseAndReset();
-  }, [asset, folderContext.filePath, onCloseAndReset, onCreate, protectedRequest, router, showNotification, t]);
+  }, [
+    asset,
+    folderContext.filePath,
+    isPlatform,
+    onCloseAndReset,
+    onCreate,
+    protectedRequest,
+    router,
+    showNotification,
+    t,
+  ]);
 
   const versionError = !isPlatform
-    ? getAssetVersionBusinessError(versionsMap, asset.name, t, asset.version)
+    ? getAssetDestinationError(
+        folderContext.filePath,
+        asset.name || '',
+        asset.version,
+        ResourceType.APPLICATION,
+        t,
+        getAssetPathsFromVersions(folderContext.filePath, versionsMap),
+      )
     : undefined;
   const isDetailsValid =
     !!asset.name &&

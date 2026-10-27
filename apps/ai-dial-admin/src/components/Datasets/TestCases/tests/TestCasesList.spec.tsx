@@ -3,8 +3,12 @@ import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
+import { BasicI18nKey } from '@/src/constants/i18n';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { useNotification } from '@/src/context/NotificationContext';
 
 import DatasetTestCasesList, { DatasetTestCasesActions } from '../TestCasesList';
 import { GridRowType } from '@/src/types/grid-row-type';
@@ -24,7 +28,9 @@ let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value:
 let capturedRowData: Record<string, unknown>[] | null = null;
 let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
 let capturedTurnActionHandlers: Record<string, (row: any) => void> | null = null;
+let capturedDuplicateOperation: ActionMenuOperationDeclaration<GroupedGridRow> | undefined;
 let capturedRemoveIconClick: ((row: any) => void) | null = null;
+const { showNotification } = useNotification();
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -36,8 +42,9 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
 }));
 
 vi.mock('@/src/components/Grid/columns/turn-columns', () => ({
-  getTurnActionsColumn: (handlers: any) => {
+  getTurnActionsColumn: (handlers: any, extraItems: ActionMenuOperationDeclaration<GroupedGridRow>[] = []) => {
     capturedTurnActionHandlers = handlers;
+    capturedDuplicateOperation = extraItems[0];
     return { colId: 'action-turns' };
   },
 }));
@@ -111,6 +118,7 @@ describe('DatasetTestCasesList', () => {
     capturedRowData = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
+    capturedDuplicateOperation = undefined;
     capturedRemoveIconClick = null;
   });
 
@@ -164,6 +172,70 @@ describe('DatasetTestCasesList', () => {
     expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
     expect(capturedRowData![0].turnCount).toBeUndefined();
     expect(capturedRowData![0].turns).toBeUndefined();
+  });
+
+  test('duplicates a multi-turn case with independent copied values and refreshes the grid', async () => {
+    const objectPerTurnDataset: Dataset = {
+      id: 'ds-1',
+      testCaseSchema: [
+        { name: 'value', type: TestCaseItemType.OBJECT, required: false, description: '', perTurn: true },
+      ],
+    };
+    const sourceCase: TestCase = {
+      ...multiTurnCase,
+      data: { shared: { value: 'shared' } },
+      multiTurnData: [{ value: { nested: { value: 1 } } }, { value: { nested: { value: 2 } } }, { value: 'c' }],
+    };
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([
+        sourceCase,
+        {
+          id: 'existing-copy',
+          testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix}`,
+          data: {},
+        },
+      ]),
+    );
+    vi.mocked(actions.createTestCase).mockResolvedValue({ success: true });
+
+    render(<DatasetTestCasesList dataset={objectPerTurnDataset} />);
+    await vi.waitFor(() => expect(capturedRowData).toHaveLength(2));
+
+    expect(capturedDuplicateOperation).toBeDefined();
+    expect(capturedDuplicateOperation?.id).toBe('ActionMenuOperation.Duplicate');
+    await act(async () => {
+      capturedDuplicateOperation?.onClick(capturedRowData![0] as GroupedGridRow);
+    });
+
+    const [, duplicateBody] = vi.mocked(actions.createTestCase).mock.calls[0];
+    expect(duplicateBody).not.toHaveProperty('id');
+    expect(duplicateBody.data).not.toBe(sourceCase.data);
+    expect(duplicateBody.multiTurnData).not.toBe(sourceCase.multiTurnData);
+    expect(duplicateBody.multiTurnData?.[0]).not.toBe(sourceCase.multiTurnData?.[0]);
+    expect(duplicateBody.multiTurnData?.[0].value).not.toBe(sourceCase.multiTurnData?.[0].value);
+    await vi.waitFor(() => {
+      expect(actions.createTestCase).toHaveBeenCalledWith('ds-1', {
+        testCaseName: `${sourceCase.testCaseName} ${BasicI18nKey.DuplicateCopyPostfix} 2`,
+        data: { shared: { value: 'shared' } },
+        multiTurnData: [{ value: { nested: { value: 1 } } }, { value: { nested: { value: 2 } } }, { value: 'c' }],
+      });
+      expect(actions.getTestCases).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  test('notifies when creating a duplicate fails', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([singleTurnCase]));
+    vi.mocked(actions.createTestCase).mockResolvedValue({ success: false, errorMessage: 'Create failed' });
+
+    render(<DatasetTestCasesList dataset={perTurnSchemaDataset} />);
+    await vi.waitFor(() => expect(capturedRowData).toHaveLength(1));
+
+    await act(async () => {
+      capturedDuplicateOperation?.onClick(capturedRowData![0] as GroupedGridRow);
+    });
+
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    expect(actions.getTestCases).toHaveBeenCalledOnce();
   });
 
   test('adding a turn to a single-turn case promotes it into an expanded two-turn group', async () => {

@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
+import { encodeCorePath } from '@/src/server/publications/path';
 import { ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { buildApplicationsExport, importApplicationsExport, resolveImportDestination } from '../exim';
@@ -19,6 +20,65 @@ describe('Server :: Applications :: exim :: resolveImportDestination', () => {
 });
 
 describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
+  test.each(['%', '%20', 'release candidate', '未来 #?%'])(
+    'serializes and round-trips path version %j without decoding it twice',
+    async (version) => {
+      const path = `public/team/assistant__internal__${version}`;
+      const assetApi = {
+        getMetadata: vi.fn().mockResolvedValue({ nodeType: 'ITEM' }),
+        getMerged: vi.fn().mockResolvedValue({ display_version: 'Spring release' }),
+        list: vi.fn().mockResolvedValue([]),
+        put: vi.fn().mockResolvedValue({ success: true }),
+      } as any;
+      const exported = await buildApplicationsExport(assetApi, {} as any, [path]);
+      expect(exported.applications?.[0].id).toBe(`applications/${encodeCorePath(path)}`);
+      await importApplicationsExport(assetApi, {} as any, exported, {
+        path: 'public/target/',
+        conflictResolutionStrategy: 'override',
+        flatImport: true,
+      });
+      expect(assetApi.put).toHaveBeenCalledWith(
+        {},
+        ResourceType.APPLICATION,
+        `public/target/assistant__internal__${version}`,
+        { display_version: 'Spring release' },
+        { allowOverride: true },
+      );
+    },
+  );
+  test.each(['Spring release', '', 'stable'])(
+    'round-trips independent display_version %j and only the selected complete path',
+    async (displayVersion) => {
+      const sourcePath = 'public/team/assistant__internal__release candidate';
+      const assetApi = {
+        getMetadata: vi.fn().mockResolvedValue({ url: `applications/${sourcePath}`, nodeType: 'ITEM' }),
+        getMerged: vi.fn().mockResolvedValue({
+          display_version: displayVersion,
+          endpoint: 'http://app',
+          _metadata: { version: 'release candidate' },
+        }),
+        list: vi.fn().mockResolvedValue([]),
+        put: vi.fn().mockResolvedValue({ success: true }),
+      } as any;
+      const exported = await buildApplicationsExport(assetApi, {} as any, [sourcePath]);
+      expect(exported.applications).toEqual([
+        { id: `applications/${encodeCorePath(sourcePath)}`, display_version: displayVersion, endpoint: 'http://app' },
+      ]);
+      expect(assetApi.getMerged).toHaveBeenCalledOnce();
+      await importApplicationsExport(assetApi, {} as any, exported, {
+        path: 'public/target/',
+        conflictResolutionStrategy: 'override',
+        flatImport: true,
+      });
+      expect(assetApi.put).toHaveBeenCalledWith(
+        {},
+        ResourceType.APPLICATION,
+        'public/target/assistant__internal__release candidate',
+        { display_version: displayVersion, endpoint: 'http://app' },
+        { allowOverride: true },
+      );
+    },
+  );
   test('fetches each selected application, omits `_metadata`, and sets a prefixed id', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'applications/public/folder/name__1.0', nodeType: 'ITEM' }),

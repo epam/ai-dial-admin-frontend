@@ -43,9 +43,9 @@ describe('SkillsList :: list affordances', () => {
 });
 
 describe('SkillsList :: columns', () => {
-  const columns = () => getGridColumns(ApplicationRoute.Skills, vi.fn(), {}, false);
+  const columns = () => getGridColumns(ApplicationRoute.Skills);
   // Prompts are versionless now too, so the versioned contrast is a deployment-asset view.
-  const versioned = () => getGridColumns(ApplicationRoute.AssetsApplications, vi.fn(), {}, false);
+  const versioned = () => getGridColumns(ApplicationRoute.AssetsApplications);
 
   test('Should show exactly four metadata-backed columns', () => {
     expect(columns()).toHaveLength(4);

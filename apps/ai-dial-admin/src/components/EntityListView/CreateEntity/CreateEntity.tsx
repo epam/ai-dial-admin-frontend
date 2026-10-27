@@ -136,6 +136,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       const entity = {
         ...updatedEntity,
         name: updatedEntity.name?.trim(),
+        ...(isAssetWithVersion(route) && !isPlatformDualBucketCreate && { display_version: updatedEntity.version }),
       };
 
       const isUnique = RoutesForCheckingUniqueName.includes(route)
@@ -204,7 +205,17 @@ const CreateEntity = <T extends CreateEntityBase>({
         }
       });
     },
-    [route, createEntity, getEntityById, folderContext, showNotification, t, router, onClose],
+    [
+      route,
+      createEntity,
+      getEntityById,
+      folderContext,
+      isPlatformDualBucketCreate,
+      showNotification,
+      t,
+      router,
+      onClose,
+    ],
   );
 
   useEffect(() => {
@@ -263,7 +274,8 @@ const CreateEntity = <T extends CreateEntityBase>({
           view={route}
           runners={runners}
           versionsMap={versionsMap}
-          entity={currentEntity}
+          key={isAssetWithVersion(route) ? folderContext?.filePath : undefined}
+          entity={isAssetWithVersion(route) ? { ...currentEntity, folderId: folderContext?.filePath } : currentEntity}
           names={names}
           isUniqueNameError={isUniqueNameError}
           externalIdError={idExistsError}

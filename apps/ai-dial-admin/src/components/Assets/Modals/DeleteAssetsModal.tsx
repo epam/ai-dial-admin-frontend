@@ -22,31 +22,20 @@ import {
   getDeleteModalTitle,
   getGridColumns,
   normalizePath,
-  processAssetsData,
 } from './utils';
 import { ColDef } from 'ag-grid-community';
 import { FILE_MANAGER_GRID_CLASS } from '@/src/components/Common/FileManager/constants';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   view: ApplicationRoute;
   isOpen: boolean;
   itemsToDelete: DialFile[];
-  selectedVersionsMap?: Record<string, string[]>;
   context: () => AssetsFolderContextReader<AssetListItem>;
   onRemove: () => void;
   onClose: () => void;
 }
 
-const DeleteAssetsModal: FC<Props> = ({
-  view,
-  isOpen,
-  itemsToDelete,
-  selectedVersionsMap,
-  context,
-  onRemove,
-  onClose,
-}) => {
+const DeleteAssetsModal: FC<Props> = ({ view, isOpen, itemsToDelete, context, onRemove, onClose }) => {
   const t = useI18n();
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
@@ -56,16 +45,8 @@ const DeleteAssetsModal: FC<Props> = ({
   const { files, fetchFiles, isFetchingFiles } = context();
 
   const { treeItems, pathMapping } = useMemo(() => {
-    const proccessedTreeItems =
-      view === ApplicationRoute.Files
-        ? files
-        : processAssetsData(files as AssetWithVersion[], selectedVersionsMap || {}, view);
-    return generateTreeForDeletingItems(
-      proccessedTreeItems,
-      itemsToDelete,
-      t(FileManagerI18nKey.DeleteFolderTreeRootItem),
-    );
-  }, [files, itemsToDelete, view, selectedVersionsMap, t]);
+    return generateTreeForDeletingItems(files, itemsToDelete, t(FileManagerI18nKey.DeleteFolderTreeRootItem));
+  }, [files, itemsToDelete, t]);
 
   const hasFoldersToDelete = useMemo(() => {
     return itemsToDelete.some((item) => item.nodeType === DialFileNodeType.FOLDER);
@@ -94,7 +75,11 @@ const DeleteAssetsModal: FC<Props> = ({
   );
 
   const getDeleteModalContent = useCallback(() => {
-    const columnDefs = getGridColumns(view, hasFoldersToDelete, selectedVersionsMap, itemsToDelete);
+    const columnDefs = getGridColumns(view, hasFoldersToDelete, itemsToDelete).map((column) => ({
+      ...column,
+      filter: false,
+      floatingFilter: false,
+    }));
 
     return (
       <div className="px-6 dial-small mb-6">
@@ -109,6 +94,7 @@ const DeleteAssetsModal: FC<Props> = ({
               rowData={itemsToDelete}
               additionalGridOptions={{
                 defaultColDef: {
+                  filter: false,
                   floatingFilter: false,
                 },
                 rowHeight: undefined,
@@ -156,7 +142,6 @@ const DeleteAssetsModal: FC<Props> = ({
     treeItems,
     handleOnPathChange,
     isFetchingFiles,
-    selectedVersionsMap,
     expandedFolders,
     setExpandedFolders,
     currentPath,

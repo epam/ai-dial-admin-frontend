@@ -10,6 +10,16 @@ import {
 } from '../zip-exim';
 
 describe('Server :: Toolsets :: zip-exim :: buildToolsetsZip', () => {
+  test('round-trips distinct path versions and independent display versions without changing the archive format', async () => {
+    const document = {
+      toolSets: [
+        { id: 'toolsets/public/assistant__internal__release candidate', display_version: 'Spring release' } as any,
+        { id: 'toolsets/public/assistant__internal__stable', display_version: '' } as any,
+      ],
+    };
+    const blob = await buildToolsetsZip(document);
+    expect(await extractToolsetsFromZip(await blob.arrayBuffer())).toEqual(document);
+  });
   test('wraps the document as a single toolSets/toolSets.json entry', async () => {
     const document = { toolSets: [{ id: 'toolsets/public/name__1.0', name: 'name' } as any] };
 

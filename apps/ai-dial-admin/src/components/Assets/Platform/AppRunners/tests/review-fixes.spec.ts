@@ -92,7 +92,7 @@ describe('App runner asset :: labels', () => {
 
 describe('App runner asset :: grid column identity', () => {
   test('Should give every column a distinct colId', () => {
-    const resolved = getGridColumns(VIEW, () => void 0, {}, false).map((column: unknown) =>
+    const resolved = getGridColumns(VIEW).map((column: unknown) =>
       typeof column === 'function'
         ? (column as (l: Intl.LocalesArgument, o?: Intl.DateTimeFormatOptions) => { colId?: string })('en-US', void 0)
             .colId
