@@ -1,8 +1,7 @@
-import { COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
-import { COST_AGGREGATING_RUN_STATUSES } from '@/src/constants/runs';
+import { COST_AGGREGATION_STALE_AFTER_MS, COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_AGGREGATING_RUN_STATUSES, COST_UNSUPPORTED_SUITE_TYPES } from '@/src/constants/runs';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus, RunTarget, RunTargetKind } from '@/src/models/evaluation/run';
-import { SuiteType } from '@/src/models/evaluation/test-suite';
 import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 const MS_IN_SECOND = 1000;
@@ -55,14 +54,24 @@ export const formatRunScore = (score?: number | null): string | null => {
   return score.toFixed(SCORE_DECIMALS);
 };
 
+/** Whether the run's suite type is one the backend never aggregates a cost for (MCP-tool and Route suites). */
+export const isCostUnsupportedRun = (run?: Run | null): boolean => {
+  const suiteType = run?.suiteSnapshot?.suiteType;
+  return suiteType != null && COST_UNSUPPORTED_SUITE_TYPES.includes(suiteType);
+};
+
+/** Whether the run completed so long ago that a missing cost is final rather than still aggregating. */
+export const isRunCostStale = (run: Run | null | undefined, now: number): boolean =>
+  run?.completedAt != null && now - run.completedAt >= COST_AGGREGATION_STALE_AFTER_MS;
+
 /**
  * Whether a run's cost is still being aggregated, as opposed to never going to exist. The backend
  * aggregates usage logs asynchronously after a run settles and cannot say "there will be no figure"
  * (e.g. an unpriced model), so a settled run with no cost counts as calculating only for
  * `COST_FETCH_MAX_WAIT_MS` — the same backstop the Summary cost cards use. The window opens at
  * `costWaitStartedAt` (when the grid first saw the run), or at `completedAt` for a run that settled
- * while the grid was watching it. MCP-tool suites are excluded because cost aggregation does not
- * support them at all.
+ * while the grid was watching it. Suites that cost aggregation does not support, and runs that
+ * completed more than `COST_AGGREGATION_STALE_AFTER_MS` ago, are excluded.
  *
  * `graceMs` stretches the window, so a poller can still touch a row on the first tick after the
  * window closes and have the cell re-render as settled.
@@ -74,7 +83,7 @@ export const isRunCostCalculating = (run: Run | null | undefined, now: number, g
   if (!COST_AGGREGATING_RUN_STATUSES.includes(run.status as RunStatus)) {
     return false;
   }
-  if (run.suiteSnapshot?.suiteType === SuiteType.McpTool) {
+  if (isCostUnsupportedRun(run) || isRunCostStale(run, now)) {
     return false;
   }
   const waitStartedAt = run.costWaitStartedAt ?? run.completedAt;

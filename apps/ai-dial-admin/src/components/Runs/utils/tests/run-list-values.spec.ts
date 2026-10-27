@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_AGGREGATION_STALE_AFTER_MS, COST_FETCH_MAX_WAIT_MS } from '@/src/components/Runs/Summary/constants';
 import { Run, RunStatus, RunTargetKind } from '@/src/models/evaluation/run';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
 import { isRunCostCalculating, resolveRunTarget, withCostWaitStart } from '../run-list-values';
@@ -105,9 +105,23 @@ describe('isRunCostCalculating', () => {
     expect(isRunCostCalculating({ ...settledRun, completedAt: undefined }, NOW)).toBe(false);
   });
 
-  test('is not calculating for an MCP-tool suite, which never gets a cost', () => {
-    const run: Run = { ...settledRun, suiteSnapshot: { suiteType: SuiteType.McpTool } };
+  test.each([SuiteType.McpTool, SuiteType.Route])(
+    'is not calculating for a %s suite, which never gets a cost',
+    (suiteType) => {
+      const run: Run = { ...settledRun, suiteSnapshot: { suiteType } };
+      expect(isRunCostCalculating(run, NOW)).toBe(false);
+    },
+  );
+
+  test('is still calculating for a deployment suite', () => {
+    const run: Run = { ...settledRun, suiteSnapshot: { suiteType: SuiteType.Deployment } };
+    expect(isRunCostCalculating(run, NOW)).toBe(true);
+  });
+
+  test('is not calculating for a run that completed over 12 hours ago, even inside a fresh wait window', () => {
+    const run: Run = { ...settledRun, completedAt: NOW - COST_AGGREGATION_STALE_AFTER_MS, costWaitStartedAt: NOW };
     expect(isRunCostCalculating(run, NOW)).toBe(false);
+    expect(isRunCostCalculating({ ...run, completedAt: NOW - COST_AGGREGATION_STALE_AFTER_MS + 1 }, NOW)).toBe(true);
   });
 
   test('stops calculating once the wait window has elapsed', () => {
@@ -126,8 +140,8 @@ describe('isRunCostCalculating', () => {
     expect(isRunCostCalculating(null, NOW)).toBe(false);
   });
 
-  test('opens the window at costWaitStartedAt, so a long-finished run still calculates', () => {
-    const run: Run = { ...settledRun, completedAt: NOW - 24 * 60 * 60 * 1000, costWaitStartedAt: NOW - 1000 };
+  test('opens the window at costWaitStartedAt, so a run finished well before the grid saw it still calculates', () => {
+    const run: Run = { ...settledRun, completedAt: NOW - 60 * 60 * 1000, costWaitStartedAt: NOW - 1000 };
     expect(isRunCostCalculating(run, NOW)).toBe(true);
   });
 

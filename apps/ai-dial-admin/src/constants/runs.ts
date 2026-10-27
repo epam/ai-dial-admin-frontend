@@ -1,4 +1,5 @@
 import { RunStatus } from '@/src/models/evaluation/run';
+import { SuiteType } from '@/src/models/evaluation/test-suite';
 
 /** How often a run in a transitional status is re-checked while a surface shows it, in ms. */
 export const RUN_CANCEL_POLL_INTERVAL = 5000;
@@ -27,6 +28,9 @@ export const INCOMPLETE_RUN_STATUSES = [
  * PENDING and the transitional statuses are excluded: nothing is being aggregated for them yet.
  */
 export const COST_AGGREGATING_RUN_STATUSES = [RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED];
+
+/** Suite types whose runs the backend's cost aggregation does not support, so they never get a cost. */
+export const COST_UNSUPPORTED_SUITE_TYPES = [SuiteType.McpTool, SuiteType.Route];
 
 /** Every status the Status column's filter can offer, in the order its checkbox list renders them. */
 export const ALL_RUN_STATUSES = [

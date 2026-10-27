@@ -69,6 +69,13 @@ export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
  */
 export const COST_FETCH_MAX_WAIT_MS = 15 * 60 * 1_000;
 
+/**
+ * How long after completion a run is still worth waiting on for a cost. Aggregation finishes within
+ * minutes, so a run settled longer ago than this that still has no figure never will — it is read
+ * once and, if figureless, shown as a dash with no Calculating wait.
+ */
+export const COST_AGGREGATION_STALE_AFTER_MS = 12 * 60 * 60 * 1_000;
+
 export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
 export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';

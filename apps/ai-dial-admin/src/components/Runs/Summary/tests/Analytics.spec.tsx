@@ -6,7 +6,7 @@ import { RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
 import Analytics from '../Analytics';
-import { COST_FETCH_POLL_INTERVAL_MS } from '../constants';
+import { COST_AGGREGATION_STALE_AFTER_MS, COST_FETCH_POLL_INTERVAL_MS } from '../constants';
 
 const executeStructuredQueryMock = vi.fn();
 const getRunCostsMock = vi.fn();
@@ -58,6 +58,11 @@ const MCP_RUN = {
   id: 'run-1',
   status: RunStatus.COMPLETED,
   suiteSnapshot: { overallScoreThreshold: 0.5, suiteType: SuiteType.McpTool },
+};
+const ROUTE_RUN = {
+  id: 'run-1',
+  status: RunStatus.COMPLETED,
+  suiteSnapshot: { overallScoreThreshold: 0.5, suiteType: SuiteType.Route },
 };
 const UNPRICED_MODEL_RUN = {
   id: 'run-1',
@@ -445,6 +450,29 @@ describe('Runs Summary :: Analytics', () => {
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
     expect(getRunCostsMock).not.toHaveBeenCalled();
     expect(screen.getAllByText('—')).toHaveLength(2);
+  });
+
+  test('does not fetch costs for a Route run, which settles to a dash', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
+    render(<Analytics run={ROUTE_RUN as any} />);
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    expect(getRunCostsMock).not.toHaveBeenCalled();
+    expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(2);
+  });
+
+  test('reads costs once for a run completed over 12 hours ago and settles to a dash without Calculating', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: null });
+    const staleRun = { ...PRICED_MODEL_RUN, completedAt: Date.now() - COST_AGGREGATION_STALE_AFTER_MS - 1_000 };
+    render(<Analytics run={staleRun as any} />);
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(2));
+    expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
+    expect(getRunCostsMock).toHaveBeenCalledTimes(1);
   });
 
   test('settles to a dash and stops polling once the deployed model is confirmed to have no pricing', async () => {

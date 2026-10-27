@@ -180,10 +180,11 @@ indication while a run's cost is still being aggregated. The backend aggregates 
 asynchronously after a run settles and cannot say a figure will never come, so a run counts as
 calculating when it is COMPLETED, FAILED or CANCELLED, has no cost, and is inside a
 `COST_FETCH_MAX_WAIT_MS` wait window — the same backstop the Summary cost cards use. The window opens
-when the tab first loads the run (so a run that finished long ago and still has no cost gets a fresh
-wait on each load, as on the Summary tab), or at the run's completion time for a run that settles
-while the tab is open. Runs that are PENDING, RUNNING or CANCELLING, and runs of MCP-tool suites
-(which have no cost aggregation), SHALL keep the missing-value indication. While any row is
+when the tab first loads the run (so a run that finished a while ago and still has no cost gets a
+fresh wait on each load, as on the Summary tab), or at the run's completion time for a run that
+settles while the tab is open. A run that completed `COST_AGGREGATION_STALE_AFTER_MS` (12 hours) or
+more ago SHALL NOT calculate at all, since aggregation is long finished. Runs that are PENDING, RUNNING or CANCELLING, and runs of MCP-tool and Route
+suites (which have no cost aggregation), SHALL keep the missing-value indication. While any row is
 calculating, the tab SHALL re-fetch all calculating rows together every `COST_FETCH_POLL_INTERVAL_MS`
 and replace the spinner with the formatted cost once it arrives, or with the missing-value indication
 once the window closes. The unscoped Runs list and the compare picker do not poll and SHALL NOT show
@@ -194,11 +195,16 @@ the spinner.
 - **WHEN** a run completed a minute ago and has no cost value
 - **THEN** the Cost cell shows a spinner labelled Calculating, not the missing-value indication
 
-#### Scenario: A long-finished run with no cost is loaded
+#### Scenario: A run finished a while ago with no cost is loaded
 
-- **WHEN** the tab loads a COMPLETED run that finished a day ago and has no cost value
+- **WHEN** the tab loads a COMPLETED run that finished an hour ago and has no cost value
 - **THEN** the Cost cell shows the spinner until `COST_FETCH_MAX_WAIT_MS` after the load, then the
   missing-value indication
+
+#### Scenario: A run finished over 12 hours ago with no cost is loaded
+
+- **WHEN** the tab loads a COMPLETED run that finished a day ago and has no cost value
+- **THEN** the Cost cell shows the missing-value indication immediately, and the run is not re-fetched
 
 #### Scenario: The cost arrives
 

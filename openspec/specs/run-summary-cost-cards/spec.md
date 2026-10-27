@@ -101,8 +101,8 @@ when, and only when, no usage row can exist:
 
 - the run is in a transitional status (still running, or cancelling) — nothing is aggregated yet,
   and the sibling KPI cards already show a dash rather than a value;
-- the suite is an MCP-tool suite — cost aggregation does not support MCP-tool suites at all, so no
-  usage row is ever produced regardless of whether the run computed metrics;
+- the suite is an MCP-tool or Route suite — cost aggregation does not support those suite types at
+  all, so no usage row is ever produced regardless of whether the run computed metrics;
 - the run's deployed model is confirmed to have no pricing configured (no Prompt and no Completion
   rate) — there is nothing for the backend to ever multiply usage by, so no usage row can price out
   to a figure. This is resolved from the model's own config (the same Catalog-then-Entities lookup
@@ -114,6 +114,11 @@ The Summary tab SHALL NOT skip `/costs` because the structured-query slice lacks
 averages (`avgRunTimeMs`). CANCELLED ("Stopped") and FAILED runs commonly have priced usage without
 those averages; gating the fetch on that signal wiped a successful `/costs` response when the slice
 resolved later and left the cards on a dash or Error while the Runs grid still showed a real cost.
+
+A run that completed `COST_AGGREGATION_STALE_AFTER_MS` (12 hours) or more ago SHALL NOT be waited on:
+aggregation is long finished, so the Summary tab SHALL read `/costs` exactly once and settle on the
+result — a real figure if there is one, otherwise an em dash with no Calculating copy and no polling.
+The fetch itself is kept because an old run can still have a real cost.
 
 Each check SHALL evaluate to "costs are still possible" while the evidence for it is loading, so a
 pending fetch is never mistaken for a zero. When the fetch is skipped, the cards SHALL show an em
@@ -127,11 +132,17 @@ the optimistic guess that costs were possible — the fetch SHALL start, respect
 - **THEN** `getRunCosts` is not called
 - **AND** both cost cards show an em dash rather than the spinner and Calculating label
 
-#### Scenario: An MCP-tool run is never polled
+#### Scenario: An MCP-tool or Route run is never polled
 
-- **WHEN** the run's suite snapshot is an MCP-tool suite
+- **WHEN** the run's suite snapshot is an MCP-tool or Route suite
 - **THEN** `getRunCosts` is not called, regardless of how many metrics the run computed
 - **AND** both cost cards show an em dash
+
+#### Scenario: A run completed over 12 hours ago is read once, not polled
+
+- **WHEN** the Summary tab renders a run that completed more than 12 hours ago and `/costs` returns no figures
+- **THEN** `getRunCosts` is called once and not retried
+- **AND** both cost cards show an em dash rather than the spinner and Calculating label
 
 #### Scenario: A model confirmed to have no pricing is never polled
 
