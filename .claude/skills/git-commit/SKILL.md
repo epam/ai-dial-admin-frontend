@@ -32,7 +32,10 @@ gh pr view --json number,url,state 2>/dev/null   # open PR for current branch (i
 ```
 
 - **New-branch mode** — current branch is `development` (or another base branch), or there's no PR for it.
-  Run the full cycle: Steps 1–6 as written (create branch → commit → push → optional PR).
+  Run the full cycle: Steps 1–6 as written (create branch → commit → push → optional PR). If you're
+  already on a non-base branch without a PR (e.g. a worktree branch the session app created, like
+  `claude/<name>-a1b2c3`), stay on it — `git checkout development` fails in a worktree — and let
+  Step 4a rename it.
 - **Update-existing mode** — you're already on a feature branch **and** it has an open PR (or the user
   says "push to the existing PR" / "update my PR"). **Do not** create a new branch and **do not** run
   `gh pr create`. Stay on the current branch, then:
@@ -135,21 +138,40 @@ removal that changes no intended behavior is `chore`; one that corrects unwanted
 - Keep the description concise and imperative (add, fix, update, remove, extract...)
 - If ticket context is available (e.g. from OpenSpec), use it to improve accuracy
 
-**Branch name** is derived from the commit message slug:
-`feat/<short-slug>` — lowercase, hyphens only, no ticket number.
+**Branch name** is derived from the commit message: `<type>/<short-slug>` — the same `<type>` as the
+commit, lowercase, hyphens only, no ticket number.
 
 Example:
 - Commit: `feat(Deployments/Images): add image version selector (Issue #42)`
 - Branch: `feat/add-image-version-selector`
+- Commit: `fix(CatalogProperties): keep the schema pick from reverting (Issue #5246)`
+- Branch: `fix/keep-schema-pick-from-reverting`
+
+---
+
+## Step 4a — Check the branch name (new-branch mode only)
+
+Run this before the first push and again before `gh pr create`. A valid name matches
+`^(feat|fix|chore|docs|test|ci)/[a-z0-9]+(-[a-z0-9]+)*$`.
+
+```bash
+git rev-parse --abbrev-ref HEAD
+```
+
+- **On a base branch** → nothing to rename; Step 5 creates `<type>/<short-slug>`.
+- **On another branch that doesn't match** (e.g. `claude/fix-5246-catalog-schema-picker-a2cdcb`) →
+  rename it in place: `git branch -m <type>/<short-slug>`. If the old name was already pushed, push the
+  new name with `-u` and leave the old remote branch alone; mention it in the Step 7 summary.
+- **Update-existing mode** → never rename: the open PR is tied to its head branch.
 
 ---
 
 ## Step 5 — Execute
 
 ```bash
-# 1. Create branch from development
+# 1. Create branch from development (skip if Step 4a kept or renamed the current branch)
 git checkout development
-git checkout -b feat/<short-slug>
+git checkout -b <type>/<short-slug>
 
 # 2. Stage all changes
 git add .
@@ -158,7 +180,7 @@ git add .
 git commit -m "<type>(<area>): <description> (Issue #<ticket>)"
 
 # 4. Push
-git push origin feat/<short-slug>
+git push origin <type>/<short-slug>
 ```
 
 If push fails for any reason (no permissions, rejected, conflict) — **report the error with the full output and stop**. Do not attempt force push or rebase automatically.
@@ -221,14 +243,14 @@ Then create the PR:
 # Regular PR
 gh pr create \
   --base development \
-  --head feat/<short-slug> \
+  --head <type>/<short-slug> \
   --title "<type>(<area>): <description> (Issue #<ticket>)" \
   --body "<generated body>"
 
 # Draft PR (if user said "draft")
 gh pr create \
   --base development \
-  --head feat/<short-slug> \
+  --head <type>/<short-slug> \
   --title "<type>(<area>): <description> (Issue #<ticket>)" \
   --body "<generated body>" \
   --draft
@@ -236,7 +258,7 @@ gh pr create \
 
 If `gh` CLI is not available — provide the GitHub compare URL for manual PR creation:
 ```
-https://github.com/<org>/<repo>/compare/development...feat/<short-slug>
+https://github.com/<org>/<repo>/compare/development...<type>/<short-slug>
 ```
 
 ---
@@ -246,7 +268,7 @@ https://github.com/<org>/<repo>/compare/development...feat/<short-slug>
 Finish with a concise confirmation:
 
 ```
-Branch:  feat/<short-slug>
+Branch:  <type>/<short-slug>
 Commit:  <type>(<area>): <description> (Issue #<ticket>)
 Push:    ✅ succeeded  /  ❌ failed — <reason>
 PR:      <link> (created)  /  <link> (updated existing)  /  skipped
