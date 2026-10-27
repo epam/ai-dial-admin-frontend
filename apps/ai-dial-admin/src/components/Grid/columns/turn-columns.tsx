@@ -4,6 +4,7 @@ import { ColDef, GridApi, ICellRendererParams, IRowNode, ValueGetterParams } fro
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import SkillSelectCellRenderer from '@/src/components/Grid/CellRenderers/SkillSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
@@ -134,6 +135,17 @@ export const getGroupedSchemaColumn = (
             },
             id: ctx.entityId,
             view: ctx.view,
+            isReadonly: isReadOnly,
+          },
+        };
+      }
+      if (param.type === TestCaseItemType.SKILL) {
+        return {
+          component: SkillSelectCellRenderer,
+          params: {
+            onChange: (value: string | number, rowData: unknown) => {
+              onCell(rowData as Record<string, unknown>, field, value);
+            },
             isReadonly: isReadOnly,
           },
         };

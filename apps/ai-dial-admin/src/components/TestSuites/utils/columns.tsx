@@ -15,6 +15,7 @@ import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatu
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import SkillSelectCellRenderer from '@/src/components/Grid/CellRenderers/SkillSelectCellRenderer';
 import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -243,6 +244,13 @@ export const getDynamicConfigurationsColumns = (
               view: ApplicationRoute.TestSuites,
             },
           };
+        } else if (params.data?.effectiveType === TestCaseItemType.SKILL) {
+          return {
+            component: SkillSelectCellRenderer,
+            params: {
+              onChange: onChangeEditable,
+            },
+          };
         }
         return {
           component: EditableCellRenderer,
@@ -437,6 +445,14 @@ export const getVariablesColumns = (
               onChange: onChangeEditable,
               id: id,
               view: ApplicationRoute.TestSuites,
+            },
+          };
+        }
+        if (params.data?.effectiveType == TestCaseItemType.SKILL) {
+          return {
+            component: SkillSelectCellRenderer,
+            params: {
+              onChange: onChangeEditable,
             },
           };
         }

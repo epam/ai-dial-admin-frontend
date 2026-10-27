@@ -8,6 +8,7 @@ import {
   extractVersionByPath,
   getFolderNameAndPath,
   toFileSelectPath,
+  toSkillSelectPath,
   getListOfPathsToBulkDelete,
   getListOfPathsToMove,
   getPathSegments,
@@ -467,5 +468,32 @@ describe('Utils :: files :: toFileSelectPath', () => {
     expect(toFileSelectPath('')).toBe('');
     expect(toFileSelectPath(null)).toBe('');
     expect(toFileSelectPath(undefined)).toBe('');
+  });
+});
+
+describe('Utils :: files :: toFileSelectPath — skill references', () => {
+  test('rejects a skill reference so it never reaches the file picker', () => {
+    expect(toFileSelectPath('skills/public/my-skill')).toBe('');
+  });
+});
+
+describe('Utils :: files :: toSkillSelectPath', () => {
+  test('returns a skill reference unchanged', () => {
+    expect(toSkillSelectPath('skills/public/my-skill')).toBe('skills/public/my-skill');
+    expect(toSkillSelectPath('skills/public/team/my-skill')).toBe('skills/public/team/my-skill');
+  });
+
+  test('returns empty for a file path or any other stale value', () => {
+    expect(toSkillSelectPath('files/public/report.pdf')).toBe('');
+    expect(toSkillSelectPath('public/docs/file.txt')).toBe('');
+    expect(toSkillSelectPath('hello')).toBe('');
+    expect(toSkillSelectPath(true)).toBe('');
+    expect(toSkillSelectPath({ path: 'skills/a' })).toBe('');
+  });
+
+  test('returns empty for missing values', () => {
+    expect(toSkillSelectPath('')).toBe('');
+    expect(toSkillSelectPath(null)).toBe('');
+    expect(toSkillSelectPath(undefined)).toBe('');
   });
 });

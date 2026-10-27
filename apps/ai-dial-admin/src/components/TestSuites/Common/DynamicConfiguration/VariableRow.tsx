@@ -4,6 +4,7 @@ import { Input, Label, NumberInput, Select, Tooltip } from '@epam/ai-dial-ui-kit
 import { FC } from 'react';
 
 import FileSelectInput from '@/src/components/Common/FileSelectInput/FileSelectInput';
+import SkillSelectInput from '@/src/components/Common/SkillSelectInput/SkillSelectInput';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import AttributeSelect from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSelect';
@@ -110,6 +111,8 @@ const VariableRow: FC<Props> = ({
           id={testSuiteId}
           view={ApplicationRoute.TestSuites}
         />
+      ) : row.effectiveType === TestCaseItemType.SKILL ? (
+        <SkillSelectInput disabled={readonly} value={strValue} onChangeValue={(v) => onChangeValue(row, v)} />
       ) : (
         <Input disabled={readonly} value={strValue} onChange={(v) => onChangeValue(row, v ?? '')} />
       )}

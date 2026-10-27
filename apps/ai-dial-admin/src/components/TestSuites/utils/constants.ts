@@ -13,4 +13,5 @@ export const TEMPLATE_VARIABLE_TYPE_BY_HINT: Record<string, TestCaseItemType | u
   object: TestCaseItemType.OBJECT,
   array: TestCaseItemType.ARRAY,
   file: TestCaseItemType.FILE,
+  skill: TestCaseItemType.SKILL,
 };

@@ -34,6 +34,7 @@ export enum TestCaseItemType {
   OBJECT = 'OBJECT',
   ARRAY = 'ARRAY',
   FILE = 'FILE',
+  SKILL = 'SKILL',
 }
 
 export enum ViewerContentType {

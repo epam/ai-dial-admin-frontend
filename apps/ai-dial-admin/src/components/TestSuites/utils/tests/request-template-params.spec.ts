@@ -269,6 +269,17 @@ describe('getTemplateParameterVariables', () => {
     ]);
   });
 
+  test('should read the skill type hint', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/upload',
+      body: { content: { attachment: '${{agent|skill}}' } },
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      { name: 'agent', hasDefault: false, defaultValue: null, effectiveType: TestCaseItemType.SKILL, sources: [] },
+    ]);
+  });
+
   test('should read a type hint and a default value from the same placeholder', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/${{ctx|file:public/data.txt}}',
