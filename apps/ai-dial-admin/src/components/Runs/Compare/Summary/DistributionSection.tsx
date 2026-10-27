@@ -4,8 +4,8 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   AnalyticsCardVariant,
-  DialAnalyticsCard,
-  DialAnalyticsHistogram,
+  AnalyticsCard,
+  AnalyticsHistogram,
   Select,
   ElementSize,
   SelectOption,
@@ -134,7 +134,7 @@ const DistributionSection: FC<Props> = ({
 
     return (
       <div className="flex flex-col gap-4 [&_[data-histogram-y-axis]]:min-w-4">
-        <DialAnalyticsHistogram
+        <AnalyticsHistogram
           title=""
           values={histogramValues}
           compareValues={histogramCompareValues}
@@ -148,7 +148,7 @@ const DistributionSection: FC<Props> = ({
             {statCards.map((card) => {
               const delta = getMetricDelta(card.primaryValue, card.comparedValue);
               return (
-                <DialAnalyticsCard
+                <AnalyticsCard
                   key={card.name}
                   variant={AnalyticsCardVariant.Compact}
                   title={card.name}

@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  DialSteps,
+  Steps,
   Notification,
   NotificationType,
   NotificationVariant,
@@ -12,6 +12,7 @@ import {
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { getDataset, getDatasets, getTestCases } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/columns';
@@ -151,7 +152,13 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
             message={t(TestSuitesI18nKey.AttachDatasetWarning)}
           />
         )}
-        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onChangeStep} />
+        <Steps
+          steps={steps}
+          currentStep={currentStepId}
+          onChangeStep={onChangeStep}
+          ariaLabel={t(TestSuitesI18nKey.AttachDataset)}
+          statusLabels={getStepStatusLabels(t)}
+        />
         <div className="flex-1 min-h-0">
           {currentStepId === AttachDatasetTab.SelectDataset && (
             <div className="flex flex-col h-full gap-y-3">

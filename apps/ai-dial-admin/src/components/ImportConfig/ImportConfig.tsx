@@ -1,6 +1,6 @@
 'use client';
 
-import { NotificationVariant, Notification, NotificationType, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, Notification, NotificationType, Steps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
@@ -9,6 +9,7 @@ import {
   importJsonConfigs,
   importZipConfig,
 } from '@/src/app/[lang]/import-config/actions';
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { getConfigScopes } from '@/src/components/Common/ConfigScopeSelector/utils';
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -181,7 +182,13 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
 
   return (
     <div className="flex flex-col size-full rounded p-4 bg-layer-2">
-      <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />
+      <Steps
+        steps={steps}
+        currentStep={currentStepId}
+        onChangeStep={setCurrentStep}
+        ariaLabel={t(MenuI18nKey.ImportConfig)}
+        statusLabels={getStepStatusLabels(t)}
+      />
       {currentStepId === ImportSteps.FILES && (
         <Files
           files={files}

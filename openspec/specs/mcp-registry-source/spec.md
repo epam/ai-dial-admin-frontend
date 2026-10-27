@@ -248,7 +248,7 @@ Package preference: prefer OCI package with `streamable-http` transport over `ss
 
 ### Requirement: Registry Browser Modal
 
-- SHALL use `McpRegistryModal` with `DialFormPopup`, header "Select MCP server from registry"
+- SHALL use `McpRegistryModal` with `Popup` and `mainButtons`, header "Select MCP server from registry"
 - Confirm button SHALL be disabled when no server is selected
 - SHALL contain `McpRegistryGrid`
 - SHALL own the server-details sidebar state (`detailsServer`, `detailsResponse`, `isDetailsOpen`, `isDetailsLoading`) and pass `infoPanel={<McpServerDetails ... />}` into `McpRegistryGrid`
@@ -348,7 +348,7 @@ The MCP server name SHALL be required and SHALL match the server-name pattern; i
 ### Requirement: Accessibility
 
 - Registry grid SHALL be keyboard navigable (ag-grid default)
-- Modal SHALL trap focus (handled by `DialFormPopup`)
+- Modal SHALL trap focus (handled by `Popup`)
 - "Select from registry" button SHALL have descriptive label for screen readers
 
 #### Scenario: Keyboard use of the registry modal
@@ -457,9 +457,9 @@ Sidebar content SHALL be composed from DIAL primitives, rendered as children of 
 | Chrome (outer + header + close) | Provided by parent | `SidePanel` |
 | Title | `server.name` | `<h3 className="dial-h3">` |
 | Description | `server.description` | `<p className="dial-small-text text-primary">` |
-| Version | `server.version` | `DialLabelledText` |
-| Last Update | `server.updatedAt` formatted via the same formatter as the grid column | `DialLabelledText` |
-| Repository | `server.repository.url` as anchor with external-link icon | `DialLabelledText` with `children` |
+| Version | `server.version` | `LabelledText` |
+| Last Update | `server.updatedAt` formatted via the same formatter as the grid column | `LabelledText` |
+| Repository | `server.repository.url` as anchor with external-link icon | `LabelledText` with `children` |
 | Remotes | `server.remotes[].type` as inline tag chips | Static markup or reuse of `TagsCellRenderer` |
 | Full server.json | Pretty-printed `{ server, _meta }` payload | `CodeViewer` with `hideFullscreen` |
 | Loading state | While the full-payload fetch is in flight for the JSON block | `Spinner` |

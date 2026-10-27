@@ -27,12 +27,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         ))}
       </select>
     ),
-    DialAnalyticsHistogram: ({ valueTitle, values }: any) => (
+    AnalyticsHistogram: ({ valueTitle, values }: any) => (
       <div role="figure" aria-label={String(valueTitle)}>
         histogram:{(values || []).length}
       </div>
     ),
-    DialAnalyticsCard: ({ title, value }: any) => (
+    AnalyticsCard: ({ title, value }: any) => (
       <div role="region" aria-label={String(title)}>
         {value}
       </div>

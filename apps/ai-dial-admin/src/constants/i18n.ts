@@ -141,6 +141,8 @@ export enum BasicI18nKey {
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
   Validated = 'Basic.Validated',
+  StepCompleted = 'Basic.StepCompleted',
+  StepError = 'Basic.StepError',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
   NoVariables = 'Basic.NoVariables',

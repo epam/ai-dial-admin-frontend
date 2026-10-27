@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CollapsibleSidebar, Popup, DialLabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
+import { CollapsibleSidebar, Popup, LabelledText, Spinner, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 
@@ -223,7 +223,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, sho
           <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4 overflow-auto">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">
-              <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />
+              <LabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />
             </div>
             {isLoadingFolder ? (
               <Spinner size={40} fullWidth />

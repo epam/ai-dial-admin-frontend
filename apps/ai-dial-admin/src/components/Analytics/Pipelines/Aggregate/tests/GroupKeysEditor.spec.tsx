@@ -7,7 +7,7 @@ import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics
 import { GroupKey } from '@/src/models/analytics/pipeline';
 
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select
-// the options can be read out of — as it was when this field was the 1.0 `DialSelectField`.
+// the options can be read out of.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

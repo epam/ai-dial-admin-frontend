@@ -337,7 +337,9 @@ describe('PipelineDetailView', () => {
   test('renders an em dash for an absent version column', () => {
     renderView({ version_column: undefined });
 
-    const versionColumn = within(facts()).getByText(AnalyticsPipelinesI18nKey.VersionColumn).parentElement;
+    const versionColumn = within(facts())
+      .getByText(AnalyticsPipelinesI18nKey.VersionColumn)
+      .closest('.dial-kit-labelled-text');
     expect(within(versionColumn as HTMLElement).getByText(AnalyticsPipelinesI18nKey.NotSet)).toBeTruthy();
   });
 

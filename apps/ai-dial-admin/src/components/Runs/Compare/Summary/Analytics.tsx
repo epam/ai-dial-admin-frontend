@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { DialAnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
+import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
 import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
@@ -100,7 +100,7 @@ const Analytics: FC<Props> = ({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
       {showOverall && (
-        <DialAnalyticsCard
+        <AnalyticsCard
           className="min-w-0 flex-1"
           title={t(RunsI18nKey.OverallScore)}
           description={t(RunsI18nKey.OverallScoreDescription)}
@@ -112,7 +112,7 @@ const Analytics: FC<Props> = ({
         />
       )}
       {showTestCasesPassed && (
-        <DialAnalyticsCard
+        <AnalyticsCard
           className="min-w-0 flex-1"
           title={t(RunsI18nKey.TestCasesPassed)}
           delta={passedDelta?.kind === MetricDeltaKind.Changed ? passedDelta.value : undefined}
@@ -122,7 +122,7 @@ const Analytics: FC<Props> = ({
           error={isPrimaryPassedEmpty && isComparedPassedEmpty}
         />
       )}
-      <DialAnalyticsCard
+      <AnalyticsCard
         className="min-w-0 flex-1"
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
         description={t(RunsI18nKey.AvgPerTestCase)}
@@ -135,7 +135,7 @@ const Analytics: FC<Props> = ({
         })}
         error={primarySeconds == null && comparedSeconds == null}
       />
-      <DialAnalyticsCard
+      <AnalyticsCard
         className="min-w-0 flex-1"
         title={t(RunsI18nKey.AvgMetricEvalLatency)}
         description={t(RunsI18nKey.AvgPerTestCase)}

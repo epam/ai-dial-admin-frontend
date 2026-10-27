@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLabelledText, Spinner } from '@epam/ai-dial-ui-kit';
+import { LabelledText, Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
@@ -40,9 +40,9 @@ const McpServerDetails: FC<Props> = ({ server, serverResponse, isLoading, isOpen
           {server.description && <p className="dial-small-text text-primary">{server.description}</p>}
 
           <div className="flex flex-row gap-6">
-            <DialLabelledText label={t(EntityFieldsI18nKey.version)} text={server.version} />
+            <LabelledText label={t(EntityFieldsI18nKey.version)} text={server.version} />
             {server.updatedAt && (
-              <DialLabelledText
+              <LabelledText
                 label={t(ContainersI18nKey.LastUpdate)}
                 text={formatDateTimeToLocalString(server.updatedAt)}
               />
@@ -50,17 +50,17 @@ const McpServerDetails: FC<Props> = ({ server, serverResponse, isLoading, isOpen
           </div>
 
           {server.repository?.url && (
-            <DialLabelledText label={t(ContainersI18nKey.Repository)}>
+            <LabelledText label={t(ContainersI18nKey.Repository)}>
               <ExternalLink value={server.repository.url} />
-            </DialLabelledText>
+            </LabelledText>
           )}
 
           {remoteTypes.length > 0 && (
-            <DialLabelledText label={t(ContainersI18nKey.Remotes)}>
+            <LabelledText label={t(ContainersI18nKey.Remotes)}>
               <div className="flex">
                 <TagsCellRenderer items={remoteTypes} />
               </div>
-            </DialLabelledText>
+            </LabelledText>
           )}
 
           {isLoading ? (

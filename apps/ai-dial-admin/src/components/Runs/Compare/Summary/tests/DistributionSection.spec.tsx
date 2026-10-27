@@ -27,14 +27,14 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         ))}
       </select>
     ),
-    DialAnalyticsHistogram: ({ valueTitle, values, compareValues, valueSetLabel, compareValueSetLabel }: any) => (
+    AnalyticsHistogram: ({ valueTitle, values, compareValues, valueSetLabel, compareValueSetLabel }: any) => (
       <div role="figure" aria-label={String(valueTitle)}>
         histogram:{(values || []).length}/{(compareValues || []).length}
         <span>{valueSetLabel}</span>
         <span>{compareValueSetLabel}</span>
       </div>
     ),
-    DialAnalyticsCard: ({ title, compareValues, delta }: any) => (
+    AnalyticsCard: ({ title, compareValues, delta }: any) => (
       <div role="region" aria-label={String(title)}>
         {delta != null && <span>delta:{delta}</span>}
         {(compareValues || []).map((item: any, index: number) => (

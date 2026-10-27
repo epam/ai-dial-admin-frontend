@@ -7,12 +7,13 @@ import {
   OutlinedButton,
   Popup,
   PrimaryButton,
-  DialSteps,
+  Steps,
   PopupSize,
   Step,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { getMetricLatestVersion, getTestSuiteMetricDetailsWithSchema } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -214,7 +215,15 @@ const AddMetricModal: FC<Props> = ({
       }
     >
       <div className="h-full flex flex-col min-h-0 px-6 py-4">
-        {!isEditMode && <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onStepChange} />}
+        {!isEditMode && (
+          <Steps
+            steps={steps}
+            currentStep={currentStepId}
+            onChangeStep={onStepChange}
+            ariaLabel={t(TestSuitesI18nKey.AddMetric)}
+            statusLabels={getStepStatusLabels(t)}
+          />
+        )}
 
         <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
           {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <Spinner size={44} fullWidth />}
