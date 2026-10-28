@@ -144,7 +144,7 @@ describe('SkillView', () => {
     expect(removeSkillFile).toHaveBeenCalledWith('public/my-skill', 'notes.md');
   });
 
-  test.skip('changing the destination folder and saving moves the skill and navigates to its new path', async () => {
+  test.skip('changing the destination folder and saving moves the skill and navigates to its new path (blocked by epam/ai-dial-core#1861)', async () => {
     vi.mocked(moveSkills).mockResolvedValue([{ success: true }]);
     const user = userEvent.setup();
     render(<SkillView skill={buildSkill()} />);
@@ -157,7 +157,7 @@ describe('SkillView', () => {
     expect(moveSkills).toHaveBeenCalledWith(['public/my-skill'], 'archive');
   });
 
-  test.skip('shows an error notification and does not navigate when Core rejects the move', async () => {
+  test.skip('shows an error notification and does not navigate when Core rejects the move (blocked by epam/ai-dial-core#1861)', async () => {
     vi.mocked(moveSkills).mockResolvedValue([{ success: false, errorMessage: 'destination already exists' }]);
     const user = userEvent.setup();
     render(<SkillView skill={buildSkill()} />);
@@ -171,7 +171,7 @@ describe('SkillView', () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
-  test.skip('shows an error notification instead of failing silently when moveSkills rejects', async () => {
+  test.skip('shows an error notification instead of failing silently when moveSkills rejects (blocked by epam/ai-dial-core#1861)', async () => {
     vi.mocked(moveSkills).mockRejectedValue(new Error('network error'));
     const user = userEvent.setup();
     render(<SkillView skill={buildSkill()} />);

@@ -41,7 +41,7 @@ const SkillAssetProperties: FC<Props> = ({
         entity={skill}
         prefix={<LabelledText label={t(EntityFieldsI18nKey.path)} text={skill.path} />}
       />
-      {/* blocked by core
+      {/* Blocked by Core: https://github.com/epam/ai-dial-core/issues/1861
       <FilePath
         value={skill.folderId}
         label={t(EntitiesI18nKey.FolderStorage)}

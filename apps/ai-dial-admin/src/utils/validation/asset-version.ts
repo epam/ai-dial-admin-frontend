@@ -44,6 +44,7 @@ export const getAssetDestinationError = (
   if (new Blob([`${RESOURCE_TYPE_PREFIX[resourceType]}${path}`]).size > MAX_ASSET_PATH_BYTES) {
     return { type: ErrorType.LENGTH, text: t(ErrorI18nKey.AssetPathTooLong, { max: MAX_ASSET_PATH_BYTES }) };
   }
+  // Keep the storage-path error first when both byte and character limits are exceeded.
   if (versionedName.length > MAX_ASSET_NAME_VERSION_SYMBOLS) {
     return {
       type: ErrorType.LENGTH,
