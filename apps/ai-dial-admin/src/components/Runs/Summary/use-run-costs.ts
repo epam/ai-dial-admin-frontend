@@ -35,8 +35,12 @@ export interface UseRunCostsResult {
  * figures shows a dash immediately instead of waiting out the window. The caller owns that judgement
  * because the evidence for it — run status, result counts, suite type, metric snapshots — lives on
  * the Summary tab, not behind `/costs`.
+ *
+ * `shouldPoll` false is for a run that completed so long ago that aggregation is long finished: the
+ * hook still reads `/costs` once, since an old run can have a real figure, but settles on whatever
+ * comes back instead of waiting for one — a figureless payload renders as a dash.
  */
-export const useRunCosts = (runId: string | undefined, canHaveCosts = true): UseRunCostsResult => {
+export const useRunCosts = (runId: string | undefined, canHaveCosts = true, shouldPoll = true): UseRunCostsResult => {
   const [costs, setCosts] = useState<RunCosts | null>(null);
   /** True whenever a fetch is due until the first effect flush — avoids an idle frame that paints as "—". */
   const [isPending, setIsPending] = useState(() => Boolean(runId) && canHaveCosts);
@@ -83,7 +87,7 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
           settle(result);
           return;
         }
-        if (Date.now() - startedAt >= COST_FETCH_MAX_WAIT_MS) {
+        if (!shouldPoll || Date.now() - startedAt >= COST_FETCH_MAX_WAIT_MS) {
           // This run will never produce a figure — e.g. the evaluated model has no pricing
           // configured — and the endpoint has no way to say so. Stop asking and settle on the last
           // figureless payload, which renders as an em dash instead of calculating forever.
@@ -106,7 +110,7 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
       cancelled = true;
       stopTimers();
     };
-  }, [runId, canHaveCosts]);
+  }, [runId, canHaveCosts, shouldPoll]);
 
   /**
    * `canHaveCosts` is allowed to start true on an optimistic guess — e.g. the analytics slice hasn't

@@ -71,9 +71,20 @@ describe('useCalculatingRunCostsPoll', () => {
     expect(nodes[1].setData).toHaveBeenCalledWith(expect.objectContaining({ id: 'run-2', totalCost: 2 }));
   });
 
-  test('polls a long-finished row once the grid has opened its wait window', async () => {
+  test('does not poll a row that completed over 12 hours ago', async () => {
     const { api } = buildGrid([
       { id: 'old', status: RunStatus.COMPLETED, completedAt: NOW - 24 * 60 * 60 * 1000, costWaitStartedAt: NOW },
+    ]);
+
+    renderHook(() => useCalculatingRunCostsPoll(api));
+    await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS);
+
+    expect(getRunsQueryMock).not.toHaveBeenCalled();
+  });
+
+  test('polls a row finished well before the grid saw it once the grid has opened its wait window', async () => {
+    const { api } = buildGrid([
+      { id: 'old', status: RunStatus.COMPLETED, completedAt: NOW - 60 * 60 * 1000, costWaitStartedAt: NOW },
     ]);
     getRunsQueryMock.mockResolvedValue({ content: [] });
 
