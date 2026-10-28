@@ -12,7 +12,7 @@ vi.mock('@/src/components/Common/FileSelectInput/FileSelectInput', () => ({
   ),
 }));
 
-vi.mock('@/src/components/Common/SkillSelectInput/SkillSelectInput', () => ({
+vi.mock('@/src/components/Common/EntitySelectInput/EntitySelectInput', () => ({
   default: ({ value, onChangeValue, disabled }: any) => (
     <input aria-label="skill-input" disabled={disabled} value={value} onChange={(e) => onChangeValue(e.target.value)} />
   ),

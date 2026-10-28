@@ -4,9 +4,11 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ICellRendererParams } from 'ag-grid-community';
 
-import SkillSelectCellRenderer from '../SkillSelectCellRenderer';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
 
-vi.mock('@/src/components/Common/SkillSelectInput/SkillSelectInput', () => ({
+import EntitySelectCellRenderer from '../EntitySelectCellRenderer';
+
+vi.mock('@/src/components/Common/EntitySelectInput/EntitySelectInput', () => ({
   default: ({ value, onChangeValue, disabled }: any) => (
     <input
       aria-label="skill-input"
@@ -21,7 +23,7 @@ vi.mock('@/src/components/Common/SkillSelectInput/SkillSelectInput', () => ({
 const cellParams = {} as ICellRendererParams;
 const mockNode = { rowIndex: 2 } as unknown as ICellRendererParams['node'];
 
-describe('SkillSelectCellRenderer', () => {
+describe('EntitySelectCellRenderer', () => {
   test('shows the new skill reference immediately and reports it to the grid', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -29,8 +31,9 @@ describe('SkillSelectCellRenderer', () => {
     const row = { data: { skill: 'skills/public/a' } };
 
     render(
-      <SkillSelectCellRenderer
+      <EntitySelectCellRenderer
         {...cellParams}
+        entityType={EntitySelectType.Skill}
         value="skills/public/a"
         data={row}
         colDef={{ field: 'skill' }}
@@ -52,8 +55,9 @@ describe('SkillSelectCellRenderer', () => {
 
   test('disables the picker when the cell is read-only', () => {
     render(
-      <SkillSelectCellRenderer
+      <EntitySelectCellRenderer
         {...cellParams}
+        entityType={EntitySelectType.Skill}
         value=""
         data={{}}
         colDef={{ field: 'skill' }}

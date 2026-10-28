@@ -2,12 +2,14 @@
 
 ## Purpose
 
-The reusable skill picker used wherever evaluation references a skill: browsing the Assets > Skills folder tree, selecting a skill but never a grouping folder or a file inside a bundle, the `skills/<bucket>/<path>` value it produces, and its disabled state and accessibility.
+The skill picker, implemented as the `Skill` entity type of the generic `EntitySelectInput`/`EntitySelectManager`/`EntitySelectCellRenderer` (per-type context lives in `ENTITY_SELECT_CONFIGS`), used wherever evaluation references a skill: browsing the Assets > Skills folder tree, selecting a skill but never a grouping folder or a file inside a bundle, the `skills/<bucket>/<path>` value it produces, and its disabled state and accessibility.
+
+The input frame (`SelectInputPopup`) and the folder-tree browser (`EntitySelectManager`) are shared with the file picker: its Public tab renders `EntitySelectManager` with the `File` entity type, while its Application tab and tabs stay specific to `FileSelectInput`.
 
 ## Requirements
 
 ### Requirement: Skill picker selects a skill, not a folder or a bundle file
-The system SHALL provide a `SkillSelectInput` that lets the user choose one skill from the Skills folder tree
+The system SHALL provide an `EntitySelectInput` (with entity type `Skill`) that lets the user choose one skill from the Skills folder tree
 (the same tree as Assets > Skills, served by `SkillFolderProvider`). The control SHALL render an editable-looking
 input with an open button, and open a popup headed by `TestSuitesI18nKey.SelectSkill` that lists grouping folders
 and skills. Only a skill row SHALL be selectable; a grouping folder row SHALL be browsable (expandable) but SHALL
@@ -28,7 +30,7 @@ NOT be selectable. The popup SHALL NOT let the user select a file inside a skill
 - **THEN** the confirm button SHALL be disabled
 
 ### Requirement: Skill reference value format
-The value emitted by `SkillSelectInput` SHALL be the skill's canonical reference `skills/<bucket>/<path>`: the
+The value emitted by `EntitySelectInput` for the `Skill` entity type SHALL be the skill's canonical reference `skills/<bucket>/<path>`: the
 skill resource path, with no trailing slash, not pointing at `SKILL.md`, at a file inside the bundle, or at a
 folder. The input SHALL display the stored value. A value that is not a string starting with `skills/` SHALL be
 treated as empty (stale value of another type) and SHALL NOT be displayed.

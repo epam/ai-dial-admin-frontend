@@ -79,7 +79,7 @@ The schema field Type dropdown, the schema table Type column and the template `|
 - **THEN** the derived schema/binding type SHALL be `SKILL`
 
 ### Requirement: SKILL values are edited with the skill picker
-The system SHALL edit a `SKILL`-typed field's value with `SkillSelectInput` wherever a `FILE`-typed field is edited
+The system SHALL edit a `SKILL`-typed field's value with `EntitySelectInput` (entity type `Skill`) wherever a `FILE`-typed field is edited
 with the file picker: the test-suite input-binding cell, the template-variable cell and the dynamic-configuration
 variable row.
 

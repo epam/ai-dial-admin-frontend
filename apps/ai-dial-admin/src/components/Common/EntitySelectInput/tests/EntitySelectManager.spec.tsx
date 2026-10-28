@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import SkillManager from '../SkillManager';
+import EntitySelectManager from '../EntitySelectManager';
+import { EntitySelectType } from '../models';
 
 const mockFolder = {
   files: [] as unknown[],
@@ -15,7 +16,10 @@ const mockFolder = {
   setExpandedFolders: vi.fn(),
 };
 
-vi.mock('@/src/context/assets/SkillFolderContext', () => ({ useSkillFolder: () => mockFolder }));
+vi.mock('@/src/context/assets/SkillFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/SkillFolderContext')>()),
+  useSkillFolder: () => mockFolder,
+}));
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 vi.mock('@/src/components/Common/FileManager/utils', () => ({
   getGridOptions: vi.fn(() => ({})),
@@ -39,8 +43,8 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => ({
   ),
 }));
 
-describe('SkillManager', () => {
-  const onChangeSelectedSkillPath = vi.fn();
+describe('EntitySelectManager', () => {
+  const onChangeSelectedPath = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -48,8 +52,16 @@ describe('SkillManager', () => {
     mockFolder.expandedFolders = new Set<string>();
   });
 
-  const renderManager = (props?: Partial<Parameters<typeof SkillManager>[0]>) =>
-    render(<SkillManager value="" isModalOpen onChangeSelectedSkillPath={onChangeSelectedSkillPath} {...props} />);
+  const renderManager = (props?: Partial<Parameters<typeof EntitySelectManager>[0]>) =>
+    render(
+      <EntitySelectManager
+        entityType={EntitySelectType.Skill}
+        value=""
+        isModalOpen
+        onChangeSelectedPath={onChangeSelectedPath}
+        {...props}
+      />,
+    );
 
   test('reports the path of a clicked skill row', async () => {
     const user = userEvent.setup();
@@ -57,7 +69,7 @@ describe('SkillManager', () => {
 
     await user.click(screen.getByRole('button', { name: 'click-skill' }));
 
-    expect(onChangeSelectedSkillPath).toHaveBeenCalledWith('public/team/my-skill');
+    expect(onChangeSelectedPath).toHaveBeenCalledWith('public/team/my-skill');
   });
 
   test('reports no selection for a grouping folder row or an empty selection', async () => {
@@ -67,9 +79,9 @@ describe('SkillManager', () => {
     await user.click(screen.getByRole('button', { name: 'click-folder' }));
     await user.click(screen.getByRole('button', { name: 'click-nothing' }));
 
-    expect(onChangeSelectedSkillPath).toHaveBeenNthCalledWith(1, null);
-    expect(onChangeSelectedSkillPath).toHaveBeenNthCalledWith(2, null);
-    expect(onChangeSelectedSkillPath).not.toHaveBeenCalledWith('public/team/');
+    expect(onChangeSelectedPath).toHaveBeenNthCalledWith(1, null);
+    expect(onChangeSelectedPath).toHaveBeenNthCalledWith(2, null);
+    expect(onChangeSelectedPath).not.toHaveBeenCalledWith('public/team/');
   });
 
   test('loads the public root when opened with no value and nothing loaded', () => {

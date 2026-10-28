@@ -19,7 +19,7 @@ A new part SHALL default to `text`. The stored `FormDataPart.type` for a skill p
 - **THEN** its type SHALL be `text`
 
 ### Requirement: Skill part value is chosen with the skill picker
-For a part whose type is `skill`, the Value cell SHALL render `SkillSelectInput` (not the file picker and not a
+For a part whose type is `skill`, the Value cell SHALL render `EntitySelectInput` (entity type `Skill`) (not the file picker and not a
 plain text editor), and the stored value SHALL be the `skills/<bucket>/<path>` reference it emits. Parts of type
 `text` and `file` SHALL render as before.
 

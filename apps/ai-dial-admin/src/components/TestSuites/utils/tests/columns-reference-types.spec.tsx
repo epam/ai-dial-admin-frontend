@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
-import SkillSelectCellRenderer from '@/src/components/Grid/CellRenderers/SkillSelectCellRenderer';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import { InputBindingRowData } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -30,7 +30,7 @@ describe('getDynamicConfigurationsColumns — reference value editors', () => {
   test('edits a SKILL value with the skill picker', () => {
     const selected = selectValueRenderer(columns, TestCaseItemType.SKILL);
 
-    expect(selected?.component).toBe(SkillSelectCellRenderer);
+    expect(selected?.component).toBe(EntitySelectCellRenderer);
     expect(selected?.params).toEqual(expect.objectContaining({ onChange: expect.any(Function) }));
   });
 
@@ -52,7 +52,7 @@ describe('getVariablesColumns — reference value editors', () => {
   test('edits a SKILL value with the skill picker', () => {
     const selected = selectValueRenderer(columns, TestCaseItemType.SKILL);
 
-    expect(selected?.component).toBe(SkillSelectCellRenderer);
+    expect(selected?.component).toBe(EntitySelectCellRenderer);
   });
 
   test('keeps the text editor for a STRING value', () => {

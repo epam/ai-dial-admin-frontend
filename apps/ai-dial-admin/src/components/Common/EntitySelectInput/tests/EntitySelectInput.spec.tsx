@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import SkillSelectInput from '../SkillSelectInput';
+import EntitySelectInput from '../EntitySelectInput';
+import { EntitySelectType } from '../models';
 
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
@@ -33,25 +34,25 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
     ) : null,
 }));
 
-vi.mock('../SkillManager', () => ({
-  default: ({ value, onChangeSelectedSkillPath }: any) => (
+vi.mock('../EntitySelectManager', () => ({
+  default: ({ value, onChangeSelectedPath }: any) => (
     <div>
       <span>{`manager:${value}`}</span>
-      <button onClick={() => onChangeSelectedSkillPath('public/folder/my-skill')}>pick-skill</button>
-      <button onClick={() => onChangeSelectedSkillPath(null)}>pick-folder</button>
+      <button onClick={() => onChangeSelectedPath('public/folder/my-skill')}>pick-skill</button>
+      <button onClick={() => onChangeSelectedPath(null)}>pick-folder</button>
     </div>
   ),
 }));
 
-describe('SkillSelectInput', () => {
+describe('EntitySelectInput', () => {
   const onChangeValue = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const renderInput = (props?: Partial<Parameters<typeof SkillSelectInput>[0]>) =>
-    render(<SkillSelectInput value="" onChangeValue={onChangeValue} {...props} />);
+  const renderInput = (props?: Partial<Parameters<typeof EntitySelectInput>[0]>) =>
+    render(<EntitySelectInput entityType={EntitySelectType.Skill} value="" onChangeValue={onChangeValue} {...props} />);
 
   test('emits the skill reference with the skills prefix when a skill is confirmed', async () => {
     const user = userEvent.setup();

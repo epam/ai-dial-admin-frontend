@@ -15,7 +15,8 @@ import ValidityStatus from '@/src/components/Common/ValidityStatus/ValidityStatu
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
-import SkillSelectCellRenderer from '@/src/components/Grid/CellRenderers/SkillSelectCellRenderer';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -246,8 +247,9 @@ export const getDynamicConfigurationsColumns = (
           };
         } else if (params.data?.effectiveType === TestCaseItemType.SKILL) {
           return {
-            component: SkillSelectCellRenderer,
+            component: EntitySelectCellRenderer,
             params: {
+              entityType: EntitySelectType.Skill,
               onChange: onChangeEditable,
             },
           };
@@ -450,8 +452,9 @@ export const getVariablesColumns = (
         }
         if (params.data?.effectiveType === TestCaseItemType.SKILL) {
           return {
-            component: SkillSelectCellRenderer,
+            component: EntitySelectCellRenderer,
             params: {
+              entityType: EntitySelectType.Skill,
               onChange: onChangeEditable,
             },
           };

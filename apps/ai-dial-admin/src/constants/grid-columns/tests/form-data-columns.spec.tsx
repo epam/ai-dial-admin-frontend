@@ -4,7 +4,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
-import SkillSelectCellRenderer from '@/src/components/Grid/CellRenderers/SkillSelectCellRenderer';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import { FormDataPart, FormDataType } from '@/src/models/form-data';
 import { getFormDataColumns } from '../grid-columns';
 
@@ -27,7 +27,7 @@ describe('getFormDataColumns', () => {
   test.each([
     [FormDataType.Text, EditableCellRenderer],
     [FormDataType.File, FileSelectCellRenderer],
-    [FormDataType.Skill, SkillSelectCellRenderer],
+    [FormDataType.Skill, EntitySelectCellRenderer],
   ])('renders the type-driven value editor for a %s part', (type, expected) => {
     expect(selectRenderer(type)?.component).toBe(expected);
   });

@@ -2,14 +2,17 @@ import { FC, useEffect, useState } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
 
-import SkillSelectInput from '@/src/components/Common/SkillSelectInput/SkillSelectInput';
+import EntitySelectInput from '@/src/components/Common/EntitySelectInput/EntitySelectInput';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
 
-interface SkillSelectCellRendererParams extends ICellRendererParams {
+interface EntitySelectCellRendererParams extends ICellRendererParams {
+  entityType: EntitySelectType;
   onChange?: (value: string, data: unknown, column: string, index?: number) => void;
   isReadonly?: boolean;
 }
 
-const SkillSelectCellRenderer: FC<SkillSelectCellRendererParams> = ({
+const EntitySelectCellRenderer: FC<EntitySelectCellRendererParams> = ({
+  entityType,
   value,
   data,
   colDef,
@@ -33,9 +36,15 @@ const SkillSelectCellRenderer: FC<SkillSelectCellRendererParams> = ({
 
   return (
     <div className="w-full min-w-0">
-      <SkillSelectInput value={localValue} onChangeValue={onChangeValue} inputClassName="h-8" disabled={isReadonly} />
+      <EntitySelectInput
+        entityType={entityType}
+        value={localValue}
+        onChangeValue={onChangeValue}
+        inputClassName="h-8"
+        disabled={isReadonly}
+      />
     </div>
   );
 };
 
-export default SkillSelectCellRenderer;
+export default EntitySelectCellRenderer;

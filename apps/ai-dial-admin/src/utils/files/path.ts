@@ -135,6 +135,6 @@ export const getPathFromUrl = (url?: string): string => {
 export const toFileSelectPath = (value: unknown): string =>
   typeof value === 'string' && value.includes('/') && !value.startsWith(SKILLS_PREFIX) ? value : '';
 
-/** A skill reference is the skill's resource path (`skills/<bucket>/<path>`); anything else is a stale value. */
-export const toSkillSelectPath = (value: unknown): string =>
-  typeof value === 'string' && value.startsWith(SKILLS_PREFIX) ? value : '';
+/** An entity reference is the resource path (`<prefix><bucket>/<path>`); anything else is a stale value. */
+export const toEntitySelectPath = (value: unknown, prefix: string): string =>
+  typeof value === 'string' && value.startsWith(prefix) ? value : '';

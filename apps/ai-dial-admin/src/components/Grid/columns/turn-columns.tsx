@@ -4,7 +4,8 @@ import { ColDef, GridApi, ICellRendererParams, IRowNode, ValueGetterParams } fro
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
-import SkillSelectCellRenderer from '@/src/components/Grid/CellRenderers/SkillSelectCellRenderer';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
@@ -141,8 +142,9 @@ export const getGroupedSchemaColumn = (
       }
       if (param.type === TestCaseItemType.SKILL) {
         return {
-          component: SkillSelectCellRenderer,
+          component: EntitySelectCellRenderer,
           params: {
+            entityType: EntitySelectType.Skill,
             onChange: (value: string | number, rowData: unknown) => {
               onCell(rowData as Record<string, unknown>, field, value);
             },
