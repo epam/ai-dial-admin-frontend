@@ -1,5 +1,4 @@
 import { ASSET_NAME_VERSION_DELIMITER } from '@/src/constants/prompt';
-import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 
 export const getNameVersionForAsset = (name: string, version: string) => {
   return `${name}${ASSET_NAME_VERSION_DELIMITER}${version}`;
@@ -45,19 +44,6 @@ export const modifyNameVersionInAsset = (input: string, newName?: string, newVer
 
   pathParts[pathParts.length - 1] = modifiedFileName;
   return pathParts.join('/');
-};
-
-export const getInitialVersion = (versionsPerName: Record<string, string[]>, name?: string) => {
-  const latest = versionsPerName[name as string]?.sort(compareVersions).at(-1)?.split('.');
-
-  if (latest) {
-    if (isNaN(+latest[2])) {
-      return DEFAULT_NEW_ENTITY_VERSION;
-    }
-    latest[2] = `${+latest[2] + 1}`;
-  }
-
-  return latest?.join('.') || '';
 };
 
 export const checkNameVersionCombination = (

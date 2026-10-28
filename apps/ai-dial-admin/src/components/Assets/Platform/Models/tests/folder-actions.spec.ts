@@ -51,7 +51,7 @@ type ColumnFactory = (dateLocale?: unknown, dateOptions?: unknown) => { colId?: 
  * the updated-at one and two columns sharing a `colId` silently collide in ag-grid.
  */
 const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
-  getGridColumns(view, vi.fn(), {}, false).map((column) => {
+  getGridColumns(view).map((column) => {
     const resolved = typeof column === 'function' ? (column as ColumnFactory)('en-US', void 0) : column;
 
     return resolved.colId ?? resolved.field;

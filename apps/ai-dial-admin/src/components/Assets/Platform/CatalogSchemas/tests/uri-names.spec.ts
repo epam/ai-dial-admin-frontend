@@ -37,7 +37,7 @@ describe('Catalog schema asset :: URI-shaped names', () => {
   });
 
   test('Should list metadata-only columns, with no version column', () => {
-    const columns = getGridColumns(VIEW, () => void 0, {}, false);
+    const columns = getGridColumns(VIEW);
 
     expect(columns).toHaveLength(4);
     expect(columns.map((column) => (column as { colId?: string }).colId)).toContain('author');

@@ -82,7 +82,7 @@ const Paths: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex flex-col gap-y-4', STANDARD_CONTROL_WIDTH)}>
       {paths?.map((path, index) => (
         <Path
           disabled={disabled}

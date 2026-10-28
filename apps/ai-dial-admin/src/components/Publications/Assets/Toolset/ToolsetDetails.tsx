@@ -24,6 +24,7 @@ const ToolsetDetails: FC<Props> = ({ publication, onChange }) => {
         selectedToolset={publication.toolSetResources?.[0].toolSetResource as DialToolsetResource}
         onChange={onChangeToolset}
         isPublication
+        publicationFolderId={publication.folderId}
       />
     </div>
   );

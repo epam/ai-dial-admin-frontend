@@ -40,11 +40,8 @@ export interface SkillButtonsWrapperProps {
 }
 
 /**
- * `AssetButtonsWrapper`'s Save/Discard + Delete shape, minus the version control it renders
- * unconditionally (`AssetVersionControl` always shows a "Version" dropdown, and its "Create" footer
- * hardcodes `getApp`/`getToolset`/`getPrompt` — none of which apply to Skill, which has no version
- * concept exposed at this layer). `ConversationButtonsWrapper` is the precedent for this kind of
- * narrower, type-specific wrapper rather than forcing a shared component into an ill-fitting shape.
+ * Skill-specific Save/Discard and Delete controls. `ConversationButtonsWrapper` is the precedent
+ * for keeping type-specific lifecycle handling outside the shared asset wrapper.
  */
 const SkillButtonsWrapper: FC<SkillButtonsWrapperProps> = ({
   view,

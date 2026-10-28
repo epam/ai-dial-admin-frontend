@@ -10,7 +10,9 @@ import HeaderIdBlock from '@/src/components/EntityHeaderControls/HeaderIdBlock';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import AssetButtonsWrapper, { AssetButtonsWrapperProps } from './Wrappers/AssetButtonsWrapper';
+import AssetButtonsWrapper, {
+  AssetButtonsWrapperProps,
+} from '@/src/components/EntityHeaderControls/Wrappers/AssetButtonsWrapper';
 
 interface Props extends AssetButtonsWrapperProps {
   tabs: TabItem[];
@@ -27,7 +29,7 @@ const AssetHeader: FC<Props> = ({ jsonConfiguration, children, tabs, activeTab, 
       <div className={getHeaderClassName(isEditorEnabled)}>
         {!isEditorEnabled && (
           <HeaderIdBlock
-            id={props.entity.name || ''}
+            id={props.entity.name || props.entity._metadata?.name || ''}
             statusBadges={<EntityValidityBadge entity={props.entity as EntityValidityInput} />}
           />
         )}

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ErrorI18nKey } from '@/src/constants/i18n';
+
 import {
   assetApi,
   configFileApi,
@@ -61,16 +63,16 @@ const resourceBase = {
 // spellings so either resolution path is exercised.
 const appResource = (overrides: Partial<DialApplicationResource> = {}): DialApplicationResource => ({
   ...resourceBase,
-  // No `name` default: these cases assert the resource path the action builds, and `getVersionedName`
-  // folds the name into it — a fixture name would change every expected path.
-  folderId: 'public',
+  name: 'my-app',
+  folderId: 'public/',
   version: '1.0',
+  display_version: 'Spring release',
   input_attachment_types: [],
   application_properties: {},
   _metadata: {
-    name: '',
-    path: 'applications/public/my-app__1.0',
-    folderId: 'public',
+    name: 'my-app',
+    path: 'public/my-app__1.0',
+    folderId: 'public/',
     version: '1.0',
     nodeType: DialFileNodeType.ITEM,
   },
@@ -91,6 +93,46 @@ describe('Assets application :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'test');
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('creates a text version and synchronizes display_version without a semver requirement', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    await createApp(appResource({ version: 'release candidate', display_version: 'independent old value' }));
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public/my-app__release candidate',
+      expect.objectContaining({ display_version: 'release candidate', displayVersion: undefined }),
+    );
+  });
+
+  test.each([
+    ['', ErrorI18nKey.RequiredField],
+    ['bad__version', ErrorI18nKey.AmbiguousAssetVersion],
+    ['_preview', ErrorI18nKey.AmbiguousAssetVersion],
+    ['bad/version', ErrorI18nKey.InvalidAssetPath],
+    ['preview.', ErrorI18nKey.InvalidAssetPath],
+    ['a'.repeat(900), ErrorI18nKey.AssetPathTooLong],
+  ])(
+    'returns a localized validation response for invalid creation version %s before Core',
+    async (version, errorMessage) => {
+      const result = await createApp(appResource({ version }));
+
+      expect(result).toEqual({ success: false, errorHeader: ErrorI18nKey.ValidationError, errorMessage });
+      expect(assetApi.put).not.toHaveBeenCalled();
+    },
+  );
+
+  test('ordinary updates preserve empty display version and original metadata identity', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    await updateApp(appResource({ version: 'forged', display_version: '' }), 'etag');
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public/my-app__1.0',
+      expect.objectContaining({ display_version: '' }),
+      { etag: 'etag' },
+    );
   });
 
   test('Should call getApp action', async () => {
@@ -183,14 +225,14 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.objectContaining({
         folderId: undefined,
         application_properties: { key: 'value' },
         defaults: { key: 'value' },
         version: undefined,
         source: undefined,
-        display_version: '1.0',
+        display_version: 'Spring release',
       }),
       { etag: 'etag' },
     );
@@ -200,7 +242,7 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
       { etag: 'etag' },
     );
@@ -225,7 +267,7 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.objectContaining({
         external_services: {
           untouched: { auth_settings: { client_id: 'id' } },
@@ -251,7 +293,7 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.objectContaining({
         interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       }),
@@ -288,12 +330,12 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.objectContaining({
         folderId: undefined,
         version: undefined,
         source: undefined,
-        displayVersion: '1.0',
+        display_version: '1.0',
         application_type_schema_id: undefined,
       }),
     );
@@ -301,7 +343,7 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
     );
     expect(result).toBe(RESPONSE_MOCK);
@@ -321,7 +363,7 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'public__1.0',
+      'public/my-app__1.0',
       expect.objectContaining({
         interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       }),

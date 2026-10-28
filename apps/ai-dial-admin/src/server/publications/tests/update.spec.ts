@@ -75,16 +75,44 @@ describe('Server :: Publications :: buildUpdatePlan — versioned resources', ()
 
     expect(resourcePuts[0].asset).toEqual({
       name: 'my-app',
+      display_version: '2.0.0',
       _metadata: { version: '2.0.0', path: 'review/my-app__2.0.0', folderId: 'review/' },
     });
   });
 
-  test('leaves the asset untouched when it has no review path', () => {
+  test('synchronizes display version even when there is no review path', () => {
     const asset = { name: 'my-app', version: '3.0.0' };
 
     const { resourcePuts } = buildUpdatePlan(buildPublication(asset) as never);
 
-    expect(resourcePuts[0].asset).toBe(asset);
+    expect(resourcePuts[0].asset).toEqual({ ...asset, display_version: '3.0.0' });
+    expect(asset).toEqual({ name: 'my-app', version: '3.0.0' });
+  });
+
+  test.each([
+    ['applicationResources', 'applicationResource', 'applications'],
+    ['toolSetResources', 'toolSetResource', 'toolsets'],
+  ])('synchronizes unchanged text versions for %s and relocates review content', (resourceKey, assetKey, prefix) => {
+    const asset = {
+      name: 'my-asset',
+      display_version: 'Spring release',
+      _metadata: { version: 'release candidate', path: 'review/my-asset__stable' },
+    };
+    const publication = {
+      path: 'public/req',
+      requestName: 'req',
+      folderId: 'public/folder',
+      rules: [],
+      [resourceKey]: [{ action: ActionType.ADD, sourceUrl: `${prefix}/source/my-asset__stable`, [assetKey]: asset }],
+    };
+    const { dto, resourcePuts } = buildUpdatePlan(publication as never);
+    expect(dto.resources[0].targetUrl).toBe(`${prefix}/public/folder/my-asset__release%20candidate`);
+    expect(resourcePuts[0].asset).toEqual({
+      ...asset,
+      display_version: 'release candidate',
+      _metadata: { ...asset._metadata, path: 'review/my-asset__release candidate' },
+    });
+    expect(asset.display_version).toBe('Spring release');
   });
 
   test('keeps versionless prompt assets untouched and without a version suffix', () => {
