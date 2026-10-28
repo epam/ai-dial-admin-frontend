@@ -1,5 +1,6 @@
 import { FC } from 'react';
-import Editor, { Monaco } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
+import Editor from '@/src/components/Common/MonacoEditor/Editor';
 import { useTheme } from '@/src/context/ThemeContext';
 import { getDiffEditorTheme } from '@/src/constants/editor';
 import { EDITOR_THEMES } from '@/src/types/editor';

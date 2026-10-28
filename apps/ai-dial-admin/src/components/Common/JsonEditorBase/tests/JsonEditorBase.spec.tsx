@@ -7,9 +7,9 @@ import JsonEditorBase from '../JsonEditorBase';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let capturedEditorProps: any;
 
-vi.mock('@monaco-editor/react', () => ({
+vi.mock('@/src/components/Common/MonacoEditor/Editor', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Editor: (props: any) => {
+  default: (props: any) => {
     capturedEditorProps = props;
     return <div role="textbox" aria-label="monaco-editor-mock" />;
   },
@@ -21,7 +21,7 @@ vi.mock('@/src/context/ThemeContext', () => ({
 
 const buildMonaco = () => ({
   editor: { defineTheme: vi.fn() },
-  languages: { json: { jsonDefaults: { setDiagnosticsOptions: vi.fn() } } },
+  json: { jsonDefaults: { setDiagnosticsOptions: vi.fn() } },
 });
 
 describe('JsonEditorBase', () => {
@@ -54,7 +54,7 @@ describe('JsonEditorBase', () => {
     const monaco = buildMonaco();
     capturedEditorProps.beforeMount(monaco);
 
-    expect(monaco.languages.json.jsonDefaults.setDiagnosticsOptions).toHaveBeenCalled();
+    expect(monaco.json.jsonDefaults.setDiagnosticsOptions).toHaveBeenCalled();
   });
 
   test('does not register JSON diagnostics for a non-json language', () => {
@@ -63,6 +63,6 @@ describe('JsonEditorBase', () => {
     const monaco = buildMonaco();
     capturedEditorProps.beforeMount(monaco);
 
-    expect(monaco.languages.json.jsonDefaults.setDiagnosticsOptions).not.toHaveBeenCalled();
+    expect(monaco.json.jsonDefaults.setDiagnosticsOptions).not.toHaveBeenCalled();
   });
 });
