@@ -67,6 +67,13 @@ describe('FileManager', () => {
       expect(options.folderCreationValidationMessages).toEqual(getValidationMessages(translate));
     });
 
+    test('passes both hidden files toggle labels to the destination folder popup', () => {
+      const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
+
+      expect(options.hiddenFilesSwitcherLabel).toBe(FileManagerI18nKey.ShowHiddenFiles);
+      expect(options.hideHiddenFilesLabel).toBe(FileManagerI18nKey.HideHiddenFiles);
+    });
+
     test('should hide the sort control in the move popup', () => {
       const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
 
