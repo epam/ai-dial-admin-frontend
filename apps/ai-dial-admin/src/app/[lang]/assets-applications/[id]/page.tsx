@@ -12,8 +12,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
-import { DialFileNodeType } from '@/src/models/dial/file';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -25,7 +24,7 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
-import { getApp, getApps, getConfigFileApplication, getPlatformApplication } from '../actions';
+import { getApp, getConfigFileApplication, getPlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +36,6 @@ export default async function Page(params: {
 
   let etag = DEFAULT_ETAG;
 
-  let apps: AssetApp[] = [];
   let app: AssetApp | null = null;
 
   let models: DialModel[] | null = [];
@@ -78,10 +76,6 @@ export default async function Page(params: {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as AssetApp | null;
       });
-
-      apps = ((await getApps(app?.folderId || app?._metadata?.folderId || ''))?.filter(
-        (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
-      ) || []) as AssetApp[];
     }
 
     assetRunners = await getAllRunners();
@@ -144,7 +138,6 @@ export default async function Page(params: {
         <AppView
           etag={etag}
           originalApp={app}
-          assets={apps || []}
           models={models || []}
           applications={applications || []}
           schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}

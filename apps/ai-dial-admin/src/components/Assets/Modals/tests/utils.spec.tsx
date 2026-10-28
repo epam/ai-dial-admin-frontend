@@ -1,365 +1,150 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import { FileManagerColumnKey, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
+import { ColDef } from 'ag-grid-community';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { DialFileNodeType } from '@/src/models/dial/file';
-import { FileManagerColumnKey } from '@epam/ai-dial-react-file-manager';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import {
   getDeleteModalDescription,
   getDeleteModalTitle,
   getGridColumns,
   generateTreeForDeletingItems,
   normalizePath,
-  processAssetsData,
-} from '../utils';
-import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@epam/ai-dial-react-file-manager';
-import { ColDef } from 'ag-grid-community';
+} from '@/src/components/Assets/Modals/utils';
 
-const t = (key: string, options?: Record<string, string | number>) => {
-  if (options?.items) {
-    return `${key}:${options.items}`;
-  }
+const t = (key: string, options?: Record<string, string | number>) =>
+  options?.items ? `${key}:${options.items}` : key;
+const assets: AssetWithVersion[] = ['stable', 'release candidate'].map((version) => ({
+  name: 'assistant',
+  version,
+  path: `public/team/assistant__${version}`,
+  folderId: 'public/team/',
+  nodeType: DialFileNodeType.ITEM,
+}));
 
-  return key;
-};
-
-describe('Assets Modals utils', () => {
-  describe('getGridColumns', () => {
-    test('returns Name and Version columns for the versioned asset views', () => {
-      const appsColumns = getGridColumns(ApplicationRoute.AssetsApplications, true);
-      const toolsetsColumns = getGridColumns(ApplicationRoute.AssetsToolsets, true);
-
-      expect(appsColumns).toHaveLength(2);
-      expect(!!appsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeTruthy();
-      expect(
-        !!toolsetsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version),
-      ).toBeTruthy();
-    });
-
-    // Prompts are versionless — each row is a single stored resource, so no version tags column.
-    test('returns only the Name column for prompts', () => {
-      const promptsColumns = getGridColumns(ApplicationRoute.Prompts, true);
-
-      expect(promptsColumns).toHaveLength(1);
-      expect(promptsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeFalsy();
-    });
-
-    test('returns Name and Size columns for files view', () => {
-      const columns = getGridColumns(ApplicationRoute.Files, true);
-
+describe('getGridColumns', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'renders scalar Version for public %s',
+    (view) => {
+      const columns = getGridColumns(view, false, assets as unknown as DialFile[]);
       expect(columns).toHaveLength(2);
-      expect(!!columns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Size)).toBeTruthy();
-    });
+      expect(columns.find((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toMatchObject({
+        field: 'version',
+        cellRenderer: FormattedValueCellRenderer,
+      });
+    },
+  );
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'keeps platform %s unversioned',
+    (view) => {
+      expect(getGridColumns(view, false, [{ bucket: 'platform', folderId: 'platform/' } as DialFile])).toEqual([
+        expect.objectContaining({ colId: FileManagerColumnKey.Name }),
+        expect.objectContaining({ colId: FileManagerColumnKey.Author }),
+      ]);
+    },
+  );
+  test.each([ApplicationRoute.Prompts, ApplicationRoute.Conversations])('keeps %s versionless', (view) => {
+    expect(getGridColumns(view, true)).toHaveLength(1);
+  });
+  test('keeps file sizes in folder previews', () => {
+    expect(getGridColumns(ApplicationRoute.Files, true)[1]).toMatchObject({ colId: FileManagerColumnKey.Size });
+  });
+});
 
-    // Regression: a platform-bucket application/toolset row has no version, so the bulk-delete
-    // confirmation grid should show Name+Author instead of Name+Version there.
-    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-      'returns Name and Author columns for a platform-bucket %s delete',
-      (view) => {
-        const columns = getGridColumns(view, false, undefined, [{ folderId: 'platform/' } as unknown as DialFile]);
-
-        expect(columns).toEqual([
-          expect.objectContaining({ colId: FileManagerColumnKey.Name }),
-          expect.objectContaining({ colId: FileManagerColumnKey.Author }),
-        ]);
-      },
+describe('getDeleteModalTitle', () => {
+  test('uses the folder-aware title when folders are selected', () => {
+    expect(getDeleteModalTitle(ApplicationRoute.AssetsApplications, t, 2, true)).toBe(
+      FileManagerI18nKey.DeleteItemsAndFoldersModalTitle,
     );
-
-    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-      'keeps Name and Version columns for a public-bucket %s delete',
-      (view) => {
-        const columns = getGridColumns(view, false, undefined, [{ folderId: 'public/folder/' } as unknown as DialFile]);
-
-        expect(!!columns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeTruthy();
-        expect(columns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Author)).toBeFalsy();
-      },
+  });
+  test.each([
+    [ApplicationRoute.Prompts, FileManagerI18nKey.Prompt, FileManagerI18nKey.Prompts],
+    [ApplicationRoute.AssetsApplications, FileManagerI18nKey.Application, FileManagerI18nKey.Applications],
+    [ApplicationRoute.AssetsToolsets, FileManagerI18nKey.Toolset, FileManagerI18nKey.Toolsets],
+    [ApplicationRoute.Skills, FileManagerI18nKey.Skill, FileManagerI18nKey.Skills],
+    [ApplicationRoute.Files, FileManagerI18nKey.File, FileManagerI18nKey.Files],
+  ])('uses actual selected row counts for %s', (view, singular, plural) => {
+    expect(getDeleteModalTitle(view as ApplicationRoute, t, 1, false)).toBe(
+      `${FileManagerI18nKey.DeleteItemsModalTitle}:${singular}`,
+    );
+    expect(getDeleteModalTitle(view as ApplicationRoute, t, 2, false)).toBe(
+      `${FileManagerI18nKey.DeleteItemsModalTitle}:${plural}`,
     );
   });
+});
 
-  describe('getDeleteModalTitle', () => {
-    test('returns folder-aware title when folders are included', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.Prompts, t, 1, true);
-      expect(result).toBe(FileManagerI18nKey.DeleteItemsAndFoldersModalTitle);
-    });
+describe('getDeleteModalDescription', () => {
+  test.each([
+    ApplicationRoute.Prompts,
+    ApplicationRoute.AssetsApplications,
+    ApplicationRoute.AssetsToolsets,
+    ApplicationRoute.Skills,
+    ApplicationRoute.Files,
+  ])('describes recursive folder deletion for %s', (view) => {
+    expect(getDeleteModalDescription(view, t, 2, true)).toContain(
+      FileManagerI18nKey.DeleteItemsAndFoldersModalDescription,
+    );
+    expect(getDeleteModalDescription(view, t, 1, false)).toContain(FileManagerI18nKey.DeleteItemsModalDescription);
+  });
+});
 
-    test('returns singular prompt title when deleting one prompt', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.Prompts, t, 1, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Prompt`);
-    });
+describe('normalizePath', () => {
+  test('adds a missing trailing slash without duplicating it', () => {
+    expect(normalizePath('public/team')).toBe('public/team/');
+    expect(normalizePath('public/team/')).toBe('public/team/');
+  });
+});
 
-    test('returns plural file title when deleting multiple files', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.Files, t, 2, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Files`);
-    });
-
-    test('returns singular skill title when deleting one skill', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.Skills, t, 1, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Skill`);
-    });
-
-    test('returns plural skill title when deleting multiple skills', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.Skills, t, 2, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Skills`);
-    });
+describe('generateTreeForDeletingItems', () => {
+  test('keeps same-name resource mappings distinct by their stored leaves', () => {
+    const { treeItems, pathMapping } = generateTreeForDeletingItems(
+      assets,
+      assets as unknown as DialFile[],
+      'Selected',
+    );
+    expect(treeItems[0].items?.map((item) => item.path)).toEqual([
+      'Selected/assistant__stable',
+      'Selected/assistant__release candidate',
+    ]);
+    expect([...pathMapping.values()]).toEqual(assets.map((asset) => asset.path));
+    expect(pathMapping.size).toBe(2);
+  });
+  test('matches the selected full path even when sibling ids are equal', () => {
+    const rows = assets.map((asset) => ({ ...asset, id: 'assistant' }));
+    const { treeItems, pathMapping } = generateTreeForDeletingItems(
+      rows,
+      [rows[1]] as unknown as DialFile[],
+      'Selected',
+    );
+    expect(treeItems[0].items?.map((item) => item.path)).toEqual(['Selected/assistant__release candidate']);
+    expect([...pathMapping.values()]).toEqual([rows[1].path]);
   });
 
-  describe('getDeleteModalDescription', () => {
-    test('returns folder-aware description for applications', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.AssetsApplications, t, 1, true);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsAndFoldersModalDescription}:filemanager.applications`);
-    });
-
-    test('returns singular prompt description when deleting one prompt', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.Prompts, t, 1, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalDescription}:filemanager.prompt`);
-    });
-
-    test('returns plural toolset description when deleting multiple toolsets', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.AssetsToolsets, t, 3, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalDescription}:filemanager.toolsets`);
-    });
-
-    test('returns folder-aware description for skills', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.Skills, t, 1, true);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsAndFoldersModalDescription}:filemanager.skills`);
-    });
-
-    test('returns singular skill description when deleting one skill', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.Skills, t, 1, false);
-      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalDescription}:filemanager.skill`);
-    });
+  test('retains recursive folder paths and maps every descendant to its original identity', () => {
+    const folder = {
+      name: 'team',
+      path: 'public/team/',
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      items: assets,
+    };
+    const { treeItems, pathMapping } = generateTreeForDeletingItems(
+      [folder],
+      [folder] as unknown as DialFile[],
+      'Selected',
+    );
+    expect(treeItems[0].items?.[0].path).toBe('Selected/team/');
+    expect(treeItems[0].items?.[0].items).toHaveLength(2);
+    expect(pathMapping.get('Selected/team/assistant__stable')).toBe(assets[0].path);
+    expect(pathMapping.get('Selected/team/assistant__release candidate')).toBe(assets[1].path);
+    expect(pathMapping.get('Selected/team/')).toBe('public/team/');
   });
-
-  describe('normalizePath', () => {
-    test('appends slash when missing', () => {
-      expect(normalizePath('folder/subfolder')).toBe('folder/subfolder/');
-    });
-
-    test('keeps path unchanged when slash already exists', () => {
-      expect(normalizePath('folder/subfolder/')).toBe('folder/subfolder/');
-    });
-  });
-
-  describe('generateTreeForDeletingItems', () => {
-    const originalItems = [
-      {
-        id: 'folder-1',
-        name: 'Folder One',
-        path: 'folder1/',
-        parentPath: '',
-        nodeType: DialFileNodeType.FOLDER,
-        items: [
-          {
-            id: 'file-1',
-            name: 'file.txt',
-            path: 'folder1/file.txt',
-            parentPath: 'folder1/',
-            nodeType: DialFileNodeType.ITEM,
-          },
-        ],
-      },
-    ];
-
-    test('builds tree and path mapping for a top-level folder', () => {
-      const itemsToDelete = [{ id: 'folder-1', name: 'Folder One', path: 'folder1/' }];
-      const { treeItems, pathMapping } = generateTreeForDeletingItems(
-        originalItems as Asset[],
-        itemsToDelete as DialFile[],
-        'Selected Items to delete',
-      );
-
-      expect(treeItems).toHaveLength(1);
-      const root = treeItems[0];
-      expect(root.path).toBe('Selected Items to delete/');
-      expect(root.items).toHaveLength(1);
-      expect(root.items?.[0].path).toBe('Selected Items to delete/folder1/');
-      expect(root.items?.[0].items?.[0].path).toBe('Selected Items to delete/folder1/file.txt');
-      expect(pathMapping.get('Selected Items to delete/folder1/')).toBe('folder1/');
-      expect(pathMapping.get('Selected Items to delete/folder1/file.txt')).toBe('folder1/file.txt');
-    });
-
-    test('builds tree and path mapping for a single file', () => {
-      const itemsToDelete = [{ id: 'file-1', name: 'file.txt', path: 'folder1/file.txt' }];
-      const { treeItems, pathMapping } = generateTreeForDeletingItems(
-        originalItems as Asset[],
-        itemsToDelete as DialFile[],
-        'Selected Items to delete',
-      );
-
-      expect(treeItems[0].items).toHaveLength(1);
-      expect(treeItems[0].items?.[0].path).toBe('Selected Items to delete/file.txt');
-      expect(treeItems[0].items?.[0].parentPath).toBe('Selected Items to delete/');
-      expect(pathMapping.get('Selected Items to delete/file.txt')).toBe('folder1/file.txt');
-    });
-  });
-
-  describe('processAssetsData', () => {
-    test('passes a single prompt through without version selection state', () => {
-      const assets = [
-        {
-          id: 'asset-1',
-          name: 'prompt1',
-          folderId: 'folder1',
-          path: 'folder1/prompt1',
-          nodeType: DialFileNodeType.ITEM,
-        },
-      ];
-      const selectedVersionsMap = {};
-
-      // DeleteAssetsModal casts the fetched rows the same way — the versionless branch
-      // passes them through untouched.
-      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('prompt1');
-      expect(result[0].versions).toBeUndefined();
-      expect(result[0].selectedVersions).toBeUndefined();
-    });
-
-    test('uses selectedVersionsMap when available', () => {
-      const assets = [
-        {
-          id: 'asset-1',
-          name: 'app1',
-          version: '1.0',
-          folderId: 'folder1',
-          path: 'folder1/app1',
-          nodeType: DialFileNodeType.ITEM,
-        },
-      ];
-      const selectedVersionsMap = { folder1app1: ['1.0', '2.0'] };
-
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.AssetsApplications);
-
-      expect(result[0].selectedVersions).toEqual(['1.0', '2.0']);
-    });
-
-    test('deduplicates items with same name and merges versions', () => {
-      const assets = [
-        {
-          id: 'asset-1',
-          name: 'toolset',
-          version: '1.0',
-          folderId: 'folder1',
-          path: 'folder1/toolset',
-          nodeType: DialFileNodeType.ITEM,
-        },
-        {
-          id: 'asset-2',
-          name: 'toolset',
-          version: '2.0',
-          folderId: 'folder2',
-          path: 'folder2/toolset',
-          nodeType: DialFileNodeType.ITEM,
-        },
-      ];
-      const selectedVersionsMap = {};
-
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.AssetsToolsets);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('toolset');
-      expect(result[0].versions).toContain('1.0');
-      expect(result[0].versions).toContain('2.0');
-    });
-
-    test('avoids duplicate versions when merging', () => {
-      const assets = [
-        {
-          id: 'asset-1',
-          name: 'file',
-          version: '1.0',
-          folderId: 'folder1',
-          path: 'folder1/file',
-          nodeType: DialFileNodeType.ITEM,
-        },
-        {
-          id: 'asset-2',
-          name: 'file',
-          version: '1.0',
-          folderId: 'folder2',
-          path: 'folder2/file',
-          nodeType: DialFileNodeType.ITEM,
-        },
-      ];
-      const selectedVersionsMap = {};
-
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.AssetsApplications);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].versions?.filter((v) => v === '1.0')).toHaveLength(1);
-    });
-
-    test('recursively processes nested folders', () => {
-      const assets = [
-        {
-          id: 'folder-1',
-          name: 'folder1',
-          path: 'folder1/',
-          nodeType: DialFileNodeType.FOLDER,
-          items: [
-            {
-              id: 'asset-1',
-              name: 'prompt',
-              folderId: 'folder1',
-              path: 'folder1/prompt',
-              nodeType: DialFileNodeType.ITEM,
-            },
-          ],
-        },
-      ];
-      const selectedVersionsMap = {};
-
-      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].nodeType).toBe(DialFileNodeType.FOLDER);
-      expect(result[0].items).toHaveLength(1);
-      expect(result[0].items?.[0].name).toBe('prompt');
-    });
-
-    test('handles empty asset array', () => {
-      const result = processAssetsData([], {}, ApplicationRoute.Prompts);
-      expect(result).toEqual([]);
-    });
-
-    // The versionless contrast to the toolsets dedup test above: for prompts, same-name rows are
-    // distinct resources, never merged into a name+versions pair.
-    test('preserves folder structure for prompts without merging same-name items', () => {
-      const assets = [
-        {
-          id: 'folder-1',
-          name: 'folder1',
-          path: 'folder1/',
-          nodeType: DialFileNodeType.FOLDER,
-          items: [
-            {
-              id: 'asset-1',
-              name: 'item',
-              folderId: 'folder1',
-              path: 'folder1/item',
-              nodeType: DialFileNodeType.ITEM,
-            },
-            {
-              id: 'asset-2',
-              name: 'item',
-              folderId: 'folder1',
-              path: 'folder1/item-v2',
-              nodeType: DialFileNodeType.ITEM,
-            },
-          ],
-        },
-      ];
-      const selectedVersionsMap = {};
-
-      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].items).toHaveLength(2);
-      expect(result[0].items?.[0].name).toBe('item');
-      expect(result[0].items?.[1].name).toBe('item');
-      expect(result[0].items?.[0].versions).toBeUndefined();
-      expect(result[0].items?.[1].versions).toBeUndefined();
-    });
+  test('uses a selected resource even when it has not been fetched', () => {
+    expect(
+      generateTreeForDeletingItems([], [assets[0]] as unknown as DialFile[], 'Selected').pathMapping.get(
+        'Selected/assistant__stable',
+      ),
+    ).toBe(assets[0].path);
   });
 });

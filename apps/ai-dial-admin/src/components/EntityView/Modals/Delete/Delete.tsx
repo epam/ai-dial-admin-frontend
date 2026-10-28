@@ -73,6 +73,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const getReqRef = useRef(useProtectedRequest());
   const modalSize = hasRelatedArtefacts(view) ? PopupSize.Md : PopupSize.Sm;
 
+  const isIndependentAsset = view === ApplicationRoute.AssetsApplications || view === ApplicationRoute.AssetsToolsets;
+  const versionOptions = isIndependentAsset ? undefined : existingVersions;
   const [selectedVersion, setSelectedVersion] = useState(
     (entity as unknown as DialResource)?._metadata?.version || entity.version,
   );
@@ -111,7 +113,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   );
 
   const existingVersionOptions = useMemo(() => {
-    if (!existingVersions) {
+    if (!versionOptions) {
       return [];
     }
 
@@ -120,11 +122,11 @@ const DeleteConfirmationModal = <T extends Artefact>({
         label: t(EntityFieldsI18nKey.allVersionsOption),
         value: AllVersionValue,
       },
-      ...existingVersions.map((version) => ({ value: version, label: version })),
+      ...versionOptions.map((version) => ({ value: version, label: version })),
     ];
-  }, [existingVersions, t]);
+  }, [versionOptions, t]);
 
-  const onConfirmRemoving = useCallback(() => {
+  const onConfirmRemoving = useCallback(async () => {
     if (isRemovingRef.current) {
       return;
     }
@@ -133,7 +135,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
 
     let entityKeys: string[];
 
-    if (!selectedVersion) {
+    if (isIndependentAsset || !selectedVersion) {
       entityKeys = [getEntityPath(view, entity, true)];
     } else {
       entityKeys =
@@ -145,52 +147,55 @@ const DeleteConfirmationModal = <T extends Artefact>({
     const promises = entityKeys.map((entityKey) => {
       // A `__` in a prompt/conversation name is part of the name — never split it to match a
       // version; the etag applies as-is. Versioned types keep the version-matched etag.
-      const entityEtag = isVersionlessAssetView(view)
-        ? etag
-        : getNameVersionFromAsset(entityKey).version === entity.version
-          ? etag
-          : undefined;
+      let entityEtag = etag;
+      if (
+        !isIndependentAsset &&
+        !isVersionlessAssetView(view) &&
+        getNameVersionFromAsset(entityKey).version !== entity.version
+      ) {
+        entityEtag = undefined;
+      }
       return getReqRef.current(onRemoveEntity, entityKey, entityEtag);
     });
 
-    Promise.all(promises)
-      .then((resArr) => {
-        let isAllSuccess = true;
+    try {
+      const resArr = await Promise.all(promises);
+      let isAllSuccess = true;
 
-        resArr.forEach((res, index) => {
-          if (res.success) {
-            showSuccessNotification(entityKeys[index]);
-            if (view === ApplicationRoute.TestSuites && name) {
-              removeTryoutResponseFromStorage(name);
-            }
-          } else {
-            isAllSuccess = false;
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      resArr.forEach((res, index) => {
+        if (res.success) {
+          showSuccessNotification(entityKeys[index]);
+          if (view === ApplicationRoute.TestSuites && name) {
+            removeTryoutResponseFromStorage(name);
           }
-        });
-
-        if (isAllSuccess) {
-          onCloseModal();
-          onResetEntity?.();
-          if (isAssetView(view)) {
-            folderContext?.fetchFiles(folderContext?.filePath);
-          }
-
-          if (isSelectedView) {
-            router.push(view);
-          }
-          router.refresh();
         } else {
-          isRemovingRef.current = false;
-          setIsRemoving(false);
+          isAllSuccess = false;
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
-      })
-      .catch((error) => {
+      });
+
+      if (isAllSuccess) {
+        onCloseModal();
+        onResetEntity?.();
+        if (isAssetView(view)) {
+          folderContext?.fetchFiles(folderContext?.filePath);
+        }
+
+        if (isSelectedView) {
+          router.push(view);
+        }
+        router.refresh();
+      } else {
         isRemovingRef.current = false;
         setIsRemoving(false);
-        showNotification(getErrorNotification(error.message));
-      });
+      }
+    } catch (error) {
+      isRemovingRef.current = false;
+      setIsRemoving(false);
+      showNotification(getErrorNotification((error as Error).message));
+    }
   }, [
+    isIndependentAsset,
     selectedVersion,
     view,
     entity,
@@ -243,7 +248,13 @@ const DeleteConfirmationModal = <T extends Artefact>({
               <EllipsisTooltip text={displayName} />
             </div>
           )}
-          {existingVersions && existingVersions.length > 0 ? (
+          {isIndependentAsset && selectedVersion && (
+            <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.version)}:</span>
+              <EllipsisTooltip text={selectedVersion} />
+            </div>
+          )}
+          {versionOptions && versionOptions.length > 0 ? (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span>
               <Select

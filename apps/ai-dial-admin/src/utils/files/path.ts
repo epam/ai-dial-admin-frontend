@@ -4,6 +4,7 @@ import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { findFolderChildren, getFolderName } from './folder';
 import { addTrailingSlash } from '@/src/utils/url';
+import { extractNameAndVersion } from '@/src/server/publications/path';
 
 export const isFolder = (type?: DialFileNodeType) => type === DialFileNodeType.FOLDER;
 
@@ -114,8 +115,8 @@ export const updatePathWithName = (oldPath: string, newName: string): string => 
 };
 
 export const extractVersionByPath = (path: string) => {
-  const match = path.match(/__(.+)$/);
-  return match ? match[1] : null;
+  const leaf = path.slice(path.lastIndexOf('/') + 1);
+  return extractNameAndVersion(leaf).version || null;
 };
 
 export const getPathFromUrl = (url?: string): string => {

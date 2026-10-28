@@ -20,7 +20,11 @@ const renderProperties = (versionsMap: Record<string, string[]>, hideVersionFiel
     />,
   );
 
-const versionValidity = (isValid: boolean) => ({ type: ValidationActionType.SetField, field: 'version', isValid });
+const versionValidity = (isValid: boolean) => ({
+  type: ValidationActionType.SetField,
+  field: expect.stringContaining('assetVersion-'),
+  isValid,
+});
 
 describe('AssetProperties', () => {
   beforeEach(() => {

@@ -1,11 +1,72 @@
 import { describe, test, expect, vi } from 'vitest';
-import { getFormDataForImport, getImportFunction, getImportTitle } from '../utils';
+import {
+  getAssetIdByNameAndVersion,
+  getFormDataForImport,
+  getImportFunction,
+  getImportTitle,
+} from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ImportFileType, ConflictResolutionPolicy } from '@/src/types/import';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 
+describe('getAssetIdByNameAndVersion', () => {
+  test('encodes a newly entered name without re-encoding the incoming suffix', () => {
+    expect(getAssetIdByNameAndVersion('applications/public/assistant__release%20candidate', 'renamed %20 未来')).toBe(
+      'applications/public/renamed%20%2520%20%E6%9C%AA%E6%9D%A5__release%20candidate',
+    );
+  });
+  test.each(['stable', 'release%20candidate', '未来 #?%', '', ' '])(
+    'preserves the original suffix %j despite a draft version',
+    (version) => {
+      expect(
+        getAssetIdByNameAndVersion(
+          `applications/public/assistant__internal__${version}`,
+          'renamed__internal',
+          'forged',
+        ),
+      ).toBe(`applications/public/renamed__internal__${version}`);
+    },
+  );
+  test('keeps an unversioned legacy id unversioned', () => {
+    expect(getAssetIdByNameAndVersion('applications/public/assistant', 'renamed', 'forged')).toBe(
+      'applications/public/renamed',
+    );
+  });
+});
+
 describe('getFormDataForImport', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'retains path and display versions independently for %s JSON import',
+    (route) => {
+      const source = {
+        id: 'applications/public/assistant__internal__stable',
+        name: 'renamed',
+        version: 'forged',
+        display_version: 'Spring release',
+        path: '',
+        folderId: '',
+      };
+      const file =
+        route === ApplicationRoute.AssetsApplications
+          ? { applications: [source] }
+          : { toolSets: [{ ...source, id: 'toolsets/public/assistant__internal__stable' }] };
+      getFormDataForImport(
+        'public/target/',
+        file,
+        ImportFileType.JSON,
+        ConflictResolutionPolicy.SKIP,
+        undefined,
+        true,
+        route,
+      );
+      const entry = 'applications' in file ? file.applications?.[0] : file.toolSets[0];
+      expect(entry?.id).toBe(
+        `${route === ApplicationRoute.AssetsApplications ? 'applications' : 'toolsets'}/public/renamed__stable`,
+      );
+      expect(entry?.display_version).toBe('Spring release');
+    },
+  );
   test('returns FormData and fileSize for ARCHIVE', () => {
     const file = new File(['test'], 'test.zip');
     const result = getFormDataForImport('path', file, ImportFileType.ARCHIVE, ConflictResolutionPolicy.SKIP);

@@ -1,9 +1,10 @@
+import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import DeleteConfirmationModal from '../Delete';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 
 const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -48,6 +49,42 @@ describe('DeleteConfirmationModal :: platform-bucket notification', () => {
       const notification = showNotification.mock.calls[0][0];
       expect(notification.description).not.toContain('platform/pl_Ts');
       expect(notification.description).toContain('pl_Ts');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'deletes only the opened metadata path with its etag for %s',
+    async (view) => {
+      vi.mocked(useRouter).mockReturnValue({ push: vi.fn(), refresh: vi.fn() } as unknown as ReturnType<
+        typeof useRouter
+      >);
+      const onRemoveEntity = vi.fn().mockResolvedValue({ success: true });
+      render(
+        <DeleteConfirmationModal
+          view={view}
+          entity={
+            {
+              name: 'assistant',
+              _metadata: {
+                name: 'assistant',
+                path: 'public/team/assistant__stable',
+                folderId: 'public/team/',
+                version: 'stable',
+              },
+            } as never
+          }
+          existingVersions={['stable', 'preview']}
+          etag="current-etag"
+          onRemoveEntity={onRemoveEntity}
+          onCloseModal={vi.fn()}
+        />,
+      );
+      expect(screen.getByText('stable')).toBeInTheDocument();
+      expect(screen.queryByRole('combobox')).toBeNull();
+      await userEvent.setup().click(screen.getByRole('button', { name: 'Buttons.Delete' }));
+      await vi.waitFor(() =>
+        expect(onRemoveEntity).toHaveBeenCalledExactlyOnceWith('public/team/assistant__stable', 'current-etag'),
+      );
     },
   );
 

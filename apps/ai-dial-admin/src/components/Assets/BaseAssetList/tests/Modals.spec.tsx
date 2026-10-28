@@ -19,7 +19,6 @@ const renderDuplicateModal = (view: ApplicationRoute, duplicateItem: Record<stri
       isModalOpen
       modalType={ModalType.duplicate}
       duplicateItem={duplicateItem as never}
-      hasSelectedItems={false}
       getContext={() => ({}) as never}
       onClose={vi.fn()}
       onRemove={vi.fn()}

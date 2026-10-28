@@ -81,6 +81,7 @@ export const getDestinationFolderPopupOptions = (
   onCreateFolderValidate: (name: string) => validateCreateFolder(name, t),
   folderCreationValidationMessages: getValidationMessages(t),
   hiddenFilesSwitcherLabel: t(FileManagerI18nKey.ShowHiddenFiles),
+  hideHiddenFilesLabel: t(FileManagerI18nKey.HideHiddenFiles),
   emptyStateTitle: t(FileManagerI18nKey.EmptyMoveFolderTitle),
   emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
     items: t(assetEntityMap[view]).toLowerCase(),

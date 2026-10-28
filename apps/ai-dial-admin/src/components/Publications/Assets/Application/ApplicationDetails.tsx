@@ -27,6 +27,7 @@ const ApplicationDetails: FC<Props> = ({ publication, applicationSchemes, onChan
         onChange={onChangeApplication}
         runners={applicationSchemes}
         isPublication
+        publicationFolderId={publication.folderId}
       />
     </div>
   );

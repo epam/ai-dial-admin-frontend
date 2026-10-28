@@ -1,19 +1,12 @@
-import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { Badge } from '@epam/ai-dial-ui-kit';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import { FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
-import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
-import { isVersionlessAssetView } from '@/src/utils/is-view';
 
-export const getGridColumns = (
-  view: ApplicationRoute,
-  hasFoldersToDelete: boolean,
-  selectedVersionsMap?: Record<string, string[]>,
-  itemsToDelete?: DialFile[],
-) => {
+export const getGridColumns = (view: ApplicationRoute, hasFoldersToDelete: boolean, itemsToDelete?: DialFile[]) => {
   const GRID_NAME_COLUMN = {
     colId: FileManagerColumnKey.Name,
     field: 'name',
@@ -33,28 +26,7 @@ export const getGridColumns = (
     field: 'version',
     headerName: 'Version',
     width: 200,
-    autoHeight: true,
-    wrapText: true,
-    cellRenderer: (params: SelectCellRendererParams & { data: AssetWithVersion }) => {
-      const selectedItemKey = `${params.data.folderId}${params.data.name}`;
-      if (selectedVersionsMap?.[selectedItemKey]) {
-        return (
-          <div className="flex flex-wrap gap-1 py-1">
-            {selectedVersionsMap?.[selectedItemKey]?.map((v: string) => (
-              <Badge key={`${params.data.name}__${v}`} label={v} />
-            ))}
-          </div>
-        );
-      } else if (params.data.version) {
-        return (
-          <div className="flex flex-wrap gap-1 py-1">
-            <Badge key={`${params.data.name}__${params.data.version}`} label={params.data.version} />
-          </div>
-        );
-      } else {
-        return null;
-      }
-    },
+    cellRenderer: FormattedValueCellRenderer,
   };
 
   switch (view) {
@@ -268,7 +240,7 @@ const findOriginalItem = (items: DialFile[] | undefined, target: DialFile): Dial
   }
 
   for (const item of items) {
-    if ((target.id && item.id === target.id) || item.path === target.path) {
+    if (item.path === target.path) {
       return item;
     }
 
@@ -330,7 +302,7 @@ export const generateTreeForDeletingItems = (
 
       return updatedItem;
     } else {
-      const fileName = originalItem.name || originalItem.path.split('/').pop() || 'file';
+      const fileName = originalItem.path.split('/').pop() || originalItem.name || 'file';
       const newPath = `${ROOT_PATH}${fileName}`;
       pathMapping.set(newPath, originalItem.path);
 
@@ -355,44 +327,4 @@ export const generateTreeForDeletingItems = (
     ] as DialFile[],
     pathMapping,
   };
-};
-
-export const processAssetsData = (
-  assets: AssetWithVersion[],
-  selectedVersionsMap: Record<string, string[]>,
-  view: ApplicationRoute,
-): AssetWithVersion[] => {
-  const processedAssets = assets.map((asset) => {
-    if (asset.nodeType === DialFileNodeType.FOLDER && asset.items) {
-      return { ...asset, items: processAssetsData(asset.items, selectedVersionsMap, view) };
-    }
-    return asset;
-  });
-
-  // A versionless row (prompt/conversation) is a single stored resource — no same-name version
-  // merging, no per-row version selection state.
-  if (isVersionlessAssetView(view)) {
-    return processedAssets;
-  }
-
-  return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
-    if (curr.nodeType === DialFileNodeType.ITEM) {
-      curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
-      const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
-      if (existing) {
-        existing.path = curr.path;
-        existing.version = curr.version;
-        existing.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
-        if (!existing.versions) existing.versions = [];
-        if (!existing.versions.includes(curr.version)) {
-          existing.versions.push(curr.version);
-        }
-      } else {
-        acc.push({ ...curr, versions: [curr.version] });
-      }
-    } else {
-      acc.push(curr);
-    }
-    return acc;
-  }, []);
 };
