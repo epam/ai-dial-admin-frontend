@@ -25,7 +25,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import AddMetricModal from './AddMetric/AddMetricModal';
 import MetricCard from './MetricCard';
 import ScoreSettings from './ScoreSettings/ScoreSettings';
-import { stripMetricFromScoreWeights } from './ScoreSettings/utils';
+import { sanitizeOverallScoreForMetricNames } from './ScoreSettings/utils';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -69,16 +69,21 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
 
   const onRemoveMetric = useCallback(
     (metricId: string) => {
-      const removedMetricName = metrics?.find((metric) => metric.id === metricId)?.name;
-
       deleteTestSuiteMetric(selectedTestSuite.id as string, metricId).then((response) => {
         setIsDeleteModalOpen(false);
         setMetricToEdit(undefined);
         if (response?.success) {
+          const remainingMetrics = (metrics ?? []).filter((metric) => metric.id !== metricId);
+          setMetrics(remainingMetrics);
           loadMetrics();
 
-          if (removedMetricName) {
-            const nextSuite = stripMetricFromScoreWeights(selectedTestSuite, removedMetricName);
+          const remainingMetricNames = remainingMetrics
+            .map((metric) => metric.name)
+            .filter((name): name is string => Boolean(name));
+          // Deleting the final metric is already persisted; don't turn it into an unsaved suite edit.
+          if (remainingMetricNames.length > 0) {
+            const nextSuite = sanitizeOverallScoreForMetricNames(selectedTestSuite, remainingMetricNames);
+
             if (nextSuite !== selectedTestSuite) {
               onChange(nextSuite);
             }
@@ -96,6 +101,14 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         setMetricToEdit(undefined);
         createTestSuiteMetric(selectedTestSuite.id as string, metric).then((response) => {
           if (response?.success) {
+            const remainingMetricNames = [...(metrics ?? []), metric]
+              .map((item) => item.name)
+              .filter((name): name is string => Boolean(name));
+            const nextSuite = sanitizeOverallScoreForMetricNames(selectedTestSuite, remainingMetricNames);
+
+            if (nextSuite !== selectedTestSuite) {
+              onChange(nextSuite);
+            }
             showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricAddSuccess)));
             loadMetrics();
           } else {
@@ -106,7 +119,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         });
       }
     },
-    [loadMetrics, selectedTestSuite.id, showNotification, t],
+    [loadMetrics, metrics, onChange, selectedTestSuite, showNotification, t],
   );
 
   const onEditMetric = useCallback(
