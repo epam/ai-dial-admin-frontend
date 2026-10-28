@@ -3,8 +3,10 @@ import classNames from 'classnames';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import {
   DURATION_COLUMN_WIDTH,
+  ELLIPSIS_HEADER_PARAMS,
   EXTRACTED_COLUMN_MIN_WIDTH,
   fixedWidthColDef,
   HTTP_COLUMN_WIDTH,
@@ -13,6 +15,7 @@ import {
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
   REQUEST_INDEX_COLUMN_WIDTH,
+  RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
@@ -35,8 +38,6 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 
 import { CompareAnalyticsRow, MetricGroup } from './models';
-import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
-import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 export type { MetricGroup } from './models';
 
 export const RUN_FILTER = (id?: string | null): FilterDto[] => [
@@ -51,12 +52,6 @@ export const RESULT_FILTERS = (run: Run): FilterDto[] => [
     value: run.testSuiteId || '',
   },
 ];
-
-const ELLIPSIS_HEADER_PARAMS = { innerHeaderComponent: EllipsisHeader };
-const RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS = {
-  innerHeaderComponent: EllipsisHeader,
-  innerHeaderComponentParams: { isRightAligned: true },
-};
 
 const getInputColumns = (input: Record<string, unknown>, hide = false) => {
   return Object.keys(input).map((key) => {
@@ -182,8 +177,7 @@ const executionColumns: ColDef[] = [
   {
     field: 'totalRequests',
     headerName: 'Total requests',
-    headerComponent: EllipsisHeader,
-    headerComponentParams: { isRightAligned: true },
+    headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
     colId: 'totalRequests',
     hide: true,
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
@@ -195,6 +189,7 @@ const executionColumns: ColDef[] = [
   {
     field: 'totalTurns',
     headerName: 'Total turns',
+    headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
     colId: 'totalTurns',
     hide: true,
     ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
@@ -205,6 +200,7 @@ const executionColumns: ColDef[] = [
   {
     field: 'responseStatusCode',
     headerName: 'HTTP',
+    headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
     colId: 'http',
     ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
@@ -215,6 +211,7 @@ const executionColumns: ColDef[] = [
   {
     field: 'durationMs',
     headerName: 'Duration',
+    headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
     colId: 'duration',
     ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
@@ -242,6 +239,7 @@ const detailsColumns = {
     {
       field: 'testCaseName',
       headerName: 'Test Case name',
+      headerComponentParams: ELLIPSIS_HEADER_PARAMS,
       colId: 'testCaseName',
       ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
       ...TEXT_FILTER_COL_DEF,
@@ -257,6 +255,7 @@ const detailsColumns = {
  */
 const getExecutionGroup = (results: AnalyticsResult[]) => ({
   headerName: EXECUTION_GROUP_HEADER,
+  headerGroupComponent: EllipsisHeaderGroup,
   children: hideUniformColumns(executionColumns, getUniformExecutionFields(results)),
 });
 
@@ -304,10 +303,12 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
     ...getMetricsColumns(metrics),
     {
       headerName: INPUT_BINDINGS_GROUP_HEADER,
+      headerGroupComponent: EllipsisHeaderGroup,
       children: getInputColumns(input, true),
     },
     {
       headerName: EXTRACTED_GROUP_HEADER,
+      headerGroupComponent: EllipsisHeaderGroup,
       children: getExtractedColumns(mergeRecordSchema(results, (result) => result.extractedColumns)),
     },
   ];
