@@ -20,4 +20,10 @@ describe('EllipsisHeader alignment', () => {
 
     expect(screen.getByText('# Run number')).not.toHaveClass('text-right');
   });
+
+  test('overrides the kit header typography with small semibold sentence-case text', () => {
+    render(<EllipsisHeader {...headerParams} displayName="Score" />);
+
+    expect(screen.getByText('Score')).toHaveClass('dial-small-semi-text', 'normal-case', 'tracking-normal');
+  });
 });
