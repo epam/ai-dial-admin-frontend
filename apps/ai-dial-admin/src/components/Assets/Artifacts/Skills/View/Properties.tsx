@@ -1,15 +1,12 @@
 import { FC } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
-import FilePath from '@/src/components/Common/FilePath/FilePath';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import SkillDetails from '@/src/components/Publications/Assets/Skill/SkillDetails';
-import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialSkillResource } from '@/src/models/dial/resource';
-import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   skill: DialSkillResource;
@@ -29,7 +26,6 @@ interface Props {
  */
 const SkillAssetProperties: FC<Props> = ({
   skill,
-  onChangeFolderId,
   addedFiles,
   removedFileNames,
   onAddFile,
@@ -45,6 +41,7 @@ const SkillAssetProperties: FC<Props> = ({
         entity={skill}
         prefix={<LabelledText label={t(EntityFieldsI18nKey.path)} text={skill.path} />}
       />
+      {/* blocked by core
       <FilePath
         value={skill.folderId}
         label={t(EntitiesI18nKey.FolderStorage)}
@@ -55,7 +52,7 @@ const SkillAssetProperties: FC<Props> = ({
         disabled={isReadOnlyAdmin}
         view={ApplicationRoute.Skills}
         shouldAbleToCreateNewFolder={false}
-      />
+      /> */}
       <SkillDetails
         skill={skill}
         disabled={isReadOnlyAdmin}

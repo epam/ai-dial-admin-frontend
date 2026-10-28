@@ -38,6 +38,51 @@ describe('AssetVersion', () => {
     expect(screen.getByText(ErrorI18nKey.NameVersionCombination)).toBeInTheDocument();
   });
 
+  test.each([ResourceType.APPLICATION, ResourceType.TOOLSET])(
+    'rechecks combined length and restores validity after name or version changes for %s',
+    (resourceType) => {
+      const name = 'a'.repeat(100);
+      const version = 'b'.repeat(153);
+      const dispatch = useSaveValidationContext().dispatch;
+      const { rerender } = render(
+        <AssetVersion {...props} resourceType={resourceType} name={name} version={version} />,
+      );
+      const input = screen.getByRole('textbox', { name: new RegExp(EntityFieldsI18nKey.version) });
+      expect(screen.queryByText(ErrorI18nKey.AssetNameVersionTooLong)).toBeNull();
+      expect(input).not.toHaveAttribute('aria-invalid', 'true');
+
+      vi.clearAllMocks();
+      rerender(<AssetVersion {...props} resourceType={resourceType} name={`${name}a`} version={version} />);
+      expect(screen.getByText(ErrorI18nKey.AssetNameVersionTooLong)).toBeInTheDocument();
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: ValidationActionType.SetField, isValid: false }),
+      );
+
+      vi.clearAllMocks();
+      rerender(<AssetVersion {...props} resourceType={resourceType} name={name} version={version} />);
+      expect(screen.queryByText(ErrorI18nKey.AssetNameVersionTooLong)).toBeNull();
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: ValidationActionType.SetField, isValid: true }),
+      );
+
+      vi.clearAllMocks();
+      rerender(<AssetVersion {...props} resourceType={resourceType} name={name} version={`${version}b`} />);
+      expect(screen.getByText(ErrorI18nKey.AssetNameVersionTooLong)).toBeInTheDocument();
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: ValidationActionType.SetField, isValid: false }),
+      );
+
+      vi.clearAllMocks();
+      rerender(<AssetVersion {...props} resourceType={resourceType} name={name} version={version} />);
+      expect(screen.queryByText(ErrorI18nKey.AssetNameVersionTooLong)).toBeNull();
+      expect(input).not.toHaveAttribute('aria-invalid', 'true');
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: ValidationActionType.SetField, isValid: true }),
+      );
+    },
+  );
+
   test('cleans up its validation field when unmounted', () => {
     const { unmount } = render(<AssetVersion {...props} version="" />);
     unmount();

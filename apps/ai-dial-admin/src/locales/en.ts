@@ -1631,6 +1631,7 @@ export default {
     ForbiddenChars: 'Field must not contain forbidden characters: {list}',
     InvalidAssetPath: 'Path segments must not contain /, {, }, double quotes or control characters, or end with a dot.',
     AssetPathTooLong: 'The complete resource path must not exceed {max} UTF-8 bytes.',
+    AssetNameVersionTooLong: 'The name and version combined, including __, must not exceed {max} characters.',
     AmbiguousAssetVersion: 'Version must not contain __ or start with _.',
     AlphanumericUnderscore:
       'Field must not contain forbidden characters. Only alphanumeric characters and underscore are allowed.',

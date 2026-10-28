@@ -123,6 +123,58 @@ describe('Assets application :: server actions', () => {
     },
   );
 
+  test('creates a public application with a 255-character combined name and version', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const name = 'a'.repeat(100);
+    const version = 'b'.repeat(153);
+    const result = await createApp(appResource({ name, version }));
+    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      `public/${name}__${version}`,
+      expect.objectContaining({ display_version: version }),
+    );
+  });
+
+  test.each([154, 160])('rejects an oversized combined application identity with version length %s', async (length) => {
+    const result = await createApp(appResource({ name: 'a'.repeat(100), version: 'b'.repeat(length) }));
+    expect(result).toEqual({
+      success: false,
+      errorHeader: ErrorI18nKey.ValidationError,
+      errorMessage: ErrorI18nKey.AssetNameVersionTooLong,
+    });
+    expect(assetApi.put).not.toHaveBeenCalled();
+  });
+
+  test('keeps platform application creation unversioned at the name length limit', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const name = 'a'.repeat(255);
+    const result = await createApp(appResource({ name, folderId: 'platform/', version: '', _metadata: undefined }));
+    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      `platform/${name}`,
+      expect.anything(),
+    );
+  });
+
+  test('preserves oversized legacy application identity during ordinary updates', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const name = 'a'.repeat(100);
+    const version = 'b'.repeat(160);
+    const path = `public/${name}__${version}`;
+    const result = await updateApp(
+      appResource({ name, version, _metadata: { name, version, path, folderId: 'public/' } }),
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, path, expect.anything(), {
+      etag: 'etag',
+    });
+  });
+
   test('ordinary updates preserve empty display version and original metadata identity', async () => {
     vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
     await updateApp(appResource({ version: 'forged', display_version: '' }), 'etag');
