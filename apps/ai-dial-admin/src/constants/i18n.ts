@@ -1254,6 +1254,7 @@ export enum ErrorI18nKey {
   InvalidAssetPath = 'Error.InvalidAssetPath',
   AmbiguousAssetVersion = 'Error.AmbiguousAssetVersion',
   AssetPathTooLong = 'Error.AssetPathTooLong',
+  AssetNameVersionTooLong = 'Error.AssetNameVersionTooLong',
   InvalidStatus = 'Error.InvalidStatus',
   EditorErrorLine = 'Error.EditorErrorLine',
   MaxNumberError = 'Error.MaxNumberError',
