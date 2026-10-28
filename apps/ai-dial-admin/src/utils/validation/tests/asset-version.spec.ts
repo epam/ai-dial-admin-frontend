@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ResourceType } from '@/src/types/resource-type';
@@ -52,14 +52,53 @@ describe('asset version validation', () => {
     );
   });
 
-  test.each([ResourceType.APPLICATION, ResourceType.TOOLSET])('checks total UTF-8 bytes for %s', (resourceType) => {
-    const prefix = resourceType === ResourceType.APPLICATION ? 'applications/public/app__' : 'toolsets/public/app__';
-    const limitVersion = 'a'.repeat(900 - prefix.length);
-    expect(getAssetDestinationError('public/', 'app', limitVersion, resourceType, t)).toBeNull();
-    expect(getAssetDestinationError('public/', 'app', `${limitVersion}a`, resourceType, t)?.type).toBe(
-      ErrorType.LENGTH,
-    );
-    expect(getAssetDestinationError('public/', 'app', '春'.repeat(300), resourceType, t)?.type).toBe(ErrorType.LENGTH);
+  describe.each([ResourceType.APPLICATION, ResourceType.TOOLSET])('getAssetDestinationError for %s', (resourceType) => {
+    test('accepts a combined name and version of 255 characters including the delimiter', () => {
+      expect(getAssetDestinationError('public/', 'a'.repeat(100), 'b'.repeat(153), resourceType, t)).toBeNull();
+    });
+
+    test.each([154, 160])('rejects a 100-character name with a %s-character version', (versionLength) => {
+      expect(getAssetDestinationError('public/', 'a'.repeat(100), 'b'.repeat(versionLength), resourceType, t)).toEqual({
+        type: ErrorType.LENGTH,
+        text: ErrorI18nKey.AssetNameVersionTooLong,
+      });
+    });
+
+    test('passes the combined character limit to the localized message', () => {
+      const translate = vi.fn(t);
+      getAssetDestinationError('public/', 'a'.repeat(100), 'b'.repeat(154), resourceType, translate);
+      expect(translate).toHaveBeenCalledWith(ErrorI18nKey.AssetNameVersionTooLong, { max: 255 });
+    });
+
+    test('accepts multibyte text within the character and storage byte limits', () => {
+      expect(getAssetDestinationError('public/', '春'.repeat(100), '版'.repeat(153), resourceType, t)).toBeNull();
+    });
+
+    test('checks total UTF-8 bytes independently of the combined character limit', () => {
+      const prefix = resourceType === ResourceType.APPLICATION ? 'applications/public/' : 'toolsets/public/';
+      const leaf = 'app__stable';
+      const parentFolders = `${'a'.repeat(200)}/${'b'.repeat(200)}/${'c'.repeat(200)}/`;
+      const padding = 'd'.repeat(900 - prefix.length - parentFolders.length - 1 - leaf.length);
+      const folderId = `public/${parentFolders}${padding}/`;
+      expect(getAssetDestinationError(folderId, 'app', 'stable', resourceType, t)).toBeNull();
+      expect(getAssetDestinationError(folderId, 'app', 'stablea', resourceType, t)).toEqual({
+        type: ErrorType.LENGTH,
+        text: ErrorI18nKey.AssetPathTooLong,
+      });
+      expect(getAssetDestinationError(`public/${'春'.repeat(200)}/`, 'app', '版'.repeat(100), resourceType, t)).toEqual(
+        {
+          type: ErrorType.LENGTH,
+          text: ErrorI18nKey.AssetPathTooLong,
+        },
+      );
+    });
+
+    test('retains the storage path error when both length limits are exceeded', () => {
+      expect(getAssetDestinationError('public/', 'app', 'a'.repeat(900), resourceType, t)).toEqual({
+        type: ErrorType.LENGTH,
+        text: ErrorI18nKey.AssetPathTooLong,
+      });
+    });
   });
 
   test('converts a destination folder version map into exact paths', () => {
