@@ -70,7 +70,7 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           />
         </div>
       )}
-      <div className="flex flex-col gap-y-3">
+      <div className="flex flex-col gap-y-4">
         <Select
           id="type"
           disabled={isAuthDisabled}
@@ -100,7 +100,7 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
         />
       </div>
 
-      <div className="flex flex-col gap-y-3 mt-3 w-full">
+      <div className="flex flex-col gap-y-4 mt-4 w-full">
         <ClientIdControl
           clientId={authSettings?.client_id}
           disabled={isAuthDisabled}

@@ -9,7 +9,7 @@ import {
   externalServiceOpsApi,
   toolsetOpsApi,
 } from '@/src/app/api/api';
-import { ROOT_FOLDER } from '@/src/constants/file';
+import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import {
   DialApplicationResource,
   DialExternalServiceAuthSettings,
@@ -17,7 +17,9 @@ import {
   ToolsetAuthType,
 } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
-import { ServerActionResponse } from '@/src/models/server-action';
+import { getI18n } from '@/src/locales/server';
+import { Translate } from '@/src/models/error';
+import { validationFailure } from '@/src/utils/validation/server-action';
 import { buildApplicationsExport, importApplicationsExport } from '@/src/server/applications/exim';
 import { buildApplicationsZip, extractApplicationsFromZip } from '@/src/server/applications/zip-exim';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
@@ -31,17 +33,11 @@ import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { getAssetDestinationError } from '@/src/utils/validation/asset-version';
 import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
+import { addTrailingSlash } from '@/src/utils/url';
 import { DialApplication } from '@/src/models/dial/application';
-
-function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
-  return {
-    success: false,
-    errorHeader: 'Validation Error',
-    errorMessage: Object.values(errors).filter(Boolean).join(', '),
-  };
-}
 
 // Besides the computed statuses, drops the read-only `client_secret_hint` and an untouched (empty) secret.
 function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
@@ -74,19 +70,26 @@ export async function getApps(path: string) {
 //todo Re-check createEntity modal, to not add unused fields
 export async function createApp(app: DialApplicationResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const t = (await getI18n()) as Translate;
   const validationErrors = validateApp(app as DialApplicationResource);
   if (Object.keys(validationErrors).length > 0) {
-    return validationFailure(validationErrors);
+    return validationFailure(validationErrors, t);
   }
 
   // Create flows seed flat `folderId`/`version`; a fetched entity carries them in `_metadata`
   // instead (see `DialResource`'s field comments) — resolve both spellings.
   const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
   const version = app.version ?? app._metadata?.version;
-  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
+  const path = `${addTrailingSlash(folderId)}${getVersionedName(app.name || '', version)}`;
+  const isPublicEntity = !isPlatformBucketPath(folderId) && app.name !== TEMP_FOLDER;
+  const versionError = isPublicEntity
+    ? getAssetDestinationError(folderId, app.name || '', version, ResourceType.APPLICATION, t)
+    : null;
+  if (versionError) return validationFailure({ version: versionError.text }, t);
   const asset = {
     ...stripMetadata(app),
-    displayVersion: version,
+    display_version: isPublicEntity ? version : app.display_version,
+    displayVersion: undefined,
     folderId: undefined,
     source: undefined,
     version: undefined,
@@ -119,19 +122,21 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const validationErrors = validateApp(app);
   if (Object.keys(validationErrors).length > 0) {
-    return validationFailure(validationErrors);
+    return validationFailure(validationErrors, (await getI18n()) as Translate);
   }
 
   // Same flat-vs-`_metadata` resolution as `createApp` — an update's entity is a fetched, merged
   // read whose identity grafts nest under `_metadata`.
   const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
-  const version = app.version ?? app._metadata?.version;
-  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
+  const version = app._metadata?.version ?? app.version;
+  const path = app._metadata?.path || `${addTrailingSlash(folderId)}${getVersionedName(app.name || '', version)}`;
   const cleaned = stripExternalServiceAuthStatuses(stripMetadata(app));
   const application = {
     ...cleaned,
     defaults: { ...cleaned.defaults },
-    display_version: version,
+    display_version: cleaned.display_version,
+    displayVersion: undefined,
+    path: undefined,
     folderId: undefined,
     source: undefined,
     version: undefined,

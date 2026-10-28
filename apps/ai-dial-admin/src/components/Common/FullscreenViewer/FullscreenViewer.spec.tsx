@@ -6,10 +6,6 @@ import { ViewerContentType } from '@/src/types/evaluation';
 import { ReactNode } from 'react';
 import FullscreenViewer from './FullscreenViewer';
 
-vi.mock('@monaco-editor/react', () => ({
-  Editor: ({ value, language }: { value: string; language: string }) => <pre data-language={language}>{value}</pre>,
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {

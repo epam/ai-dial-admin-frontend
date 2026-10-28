@@ -77,7 +77,6 @@ interface Props {
   customDownloadItemsAction?: (items?: DialFile[]) => void;
   onTableFileClick?: (item: FileManagerGridRow) => void;
   filterData?: (data: AssetWithVersion[]) => AssetWithVersion[];
-  selectedVersionsMap?: Record<string, string[]>;
   nonClickableTableColumns?: FileManagerColumnKey[];
   onPathChange?: (nextPath?: string) => void;
   onSelectedPathsChange?: (paths: Set<string>) => void;

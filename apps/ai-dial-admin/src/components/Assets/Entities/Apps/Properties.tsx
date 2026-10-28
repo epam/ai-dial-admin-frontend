@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useId, useMemo } from 'react';
 
 import classNames from 'classnames';
 
@@ -16,9 +16,13 @@ import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
-import VersionControl from '@/src/components/BaseControls/Version';
+import AssetVersion from '@/src/components/BaseControls/AssetVersion';
+import { Input } from '@epam/ai-dial-ui-kit';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { ResourceType } from '@/src/types/resource-type';
 import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
@@ -44,6 +48,7 @@ interface Props {
   catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialApplicationResource) => void;
   isPublication?: boolean;
+  publicationFolderId?: string;
 }
 
 const ApplicationAssetProperties: FC<Props> = ({
@@ -53,8 +58,10 @@ const ApplicationAssetProperties: FC<Props> = ({
   catalogSchemas,
   onChange,
   isPublication,
+  publicationFolderId,
 }) => {
   const t = useI18n();
+  const displayVersionId = useId();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { codeAppEditorUrl } = useAppContext();
 
@@ -71,6 +78,10 @@ const ApplicationAssetProperties: FC<Props> = ({
     (!schemaSourceId && !!assetApp.responses_endpoint) ||
     (!!schemaSourceId && !!appRunner?.['dial:applicationTypeResponsesEndpoint']);
 
+  const headerPrefix = !isPlatformBucketPath(folderId) ? (
+    <LabelledText label={t(EntityFieldsI18nKey.version)} text={asset._metadata?.version ?? asset.version ?? ''} />
+  ) : undefined;
+
   const headerPostfix = useMemo(() => {
     return (
       <>
@@ -81,7 +92,7 @@ const ApplicationAssetProperties: FC<Props> = ({
 
   return (
     <div className="flex flex-col">
-      {!isPublication && <ResourceInfoHeader entity={asset} postfix={headerPostfix} />}
+      {!isPublication && <ResourceInfoHeader entity={asset} prefix={headerPrefix} postfix={headerPostfix} />}
       <div className={classNames('flex flex-col gap-y-8', !isPublication && 'mt-8')}>
         {isPublication && (
           <IdControl entity={asset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
@@ -92,8 +103,21 @@ const ApplicationAssetProperties: FC<Props> = ({
           isFullWidth={false}
           onChange={(display_name) => onChange({ ...asset, display_name })}
         />
+        {!isPublication && !isPlatformBucketPath(folderId) && (
+          <Input
+            id={displayVersionId}
+            containerClassName={STANDARD_CONTROL_WIDTH}
+            labelProps={{ label: t(EntityFieldsI18nKey.displayVersion) }}
+            value={asset.display_version ?? ''}
+            onChange={(display_version) => onChange({ ...asset, display_version: display_version ?? '' })}
+            disabled={isReadOnlyAdmin}
+          />
+        )}
         {isPublication && (
-          <VersionControl
+          <AssetVersion
+            name={asset.name ?? asset._metadata?.name}
+            folderId={publicationFolderId ?? folderId}
+            resourceType={ResourceType.APPLICATION}
             containerClassName="w-[175px]"
             version={asset._metadata?.version}
             onChange={(version?: string) =>

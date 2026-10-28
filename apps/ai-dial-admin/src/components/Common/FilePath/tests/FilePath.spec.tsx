@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import FilePath from '../FilePath';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
@@ -75,6 +76,19 @@ const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplicatio
 };
 
 describe('FilePath', () => {
+  test('keeps same-name public asset versions as separate destination-grid rows', async () => {
+    const user = userEvent.setup();
+    const assets = ['stable', 'release candidate'].map((version) => ({
+      name: 'assistant',
+      version,
+      path: `public/assistant__${version}`,
+      folderId: 'public/',
+      nodeType: DialFileNodeType.ITEM,
+    })) as Asset[];
+    renderFilePath(assets);
+    await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
+    expect(screen.getAllByText('item:assistant')).toHaveLength(2);
+  });
   test('does not offer the platform bucket as a Move-to destination for a dual-bucket view', async () => {
     const user = userEvent.setup();
     renderFilePath([platformRoot, publicRoot]);

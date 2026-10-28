@@ -1,5 +1,3 @@
-import { getVersionedName } from '@/src/server/publications/path';
-
 /**
  * Shared by every asset type's import (prompts/toolsets/applications): resolves the
  * destination path for an imported entity. Versioned types (application/toolset) pass the
@@ -16,7 +14,8 @@ export const resolveImportDestination = (
   version: string | undefined,
   flatImport?: boolean,
 ): string => {
-  const versionedName = getVersionedName(name, version);
+  // Imported ids are authoritative, including untouched legacy blank suffixes.
+  const versionedName = version == null ? name : `${name}__${version}`;
   if (flatImport) {
     return `${destinationRoot}${versionedName}`;
   }

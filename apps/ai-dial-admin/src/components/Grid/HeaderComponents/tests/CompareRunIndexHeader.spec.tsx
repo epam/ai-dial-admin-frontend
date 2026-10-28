@@ -41,4 +41,10 @@ describe('CompareRunIndexHeader alignment', () => {
 
     expect(container.firstElementChild).toHaveClass('justify-center');
   });
+
+  test('renders the label as small semibold header text', () => {
+    render(<CompareRunIndexHeader {...headerParams} runIndex={RUN_COMPARE_PRIMARY_INDEX} label="HTTP" />);
+
+    expect(screen.getByText('HTTP')).toHaveClass('dial-small-semi-text');
+  });
 });

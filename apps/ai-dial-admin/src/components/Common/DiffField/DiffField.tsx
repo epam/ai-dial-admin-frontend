@@ -1,4 +1,5 @@
-import { DiffEditor, Monaco } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
+import DiffEditor from '@/src/components/Common/MonacoEditor/DiffEditor';
 import classNames from 'classnames';
 import { FC } from 'react';
 

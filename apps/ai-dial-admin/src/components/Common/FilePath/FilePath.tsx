@@ -21,7 +21,7 @@ import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRootFolders } from '@/src/utils/files/root-folder';
-import { getFilePathGridOptions, processAssetsData } from './utils';
+import { getFilePathGridOptions } from './utils';
 
 interface Props {
   label: string;
@@ -131,7 +131,7 @@ const FilePath: FC<Props> = ({
           onClose={onCloseFilePathModal}
           rootItem={files?.[0] as DialRootFolder}
           mode="move"
-          items={processAssetsData(files, view) as DialFile[]}
+          items={files as DialFile[]}
           onFolderPopupPathChange={onDestinationFolderChange}
           onConfirm={onCloseFilePathModal}
           header={modalTitle}

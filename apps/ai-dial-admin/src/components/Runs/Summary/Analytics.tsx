@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
@@ -18,10 +18,10 @@ import {
   hasOverallScoreThreshold,
   hasRunCostFigure,
 } from '@/src/components/Runs/Summary/utils';
+import { isCostUnsupportedRun, isRunCostStale } from '@/src/components/Runs/utils/run-list-values';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
-import { SuiteType } from '@/src/models/evaluation/test-suite';
 import classNames from 'classnames';
 
 const NO_DATA_VALUE = '—';
@@ -56,11 +56,11 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   // Must NOT gate the cost fetch: CANCELLED/FAILED runs often have /costs figures with no
   // eval_summaries row, and flipping canHaveCosts false after an optimistic fetch would wipe them.
   const hasNoResults = data != null && data.avgRunTimeMs == null;
-  // Cost aggregation doesn't support MCP-tool suites at all yet — confirmed by QA reproduction
+  // Cost aggregation doesn't support MCP-tool or Route suites at all yet — confirmed by QA reproduction
   // (both cards stay in Calculating indefinitely regardless of whether the run computed metrics),
   // which disproved the earlier "MCP bills only through its metrics" assumption. Skip the fetch
   // unconditionally rather than polling toward a result the backend can never produce.
-  const isMcpRun = run?.suiteSnapshot?.suiteType === SuiteType.McpTool;
+  const isCostUnsupported = isCostUnsupportedRun(run);
   // A model with no Prompt/Completion rate configured can never produce a cost figure either — the
   // backend has nothing to multiply usage by. Resolved from the deployed model's own config, not
   // from `/costs`, so a run against such a model shows a dash immediately instead of polling toward
@@ -68,8 +68,14 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   // (see `resolveModelPricing`), so this only ever fires for a model deployment.
   const { deploymentType } = useDeploymentType(run?.suiteSnapshot?.deploymentRef);
   const { isDefinitelyUnpriced } = useModelPricing(run?.suiteSnapshot?.deploymentRef?.id, deploymentType);
-  const canHaveCosts = !isRunInProgress && !isMcpRun && !isDefinitelyUnpriced;
-  const { costs, isPending: areCostsPending, unavailable: costsUnavailable } = useRunCosts(run?.id, canHaveCosts);
+  // Evaluated once per run so a render landing on the 12h boundary can't flip it and restart the fetch.
+  const shouldPollCosts = useMemo(() => !isRunCostStale(run, Date.now()), [run]);
+  const canHaveCosts = !isRunInProgress && !isCostUnsupported && !isDefinitelyUnpriced;
+  const {
+    costs,
+    isPending: areCostsPending,
+    unavailable: costsUnavailable,
+  } = useRunCosts(run?.id, canHaveCosts, shouldPollCosts);
 
   if (!data) {
     return (

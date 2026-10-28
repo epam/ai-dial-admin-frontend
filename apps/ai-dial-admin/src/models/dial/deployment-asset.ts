@@ -7,17 +7,14 @@ import { Toolset } from './toolset';
 export interface AssetApp extends DialFile, DialApplication, EntityValidityState {
   version: string;
   items?: AssetApp[];
-  versions?: string[];
   reference?: string;
   display_name?: string;
   display_version?: string;
   displayVersion?: string;
-  selectedVersions?: string[];
   /**
    * Present when this holds a merged Core detail entity: the detail views keep this row-shaped
-   * surface because their create/new-version flows seed the flat identity fields, while a merged
-   * read carries its identity only here (see `CoreResourceEntityMetadata`). Grid/tree rows never
-   * set it.
+   * surface for create/duplicate identity, while a merged read carries its identity only here
+   * (see `CoreResourceEntityMetadata`). Grid/tree rows never set it.
    */
   _metadata?: CoreResourceEntityMetadata;
 }
@@ -25,11 +22,9 @@ export interface AssetApp extends DialFile, DialApplication, EntityValidityState
 export interface AssetToolset extends DialFile, Toolset {
   version: string;
   items?: AssetToolset[];
-  versions?: string[];
   display_name?: string;
   display_version?: string;
   displayVersion?: string;
-  selectedVersions?: string[];
   /** See `AssetApp._metadata`. */
   _metadata?: CoreResourceEntityMetadata;
 }

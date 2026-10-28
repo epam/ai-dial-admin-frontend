@@ -195,8 +195,15 @@ describe('entity utils', () => {
         name: 'my_box',
         displayName: 'My Box',
         endpoint: 'http://box',
-        transport: ENTITY_TRANSPORT[CONTAINER_TRANSPORT.SSE],
+        transport: 'SSE',
       });
+    });
+
+    test('upper-cases a streamable-HTTP container transport to the Core asset value', () => {
+      expect(getAssetTemplate(ApplicationRoute.McpContainers, container(), CONTAINER_TRANSPORT.HTTP)).toHaveProperty(
+        'transport',
+        'HTTP',
+      );
     });
 
     test('leaves the MCP transport unset when the container reports none', () => {
@@ -256,7 +263,7 @@ describe('entity utils', () => {
         name: 'my_box',
         displayName: 'My Box',
         endpoint: `http://box${SERVING_MCP_ENDPOINT_PATH}`,
-        transport: ToolsetTransport.HTTP,
+        transport: 'HTTP',
       });
     });
 

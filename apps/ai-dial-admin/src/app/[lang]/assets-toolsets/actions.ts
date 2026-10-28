@@ -3,7 +3,10 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
-import { ROOT_FOLDER } from '@/src/constants/file';
+import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
+import { getI18n } from '@/src/locales/server';
+import { Translate } from '@/src/models/error';
+import { validationFailure } from '@/src/utils/validation/server-action';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import {
@@ -17,7 +20,8 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { getAssetDestinationError } from '@/src/utils/validation/asset-version';
 import { getToolsetBasicBody, getToolsetSignInBody, stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { ImportFileType } from '@/src/types/import';
 import { getVersionedName } from '@/src/server/publications/path';
@@ -28,6 +32,7 @@ import { stripMetadata, stripPlatformAssetFields } from '@/src/server/assets/exi
 import { buildToolsetsExport, importToolsetsExport } from '@/src/server/toolsets/exim';
 import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '@/src/server/toolsets/mcp-client';
 import { buildToolsetsZip, extractToolsetsFromZip } from '@/src/server/toolsets/zip-exim';
+import { addTrailingSlash } from '@/src/utils/url';
 import { getAllowTools, getTransport } from '@/src/components/Assets/Resources/utils';
 
 export async function getToolsets(path: string) {
@@ -37,16 +42,23 @@ export async function getToolsets(path: string) {
 
 export async function createToolset(toolset: DialToolsetResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const t = (await getI18n()) as Translate;
   // Same flat-vs-`_metadata` resolution as `createApp` in `assets-applications/actions.ts`.
   const folderId = toolset.folderId || toolset._metadata?.folderId || ROOT_FOLDER;
   const version = toolset.version ?? toolset._metadata?.version;
-  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
+  const path = `${addTrailingSlash(folderId)}${getVersionedName(toolset.name || '', version)}`;
+  const isPublicEntity = !isPlatformBucketPath(folderId) && toolset.name !== TEMP_FOLDER;
+  const versionError = isPublicEntity
+    ? getAssetDestinationError(folderId, toolset.name || '', version, ResourceType.TOOLSET, t)
+    : null;
+  if (versionError) return validationFailure({ version: versionError.text }, t);
   return assetApi.put(token, ResourceType.TOOLSET, path, {
     ...stripMetadata(toolset),
     auth_settings: toolset.auth_settings && stripClientSecretHint(toolset.auth_settings),
     allowedTools: getAllowTools(toolset),
     transport: getTransport(toolset),
-    displayVersion: version,
+    display_version: isPublicEntity ? version : toolset.display_version,
+    displayVersion: undefined,
     folderId: undefined,
     version: undefined,
     // Same flat-`path` rejection as `createApp`, and the same folder-marker cause;
@@ -79,8 +91,9 @@ export async function updateToolset(toolset: AssetToolset, etag: string) {
     auth_settings?: DialToolsetResourceAuthSettings;
   };
   const folderId = castToolset.folderId || castToolset._metadata?.folderId || ROOT_FOLDER;
-  const version = castToolset.version ?? castToolset._metadata?.version;
-  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
+  const version = castToolset._metadata?.version ?? castToolset.version;
+  const path =
+    castToolset._metadata?.path || `${addTrailingSlash(folderId)}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(
     token,
     ResourceType.TOOLSET,
@@ -88,7 +101,8 @@ export async function updateToolset(toolset: AssetToolset, etag: string) {
     {
       ...stripMetadata(castToolset),
       auth_settings: castToolset.auth_settings && stripClientSecretHint(castToolset.auth_settings),
-      displayVersion: version,
+      display_version: castToolset.display_version ?? castToolset.displayVersion,
+      displayVersion: undefined,
       folderId: undefined,
       version: undefined,
       path: undefined,

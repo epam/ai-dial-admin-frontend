@@ -3,7 +3,7 @@
 import { FC, useMemo } from 'react';
 
 import { ButtonVariant, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { Editor } from '@monaco-editor/react';
+import Editor from '@/src/components/Common/MonacoEditor/Editor';
 import { IconCopy } from '@tabler/icons-react';
 
 import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
@@ -29,6 +29,9 @@ const EDITOR_OPTIONS = {
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
   wordWrap: 'on' as const,
+  // Sticky scroll pins the enclosing lines over the top of a long wrapped value and hides what scrolls
+  // under them — the shared `editorOptions` turn it off for the same reason.
+  stickyScroll: { enabled: false },
   folding: true,
   renderLineHighlight: 'none' as const,
   overviewRulerLanes: 0,
