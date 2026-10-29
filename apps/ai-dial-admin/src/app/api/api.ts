@@ -31,6 +31,7 @@ import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
+import { CoreOrgUnitsApi } from '@/src/server/entities/core-org-units-api';
 import { CorePublicationsApi } from '@/src/server/entities/core-publications-api';
 import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
@@ -192,6 +193,11 @@ export const bucketApi = new BucketApi({
 });
 
 export const filesCoreApi = new FilesCoreApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Org units (Units API): roles and unit lifecycle on the Folders Storage page.
+export const coreOrgUnitsApi = new CoreOrgUnitsApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

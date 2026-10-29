@@ -1,20 +1,16 @@
 import { FC, useCallback, useState } from 'react';
 
-import { Label, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
-
-import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
-import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
-import OverflowValueTooltip from '@/src/components/Common/OverflowValueTooltip/OverflowValueTooltip';
+import EntitySelectManager from '@/src/components/Common/EntitySelectInput/EntitySelectManager';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
+import SelectInputPopup from '@/src/components/Common/EntitySelectInput/SelectInputPopup';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
-import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { toFileSelectPath } from '@/src/utils/files/path';
 import { EntityViewTab, getFileSelectInputTabs } from '@/src/utils/tabs/utils';
 import ApplicationFileManager from './ApplicationFileManager';
-import PublicFileManager from './PublicFileManager';
 
 interface Props {
   value: string;
@@ -29,7 +25,6 @@ interface Props {
 
 const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputClassName, onChangeValue, view, id }) => {
   const t = useI18n();
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,63 +43,48 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
 
   return (
     <FileFolderProvider>
-      <div className="flex flex-col gap-y-1">
-        {label && <Label label={label} htmlFor={elementId} />}
-        <OverflowValueTooltip text={filePath}>
-          <InputPopup
-            disabled={disabled || isReadOnlyAdmin}
-            open={isModalOpen}
-            selectedValue={filePath}
-            onOpen={() => setIsModalOpen(true)}
-            emptyValueText={t(BasicI18nKey.None)}
-            inputClassName={inputClassName}
-            editable
-            onValueChange={onChangeValue}
-          >
-            <Popup
-              header={t(TestSuitesI18nKey.SelectDocument)}
-              portalId="fileSelect"
-              open={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              className="md:h-[800px]"
-              size={PopupSize.Lg}
-              mainButtons={getFormPopupButtons({
-                cancelLabel: t(ButtonsI18nKey.Cancel),
-                submitLabel: t(ButtonsI18nKey.Confirm),
-                isSubmitDisabled: !selectedFilePath,
-                onCancel: () => setIsModalOpen(false),
-                onSubmit: onConfirm,
-              })}
-            >
-              <div className="size-full flex flex-col">
-                {showTabs && (
-                  <div className="flex flex-row justify-between pt-4 px-6 items-center">
-                    <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
-                  </div>
-                )}
-                <div className="grow min-h-0 overflow-hidden">
-                  {activeTab === EntityViewTab.Public && (
-                    <PublicFileManager
-                      value={isPublicFile ? filePath : ''}
-                      isModalOpen={isModalOpen}
-                      onChangeSelectedFilePath={setSelectedFilePath}
-                    />
-                  )}
-                  {activeTab === EntityViewTab.Application && (
-                    <ApplicationFileManager
-                      id={id}
-                      view={view}
-                      value={filePath}
-                      selectedFilePath={selectedFilePath}
-                      onChangeSelectedFilePath={setSelectedFilePath}
-                    />
-                  )}
-                </div>
-              </div>
-            </Popup>
-          </InputPopup>
-        </OverflowValueTooltip>
-      </div>
+      <SelectInputPopup
+        displayValue={filePath}
+        header={t(TestSuitesI18nKey.SelectDocument)}
+        portalId="fileSelect"
+        isOpen={isModalOpen}
+        isConfirmDisabled={!selectedFilePath}
+        label={label}
+        elementId={elementId}
+        disabled={disabled}
+        inputClassName={inputClassName}
+        onOpen={() => setIsModalOpen(true)}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={onConfirm}
+        onChangeValue={onChangeValue}
+      >
+        <div className="size-full flex flex-col">
+          {showTabs && (
+            <div className="flex flex-row justify-between pt-4 px-6 items-center">
+              <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+            </div>
+          )}
+          <div className="grow min-h-0 overflow-hidden">
+            {activeTab === EntityViewTab.Public && (
+              <EntitySelectManager
+                entityType={EntitySelectType.File}
+                value={isPublicFile ? filePath : ''}
+                isModalOpen={isModalOpen}
+                onChangeSelectedPath={setSelectedFilePath}
+              />
+            )}
+            {activeTab === EntityViewTab.Application && (
+              <ApplicationFileManager
+                id={id}
+                view={view}
+                value={filePath}
+                selectedFilePath={selectedFilePath}
+                onChangeSelectedFilePath={setSelectedFilePath}
+              />
+            )}
+          </div>
+        </div>
+      </SelectInputPopup>
     </FileFolderProvider>
   );
 };

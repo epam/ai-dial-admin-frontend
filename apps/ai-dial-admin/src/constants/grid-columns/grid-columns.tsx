@@ -9,6 +9,8 @@ import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/V
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import ExternalUrlCellRenderer from '@/src/components/Grid/CellRenderers/ExternalUrlCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
 import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
 import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
@@ -1943,6 +1945,10 @@ export const getFormDataColumns = (
             value: FormDataType.File,
             label: capitalize(FormDataType.File),
           },
+          {
+            value: FormDataType.Skill,
+            label: capitalize(FormDataType.Skill),
+          },
         ],
       },
     },
@@ -1960,6 +1966,12 @@ export const getFormDataColumns = (
               id: id,
               view: ApplicationRoute.TestSuites,
             },
+          };
+        }
+        if (params.data?.type === FormDataType.Skill) {
+          return {
+            component: EntitySelectCellRenderer,
+            params: { entityType: EntitySelectType.Skill, onChange },
           };
         }
         return {

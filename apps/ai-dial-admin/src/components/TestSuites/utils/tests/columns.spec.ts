@@ -62,6 +62,7 @@ describe('getColumnsGridColumns', () => {
       { value: TestCaseItemType.OBJECT, label: 'object' },
       { value: TestCaseItemType.ARRAY, label: 'array' },
       { value: TestCaseItemType.FILE, label: 'file' },
+      { value: TestCaseItemType.SKILL, label: 'skill' },
     ]);
   });
 });

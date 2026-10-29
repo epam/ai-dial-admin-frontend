@@ -8,6 +8,7 @@ import {
   extractVersionByPath,
   getFolderNameAndPath,
   toFileSelectPath,
+  toEntitySelectPath,
   getListOfPathsToBulkDelete,
   getListOfPathsToMove,
   getPathSegments,
@@ -474,5 +475,32 @@ describe('Utils :: files :: toFileSelectPath', () => {
     expect(toFileSelectPath('')).toBe('');
     expect(toFileSelectPath(null)).toBe('');
     expect(toFileSelectPath(undefined)).toBe('');
+  });
+});
+
+describe('Utils :: files :: toFileSelectPath — skill references', () => {
+  test('rejects a skill reference so it never reaches the file picker', () => {
+    expect(toFileSelectPath('skills/public/my-skill')).toBe('');
+  });
+});
+
+describe('Utils :: files :: toEntitySelectPath', () => {
+  test('returns a skill reference unchanged', () => {
+    expect(toEntitySelectPath('skills/public/my-skill', 'skills/')).toBe('skills/public/my-skill');
+    expect(toEntitySelectPath('skills/public/team/my-skill', 'skills/')).toBe('skills/public/team/my-skill');
+  });
+
+  test('returns empty for a file path or any other stale value', () => {
+    expect(toEntitySelectPath('files/public/report.pdf', 'skills/')).toBe('');
+    expect(toEntitySelectPath('public/docs/file.txt', 'skills/')).toBe('');
+    expect(toEntitySelectPath('hello', 'skills/')).toBe('');
+    expect(toEntitySelectPath(true, 'skills/')).toBe('');
+    expect(toEntitySelectPath({ path: 'skills/a' }, 'skills/')).toBe('');
+  });
+
+  test('returns empty for missing values', () => {
+    expect(toEntitySelectPath('', 'skills/')).toBe('');
+    expect(toEntitySelectPath(null, 'skills/')).toBe('');
+    expect(toEntitySelectPath(undefined, 'skills/')).toBe('');
   });
 });

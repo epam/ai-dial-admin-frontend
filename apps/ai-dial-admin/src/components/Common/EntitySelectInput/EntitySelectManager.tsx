@@ -2,22 +2,24 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-react-file-manager';
 
-import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Artifacts/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
+import { ENTITY_SELECT_CONFIGS } from './constants';
+import { EntitySelectType } from './models';
 
 interface Props {
+  entityType: EntitySelectType;
+  /** The selected entity's path as its tree lists it (`<bucket>/<path>`), without the resource prefix. */
   value: string;
   isModalOpen: boolean;
-  onChangeSelectedFilePath: (filePath: string | null) => void;
+  onChangeSelectedPath: (path: string | null) => void;
 }
 
-const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFilePath }) => {
+const EntitySelectManager: FC<Props> = ({ entityType, value, isModalOpen, onChangeSelectedPath }) => {
+  const { route, gridColumns, useFolder } = ENTITY_SELECT_CONFIGS[entityType];
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const {
@@ -29,12 +31,12 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
     setFilePath,
     expandedFolders,
     setExpandedFolders,
-  } = useFileFolder();
+  } = useFolder();
 
-  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const [loadedPaths, setLoadedPaths] = useState(new Set<string>());
 
   useEffect(() => {
-    if ((files == null || files?.length === 0) && isModalOpen) {
+    if ((files == null || files.length === 0) && isModalOpen) {
       if (value) {
         const path = getFolderNameAndPath(value).path;
         fetchFolderHierarchy?.(`${path}/`, true);
@@ -54,7 +56,7 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, isModalOpen]);
 
-  const handleOnPathChange = useCallback(
+  const onPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (!nextPath) {
         return;
@@ -76,7 +78,7 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
     [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath],
   );
 
-  const handleFolderPopupPathChange = useCallback(
+  const onFolderPopupPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (nextPath && !loadedPaths.has(nextPath)) {
         setLoadedPaths((prev) => new Set(prev).add(nextPath));
@@ -86,15 +88,13 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
     [loadedPaths, fetchFiles],
   );
 
-  const handleSelectionClick = useCallback(
-    (files: FileManagerGridRow[]) => {
-      if (files.length > 0 && files[0].nodeType === DialFileNodeType.ITEM) {
-        onChangeSelectedFilePath(files[0].id);
-      } else {
-        onChangeSelectedFilePath(null);
-      }
+  // A grouping folder is browsable but never a choice, so only an entity row (an ITEM) is reported.
+  const onSelectEntity = useCallback(
+    (rows: FileManagerGridRow[]) => {
+      const row = rows[0];
+      onChangeSelectedPath(row?.nodeType === DialFileNodeType.ITEM ? row.path : null);
     },
-    [onChangeSelectedFilePath],
+    [onChangeSelectedPath],
   );
 
   return (
@@ -116,18 +116,18 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
           isFetchingFiles,
           value ? expandedFolders : loadedPaths,
           expandedFolders,
-          ApplicationRoute.Files,
+          route,
           setExpandedFolders,
           t,
         )}
         defaultSelectedPaths={value ? new Set([value]) : void 0}
-        gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
-        onPathChange={handleOnPathChange}
-        onFolderPopupPathChange={handleFolderPopupPathChange}
-        handleSelectionClick={handleSelectionClick}
+        gridOptions={getGridOptions(route, isReadOnlyAdmin, gridColumns, t, true)}
+        onPathChange={onPathChange}
+        onFolderPopupPathChange={onFolderPopupPathChange}
+        handleSelectionClick={onSelectEntity}
       />
     </div>
   );
 };
 
-export default PublicFileManager;
+export default EntitySelectManager;

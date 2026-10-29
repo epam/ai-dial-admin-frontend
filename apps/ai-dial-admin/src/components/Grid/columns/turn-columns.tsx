@@ -4,6 +4,8 @@ import { ColDef, GridApi, ICellRendererParams, IRowNode, ValueGetterParams } fro
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
@@ -138,6 +140,18 @@ export const getGroupedSchemaColumn = (
           },
         };
       }
+      if (param.type === TestCaseItemType.SKILL) {
+        return {
+          component: EntitySelectCellRenderer,
+          params: {
+            entityType: EntitySelectType.Skill,
+            onChange: (value: string | number, rowData: unknown) => {
+              onCell(rowData as Record<string, unknown>, field, value);
+            },
+            isReadonly: isReadOnly,
+          },
+        };
+      }
       if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
         return {
           component: EditableCellRenderer,
@@ -245,6 +259,7 @@ export const getTurnActionsColumn = (
       onClick: (row) => row && handlers.onDeleteTurn(row),
       hidden: isNotTurnRow,
     },
+    ...(extraItems ?? []),
     {
       icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className="text-error" />,
       id: ActionMenuOperationI18nKey.Delete_case,
@@ -252,7 +267,6 @@ export const getTurnActionsColumn = (
       onClick: (row) => row && handlers.onDeleteCase(row),
       hidden: isTurnRow,
     },
-    ...(extraItems ?? []),
   ];
 
   return { ...ACTION_COLUMN<GroupedGridRow>(items), colId: 'action-turns' };
