@@ -17,7 +17,6 @@ interface Props {
   runOrder: TrendsRunPoint[];
   selectedTestSuite: TestSuite;
   segments: RunTestCaseSegments[];
-  metricCount: number;
   costPoints: ComboTrendPoint[];
   runtimePoints: ComboTrendPoint[];
   sourceKind: string;
@@ -36,7 +35,6 @@ const KpiStrip: FC<Props> = ({
   runOrder,
   selectedTestSuite,
   segments,
-  metricCount,
   costPoints,
   runtimePoints,
   sourceKind,
@@ -48,7 +46,7 @@ const KpiStrip: FC<Props> = ({
   const t = useI18n();
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:flex xl:flex-row xl:gap-4">
       <PassRateCard
         className="flex-1 sm:min-w-[180px]"
         segments={segments}
@@ -60,7 +58,6 @@ const KpiStrip: FC<Props> = ({
         className="flex-1 sm:min-w-[180px]"
         runOrder={runOrder}
         selectedTestSuite={selectedTestSuite}
-        metricCount={metricCount}
       />
       <LatestComboTotalCard
         className="flex-1 sm:min-w-[180px]"

@@ -53,8 +53,6 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
   const hasThreshold = hasOverallScoreThreshold(selectedTestSuite.overallScoreThreshold);
   const latestRunSegments = testCaseSegments.length > 0 ? testCaseSegments[testCaseSegments.length - 1] : null;
 
-  const metricCount = runOrder[runOrder.length - 1]?.metricNames?.length ?? 0;
-
   useEffect(() => {
     onTrendsRunCountChange?.(data?.kpis.runCount ?? null);
   }, [data?.kpis.runCount, onTrendsRunCountChange]);
@@ -112,7 +110,6 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
         runOrder={data.runOrder}
         selectedTestSuite={selectedTestSuite}
         segments={testCaseSegments}
-        metricCount={metricCount}
         costPoints={costPoints}
         runtimePoints={runtimePoints}
         sourceKind={sourceKind}

@@ -37,14 +37,17 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard
         runOrder={runOrder}
         selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-        metricCount={2}
       />,
     );
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('0.580')).toBeInTheDocument();
-    expect(screen.getByText(TestSuitesI18nKey.TrendsDeltaVsPrev)).toBeInTheDocument();
+    const deltaLabels = screen.getAllByText(TestSuitesI18nKey.TrendsDeltaVsPrev);
+    expect(deltaLabels.some((element) => element.dataset.testid !== 'kpi-tooltip-content')).toBe(true);
     expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
+    ).not.toBeInTheDocument();
   });
 
   test('shows above/below threshold tip on the score when suite has a threshold', () => {
@@ -52,7 +55,6 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard
         runOrder={runOrder}
         selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-        metricCount={2}
       />,
     );
 
@@ -60,13 +62,7 @@ describe('OverallScoreOfLatestRunCard', () => {
   });
 
   test('hides the score tip when suite has no threshold', () => {
-    render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1' } as TestSuite}
-        metricCount={2}
-      />,
-    );
+    render(<OverallScoreOfLatestRunCard runOrder={runOrder} selectedTestSuite={{ id: 'suite-1' } as TestSuite} />);
 
     const scoreTip = screen.getAllByTestId('kpi-tooltip').find((node) => node.textContent?.includes('0.580'));
     expect(scoreTip).toHaveAttribute('data-hide', 'true');
@@ -74,11 +70,7 @@ describe('OverallScoreOfLatestRunCard', () => {
 
   test('omits threshold glyph when suite has no threshold', () => {
     const { container } = render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1' } as TestSuite}
-        metricCount={2}
-      />,
+      <OverallScoreOfLatestRunCard runOrder={runOrder} selectedTestSuite={{ id: 'suite-1' } as TestSuite} />,
     );
 
     expect(container.querySelector('.bg-score-abs-11')).not.toBeInTheDocument();

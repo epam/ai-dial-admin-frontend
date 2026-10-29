@@ -2,7 +2,9 @@
 
 import { FC } from 'react';
 
-import { Badge, BadgeColor, BadgeVariant } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+
+import { Badge, BadgeColor, BadgeVariant, Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -18,15 +20,18 @@ const KpiDeltaBadge: FC<Props> = ({ label, higherIsBetter, className }) => {
   const t = useI18n();
   const isIncrease = label.startsWith('+');
   const isPositive = higherIsBetter ? isIncrease : !isIncrease;
+  const badgeLabel = t(TestSuitesI18nKey.TrendsDeltaVsPrev, { delta: label });
 
   return (
-    <Badge
-      label={t(TestSuitesI18nKey.TrendsDeltaVsPrev, { delta: label })}
-      variant={BadgeVariant.Filled}
-      color={isPositive ? BadgeColor.Green : BadgeColor.Red}
-      textClassName="dial-tiny-semi-text"
-      className={className}
-    />
+    <Tooltip tooltip={badgeLabel} triggerClassName="min-w-0 max-w-full">
+      <Badge
+        label={badgeLabel}
+        variant={BadgeVariant.Filled}
+        color={isPositive ? BadgeColor.Green : BadgeColor.Red}
+        textClassName="dial-tiny-semi-text max-w-full truncate"
+        className={classNames('min-w-0 max-w-full', className)}
+      />
+    </Tooltip>
   );
 };
 

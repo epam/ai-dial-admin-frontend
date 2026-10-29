@@ -3,12 +3,10 @@
 import { FC, useMemo } from 'react';
 
 import { Tooltip } from '@epam/ai-dial-ui-kit';
-import { IconInfoCircle } from '@tabler/icons-react';
 
 import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import KpiDeltaBadge from '@/src/components/TestSuites/Trends/Kpi/KpiDeltaBadge';
-import { buildOverallScoreMethodTooltip } from '@/src/components/TestSuites/Trends/Kpi/utils/overall-score-method-tooltip';
 import { formatScoreDelta } from '@/src/components/TestSuites/Trends/Kpi/utils/kpi-delta';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { formatScore, roundScore } from '@/src/components/TestSuites/Trends/utils/format';
@@ -22,11 +20,10 @@ const formatOverallScore = (value: number): string => roundScore(value).toFixed(
 interface Props {
   runOrder: TrendsRunPoint[];
   selectedTestSuite: TestSuite;
-  metricCount: number;
   className?: string;
 }
 
-const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, selectedTestSuite, metricCount, className }) => {
+const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, selectedTestSuite, className }) => {
   const t = useI18n();
   const threshold = selectedTestSuite.overallScoreThreshold;
   const hasThreshold = hasOverallScoreThreshold(threshold);
@@ -46,10 +43,6 @@ const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, selectedTestSuite, m
       : undefined;
 
   const deltaLabel = useMemo(() => formatScoreDelta(score, previousScore), [score, previousScore]);
-  const methodTooltip = useMemo(
-    () => buildOverallScoreMethodTooltip(selectedTestSuite, t, metricCount),
-    [selectedTestSuite, t, metricCount],
-  );
 
   const title = t(TestSuitesI18nKey.OverallScoreOfLatestRun);
 
@@ -69,18 +62,7 @@ const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, selectedTestSuite, m
             </>
           )}
         </div>
-        <div className="flex items-center gap-1">
-          <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</p>
-          <Tooltip tooltip={methodTooltip} asChild>
-            <button
-              type="button"
-              aria-label={t(TestSuitesI18nKey.OverallScoreCalculationMethod)}
-              className="flex size-6 shrink-0 items-center justify-center rounded text-secondary hover:text-accent-primary focus-visible:text-accent-primary"
-            >
-              <IconInfoCircle size={16} aria-hidden />
-            </button>
-          </Tooltip>
-        </div>
+        <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</p>
       </div>
     </KpiCardFrame>
   );
