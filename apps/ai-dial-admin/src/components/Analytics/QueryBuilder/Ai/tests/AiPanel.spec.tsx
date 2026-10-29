@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { getDefaultNormalizer, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -94,6 +94,26 @@ describe('AiPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
     expect(onRunMessage).toHaveBeenCalledWith('SELECT 1', 1);
+  });
+
+  test('shows a one-line SQL reply one clause per line but runs it as written', async () => {
+    const user = userEvent.setup();
+    const sql = 'SELECT model, count(*) AS n FROM dial_usage_log GROUP BY model';
+    vi.mocked(generateQuery).mockResolvedValue(reply(`\`\`\`sql\n${sql}\n\`\`\``) as never);
+    const { onRunMessage } = renderPanel();
+
+    await user.type(promptBox(), 'count by model');
+    await user.click(sendButton());
+
+    // The default normalizer collapses whitespace, which would also match the one-line original.
+    expect(
+      await screen.findByText('SELECT\n  model,\n  count(*) AS n\nFROM\n  dial_usage_log\nGROUP BY\n  model', {
+        normalizer: getDefaultNormalizer({ trim: false, collapseWhitespace: false }),
+      }),
+    ).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
+    expect(onRunMessage).toHaveBeenCalledWith(sql, 1);
   });
 
   test('sending a message scrolls the new user message into view', async () => {

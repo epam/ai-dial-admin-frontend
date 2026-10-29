@@ -278,9 +278,11 @@ SHALL fail at this point and SHALL be reported as a body refusal carrying the se
 
 The Analytics group SHALL provide a `/queries/{id}` page rendering the Query Builder seeded from the stored saved query. The page SHALL be an `async` server component gated by the same Analytics access check as the other Analytics pages, and SHALL resolve to a not-found result when the query cannot be read — the service reports a query the caller may not see as absent rather than forbidden, so the two cases SHALL be indistinguishable to the user.
 
-The page SHALL fetch the schema of **the stored query's primary source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text, a structured body the visual builder can represent opens the Builder view hydrated from it, and any other structured body opens the JSON view showing it. The heading SHALL show the query's name.
+The page SHALL fetch the schema of **the stored query's primary source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text laid out one clause per line, a structured body the visual builder can represent opens the Builder view hydrated from it, and any other structured body opens the JSON view showing it. The heading SHALL show the query's name.
 
 A query reading from several entities SHALL open the same way — its stored SQL shown in the SQL view — with the schema of its primary source loaded. Switching such a query to the Builder or JSON view SHALL follow the existing translation behaviour for SQL the DSL cannot express: the service refuses the translation and the discard guard applies.
+
+The laid-out text SHALL be the query's unedited baseline, so opening a query stored on one line SHALL NOT mark it as having unsaved changes. Saving from the SQL view SHALL send the SQL view's text as shown, so the first save after opening stores the laid-out form. Editing a query's metadata or duplicating it SHALL send the stored SQL unchanged, because neither re-authors the body.
 
 The stored time intent SHALL be applied to the toolbar time filter: a relative intent selects that period, an absolute intent selects that custom range, and an absent intent leaves the toolbar at its default. A relative period the frontend does not recognise SHALL leave the toolbar unchanged and SHALL NOT prevent the query from loading.
 
@@ -298,8 +300,15 @@ The stored time intent SHALL be applied to the toolbar time filter: a relative i
 #### Scenario: A SQL body opens in the SQL view
 
 - **WHEN** the user opens a query carrying a SQL body
-- **THEN** the SQL view is shown containing the stored statement
+- **THEN** the SQL view is shown containing the stored statement, one clause per line
 - **AND** entering the SQL view does not overwrite it with a re-seeded translation
+
+#### Scenario: Saving an opened SQL query stores the laid-out text
+
+- **WHEN** the user opens a query whose SQL is stored on one line
+- **THEN** the page reports no unsaved changes
+- **WHEN** the user saves it from the SQL view
+- **THEN** the payload's `sql` is the text the SQL view shows
 
 #### Scenario: The schema loaded is the query's own source
 

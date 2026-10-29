@@ -74,6 +74,26 @@ describe('EDITOR_THEMES_CONFIG', () => {
   });
 });
 
+describe('SQL theme rules', () => {
+  test.each([
+    [EDITOR_THEMES.dark, fallbackDarkTheme],
+    [EDITOR_THEMES.light, fallbackLightTheme],
+  ])('%s theme colors SQL keywords, functions, strings and comments', (theme, palette) => {
+    const colorOf = (token: string) =>
+      EDITOR_THEMES_CONFIG[theme].rules.find((rule) => rule.token === token)?.foreground;
+    const keywordColor = colorOf('keyword.json');
+
+    expect(colorOf('keyword.sql')).toBe(keywordColor);
+    expect(colorOf('keyword.block.sql')).toBe(keywordColor);
+    expect(colorOf('keyword.choice.sql')).toBe(keywordColor);
+    expect(colorOf('operator.sql')).toBe(keywordColor);
+    expect(colorOf('predefined.sql')).toBe(palette['text-accent-secondary']);
+    expect(colorOf('string.sql')).toBe(palette['text-accent-primary']);
+    expect(colorOf('comment.sql')).toBe(palette['controls-text-primary-disable']);
+    expect(colorOf('comment.quote.sql')).toBe(palette['controls-text-primary-disable']);
+  });
+});
+
 describe('JSONata theme rules', () => {
   const jsonataTokens = collectJsonataTokenNames();
 

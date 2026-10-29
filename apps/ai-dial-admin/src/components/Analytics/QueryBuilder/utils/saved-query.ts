@@ -20,6 +20,7 @@ import { TimeRange } from '@/src/models/time-range';
 import { buildQuery } from './serialize';
 import { isBuilderRepresentable, parseQuery } from './deserialize';
 import { createInitialState } from './state';
+import { formatSql } from './sql-format';
 
 const JSON_INDENT = 2;
 
@@ -196,7 +197,9 @@ export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryResto
   return {
     editor,
     state,
-    sqlText: saved.sql ?? '',
+    // Laid out for reading like the JSON body; the page's unsaved-changes baseline is built from this same
+    // text, so opening a query stored on one line does not mark it as edited.
+    sqlText: saved.sql ? formatSql(saved.sql) : '',
     jsonText: saved.query ? JSON.stringify(saved.query, null, JSON_INDENT) : '',
     time: toTimeRestore(saved.time, knownPeriods),
     resultView: saved.result_view ?? QueryResultView.Table,

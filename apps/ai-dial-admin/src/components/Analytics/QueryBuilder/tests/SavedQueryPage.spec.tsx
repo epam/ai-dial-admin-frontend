@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSavedQuery, translateSqlToQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
 import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -196,7 +197,7 @@ describe('QueryBuilder — a stored saved query', () => {
     renderPage(composite);
 
     expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByLabelText('sql-editor')).toHaveValue(composite.sql);
+    expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql(composite.sql ?? ''));
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/conversations/);
     expect(screen.queryByText('QueryBuilder.SchemaLoadFailed')).not.toBeInTheDocument();
   });
@@ -213,10 +214,10 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(await screen.findByLabelText('json-editor')).toHaveValue(JSON.stringify(UNREPRESENTABLE_BODY, null, 2));
   });
 
-  test('opens a SQL body in the SQL view with the stored statement intact', async () => {
+  test('opens a SQL body in the SQL view with the stored statement laid out for reading', async () => {
     renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
 
-    expect(await screen.findByLabelText('sql-editor')).toHaveValue('SELECT count(*) FROM dial_usage_log');
+    expect(await screen.findByLabelText('sql-editor')).toHaveValue(formatSql('SELECT count(*) FROM dial_usage_log'));
   });
 
   test('reports no unsaved changes when freshly loaded', () => {
@@ -593,7 +594,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
       await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       const request = sentRequest();
-      expect(request.sql).toBe('SELECT count(*) FROM dial_usage_log');
+      expect(request.sql).toBe(formatSql('SELECT count(*) FROM dial_usage_log'));
       expect('query' in request).toBeFalsy();
     });
 
