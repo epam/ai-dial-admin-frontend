@@ -90,6 +90,7 @@ describe('SQL theme rules', () => {
     expect(colorOf('predefined.sql')).toBe(palette['text-accent-secondary']);
     expect(colorOf('string.sql')).toBe(palette['text-accent-primary']);
     expect(colorOf('comment.sql')).toBe(palette['controls-text-primary-disable']);
+    expect(colorOf('comment.quote.sql')).toBe(palette['controls-text-primary-disable']);
   });
 });
 
