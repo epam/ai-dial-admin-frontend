@@ -17,6 +17,7 @@ import classNames from 'classnames';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
 import { splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
+import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { QUERY_ASSISTANT_SUGGESTIONS } from '@/src/constants/analytics/query-assistant';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -104,8 +105,10 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
                         />
                       </div>
                     </div>
-                    <pre className="dial-small-text overflow-x-auto whitespace-pre-wrap rounded border border-primary bg-layer-3 p-2">
-                      {split.sql}
+                    {/* Formatted for reading only; copy and Run take the SQL exactly as the assistant wrote it.
+                        It scrolls rather than wraps, so a wrapped line never reads as a clause of its own. */}
+                    <pre className="dial-small-text overflow-x-auto rounded border border-primary bg-layer-3 p-2 font-mono">
+                      {formatSql(split.sql)}
                     </pre>
                   </div>
                   {split.after && <p className="dial-small-text whitespace-pre-wrap text-primary">{split.after}</p>}

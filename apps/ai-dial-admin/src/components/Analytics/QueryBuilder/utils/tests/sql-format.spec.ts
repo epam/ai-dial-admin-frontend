@@ -9,6 +9,12 @@ describe('formatSql', () => {
     );
   });
 
+  test('keeps a function call attached to its parentheses', () => {
+    expect(formatSql("SELECT count(*) FROM t WHERE ts >= now() - INTERVAL '7' DAY")).toBe(
+      "SELECT\n  count(*)\nFROM\n  t\nWHERE\n  ts >= now() - INTERVAL '7' DAY",
+    );
+  });
+
   test('returns the original text unchanged on a formatting failure', () => {
     expect(formatSql('SELECT (')).toBe('SELECT (');
   });

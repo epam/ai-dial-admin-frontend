@@ -55,6 +55,17 @@ const buildEditorTheme = (palette: ThemePalette, spec: EditorThemeSpec): JSONEdi
       { token: 'jsonata.operator', foreground: text },
       { token: 'jsonata.bracket', foreground: bracket },
       { token: 'jsonata.comment', foreground: muted },
+      // Monaco's SQL tokenizer; `number` and `delimiter` above already cover its numbers and punctuation.
+      // Word operators (AND, IN, LIKE) come out as `operator`, so they take the keyword color.
+      { token: 'keyword.sql', foreground: spec.keywordColor },
+      { token: 'keyword.block.sql', foreground: spec.keywordColor },
+      { token: 'keyword.choice.sql', foreground: spec.keywordColor },
+      { token: 'operator.sql', foreground: spec.keywordColor },
+      { token: 'predefined.sql', foreground: key },
+      { token: 'string.sql', foreground: value },
+      { token: 'identifier.quote.sql', foreground: bracket },
+      { token: 'comment.sql', foreground: muted },
+      { token: 'comment.quote.sql', foreground: muted },
     ],
     colors: {
       focusBorder: TRANSPARENT,

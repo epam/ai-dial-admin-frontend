@@ -412,11 +412,11 @@ describe('toBuilderRestore', () => {
     expect(result.jsonText).toContain('dial_usage_log');
   });
 
-  test('opens a SQL body in the SQL view with the stored statement intact', () => {
+  test('opens a SQL body in the SQL view with the stored statement laid out one clause per line', () => {
     const result = restore({ sql: 'SELECT count(*) FROM dial_usage_log', source: ['dial_usage_log'] });
 
     expect(result.editor).toBe(SavedQueryEditor.Sql);
-    expect(result.sqlText).toBe('SELECT count(*) FROM dial_usage_log');
+    expect(result.sqlText).toBe('SELECT\n  count(*)\nFROM\n  dial_usage_log');
     expect(result.state.entityName).toBe('dial_usage_log');
   });
 
