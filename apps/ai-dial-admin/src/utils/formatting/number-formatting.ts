@@ -81,12 +81,23 @@ function formatInt(value: string | number, delimiter: string): string {
 
 const SIGNIFICANT_DIGITS = 2;
 // At and above one unit, two significant digits would report 19.74 as 20 and switch to exponential
-// notation past two integer digits; the compact formatter reads better and keeps the leading digits.
+// notation past two integer digits, so the value switches to fixed decimals there instead.
 const SIGNIFICANT_COMPACT_THRESHOLD = 1;
+
+// Below this a significant-digit value of a few units keeps its decimals instead of being compacted.
+const SIGNIFICANT_DECIMALS_LIMIT = 1000;
+const DEFAULT_FRACTION_DIGITS = 2;
 
 // Only meaningful after a decimal point: on an integer it would turn 20 into 2.
 export const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
+
+/** At most two decimals, without trailing zeros: 33.9819063 → "33.98", 2.5 → "2.5". */
+export const formatFractionDigits = (value: number): string => {
+  const text = stripTrailingZeros(value.toFixed(DEFAULT_FRACTION_DIGITS));
+  // A small negative rounds to "-0.00", which strips to a signed zero.
+  return text === '-0' ? '0' : text;
+};
 
 export const formatSignificantNumber = (value: number | string): string => {
   if (value === '' || value == null || isNaN(+value) || !isFinite(+value)) {
@@ -101,9 +112,12 @@ export const formatSignificantNumber = (value: number | string): string => {
   const sign = amount.lt(0) ? '-' : '';
   const absAmount = amount.abs();
 
-  // At and above one unit, the compact formatter is currency-agnostic and already reads better.
+  // At and above one unit a value reads at two decimals, and from a thousand up the compact formatter,
+  // which is currency-agnostic, keeps it short.
   if (absAmount.gte(SIGNIFICANT_COMPACT_THRESHOLD)) {
-    return `${sign}${formatNumberWithExponent(absAmount.toNumber())}`;
+    const abs = absAmount.toNumber();
+    const text = abs < SIGNIFICANT_DECIMALS_LIMIT ? formatFractionDigits(abs) : formatNumberWithExponent(abs);
+    return `${sign}${text}`;
   }
 
   // Sub-unit values need significant digits, not decimal places, to stay legible across orders of

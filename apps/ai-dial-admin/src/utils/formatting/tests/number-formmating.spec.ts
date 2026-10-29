@@ -1,6 +1,7 @@
 import {
   formatNumberWithExponent,
   formatNumberByDelimiter,
+  formatFractionDigits,
   formatSignificantNumber,
 } from '@/src/utils/formatting/number-formatting';
 import { describe, expect, test, vi } from 'vitest';
@@ -81,12 +82,29 @@ describe('Utils :: formatting :: formatSignificantNumber', () => {
   test.each([
     [0, '0'],
     [0.0004792, '0.00048'],
-    [19.74, '19.7'],
+    [19.74, '19.74'],
+    [33.9819063, '33.98'],
+    [999.996, '1000'],
+    [1234.5, '1.2 K'],
+    [-33.9819063, '-33.98'],
     [4897666958, '4.9 B'],
     [-0.0004792, '-0.00048'],
     ['abc', ''],
     ['', ''],
   ])('Should format %p as %p', (value, expected) => {
     expect(formatSignificantNumber(value)).toBe(expected);
+  });
+});
+
+describe('Utils :: formatting :: formatFractionDigits', () => {
+  test.each([
+    [33.9819063, '33.98'],
+    [2.5, '2.5'],
+    [7, '7'],
+    [0.004, '0'],
+    [-0.004, '0'],
+    [-12.345, '-12.35'],
+  ])('Should format %p as %p', (value, expected) => {
+    expect(formatFractionDigits(value)).toBe(expected);
   });
 });

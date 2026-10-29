@@ -1,4 +1,4 @@
-import { ColDef, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ITooltipParams, ValueFormatterParams, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -7,6 +7,7 @@ import {
   isFullValueNeeded,
   previewOf,
   renderCell,
+  renderResultCell,
 } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 
@@ -120,5 +121,34 @@ describe('getResultColumns — tooltips', () => {
 
   test('a value too long for a tooltip gets none, and the viewer instead', () => {
     expect(tooltipFor('x'.repeat(2000))).toBeUndefined();
+  });
+});
+
+describe('renderResultCell', () => {
+  test('rounds a fractional number to at most two decimals', () => {
+    expect(renderResultCell(33.9819063)).toBe('33.98');
+    expect(renderResultCell(2.5)).toBe('2.5');
+    expect(renderResultCell(-0.001)).toBe('0');
+  });
+
+  test('leaves an integer, a numeric string and a non-number as returned', () => {
+    expect(renderResultCell(1730000000000)).toBe('1730000000000');
+    expect(renderResultCell('1.2345')).toBe('1.2345');
+    expect(renderResultCell(null)).toBe('');
+    expect(renderResultCell({ a: 1.2345 })).toBe('{"a":1.2345}');
+  });
+});
+
+describe('getResultColumns — an unclassified fractional value', () => {
+  const [column] = getResultColumns({ columns: ['spend'], rows: [{ spend: 33.9819063 }] });
+
+  test('shows it at two decimals', () => {
+    const valueFormatter = column.valueFormatter as (params: ValueFormatterParams) => string;
+    expect(valueFormatter({ value: 33.9819063 } as ValueFormatterParams)).toBe('33.98');
+  });
+
+  test('keeps every digit in the tooltip', () => {
+    const tooltipValueGetter = column.tooltipValueGetter as (params: ITooltipParams) => unknown;
+    expect(tooltipValueGetter({ value: 33.9819063, valueFormatted: '33.98' } as ITooltipParams)).toBe('33.9819063');
   });
 });
