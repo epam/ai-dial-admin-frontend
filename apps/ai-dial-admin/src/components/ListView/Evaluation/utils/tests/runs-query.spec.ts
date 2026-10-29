@@ -150,6 +150,9 @@ describe('runs-query', () => {
     expect(query.page).toEqual({ type: PageType.Offset, offset: 20, limit: 20, include_total: true });
     expect(query.filter?.op).toBe(ComparisonOp.Eq);
     expect(query.sort).toEqual([{ field: 'started_at_ms', dir: SortDir.Desc, nulls: null }]);
+    expect(query.select).toContainEqual({
+      expr: { type: ExprType.Field, name: 'overall_score_threshold' },
+    });
   });
 
   test('mapRunRow reads the deployment target, metric names and post-query display values', () => {
@@ -165,6 +168,7 @@ describe('runs-query', () => {
         created_at_ms: 1790319683269,
         updated_at_ms: 1790319687162,
         suite_type: 'DEPLOYMENT',
+        overall_score_threshold: 0.6,
         'deployment_ref::id': 'msh-anthropic',
         'deployment_ref::name': 'msh-anthropic',
         'deployment_ref::type': 'dial-model',
@@ -188,6 +192,7 @@ describe('runs-query', () => {
       totalCost: 0.000612,
       suiteSnapshot: {
         suiteType: SuiteType.Deployment,
+        overallScoreThreshold: 0.6,
         deploymentRef: { id: 'msh-anthropic', name: 'msh-anthropic', version: undefined, type: 'dial-model' },
         mcpDeploymentRef: undefined,
         routesRef: undefined,
@@ -207,6 +212,16 @@ describe('runs-query', () => {
       deploymentRef: undefined,
       mcpDeploymentRef: undefined,
       routesRef: { name: 'routes/platform/search-route' },
+    });
+  });
+
+  test('mapRunRow creates a suite snapshot when only its threshold is present', () => {
+    expect(mapRunRow({ id: 'run-1', overall_score_threshold: 0 }).suiteSnapshot).toEqual({
+      suiteType: undefined,
+      deploymentRef: undefined,
+      mcpDeploymentRef: undefined,
+      routesRef: undefined,
+      overallScoreThreshold: 0,
     });
   });
 

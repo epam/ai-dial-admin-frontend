@@ -39,8 +39,6 @@ const TooltipRow: FC<RowProps> = ({ label, value, swatchClass, swatchStyle, inde
 
 export interface TestCasesBarTooltipProps {
   segments: RunTestCaseSegments;
-  hasThreshold: boolean;
-  threshold?: number | null;
   totalLabel: string;
   completedLabel: string;
   aboveLabel: string;
@@ -50,18 +48,17 @@ export interface TestCasesBarTooltipProps {
 
 const TestCasesBarTooltip: FC<TestCasesBarTooltipProps> = ({
   segments,
-  hasThreshold,
-  threshold,
   totalLabel,
   completedLabel,
   aboveLabel,
   belowLabel,
   errorLabel,
 }) => {
-  const { runId, runName, above, below, errorOrNa, total } = segments;
+  const { runId, runName, above, below, errorOrNa, total, overallScoreThreshold } = segments;
+  const hasThreshold = overallScoreThreshold != null;
   const completedCount = hasThreshold ? above + below : above;
-  const aboveWithThreshold = threshold != null ? `${aboveLabel} (${threshold})` : aboveLabel;
-  const belowWithThreshold = threshold != null ? `${belowLabel} (${threshold})` : belowLabel;
+  const aboveWithThreshold = overallScoreThreshold != null ? `${aboveLabel} (${overallScoreThreshold})` : aboveLabel;
+  const belowWithThreshold = overallScoreThreshold != null ? `${belowLabel} (${overallScoreThreshold})` : belowLabel;
   const href = getUrnForEntity(ApplicationRoute.Runs, { id: runId, testRunName: runName });
 
   return (

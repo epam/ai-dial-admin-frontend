@@ -12,6 +12,7 @@ const isPassedFalse = (value: unknown): boolean => value === false || value === 
 const emptySegments = (point: TrendsRunPoint): RunTestCaseSegments => ({
   runId: point.runId,
   runName: point.runName,
+  overallScoreThreshold: point.overallScoreThreshold,
   above: 0,
   below: 0,
   errorOrNa: 0,
@@ -21,7 +22,6 @@ const emptySegments = (point: TrendsRunPoint): RunTestCaseSegments => ({
 export const parseRunTestCaseSegments = (
   result: StructuredQueryResult | null,
   runOrder: TrendsRunPoint[],
-  hasThreshold = true,
 ): RunTestCaseSegments[] => {
   const byRun = new Map<string, RunTestCaseSegments>();
   for (const point of runOrder) {
@@ -38,6 +38,7 @@ export const parseRunTestCaseSegments = (
       segments = {
         runId,
         runName: runId,
+        overallScoreThreshold: null,
         above: 0,
         below: 0,
         errorOrNa: 0,
@@ -57,7 +58,7 @@ export const parseRunTestCaseSegments = (
       continue;
     }
 
-    if (!hasThreshold) {
+    if (segments.overallScoreThreshold == null) {
       segments.above += count;
       continue;
     }
@@ -78,7 +79,6 @@ export const parseRunTestCaseSegments = (
 export const fillEmptySegmentsFromOverallScore = (
   segments: RunTestCaseSegments[],
   runOrder: TrendsRunPoint[],
-  threshold: number | null | undefined,
 ): RunTestCaseSegments[] => {
   const byId = new Map(runOrder.map((point) => [point.runId, point]));
 
@@ -93,10 +93,10 @@ export const fillEmptySegmentsFromOverallScore = (
     if (point.isFailed || point.overallScore == null) {
       return { ...seg, errorOrNa: 1, total: 1 };
     }
-    if (threshold == null) {
+    if (point.overallScoreThreshold == null) {
       return { ...seg, above: 1, total: 1 };
     }
-    if (point.overallScore >= threshold) {
+    if (point.overallScore >= point.overallScoreThreshold) {
       return { ...seg, above: 1, total: 1 };
     }
     return { ...seg, below: 1, total: 1 };
