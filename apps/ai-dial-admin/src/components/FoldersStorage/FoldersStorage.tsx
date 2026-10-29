@@ -11,6 +11,7 @@ import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import FolderInfo from './FolderInfo';
+import NewUnitButton from './NewUnitButton';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 interface Props {
   initialPath?: string;
@@ -31,6 +32,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
     <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         <h1 className="dial-h1-text">{t(MenuI18nKey.FoldersStorage)}</h1>
+        {!isReadOnlyAdmin && <NewUnitButton />}
       </div>
       <div className="flex flex-1 gap-4 min-h-0">
         <CollapsibleSidebar

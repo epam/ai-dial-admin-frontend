@@ -2,8 +2,9 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { filesCoreApi } from '@/src/app/api/api';
+import { coreOrgUnitsApi, filesCoreApi } from '@/src/app/api/api';
 import { DialFolder } from '@/src/models/dial/folder';
+import { NewOrgUnit, NewOrgUnitRoleAssignment } from '@/src/models/dial/org-unit';
 import { DialRule } from '@/src/models/dial/rule';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -64,4 +65,44 @@ export async function removeSkillFolder(path: string) {
 export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType, overwrite?: boolean) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return changeFolderCore(token, oldPath, newPath, [resourceType], overwrite);
+}
+
+export async function getOrgUnits() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.listUnits(token);
+}
+
+export async function createOrgUnit(parentPath: string, unit: NewOrgUnit) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.createUnit(token, parentPath, unit);
+}
+
+export async function renameOrgUnit(unitPath: string, displayName: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.renameUnit(token, unitPath, displayName);
+}
+
+export async function deleteOrgUnit(unitPath: string, recursive = false) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.deleteUnit(token, unitPath, recursive);
+}
+
+export async function getOrgUnitRoles(unitPath: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.listRoles(token, unitPath);
+}
+
+export async function getOrgUnitAssignments(unitPath: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.listAssignments(token, unitPath);
+}
+
+export async function addOrgUnitAssignment(unitPath: string, assignment: NewOrgUnitRoleAssignment) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.addAssignment(token, unitPath, assignment);
+}
+
+export async function removeOrgUnitAssignment(unitPath: string, assignmentId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreOrgUnitsApi.removeAssignment(token, unitPath, assignmentId);
 }

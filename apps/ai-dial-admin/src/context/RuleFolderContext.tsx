@@ -2,6 +2,7 @@
 import { createContext, ReactNode, useContext, useState } from 'react';
 
 import { getFolders, getRules } from '@/src/app/[lang]/folders-storage/actions';
+import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
@@ -27,6 +28,7 @@ export interface RuleFolderContextType {
 const RuleFolderContext = createContext<RuleFolderContextType | undefined>(undefined);
 
 export const RuleFolderProvider = ({ children, attributes }: { children: ReactNode; attributes?: string }) => {
+  const { ensureUnits } = useOrgUnits();
   const [files, setFiles] = useState<DialFolder[] | null>(null);
   const [currentFolder, setCurrentFolder] = useState<DialFolder>();
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +49,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
   };
 
   const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
+    ensureUnits();
     const pathParts = fullPath?.split('/').filter(Boolean);
     let currentPath = '';
     let index = 0;
@@ -124,6 +127,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
   };
 
   const fetchFiles = (path: string) => {
+    ensureUnits();
     const isInitialLoad = files === null;
     if (isInitialLoad) {
       setIsLoading(true);

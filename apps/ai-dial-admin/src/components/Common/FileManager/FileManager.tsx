@@ -7,6 +7,8 @@ import {
   DialDeletedItem,
   DialFile,
   DialFileManager,
+  DialFileManagerActions,
+  DialFileNodeType,
   DialRootFolder,
   DialUploadFileItem,
   FileManagerColumnKey,
@@ -19,14 +21,17 @@ import {
   getMoveNotificationContent,
   getParentPathByFullPath,
 } from '@/src/components/Assets/utils';
+import { UnitFolderRole, getUnitFolderRole, isUnitFolder } from '@/src/utils/org-units/units';
 import { useGridStatePersistence } from '@/src/components/Grid/hooks/use-grid-state-persistence';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
-import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import UnitFolderIcon from '@/src/components/Common/UnitFolderIcon/UnitFolderIcon';
+import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -89,6 +94,12 @@ interface Props {
   folderToRefetch?: string | null;
 }
 
+const UNIT_PROTECTED_ACTIONS = new Set([
+  DialFileManagerActions.Move,
+  DialFileManagerActions.Rename,
+  DialFileManagerActions.Delete,
+]);
+
 const FileManager: FC<Props> = ({
   label,
   columnDefs,
@@ -112,6 +123,7 @@ const FileManager: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { featureFlags } = useAppContext();
   const { showNotification } = useNotification();
+  const { units, ensureUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
@@ -127,6 +139,10 @@ const FileManager: FC<Props> = ({
     onColumnVisible,
     onColumnResized,
   } = useGridStatePersistence({ storageKey: view, columnDefs, gridApi, ...FILE_MANAGER_GRID_PERSISTENCE });
+
+  useEffect(() => {
+    ensureUnits();
+  }, [ensureUnits]);
 
   useEffect(() => {
     if (!folderToRefetch) {
@@ -172,6 +188,28 @@ const FileManager: FC<Props> = ({
   // false success toast (`handleMoveToFiles` reports success on an empty promise list).
   const isMoveSupported = !isFlatPlatformView(view) && view !== ApplicationRoute.Conversations;
   const isFileRootActive = isFileRootPath(filePath);
+  const hasUnits = Object.keys(units).length > 0;
+  const getUnitIcon = useCallback(
+    (file: DialFile) =>
+      hasUnits && file.nodeType === DialFileNodeType.FOLDER && isUnitFolder(units, file.path) ? (
+        <UnitFolderIcon />
+      ) : undefined,
+    [hasUnits, units],
+  );
+
+  const getItemActionRestriction = useCallback(
+    (file: DialFile, action: DialFileManagerActions) => {
+      if (!hasUnits || file.nodeType !== DialFileNodeType.FOLDER || !UNIT_PROTECTED_ACTIONS.has(action)) {
+        return undefined;
+      }
+      const role = getUnitFolderRole(units, file.path);
+      if (role === UnitFolderRole.UNIT) {
+        return t(FoldersI18nKey.UnitFolderRestriction);
+      }
+      return role === UnitFolderRole.CONTAINS_UNIT ? t(FoldersI18nKey.ContainsUnitRestriction) : undefined;
+    },
+    [hasUnits, units, t],
+  );
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);
@@ -405,6 +443,7 @@ const FileManager: FC<Props> = ({
     const base = getGridOptions(view, isReadOnlyAdmin, persistedColumnDefs ?? columnDefs, t, undefined, filePath);
     return {
       ...base,
+      getItemIcon: getUnitIcon,
       additionalGridOptions: {
         ...base.additionalGridOptions,
         maintainColumnOrder: true,
@@ -422,6 +461,7 @@ const FileManager: FC<Props> = ({
   }, [
     view,
     isReadOnlyAdmin,
+    getUnitIcon,
     persistedColumnDefs,
     columnDefs,
     t,
@@ -460,22 +500,26 @@ const FileManager: FC<Props> = ({
         showHiddenFiles={isHiddenFilesToggleVisible ? isShowHiddenFiles : undefined}
         onShowHiddenFilesChange={isHiddenFilesToggleVisible ? onShowHiddenFilesChange : undefined}
         showHiddenFileSwitcherInDestinationPopup={isHiddenFilesToggleVisible ? true : undefined}
-        treeOptions={getTreeOptions(
-          isReadOnlyAdmin,
-          isFetchingFiles,
-          loadedPaths,
-          expandedFolders,
-          view,
-          setExpandedFolders,
-          t,
-          filePath,
-          label,
-        )}
+        treeOptions={{
+          ...getTreeOptions(
+            isReadOnlyAdmin,
+            isFetchingFiles,
+            loadedPaths,
+            expandedFolders,
+            view,
+            setExpandedFolders,
+            t,
+            filePath,
+            label,
+          ),
+          getItemIcon: getUnitIcon,
+        }}
         gridOptions={gridOptions}
         onGridApiChange={setGridApi}
         onPathChange={handleOnPathChange}
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         {...props}
+        getItemActionRestriction={getItemActionRestriction}
         onCreateFolder={isReadOnlyAdmin || isFileRootActive ? undefined : handleCreateFolder}
         onDownloadFiles={isFileRootActive ? undefined : handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
