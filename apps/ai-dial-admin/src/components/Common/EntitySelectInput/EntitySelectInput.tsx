@@ -27,7 +27,7 @@ const EntitySelectInput: FC<Props> = ({
   inputClassName,
   onChangeValue,
 }) => {
-  const { prefix, headerI18nKey, portalId, FolderProvider } = ENTITY_SELECT_CONFIGS[entityType];
+  const { prefix, headerI18nKey, portalId, isEditable, FolderProvider } = ENTITY_SELECT_CONFIGS[entityType];
   const t = useI18n();
 
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -64,6 +64,7 @@ const EntitySelectInput: FC<Props> = ({
         elementId={elementId}
         disabled={disabled}
         inputClassName={inputClassName}
+        isEditable={isEditable}
         onOpen={onOpen}
         onClose={onClose}
         onConfirm={onConfirm}

@@ -8,9 +8,9 @@ import { EntitySelectType } from '../models';
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
 vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
-  default: ({ selectedValue, onOpen, disabled, children }: any) => (
+  default: ({ selectedValue, onOpen, disabled, editable, children }: any) => (
     <div>
-      <input aria-label="skill-value" readOnly value={selectedValue} />
+      <input aria-label="skill-value" readOnly={!editable} value={selectedValue} />
       <button disabled={disabled} onClick={onOpen}>
         open
       </button>
@@ -53,6 +53,12 @@ describe('EntitySelectInput', () => {
 
   const renderInput = (props?: Partial<Parameters<typeof EntitySelectInput>[0]>) =>
     render(<EntitySelectInput entityType={EntitySelectType.Skill} value="" onChangeValue={onChangeValue} {...props} />);
+
+  test('does not let a skill reference be typed into the input', () => {
+    renderInput();
+
+    expect(screen.getByLabelText('skill-value')).toHaveAttribute('readonly');
+  });
 
   test('emits the skill reference with the skills prefix when a skill is confirmed', async () => {
     const user = userEvent.setup();

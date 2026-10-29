@@ -11,7 +11,7 @@ import { EntitySelectConfig, EntitySelectType } from './models';
 
 // Imported straight from the kit (as `FILES_GRID_COLUMNS` does) rather than via `getAssetNameColumn`: that
 // module builds the per-view server-action maps at load time, which every importer of this picker would drag in.
-export const ENTITY_SELECT_GRID_COLUMNS: ColDef[] = [NAME_COLUMN('Name') as ColDef];
+const ENTITY_SELECT_GRID_COLUMNS: ColDef[] = [NAME_COLUMN('Name') as ColDef];
 
 export const ENTITY_SELECT_CONFIGS: Record<EntitySelectType, EntitySelectConfig> = {
   [EntitySelectType.Skill]: {
@@ -19,6 +19,7 @@ export const ENTITY_SELECT_CONFIGS: Record<EntitySelectType, EntitySelectConfig>
     route: ApplicationRoute.Skills,
     headerI18nKey: TestSuitesI18nKey.SelectSkill,
     portalId: 'skillSelect',
+    isEditable: false,
     gridColumns: ENTITY_SELECT_GRID_COLUMNS,
     FolderProvider: SkillFolderProvider,
     useFolder: useSkillFolder,
@@ -29,6 +30,7 @@ export const ENTITY_SELECT_CONFIGS: Record<EntitySelectType, EntitySelectConfig>
     route: ApplicationRoute.Files,
     headerI18nKey: TestSuitesI18nKey.SelectDocument,
     portalId: 'fileSelect',
+    isEditable: true,
     gridColumns: FILES_GRID_COLUMNS,
     FolderProvider: FileFolderProvider,
     useFolder: useFileFolder,
