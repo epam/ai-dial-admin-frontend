@@ -62,22 +62,19 @@ describe('ImageFields', () => {
     expect(screen.queryByText('ImageBuildPrivileges')).not.toBeInTheDocument();
   });
 
-  test('should render dividers between field groups', () => {
-    const { container } = render(<ImageFields image={mockImage} setImage={vi.fn()} />);
+  test('should render a divider above the source group', () => {
+    render(<ImageFields image={mockImage} setImage={vi.fn()} />);
 
-    const parentDiv = container.firstChild as HTMLElement;
-    expect(parentDiv.className).toContain('divide-y');
-    expect(parentDiv.className).toContain('divide-primary');
+    const sourceGroup = screen.getByText('ImageSource').parentElement as HTMLElement;
+    expect(sourceGroup.className).toContain('border-t');
+    expect(sourceGroup.className).toContain('border-primary');
   });
 
   test('should not render dividers or extra spacing in modal mode', () => {
-    const { container } = render(<ImageFields image={mockImage} setImage={vi.fn()} isModal={true} />);
-
-    const parentDiv = container.firstChild as HTMLElement;
-    expect(parentDiv.className).not.toContain('divide-y');
-    expect(parentDiv.className).not.toContain('divide-primary');
+    render(<ImageFields image={mockImage} setImage={vi.fn()} isModal={true} />);
 
     const sourceGroup = screen.getByText('ImageSource').parentElement as HTMLElement;
+    expect(sourceGroup.className).not.toContain('border-t');
     expect(sourceGroup.className).not.toContain('pt-8');
   });
 });

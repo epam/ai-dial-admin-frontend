@@ -239,7 +239,8 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     setContainerClassNames(
       classNames(SELECT_ENTITY_HEADER_CLASS, (isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_CLASS),
     );
-    setButtonsClassNames(classNames((isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS));
+    // The versions select fills its row, so on desktop the buttons must not shrink and wrap their labels.
+    setButtonsClassNames(isTablet || isMobile ? SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS : 'shrink-0');
   }, [isTablet, isMobile]);
 
   return (
@@ -271,13 +272,16 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration?.isEditorEnabled && (
-              <div className="flex-1 flex flex-row gap-3">
-                <VersionsSelect
-                  selected={image.id}
-                  versions={versions}
-                  onChange={onVersionChange}
-                  onClick={onOpenCreteNewVersionModal}
-                />
+              <div className="flex-1 flex flex-row items-center gap-3">
+                {/* ui-kit Select has no content-width mode: its field is an input with the browser's default width. */}
+                <div className="shrink-0 [&_input]:field-sizing-content">
+                  <VersionsSelect
+                    selected={image.id}
+                    versions={versions}
+                    onChange={onVersionChange}
+                    onClick={onOpenCreteNewVersionModal}
+                  />
+                </div>
                 <DangerButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
