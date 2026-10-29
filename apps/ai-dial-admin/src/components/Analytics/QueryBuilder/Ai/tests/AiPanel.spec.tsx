@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { getDefaultNormalizer, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -105,8 +105,12 @@ describe('AiPanel', () => {
     await user.type(promptBox(), 'count by model');
     await user.click(sendButton());
 
-    const block = await screen.findByText((_, element) => element?.tagName === 'PRE');
-    expect(block.textContent).toBe('SELECT\n  model,\n  count(*) AS n\nFROM\n  dial_usage_log\nGROUP BY\n  model');
+    // The default normalizer collapses whitespace, which would also match the one-line original.
+    expect(
+      await screen.findByText('SELECT\n  model,\n  count(*) AS n\nFROM\n  dial_usage_log\nGROUP BY\n  model', {
+        normalizer: getDefaultNormalizer({ trim: false, collapseWhitespace: false }),
+      }),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
     expect(onRunMessage).toHaveBeenCalledWith(sql, 1);
