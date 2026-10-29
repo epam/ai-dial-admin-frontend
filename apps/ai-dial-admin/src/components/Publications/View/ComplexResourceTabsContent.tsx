@@ -74,7 +74,8 @@ const ComplexResourceTabsContent: FC<Props> = ({
                 onChange={onChange as (p: ProjectPublication) => void}
                 staging={projectStaging}
                 limits={projectLimits}
-                disabled={isReadOnlyAdmin}
+                // Edits typed before PROJECT.md arrives would be discarded by it, so the fields wait.
+                disabled={isReadOnlyAdmin || !projectStaging.isLoaded}
               />
             </ProjectFolderProvider>
           )}

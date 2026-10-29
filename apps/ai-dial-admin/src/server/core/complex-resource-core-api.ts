@@ -267,6 +267,13 @@ export abstract class ComplexResourceCoreApi extends CoreApi {
    * rejects with a conflict if the folder is not empty, rather than removing a whole tree.
    */
   protected deleteResourceFolder(token: Token, path: string, etag: string): Promise<ServerActionResponse> {
+    if (!etag) {
+      return Promise.reject(
+        new Error(
+          `Deleting a ${this.group.type.toLowerCase()} folder requires a concrete etag — Core rejects an unconditional delete.`,
+        ),
+      );
+    }
     // Same normalization as `createResourceFolder` — a folder row's own path may already carry a trailing
     // slash, and this route appends its own.
     const url = `${this.group.contentUrl}/${encodeCorePath(removeTrailingSlash(path))}/`;

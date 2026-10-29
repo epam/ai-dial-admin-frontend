@@ -35,7 +35,7 @@ class TestApi extends ComplexResourceCoreApi {
 
   create = (path: string, content: string) => this.createResource(TOKEN_MOCK, path, content);
   remove = (path: string, etag: string) => this.deleteResource(TOKEN_MOCK, path, etag);
-  removeFolder = (path: string) => this.deleteResourceFolder(TOKEN_MOCK, path, '*');
+  removeFolder = (path: string, etag = '*') => this.deleteResourceFolder(TOKEN_MOCK, path, etag);
   list = (path: string) => this.listResourceMetadata(TOKEN_MOCK, path);
   manifest = (path: string) => this.getManifestContent(TOKEN_MOCK, path);
   upload = (path: string, file: string, content: File) => this.uploadResourceFile(TOKEN_MOCK, path, file, content);
@@ -83,6 +83,11 @@ describe.each(GROUPS)('Server :: Core :: ComplexResourceCoreApi :: %s group', (_
 
     expect(String(fetch.mock.calls[0][0])).toContain(`/${group.contentUrl}/public/dir/`);
     expect(String(fetch.mock.calls[0][0])).not.toContain('dir//');
+  });
+
+  test('folder delete rejects without a request when the etag is empty', async () => {
+    await expect(api.removeFolder('public/dir/', '')).rejects.toThrow(/etag/);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   test('listing targets the group metadata route non-recursively', async () => {

@@ -16,7 +16,7 @@ import { getApiHeaders } from '@/src/utils/auth/api-headers';
 import { buildProjectManifest } from '@/src/utils/project-manifest';
 import { CoreResourceMetadataNode } from './asset-metadata';
 import { ComplexResourceCoreApi } from './complex-resource-core-api';
-import { readArchiveFileSizes } from './project-archive';
+import { readArchiveFileSizes, readBodyWithin } from './project-archive';
 
 /**
  * Projects' `v2/projects` Core client. Every operation lives in {@link ComplexResourceCoreApi}; this class
@@ -34,16 +34,18 @@ export class ProjectsCoreApi extends ComplexResourceCoreApi {
 
   /**
    * Reads the project like any complex resource, then adds each file's size: Core's metadata and `/files`
-   * listing carry none, so they come from the project archive (see {@link getProjectArchiveSizes}), read in
-   * parallel. A file keeps no `size` when the archive can't be read — the page still loads, the capacity meter
-   * just can't count it.
+   * listing carry none, so they come from the project archive (see {@link getProjectArchiveSizes}). The archive is
+   * only requested once the project is known to exist — most callers of this on a publication ask about a target
+   * that doesn't — at the cost of one round trip when it does. A file keeps no `size` when the archive can't be
+   * read: the page still loads, the capacity meter just can't count it.
    */
   async getProjectMetadata(token: Token, path: string): Promise<DialProjectResource | null> {
-    const [project, sizes] = await Promise.all([
-      this.getResourceMetadata(token, path),
-      this.getProjectArchiveSizes(token, path),
-    ]);
-    if (!project || !sizes) {
+    const project = await this.getResourceMetadata(token, path);
+    if (!project) {
+      return null;
+    }
+    const sizes = await this.getProjectArchiveSizes(token, path);
+    if (!sizes) {
       return project;
     }
     return { ...project, files: project.files.map((file) => ({ ...file, size: sizes.get(file.name) })) };
@@ -51,8 +53,8 @@ export class ProjectsCoreApi extends ComplexResourceCoreApi {
 
   /**
    * Sizes of the project's files, from the central directory of the whole-bundle archive
-   * (`GET /v2/projects/{bucket}/{path}`), which is buffered under {@link PROJECT_ARCHIVE_READ_MAX_BYTES} and not
-   * inflated. `undefined` when the archive is missing, too large, unreadable or slower than
+   * (`GET /v2/projects/{bucket}/{path}`), which is buffered under {@link PROJECT_ARCHIVE_READ_MAX_BYTES} (counted as
+   * it streams, so a response with no declared length is bounded too) and not inflated. `undefined` when the archive is missing, too large, unreadable or slower than
    * {@link PROJECT_ARCHIVE_READ_TIMEOUT_MS}; never throws, since sizes only
    * improve a display.
    */
@@ -66,11 +68,8 @@ export class ProjectsCoreApi extends ComplexResourceCoreApi {
         await res.body?.cancel();
         return undefined;
       }
-      if (Number(res.headers.get('content-length')) > PROJECT_ARCHIVE_READ_MAX_BYTES) {
-        await res.body?.cancel();
-        return undefined;
-      }
-      return await readArchiveFileSizes(await res.blob());
+      const archive = await readBodyWithin(res, PROJECT_ARCHIVE_READ_MAX_BYTES);
+      return archive && (await readArchiveFileSizes(archive));
     } catch (e) {
       errorObjLog(e, 'Failed to read project archive sizes');
       return undefined;

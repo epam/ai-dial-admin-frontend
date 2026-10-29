@@ -6,7 +6,10 @@ import { IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { readArchiveFileSizes } from '../project-archive';
 import { ProjectsCoreApi } from '../projects-core-api';
 
-vi.mock('../project-archive', () => ({ readArchiveFileSizes: vi.fn() }));
+vi.mock('../project-archive', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../project-archive')>()),
+  readArchiveFileSizes: vi.fn(),
+}));
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -170,6 +173,25 @@ describe('Server :: Core :: ProjectsCoreApi', () => {
       vi.mocked(readArchiveFileSizes).mockResolvedValue(new Map());
 
       expect(await instance.getProjectMetadata(TOKEN_MOCK, 'public/p')).toBeNull();
+    });
+
+    test('does not request the archive of a project that does not exist', async () => {
+      fetch.mockResponse(JSON.stringify({ name: 'public', nodeType: 'FOLDER' }), JSON_HEADERS);
+
+      await instance.getProjectMetadata(TOKEN_MOCK, 'public/p');
+
+      expect(fetch.mock.calls.every(([url]) => String(url).includes('/v2/metadata/'))).toBe(true);
+    });
+
+    test('requests the archive only after the metadata has answered', async () => {
+      mockProject({});
+      vi.mocked(readArchiveFileSizes).mockResolvedValue(new Map());
+
+      await instance.getProjectMetadata(TOKEN_MOCK, 'public/p');
+
+      const urls = fetch.mock.calls.map(([url]) => String(url));
+      const archiveIndex = urls.findIndex((url) => !url.includes('/v2/metadata/'));
+      expect(archiveIndex).toBe(urls.length - 1);
     });
   });
 });

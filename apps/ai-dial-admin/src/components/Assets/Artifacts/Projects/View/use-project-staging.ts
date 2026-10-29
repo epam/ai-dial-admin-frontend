@@ -45,7 +45,7 @@ export const useProjectStaging = ({ manifestContent, projectName, files }: Param
     setInstructionsEdit(undefined);
     setAddedFiles([]);
     setRemovedFileNames([]);
-  }, [manifest, filesKey]);
+  }, [manifestContent, filesKey]);
 
   const description = descriptionEdit ?? manifest.description;
   const instructions = instructionsEdit ?? manifest.instructions;
@@ -117,6 +117,8 @@ export const useProjectStaging = ({ manifestContent, projectName, files }: Param
   );
 
   return {
+    /** Whether `PROJECT.md` has been read: until then the fields are empty and must not be edited. */
+    isLoaded: manifestContent !== undefined,
     description,
     instructions,
     storedFiles,

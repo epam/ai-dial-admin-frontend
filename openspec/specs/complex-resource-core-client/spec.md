@@ -26,6 +26,10 @@ re-implement these operations.
 - **WHEN** a delete is requested for either group with an empty etag
 - **THEN** the call rejects without sending a request
 
+#### Scenario: Deleting a folder without an etag is rejected before any request
+- **WHEN** a grouping-folder delete is requested for either group with an empty etag
+- **THEN** the call rejects without sending a request
+
 #### Scenario: File names are relative to the resource root
 - **WHEN** the file listing of a resource is read
 - **THEN** each returned name is the file's path relative to the resource root, decoded, with grouping-folder

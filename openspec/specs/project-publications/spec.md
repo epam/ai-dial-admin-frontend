@@ -55,6 +55,11 @@ the publication. `PROJECT.md` and files outside `context/` SHALL NOT be shown.
 - **WHEN** a reviewer opens a pending Project publication
 - **THEN** the tab bar shows `Properties` followed by `Permissions`
 
+#### Scenario: Project fields wait for PROJECT.md
+- **WHEN** a Project publication opens and `PROJECT.md` has not been read yet
+- **THEN** the Description, Instructions and Context controls are disabled until it has, so nothing typed into the
+  empty fields is discarded when the manifest arrives
+
 #### Scenario: Staged project edits are written on save
 - **WHEN** a reviewer edits Description, Instructions or Context and saves the publication
 - **THEN** `PROJECT.md` and the `context/` files are updated in the project's bundle in Core

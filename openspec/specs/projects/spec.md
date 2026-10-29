@@ -218,6 +218,15 @@ shown regardless of extension.
 - **THEN** the capacity meter counts the stored files' sizes, read from the project's archive because Core's file
   listing reports none, and does not count `PROJECT.md`
 
+#### Scenario: An archive of undeclared length is still bounded
+- **WHEN** Core answers the archive request without a `content-length` (a chunked response)
+- **THEN** the body is counted as it streams and abandoned once it passes Core's per-project total, so it is never
+  buffered whole, and the files are shown with unknown sizes
+
+#### Scenario: The archive is requested only for a project that exists
+- **WHEN** the project's metadata shows that the path is not a project
+- **THEN** no archive request is made
+
 #### Scenario: An unreadable archive does not block the page
 - **WHEN** the project's archive cannot be read or is larger than Core's per-project total
 - **THEN** the project still opens, with its stored files shown and counted as 0 bytes toward the capacity

@@ -96,7 +96,7 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
     skillPath,
     isManifestTabActive: activeTab === EntityViewTab.Skill,
   });
-  const { reset: resetSkillStaging, discard: discardSkillStaging } = skillStaging;
+  const { reset: resetSkillStaging } = skillStaging;
 
   const [projectManifestContent, setProjectManifestContent] = useState<string | undefined>(undefined);
   const [projectLimits, setProjectLimits] = useState<ProjectContextLimits>(FALLBACK_PROJECT_LIMITS);
@@ -105,10 +105,17 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
     projectName: project?.name ?? '',
     files: project?.files ?? NO_FILES,
   });
-  const { discard: discardProjectStaging } = projectStaging;
 
   useEffect(() => {
-    getContextLimits().then(setProjectLimits);
+    let isCurrent = true;
+    getContextLimits().then((limits) => {
+      if (isCurrent) {
+        setProjectLimits(limits);
+      }
+    });
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
@@ -149,7 +156,10 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
     };
   }, [publication, publicationProjectPath, resetSkillStaging]);
 
-  const isStagingChanged = isProject ? projectStaging.isChanged : skillStaging.isChanged;
+  // Both stagings share `isChanged` / `discard` / `apply(path)`; only the open publication's type has anything staged.
+  const activeStaging = isProject ? projectStaging : skillStaging;
+  const isStagingChanged = activeStaging.isChanged;
+  const { discard: discardStaging, apply: applyStaging } = activeStaging;
 
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(selectedPublication, publication) || isStagingChanged);
@@ -197,25 +207,19 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
 
   const onDiscard = useCallback(() => {
     setSelectedPublication(structuredClone(publication));
-    discardSkillStaging();
-    discardProjectStaging();
+    discardStaging();
     setDiscardKey((prev) => prev + 1);
-  }, [publication, discardSkillStaging, discardProjectStaging]);
-
-  const { apply: applyProjectStaging } = projectStaging;
-  const { apply: applySkillStaging } = skillStaging;
+  }, [publication, discardStaging]);
 
   /** Writes the staged resource edits after the publication itself saved; they aren't publication fields. */
   const applyResourceChanges = useCallback(
     async (savedPublication: Publication): Promise<ServerActionResponse> => {
-      if (isProject) {
-        const path = (savedPublication as ProjectPublication).projectResources?.[0]?.projectResource.path;
-        return projectStaging.isChanged && path ? applyProjectStaging(path) : { success: true };
-      }
-      const path = (savedPublication as SkillPublication).skillResources?.[0]?.skillResource.path;
-      return skillStaging.isChanged && path ? applySkillStaging(path) : { success: true };
+      const path = isProject
+        ? (savedPublication as ProjectPublication).projectResources?.[0]?.projectResource.path
+        : (savedPublication as SkillPublication).skillResources?.[0]?.skillResource.path;
+      return isStagingChanged && path ? applyStaging(path) : { success: true };
     },
-    [applyProjectStaging, applySkillStaging, isProject, projectStaging.isChanged, skillStaging.isChanged],
+    [applyStaging, isProject, isStagingChanged],
   );
 
   const onSave = useCallback(() => {

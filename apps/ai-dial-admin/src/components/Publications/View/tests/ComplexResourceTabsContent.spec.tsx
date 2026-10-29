@@ -25,8 +25,9 @@ vi.mock('@/src/components/Publications/Properties/SkillProperties', () => ({
 }));
 
 vi.mock('@/src/components/Publications/Properties/ProjectProperties', () => ({
-  default: ({ staging }: any) => (
+  default: ({ staging, disabled }: any) => (
     <div role="region" aria-label="project-properties">
+      <span>{disabled ? 'fields-disabled' : 'fields-enabled'}</span>
       <span>{staging.description}</span>
       <span>{staging.instructions}</span>
       <button onClick={() => staging.onChangeDescription('changed')}>change-description</button>
@@ -78,6 +79,7 @@ const skillStaging = (overrides?: Partial<SkillPublicationStaging>): SkillPublic
 });
 
 const projectStaging = (overrides?: Partial<ProjectStaging>): ProjectStaging => ({
+  isLoaded: true,
   description: 'A project',
   instructions: 'Be helpful.',
   storedFiles: [],
@@ -166,6 +168,22 @@ describe('ComplexResourceTabsContent :: Project publication', () => {
 
     expect(screen.getByText('A project')).toBeTruthy();
     expect(screen.getByText('Be helpful.')).toBeTruthy();
+  });
+
+  test('enables the project fields once PROJECT.md has been read', () => {
+    renderTabs({ view: ApplicationRoute.ProjectPublications, activeTab: EntityViewTab.Properties });
+
+    expect(screen.getByText('fields-enabled')).toBeTruthy();
+  });
+
+  test('keeps the project fields disabled until PROJECT.md has been read, so nothing typed is lost to it', () => {
+    renderTabs({
+      view: ApplicationRoute.ProjectPublications,
+      activeTab: EntityViewTab.Properties,
+      project: projectStaging({ isLoaded: false }),
+    });
+
+    expect(screen.getByText('fields-disabled')).toBeTruthy();
   });
 
   test('forwards edits to the project staging', async () => {
