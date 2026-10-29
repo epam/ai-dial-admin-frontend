@@ -20,6 +20,7 @@ import { HelpTopicProvider } from '@/src/context/HelpTopicContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
 import { NotificationProvider } from '@/src/context/NotificationContext';
+import { OrgUnitsProvider } from '@/src/context/OrgUnitsContext';
 import { RuleFolderProvider } from '@/src/context/RuleFolderContext';
 import { ThemeProvider } from '@/src/context/ThemeContext';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
@@ -80,26 +81,28 @@ export default async function Layout({ children, params }: { children: ReactNode
           isEnableAuth={isEnableAuth}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
-            <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
-              <AssetFolderProviders>
-                <NotificationProvider>
-                  <HelpTopicProvider>
-                    <div className="flex flex-col size-full">
-                      <Header
-                        isEnableAuth={isEnableAuth}
-                        docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
-                      />
-                      <div className="flex-1 min-h-0">
-                        <div className="flex flex-row h-full relative">
-                          <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                          <Content isEnableAuth={isEnableAuth}>{children}</Content>
+            <OrgUnitsProvider groupClaim={process.env.ORG_UNITS_GROUP_CLAIM || 'groups'}>
+              <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
+                <AssetFolderProviders>
+                  <NotificationProvider>
+                    <HelpTopicProvider>
+                      <div className="flex flex-col size-full">
+                        <Header
+                          isEnableAuth={isEnableAuth}
+                          docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                        />
+                        <div className="flex-1 min-h-0">
+                          <div className="flex flex-row h-full relative">
+                            <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                            <Content isEnableAuth={isEnableAuth}>{children}</Content>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </HelpTopicProvider>
-                </NotificationProvider>
-              </AssetFolderProviders>
-            </RuleFolderProvider>
+                    </HelpTopicProvider>
+                  </NotificationProvider>
+                </AssetFolderProviders>
+              </RuleFolderProvider>
+            </OrgUnitsProvider>
           </ThemeProvider>
         </AppContextProvider>
       </NextAuthProvider>
