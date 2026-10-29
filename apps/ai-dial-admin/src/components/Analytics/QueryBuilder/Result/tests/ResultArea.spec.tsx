@@ -21,19 +21,25 @@ import {
 const { capturedColumnDefs } = vi.hoisted(() => ({ capturedColumnDefs: { current: [] as ColDef[] } }));
 
 // Renders the ids the grid would key its rows by: the kit grid merges rows that share an id, so distinct ids are what
-// keeps every returned row on screen.
+// keeps every returned row on screen. Mirrors the real chain — AgGridWrapper forwards `getRowId` only with
+// `isLiveData`, and without one the kit falls back to the row's `id` or its JSON.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({
     rowData,
     columnDefs,
     getRowId,
+    isLiveData,
   }: {
     rowData?: unknown[];
     columnDefs?: ColDef[];
     getRowId?: (params: GetRowIdParams) => string;
+    isLiveData?: boolean;
   }) => {
     capturedColumnDefs.current = columnDefs ?? [];
-    const rowIds = getRowId ? rowData?.map((data) => getRowId({ data } as GetRowIdParams)) : [];
+    const kitDefaultRowId = (data: unknown) => String((data as { id?: unknown }).id ?? JSON.stringify(data));
+    const rowIds = rowData?.map((data) =>
+      isLiveData && getRowId ? getRowId({ data } as GetRowIdParams) : kitDefaultRowId(data),
+    );
     return (
       <>
         <div>grid rows: {rowData?.length ?? 0}</div>
