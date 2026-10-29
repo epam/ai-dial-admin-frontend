@@ -45,14 +45,17 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard
         runOrder={runOrder}
         selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
-        metricCount={2}
       />,
     );
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('0.580')).toBeInTheDocument();
-    expect(screen.getByText(TestSuitesI18nKey.TrendsDeltaVsPrev)).toBeInTheDocument();
+    const deltaLabels = screen.getAllByText(TestSuitesI18nKey.TrendsDeltaVsPrev);
+    expect(deltaLabels.some((element) => element.dataset.testid !== 'kpi-tooltip-content')).toBe(true);
     expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
+    ).not.toBeInTheDocument();
   });
 
   test('shows above/below threshold tip on the score when suite has a threshold', () => {
@@ -60,7 +63,6 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard
         runOrder={runOrder}
         selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
-        metricCount={2}
       />,
     );
 
@@ -72,7 +74,6 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard
         runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
         selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-        metricCount={2}
       />,
     );
 
@@ -85,7 +86,6 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard
         runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
         selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-        metricCount={2}
       />,
     );
 

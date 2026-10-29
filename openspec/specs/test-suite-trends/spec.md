@@ -75,8 +75,7 @@ Overall Score Trend plots), formatted to three decimals. The card SHALL:
   threshold (exact threshold counts as above)
 - show a signed delta vs the previous run’s overall score (`+0.12 vs prev.`); hide it when either
   score is missing or the delta is zero (higher is better → green)
-- expose a static “Based on completed test cases” footer and an info control whose tooltip
-  describes the suite’s overall-score calculation method
+- show the static “Based on completed test cases” subtitle and omit the calculation-method tooltip
 
 #### Scenario: Latest overall score value
 - **WHEN** the Trends window’s latest run has overall score `0.58` and the previous run has `0.46`
@@ -492,4 +491,3 @@ existing left alignment.
 
 - **WHEN** a Test Case Stability cell shows a score
 - **THEN** the value is right-aligned within the cell
-
