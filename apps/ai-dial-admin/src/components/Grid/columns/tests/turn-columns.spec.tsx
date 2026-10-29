@@ -311,6 +311,27 @@ describe('getTurnActionsColumn', () => {
     expect(item.hidden?.({} as GridApi, nodeFor(GridRowType.GROUP))).toBe(false);
   });
 
+  test('should place extra actions before Delete test case', () => {
+    const column = getTurnActionsColumn(handlers, [
+      {
+        icon: null,
+        id: ActionMenuOperationI18nKey.Duplicate,
+        label: ActionMenuOperationI18nKey.Duplicate,
+        onClick: vi.fn(),
+      },
+    ]);
+    const items = column.cellRendererParams?.items as { id: string }[];
+
+    expect(items.map(({ id }) => id)).toEqual([
+      ActionMenuOperationI18nKey.Add_turn,
+      ActionMenuOperationI18nKey.Move_turn_up,
+      ActionMenuOperationI18nKey.Move_turn_down,
+      ActionMenuOperationI18nKey.Delete_turn,
+      ActionMenuOperationI18nKey.Duplicate,
+      ActionMenuOperationI18nKey.Delete_case,
+    ]);
+  });
+
   test.each([
     ActionMenuOperationI18nKey.Move_turn_up,
     ActionMenuOperationI18nKey.Move_turn_down,
