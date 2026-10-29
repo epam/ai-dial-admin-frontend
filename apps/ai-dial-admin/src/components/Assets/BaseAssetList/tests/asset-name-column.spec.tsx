@@ -55,13 +55,14 @@ describe('getAssetNameColumn', () => {
     expect(screen.getByText('GP')).toBeInTheDocument();
   });
 
-  test('maps exactly the five asset views to a type icon', () => {
+  test('maps exactly the six asset views to a type icon', () => {
     expect(Object.keys(ASSET_TYPE_ICONS).sort()).toEqual(
       [
         ApplicationRoute.AssetsApplications,
         ApplicationRoute.AssetsToolsets,
         ApplicationRoute.Prompts,
         ApplicationRoute.Skills,
+        ApplicationRoute.Projects,
         ApplicationRoute.Conversations,
       ].sort(),
     );

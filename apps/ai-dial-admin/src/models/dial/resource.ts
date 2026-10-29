@@ -426,38 +426,44 @@ export interface DialToolsetResource extends Omit<DialResource, 'display_name' |
 }
 
 /**
- * A skill resource's folder metadata. `name`/`folderId` are derived from `path` alone (Core exposes
- * no separate display name — see `SkillsCoreApi.getSkillMetadata`'s doc comment); `description`/
- * `version` live only in `SKILL.md`'s frontmatter and are deliberately left unpopulated here — the
- * Skill tab (see `SkillManifestTab`) fetches and parses `SKILL.md`'s content independently
- * (`getSkillManifestContent`/`parseSkillManifest`) rather than populating them on this model, since
- * every other consumer of `DialSkillResource` (the list, the folder tree) never needs the manifest's
- * content and shouldn't pay for fetching it. `files` lists the bundle's contents, read separately via
- * `SkillsCoreApi.getSkillFiles` (Core's metadata endpoint reports no per-file size).
+ * A complex resource's (skill's or project's) folder metadata. `name`/`folderId` are derived from `path`
+ * alone (Core exposes no separate display name — see `ComplexResourceCoreApi.getResourceMetadata`'s doc
+ * comment); `description`/`version` live only in the manifest's frontmatter and are deliberately left
+ * unpopulated here — the views fetch and parse the manifest independently rather than populating them on
+ * this model, since every other consumer (the list, the folder tree) never needs the manifest's content
+ * and shouldn't pay for fetching it. `files` lists the bundle's contents, read separately via
+ * `ComplexResourceCoreApi.getResourceFiles` (Core's metadata endpoint reports no per-file size).
  */
-export interface DialSkillResource {
+export interface DialComplexResource {
   name: string;
   description?: string;
   version?: string;
   path: string;
-  /** The containing folder's path, e.g. `public/` for a skill at `public/my-skill` — enables Move. */
+  /** The containing folder's path, e.g. `public/` for a resource at `public/my-skill` — enables Move. */
   folderId: string;
   etag?: string;
-  files: DialSkillFile[];
+  files: DialComplexResourceFile[];
   /**
-   * Author/created/updated from the skill's own row in its parent folder's listing (see
-   * `SkillsCoreApi.getSkillMetadata`) — the skill read's only grafted fields, so its `_metadata`
-   * is the timestamp/author subset of the shared shape. `name`/`folderId` stay flat: they are
-   * derived from the requested path itself, not grafted from a second response, and the Skills
-   * tree rows share this model's flat identity. Present when read via the Assets surface — Skill
-   * Publications' properties view doesn't show these.
+   * Author/created/updated from the resource's own metadata node (see
+   * `ComplexResourceCoreApi.getResourceMetadata`) — the read's only grafted fields, so its `_metadata`
+   * is the timestamp/author subset of the shared shape. `name`/`folderId` stay flat: they are derived from
+   * the requested path itself, not grafted from a second response, and the tree rows share this model's
+   * flat identity. Present when read via the Assets surface — Publications' properties views don't show
+   * these.
    */
   _metadata?: Pick<CoreResourceEntityMetadata, 'author' | 'createdAt' | 'updatedAt'>;
 }
 
-export interface DialSkillFile {
+export interface DialComplexResourceFile {
   name: string;
+  /** Uncompressed size in bytes; only Projects fill it (from the archive), as Core's listing reports none. */
+  size?: number;
 }
+
+export type DialSkillResource = DialComplexResource;
+export type DialSkillFile = DialComplexResourceFile;
+export type DialProjectResource = DialComplexResource;
+export type DialProjectFile = DialComplexResourceFile;
 
 export interface DialToolsetResourceAuthSettings {
   authentication_type?: ToolsetAuthType;

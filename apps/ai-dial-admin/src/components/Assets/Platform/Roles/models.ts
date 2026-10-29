@@ -3,7 +3,7 @@ import { DialCoreRoleLimits } from '@/src/models/dial/role-limits';
 
 /**
  * The resource types DIAL Core allows a role to override sharing limits for. Values match Core's own
- * `ResourceTypes.name()` exactly (uppercase, `SKILL` singular) — that name is the literal key Core
+ * `ResourceTypes.name()` exactly (uppercase, `SKILL`/`PROJECT` singular) — that name is the literal key Core
  * reads a role's `share` map with (`ShareService.getLimit`), so a mismatch here means the UI silently
  * reads and writes the wrong entries. Distinct from `Entities > Roles`' lowercase `SharingType`
  * (`components/Roles/types.ts`), which models the admin-backend's own convention for a different
@@ -17,6 +17,7 @@ export enum PlatformSharingType {
   CONVERSATION = 'CONVERSATION',
   CREDENTIALS = 'CREDENTIALS',
   SKILL = 'SKILL',
+  PROJECT = 'PROJECT',
 }
 
 export interface PlatformRoleModelLimitRow extends DialCoreRoleLimits {

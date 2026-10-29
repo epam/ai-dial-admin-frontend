@@ -82,6 +82,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconPackage width={iconSize} height={iconSize} />,
       items: [
         { key: MenuI18nKey.Skills, href: ApplicationRoute.Skills },
+        { key: MenuI18nKey.Projects, href: ApplicationRoute.Projects },
         { key: MenuI18nKey.Files, href: ApplicationRoute.Files },
         { key: MenuI18nKey.Conversations, href: ApplicationRoute.Conversations },
         { key: MenuI18nKey.Prompts, href: ApplicationRoute.Prompts },

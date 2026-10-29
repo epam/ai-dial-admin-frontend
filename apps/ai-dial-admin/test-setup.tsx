@@ -121,6 +121,14 @@ vi.mock('@/src/context/assets/SkillFolderContext', () => {
   };
 });
 
+vi.mock('@/src/context/assets/ProjectFolderContext', () => {
+  const projectFolder = { fetchFiles: vi.fn(), fetchedFoldersData: {}, filePath: '' };
+  return {
+    useProjectFolder: () => projectFolder,
+    ProjectFolderProvider: ({ children }: any) => <div>{children}</div>,
+  };
+});
+
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: vi.fn(() => ({ currentTheme: 'dark' })) }));
 // Units start out empty and idle, so every page behaves as it does with org units switched off. A spec that needs
 // units overrides `useOrgUnits` with `vi.mocked(useOrgUnits).mockReturnValue(...)`.

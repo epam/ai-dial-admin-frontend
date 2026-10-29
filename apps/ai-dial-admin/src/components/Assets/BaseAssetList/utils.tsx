@@ -25,6 +25,7 @@ import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platfo
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
 import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
+import { bulkDeleteProjects, getProject } from '@/src/app/[lang]/projects/actions';
 import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/skills/actions';
 import {
   bulkDeletePlatformToolsets,
@@ -59,6 +60,7 @@ import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
+import { useProjectFolder } from '@/src/context/assets/ProjectFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -175,7 +177,12 @@ export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => 
 
   // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
   // resource's storage name; schema body `$id` values are available after opening the resource.
-  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
+  if (
+    isFlatPlatformView(view) ||
+    view === ApplicationRoute.Skills ||
+    view === ApplicationRoute.Projects ||
+    isPlatformDualBucketView(view, currentPath)
+  ) {
     return [
       NAME_COLUMN_DEF,
       AUTHOR_COLUMN,
@@ -247,6 +254,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Keys;
     case ApplicationRoute.Skills:
       return FileManagerI18nKey.Skills;
+    case ApplicationRoute.Projects:
+      return FileManagerI18nKey.Projects;
     default:
       return '';
   }
@@ -322,6 +331,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.SkillsEmptyStateTitle),
         description: t(FileManagerI18nKey.SkillsEmptyStateDescription),
       };
+    case ApplicationRoute.Projects:
+      return {
+        title: t(FileManagerI18nKey.ProjectsEmptyStateTitle),
+        description: t(FileManagerI18nKey.ProjectsEmptyStateDescription),
+      };
     default:
       return { title: '', description: '' };
   }
@@ -381,6 +395,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.PlatformRoles]: useRolesFolder,
   [ApplicationRoute.PlatformKeys]: useKeysFolder,
   [ApplicationRoute.Skills]: useSkillFolder,
+  [ApplicationRoute.Projects]: useProjectFolder,
 };
 
 export const GetAssetActionMap = {
@@ -397,6 +412,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.PlatformRoles]: getRole,
   [ApplicationRoute.PlatformKeys]: getKey,
   [ApplicationRoute.Skills]: getSkill,
+  [ApplicationRoute.Projects]: getProject,
 };
 
 /**
@@ -527,6 +543,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
   [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,
   [ApplicationRoute.Skills]: bulkDeleteSkills,
+  [ApplicationRoute.Projects]: bulkDeleteProjects,
 };
 
 export const PlatformBulkDeleteAssetActionMap: Partial<

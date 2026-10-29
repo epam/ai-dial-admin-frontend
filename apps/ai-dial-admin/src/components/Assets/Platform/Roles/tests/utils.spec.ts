@@ -45,10 +45,10 @@ describe('getAssetSharingData', () => {
     expect(row?.maxAcceptedUsers).toBe('5');
   });
 
-  test('lists all seven sharing types, including Credentials and Skills, even when the role has no share entries', () => {
+  test('lists all eight sharing types, including Credentials, Skills and Projects, even when the role has no share entries', () => {
     const rows = getAssetSharingData(roleWith());
 
-    expect(rows).toHaveLength(7);
+    expect(rows).toHaveLength(8);
     expect(rows.map((row) => row.name)).toEqual(Object.values(PlatformSharingType));
     expect(rows.every((row) => row.invitationTtl === undefined && row.maxAcceptedUsers === undefined)).toBe(true);
   });
@@ -159,6 +159,14 @@ describe('getDefaultPlaceholder', () => {
     expect(
       getDefaultPlaceholder(
         { data: { name: PlatformSharingType.SKILL } } as never,
+        {
+          field: 'maxAcceptedUsers',
+        } as never,
+      ),
+    ).toBe('10');
+    expect(
+      getDefaultPlaceholder(
+        { data: { name: PlatformSharingType.PROJECT } } as never,
         {
           field: 'maxAcceptedUsers',
         } as never,

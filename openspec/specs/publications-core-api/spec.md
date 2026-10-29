@@ -28,7 +28,7 @@ The system SHALL route all publication operations to DIAL Core unconditionally �
 - **THEN** their signatures and the `Publication` shape are unchanged from before the cutover
 
 ### Requirement: List public publications filtered by resource type
-The system SHALL list publications via `POST /v1/ops/publication/list` with the request path fixed to `publications/public/`, then return only publications whose resolved resource type matches the requested type (application, conversation, prompt, tool_set, file, skill), using the priority order APPLICATION → CONVERSATION → PROMPT → TOOL_SET → FILE → SKILL.
+The system SHALL list publications via `POST /v1/ops/publication/list` with the request path fixed to `publications/public/`, then return only publications whose resolved resource type matches the requested type (application, conversation, prompt, tool_set, file, skill, project), using the priority order APPLICATION → CONVERSATION → PROMPT → TOOL_SET → FILE → SKILL → PROJECT.
 
 #### Scenario: Prompt list returns only prompt publications
 - **WHEN** the prompt-publications list is requested
@@ -37,6 +37,14 @@ The system SHALL list publications via `POST /v1/ops/publication/list` with the 
 #### Scenario: Skill list returns only skill publications
 - **WHEN** the skill-publications list is requested
 - **THEN** Core is queried with path `publications/public/` and only publications resolving to the SKILL type are returned
+
+#### Scenario: Project list returns only project publications
+- **WHEN** the project-publications list is requested
+- **THEN** Core is queried with path `publications/public/` and only publications resolving to the PROJECT type are returned
+
+#### Scenario: A publication carrying both a skill and a project resolves to skill
+- **WHEN** a publication lists resources of both the SKILL and PROJECT types
+- **THEN** it resolves to SKILL, the earlier type in the priority order
 
 ### Requirement: Get a pending publication with enriched resources and issues
 The system SHALL fetch a single publication via `POST /v1/ops/publication/get` (path prefixed with `publications/`). It SHALL treat a publication whose status is APPROVED or REJECTED as not found. For each resource it SHALL resolve the effective URL by action and status (ADD/ADD_IF_ABSENT → reviewUrl when PENDING, targetUrl when APPROVED, sourceUrl when REJECTED; DELETE → targetUrl), enrich the resource with its body **fetched directly from DIAL Core** (`GET /v1/{type}/{path}` merged with `GET /v1/metadata/{type}/{path}`, via the shared `core-asset-client`), and collect "not found" / "target already exists" problems into `resourceIssues` instead of failing the whole request. Enrichment SHALL NOT call the admin BE, for any resource type. Prompt and conversation resources SHALL be enriched as versionless entities — their paths parsed without `__` version splitting and their enriched models carrying no `version` field.

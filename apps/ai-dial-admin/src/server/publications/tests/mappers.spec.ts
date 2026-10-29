@@ -16,6 +16,15 @@ describe('Server :: Publications :: resolvePublicationResourceType', () => {
     );
   });
 
+  test('resolves a publication carrying only PROJECT to ResourceType.PROJECT', () => {
+    expect(resolvePublicationResourceType([CoreResourceType.PROJECT])).toBe(ResourceType.PROJECT);
+  });
+
+  test('PROJECT is the lowest-priority type, after SKILL', () => {
+    expect(resolvePublicationResourceType([CoreResourceType.PROJECT, CoreResourceType.SKILL])).toBe(ResourceType.SKILL);
+    expect(resolvePublicationResourceType([CoreResourceType.PROJECT, CoreResourceType.FILE])).toBe(ResourceType.FILE);
+  });
+
   test('returns undefined for an empty or missing type list', () => {
     expect(resolvePublicationResourceType([])).toBeUndefined();
     expect(resolvePublicationResourceType(undefined)).toBeUndefined();

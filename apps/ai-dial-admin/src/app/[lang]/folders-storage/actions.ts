@@ -16,6 +16,7 @@ import {
   getFoldersCore,
   getRulesCore,
   removeFolderCore,
+  removeProjectFolderCore,
   removeSkillFolderCore,
   updateRulesCore,
 } from '@/src/server/folders/folders-core';
@@ -60,6 +61,12 @@ export async function removeFolder(path: string, resourceType: ResourceType) {
 export async function removeSkillFolder(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return removeSkillFolderCore(token, path);
+}
+
+/** Deletes a Projects grouping folder recursively through Projects' own Core endpoints — see `removeSkillFolder`. */
+export async function removeProjectFolder(path: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return removeProjectFolderCore(token, path);
 }
 
 export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType, overwrite?: boolean) {

@@ -29,6 +29,32 @@ describe('Server :: Publications :: buildUpdatePlan — skill resources', () => 
   });
 });
 
+describe('Server :: Publications :: buildUpdatePlan — project resources', () => {
+  test('recalculates a project resource target URL without queuing an asset PUT', () => {
+    const publication = {
+      path: 'public/req',
+      requestName: 'My project request',
+      folderId: 'public/folder',
+      rules: [],
+      projectResources: [
+        {
+          action: ActionType.ADD,
+          sourceUrl: 'projects/src/my-project',
+          targetUrl: 'projects/old/my-project',
+          reviewUrl: 'projects/review/my-project',
+          projectResource: { name: 'my-project', path: 'review/my-project' },
+        },
+      ],
+    };
+
+    const { dto, resourcePuts } = buildUpdatePlan(publication as never);
+
+    expect(dto.resourceTypes).toEqual(['PROJECT']);
+    expect(dto.resources[0].targetUrl).toBe('projects/public/folder/my-project');
+    expect(resourcePuts).toEqual([]);
+  });
+});
+
 describe('Server :: Publications :: buildUpdatePlan — versioned resources', () => {
   const buildPublication = (applicationResource: object) => ({
     path: 'public/req',

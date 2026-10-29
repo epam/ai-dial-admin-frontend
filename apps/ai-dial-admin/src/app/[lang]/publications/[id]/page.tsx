@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi, publicationsApi } from '@/src/app/api/api';
+import ComplexResourcePublicationView from '@/src/components/Publications/View/ComplexResourceView';
 import PublicationView from '@/src/components/Publications/View/View';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -15,7 +16,7 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getPublicationView } from '@/src/utils/publications';
+import { getPublicationView, isComplexResourcePublicationView } from '@/src/utils/publications';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,6 @@ export default async function Page(params: { searchParams: Promise<SearchParams>
 
   try {
     data = await publicationsApi.getPublication(token, path);
-
     if (type === ResourceType.APPLICATION) {
       assetRunners = await getAllRunners();
       applicationSchemes = process.env.DIAL_ADMIN_API_URL
@@ -54,6 +54,14 @@ export default async function Page(params: { searchParams: Promise<SearchParams>
 
   if (data == null) {
     notFound();
+  }
+
+  if (isComplexResourcePublicationView(view)) {
+    return (
+      <SaveValidationContextProvider>
+        <ComplexResourcePublicationView publication={data} view={view} />
+      </SaveValidationContextProvider>
+    );
   }
 
   return (

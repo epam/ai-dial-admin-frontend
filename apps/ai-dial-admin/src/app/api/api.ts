@@ -15,6 +15,7 @@ import { FilesCoreApi } from '@/src/server/core/files-core-api';
 import { ExternalServiceConsentApi } from '@/src/server/core/external-service-consent-api';
 import { ExternalServiceOpsApi } from '@/src/server/core/external-service-ops-api';
 import { QueryAssistantApi } from '@/src/server/core/query-assistant-api';
+import { ProjectsCoreApi } from '@/src/server/core/projects-core-api';
 import { SkillsCoreApi } from '@/src/server/core/skills-core-api';
 import { ToolsetOpsApi } from '@/src/server/core/toolset-ops-api';
 import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
@@ -206,6 +207,11 @@ export const skillsCoreApi = new SkillsCoreApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+// Project folder-metadata reads and the whole-bundle/per-file operations (`v2/projects`) — same engine as skills.
+export const projectsCoreApi = new ProjectsCoreApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
 // Generic direct-to-Core client for application-resource, toolset-resource, conversation,
 // and prompt (migrate-conversations-to-core is the first consumer; the other three types
 // switch over in their own changes).
@@ -310,6 +316,7 @@ const publicationEnrichmentClients: EnrichmentClients = {
   getFileMetadata: (token, path) => filesCoreApi.getFileMetadata(token, path),
   uploadFile: (token, path, file) => filesCoreApi.uploadFile(token, path, file),
   getSkillMetadata: (token, path) => skillsCoreApi.getSkillMetadata(token, path),
+  getProjectMetadata: (token, path) => projectsCoreApi.getProjectMetadata(token, path),
 };
 
 export const publicationsApi = new CorePublicationsApi(

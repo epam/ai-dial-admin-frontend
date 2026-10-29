@@ -135,6 +135,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
     case ApplicationRoute.Skills:
+    case ApplicationRoute.Projects:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
@@ -156,7 +157,7 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
   // (no create/move on this surface — see design's Non-Goals), and folder delete isn't wired either
   // (`getResourceTypeByRoute` deliberately has no SKILL case, since Skill has no `AssetApi`-shaped
   // delete path), so offering it here would silently no-op.
-  if (view === ApplicationRoute.Skills) {
+  if (view === ApplicationRoute.Skills || view === ApplicationRoute.Projects) {
     return [];
   }
 
@@ -295,6 +296,15 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Skill,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.Projects:
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Project,
           icon: null,
         },
       ];
@@ -461,6 +471,18 @@ export const getDeleteNotificationContent = (
             name:
               (fileNodes as DialFile[])?.[0]?.path ||
               `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0]?.version || ''}`,
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.Projects: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Project) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Project),
+            name: nameWithPath,
           });
       return { title, description };
     }

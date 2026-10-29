@@ -20,6 +20,7 @@ import { CorePublication, CorePublicationResource, CoreResourceAction } from '..
 import { parseEncodedFolderPath, parseEncodedVersionedPath } from '../path';
 import { enrichFileResource } from './file-resource';
 import { PUBLICATION_TYPE_REGISTRY } from './registry';
+import { enrichProjectResource } from './project-resource';
 import { enrichSkillResource } from './skill-resource';
 import { EnrichmentClients, PublicationTypeConfig } from './types';
 import { resolveResourceUrl } from './url-resolver';
@@ -73,7 +74,7 @@ const enrichAssetResource = async (
   };
 };
 
-/** Dispatches a primary resource to its type's enrichment shape (metadata-only for FILE/SKILL, asset body otherwise). */
+/** Dispatches a primary resource to its type's enrichment shape (metadata-only for FILE/SKILL/PROJECT, asset body otherwise). */
 const enrichPrimaryResource = (
   resource: CorePublicationResource,
   status: PublicationStatus,
@@ -87,6 +88,9 @@ const enrichPrimaryResource = (
   }
   if (config.resourceType === ResourceType.SKILL) {
     return enrichSkillResource(resource, status, token, clients, issues);
+  }
+  if (config.resourceType === ResourceType.PROJECT) {
+    return enrichProjectResource(resource, status, token, clients, issues);
   }
   return enrichAssetResource(resource, status, config, token, clients, issues);
 };

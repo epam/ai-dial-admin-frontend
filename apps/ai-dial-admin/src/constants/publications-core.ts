@@ -22,6 +22,12 @@ export const CORE_SKILLS_METADATA_URL = 'v2/metadata/skills';
 /** DIAL Core's v2 "complex resource" content endpoint for skills (whole-bundle GET/PUT/DELETE, multipart/ZIP). */
 export const CORE_SKILLS_URL = 'v2/skills';
 
+/** DIAL Core's v2 "complex resource" metadata endpoint for projects (folder metadata only — no ZIP/content). */
+export const CORE_PROJECTS_METADATA_URL = 'v2/metadata/projects';
+
+/** DIAL Core's v2 "complex resource" content endpoint for projects (whole-bundle GET/PUT/DELETE, multipart/ZIP). */
+export const CORE_PROJECTS_URL = 'v2/projects';
+
 /** Core resource URL prefixes (mirror the backend `*ClientMapper` prefixes). */
 export const PUBLICATIONS_PREFIX = 'publications/';
 export const APPLICATIONS_PREFIX = 'applications/';
@@ -30,6 +36,7 @@ export const PROMPTS_PREFIX = 'prompts/';
 export const TOOLSETS_PREFIX = 'toolsets/';
 export const FILES_PREFIX = 'files/';
 export const SKILLS_PREFIX = 'skills/';
+export const PROJECTS_PREFIX = 'projects/';
 export const MODELS_PREFIX = 'models/platform/';
 export const SCHEMAS_PREFIX = 'schemas/platform/';
 /** Core's `catalog_schemas` type has no short URL alias, unlike `app_type_schemas` -> `schemas`. */
@@ -47,6 +54,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.TOOLSET]: TOOLSETS_PREFIX,
   [ResourceType.FILE]: FILES_PREFIX,
   [ResourceType.SKILL]: SKILLS_PREFIX,
+  [ResourceType.PROJECT]: PROJECTS_PREFIX,
   [ResourceType.MODEL]: MODELS_PREFIX,
   [ResourceType.APP_TYPE_SCHEMA]: SCHEMAS_PREFIX,
   [ResourceType.CATALOG_SCHEMA]: CATALOG_SCHEMAS_PREFIX,

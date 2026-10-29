@@ -44,11 +44,12 @@ export const getEntityPath = (
       return encodeURIComponent(`${(data as DialApplicationScheme).$id}`);
 
     // Prompts and conversations are versionless — the path is the folder + plain name, with any
-    // `__` in the name kept verbatim. Files and skills always had this same folder+name shape.
+    // `__` in the name kept verbatim. Files, skills and projects always had this same folder+name shape.
     case ApplicationRoute.Conversations:
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
-    case ApplicationRoute.Skills: {
+    case ApplicationRoute.Skills:
+    case ApplicationRoute.Projects: {
       const entity = data as DialPrompt;
       // A merged detail prompt/conversation keeps its identity in `_metadata`; row shapes keep it
       // flat — hence the flat-first resolution on every read.

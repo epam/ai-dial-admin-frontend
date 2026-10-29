@@ -14,6 +14,10 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 - `ZIP_IMPORT_MAX_ENTRIES`, `ZIP_IMPORT_MAX_ENTRY_SIZE_MB`, `ZIP_IMPORT_MAX_TOTAL_SIZE_MB` — limits applied to uploaded zip archives (entry count, inflated size of one entry, inflated size of the whole archive); an archive over a limit is rejected with a 400. Invalid or non-positive values fall back to the defaults (default: `500`, `100`, `1024`)
 
+#### Projects
+
+- `PROJECT_CONTEXT_ALLOWED_EXTENSIONS`, `PROJECT_CONTEXT_FILE_MAX_BYTES`, `PROJECT_CONTEXT_TOTAL_MAX_BYTES` — limits applied when adding context files to a project (allowed extensions, size of one file, total size of the context); a file over a limit is rejected before it is staged. Use the same values as the chat application. Extensions are comma-separated, case-insensitive, with an optional leading dot; unset or empty values, and invalid or non-positive byte values, fall back to the defaults (default: `csv,pdf,xlsx`, `1048576`, `10485760`)
+
 ### Changed
 
 #### Navigation

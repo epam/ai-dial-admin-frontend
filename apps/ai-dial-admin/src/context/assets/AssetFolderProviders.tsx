@@ -8,6 +8,7 @@ import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { InterceptorsFolderProvider } from '@/src/context/assets/InterceptorsFolderContext';
 import { KeysFolderProvider } from '@/src/context/assets/KeysFolderContext';
 import { ModelsFolderProvider } from '@/src/context/assets/ModelsFolderContext';
+import { ProjectFolderProvider } from '@/src/context/assets/ProjectFolderContext';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { RolesFolderProvider } from '@/src/context/assets/RolesFolderContext';
 import { RoutesFolderProvider } from '@/src/context/assets/RoutesFolderContext';
@@ -31,4 +32,5 @@ export const AssetFolderProviders = composeProviders([
   FileFolderProvider,
   ConversationFolderProvider,
   SkillFolderProvider,
+  ProjectFolderProvider,
 ]);
