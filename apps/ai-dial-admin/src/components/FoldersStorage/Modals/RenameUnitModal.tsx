@@ -6,7 +6,7 @@ import { Input, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { renameOrgUnit } from '@/src/app/[lang]/folders-storage/actions';
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { OrgUnit } from '@/src/models/dial/org-unit';
@@ -29,14 +29,19 @@ const RenameUnitModal: FC<Props> = ({ unit, onClose, onRenamed }) => {
 
   const onSubmit = useCallback(async () => {
     setIsSaving(true);
-    const res = await renameOrgUnit(unit.path, displayName.trim());
-    setIsSaving(false);
-    if (res.success) {
-      onRenamed(res.response as OrgUnit);
-      return;
+    try {
+      const res = await renameOrgUnit(unit.path, displayName.trim());
+      if (res.success) {
+        onRenamed(res.response as OrgUnit);
+        return;
+      }
+      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+    } catch {
+      showNotification(getErrorNotification(t(ErrorI18nKey.SystemUnavailable), t(ErrorI18nKey.TryAgainLater)));
+    } finally {
+      setIsSaving(false);
     }
-    showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-  }, [unit.path, displayName, onRenamed, showNotification]);
+  }, [unit.path, displayName, onRenamed, showNotification, t]);
 
   return (
     <Popup

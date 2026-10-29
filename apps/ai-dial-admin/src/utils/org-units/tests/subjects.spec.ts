@@ -44,6 +44,12 @@ describe('classifySubject', () => {
     );
   });
 
+  test('treats the roles claim as a DIAL role even when it is also the configured group claim', () => {
+    const roles = subject('roles', OrgUnitSubjectFunction.EQUAL, ['admin']);
+
+    expect(classifySubject(roles, 'roles').kind).toBe(SubjectKind.DIAL_ROLE);
+  });
+
   test('keeps any other subject raw with all targets', () => {
     expect(classifySubject(subject('tenant', OrgUnitSubjectFunction.EQUAL, ['a', 'b']), 'groups')).toEqual({
       kind: SubjectKind.RAW,

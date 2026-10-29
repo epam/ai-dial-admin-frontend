@@ -23,11 +23,11 @@ export const classifySubject = (subject: OrgUnitSubject, groupClaim: string): Cl
     if (subject.source === EMAIL_SOURCE || (subject.source !== groupClaim && targets.some((t) => t.includes('@')))) {
       return { kind: SubjectKind.PERSON, label: joined };
     }
-    if (subject.source === groupClaim) {
-      return { kind: SubjectKind.GROUP, label: joined };
-    }
     if (subject.source === ROLES_SOURCE) {
       return { kind: SubjectKind.DIAL_ROLE, label: joined };
+    }
+    if (subject.source === groupClaim) {
+      return { kind: SubjectKind.GROUP, label: joined };
     }
   }
   return { kind: SubjectKind.RAW, label: `${subject.source} = ${joined}` };

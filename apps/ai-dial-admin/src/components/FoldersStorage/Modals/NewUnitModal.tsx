@@ -6,7 +6,7 @@ import { Input, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { createOrgUnit } from '@/src/app/[lang]/folders-storage/actions';
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { OrgUnit } from '@/src/models/dial/org-unit';
@@ -33,22 +33,27 @@ const NewUnitModal: FC<Props> = ({ parentPath, onClose, onCreated }) => {
 
   const onSubmit = useCallback(async () => {
     setIsSaving(true);
-    const res = await createOrgUnit(parentPath, {
-      name: name.trim(),
-      ...(displayName.trim() ? { displayName: displayName.trim() } : {}),
-    });
-    setIsSaving(false);
-    if (res.success) {
-      onCreated(res.response as OrgUnit);
-      return;
+    try {
+      const res = await createOrgUnit(parentPath, {
+        name: name.trim(),
+        ...(displayName.trim() ? { displayName: displayName.trim() } : {}),
+      });
+      if (res.success) {
+        onCreated(res.response as OrgUnit);
+        return;
+      }
+      const error = mapOrgUnitError(res);
+      if (error.kind === OrgUnitErrorKind.FIELD || error.kind === OrgUnitErrorKind.NOT_FOUND) {
+        setNameError(error.message);
+        return;
+      }
+      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+    } catch {
+      showNotification(getErrorNotification(t(ErrorI18nKey.SystemUnavailable), t(ErrorI18nKey.TryAgainLater)));
+    } finally {
+      setIsSaving(false);
     }
-    const error = mapOrgUnitError(res);
-    if (error.kind === OrgUnitErrorKind.FIELD || error.kind === OrgUnitErrorKind.NOT_FOUND) {
-      setNameError(error.message);
-      return;
-    }
-    showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-  }, [parentPath, name, displayName, onCreated, showNotification]);
+  }, [parentPath, name, displayName, onCreated, showNotification, t]);
 
   return (
     <Popup

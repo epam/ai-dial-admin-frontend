@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createOrgUnit, deleteOrgUnit, renameOrgUnit } from '@/src/app/[lang]/folders-storage/actions';
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { OrgUnit } from '@/src/models/dial/org-unit';
 import NewUnitModal from '../Modals/NewUnitModal';
 import RemoveUnitModal from '../Modals/RemoveUnitModal';
@@ -151,5 +152,46 @@ describe('RemoveUnitModal', () => {
 
     expect((await screen.findByRole('alert')).textContent).toContain('Reports/q3.xlsx');
     expect(onRemoved).not.toHaveBeenCalled();
+  });
+});
+
+describe('Unit dialogs recover from a thrown server action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('NewUnitModal re-enables Create after the action throws', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createOrgUnit).mockRejectedValue(new Error('network'));
+    render(<NewUnitModal parentPath="public/Acme" onClose={vi.fn()} onCreated={vi.fn()} />);
+
+    await enterName(user, 'Risk');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeEnabled());
+    expect(useNotification().showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: ErrorI18nKey.SystemUnavailable }),
+    );
+  });
+
+  test('RenameUnitModal re-enables Save after the action throws', async () => {
+    const user = userEvent.setup();
+    vi.mocked(renameOrgUnit).mockRejectedValue(new Error('network'));
+    render(<RenameUnitModal unit={unit} onClose={vi.fn()} onRenamed={vi.fn()} />);
+
+    await user.click(await screen.findByRole('dialog'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled());
+  });
+
+  test('RemoveUnitModal re-enables Remove after the action throws', async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteOrgUnit).mockRejectedValue(new Error('network'));
+    render(<RemoveUnitModal unit={unit} subUnits={[]} onClose={vi.fn()} onRemoved={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
+
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Remove })).toBeEnabled());
   });
 });

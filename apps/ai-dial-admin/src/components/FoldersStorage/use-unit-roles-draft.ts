@@ -39,11 +39,10 @@ export const useUnitRolesDraft = (unitPath: string) => {
 
   const load = useCallback(async () => {
     const [rolesRes, assignmentsRes] = await Promise.all([getOrgUnitRoles(unitPath), getOrgUnitAssignments(unitPath)]);
-    const failed = [rolesRes, assignmentsRes].find((res) => !res.success);
-    if (failed) {
-      setStatus(
-        mapOrgUnitError(failed).kind === OrgUnitErrorKind.FORBIDDEN ? RolesCardStatus.FORBIDDEN : RolesCardStatus.ERROR,
-      );
+    const failures = [rolesRes, assignmentsRes].filter((res) => !res.success);
+    if (failures.length > 0) {
+      const isForbidden = failures.some((res) => mapOrgUnitError(res).kind === OrgUnitErrorKind.FORBIDDEN);
+      setStatus(isForbidden ? RolesCardStatus.FORBIDDEN : RolesCardStatus.ERROR);
       return;
     }
     const holders = (assignmentsRes.response?.items ?? []).map(toHolder);
@@ -87,26 +86,31 @@ export const useUnitRolesDraft = (unitPath: string) => {
   /** Sends only the difference, one call at a time, and stops at the first failure; core's state is reloaded either way. */
   const save = useCallback(async (): Promise<SaveRolesResult> => {
     setIsSaving(true);
-    let failure: ServerActionResponse | undefined;
-    for (const holder of draft.filter((h) => !h.id)) {
-      const res = await addOrgUnitAssignment(unitPath, { roleName: holder.roleName, subject: holder.subject });
-      if (!res.success) {
-        failure = res;
-        break;
-      }
-    }
-    if (!failure) {
-      for (const holder of draft.filter((h) => h.isRemoved && h.id)) {
-        const res = await removeOrgUnitAssignment(unitPath, holder.id as string);
+    try {
+      let failure: ServerActionResponse | undefined;
+      for (const holder of draft.filter((h) => !h.id)) {
+        const res = await addOrgUnitAssignment(unitPath, { roleName: holder.roleName, subject: holder.subject });
         if (!res.success) {
           failure = res;
           break;
         }
       }
+      if (!failure) {
+        for (const holder of draft.filter((h) => h.isRemoved && h.id)) {
+          const res = await removeOrgUnitAssignment(unitPath, holder.id as string);
+          if (!res.success) {
+            failure = res;
+            break;
+          }
+        }
+      }
+      await load();
+      return failure ? { isSuccess: false, errorMessage: failure.errorMessage } : { isSuccess: true };
+    } catch {
+      return { isSuccess: false };
+    } finally {
+      setIsSaving(false);
     }
-    await load();
-    setIsSaving(false);
-    return failure ? { isSuccess: false, errorMessage: failure.errorMessage } : { isSuccess: true };
   }, [draft, load, unitPath]);
 
   return { status, roles, draft, isChanged, isSaving, addHolder, removeHolder, discard, save };

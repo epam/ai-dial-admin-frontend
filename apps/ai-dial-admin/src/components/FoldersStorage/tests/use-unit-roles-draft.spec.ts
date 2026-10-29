@@ -154,4 +154,26 @@ describe('useUnitRolesDraft', () => {
     expect(outcome).toEqual({ isSuccess: false, errorMessage: 'boom' });
     expect(result.current.isChanged).toBe(false);
   });
+
+  test('hides the card when assignments answer 403 even if roles failed first with another error', async () => {
+    vi.mocked(getOrgUnitRoles).mockResolvedValue({ success: false, status: 500 });
+    vi.mocked(getOrgUnitAssignments).mockResolvedValue({ success: false, status: 403 });
+    const { result } = renderHook(() => useUnitRolesDraft(UNIT));
+
+    await waitFor(() => expect(result.current.status).toBe(RolesCardStatus.FORBIDDEN));
+  });
+
+  test('reports a failed save and clears the saving state when a call throws', async () => {
+    vi.mocked(addOrgUnitAssignment).mockRejectedValue(new Error('network'));
+    const { result } = await renderDraft();
+    act(() => result.current.addHolder('editor', person('new@acme.com')));
+
+    let outcome;
+    await act(async () => {
+      outcome = await result.current.save();
+    });
+
+    expect(outcome).toEqual({ isSuccess: false });
+    expect(result.current.isSaving).toBe(false);
+  });
 });

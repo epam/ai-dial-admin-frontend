@@ -5,7 +5,7 @@ import { FC, useCallback, useState } from 'react';
 import { ConfirmationPopup, ConfirmationPopupVariant } from '@epam/ai-dial-ui-kit';
 
 import { deleteOrgUnit } from '@/src/app/[lang]/folders-storage/actions';
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { OrgUnit } from '@/src/models/dial/org-unit';
@@ -28,18 +28,23 @@ const RemoveUnitModal: FC<Props> = ({ unit, subUnits, onClose, onRemoved }) => {
 
   const onConfirm = useCallback(async () => {
     setIsRemoving(true);
-    const res = await deleteOrgUnit(unit.path, true);
-    setIsRemoving(false);
-    if (res.success) {
-      onRemoved();
-      return;
+    try {
+      const res = await deleteOrgUnit(unit.path, true);
+      if (res.success) {
+        onRemoved();
+        return;
+      }
+      if (mapOrgUnitError(res).kind === OrgUnitErrorKind.FIELD) {
+        setBlockMessage(res.errorMessage);
+        return;
+      }
+      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+    } catch {
+      showNotification(getErrorNotification(t(ErrorI18nKey.SystemUnavailable), t(ErrorI18nKey.TryAgainLater)));
+    } finally {
+      setIsRemoving(false);
     }
-    if (mapOrgUnitError(res).kind === OrgUnitErrorKind.FIELD) {
-      setBlockMessage(res.errorMessage);
-      return;
-    }
-    showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-  }, [unit.path, onRemoved, showNotification]);
+  }, [unit.path, onRemoved, showNotification, t]);
 
   return (
     <ConfirmationPopup
