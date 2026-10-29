@@ -8,8 +8,8 @@ import { DialRule } from '@/src/models/dial/rule';
 import { ProjectContextLimits } from '@/src/models/project-context';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
+import { ProjectStaging } from '@/src/components/Assets/Artifacts/Projects/View/models';
 import ComplexResourceTabsContent from '../ComplexResourceTabsContent';
-import { ProjectStaging } from '../models';
 import { SkillPublicationStaging } from '../use-skill-publication-staging';
 
 vi.mock('../Permissions', () => ({
@@ -25,12 +25,12 @@ vi.mock('@/src/components/Publications/Properties/SkillProperties', () => ({
 }));
 
 vi.mock('@/src/components/Publications/Properties/ProjectProperties', () => ({
-  default: ({ description, instructions, onChangeDescription, onAddFiles }: any) => (
+  default: ({ staging }: any) => (
     <div role="region" aria-label="project-properties">
-      <span>{description}</span>
-      <span>{instructions}</span>
-      <button onClick={() => onChangeDescription('changed')}>change-description</button>
-      <button onClick={() => onAddFiles([])}>add-files</button>
+      <span>{staging.description}</span>
+      <span>{staging.instructions}</span>
+      <button onClick={() => staging.onChangeDescription('changed')}>change-description</button>
+      <button onClick={() => staging.onAddFiles([])}>add-files</button>
     </div>
   ),
 }));

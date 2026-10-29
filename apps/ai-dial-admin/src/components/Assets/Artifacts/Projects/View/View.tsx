@@ -93,20 +93,7 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
         getAssetContext={useProjectFolder}
       />
       <div className="flex-1 overflow-auto min-h-0">
-        <ProjectAssetProperties
-          project={project}
-          description={staging.description}
-          instructions={staging.instructions}
-          storedFiles={staging.storedFiles}
-          addedFiles={staging.addedFiles}
-          removedFileNames={staging.removedFileNames}
-          limits={limits}
-          onChangeDescription={staging.onChangeDescription}
-          onChangeInstructions={staging.onChangeInstructions}
-          onAddFiles={staging.onAddFiles}
-          onRemoveStoredFile={staging.onRemoveStoredFile}
-          onRemoveAddedFile={staging.onRemoveAddedFile}
-        />
+        <ProjectAssetProperties project={project} staging={staging} limits={limits} />
       </div>
     </div>
   );

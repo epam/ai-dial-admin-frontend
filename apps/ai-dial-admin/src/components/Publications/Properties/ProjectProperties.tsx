@@ -1,26 +1,18 @@
 import { FC } from 'react';
 
+import { ProjectStaging } from '@/src/components/Assets/Artifacts/Projects/View/models';
 import ProjectDetails from '@/src/components/Assets/Artifacts/Projects/View/ProjectDetails';
 import { useProjectFolder } from '@/src/context/assets/ProjectFolderContext';
 import { ProjectPublication } from '@/src/models/dial/publications';
-import { ProjectContextLimits, StoredContextFile } from '@/src/models/project-context';
+import { ProjectContextLimits } from '@/src/models/project-context';
 import BaseProperties from './BaseProperties';
 
 interface Props {
   publication: ProjectPublication;
-  description: string;
-  instructions: string;
-  storedFiles: StoredContextFile[];
-  addedFiles: File[];
-  removedFileNames: string[];
+  staging: ProjectStaging;
   limits: ProjectContextLimits;
   disabled?: boolean;
   onChange?: (publication: ProjectPublication) => void;
-  onChangeDescription: (description: string) => void;
-  onChangeInstructions: (instructions: string) => void;
-  onAddFiles: (files: File[]) => void;
-  onRemoveStoredFile: (fileName: string) => void;
-  onRemoveAddedFile: (index: number) => void;
 }
 
 /**
@@ -29,14 +21,20 @@ interface Props {
  * Description, Instructions and Context edits are staged by `ComplexResourcePublicationView` and written to
  * the project (through Core's per-file project routes) when the reviewer saves the publication.
  */
-const ProjectProperties: FC<Props> = ({ publication, onChange, disabled, ...detailsProps }) => {
+const ProjectProperties: FC<Props> = ({ publication, staging, limits, disabled, onChange }) => {
   const project = publication.projectResources?.[0]?.projectResource;
 
   return (
     <div className="flex-1 min-h-0 pt-8">
       <div className="w-full flex flex-col gap-y-8">
         <BaseProperties publication={publication} onChange={onChange} getContext={useProjectFolder} />
-        <ProjectDetails name={project?.name ?? ''} projectPath={project?.path} disabled={disabled} {...detailsProps} />
+        <ProjectDetails
+          name={project?.name ?? ''}
+          projectPath={project?.path}
+          staging={staging}
+          limits={limits}
+          disabled={disabled}
+        />
       </div>
     </div>
   );

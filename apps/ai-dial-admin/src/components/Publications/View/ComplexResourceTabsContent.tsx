@@ -3,6 +3,7 @@
 import { FC } from 'react';
 
 import SkillManifestTab from '@/src/components/Assets/Artifacts/Skills/View/SkillManifestTab';
+import { ProjectStaging } from '@/src/components/Assets/Artifacts/Projects/View/models';
 import ProjectProperties from '@/src/components/Publications/Properties/ProjectProperties';
 import SkillProperties from '@/src/components/Publications/Properties/SkillProperties';
 import { ProjectFolderProvider } from '@/src/context/assets/ProjectFolderContext';
@@ -14,7 +15,6 @@ import { ProjectContextLimits } from '@/src/models/project-context';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { SkillPublicationStaging } from './use-skill-publication-staging';
-import { ProjectStaging } from './models';
 import PublicationInfoHeader from './InfoHeader';
 import PublicationPermissions from './Permissions';
 
@@ -72,18 +72,9 @@ const ComplexResourceTabsContent: FC<Props> = ({
               <ProjectProperties
                 publication={selectedPublication as ProjectPublication}
                 onChange={onChange as (p: ProjectPublication) => void}
-                description={projectStaging.description}
-                instructions={projectStaging.instructions}
-                storedFiles={projectStaging.storedFiles}
-                addedFiles={projectStaging.addedFiles}
-                removedFileNames={projectStaging.removedFileNames}
+                staging={projectStaging}
                 limits={projectLimits}
                 disabled={isReadOnlyAdmin}
-                onChangeDescription={projectStaging.onChangeDescription}
-                onChangeInstructions={projectStaging.onChangeInstructions}
-                onAddFiles={projectStaging.onAddFiles}
-                onRemoveStoredFile={projectStaging.onRemoveStoredFile}
-                onRemoveAddedFile={projectStaging.onRemoveAddedFile}
               />
             </ProjectFolderProvider>
           )}
