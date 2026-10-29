@@ -5,6 +5,7 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
+import EntitySelectCellRenderer from '@/src/components/Grid/CellRenderers/EntitySelectCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
@@ -211,6 +212,7 @@ describe('getGroupedSchemaColumn', () => {
     [TestCaseItemType.OBJECT, JsonEditorCellRenderer],
     [TestCaseItemType.ARRAY, JsonEditorCellRenderer],
     [TestCaseItemType.FILE, FileSelectCellRenderer],
+    [TestCaseItemType.SKILL, EntitySelectCellRenderer],
   ])('should choose the type-driven renderer for %s on a SINGLE row', (type, expected) => {
     const column = getGroupedSchemaColumn({ name: 'field', type }, vi.fn(), ctx);
 
@@ -234,6 +236,7 @@ describe('getGroupedSchemaColumn', () => {
     TestCaseItemType.OBJECT,
     TestCaseItemType.ARRAY,
     TestCaseItemType.FILE,
+    TestCaseItemType.SKILL,
   ])('should leave %s columns left-aligned', (type) => {
     const column = getGroupedSchemaColumn({ name: 'field', type }, vi.fn(), ctx);
 

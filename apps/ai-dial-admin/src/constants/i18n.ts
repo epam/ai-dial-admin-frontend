@@ -2002,6 +2002,7 @@ export enum TestSuitesI18nKey {
   CreateTestSuite = 'TestSuites.CreateTestSuite',
   UpdateTestSuite = 'TestSuites.UpdateTestSuite',
   SelectDocument = 'TestSuites.SelectDocument',
+  SelectSkill = 'TestSuites.SelectSkill',
   Application = 'TestSuites.Application',
   Target = 'TestSuites.Target',
   Methods = 'TestSuites.Methods',

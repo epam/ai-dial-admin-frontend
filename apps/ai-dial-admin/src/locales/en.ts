@@ -2058,6 +2058,7 @@ export default {
     CreateTestSuite: 'Create Test Suite',
     UpdateTestSuite: 'Update Test Suite',
     SelectDocument: 'Select document',
+    SelectSkill: 'Select skill',
     Target: 'Target',
     Application: 'Application',
     Methods: 'Methods',

@@ -1,3 +1,4 @@
+import { SKILLS_PREFIX } from '@/src/constants/publications-core';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
@@ -127,6 +128,13 @@ export const getPathFromUrl = (url?: string): string => {
   return decodeURIComponent(url.replace(/^files\//, ''));
 };
 
-/** DIAL file ids are storage paths (`public/...`). Leftover schema values after a type change are not. */
+/**
+ * DIAL file ids are storage paths (`public/...`). Leftover schema values after a type change are not,
+ * and neither is a skill reference, which belongs to the skill picker.
+ */
 export const toFileSelectPath = (value: unknown): string =>
-  typeof value === 'string' && value.includes('/') ? value : '';
+  typeof value === 'string' && value.includes('/') && !value.startsWith(SKILLS_PREFIX) ? value : '';
+
+/** An entity reference is the resource path (`<prefix><bucket>/<path>`); anything else is a stale value. */
+export const toEntitySelectPath = (value: unknown, prefix: string): string =>
+  typeof value === 'string' && value.startsWith(prefix) ? value : '';
