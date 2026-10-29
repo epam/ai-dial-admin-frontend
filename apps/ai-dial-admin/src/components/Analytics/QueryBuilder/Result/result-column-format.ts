@@ -1,11 +1,12 @@
-import { ColDef, ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
+import { ColDef, ITooltipParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 
 import { strictNumber } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { dateTimeColumn, numericColumn } from '@/src/constants/grid-columns/configs';
 import { baseNumberFilter, dateFilter } from '@/src/constants/grid-columns/filters';
+import { toNumberOrNull } from '@/src/constants/grid-columns/formatters';
 import { ResultValueClass } from '@/src/models/analytics/query-builder';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString, toDateOrNull } from '@/src/utils/formatting/date';
 import {
   formatNumberByDelimiter,
   formatNumberWithExponent,
@@ -20,9 +21,14 @@ const exactNumberText = (value: unknown): string => {
   return renderCell(value);
 };
 
+// The shared column configs filter on `data[field]`, but a result row is wrapped (see `ResultGridRow`): read the
+// column's own value instead, which its `valueGetter` resolves.
+const cellValueOf = ({ column, getValue }: ValueGetterParams) => getValue(column.getColId());
+
 const getNumericColumn = (format: (value: number) => string): Partial<ColDef> => ({
   ...numericColumn,
   ...baseNumberFilter,
+  filterValueGetter: (params: ValueGetterParams) => toNumberOrNull(cellValueOf(params)),
   valueFormatter: ({ value }: ValueFormatterParams) => {
     const parsed = strictNumber(value);
     // Fall back to today's rendering rather than blanking a value the run returned.
@@ -52,6 +58,7 @@ export const getValueClassColumn = (valueClass?: ResultValueClass): Partial<ColD
       return {
         ...dateTimeColumn,
         tooltipValueGetter: ({ value }: ITooltipParams) => formatDateTimeToLocalString(value),
+        filterValueGetter: (params: ValueGetterParams) => toDateOrNull(cellValueOf(params)),
         ...dateFilter,
       };
     default:

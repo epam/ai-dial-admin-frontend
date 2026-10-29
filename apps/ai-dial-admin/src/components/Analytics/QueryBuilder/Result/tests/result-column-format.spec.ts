@@ -10,10 +10,11 @@ const format = (col: Partial<ColDef>, value: unknown): string =>
 const tooltip = (col: Partial<ColDef>, value: unknown): unknown =>
   (col.tooltipValueGetter as (p: ITooltipParams) => unknown)({ value } as ITooltipParams);
 
-const filterValue = (col: Partial<ColDef>, data: Record<string, unknown>, field: string): unknown =>
+// The filter reads the column's own value, which the grid resolves through the result column's `valueGetter`.
+const filterValue = (col: Partial<ColDef>, values: Record<string, unknown>, colId: string): unknown =>
   (col.filterValueGetter as (p: ValueGetterParams) => unknown)({
-    data,
-    colDef: { field },
+    column: { getColId: () => colId },
+    getValue: (key: string) => values[key],
   } as unknown as ValueGetterParams);
 
 const compare = (col: Partial<ColDef>, a: unknown, b: unknown): number =>

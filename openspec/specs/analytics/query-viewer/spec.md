@@ -100,7 +100,7 @@ When a result is shown, the results area SHALL display a stat-tile row above the
 
 ### Requirement: Result table and chart views
 
-The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. Each result column SHALL render its row's actual value looked up by its exact column name, including a column name that itself contains a literal `.` (for example an enrichment projection's `table.column`) — such a name SHALL NOT be treated as a nested-path lookup. The Chart view SHALL render the result with ECharts and offer a chart-type control with four types — bar, line, pie, and scatter — plus two column selectors whose allowed columns and labels follow the selected type. The Chart view SHALL be available whenever the shown result has at least one dimension column and at least one aggregate column, as those are defined below for the run that produced it; otherwise the Chart view SHALL show a hint naming the reason it is unavailable. Chart colors SHALL come from the shared chart color tokens.
+The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. Each result column SHALL render its row's actual value looked up by its exact column name, including a column name that itself contains a literal `.` (for example an enrichment projection's `table.column`) — such a name SHALL NOT be treated as a nested-path lookup. The Table view SHALL show one grid row per returned row: rows whose values are identical, or that share an `id` value, SHALL each stay on screen, so the grid's row count always matches the Rows returned tile. The Chart view SHALL render the result with ECharts and offer a chart-type control with four types — bar, line, pie, and scatter — plus two column selectors whose allowed columns and labels follow the selected type. The Chart view SHALL be available whenever the shown result has at least one dimension column and at least one aggregate column, as those are defined below for the run that produced it; otherwise the Chart view SHALL show a hint naming the reason it is unavailable. Chart colors SHALL come from the shared chart color tokens.
 
 For a **structured run**, the dimension columns SHALL be the executed query's group-by/bucket columns and the aggregate columns SHALL be the remaining returned columns. A row-mode structured run has no group-by and therefore no dimension columns, so it is never chartable.
 
@@ -192,6 +192,12 @@ Each reason the Chart view has nothing to render SHALL have its own hint text na
 
 - **WHEN** a result row includes a column whose name contains a literal `.` (e.g. an enrichment projection) and the backend response carries a value for it
 - **THEN** the Table view shows that value in the corresponding cell rather than leaving it blank
+
+#### Scenario: Identical rows are all shown
+
+- **WHEN** a run returns several rows whose values are identical in every returned column
+- **THEN** the Table view shows each of those rows
+- **AND** the number of rows in the table matches the Rows returned tile
 
 ### Requirement: Numeric and temporal result-cell formatting
 

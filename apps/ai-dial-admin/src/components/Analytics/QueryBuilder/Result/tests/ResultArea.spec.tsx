@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 
-import { ColDef, ValueFormatterParams } from 'ag-grid-community';
+import { ColDef, GetRowIdParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -20,10 +20,32 @@ import {
 // valueFormatter directly and prove the fragment from getValueClassColumn reached the grid.
 const { capturedColumnDefs } = vi.hoisted(() => ({ capturedColumnDefs: { current: [] as ColDef[] } }));
 
+// Renders the ids the grid would key its rows by: the kit grid merges rows that share an id, so distinct ids are what
+// keeps every returned row on screen. Mirrors the real chain — AgGridWrapper forwards `getRowId` only with
+// `isLiveData`, and without one the kit falls back to the row's `id` or its JSON.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData, columnDefs }: { rowData?: unknown[]; columnDefs?: ColDef[] }) => {
+  default: ({
+    rowData,
+    columnDefs,
+    getRowId,
+    isLiveData,
+  }: {
+    rowData?: unknown[];
+    columnDefs?: ColDef[];
+    getRowId?: (params: GetRowIdParams) => string;
+    isLiveData?: boolean;
+  }) => {
     capturedColumnDefs.current = columnDefs ?? [];
-    return <div>grid rows: {rowData?.length ?? 0}</div>;
+    const kitDefaultRowId = (data: unknown) => String((data as { id?: unknown }).id ?? JSON.stringify(data));
+    const rowIds = rowData?.map((data) =>
+      isLiveData && getRowId ? getRowId({ data } as GetRowIdParams) : kitDefaultRowId(data),
+    );
+    return (
+      <>
+        <div>grid rows: {rowData?.length ?? 0}</div>
+        <div>distinct row ids: {new Set(rowIds).size}</div>
+      </>
+    );
   },
 }));
 
@@ -120,6 +142,25 @@ describe('QueryBuilder :: ResultArea', () => {
     expect(screen.getByText('QueryBuilder.Fields')).toBeInTheDocument();
     expect(screen.getByText('QueryBuilder.Total')).toBeInTheDocument();
     expect(screen.getByText('grid rows: 2')).toBeInTheDocument();
+  });
+
+  test('gives identical rows distinct ids, so the grid shows every row the run returned', () => {
+    const rows = Array.from({ length: 6 }, () => ({ client_type: 'web' }));
+    renderArea({ result: { columns: ['client_type'], rows }, meta: ROW_META });
+
+    expect(screen.getByText('grid rows: 6')).toBeInTheDocument();
+    expect(screen.getByText('distinct row ids: 6')).toBeInTheDocument();
+  });
+
+  test('reads a cell from the wrapped row the grid holds', () => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META });
+
+    const deployment = capturedColumnDefs.current.find((col) => col.field === 'deployment');
+    const value = (deployment?.valueGetter as (p: ValueGetterParams) => unknown)({
+      data: { index: 1, values: AGG_RESULT.rows[1] },
+    } as ValueGetterParams);
+
+    expect(value).toBe('claude');
   });
 
   test('omits the Total tile when the response has no total', () => {
