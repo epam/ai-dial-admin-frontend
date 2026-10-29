@@ -17,7 +17,9 @@ export type BaseAssetRoute =
   | ApplicationRoute.Projects;
 
 export type CrudAssetRoute =
-  ApplicationRoute.Prompts | ApplicationRoute.AssetsApplications | ApplicationRoute.AssetsToolsets;
+  | ApplicationRoute.Prompts
+  | ApplicationRoute.AssetsApplications
+  | ApplicationRoute.AssetsToolsets;
 
 export type CreateAssetRoute =
   | CrudAssetRoute

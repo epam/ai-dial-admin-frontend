@@ -16,7 +16,13 @@ export type PublicationResourceKey =
 
 /** The field on a resource wrapper that holds the enriched asset body. */
 export type PublicationAssetKey =
-  'prompt' | 'applicationResource' | 'conversation' | 'toolSetResource' | 'file' | 'skillResource' | 'projectResource';
+  | 'prompt'
+  | 'applicationResource'
+  | 'conversation'
+  | 'toolSetResource'
+  | 'file'
+  | 'skillResource'
+  | 'projectResource';
 
 /**
  * Resource types the publications workflow can carry. The `ConfigResourceController`-backed types

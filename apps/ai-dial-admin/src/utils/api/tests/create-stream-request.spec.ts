@@ -105,6 +105,46 @@ describe('Utils :: api :: streamRequest', () => {
     expect(response.headers.get('Content-Type')).toBe('application/zip');
   });
 
+  test.each(['text/markdown', 'text/markdown; charset=utf-8', 'application/octet-stream', undefined])(
+    'serves Markdown previews as plain text when the backend Content-Type is %s',
+    async (contentType) => {
+      const mockResponse = new Response(createMockReadableStream(), {
+        headers: contentType ? { 'Content-Type': contentType } : {},
+      });
+      vi.mocked(sendRequest).mockResolvedValue(mockResponse);
+
+      const response = await streamRequest(mockUrl, 'notes.MD', mockToken, true);
+
+      expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
+      expect(response.headers.get('Content-Disposition')).toBe('inline');
+      expect(await response.text()).toBe('HI');
+    },
+  );
+
+  test('preserves the Markdown content type and filename for downloads', async () => {
+    vi.mocked(sendRequest).mockResolvedValue(
+      new Response(createMockReadableStream(), { headers: { 'Content-Type': 'text/markdown' } }),
+    );
+
+    const response = await streamRequest(mockUrl, 'notes.md', mockToken, false);
+
+    expect(response.headers.get('Content-Type')).toBe('text/markdown');
+    expect(response.headers.get('Content-Disposition')).toBe(
+      `attachment; filename="notes.md"; filename*=UTF-8''notes.md`,
+    );
+  });
+
+  test('preserves the JSON content type for previews', async () => {
+    vi.mocked(sendRequest).mockResolvedValue(
+      new Response(createMockReadableStream(), { headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    const response = await streamRequest(mockUrl, 'data.json', mockToken, true);
+
+    expect(response.headers.get('Content-Type')).toBe('application/json');
+    expect(response.headers.get('Content-Disposition')).toBe('inline');
+  });
+
   describe('getContentType', () => {
     test('returns null for unknown extension', () => {
       expect(getContentType('file.unknown')).toBe(null);

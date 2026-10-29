@@ -51,9 +51,27 @@ vi.mock('@/src/components/EntityHeaderControls/PublicationsHeader', () => ({
 }));
 
 vi.mock('../ComplexResourceTabsContent', () => ({
-  default: ({ projectStaging, skillStaging }: any) => (
+  default: ({ projectStaging, skillStaging, selectedPublication, onChange }: any) => (
     <div>
       <span>description:{projectStaging.description}</span>
+      <button
+        onClick={() =>
+          onChange({
+            ...selectedPublication,
+            projectResources: [
+              {
+                ...selectedPublication.projectResources[0],
+                projectResource: {
+                  ...selectedPublication.projectResources[0].projectResource,
+                  path: 'elsewhere/my-project',
+                },
+              },
+            ],
+          })
+        }
+      >
+        rewrite-project-path
+      </button>
       <button onClick={() => projectStaging.onChangeDescription('changed')}>stage-project-description</button>
       <button onClick={() => skillStaging.setAddedFiles([new File(['x'], 'a.md')])}>stage-skill-file</button>
     </div>
@@ -180,6 +198,23 @@ describe('ComplexResourcePublicationView — Project', () => {
     expect(vi.mocked(updatePublication).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(uploadProjectFile).mock.invocationCallOrder[0],
     );
+  });
+
+  test('writes to the path the project had when the publication was loaded, not to an edited copy of it', async () => {
+    const user = userEvent.setup();
+    render(
+      <ComplexResourcePublicationView view={ApplicationRoute.ProjectPublications} publication={projectPublication()} />,
+    );
+    await screen.findByText('description:Original');
+
+    // The JSON editor can rewrite any field of the edited copy, including the resource path.
+    await user.click(screen.getByRole('button', { name: 'rewrite-project-path' }));
+    await user.click(screen.getByRole('button', { name: 'stage-project-description' }));
+    await user.click(await screen.findByRole('button', { name: 'save' }));
+
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(uploadProjectFile).toHaveBeenCalledWith('review/my-project', 'PROJECT.md', expect.any(FormData));
+    expect(uploadProjectFile).not.toHaveBeenCalledWith('elsewhere/my-project', expect.anything(), expect.anything());
   });
 
   test('does not touch the project when the publication itself fails to save', async () => {

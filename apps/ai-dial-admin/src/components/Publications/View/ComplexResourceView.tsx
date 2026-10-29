@@ -211,16 +211,19 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
     setDiscardKey((prev) => prev + 1);
   }, [publication, discardStaging]);
 
-  /** Writes the staged resource edits after the publication itself saved; they aren't publication fields. */
-  const applyResourceChanges = useCallback(
-    async (savedPublication: Publication): Promise<ServerActionResponse> => {
-      const path = isProject
-        ? (savedPublication as ProjectPublication).projectResources?.[0]?.projectResource.path
-        : (savedPublication as SkillPublication).skillResources?.[0]?.skillResource.path;
-      return isStagingChanged && path ? applyStaging(path) : { success: true };
-    },
-    [applyStaging, isProject, isStagingChanged],
-  );
+  /**
+   * Writes the staged resource edits after the publication itself saved; they aren't publication fields. The path
+   * is the one the resource had when the publication was loaded, not the locally edited copy's: Core derives a
+   * review copy's URL from the resource's name relative to the target folder, which nothing on this page changes
+   * (a folder edit leaves it where it is, the name is read-only), whereas the JSON editor can rewrite any field of
+   * the edited copy and must not be able to redirect a write.
+   */
+  const applyResourceChanges = useCallback(async (): Promise<ServerActionResponse> => {
+    const path = isProject
+      ? (publication as unknown as ProjectPublication).projectResources?.[0]?.projectResource.path
+      : (publication as unknown as SkillPublication).skillResources?.[0]?.skillResource.path;
+    return isStagingChanged && path ? applyStaging(path) : { success: true };
+  }, [applyStaging, isProject, isStagingChanged, publication]);
 
   const onSave = useCallback(() => {
     const correctFolderId = addTrailingSlash(selectedPublication.folderId);
@@ -235,7 +238,7 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
     const req = getReqRef.current(updatePublication, body);
     req.then(async (res) => {
       if (res.success) {
-        const resourceResult = await applyResourceChanges(selectedPublication);
+        const resourceResult = await applyResourceChanges();
         if (!resourceResult.success) {
           showNotification(getErrorNotification(resourceResult.errorHeader, resourceResult.errorMessage));
           return;

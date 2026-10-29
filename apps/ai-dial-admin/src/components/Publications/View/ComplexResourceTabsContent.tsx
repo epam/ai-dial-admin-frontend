@@ -14,7 +14,7 @@ import { DialRule } from '@/src/models/dial/rule';
 import { ProjectContextLimits } from '@/src/models/project-context';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import { SkillPublicationStaging } from './use-skill-publication-staging';
+import { SkillPublicationStaging } from './models';
 import PublicationInfoHeader from './InfoHeader';
 import PublicationPermissions from './Permissions';
 

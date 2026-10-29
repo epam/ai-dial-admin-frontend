@@ -175,6 +175,13 @@ SHALL NOT appear otherwise.
 - **THEN** the file's content opens for inline preview, or downloads, respectively, with no change
   staged
 
+#### Scenario: Markdown files open as text for inline preview
+
+- **WHEN** a user previews an already-saved `.md` file from the skill's file listing
+- **THEN** the preview response serves the unchanged file content as `text/plain; charset=utf-8`
+  so the browser displays it in a new tab instead of downloading it; the download action retains
+  the original content type and filename
+
 #### Scenario: Removing a file stages it and shows Save/Discard
 - **WHEN** a user removes a file other than `SKILL.md`
 - **THEN** the file listing no longer shows that file, no request has reached Core yet, and the

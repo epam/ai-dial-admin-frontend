@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { getSkillManifest, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/skills/actions';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -15,21 +15,6 @@ interface Params {
   isManifestTabActive: boolean;
 }
 
-export interface SkillPublicationStaging {
-  addedFiles: File[];
-  setAddedFiles: Dispatch<SetStateAction<File[]>>;
-  removedFileNames: string[];
-  setRemovedFileNames: Dispatch<SetStateAction<string[]>>;
-  stagedManifest?: SkillManifest;
-  isChanged: boolean;
-  onChangeDescription: (description: string) => void;
-  onChangeBody: (body: string) => void;
-  /** Drops the cached manifest, e.g. when the publication it was read for has been replaced. */
-  reset: () => void;
-  discard: () => void;
-  apply: (skillPath: string) => Promise<ServerActionResponse>;
-}
-
 /**
  * Staged Skill edits for a Skill publication — file additions/removals and the `SKILL.md` description/body —
  * written directly against Core's per-file skill routes after `updatePublication` succeeds, since they aren't
@@ -37,7 +22,7 @@ export interface SkillPublicationStaging {
  * original manifest content is kept alongside the parsed fields. The manifest is fetched lazily on the first
  * activation of the Skill tab, not eagerly with the rest of the page.
  */
-export const useSkillPublicationStaging = ({ skillPath, isManifestTabActive }: Params): SkillPublicationStaging => {
+export const useSkillPublicationStaging = ({ skillPath, isManifestTabActive }: Params) => {
   const { showNotification } = useNotification();
   const [addedFiles, setAddedFiles] = useState<File[]>([]);
   const [removedFileNames, setRemovedFileNames] = useState<string[]>([]);
@@ -75,6 +60,7 @@ export const useSkillPublicationStaging = ({ skillPath, isManifestTabActive }: P
     setStagedManifest((prev) => (prev ? { ...prev, body } : prev));
   }, []);
 
+  /** Drops the cached manifest, e.g. when the publication it was read for has been replaced. */
   const reset = useCallback(() => {
     setManifestContent(undefined);
     setManifest(undefined);

@@ -10,7 +10,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ProjectStaging } from '@/src/components/Assets/Artifacts/Projects/View/models';
 import ComplexResourceTabsContent from '../ComplexResourceTabsContent';
-import { SkillPublicationStaging } from '../use-skill-publication-staging';
+import { SkillPublicationStaging } from '../models';
 
 vi.mock('../Permissions', () => ({
   default: () => <div role="region" aria-label="permissions" />,
@@ -65,6 +65,7 @@ const publication = (overrides?: Partial<Publication>): Publication =>
   }) as Publication;
 
 const skillStaging = (overrides?: Partial<SkillPublicationStaging>): SkillPublicationStaging => ({
+  stagedManifest: undefined,
   addedFiles: [],
   setAddedFiles: vi.fn(),
   removedFileNames: [],
