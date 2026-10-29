@@ -220,9 +220,11 @@ The value class SHALL be resolved when the executed-query metadata is built, and
 
 The value class SHALL be withheld for every column of a run, leaving the grid rendering as it does today, in exactly the two cases where the column labels are withheld: a SQL run the backend could not translate, whose measure list comes from a blind scan of every returned column rather than from group-by semantics and so cannot be trusted to exclude an id or a raw epoch column; and a translated SQL run whose entity is not the entity selected in the builder, whose schema cannot describe the returned columns.
 
-A **compact** cell SHALL render through the app's shared compact formatter, the same one the platform models grid's Parameters column uses, so a multi-billion count reads as a unit-suffixed figure. A **significant-digit** cell SHALL render at two significant digits below one and compact at one and above, so a sub-unit value survives instead of rounding to zero while a value of a few units is not rounded to its leading digit. That formatter SHALL be currency-agnostic and SHALL live beside the app's other number formatters; the sessions log's cost formatter SHALL NOT be reused for it, re-parameterised, or stripped of its currency symbol at a call site — its rounding stays local to that page, as `analytics/sessions-listing` requires. A **duration** cell SHALL NOT be formatted: it SHALL render the value as returned, which is the rendering an unclassified cell gets, so the figure stays in the unit its header declares. In particular a returned zero SHALL render as `0` rather than as an empty cell — in a result grid a zero is a value the query returned — and no duration formatter SHALL be introduced at this call site while the header states the unit. A **date-time** cell SHALL render through the app's shared date-time column configuration rather than by calling the date formatter by hand, so the column carries the same formatted value, tooltip and typed filter every other date-time column in the app carries.
+A **compact** cell SHALL render through the app's shared compact formatter, the same one the platform models grid's Parameters column uses, so a multi-billion count reads as a unit-suffixed figure. A **significant-digit** cell SHALL render at two significant digits below one, at most two decimals from one up to a thousand, and compact from a thousand up, so a sub-unit value survives instead of rounding to zero while a value of a few units is not rounded to its leading digit. That formatter SHALL be currency-agnostic and SHALL live beside the app's other number formatters; the sessions log's cost formatter SHALL NOT be reused for it, re-parameterised, or stripped of its currency symbol at a call site — its rounding stays local to that page, as `analytics/sessions-listing` requires. A **duration** cell SHALL NOT be formatted: it SHALL render the value as returned, which is the rendering an unclassified cell gets, so the figure stays in the unit its header declares. In particular a returned zero SHALL render as `0` rather than as an empty cell — in a result grid a zero is a value the query returned — and no duration formatter SHALL be introduced at this call site while the header states the unit. A **date-time** cell SHALL render through the app's shared date-time column configuration rather than by calling the date formatter by hand, so the column carries the same formatted value, tooltip and typed filter every other date-time column in the app carries.
 
 A value a resolved numeric class cannot read as a number SHALL fall back to today's rendering rather than to an empty cell, so no value a run returned is ever hidden by a formatter.
+
+A cell no value class formats — an unclassified column, a duration column, or any column of a run whose classes are withheld — SHALL still show a fractional JSON number at most two decimals after the point, with its tooltip carrying the value as returned. An integer, a numeric string and every non-number SHALL render as returned, so the ids, raw epochs and numeric-looking codes the classes stay away from are untouched by this default.
 
 On a cell whose text is a rounded or compacted rendering the tooltip SHALL carry the value as returned: every digit the app's shared number formatting can represent, which is double precision, thousand-delimited where the value is whole and unmodified where it is fractional. It SHALL NOT repeat the shortened text: a shortened value with no way to reach the full one is unreadable, per `.claude/rules/a11y.md`. A date-time cell keeps the shared date-time configuration's own tooltip. A duration cell shortens nothing, so it needs no such tooltip and SHALL keep the result grid's own.
 
@@ -242,7 +244,13 @@ A formatted numeric column SHALL right-align its cells and its header and SHALL 
 #### Scenario: A decimal of a few units keeps its leading digits
 
 - **WHEN** a `Decimal` column returns 19.74
-- **THEN** the cell shows "19.7" rather than "20"
+- **THEN** the cell shows "19.74" rather than "20"
+
+#### Scenario: A fractional number with no value class reads at two decimals
+
+- **WHEN** a SQL run the backend could not translate returns 33.9819063 as a JSON number
+- **THEN** the cell shows "33.98" and its tooltip shows "33.9819063"
+- **AND** an integer or a numeric string in the same run renders as returned
 
 #### Scenario: The compact threshold is exact
 

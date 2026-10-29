@@ -84,8 +84,12 @@ describe('getValueClassColumn — Significant', () => {
     expect(format(col, 0)).toBe('0');
   });
 
-  test('compacts a value at or above one unit', () => {
-    expect(format(col, '19.74')).toBe('19.7');
+  test('rounds a value of a few units to two decimals', () => {
+    expect(format(col, '33.9819063')).toBe('33.98');
+  });
+
+  test('compacts a value at or above one thousand', () => {
+    expect(format(col, '1234.5')).toBe('1.2 K');
   });
 
   test('puts a fractional value in the tooltip verbatim, without rounding it to two decimals', () => {
