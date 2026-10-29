@@ -2,7 +2,8 @@
 
 import { FC, useMemo } from 'react';
 
-import { DiffEditor, Monaco } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
+import DiffEditor from '@/src/components/Common/MonacoEditor/DiffEditor';
 import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';

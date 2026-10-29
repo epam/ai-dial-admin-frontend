@@ -1,6 +1,7 @@
 'use client';
 
-import { Editor, Monaco } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
+import Editor from '@/src/components/Common/MonacoEditor/Editor';
 import { FC, useCallback, useMemo } from 'react';
 
 import { editorOptions, getReadOnlyEditorTheme, readOnlySchemaThemeId } from '@/src/constants/editor';

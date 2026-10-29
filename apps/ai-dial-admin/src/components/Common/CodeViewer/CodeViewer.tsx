@@ -3,7 +3,7 @@
 import { FC, MouseEvent, useCallback, useId, useMemo, useState } from 'react';
 
 import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
-import { Editor } from '@monaco-editor/react';
+import Editor from '@/src/components/Common/MonacoEditor/Editor';
 import { IconChevronRight, IconMaximize } from '@tabler/icons-react';
 import classNames from 'classnames';
 

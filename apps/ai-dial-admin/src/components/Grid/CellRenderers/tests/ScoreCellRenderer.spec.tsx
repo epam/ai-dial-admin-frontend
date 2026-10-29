@@ -184,4 +184,12 @@ describe('ScoreCellRenderer — heat map layout width', () => {
 
     expect(screen.queryByText('0.500')).not.toBeInTheDocument();
   });
+
+  test('right-aligns the text inside its full-width wrapper, for a score and for a dash', () => {
+    renderCell({ value: 0.5 });
+    expect(screen.getByText('0.500')).toHaveClass('text-right');
+
+    renderCell({ value: null });
+    expect(screen.getByText('—')).toHaveClass('text-right');
+  });
 });

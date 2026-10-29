@@ -132,6 +132,55 @@ describe('Assets Toolset :: server actions', () => {
     },
   );
 
+  test('creates a public toolset with a 255-character combined name and version', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const name = 'a'.repeat(100);
+    const version = 'b'.repeat(153);
+    const result = await createToolset(toolsetResource({ name, version }));
+    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      `public/${name}__${version}`,
+      expect.objectContaining({ display_version: version }),
+    );
+  });
+
+  test.each([154, 160])('rejects an oversized combined toolset identity with version length %s', async (length) => {
+    const result = await createToolset(toolsetResource({ name: 'a'.repeat(100), version: 'b'.repeat(length) }));
+    expect(result).toEqual({
+      success: false,
+      errorHeader: ErrorI18nKey.ValidationError,
+      errorMessage: ErrorI18nKey.AssetNameVersionTooLong,
+    });
+    expect(assetApi.put).not.toHaveBeenCalled();
+  });
+
+  test('keeps platform toolset creation unversioned at the name length limit', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const name = 'a'.repeat(255);
+    const result = await createToolset(
+      toolsetResource({ name, folderId: 'platform/', version: '', _metadata: undefined }),
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, `platform/${name}`, expect.anything());
+  });
+
+  test('preserves oversized legacy toolset identity during ordinary updates', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const name = 'a'.repeat(100);
+    const version = 'b'.repeat(160);
+    const path = `public/${name}__${version}`;
+    const result = await updateToolset(
+      { ...assetToolset({ name, version }), _metadata: { name, version, path, folderId: 'public/' } },
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, path, expect.anything(), {
+      etag: 'etag',
+    });
+  });
+
   test('ordinary updates preserve independent display version and original metadata identity', async () => {
     vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
     await updateToolset(

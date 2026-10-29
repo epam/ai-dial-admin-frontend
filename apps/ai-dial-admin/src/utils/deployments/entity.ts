@@ -212,6 +212,9 @@ const getChatInterfaces = (): Record<string, DialResourceInterface> => ({
   [DeploymentInterfaceType.OpenAIChatCompletions]: {} as DialResourceInterface,
 });
 
+// A Core asset toolset carries the transport upper-cased, unlike the admin-backend entity.
+const toAssetTransport = (transport: ToolsetTransport) => transport.toUpperCase() as ToolsetTransport;
+
 /**
  * Pre-fills the Core asset a running container becomes. With `baseUrl` + an interface Core calls
  * `<url>/openai/deployments/<name>/chat/completions` — the path adapter and SDK containers serve —
@@ -231,7 +234,12 @@ export const getAssetTemplate = (
   const withPath = (path: string) => (url ? `${url}${path}` : undefined);
 
   if (route === ApplicationRoute.McpContainers) {
-    return { name, displayName, endpoint: url, transport: transport ? ENTITY_TRANSPORT[transport] : undefined };
+    return {
+      name,
+      displayName,
+      endpoint: url,
+      transport: transport ? toAssetTransport(ENTITY_TRANSPORT[transport]) : undefined,
+    };
   }
 
   if (route === ApplicationRoute.InterceptorContainers) {
@@ -244,7 +252,12 @@ export const getAssetTemplate = (
 
   if (route === ApplicationRoute.ModelServings) {
     if (isClassificationServing(route, container)) {
-      return { name, displayName, endpoint: withPath(SERVING_MCP_ENDPOINT_PATH), transport: ToolsetTransport.HTTP };
+      return {
+        name,
+        displayName,
+        endpoint: withPath(SERVING_MCP_ENDPOINT_PATH),
+        transport: toAssetTransport(ToolsetTransport.HTTP),
+      };
     }
 
     return {

@@ -38,7 +38,7 @@ const LEGACY_TRIGGER_CLASS =
  * surface only ever shows through at the corners. The 2.0 look replaces that container's own
  * classes, which is why each one is forced.
  */
-const MODERN_LIST_CLASS = '!rounded-xl p-1 !shadow-md ![background-color:var(--bg-layer-raised)]';
+const MODERN_LIST_CLASS = '!rounded-xl p-1 !shadow-md ![background-color:var(--bg-layer-raised, #fcfcfc)]';
 const LEGACY_OVERLAY_CLASS = 'rounded border border-secondary bg-layer-0 shadow-lg';
 
 /** Mirrors `overlayItemClassName`, the row every 2.0 `MenuItem` — and so every `Select` option — is. */

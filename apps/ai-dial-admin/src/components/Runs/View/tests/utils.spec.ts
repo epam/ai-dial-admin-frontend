@@ -205,6 +205,22 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(firstLeafOf('INPUT BINDINGS').headerComponentParams).toEqual({ innerHeaderComponent: EllipsisHeader });
   });
 
+  test('Should render every named group and fixed leaf header through the ellipsis components', () => {
+    const columns = getAnalyticsColumns([
+      { metricValues: { Accuracy: { accuracy: 0.95 } }, testCaseData: { prompt: 'hello' }, extractedColumns: { a: 1 } },
+    ] as any) as any[];
+    const leaves = columns.flatMap((column) => column.children ?? [column]);
+
+    for (const group of columns.filter((column) => column.headerName?.trim())) {
+      expect(group.headerGroupComponent).toBe(EllipsisHeaderGroup);
+    }
+    for (const colId of ['testCaseName', 'totalRequests', 'totalTurns', 'http', 'duration']) {
+      const leaf = leaves.find((column) => column.colId === colId);
+      expect(leaf.headerComponent).toBeUndefined();
+      expect(leaf.headerComponentParams.innerHeaderComponent).toBe(EllipsisHeader);
+    }
+  });
+
   test('Should merge extracted column keys from all rows, so a request chain shows every column', () => {
     const results = [
       { requestIndex: 0, extractedColumns: { answer: 'Hello!' } },

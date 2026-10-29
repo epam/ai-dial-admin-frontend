@@ -72,8 +72,9 @@ export interface Run {
   totalCost?: number;
   /**
    * Client-only, never sent by the backend: when the runs grid first saw this settled run without a
-   * cost. The cost wait window opens here rather than at `completedAt`, so a run that finished long
-   * ago and still has no cost gets a fresh wait on each load, like the Summary cost cards.
+   * cost. The cost wait window opens here rather than at `completedAt`, so a run that finished a
+   * while ago and still has no cost gets a fresh wait on each load, like the Summary cost cards.
+   * Runs past `COST_AGGREGATION_STALE_AFTER_MS` get no wait at all.
    */
   costWaitStartedAt?: number;
   grafanaExploreUrl?: string;

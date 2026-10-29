@@ -210,6 +210,17 @@ vi.mock('@monaco-editor/react', () => {
   };
 });
 
+// The app's wrappers load the bundled Monaco before mounting the library editor, which jsdom cannot run; they get
+// the library stubs above, so a spec sees the same editor through either import. Their own specs unmock them.
+vi.mock('@/src/components/Common/MonacoEditor/Editor', async () => ({
+  __esModule: true,
+  default: (await import('@monaco-editor/react')).Editor,
+}));
+vi.mock('@/src/components/Common/MonacoEditor/DiffEditor', async () => ({
+  __esModule: true,
+  default: (await import('@monaco-editor/react')).DiffEditor,
+}));
+
 // ------------------ Global console ------------------
 const originalConsole = console;
 global.console = {

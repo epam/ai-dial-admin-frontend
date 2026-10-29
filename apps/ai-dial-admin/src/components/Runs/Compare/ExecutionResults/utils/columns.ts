@@ -26,6 +26,7 @@ import {
   TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnsCompareOptions } from '@/src/components/Runs/Compare/ExecutionResults/models';
+import { ELLIPSIS_HEADER_PARAMS, RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS } from '@/src/components/Runs/grid-column-layout';
 import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
 import {
   getCompareRowResult,
@@ -196,6 +197,7 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
   colId: `delta_${groupKey}_${key}`,
   field: `delta_${groupKey}_${key}`,
   headerName: deltaHeader,
+  headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
   ...COMPACT_NUMBER_FILTER_COL_DEF,
   ...compareScoreColDef,
   ...rightAlignedColumn,
@@ -315,6 +317,7 @@ const getComparedExecutionColumns = (
   hideHighlights?: boolean,
 ): ColGroupDef => ({
   headerName: EXECUTION_GROUP_HEADER,
+  headerGroupComponent: EllipsisHeaderGroup,
   children: hideUniformColumns(
     [
       ...buildRunColumns(runs, hideHighlights, (context) =>
@@ -368,6 +371,7 @@ const getComparedExtractedGroupColumn = (
 
   return {
     headerName: EXTRACTED_GROUP_HEADER,
+    headerGroupComponent: EllipsisHeaderGroup,
     children: keys.map((key) => ({
       headerName: key,
       headerGroupComponent: EllipsisHeaderGroup,
@@ -394,6 +398,7 @@ export const getCompareColumnsCompare = (
     {
       field: 'testCaseName',
       headerName: 'Test Case name',
+      headerComponentParams: ELLIPSIS_HEADER_PARAMS,
       colId: 'testCaseName',
       ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
       ...TEXT_FILTER_COL_DEF,
