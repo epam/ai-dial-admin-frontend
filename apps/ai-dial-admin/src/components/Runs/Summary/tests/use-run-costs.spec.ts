@@ -150,6 +150,30 @@ describe('useRunCosts', () => {
     });
   });
 
+  test('reads once and settles on a figureless payload when told not to poll', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const empty = { avgTestCaseCost: null, avgMetricEvalCost: null };
+    getRunCostsMock.mockResolvedValue(empty);
+
+    const { result } = renderHook(() => useRunCosts('run-1', true, false));
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(result.current.costs).toEqual(empty);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS * 5);
+    });
+    expect(getRunCostsMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('still returns a real figure when told not to poll', async () => {
+    getRunCostsMock.mockResolvedValue({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
+
+    const { result } = renderHook(() => useRunCosts('run-1', true, false));
+
+    await waitFor(() => expect(result.current.costs).toEqual({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 }));
+  });
+
   test('settles once a retry finally returns figures', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const payload = { avgTestCaseCost: 0.3, avgMetricEvalCost: null };

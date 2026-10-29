@@ -29,8 +29,6 @@ export const compareScoreColDef: Pick<ColDef, 'width' | 'minWidth' | 'flex' | 's
   suppressSizeToFit: true,
 };
 
-export const COMPARE_GROUP_HEADER_HEIGHT = 28;
-
 export const EXECUTION_GROUP_HEADER = 'Execution';
 export const EXECUTION_STATUS_GROUP_HEADER = 'Execution status';
 export const EXTRACTED_GROUP_HEADER = 'Extracted';
@@ -44,7 +42,6 @@ export const compareMissingValueCellClassRules = {
 };
 
 export const compareGridOptions = {
-  groupHeaderHeight: COMPARE_GROUP_HEADER_HEIGHT,
   hidePaddedHeaderRows: true,
   defaultColDef: {
     cellClassRules: compareMissingValueCellClassRules,

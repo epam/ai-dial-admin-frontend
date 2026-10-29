@@ -122,6 +122,23 @@ vi.mock('@/src/context/assets/SkillFolderContext', () => {
 });
 
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: vi.fn(() => ({ currentTheme: 'dark' })) }));
+// Units start out empty and idle, so every page behaves as it does with org units switched off. A spec that needs
+// units overrides `useOrgUnits` with `vi.mocked(useOrgUnits).mockReturnValue(...)`.
+vi.mock('@/src/context/OrgUnitsContext', () => {
+  const noUnits = {
+    units: {},
+    unitsStatus: 'idle',
+    groupClaim: 'groups',
+    ensureUnits: vi.fn(),
+    refreshUnits: vi.fn(async () => undefined),
+    getOwningUnit: vi.fn(() => undefined),
+  };
+  return {
+    useOrgUnits: vi.fn(() => noUnits),
+    OrgUnitsProvider: ({ children }: any) => <div>{children}</div>,
+  };
+});
+
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
 
@@ -209,6 +226,17 @@ vi.mock('@monaco-editor/react', () => {
     default: Editor,
   };
 });
+
+// The app's wrappers load the bundled Monaco before mounting the library editor, which jsdom cannot run; they get
+// the library stubs above, so a spec sees the same editor through either import. Their own specs unmock them.
+vi.mock('@/src/components/Common/MonacoEditor/Editor', async () => ({
+  __esModule: true,
+  default: (await import('@monaco-editor/react')).Editor,
+}));
+vi.mock('@/src/components/Common/MonacoEditor/DiffEditor', async () => ({
+  __esModule: true,
+  default: (await import('@monaco-editor/react')).DiffEditor,
+}));
 
 // ------------------ Global console ------------------
 const originalConsole = console;

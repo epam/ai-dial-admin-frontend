@@ -1,5 +1,6 @@
 import { ColDef, ITooltipParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 
+import { ResultGridRow } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import { RESULT_PREVIEW_CHARS, RESULT_TOOLTIP_MAX_CHARS } from '@/src/constants/analytics/query-builder';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 
@@ -35,7 +36,7 @@ export const getResultColumns = (
     // `field` alone makes ag-grid read a dotted column name (e.g. an enrichment's "table.column"
     // projection) as a nested-property path; the API always returns a flat row object keyed by the
     // literal column name, so resolve it directly — a `valueGetter` takes priority over `field`.
-    valueGetter: (params: ValueGetterParams) => (params.data as Record<string, unknown> | undefined)?.[col],
+    valueGetter: (params: ValueGetterParams<ResultGridRow>) => params.data?.values[col],
     valueFormatter: (params: ValueFormatterParams) => renderCell(params.value),
     // The shared grid's default getter reads the raw value and its renderer drops anything that is not
     // a string, so an object cell had no tooltip at all.

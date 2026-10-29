@@ -4,6 +4,8 @@ import { Input, Label, NumberInput, Select, Tooltip } from '@epam/ai-dial-ui-kit
 import { FC } from 'react';
 
 import FileSelectInput from '@/src/components/Common/FileSelectInput/FileSelectInput';
+import EntitySelectInput from '@/src/components/Common/EntitySelectInput/EntitySelectInput';
+import { EntitySelectType } from '@/src/components/Common/EntitySelectInput/models';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import AttributeSelect from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSelect';
@@ -109,6 +111,13 @@ const VariableRow: FC<Props> = ({
           onChangeValue={(v) => onChangeValue(row, v)}
           id={testSuiteId}
           view={ApplicationRoute.TestSuites}
+        />
+      ) : row.effectiveType === TestCaseItemType.SKILL ? (
+        <EntitySelectInput
+          entityType={EntitySelectType.Skill}
+          disabled={readonly}
+          value={strValue}
+          onChangeValue={(v) => onChangeValue(row, v)}
         />
       ) : (
         <Input disabled={readonly} value={strValue} onChange={(v) => onChangeValue(row, v ?? '')} />

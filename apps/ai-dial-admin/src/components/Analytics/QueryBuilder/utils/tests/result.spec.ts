@@ -72,7 +72,7 @@ describe('getResultColumns', () => {
     const dottedCol = getResultColumns(result).find((c) => c.field === 'test.test');
 
     const value = valueGetterOf(dottedCol)({
-      data: { event_id: '1', 'test.test': 'test_value' },
+      data: { index: 0, values: { event_id: '1', 'test.test': 'test_value' } },
     } as ValueGetterParams);
 
     expect(value).toBe('test_value');

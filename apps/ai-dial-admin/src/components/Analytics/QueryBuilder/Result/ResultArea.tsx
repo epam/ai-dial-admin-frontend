@@ -2,12 +2,13 @@
 
 import { FC, useId, useMemo } from 'react';
 
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GetRowIdParams } from 'ag-grid-community';
 import { Spinner, NoDataContent, SegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { ResultGridRow } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
 import { getValueClassColumn } from '@/src/components/Analytics/QueryBuilder/Result/result-column-format';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
@@ -39,6 +40,8 @@ interface Props {
   onExportCsv?: () => void;
 }
 
+const getRowId = ({ data }: GetRowIdParams<ResultGridRow>): string => String(data.index);
+
 const ResultArea: FC<Props> = ({
   result,
   meta,
@@ -63,7 +66,8 @@ const ResultArea: FC<Props> = ({
       })),
     [result, meta?.columnLabels, meta?.columnValueClasses],
   );
-  const rows = result?.rows ?? [];
+  const rows = useMemo(() => result?.rows ?? [], [result]);
+  const gridRows = useMemo(() => rows.map((values, index): ResultGridRow => ({ index, values })), [rows]);
   const total = getResultTotal(result);
 
   const chartAvailable =
@@ -146,7 +150,7 @@ const ResultArea: FC<Props> = ({
           <NoDataContent title={t(QueryBuilderI18nKey.NoRows)} />
         ) : (
           <div className="min-h-0 flex-1">
-            <GridView columnDefs={columns as ColDef[]} rowData={rows} />
+            <GridView columnDefs={columns as ColDef[]} rowData={gridRows} getRowId={getRowId} isLiveData />
           </div>
         )}
       </div>

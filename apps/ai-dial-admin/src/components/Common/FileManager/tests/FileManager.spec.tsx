@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import type { ColDef } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
 import FileManager from '../FileManager';
 import { SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX } from '../constants';
+import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -291,5 +292,100 @@ describe('FileManager — reset filters', () => {
 
     expect(api.setFilterModel).toHaveBeenCalledWith(null);
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.ResetFilters })).toBeNull();
+  });
+});
+
+describe('FileManager — org units', () => {
+  const lastTreeOptions = () =>
+    (dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as { treeOptions: { getItemIcon: (file: unknown) => unknown } })
+      .treeOptions;
+
+  const withUnits = (units: Record<string, unknown>) =>
+    vi.mocked(useOrgUnits).mockReturnValue({
+      units,
+      unitsStatus: 'ready',
+      groupClaim: 'groups',
+      ensureUnits: vi.fn(),
+      refreshUnits: vi.fn(),
+      getOwningUnit: vi.fn(),
+    } as unknown as ReturnType<typeof useOrgUnits>);
+
+  beforeEach(() => {
+    dialFileManagerPropsSpy.mockClear();
+    withUnits({});
+  });
+
+  test('asks for units on mount', () => {
+    renderFileManager();
+
+    expect(useOrgUnits().ensureUnits).toHaveBeenCalled();
+  });
+
+  test('gives only a unit folder a tree icon', () => {
+    withUnits({ 'public/Acme/': { id: 'u1' } });
+    renderFileManager();
+
+    const { getItemIcon } = lastTreeOptions();
+
+    expect(getItemIcon({ nodeType: 'folder', path: 'public/Acme/' })).toBeTruthy();
+    expect(getItemIcon({ nodeType: 'folder', path: 'public/Other/' })).toBeUndefined();
+    expect(getItemIcon({ nodeType: 'item', path: 'public/Acme/' })).toBeUndefined();
+  });
+
+  test('gives no tree icon when there are no units', () => {
+    renderFileManager();
+
+    expect(lastTreeOptions().getItemIcon({ nodeType: 'folder', path: 'public/Acme/' })).toBeUndefined();
+  });
+
+  const lastProps = () => dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, any>;
+
+  test('gives the grid the same unit icon as the tree', () => {
+    withUnits({ 'public/Acme/': { id: 'u1' } });
+    renderFileManager();
+
+    const { getItemIcon } = lastProps().gridOptions;
+
+    expect(getItemIcon({ nodeType: 'folder', path: 'public/Acme/' })).toBeTruthy();
+    expect(getItemIcon({ nodeType: 'folder', path: 'public/Other/' })).toBeUndefined();
+  });
+
+  describe('getItemActionRestriction', () => {
+    const restriction = (file: object, action: string) => lastProps().getItemActionRestriction(file, action);
+    const folder = (path: string) => ({ nodeType: 'folder', path });
+
+    beforeEach(() => {
+      withUnits({ 'public/Acme/Risk/': { id: 'u1' } });
+      renderFileManager();
+    });
+
+    test.each(['move', 'rename', 'delete'])('blocks %s on a unit folder with the unit reason', (action) => {
+      expect(restriction(folder('public/Acme/Risk/'), action)).toBe(FoldersI18nKey.UnitFolderRestriction);
+    });
+
+    test.each(['move', 'rename', 'delete'])('blocks %s on a folder containing a unit', (action) => {
+      expect(restriction(folder('public/Acme/'), action)).toBe(FoldersI18nKey.ContainsUnitRestriction);
+    });
+
+    test('leaves other actions available', () => {
+      expect(restriction(folder('public/Acme/Risk/'), 'copy')).toBeUndefined();
+      expect(restriction(folder('public/Acme/Risk/'), 'download')).toBeUndefined();
+    });
+
+    test('leaves a folder inside a unit that contains no unit available', () => {
+      expect(restriction(folder('public/Acme/Risk/docs/'), 'delete')).toBeUndefined();
+    });
+
+    test('leaves files available', () => {
+      expect(restriction({ nodeType: 'item', path: 'public/Acme/Risk/' }, 'delete')).toBeUndefined();
+    });
+  });
+
+  test('restricts nothing when there are no units', () => {
+    renderFileManager();
+
+    expect(
+      lastProps().getItemActionRestriction({ nodeType: 'folder', path: 'public/Acme/' }, 'delete'),
+    ).toBeUndefined();
   });
 });

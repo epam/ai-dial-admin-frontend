@@ -1,6 +1,6 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
-import { MAX_ASSET_PATH_BYTES } from '@/src/constants/validation';
+import { MAX_ASSET_NAME_VERSION_SYMBOLS, MAX_ASSET_PATH_BYTES } from '@/src/constants/validation';
 import { FieldError, Translate } from '@/src/models/error';
 import { getVersionedName } from '@/src/server/publications/path';
 import { ErrorType } from '@/src/types/error-type';
@@ -34,7 +34,8 @@ export const getAssetDestinationError = (
   const versionError = getAssetVersionError(version, t);
   if (versionError) return versionError;
 
-  const path = `${addTrailingSlash(folderId)}${getVersionedName(name, version)}`;
+  const versionedName = getVersionedName(name, version);
+  const path = `${addTrailingSlash(folderId)}${versionedName}`;
   const segments = path.split('/');
   if (segments.some((segment) => !segment || hasForbiddenPathCharacters(segment) || segment.endsWith('.'))) {
     return { type: ErrorType.INVALID, text: t(ErrorI18nKey.InvalidAssetPath) };
@@ -42,6 +43,13 @@ export const getAssetDestinationError = (
   // Core limits the entire decoded storage path, including the type and bucket, in UTF-8 bytes.
   if (new Blob([`${RESOURCE_TYPE_PREFIX[resourceType]}${path}`]).size > MAX_ASSET_PATH_BYTES) {
     return { type: ErrorType.LENGTH, text: t(ErrorI18nKey.AssetPathTooLong, { max: MAX_ASSET_PATH_BYTES }) };
+  }
+  // Keep the storage-path error first when both byte and character limits are exceeded.
+  if (versionedName.length > MAX_ASSET_NAME_VERSION_SYMBOLS) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t(ErrorI18nKey.AssetNameVersionTooLong, { max: MAX_ASSET_NAME_VERSION_SYMBOLS }),
+    };
   }
   if (existingPaths?.includes(path)) {
     return { type: ErrorType.EXISTING, text: t(ErrorI18nKey.NameVersionCombination) };

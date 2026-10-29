@@ -289,7 +289,6 @@ const ExecutionResultsTab: FC<Props> = ({
   const gridOptions = useMemo(
     () => ({
       ...compareGridOptions,
-      rowHeight: 40,
       rowClassRules,
       onCellClicked,
       onRowClicked,

@@ -3,14 +3,17 @@ import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { DialFile as FileManagerFile, DialFoldersTree } from '@epam/ai-dial-react-file-manager';
 import { Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
+import UnitFolderIcon from '@/src/components/Common/UnitFolderIcon/UnitFolderIcon';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { isFileRootPath } from '@/src/utils/files/root-folder';
+import { isUnitFolder } from '@/src/utils/org-units/units';
 
 interface Props {
   disableAutoFetch?: boolean;
@@ -102,6 +105,13 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
     : !!assetsContext?.isFetchingFiles;
   const showNoFolders = !isFetching && !folderData?.length;
 
+  const { units } = useOrgUnits();
+  const hasUnits = Object.keys(units).length > 0;
+  const getItemIcon = useCallback(
+    (node: FileManagerFile) => (isUnitFolder(units, node.path) ? <UnitFolderIcon /> : undefined),
+    [units],
+  );
+
   return (
     <div className="flex-1 size-full overflow-y-auto">
       {isFetching ? (
@@ -119,6 +129,7 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
           loadedPaths={loadedPaths}
           areHiddenFilesVisible
           ariaLabel={t(FoldersI18nKey.Folders)}
+          getItemIcon={hasUnits ? getItemIcon : undefined}
           onItemClick={(node) => onToggleFolder(node as unknown as Asset)}
           onExpandedPathsChange={IGNORE_TREE_EXPANSION_CHANGE}
         />

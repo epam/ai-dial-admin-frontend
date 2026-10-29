@@ -1,12 +1,13 @@
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { FILE_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import FolderList from './FolderList';
 
 // `Asset` (the shape every real caller's context actually holds) doesn't structurally satisfy
@@ -178,5 +179,55 @@ describe('FolderList tree', () => {
 
     expect(screen.getByRole('treeitem', { name: 'apps' }).querySelector('svg')).not.toHaveClass('text-transparent');
     expect(screen.getByRole('treeitem', { name: '.hidden' }).querySelector('svg')).toHaveClass('text-transparent');
+  });
+
+  const UNIT_ICON = '.tabler-icon-sitemap';
+  const mockUnits = (units: Record<string, unknown>) =>
+    vi.mocked(useOrgUnits).mockReturnValue({
+      units,
+      unitsStatus: 'ready',
+      groupClaim: 'groups',
+      ensureUnits: vi.fn(),
+      refreshUnits: vi.fn(),
+      getOwningUnit: vi.fn(),
+    } as unknown as ReturnType<typeof useOrgUnits>);
+
+  afterEach(() => {
+    mockUnits({});
+  });
+
+  test('marks only the row whose folder is a unit', () => {
+    mockUnits({ 'public/apps/': { id: 'u1', name: 'apps', displayName: 'apps' } });
+    const { context } = treeContext();
+    render(<FolderList context={() => context} />);
+
+    expect(screen.getByRole('treeitem', { name: 'apps' }).querySelector(UNIT_ICON)).not.toBeNull();
+    expect(screen.getByRole('treeitem', { name: '.hidden' }).querySelector(UNIT_ICON)).toBeNull();
+  });
+
+  test('marks unit rows in a content-page context too', () => {
+    mockUnits({ 'public/.hidden/': { id: 'u2', name: '.hidden', displayName: '.hidden' } });
+    const { context } = treeContext();
+    render(<FolderList context={() => context} />);
+
+    expect(screen.getByRole('treeitem', { name: '.hidden' }).querySelector(UNIT_ICON)).not.toBeNull();
+  });
+
+  test('hides the unit marker from assistive technology', () => {
+    mockUnits({ 'public/apps/': { id: 'u1', name: 'apps', displayName: 'apps' } });
+    const { context } = treeContext();
+    render(<FolderList context={() => context} />);
+
+    expect(screen.getByRole('treeitem', { name: 'apps' }).querySelector(UNIT_ICON)).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+  });
+
+  test('shows no marker when there are no units', () => {
+    const { context } = treeContext();
+    render(<FolderList context={() => context} />);
+
+    expect(document.querySelector(UNIT_ICON)).toBeNull();
   });
 });

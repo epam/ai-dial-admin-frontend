@@ -89,6 +89,11 @@ SHALL commit the draft to the suite via the tab's `onChange`; Cancel SHALL disca
 - **WHEN** the Metrics tab has loaded and the suite has zero bound metrics
 - **THEN** neither the Overall Score card nor the Edit modal entry point is rendered
 
+#### Scenario: Deleting the final metric does not create an unsaved suite change
+- **WHEN** a user deletes the final bound metric
+- **THEN** the metric deletion is reflected immediately, and the deletion alone does not create a
+  pending suite edit that exposes Save and Discard controls
+
 ### Requirement: Persist nested Test Case Score as `testCaseOverallScore`
 When the user Applies Overall Score as Specific function (`custom_function`), the system SHALL
 persist a nested Test Case Score on the suite as `testCaseOverallScore` with type `mean` or
@@ -110,4 +115,3 @@ falls back to `overallScore`.
 - **WHEN** Specific function is selected and nested Test Case Score is missing or Weighted mean has
   no valid weight rows
 - **THEN** Apply is disabled
-
