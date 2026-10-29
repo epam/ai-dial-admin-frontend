@@ -116,13 +116,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   if (owningUnit) {
     return (
       <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
-        <FolderInfoHeader
-          isChanged={false}
-          title={currentFolder.name as string}
-          onSave={onSave}
-          onDiscard={onDiscard}
-          isSaveDisable
-        />
+        <FolderInfoHeader isChanged={false} title={currentFolder.name as string} />
         <div className="flex flex-row flex-wrap items-center gap-3">
           <span className="dial-small-text">
             {t(FoldersI18nKey.InsideUnitNote, { unit: owningUnit.displayName || owningUnit.name })}

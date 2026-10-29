@@ -59,13 +59,13 @@ const RemoveUnitModal: FC<Props> = ({ unit, subUnits, onClose, onRemoved }) => {
       onClose={onClose}
     >
       <div className="flex flex-col gap-3">
-        <p>{t(FoldersI18nKey.RemoveUnitDescription, { unit: unit.displayName })}</p>
+        <p>{t(FoldersI18nKey.RemoveUnitDescription, { unit: unit.displayName || unit.name })}</p>
         {subUnits.length > 0 && (
           <div className="flex flex-col gap-1">
             <p>{t(FoldersI18nKey.RemoveUnitSubunits)}</p>
             <ul className="list-disc pl-6">
               {subUnits.map((subUnit) => (
-                <li key={subUnit.id}>{subUnit.displayName}</li>
+                <li key={subUnit.id}>{subUnit.displayName || subUnit.name}</li>
               ))}
             </ul>
           </div>

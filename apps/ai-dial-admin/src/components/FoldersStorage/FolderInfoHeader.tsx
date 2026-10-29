@@ -8,10 +8,10 @@ import ChangedEntityButtons from '../EntityHeaderControls/Buttons/ChangedEntityB
 
 interface Props {
   isChanged: boolean;
-  isSaveDisable: boolean;
+  isSaveDisable?: boolean;
   title: string;
-  onSave: () => void;
-  onDiscard: () => void;
+  onSave?: () => void;
+  onDiscard?: () => void;
 }
 
 const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, onSave, onDiscard }) => {

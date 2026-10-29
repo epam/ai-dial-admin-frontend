@@ -16,7 +16,7 @@ import { isValidDisplayName } from '@/src/utils/org-units/subjects';
 interface Props {
   unit: OrgUnit;
   onClose: () => void;
-  onRenamed: (unit: OrgUnit) => void;
+  onRenamed: () => void;
 }
 
 const RenameUnitModal: FC<Props> = ({ unit, onClose, onRenamed }) => {
@@ -32,7 +32,7 @@ const RenameUnitModal: FC<Props> = ({ unit, onClose, onRenamed }) => {
     try {
       const res = await renameOrgUnit(unit.path, displayName.trim());
       if (res.success) {
-        onRenamed(res.response as OrgUnit);
+        onRenamed();
         return;
       }
       showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

@@ -107,7 +107,7 @@ describe('RenameUnitModal', () => {
     await user.paste('Risk Department');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await vi.waitFor(() => expect(onRenamed).toHaveBeenCalledWith(renamed));
+    await vi.waitFor(() => expect(onRenamed).toHaveBeenCalledOnce());
     expect(renameOrgUnit).toHaveBeenCalledWith('public/Acme/Risk', 'Risk Department');
   });
 });
@@ -121,6 +121,20 @@ describe('RemoveUnitModal', () => {
     { ...unit, id: 's1', displayName: 'US Risk' },
     { ...unit, id: 's2', displayName: 'EU Risk' },
   ];
+
+  test('falls back to the unit name when there is no display name', () => {
+    render(
+      <RemoveUnitModal
+        unit={{ ...unit, displayName: '' }}
+        subUnits={[{ ...unit, id: 's3', name: 'EU', displayName: '' }]}
+        onClose={vi.fn()}
+        onRemoved={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(FoldersI18nKey.RemoveUnitDescription)).toBeTruthy();
+    expect(screen.getByText('EU')).toBeTruthy();
+  });
 
   test('lists the sub-units and sends one recursive delete', async () => {
     const user = userEvent.setup();
