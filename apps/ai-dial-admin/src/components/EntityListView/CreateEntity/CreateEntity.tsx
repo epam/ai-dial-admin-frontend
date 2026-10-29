@@ -178,7 +178,7 @@ const CreateEntity = <T extends CreateEntityBase>({
               getCreateNotificationDescription(route, entityLabel, t),
             ),
           );
-          // Skill has nothing for the shared route builder's Prompts/Files/AssetsApplications/
+          // Skill and Project have nothing for the shared route builder's Prompts/Files/AssetsApplications/
           // AssetsToolsets/Skills branch to build a path from otherwise — no version, so it would fall
           // back to a literal `__undefined` suffix. Scoped to this one route rather than "no version"
           // generically: AssetsModels/AssetsAppRunners already prefer an explicit path over their
@@ -190,7 +190,7 @@ const CreateEntity = <T extends CreateEntityBase>({
                 version: entity.version,
                 $id: entityId,
                 path:
-                  route === ApplicationRoute.Skills
+                  route === ApplicationRoute.Skills || route === ApplicationRoute.Projects
                     ? `${addTrailingSlash(entity.folderId)}${entity.name || ''}`
                     : undefined,
               }

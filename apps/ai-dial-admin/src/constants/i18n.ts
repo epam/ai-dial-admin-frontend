@@ -39,6 +39,7 @@ export enum MenuI18nKey {
   Prompts = 'Menu.Prompts',
   Files = 'Menu.Files',
   Skills = 'Menu.Skills',
+  Projects = 'Menu.Projects',
   Credentials = 'Menu.Credentials',
   Runs = 'Menu.Runs',
   TestSuites = 'Menu.TestSuites',
@@ -331,6 +332,7 @@ export enum DeleteI18nKey {
   Application = 'DeleteEntity.Entities.Application',
   Toolset = 'DeleteEntity.Entities.Toolset',
   Skill = 'DeleteEntity.Entities.Skill',
+  Project = 'DeleteEntity.Entities.Project',
   Route = 'DeleteEntity.Entities.Route',
   Interceptor = 'DeleteEntity.Entities.Interceptor',
   Translator = 'DeleteEntity.Entities.Translator',
@@ -492,6 +494,7 @@ export enum UpdateI18nKey {
   Application = 'UpdateEntity.Entities.Application',
   Toolset = 'UpdateEntity.Entities.Toolset',
   Skill = 'UpdateEntity.Entities.Skill',
+  Project = 'UpdateEntity.Entities.Project',
   Translator = 'UpdateEntity.Entities.Translator',
   Route = 'UpdateEntity.Entities.Route',
   Interceptor = 'UpdateEntity.Entities.Interceptor',
@@ -546,6 +549,7 @@ export enum CreateI18nKey {
   Dataset = 'CreateEntity.Entities.Dataset',
   Query = 'CreateEntity.Entities.Query',
   Skill = 'CreateEntity.Entities.Skill',
+  Project = 'CreateEntity.Entities.Project',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -916,6 +920,13 @@ export enum PublicationsI18nKey {
   SkillUnpublishDeclineModalTitle = 'Publications.Skill.UnpublishDeclineModalTitle',
   SkillPublishApproveDescription = 'Publications.Skill.PublishApproveDescription',
   SkillUnpublishApproveDescription = 'Publications.Skill.UnpublishApproveDescription',
+  // project publications
+  ProjectPublishApproveModalTitle = 'Publications.Project.PublishApproveModalTitle',
+  ProjectPublishDeclineModalTitle = 'Publications.Project.PublishDeclineModalTitle',
+  ProjectUnpublishApproveModalTitle = 'Publications.Project.UnpublishApproveModalTitle',
+  ProjectUnpublishDeclineModalTitle = 'Publications.Project.UnpublishDeclineModalTitle',
+  ProjectPublishApproveDescription = 'Publications.Project.PublishApproveDescription',
+  ProjectUnpublishApproveDescription = 'Publications.Project.UnpublishApproveDescription',
 
   // entities (for approval action notifications)
   ApplicationPublicationEntity = 'Publications.Entities.Application',
@@ -924,6 +935,7 @@ export enum PublicationsI18nKey {
   FilePublicationEntity = 'Publications.Entities.File',
   ConversationPublicationEntity = 'Publications.Entities.Conversation',
   SkillPublicationEntity = 'Publications.Entities.Skill',
+  ProjectPublicationEntity = 'Publications.Entities.Project',
 
   // resource types (Type column of the Approvals list)
   ApplicationType = 'Publications.Types.Application',
@@ -932,6 +944,7 @@ export enum PublicationsI18nKey {
   FileType = 'Publications.Types.File',
   ConversationType = 'Publications.Types.Conversation',
   SkillType = 'Publications.Types.Skill',
+  ProjectType = 'Publications.Types.Project',
 
   // approval action notifications
   NotificationDeleteTitle = 'Publications.Notification.DeleteTitle',
@@ -1278,6 +1291,7 @@ export enum ErrorI18nKey {
   LabelExists = 'Error.LabelExists',
   DisplayNameExists = 'Error.DisplayNameExists',
   SkillNameExists = 'Error.SkillNameExists',
+  ProjectNameExists = 'Error.ProjectNameExists',
   Unique = 'Error.Unique',
   Version = 'Error.Version',
   NameVersionCombination = 'Error.NameVersionCombination',
@@ -2511,6 +2525,8 @@ export enum FileManagerI18nKey {
   Toolset = 'FileManager.Toolset',
   Skills = 'FileManager.Skills',
   Skill = 'FileManager.Skill',
+  Projects = 'FileManager.Projects',
+  Project = 'FileManager.Project',
   Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
   Conversations = 'FileManager.Conversations',
@@ -2554,6 +2570,8 @@ export enum FileManagerI18nKey {
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
   SkillsEmptyStateTitle = 'FileManager.SkillsEmptyStateTitle',
   SkillsEmptyStateDescription = 'FileManager.SkillsEmptyStateDescription',
+  ProjectsEmptyStateTitle = 'FileManager.ProjectsEmptyStateTitle',
+  ProjectsEmptyStateDescription = 'FileManager.ProjectsEmptyStateDescription',
   ConversationsEmptyStateTitle = 'FileManager.ConversationsEmptyStateTitle',
   MovingItems = 'FileManager.MovingItems',
   MovingProgress = 'FileManager.MovingProgress',
@@ -4115,4 +4133,27 @@ export enum MonacoJsonErrorI18nKey {
   TooManyProperties = 'MonacoJsonError.TooManyProperties',
   TooFewProperties = 'MonacoJsonError.TooFewProperties',
   MissingDependentProperty = 'MonacoJsonError.MissingDependentProperty',
+}
+
+export enum ProjectI18nKey {
+  Instructions = 'Projects.Instructions',
+  InstructionsPlaceholder = 'Projects.InstructionsPlaceholder',
+  Context = 'Projects.Context',
+  CapacityMeterLabel = 'Projects.CapacityMeterLabel',
+  CapacityLabel = 'Projects.CapacityLabel',
+  AddFromDevice = 'Projects.AddFromDevice',
+  AddFromStorage = 'Projects.AddFromStorage',
+  SelectFiles = 'Projects.SelectFiles',
+  PickFilesError = 'Projects.PickFilesError',
+  DropZoneLabel = 'Projects.DropZoneLabel',
+  DropZoneHint = 'Projects.DropZoneHint',
+  RemoveFile = 'Projects.RemoveFile',
+  DownloadFile = 'Projects.DownloadFile',
+  FilesAddedStatus = 'Projects.FilesAddedStatus',
+  FileRemovedStatus = 'Projects.FileRemovedStatus',
+  RejectedExtension = 'Projects.RejectedExtension',
+  RejectedFileSize = 'Projects.RejectedFileSize',
+  RejectedTotalSize = 'Projects.RejectedTotalSize',
+  RejectedFileCount = 'Projects.RejectedFileCount',
+  RejectedDuplicate = 'Projects.RejectedDuplicate',
 }

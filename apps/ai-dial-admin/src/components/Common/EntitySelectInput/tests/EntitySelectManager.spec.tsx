@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { getGridOptions } from '@/src/components/Common/FileManager/utils';
 import EntitySelectManager from '../EntitySelectManager';
 import { EntitySelectType } from '../models';
 
@@ -38,6 +39,17 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => ({
       </button>
       <button onClick={() => handleSelectionClick([{ nodeType: 'folder', path: 'public/team/' }])}>click-folder</button>
       <button onClick={() => handleSelectionClick([])}>click-nothing</button>
+      <button
+        onClick={() =>
+          handleSelectionClick([
+            { nodeType: 'item', path: 'public/a.csv' },
+            { nodeType: 'folder', path: 'public/team/' },
+            { nodeType: 'item', path: 'public/team/b.pdf' },
+          ])
+        }
+      >
+        click-many
+      </button>
       <button onClick={() => onPathChange('public/team/')}>open-folder</button>
     </div>
   ),
@@ -82,6 +94,54 @@ describe('EntitySelectManager', () => {
     expect(onChangeSelectedPath).toHaveBeenNthCalledWith(1, null);
     expect(onChangeSelectedPath).toHaveBeenNthCalledWith(2, null);
     expect(onChangeSelectedPath).not.toHaveBeenCalledWith('public/team/');
+  });
+
+  test('asks the grid for single selection when only the single callback is given', () => {
+    renderManager();
+
+    expect(vi.mocked(getGridOptions).mock.calls.at(-1)?.[4]).toBe(true);
+  });
+
+  describe('multi-selection', () => {
+    const onChangeSelectedPaths = vi.fn();
+
+    const renderMulti = () => renderManager({ onChangeSelectedPath: undefined, onChangeSelectedPaths });
+
+    test('asks the grid for multiple selection', () => {
+      renderMulti();
+
+      expect(vi.mocked(getGridOptions).mock.calls.at(-1)?.[4]).toBe(false);
+    });
+
+    test('reports every selected entity and never a grouping folder', async () => {
+      const user = userEvent.setup();
+      renderMulti();
+
+      await user.click(screen.getByRole('button', { name: 'click-many' }));
+
+      expect(onChangeSelectedPaths).toHaveBeenCalledWith(['public/a.csv', 'public/team/b.pdf']);
+    });
+
+    test('reports an empty list for an empty selection or only folders', async () => {
+      const user = userEvent.setup();
+      renderMulti();
+
+      await user.click(screen.getByRole('button', { name: 'click-nothing' }));
+      await user.click(screen.getByRole('button', { name: 'click-folder' }));
+
+      expect(onChangeSelectedPaths).toHaveBeenNthCalledWith(1, []);
+      expect(onChangeSelectedPaths).toHaveBeenNthCalledWith(2, []);
+    });
+
+    test('does not use the single-selection callback', async () => {
+      const user = userEvent.setup();
+      renderManager({ onChangeSelectedPaths });
+
+      await user.click(screen.getByRole('button', { name: 'click-skill' }));
+
+      expect(onChangeSelectedPath).not.toHaveBeenCalled();
+      expect(onChangeSelectedPaths).toHaveBeenCalledWith(['public/team/my-skill']);
+    });
   });
 
   test('loads the public root when opened with no value and nothing loaded', () => {

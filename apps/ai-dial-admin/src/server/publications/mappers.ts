@@ -47,6 +47,7 @@ const CORE_RESOURCE_TYPE_TO_RESOURCE_TYPE: Record<CoreResourceType, PublishableR
   [CoreResourceType.TOOL_SET]: ResourceType.TOOLSET,
   [CoreResourceType.FILE]: ResourceType.FILE,
   [CoreResourceType.SKILL]: ResourceType.SKILL,
+  [CoreResourceType.PROJECT]: ResourceType.PROJECT,
 };
 
 /** Priority order used to resolve a publication's primary type (mirrors `PublicationResourceTypeResolver`). */
@@ -57,6 +58,7 @@ const RESOLUTION_ORDER: CoreResourceType[] = [
   CoreResourceType.TOOL_SET,
   CoreResourceType.FILE,
   CoreResourceType.SKILL,
+  CoreResourceType.PROJECT,
 ];
 
 const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<PublishableResourceType, CoreResourceType> = {
@@ -66,6 +68,7 @@ const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<PublishableResourceType, CoreR
   [ResourceType.TOOLSET]: CoreResourceType.TOOL_SET,
   [ResourceType.FILE]: CoreResourceType.FILE,
   [ResourceType.SKILL]: CoreResourceType.SKILL,
+  [ResourceType.PROJECT]: CoreResourceType.PROJECT,
 };
 
 export const resourceTypeToCore = (type: PublishableResourceType): CoreResourceType => {

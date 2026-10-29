@@ -1,11 +1,12 @@
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 
-/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, models, app runners, interceptors, roles, routes, project keys, prompts and conversations are versionless. */
+/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, projects, models, app runners, interceptors, roles, routes, project keys, prompts and conversations are versionless. */
 export type VersionedResourceType = Exclude<
   ResourceType,
   | ResourceType.FILE
   | ResourceType.SKILL
+  | ResourceType.PROJECT
   | ResourceType.MODEL
   | ResourceType.APP_TYPE_SCHEMA
   | ResourceType.CATALOG_SCHEMA
@@ -45,7 +46,7 @@ export const RESOURCE_CONTROLLER_TYPES: ReadonlySet<ResourceType> = new Set([
 
 /**
  * `v1/{prefix}` content endpoint per resource type (mirrors the backend's per-type Core clients).
- * `SKILL`'s entry is unreachable in practice: a skill has no `/v1/skills` JSON endpoint (Core
+ * `SKILL`'s and `PROJECT`'s entries are unreachable in practice: a skill (or project) has no `/v1/skills` JSON endpoint (Core
  * serves it via `/v2/skills`, multipart/ZIP) and is never enriched through `AssetApi` — publications
  * resolve it through the dedicated `SkillsCoreApi.getSkillMetadata` instead (see
  * `enrichSkillResource`). Present only so this `Record<ResourceType, string>` stays total.
@@ -57,6 +58,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.PROMPT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]}`,
   [ResourceType.FILE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
   [ResourceType.SKILL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
+  [ResourceType.PROJECT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT]}`,
   [ResourceType.MODEL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
   [ResourceType.CATALOG_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
@@ -67,7 +69,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
 };
 
-/** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s entry is unreachable — see `CORE_RESOURCE_URL`. */
+/** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s and `PROJECT`'s entries are unreachable — see `CORE_RESOURCE_URL`. */
 export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}`,
   [ResourceType.TOOLSET]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}`,
@@ -75,6 +77,7 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.PROMPT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]}`,
   [ResourceType.FILE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
   [ResourceType.SKILL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
+  [ResourceType.PROJECT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT]}`,
   [ResourceType.MODEL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
   [ResourceType.CATALOG_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,

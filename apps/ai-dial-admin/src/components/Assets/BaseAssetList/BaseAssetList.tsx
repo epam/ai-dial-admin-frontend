@@ -9,8 +9,14 @@ import {
 } from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { createProject, createProjectFolder } from '@/src/app/[lang]/projects/actions';
 import { createSkill, createSkillFolder } from '@/src/app/[lang]/skills/actions';
-import { changeFolder, removeFolder, removeSkillFolder } from '@/src/app/[lang]/folders-storage/actions';
+import {
+  changeFolder,
+  removeFolder,
+  removeProjectFolder,
+  removeSkillFolder,
+} from '@/src/app/[lang]/folders-storage/actions';
 import {
   getDeleteNotificationContent,
   getExportNotificationContent,
@@ -252,7 +258,9 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
       const createFolder =
         view === ApplicationRoute.Skills
           ? () => createSkillFolder(newPath.slice(0, -1))
-          : () => CreateAssetActionMap[view as CreateAssetRoute](getEmptyAsset(view, newPath) as AssetWithVersion);
+          : view === ApplicationRoute.Projects
+            ? () => createProjectFolder(newPath.slice(0, -1))
+            : () => CreateAssetActionMap[view as CreateAssetRoute](getEmptyAsset(view, newPath) as AssetWithVersion);
 
       return createFolder().then((res) => {
         // Without this the pending tree node just disappears on rejection, leaving no trace that the
@@ -283,9 +291,14 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
               const { name, description } = asset as unknown as { name?: string; description?: string };
               return createSkill(name || '', description || '', folderPath);
             }
-          : isPlatformDualBucketView(view, folderPath)
-            ? () => PlatformCreateAssetActionMap[view]!({ ...asset, folderId: folderPath })
-            : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
+          : view === ApplicationRoute.Projects
+            ? () => {
+                const { name, description } = asset as unknown as { name?: string; description?: string };
+                return createProject(name || '', description || '', folderPath);
+              }
+            : isPlatformDualBucketView(view, folderPath)
+              ? () => PlatformCreateAssetActionMap[view]!({ ...asset, folderId: folderPath })
+              : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
 
       return createAsset().then((res) => {
         if (res.success) {
@@ -540,7 +553,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
       const promises = [];
       if (assets.length > 0) {
-        // Only skills use the optional listing etag for bulk deletion.
+        // Only skills and projects use the optional listing etag for bulk deletion.
         const assetsPaths = assets.map((asset) => ({ path: asset.path, etag: asset.etag || DEFAULT_ETAG }));
         promises.push(bulkDeleteAsset(assetsPaths));
       }
@@ -555,6 +568,11 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         // own recursive, dedicated-endpoint delete instead (see `removeSkillFolderCore`).
         folders.forEach((folder) => {
           promises.push(removeSkillFolder(folder.path));
+        });
+      } else if (view === ApplicationRoute.Projects) {
+        // Same dedicated recursive delete as Skills, over the projects routes (`removeProjectFolderCore`).
+        folders.forEach((folder) => {
+          promises.push(removeProjectFolder(folder.path));
         });
       }
 

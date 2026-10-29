@@ -13,7 +13,8 @@ export type BaseAssetRoute =
   | ApplicationRoute.PlatformRoutes
   | ApplicationRoute.PlatformRoles
   | ApplicationRoute.PlatformKeys
-  | ApplicationRoute.Skills;
+  | ApplicationRoute.Skills
+  | ApplicationRoute.Projects;
 
 export type CrudAssetRoute =
   | ApplicationRoute.Prompts

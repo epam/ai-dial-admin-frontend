@@ -9,6 +9,7 @@ import CatalogSchemaCreateProperties from '@/src/components/Assets/Platform/Cata
 import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
+import ProjectCreateProperties from '@/src/components/Assets/Artifacts/Projects/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Artifacts/Skills/CreateProperties';
 import { DialAppRunnerResource, DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
@@ -80,7 +81,17 @@ const Properties = <T extends object>({
     );
   }
 
-  // Ahead of `isSimpleEntity` for the same reason as App Runner above: the generic `EntityProperties`
+  if (view === ApplicationRoute.Projects) {
+    return (
+      <ProjectCreateProperties
+        entity={entity as { name?: string; description?: string }}
+        names={props.names}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as App Runner above:the generic `EntityProperties`
   // form always renders a display-name field and seeds a `description`, neither of which exists on
   // `Route` (see `RouteCreateProperties`'s doc comment).
   if (view === ApplicationRoute.PlatformRoutes) {

@@ -74,6 +74,19 @@ describe('FileManager', () => {
       expect(options.hideHiddenFilesLabel).toBe(FileManagerI18nKey.HideHiddenFiles);
     });
 
+    test.each([
+      [ApplicationRoute.Skills, FileManagerI18nKey.Skills],
+      [ApplicationRoute.Projects, FileManagerI18nKey.Projects],
+    ])('names the %s items in the empty move-folder description', (view, itemsKey) => {
+      const t = (key: string, options?: Record<string, string | number>) => (options ? `${key}:${options.items}` : key);
+
+      const options = getDestinationFolderPopupOptions(view, t, vi.fn());
+
+      expect(options.emptyStateDescription).toBe(
+        `${FileManagerI18nKey.EmptyMoveFolderDescription}:${itemsKey.toLowerCase()}`,
+      );
+    });
+
     test('should hide the sort control in the move popup', () => {
       const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
 
@@ -286,6 +299,12 @@ describe('getBulkActionsToolbarOptions — Assets Applications bucket switch', (
 
     expect(Object.keys(withPublicPath.actionLabels).sort()).toEqual(['delete', 'download', 'move']);
     expect(withPublicPath.actionLabels).toEqual(withoutPath.actionLabels);
+  });
+
+  test.each([ApplicationRoute.Skills, ApplicationRoute.Projects])('offers only delete for the %s view', (view) => {
+    const { actionLabels } = getBulkActionsToolbarOptions(view, translate);
+
+    expect(Object.keys(actionLabels)).toEqual(['delete']);
   });
 
   test('is unaffected for other views regardless of the path argument', () => {

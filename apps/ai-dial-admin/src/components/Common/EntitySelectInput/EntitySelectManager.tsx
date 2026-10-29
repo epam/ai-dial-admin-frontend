@@ -15,10 +15,20 @@ interface Props {
   /** The selected entity's path as its tree lists it (`<bucket>/<path>`), without the resource prefix. */
   value: string;
   isModalOpen: boolean;
-  onChangeSelectedPath: (path: string | null) => void;
+  /** Single-selection mode: reports the one selected entity, or `null` when nothing selectable is. */
+  onChangeSelectedPath?: (path: string | null) => void;
+  /** Multi-selection mode (takes precedence): reports every selected entity, never a grouping folder. */
+  onChangeSelectedPaths?: (paths: string[]) => void;
 }
 
-const EntitySelectManager: FC<Props> = ({ entityType, value, isModalOpen, onChangeSelectedPath }) => {
+const EntitySelectManager: FC<Props> = ({
+  entityType,
+  value,
+  isModalOpen,
+  onChangeSelectedPath,
+  onChangeSelectedPaths,
+}) => {
+  const isMultiple = onChangeSelectedPaths != null;
   const { route, gridColumns, useFolder } = ENTITY_SELECT_CONFIGS[entityType];
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -91,10 +101,14 @@ const EntitySelectManager: FC<Props> = ({ entityType, value, isModalOpen, onChan
   // A grouping folder is browsable but never a choice, so only an entity row (an ITEM) is reported.
   const onSelectEntity = useCallback(
     (rows: FileManagerGridRow[]) => {
+      if (onChangeSelectedPaths) {
+        onChangeSelectedPaths(rows.filter((row) => row.nodeType === DialFileNodeType.ITEM).map((row) => row.path));
+        return;
+      }
       const row = rows[0];
-      onChangeSelectedPath(row?.nodeType === DialFileNodeType.ITEM ? row.path : null);
+      onChangeSelectedPath?.(row?.nodeType === DialFileNodeType.ITEM ? row.path : null);
     },
-    [onChangeSelectedPath],
+    [onChangeSelectedPath, onChangeSelectedPaths],
   );
 
   return (
@@ -121,7 +135,7 @@ const EntitySelectManager: FC<Props> = ({ entityType, value, isModalOpen, onChan
           t,
         )}
         defaultSelectedPaths={value ? new Set([value]) : void 0}
-        gridOptions={getGridOptions(route, isReadOnlyAdmin, gridColumns, t, true)}
+        gridOptions={getGridOptions(route, isReadOnlyAdmin, gridColumns, t, !isMultiple)}
         onPathChange={onPathChange}
         onFolderPopupPathChange={onFolderPopupPathChange}
         handleSelectionClick={onSelectEntity}

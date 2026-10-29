@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Notification, NotificationType, NotificationVariant, TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import { getSkillManifest, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/skills/actions';
 import { updatePublication } from '@/src/app/actions/publications';
 import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -18,20 +17,13 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
-import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import {
-  FilePublication,
-  PromptPublication,
-  Publication,
-  SkillPublication,
-  ToolsetPublication,
-} from '@/src/models/dial/publications';
+import { FilePublication, PromptPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
 import { ResourceType } from '@/src/types/resource-type';
@@ -39,7 +31,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { buildSkillManifest, parseSkillManifest, SkillManifest } from '@/src/utils/skill-manifest';
 import { EntityViewTab, getPublicationViewTabs, getTabStatusProps } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
@@ -61,7 +52,6 @@ const PublicationFolderContextMap = {
   [ApplicationRoute.PromptPublications]: usePromptFolder,
   [ApplicationRoute.FilePublications]: useFileFolder,
   [ApplicationRoute.ConversationPublications]: useConversationFolder,
-  [ApplicationRoute.SkillPublications]: useSkillFolder,
 };
 
 const PublicationView = <T extends Publication>({ view, publication, applicationSchemes, oAuthCode }: Props<T>) => {
@@ -94,53 +84,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const [currentRules, setCurrentRules] = useState<DialRule[]>([]);
 
   const [addedFiles, setAddedFiles] = useState<File[]>([]);
-  const [skillAddedFiles, setSkillAddedFiles] = useState<File[]>([]);
-  const [skillRemovedFileNames, setSkillRemovedFileNames] = useState<string[]>([]);
-
-  // `SKILL.md`'s raw last-fetched content, its parsed manifest, and the staged edit — same shape as
-  // `Assets > Skills`' `SkillView` (see its doc comment on `buildSkillManifest` for why the original
-  // content is needed alongside the parsed fields).
-  const [skillManifestContent, setSkillManifestContent] = useState<string | undefined>(undefined);
-  const [skillManifest, setSkillManifest] = useState<SkillManifest | undefined>(undefined);
-  const [skillStagedManifest, setSkillStagedManifest] = useState<SkillManifest | undefined>(undefined);
-
-  const skillManifestPath =
-    view === ApplicationRoute.SkillPublications
-      ? (selectedPublication as unknown as SkillPublication).skillResources?.[0]?.skillResource.path
-      : undefined;
-
-  const isSkillManifestChanged =
-    !!skillManifest &&
-    !!skillStagedManifest &&
-    (skillStagedManifest.description !== skillManifest.description || skillStagedManifest.body !== skillManifest.body);
-
-  // Lazy-fetch `SKILL.md`'s content on first activation of the Skill tab, rather than eagerly with
-  // the rest of the page.
-  useEffect(() => {
-    if (activeTab !== EntityViewTab.Skill || skillManifestContent !== undefined || !skillManifestPath) {
-      return;
-    }
-    getSkillManifest(skillManifestPath).then((result) => {
-      if (!result.success) {
-        showNotification(getErrorNotification(result.errorHeader, result.errorMessage));
-        return;
-      }
-      const content = result.response as string;
-      const parsed = parseSkillManifest(content);
-      setSkillManifestContent(content);
-      setSkillManifest(parsed);
-      setSkillStagedManifest(parsed);
-    });
-  }, [activeTab, skillManifestContent, skillManifestPath, showNotification]);
-
-  const onChangeSkillDescription = useCallback((description: string) => {
-    setSkillStagedManifest((prev) => (prev ? { ...prev, description } : prev));
-  }, []);
-
-  const onChangeSkillBody = useCallback((body: string) => {
-    setSkillStagedManifest((prev) => (prev ? { ...prev, body } : prev));
-  }, []);
-
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
@@ -157,19 +100,10 @@ const PublicationView = <T extends Publication>({ view, publication, application
 
   useEffect(() => {
     setSelectedPublication(structuredClone(publication));
-    setSkillManifestContent(undefined);
-    setSkillManifest(undefined);
-    setSkillStagedManifest(undefined);
   }, [publication]);
 
   useEffect(() => {
-    setIsChanged(
-      !isEqualSkippingUndefined(selectedPublication, publication) ||
-        addedFiles.length > 0 ||
-        skillAddedFiles.length > 0 ||
-        skillRemovedFileNames.length > 0 ||
-        isSkillManifestChanged,
-    );
+    setIsChanged(!isEqualSkippingUndefined(selectedPublication, publication) || addedFiles.length > 0);
     setIsPermissionsChanged(!isEqualSkippingUndefined(currentRules, selectedPublication.rules));
     const error = selectedPublication.rules?.some(
       (rule) =>
@@ -179,17 +113,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
         (rule.targets.length && !rule.targets[0].length),
     );
     dispatch({ type: ValidationActionType.SetField, field: 'rules', isValid: !error });
-  }, [
-    selectedPublication,
-    publication,
-    t,
-    currentRules,
-    dispatch,
-    addedFiles.length,
-    skillAddedFiles.length,
-    skillRemovedFileNames.length,
-    isSkillManifestChanged,
-  ]);
+  }, [selectedPublication, publication, t, currentRules, dispatch, addedFiles.length]);
 
   useEffect(() => {
     setTabs((prev) => {
@@ -225,60 +149,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const onDiscard = useCallback(() => {
     setSelectedPublication(structuredClone(publication));
     setAddedFiles([]);
-    setSkillAddedFiles([]);
-    setSkillRemovedFileNames([]);
-    setSkillStagedManifest(skillManifest);
     setDiscardKey((prev) => prev + 1);
-  }, [publication, skillManifest]);
-
-  /**
-   * Applies staged Skill file changes and a staged manifest edit directly against Core's per-file
-   * skill routes — these aren't publication fields `updatePublication` can persist, so they're a
-   * separate step after it succeeds. File removals first, so a name freed by a removal can be reused
-   * by an added file in the same save; the manifest write doesn't interact with either.
-   */
-  const applySkillFileChanges = useCallback(
-    async (skillPath: string) => {
-      if (isSkillManifestChanged && skillManifestContent && skillManifest && skillStagedManifest) {
-        const content = buildSkillManifest(skillManifestContent, {
-          name: skillManifest.name,
-          description: skillStagedManifest.description,
-          body: skillStagedManifest.body,
-        });
-        const formData = new FormData();
-        formData.append('file', new File([content], 'SKILL.md', { type: 'text/markdown' }));
-        const result = await uploadSkillFile(skillPath, 'SKILL.md', formData);
-        if (!result.success) {
-          return result;
-        }
-        setSkillManifestContent(content);
-        setSkillManifest(skillStagedManifest);
-      }
-      for (const fileName of skillRemovedFileNames) {
-        const result = await removeSkillFile(skillPath, fileName);
-        if (!result.success) {
-          return result;
-        }
-      }
-      for (const file of skillAddedFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const result = await uploadSkillFile(skillPath, file.name, formData);
-        if (!result.success) {
-          return result;
-        }
-      }
-      return { success: true };
-    },
-    [
-      skillRemovedFileNames,
-      skillAddedFiles,
-      isSkillManifestChanged,
-      skillManifestContent,
-      skillManifest,
-      skillStagedManifest,
-    ],
-  );
+  }, [publication]);
 
   const onSave = useCallback(() => {
     const correctedPublication =
@@ -297,26 +169,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
     const req = getReqRef.current(updatePublication, body);
     req.then(async (res) => {
       if (res.success) {
-        if (
-          view === ApplicationRoute.SkillPublications &&
-          (skillAddedFiles.length || skillRemovedFileNames.length || isSkillManifestChanged)
-        ) {
-          const skillPath = (correctedPublication as unknown as SkillPublication).skillResources?.[0]?.skillResource
-            .path;
-          const skillFilesResult = skillPath ? await applySkillFileChanges(skillPath) : { success: true };
-          if (!skillFilesResult.success) {
-            showNotification(
-              getErrorNotification(
-                (skillFilesResult as { errorHeader?: string }).errorHeader,
-                (skillFilesResult as { errorMessage?: string }).errorMessage,
-              ),
-            );
-            return;
-          }
-          setSkillAddedFiles([]);
-          setSkillRemovedFileNames([]);
-        }
-
         dispatch({ type: ValidationActionType.Reset });
 
         const shouldRedirectToListView =
@@ -341,20 +193,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [
-    dispatch,
-    publication.requestName,
-    router,
-    selectedPublication,
-    showNotification,
-    t,
-    view,
-    addedFiles,
-    skillAddedFiles,
-    skillRemovedFileNames,
-    isSkillManifestChanged,
-    applySkillFileChanges,
-  ]);
+  }, [dispatch, publication.requestName, router, selectedPublication, showNotification, t, view, addedFiles]);
 
   const warning = useMemo(() => {
     if (publication.resourceIssues?.length) {
@@ -429,13 +268,6 @@ const PublicationView = <T extends Publication>({ view, publication, application
               currentRules={currentRules}
               addedFiles={addedFiles}
               setAddedFiles={setAddedFiles}
-              skillAddedFiles={skillAddedFiles}
-              setSkillAddedFiles={setSkillAddedFiles}
-              skillRemovedFileNames={skillRemovedFileNames}
-              setSkillRemovedFileNames={setSkillRemovedFileNames}
-              skillManifest={skillStagedManifest}
-              onChangeSkillDescription={onChangeSkillDescription}
-              onChangeSkillBody={onChangeSkillBody}
             />
           )
         )}

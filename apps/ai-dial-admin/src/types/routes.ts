@@ -32,6 +32,7 @@ export enum ApplicationRoute {
   Prompts = '/prompts',
   Files = '/files',
   Skills = '/skills',
+  Projects = '/projects',
 
   // Publications
   FoldersStorage = '/folders-storage',
@@ -42,6 +43,7 @@ export enum ApplicationRoute {
   FilePublications = '/file-publications',
   ConversationPublications = '/conversation-publications',
   SkillPublications = '/skill-publications',
+  ProjectPublications = '/project-publications',
 
   // Access Management
   Roles = '/roles',

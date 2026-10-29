@@ -6,6 +6,7 @@ import {
   getPublicationTypeLabel,
   getPublicationView,
   isAddAction,
+  isComplexResourcePublicationView,
 } from '../publications';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -141,6 +142,12 @@ describe('getPublicationEntityLabel', () => {
     );
   });
 
+  test('returns the project publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ProjectPublications, t)).toBe(
+      PublicationsI18nKey.ProjectPublicationEntity,
+    );
+  });
+
   test('returns the skill publication entity key', () => {
     expect(getPublicationEntityLabel(ApplicationRoute.SkillPublications, t)).toBe(
       PublicationsI18nKey.SkillPublicationEntity,
@@ -156,6 +163,7 @@ describe('getPublicationView', () => {
     expect(getPublicationView(ResourceType.FILE)).toBe(ApplicationRoute.FilePublications);
     expect(getPublicationView(ResourceType.CONVERSATION)).toBe(ApplicationRoute.ConversationPublications);
     expect(getPublicationView(ResourceType.SKILL)).toBe(ApplicationRoute.SkillPublications);
+    expect(getPublicationView(ResourceType.PROJECT)).toBe(ApplicationRoute.ProjectPublications);
   });
 
   test('returns undefined for a missing or non-publishable type', () => {
@@ -168,10 +176,45 @@ describe('getPublicationView', () => {
 describe('getPublicationTypeLabel', () => {
   test('returns the translated label of a publishable type', () => {
     expect(getPublicationTypeLabel(ResourceType.SKILL, t)).toBe(PublicationsI18nKey.SkillType);
+    expect(getPublicationTypeLabel(ResourceType.PROJECT, t)).toBe(PublicationsI18nKey.ProjectType);
   });
 
   test('returns an empty string for a missing or non-publishable type', () => {
     expect(getPublicationTypeLabel(undefined, t)).toBe('');
     expect(getPublicationTypeLabel(ResourceType.MODEL, t)).toBe('');
+  });
+});
+
+describe('getModalsTranslations — project publications', () => {
+  test('returns the publish keys for an add action', () => {
+    expect(getModalsTranslations(ApplicationRoute.ProjectPublications, ActionType.ADD)).toEqual({
+      ApproveModalTitle: PublicationsI18nKey.ProjectPublishApproveModalTitle,
+      DeclineModalTitle: PublicationsI18nKey.ProjectPublishDeclineModalTitle,
+      ApproveDescription: PublicationsI18nKey.ProjectPublishApproveDescription,
+    });
+  });
+
+  test('returns the unpublish keys for a delete action', () => {
+    expect(getModalsTranslations(ApplicationRoute.ProjectPublications, ActionType.DELETE)).toEqual({
+      ApproveModalTitle: PublicationsI18nKey.ProjectUnpublishApproveModalTitle,
+      DeclineModalTitle: PublicationsI18nKey.ProjectUnpublishDeclineModalTitle,
+      ApproveDescription: PublicationsI18nKey.ProjectUnpublishApproveDescription,
+    });
+  });
+});
+
+describe('isComplexResourcePublicationView', () => {
+  test.each([ApplicationRoute.SkillPublications, ApplicationRoute.ProjectPublications])('is true for %s', (view) => {
+    expect(isComplexResourcePublicationView(view)).toBe(true);
+  });
+
+  test.each([
+    ApplicationRoute.ApplicationPublications,
+    ApplicationRoute.ToolsetPublications,
+    ApplicationRoute.PromptPublications,
+    ApplicationRoute.FilePublications,
+    ApplicationRoute.ConversationPublications,
+  ])('is false for %s', (view) => {
+    expect(isComplexResourcePublicationView(view)).toBe(false);
   });
 });

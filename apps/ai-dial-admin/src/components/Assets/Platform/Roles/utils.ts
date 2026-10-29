@@ -81,7 +81,7 @@ export const applySharingChange = (
  * The sharing grid's default-placeholder lookup for this surface, against `platformSharingDefaults`
  * rather than `Entities > Roles`' own `sharingDefaults` (`components/Roles/utils.ts`) — the two
  * surfaces disagree on the default max users for `TOOL_SET`, and this one additionally covers
- * `CREDENTIALS`/`SKILL`, which the admin-backend surface doesn't have.
+ * `CREDENTIALS`/`SKILL`/`PROJECT`, which the admin-backend surface doesn't have.
  */
 export const getDefaultPlaceholder = (node: IRowNode, colDef: ColDef): string => {
   const field = colDef.field as keyof DialRoleShare;

@@ -1,16 +1,20 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { assetApi, filesCoreApi, publicationsApi, skillsCoreApi } from '@/src/app/api/api';
+import { DialFileNodeType } from '@/src/models/dial/file';
+import { CoreResourceMetadataNode, ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ResourceType } from '@/src/types/resource-type';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   changeFolderCore,
   getFoldersCore,
   getRulesCore,
+  removeComplexFolderCore,
   removeFolderCore,
   removeSkillFolderCore,
   updateRulesCore,
 } from '../folders-core';
+import { ComplexFolderOps } from '../models';
 
 vi.mock('@/src/app/api/api');
 
@@ -402,5 +406,54 @@ describe('Server :: Folders :: folders-core :: removeSkillFolderCore', () => {
     expect(skillsCoreApi.deleteSkill).not.toHaveBeenCalled();
     expect(skillsCoreApi.deleteSkillFolder).toHaveBeenCalledWith(TOKEN_MOCK, 'public/empty', '*');
     expect(result.success).toBe(true);
+  });
+});
+
+describe('Server :: Folders :: folders-core :: removeComplexFolderCore', () => {
+  const makeOps = (listings: Record<string, { url: string; nodeType: string }[]>) => {
+    const deleteResource = vi.fn().mockResolvedValue({ success: true });
+    const deleteFolder = vi.fn().mockResolvedValue({ success: true });
+    const ops: ComplexFolderOps = {
+      listMetadata: (_token, path) => Promise.resolve({ items: listings[path] ?? [] } as CoreResourceMetadataNode),
+      toList: (node) =>
+        ((node as { items?: { url: string; nodeType: string }[] } | null)?.items ?? []).map((item) => ({
+          path: item.url.replace(/^projects\//, ''),
+          nodeType: item.nodeType === 'FOLDER' ? DialFileNodeType.FOLDER : DialFileNodeType.ITEM,
+        })) as ResourceInfo[],
+      deleteResource,
+      deleteFolder,
+    };
+    return { ops, deleteResource, deleteFolder };
+  };
+
+  test('deletes resources, then nested folders deepest-first, then the target folder', async () => {
+    const { ops, deleteResource, deleteFolder } = makeOps({
+      'public/t/': [
+        { url: 'projects/public/t/a', nodeType: 'ITEM' },
+        { url: 'projects/public/t/s', nodeType: 'FOLDER' },
+      ],
+      'public/t/s/': [
+        { url: 'projects/public/t/s/b', nodeType: 'ITEM' },
+        { url: 'projects/public/t/s/d', nodeType: 'FOLDER' },
+      ],
+    });
+
+    const result = await removeComplexFolderCore(ops, TOKEN_MOCK, 'public/t/');
+
+    expect(deleteResource.mock.calls.map((c) => c[1])).toEqual(['public/t/a', 'public/t/s/b']);
+    expect(deleteFolder.mock.calls.map((c) => c[1])).toEqual(['public/t/s/d', 'public/t/s', 'public/t']);
+    expect(result.success).toBe(true);
+  });
+
+  test('stops at the first failure', async () => {
+    const { ops, deleteResource, deleteFolder } = makeOps({
+      'public/t/': [{ url: 'projects/public/t/a', nodeType: 'ITEM' }],
+    });
+    deleteResource.mockResolvedValueOnce({ success: false, errorMessage: 'boom' });
+
+    const result = await removeComplexFolderCore(ops, TOKEN_MOCK, 'public/t/');
+
+    expect(result.success).toBe(false);
+    expect(deleteFolder).not.toHaveBeenCalled();
   });
 });

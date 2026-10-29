@@ -1,34 +1,10 @@
-import { parseFrontmatter, stringifyFrontmatter } from '@/src/utils/frontmatter';
+import { buildManifest, Manifest, parseManifest } from '@/src/utils/manifest';
 
-export interface SkillManifest {
-  name: string;
-  description: string;
-  body: string;
-}
+export type SkillManifest = Manifest;
 
-/**
- * Parses `SKILL.md`'s YAML frontmatter (`name`/`description`) and its body content (the markdown
- * after the frontmatter block). The shared parser keeps this boundary aligned with Core's own
- * `SkillHandler.parseFrontmatter` regex/YAML expectations.
- */
-export const parseSkillManifest = (content: string): SkillManifest => {
-  const { attributes, body } = parseFrontmatter(content);
-  return {
-    name: typeof attributes.name === 'string' ? attributes.name : '',
-    description: typeof attributes.description === 'string' ? attributes.description : '',
-    body,
-  };
-};
+/** Parses `SKILL.md` — see {@link parseManifest}. */
+export const parseSkillManifest = (content: string): SkillManifest => parseManifest(content);
 
-/**
- * Reassembles a valid `SKILL.md` document from an edited `name`/`description`/`body`, preserving any
- * other frontmatter key already present in `originalContent` (e.g. `version`) untouched — this app
- * never edits `version`, so a save must not silently drop it. Re-parses `originalContent` rather than
- * requiring the caller to carry its frontmatter forward, so callers only ever handle the three fields
- * they actually edit.
- */
-export const buildSkillManifest = (originalContent: string, manifest: SkillManifest): string => {
-  const { attributes } = parseFrontmatter(originalContent);
-
-  return stringifyFrontmatter({ ...attributes, name: manifest.name, description: manifest.description }, manifest.body);
-};
+/** Reassembles `SKILL.md` from edited fields, preserving untouched frontmatter keys — see {@link buildManifest}. */
+export const buildSkillManifest = (originalContent: string, manifest: SkillManifest): string =>
+  buildManifest(originalContent, manifest);

@@ -18,7 +18,11 @@ export const streamRequest = async (
     const stream = createReadableStream(reader);
     const headers = new Headers();
     const resolvedFileName = getFileNameFromContentDisposition(res?.headers.get('Content-Disposition')) || fileName;
-    const contentType = res?.headers.get('Content-Type') || getContentType(resolvedFileName);
+    // Browsers download text/markdown even with inline disposition; preview it as plain text.
+    const contentType =
+      isPreview && resolvedFileName.toLowerCase().endsWith('.md')
+        ? 'text/plain; charset=utf-8'
+        : res?.headers.get('Content-Type') || getContentType(resolvedFileName);
     if (contentType) {
       headers.append('Content-Type', contentType);
     }

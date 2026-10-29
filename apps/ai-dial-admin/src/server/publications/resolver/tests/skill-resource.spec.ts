@@ -20,6 +20,7 @@ const makeClients = (getSkillMetadata: EnrichmentClients['getSkillMetadata']): E
   getFileMetadata: vi.fn(),
   uploadFile: vi.fn(),
   getSkillMetadata,
+  getProjectMetadata: vi.fn(),
 });
 
 describe('Server :: Publications :: enrichSkillResource', () => {

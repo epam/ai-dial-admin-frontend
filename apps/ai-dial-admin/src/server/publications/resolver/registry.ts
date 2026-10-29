@@ -2,6 +2,7 @@ import {
   APPLICATIONS_PREFIX,
   CONVERSATIONS_PREFIX,
   FILES_PREFIX,
+  PROJECTS_PREFIX,
   PROMPTS_PREFIX,
   SKILLS_PREFIX,
   TOOLSETS_PREFIX,
@@ -67,5 +68,14 @@ export const PUBLICATION_TYPE_REGISTRY: Record<PublishableResourceType, Publicat
     hasFiles: false,
     notFoundMessage: 'Skill not found',
     alreadyExistsMessage: 'Target skill already exists',
+  },
+  [ResourceType.PROJECT]: {
+    resourceType: ResourceType.PROJECT,
+    prefix: PROJECTS_PREFIX,
+    resourceKey: 'projectResources',
+    assetKey: 'projectResource',
+    hasFiles: false,
+    notFoundMessage: 'Project not found',
+    alreadyExistsMessage: 'Target project already exists',
   },
 };

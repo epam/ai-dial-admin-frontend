@@ -19,6 +19,7 @@ const publicationEntityMap: Record<string, PublicationsI18nKey> = {
   [ApplicationRoute.FilePublications]: PublicationsI18nKey.FilePublicationEntity,
   [ApplicationRoute.ConversationPublications]: PublicationsI18nKey.ConversationPublicationEntity,
   [ApplicationRoute.SkillPublications]: PublicationsI18nKey.SkillPublicationEntity,
+  [ApplicationRoute.ProjectPublications]: PublicationsI18nKey.ProjectPublicationEntity,
 };
 
 const publicationTypeRouteMap: Partial<Record<ResourceType, ApplicationRoute>> = {
@@ -28,7 +29,15 @@ const publicationTypeRouteMap: Partial<Record<ResourceType, ApplicationRoute>> =
   [ResourceType.FILE]: ApplicationRoute.FilePublications,
   [ResourceType.CONVERSATION]: ApplicationRoute.ConversationPublications,
   [ResourceType.SKILL]: ApplicationRoute.SkillPublications,
+  [ResourceType.PROJECT]: ApplicationRoute.ProjectPublications,
 };
+
+/** Skill and Project publications render in their own view; every other type uses the generic publication view. */
+export function isComplexResourcePublicationView(
+  view: ApplicationRoute,
+): view is ApplicationRoute.SkillPublications | ApplicationRoute.ProjectPublications {
+  return view === ApplicationRoute.SkillPublications || view === ApplicationRoute.ProjectPublications;
+}
 
 /** The `view` of a resource type's publication — undefined when the type has no publications. */
 export function getPublicationView(type?: string): ApplicationRoute | undefined {
@@ -42,6 +51,7 @@ const publicationTypeLabelMap: Partial<Record<ResourceType, PublicationsI18nKey>
   [ResourceType.FILE]: PublicationsI18nKey.FileType,
   [ResourceType.CONVERSATION]: PublicationsI18nKey.ConversationType,
   [ResourceType.SKILL]: PublicationsI18nKey.SkillType,
+  [ResourceType.PROJECT]: PublicationsI18nKey.ProjectType,
 };
 
 export function getPublicationTypeLabel(type: ResourceType | undefined, t: (str: string) => string): string {
@@ -101,6 +111,18 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
           ApproveModalTitle: PublicationsI18nKey.ConversationUnpublishApproveModalTitle,
           DeclineModalTitle: PublicationsI18nKey.ConversationUnpublishDeclineModalTitle,
           ApproveDescription: PublicationsI18nKey.ConversationUnpublishApproveDescription,
+        };
+  } else if (route === ApplicationRoute.ProjectPublications) {
+    return isAddAction(action)
+      ? {
+          ApproveModalTitle: PublicationsI18nKey.ProjectPublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ProjectPublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ProjectPublishApproveDescription,
+        }
+      : {
+          ApproveModalTitle: PublicationsI18nKey.ProjectUnpublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ProjectUnpublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ProjectUnpublishApproveDescription,
         };
   } else if (route === ApplicationRoute.SkillPublications) {
     return isAddAction(action)

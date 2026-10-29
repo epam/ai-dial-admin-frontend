@@ -42,6 +42,7 @@ type UpdatablePublication = Publication & {
   prompts?: ResourceWrapper[];
   toolSetResources?: ResourceWrapper[];
   skillResources?: ResourceWrapper[];
+  projectResources?: ResourceWrapper[];
   files?: PublicationFile[];
 };
 
@@ -60,6 +61,9 @@ const getPrimaryType = (publication: UpdatablePublication): PublishableResourceT
   }
   if (Array.isArray(publication.skillResources)) {
     return ResourceType.SKILL;
+  }
+  if (Array.isArray(publication.projectResources)) {
+    return ResourceType.PROJECT;
   }
   return ResourceType.FILE;
 };
@@ -118,9 +122,9 @@ export const buildUpdatePlan = (publication: UpdatablePublication): UpdatePlan =
       sourceUrl: wrapper.sourceUrl,
       targetUrl,
     });
-    // Skill has no writable JSON asset (its real write path is Core's /v2/skills multipart API,
+    // Skill and Project have no writable JSON asset (their real write path is Core's /v2/{group} multipart API,
     // not /v1/{type}/...) — only recalculate its target URL above, never queue an asset PUT.
-    if (type !== ResourceType.SKILL) {
+    if (type !== ResourceType.SKILL && type !== ResourceType.PROJECT) {
       resourcePuts.push({ asset: isVersionless ? (asset as object) : withMovedReviewPath(asset, version), type });
     }
   }

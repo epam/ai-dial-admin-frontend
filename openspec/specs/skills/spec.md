@@ -175,6 +175,13 @@ SHALL NOT appear otherwise.
 - **THEN** the file's content opens for inline preview, or downloads, respectively, with no change
   staged
 
+#### Scenario: Markdown files open as text for inline preview
+
+- **WHEN** a user previews an already-saved `.md` file from the skill's file listing
+- **THEN** the preview response serves the unchanged file content as `text/plain; charset=utf-8`
+  so the browser displays it in a new tab instead of downloading it; the download action retains
+  the original content type and filename
+
 #### Scenario: Removing a file stages it and shows Save/Discard
 - **WHEN** a user removes a file other than `SKILL.md`
 - **THEN** the file listing no longer shows that file, no request has reached Core yet, and the
@@ -263,3 +270,12 @@ banner, since Core exposes no rollback/revision history endpoint for skills that
 #### Scenario: No Core-sync banner is present
 - **WHEN** a user opens a skill's detail view
 - **THEN** no Core-sync status banner is rendered in the header
+
+### Requirement: Skills behaviour is unchanged by the shared complex-resource client
+The system SHALL serve every Skills surface (list, create, detail, file staging, manifest tab, delete, bulk
+delete, folder delete, move) through the shared complex-resource client, with the same requests, notifications,
+and UI as before the extraction. No Skill requirement in this capability changes.
+
+#### Scenario: Existing Skill behaviour is preserved
+- **WHEN** a user lists, creates, edits, and deletes skills
+- **THEN** each action sends the same Core requests and shows the same results as before the extraction

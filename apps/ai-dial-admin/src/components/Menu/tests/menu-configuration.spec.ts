@@ -226,11 +226,12 @@ describe('MENU_CONFIGURATION — group badges', () => {
 });
 
 describe('MENU_CONFIGURATION — Artifacts group', () => {
-  test('lists skills, files, conversations, prompts', () => {
+  test('lists skills, projects, files, conversations, prompts', () => {
     const group = MENU_CONFIGURATION(ICON_SIZE, baseFlags).find((item) => item.key === MenuI18nKey.Artifacts);
 
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Skills,
+      MenuI18nKey.Projects,
       MenuI18nKey.Files,
       MenuI18nKey.Conversations,
       MenuI18nKey.Prompts,
@@ -288,6 +289,7 @@ describe('MENU_CONFIGURATION — catalog token', () => {
       expect(keys).not.toContain(key);
     }
     expect(keys).toContain(MenuI18nKey.Skills);
+    expect(keys).toContain(MenuI18nKey.Projects);
     expect(keys).toContain(MenuI18nKey.FoldersStorage);
     expect(keys).toContain(MenuI18nKey.Approvals);
   });

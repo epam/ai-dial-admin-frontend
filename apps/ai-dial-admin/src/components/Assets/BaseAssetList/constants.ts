@@ -1,5 +1,6 @@
 import ApplicationIcon from '@/public/images/assets-application-icon.svg';
 import ConversationIcon from '@/public/images/assets-conversation-icon.svg';
+import ProjectIcon from '@/public/images/assets-project-icon.svg';
 import PromptIcon from '@/public/images/assets-prompt-icon.svg';
 import SkillIcon from '@/public/images/assets-skill-icon.svg';
 import ToolsetIcon from '@/public/images/assets-toolset-icon.svg';
@@ -12,5 +13,6 @@ export const ASSET_TYPE_ICONS: Partial<Record<ApplicationRoute, TypeIconComponen
   [ApplicationRoute.AssetsToolsets]: ToolsetIcon,
   [ApplicationRoute.Prompts]: PromptIcon,
   [ApplicationRoute.Skills]: SkillIcon,
+  [ApplicationRoute.Projects]: ProjectIcon,
   [ApplicationRoute.Conversations]: ConversationIcon,
 };

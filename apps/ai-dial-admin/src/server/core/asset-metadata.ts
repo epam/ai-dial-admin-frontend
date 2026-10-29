@@ -93,8 +93,8 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
   let parts: VersionedPathParts;
   if (isVersioned(type)) {
     parts = parseEncodedVersionedPath(metadata.url, prefix);
-  } else if (isFolderNestedVersionless(type) || type === ResourceType.SKILL) {
-    // Prompt/conversation/skill: folder + plain name, never a `__` split. A genuine FOLDER row
+  } else if (isFolderNestedVersionless(type) || type === ResourceType.SKILL || type === ResourceType.PROJECT) {
+    // Prompt/conversation/skill/project: folder + plain name, never a `__` split. A genuine FOLDER row
     // re-adds the trailing slash `parsePath` strips — the one implementation of that convention,
     // matching every versioned type's folder rows — since generic path-matching code downstream
     // (`mergeFiles`, per-path fetches) relies on it.

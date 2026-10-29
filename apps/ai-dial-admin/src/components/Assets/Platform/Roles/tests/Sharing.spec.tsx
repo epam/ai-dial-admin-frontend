@@ -70,12 +70,13 @@ const role = (overrides: Partial<DialRoleResource> = {}): DialRoleResource =>
   ({ name: 'my-role', path: 'my-role', folderId: '', ...overrides }) as DialRoleResource;
 
 describe('RoleSharing', () => {
-  test('lists all seven sharing types, including Credentials and Skills', () => {
+  test('lists all eight sharing types, including Credentials, Skills and Projects', () => {
     render(<RoleSharing selectedRole={role()} onChangeRole={vi.fn()} isSkipRefresh={false} />);
 
-    expect(screen.getByText('rows: 7')).toBeTruthy();
+    expect(screen.getByText('rows: 8')).toBeTruthy();
     expect(screen.getByText(/Menu\.Credentials/)).toBeTruthy();
     expect(screen.getByText(/Menu\.Skills/)).toBeTruthy();
+    expect(screen.getByText(/Menu\.Projects/)).toBeTruthy();
   });
 
   test("shows the toolset row's max-users placeholder as 10, same as applications", () => {

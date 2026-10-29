@@ -5,7 +5,7 @@ import { PlatformSharingType } from './models';
 /**
  * Placeholder defaults for the sharing grid, matching Core's own `ShareService.DEFAULT_LIMITS` (see
  * `utils.ts`'s `getAssetSharingData` doc-comment for how `-1` — Core's "not provided" sentinel — maps
- * to these placeholders). Max users defaults to `10` for the four types Core caps by default;
+ * to these placeholders). Max users defaults to `10` for the five types Core caps by default;
  * `PROMPT`/`FILE`/`CONVERSATION` default to `Integer.MAX_VALUE` on Core's side, which this grid shows
  * as no specific placeholder rather than a literal huge number.
  */
@@ -14,6 +14,7 @@ export const platformSharingDefaults: Record<PlatformSharingType, DialRoleShare>
   [PlatformSharingType.TOOL_SET]: { invitationTtl: '72', maxAcceptedUsers: '10' },
   [PlatformSharingType.CREDENTIALS]: { invitationTtl: '72', maxAcceptedUsers: '10' },
   [PlatformSharingType.SKILL]: { invitationTtl: '72', maxAcceptedUsers: '10' },
+  [PlatformSharingType.PROJECT]: { invitationTtl: '72', maxAcceptedUsers: '10' },
   [PlatformSharingType.PROMPT]: { invitationTtl: '72', maxAcceptedUsers: '' },
   [PlatformSharingType.FILE]: { invitationTtl: '72', maxAcceptedUsers: '' },
   [PlatformSharingType.CONVERSATION]: { invitationTtl: '72', maxAcceptedUsers: '' },
@@ -27,4 +28,5 @@ export const platformSharingTypeLabels: Record<PlatformSharingType, MenuI18nKey>
   [PlatformSharingType.CONVERSATION]: MenuI18nKey.Conversations,
   [PlatformSharingType.CREDENTIALS]: MenuI18nKey.Credentials,
   [PlatformSharingType.SKILL]: MenuI18nKey.Skills,
+  [PlatformSharingType.PROJECT]: MenuI18nKey.Projects,
 };

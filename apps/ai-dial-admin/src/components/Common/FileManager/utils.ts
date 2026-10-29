@@ -55,6 +55,7 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.Files]: FileManagerI18nKey.Files,
   [ApplicationRoute.Conversations]: FileManagerI18nKey.Conversations,
   [ApplicationRoute.Skills]: FileManagerI18nKey.Skills,
+  [ApplicationRoute.Projects]: FileManagerI18nKey.Projects,
 };
 
 export const getValidationMessages = (t: (key: string) => string) => {
@@ -265,6 +266,7 @@ export const getBulkActionsToolbarOptions = (
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformKeys ||
     view === ApplicationRoute.Skills ||
+    view === ApplicationRoute.Projects ||
     isPlatformDualBucketView(view, currentPath);
 
   const actionLabels = isFlatBulkView ? bulkActionLabels.filter((action) => action.key === 'delete') : bulkActionLabels;

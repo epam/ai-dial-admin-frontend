@@ -61,6 +61,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.Projects]: {
+    segments: [
+      { name: 'Projects', i18nKey: MenuI18nKey.Projects, shouldEnrichWithFolderBreadcrumbs: true },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.PlatformModels]: {
     segments: [
       { name: 'PlatformModels', i18nKey: MenuI18nKey.Models },
