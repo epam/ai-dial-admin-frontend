@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { filesCoreApi } from '@/src/app/api/api';
+import { coreOrgUnitsApi, filesCoreApi } from '@/src/app/api/api';
+import { OrgUnitSubject, OrgUnitSubjectFunction } from '@/src/models/dial/org-unit';
 import * as foldersCore from '@/src/server/folders/folders-core';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
@@ -9,11 +10,19 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  addOrgUnitAssignment,
   changeFolder,
   createFolderWithFiles,
+  createOrgUnit,
+  deleteOrgUnit,
+  getOrgUnitAssignments,
+  getOrgUnitRoles,
+  getOrgUnits,
   getFolders,
   getRules,
   removeFolder,
+  removeOrgUnitAssignment,
+  renameOrgUnit,
   removeSkillFolder,
   updateRules,
 } from './actions';
@@ -132,5 +141,38 @@ describe('Folders storage :: server actions', () => {
     expect(filesCoreApi.uploadFile).toHaveBeenCalledWith(TOKEN_MOCK, 'public/folder/.dial_folder', file, {
       overwrite: true,
     });
+  });
+});
+
+describe('Folders storage :: org unit server actions', () => {
+  const subject: OrgUnitSubject = { type: 'claimsPredicate', source: 'sub', function: OrgUnitSubjectFunction.TRUE };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+  });
+
+  test('forward every call to the units client with the user token', async () => {
+    await getOrgUnits();
+    await createOrgUnit('public/Acme', { name: 'Risk' });
+    await renameOrgUnit('public/Acme', 'Acme Corp');
+    await deleteOrgUnit('public/Acme', true);
+    await getOrgUnitRoles('public/Acme');
+    await getOrgUnitAssignments('public/Acme');
+    await addOrgUnitAssignment('public/Acme', { roleName: 'editor', subject });
+    await removeOrgUnitAssignment('public/Acme', 'a1');
+
+    expect(coreOrgUnitsApi.listUnits).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(coreOrgUnitsApi.createUnit).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme', { name: 'Risk' });
+    expect(coreOrgUnitsApi.renameUnit).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme', 'Acme Corp');
+    expect(coreOrgUnitsApi.deleteUnit).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme', true);
+    expect(coreOrgUnitsApi.listRoles).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme');
+    expect(coreOrgUnitsApi.listAssignments).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme');
+    expect(coreOrgUnitsApi.addAssignment).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme', {
+      roleName: 'editor',
+      subject,
+    });
+    expect(coreOrgUnitsApi.removeAssignment).toHaveBeenCalledWith(TOKEN_MOCK, 'public/Acme', 'a1');
   });
 });

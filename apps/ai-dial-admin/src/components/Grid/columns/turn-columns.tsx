@@ -259,6 +259,7 @@ export const getTurnActionsColumn = (
       onClick: (row) => row && handlers.onDeleteTurn(row),
       hidden: isNotTurnRow,
     },
+    ...(extraItems ?? []),
     {
       icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className="text-error" />,
       id: ActionMenuOperationI18nKey.Delete_case,
@@ -266,7 +267,6 @@ export const getTurnActionsColumn = (
       onClick: (row) => row && handlers.onDeleteCase(row),
       hidden: isTurnRow,
     },
-    ...(extraItems ?? []),
   ];
 
   return { ...ACTION_COLUMN<GroupedGridRow>(items), colId: 'action-turns' };
