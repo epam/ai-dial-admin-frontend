@@ -23,9 +23,11 @@ interface BuildStabilityColumnsOptions {
   testCaseColIds: string[];
   headerLabels: string[];
   cellMeta: Record<string, Record<string, StabilityCellMeta>>;
+  thresholdByRowId: Record<string, number | null | undefined>;
   labels: {
     testCase: string;
     run: string;
+    threshold: string;
     score: string;
     passed: string;
     notApplicable: string;
@@ -39,6 +41,7 @@ const buildStabilityTooltip = (
   colId: string,
   testCaseLabel: string,
   cellMeta: Record<string, Record<string, StabilityCellMeta>>,
+  thresholdByRowId: Record<string, number | null | undefined>,
   labels: BuildStabilityColumnsOptions['labels'],
 ): HeatMapCellTooltipContent | undefined => {
   if (!row) {
@@ -50,6 +53,10 @@ const buildStabilityTooltip = (
   const tooltipRows = [
     { label: labels.testCase, value: testCaseLabel },
     { label: labels.run, value: row.label },
+    {
+      label: labels.threshold,
+      value: thresholdByRowId[row.id] == null ? labels.notApplicable : String(thresholdByRowId[row.id]),
+    },
   ];
 
   if (value === undefined || meta == null) {
@@ -86,6 +93,7 @@ export const buildStabilityColumns = ({
   testCaseColIds,
   headerLabels,
   cellMeta,
+  thresholdByRowId,
   labels,
 }: BuildStabilityColumnsOptions): ColDef<HeatMapGridRow>[] => {
   const labelColumn: ColDef<HeatMapGridRow> = {
@@ -128,7 +136,8 @@ export const buildStabilityColumns = ({
         return getHeatMapDefaultCellStyle();
       },
       tooltipComponent: HeatMapCellTooltip,
-      tooltipValueGetter: (params) => buildStabilityTooltip(params.data, colId, headerLabel, cellMeta, labels),
+      tooltipValueGetter: (params) =>
+        buildStabilityTooltip(params.data, colId, headerLabel, cellMeta, thresholdByRowId, labels),
     };
   });
 

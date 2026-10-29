@@ -18,6 +18,7 @@ interface StabilityDataState {
 const emptyMatrix = (): StabilityMatrix => ({
   rows: [],
   cellMeta: {},
+  thresholdByRowId: {},
   headerLabels: [],
   testCaseColIds: [],
 });

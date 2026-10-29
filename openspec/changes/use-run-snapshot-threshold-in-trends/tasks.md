@@ -18,11 +18,13 @@
 - [x] 2.2 Add or update component tests for latest-run KPI threshold labels/classification, each
   bar's tooltip threshold, mixed-threshold legends, and the Latest Run gauge; verify with focused
   Trends Vitest specs.
+- [x] 2.3 Show each run's snapshot threshold before Passed in Test Case Stability cell tooltips,
+  display N/A when unset, and cover mixed and unset thresholds in regression tests.
 
 ## 3. Run quality gates
 
-- [x] 3.1 Run focused Trends tests, `npm run typecheck`, `npm run typecheck:specs`, `npm run lint`,
-  `npm run format`, and `npm run test`; resolve any regressions.
+- [x] 3.1 Run the focused Test Case Stability spec, both TypeScript checks, and lint/format checks
+  for the changed files; resolve any regressions.
 
 > Browser verification was omitted at the user's request; focused component tests cover the
 > deterministic UI contracts.

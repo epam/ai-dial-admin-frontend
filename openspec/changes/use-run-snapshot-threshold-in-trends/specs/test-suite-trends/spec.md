@@ -1,5 +1,21 @@
 # Spec Delta
 
+## ADDED Requirements
+
+### Requirement: Test Case Stability tooltips show each run's threshold
+Each Test Case Stability cell tooltip SHALL show the threshold from the run represented by that
+row, after the run name and before Passed. When that run has no snapshotted threshold, the tooltip
+SHALL show `N/A`.
+
+#### Scenario: Threshold tooltip follows the cell's run
+- **WHEN** two Test Case Stability rows belong to runs with snapshot thresholds `0.6` and `0.8`
+- **THEN** their cell tooltips show `Threshold: 0.6` and `Threshold: 0.8` respectively, before
+  their Passed rows
+
+#### Scenario: Threshold tooltip is not applicable when unset
+- **WHEN** a Test Case Stability row belongs to a run with no snapshot threshold
+- **THEN** its cell tooltip shows `Threshold: N/A` before the Passed row
+
 ## MODIFIED Requirements
 
 ### Requirement: Pass / completion rate of latest run
