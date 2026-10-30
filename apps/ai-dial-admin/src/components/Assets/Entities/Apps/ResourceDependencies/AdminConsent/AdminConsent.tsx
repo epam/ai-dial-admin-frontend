@@ -96,7 +96,7 @@ const AdminConsent: FC<Props> = ({
       </span>
 
       {isLoading || !state ? (
-        <div aria-label={t(ResourceDependenciesI18nKey.ConsentLoading)}>
+        <div role="status" aria-label={t(ResourceDependenciesI18nKey.ConsentLoading)}>
           <Spinner fullWidth={false} size={16} />
         </div>
       ) : (
