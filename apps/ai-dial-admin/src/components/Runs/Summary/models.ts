@@ -1,10 +1,27 @@
 import { MetricStatistic } from '@/src/components/Common/MetricStatistics/models';
-import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
 
 export { MetricStatistic };
 
-/** Aggregated test-case execution outcome counts for a run, derived from `test_case_eval_scores`. */
-export type TestCaseStatusCounts = PassFailErrorCounts;
+/**
+ * Aggregated test-case execution outcome counts for a run, derived from `test_case_eval_scores`.
+ * `error` is any non-SUCCESS execution; `unscored` is SUCCESS with no threshold outcome (`passed` null).
+ */
+export interface TestCaseStatusCounts {
+  passed: number;
+  failed: number;
+  error: number;
+  unscored: number;
+  total: number;
+}
+
+/** Completed / above / below / Error-or-N/A split of a run's test cases (see `toCompletionBreakdown`). */
+export interface CompletionBreakdown {
+  total: number;
+  completed: number;
+  above: number;
+  below: number;
+  errorOrNa: number;
+}
 
 /**
  * One bar group for a given statistic: the metric group name (the `metric_name` without its last
@@ -53,9 +70,15 @@ export interface MetricOption {
   computationId: string;
 }
 
-/** Status counts + avg runtime for a single run's analytics KPI cards. */
+/** Status counts + total runtime parts for a single run's analytics KPI cards. */
 export interface RunAnalyticsSlice {
   statusCounts: TestCaseStatusCounts;
-  avgRunTimeMs: number | null;
-  avgMetricEvalDurationMs: number | null;
+  totalRunTimeMs: number | null;
+  totalMetricEvalDurationMs: number | null;
+}
+
+/** A run's total cost split by phase; a part is null when no usage row exists for it yet (or ever). */
+export interface RunCostFigures {
+  sourceCost: number | null;
+  metricsCost: number | null;
 }

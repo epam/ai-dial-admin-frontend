@@ -7,22 +7,6 @@ export const segmentPassRate = (segments: Pick<RunTestCaseSegments, 'above' | 't
   return segments.above / segments.total;
 };
 
-export const passRateBarColor = (rate: number): string => {
-  if (rate >= 0.7) {
-    return '#4dc87a';
-  }
-  if (rate >= 0.4) {
-    return '#d4be3a';
-  }
-  return '#ff4e50';
-};
-
-export const formatPassRatePercent = (rate: number): string => {
-  const pct = Math.round(rate * 1000) / 10;
-  const text = Number.isInteger(pct) ? String(pct) : String(pct);
-  return `${text}%`;
-};
-
 /**
  * Percentage-point delta between two 0–1 rates (e.g. 0.985 − 0.665 → `+32%`).
  * Null when either rate is missing or the rounded delta is zero.

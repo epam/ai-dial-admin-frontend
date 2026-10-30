@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { RunCosts } from '@/src/models/evaluation/run';
+import { RunTotalCosts } from '@/src/models/evaluation/run';
 import {
   ComparisonOp,
   ExprType,
@@ -10,23 +10,24 @@ import {
   ValueType,
 } from '@/src/models/evaluation/structured-query';
 import {
-  AVG_DURATION_ALIAS,
-  AVG_METRIC_EVAL_DURATION_ALIAS,
   COUNT_ALIAS,
   EXECUTION_STATUS_FIELD,
   PASSED_FIELD,
+  TOTAL_DURATION_ALIAS,
+  TOTAL_METRIC_EVAL_DURATION_ALIAS,
 } from '../constants';
-import { MetricScoresData } from '../models';
+import { MetricScoresData, TestCaseStatusCounts } from '../models';
 import {
   attachMetricInfo,
-  buildAvgMetricEvalDurationQuery,
-  buildAvgRunTimeQuery,
   buildDistributionQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
+  buildTotalMetricEvalDurationQuery,
+  buildTotalRunTimeQuery,
   fillUnscoredMetricBars,
-  formatAvgRunTimeSeconds,
   formatRunCost,
+  formatRunTimeSeconds,
+  getCompletionRate,
   getMetricFieldPath,
   getMetricOutputDescriptions,
   getMetricOutputFields,
@@ -34,14 +35,18 @@ import {
   hasOverallScoreThreshold,
   hasModelPricing,
   hasRunCostFigure,
-  parseAvgRunTimeMs,
   parseComparisonMetricScores,
+  parseDurationMs,
   parseHistogramValues,
   parseMetricScores,
   parseTestCaseStatusCounts,
   splitMetricName,
+  sumRunCostParts,
+  sumRunTimeParts,
+  toCompletionBreakdown,
   toMetricInfoByName,
   toMetricOptions,
+  toRunCostFigures,
 } from '../utils';
 
 describe('Runs Summary :: query builders', () => {
@@ -101,32 +106,35 @@ describe('Runs Summary :: query builders', () => {
     });
   });
 
-  test('buildAvgRunTimeQuery averages exec_duration_ms within the run', () => {
-    const query = buildAvgRunTimeQuery('run-1');
+  test('buildTotalRunTimeQuery sums exec_duration_ms within the run', () => {
+    const query = buildTotalRunTimeQuery('run-1');
 
     expect(query.select).toEqual([
       {
-        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'exec_duration_ms' }] },
-        as: AVG_DURATION_ALIAS,
+        expr: { type: ExprType.Fn, name: 'sum', args: [{ type: ExprType.Field, name: 'exec_duration_ms' }] },
+        as: TOTAL_DURATION_ALIAS,
       },
     ]);
     expect(query.group_by).toBeUndefined();
   });
 
-  test('buildAvgMetricEvalDurationQuery averages metric_eval_duration_ms within the run', () => {
-    const query = buildAvgMetricEvalDurationQuery('run-1');
+  test('buildTotalMetricEvalDurationQuery sums metric_eval_duration_ms within the run', () => {
+    const query = buildTotalMetricEvalDurationQuery('run-1');
 
     expect(query.select).toEqual([
       {
-        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'metric_eval_duration_ms' }] },
-        as: AVG_METRIC_EVAL_DURATION_ALIAS,
+        expr: { type: ExprType.Fn, name: 'sum', args: [{ type: ExprType.Field, name: 'metric_eval_duration_ms' }] },
+        as: TOTAL_METRIC_EVAL_DURATION_ALIAS,
       },
     ]);
     expect(query.group_by).toBeUndefined();
   });
 
-  test('buildAvgMetricEvalDurationQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
-    const query = buildAvgMetricEvalDurationQuery('run-1', ['id-1', 'id-2']);
+  test.each([
+    ['buildTotalRunTimeQuery', buildTotalRunTimeQuery],
+    ['buildTotalMetricEvalDurationQuery', buildTotalMetricEvalDurationQuery],
+  ])('%s ANDs a NOT IN exclusion when unmatched ids are provided', (_name, build) => {
+    const query = build('run-1', ['id-1', 'id-2']);
 
     expect(query.filter).toEqual({
       op: LogicalOp.And,
@@ -595,10 +603,10 @@ describe('Runs Summary :: result parsers', () => {
       ],
     });
 
-    expect(counts).toEqual({ passed: 37, failed: 3, error: 4, total: 44 });
+    expect(counts).toEqual({ passed: 37, failed: 3, error: 4, unscored: 0, total: 44 });
   });
 
-  test('parseTestCaseStatusCounts treats SUCCESS with null passed as total-only', () => {
+  test('parseTestCaseStatusCounts counts SUCCESS with null passed as unscored', () => {
     const counts = parseTestCaseStatusCounts({
       rows: [
         { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 5 },
@@ -606,7 +614,7 @@ describe('Runs Summary :: result parsers', () => {
       ],
     });
 
-    expect(counts).toEqual({ passed: 2, failed: 0, error: 0, total: 7 });
+    expect(counts).toEqual({ passed: 2, failed: 0, error: 0, unscored: 5, total: 7 });
   });
 
   test('parseTestCaseStatusCounts accepts string boolean passed values', () => {
@@ -617,12 +625,13 @@ describe('Runs Summary :: result parsers', () => {
       ],
     });
 
-    expect(counts).toEqual({ passed: 4, failed: 1, error: 0, total: 5 });
+    expect(counts).toEqual({ passed: 4, failed: 1, error: 0, unscored: 0, total: 5 });
   });
 
   test('parseTestCaseStatusCounts returns zeros for empty/null results', () => {
-    expect(parseTestCaseStatusCounts(null)).toEqual({ passed: 0, failed: 0, error: 0, total: 0 });
-    expect(parseTestCaseStatusCounts({ rows: [] })).toEqual({ passed: 0, failed: 0, error: 0, total: 0 });
+    const zeros = { passed: 0, failed: 0, error: 0, unscored: 0, total: 0 };
+    expect(parseTestCaseStatusCounts(null)).toEqual(zeros);
+    expect(parseTestCaseStatusCounts({ rows: [] })).toEqual(zeros);
   });
 
   test('hasOverallScoreThreshold is true for 0 and false for null/undefined', () => {
@@ -632,22 +641,31 @@ describe('Runs Summary :: result parsers', () => {
     expect(hasOverallScoreThreshold(undefined)).toBe(false);
   });
 
-  test('parseAvgRunTimeMs rounds the average and handles missing data', () => {
-    expect(parseAvgRunTimeMs({ rows: [{ [AVG_DURATION_ALIAS]: 199.6 }] })).toBe(200);
-    expect(parseAvgRunTimeMs({ rows: [{ [AVG_DURATION_ALIAS]: null }] })).toBeNull();
-    expect(parseAvgRunTimeMs({ rows: [] })).toBeNull();
-    expect(parseAvgRunTimeMs(null)).toBeNull();
+  test('parseDurationMs rounds the value and handles missing data', () => {
+    expect(parseDurationMs({ rows: [{ [TOTAL_DURATION_ALIAS]: 341199.6 }] }, TOTAL_DURATION_ALIAS)).toBe(341200);
+    expect(parseDurationMs({ rows: [{ [TOTAL_DURATION_ALIAS]: null }] }, TOTAL_DURATION_ALIAS)).toBeNull();
+    expect(parseDurationMs({ rows: [] }, TOTAL_DURATION_ALIAS)).toBeNull();
+    expect(parseDurationMs(null, TOTAL_DURATION_ALIAS)).toBeNull();
   });
 
-  test('parseAvgRunTimeMs supports reading a non-default alias', () => {
-    expect(
-      parseAvgRunTimeMs({ rows: [{ [AVG_METRIC_EVAL_DURATION_ALIAS]: 291123.6 }] }, AVG_METRIC_EVAL_DURATION_ALIAS),
-    ).toBe(291124);
+  test('parseDurationMs reads the requested alias only', () => {
+    const result = { rows: [{ [TOTAL_METRIC_EVAL_DURATION_ALIAS]: 291123.6 }] };
+
+    expect(parseDurationMs(result, TOTAL_METRIC_EVAL_DURATION_ALIAS)).toBe(291124);
+    expect(parseDurationMs(result, TOTAL_DURATION_ALIAS)).toBeNull();
   });
 
-  test('formatAvgRunTimeSeconds rounds ms to one decimal second', () => {
-    expect(formatAvgRunTimeSeconds(199.6)).toBe(0.2);
-    expect(formatAvgRunTimeSeconds(241000)).toBe(241);
+  test('formatRunTimeSeconds rounds ms to one decimal second', () => {
+    expect(formatRunTimeSeconds(199.6)).toBe(0.2);
+    expect(formatRunTimeSeconds(241000)).toBe(241);
+  });
+
+  test('sumRunTimeParts adds the present parts and is null only when both are missing', () => {
+    expect(sumRunTimeParts(341000, 291000)).toBe(632000);
+    expect(sumRunTimeParts(341000, null)).toBe(341000);
+    expect(sumRunTimeParts(null, 291000)).toBe(291000);
+    expect(sumRunTimeParts(0, null)).toBe(0);
+    expect(sumRunTimeParts(null, null)).toBeNull();
   });
 
   test('formatRunCost returns null for missing or non-finite values', () => {
@@ -667,18 +685,109 @@ describe('Runs Summary :: result parsers', () => {
     expect(formatRunCost(0.0123)).toBe('$0.012');
   });
 
-  test('hasRunCostFigure is true when either average is a number, including zero', () => {
-    expect(hasRunCostFigure({ avgTestCaseCost: 0.1, avgMetricEvalCost: 0.2 })).toBe(true);
-    expect(hasRunCostFigure({ avgTestCaseCost: null, avgMetricEvalCost: 0.2 })).toBe(true);
-    expect(hasRunCostFigure({ avgTestCaseCost: 0, avgMetricEvalCost: null })).toBe(true);
+  test('hasRunCostFigure is true when either part is a number, including zero', () => {
+    expect(hasRunCostFigure({ sourceCost: 0.1, metricsCost: 0.2 })).toBe(true);
+    expect(hasRunCostFigure({ sourceCost: null, metricsCost: 0.2 })).toBe(true);
+    expect(hasRunCostFigure({ sourceCost: 0, metricsCost: null })).toBe(true);
   });
 
   test('hasRunCostFigure is false for the shapes a not-yet-aggregated run returns', () => {
-    expect(hasRunCostFigure({ avgTestCaseCost: null, avgMetricEvalCost: null })).toBe(false);
-    expect(hasRunCostFigure({} as RunCosts)).toBe(false);
-    expect(hasRunCostFigure('' as unknown as RunCosts)).toBe(false);
+    expect(hasRunCostFigure({ sourceCost: null, metricsCost: null })).toBe(false);
+    expect(hasRunCostFigure({} as never)).toBe(false);
+    expect(hasRunCostFigure('' as never)).toBe(false);
     expect(hasRunCostFigure(null)).toBe(false);
     expect(hasRunCostFigure(undefined)).toBe(false);
+  });
+
+  test('sumRunCostParts adds the present parts and is null without a figure', () => {
+    expect(sumRunCostParts({ sourceCost: 0.42, metricsCost: 0.08 })).toBeCloseTo(0.5);
+    expect(sumRunCostParts({ sourceCost: 0.42, metricsCost: null })).toBe(0.42);
+    expect(sumRunCostParts({ sourceCost: 0, metricsCost: 0 })).toBe(0);
+    expect(sumRunCostParts({ sourceCost: null, metricsCost: null })).toBeNull();
+    expect(sumRunCostParts(null)).toBeNull();
+  });
+});
+
+describe('toRunCostFigures', () => {
+  const entry = (runId: string, testCaseCost: number | null, metricEvalCost: number | null): RunTotalCosts => ({
+    runId,
+    totalCost: (testCaseCost ?? 0) + (metricEvalCost ?? 0),
+    testCaseCost,
+    metricEvalCost,
+  });
+
+  test('reads the entry for the requested run', () => {
+    expect(toRunCostFigures([entry('other', 9, 9), entry('run-1', 0.42, 0.08)], 'run-1')).toEqual({
+      sourceCost: 0.42,
+      metricsCost: 0.08,
+    });
+  });
+
+  test('falls back to the first entry when none carries the run id', () => {
+    expect(toRunCostFigures([entry('x', 1, 2)], 'run-1')).toEqual({ sourceCost: 1, metricsCost: 2 });
+  });
+
+  test('normalises every not-ready shape to a figureless pair', () => {
+    const figureless = { sourceCost: null, metricsCost: null };
+
+    expect(toRunCostFigures([], 'run-1')).toEqual(figureless);
+    expect(toRunCostFigures([entry('run-1', null, null)], 'run-1')).toEqual(figureless);
+    expect(toRunCostFigures('' as never, 'run-1')).toEqual(figureless);
+    expect(toRunCostFigures({} as never, 'run-1')).toEqual(figureless);
+    expect(toRunCostFigures(undefined, 'run-1')).toEqual(figureless);
+  });
+
+  test('keeps a zero part as a real figure', () => {
+    expect(toRunCostFigures([entry('run-1', 0, null)], 'run-1')).toEqual({ sourceCost: 0, metricsCost: null });
+  });
+});
+
+describe('Runs Summary :: completion breakdown', () => {
+  const counts = (overrides: Partial<TestCaseStatusCounts>): TestCaseStatusCounts => ({
+    passed: 0,
+    failed: 0,
+    error: 0,
+    unscored: 0,
+    total: 0,
+    ...overrides,
+  });
+
+  test('toCompletionBreakdown with a threshold completes only scored SUCCESS cases', () => {
+    const breakdown = toCompletionBreakdown(counts({ passed: 20, failed: 25, error: 8, unscored: 2, total: 55 }), true);
+
+    expect(breakdown).toEqual({ total: 55, completed: 45, above: 20, below: 25, errorOrNa: 10 });
+  });
+
+  test('toCompletionBreakdown without a threshold completes every SUCCESS case and hides above/below', () => {
+    const breakdown = toCompletionBreakdown(counts({ unscored: 45, error: 10, total: 55 }), false);
+
+    expect(breakdown).toEqual({ total: 55, completed: 45, above: 0, below: 0, errorOrNa: 10 });
+  });
+
+  test('toCompletionBreakdown is all zeros for a run without test cases', () => {
+    expect(toCompletionBreakdown(counts({}), true)).toEqual({
+      total: 0,
+      completed: 0,
+      above: 0,
+      below: 0,
+      errorOrNa: 0,
+    });
+  });
+
+  test('getCompletionRate divides above by total with a threshold', () => {
+    const breakdown = toCompletionBreakdown(counts({ passed: 197, failed: 3, total: 200 }), true);
+
+    expect(getCompletionRate(breakdown, true)).toBeCloseTo(0.985);
+  });
+
+  test('getCompletionRate divides completed by total without a threshold', () => {
+    const breakdown = toCompletionBreakdown(counts({ unscored: 45, error: 10, total: 55 }), false);
+
+    expect(getCompletionRate(breakdown, false)).toBeCloseTo(45 / 55);
+  });
+
+  test('getCompletionRate is null when the run has no test cases', () => {
+    expect(getCompletionRate(toCompletionBreakdown(counts({}), true), true)).toBeNull();
   });
 });
 

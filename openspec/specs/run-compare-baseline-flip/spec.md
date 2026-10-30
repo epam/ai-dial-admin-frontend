@@ -31,9 +31,9 @@ label SHALL always sit on the first (left) run tag, and the "2" badge on the sec
 Every delta, highlight and diff count on the Run Comparison page SHALL be measured as the second run minus the
 baseline (first) run, using the baseline in force after the last flip. This applies to Summary Overview delta
 badges, the Execution Results Delta columns, Execution Results difference highlighting, and the diff legend
-counts. Colors SHALL follow each metric's polarity: for Overall Score and Test Cases Passed Threshold a positive
-delta is green and a negative delta red; for Avg Test Case Run Time and Avg Metric-Eval Latency a positive delta
-is red and a negative delta green.
+counts. Colors SHALL follow each metric's polarity: for Overall Score, Test Cases Completed and Threshold Pass
+Rate / Completion Rate a positive delta is green and a negative delta red; for Total Runtime and Total Run
+Cost a positive delta is red and a negative delta green.
 
 #### Scenario: Summary Overview badges recalculate on flip
 - **WHEN** the baseline run has Overall Score 0.900 and the second run 0.817, so the badge shows -0.083 in red, and the user flips the runs
@@ -41,7 +41,7 @@ is red and a negative delta green.
 - **AND** the Overall Score badge shows +0.083 in green
 
 #### Scenario: Time metrics keep inverted polarity after flip
-- **WHEN** the user flips runs and Avg Test Case Run Time of the new second run is lower than the new baseline's
+- **WHEN** the user flips runs and Total Runtime or Total Run Cost of the new second run is lower than the new baseline's
 - **THEN** its badge shows a negative delta in green
 
 #### Scenario: Execution Results Delta columns recalculate on flip

@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
-import { AVG_METRIC_EVAL_DURATION_ALIAS } from '@/src/components/Runs/Summary/constants';
+import { TOTAL_DURATION_ALIAS, TOTAL_METRIC_EVAL_DURATION_ALIAS } from '@/src/components/Runs/Summary/constants';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
 import {
-  buildAvgMetricEvalDurationQuery,
-  buildAvgRunTimeQuery,
   buildTestCasesStatusQuery,
-  parseAvgRunTimeMs,
+  buildTotalMetricEvalDurationQuery,
+  buildTotalRunTimeQuery,
+  parseDurationMs,
   parseTestCaseStatusCounts,
 } from '@/src/components/Runs/Summary/utils';
 
@@ -27,16 +27,16 @@ export const useRunAnalyticsSlice = (runId: string | undefined): { data: RunAnal
 
     Promise.all([
       executeStructuredQuery(buildTestCasesStatusQuery(runId)),
-      executeStructuredQuery(buildAvgRunTimeQuery(runId)),
-      executeStructuredQuery(buildAvgMetricEvalDurationQuery(runId)),
-    ]).then(([statusResult, avgResult, avgMetricEvalResult]) => {
+      executeStructuredQuery(buildTotalRunTimeQuery(runId)),
+      executeStructuredQuery(buildTotalMetricEvalDurationQuery(runId)),
+    ]).then(([statusResult, runTimeResult, metricEvalResult]) => {
       if (cancelled) {
         return;
       }
       setData({
         statusCounts: parseTestCaseStatusCounts(statusResult),
-        avgRunTimeMs: parseAvgRunTimeMs(avgResult),
-        avgMetricEvalDurationMs: parseAvgRunTimeMs(avgMetricEvalResult, AVG_METRIC_EVAL_DURATION_ALIAS),
+        totalRunTimeMs: parseDurationMs(runTimeResult, TOTAL_DURATION_ALIAS),
+        totalMetricEvalDurationMs: parseDurationMs(metricEvalResult, TOTAL_METRIC_EVAL_DURATION_ALIAS),
       });
     });
 

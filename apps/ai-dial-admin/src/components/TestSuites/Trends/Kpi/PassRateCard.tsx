@@ -4,15 +4,12 @@ import { FC, useMemo } from 'react';
 
 import { Notification, NotificationType, NotificationVariant, Spinner } from '@epam/ai-dial-ui-kit';
 
+import PassRateBar from '@/src/components/Common/PassRateBar/PassRateBar';
+import { formatPassRatePercent } from '@/src/components/Common/PassRateBar/utils';
 import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import KpiDeltaBadge from '@/src/components/TestSuites/Trends/Kpi/KpiDeltaBadge';
-import {
-  formatPassRateDelta,
-  formatPassRatePercent,
-  passRateBarColor,
-  segmentPassRate,
-} from '@/src/components/TestSuites/Trends/Kpi/utils/pass-rate';
+import { formatPassRateDelta, segmentPassRate } from '@/src/components/TestSuites/Trends/Kpi/utils/pass-rate';
 import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
 import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -64,17 +61,7 @@ const PassRateCard: FC<Props> = ({ segments, overallScoreThreshold, isLoading, h
               </>
             )}
           </div>
-          {latestRate != null && (
-            <div className="h-1 w-full overflow-hidden rounded-sm bg-layer-1" aria-hidden>
-              <div
-                className="h-full rounded-sm"
-                style={{
-                  width: `${Math.min(100, latestRate * 100)}%`,
-                  backgroundColor: passRateBarColor(latestRate),
-                }}
-              />
-            </div>
-          )}
+          {latestRate != null && <PassRateBar rate={latestRate} label={title} />}
         </div>
       )}
       {hasThreshold && overallScoreThreshold != null && !hasError && (

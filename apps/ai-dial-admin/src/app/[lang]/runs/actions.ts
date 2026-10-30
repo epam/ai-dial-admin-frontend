@@ -41,11 +41,6 @@ export async function getRun(id: string) {
   return runsApi.getRun(id, token);
 }
 
-export async function getRunCosts(id: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return runsApi.getRunCosts(id, token);
-}
-
 export async function getRunsTotalCosts(runIds: string[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.getRunsTotalCosts({ runIds }, token);

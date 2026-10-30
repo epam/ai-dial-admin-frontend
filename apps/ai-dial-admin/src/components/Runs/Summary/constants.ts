@@ -21,6 +21,8 @@ export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
 export const COUNT_ALIAS = 'count';
 export const AVG_DURATION_ALIAS = 'avg_duration_ms';
 export const AVG_METRIC_EVAL_DURATION_ALIAS = 'avg_metric_eval_duration_ms';
+export const TOTAL_DURATION_ALIAS = 'total_duration_ms';
+export const TOTAL_METRIC_EVAL_DURATION_ALIAS = 'total_metric_eval_duration_ms';
 
 /** `metric_score_name` value for the run-level overall score; excluded from the Metric Scores segmented control. */
 export const OVERALL_METRIC_SCORE_NAME = 'overall';
@@ -55,7 +57,11 @@ export const SUMMARY_PANELS_GRID_CLASS =
 
 export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
 
+/** Card with a footer pinned to the bottom (Overall Score's "Based on completed test cases"). */
 export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-between';
+
+/** Card whose content sits right under the title however tall the row is stretched by its neighbours. */
+export const ANALYTICS_KPI_CARD_TOP_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-start gap-2';
 
 export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
 

@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
-import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
+import { MetricOption, MetricScoresData, RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import { Run } from '@/src/models/evaluation/run';
 import {
   getCompareBarGroups,
   getCompareMetricStatCards,
   unionStatistics,
   maxBarValue,
+  toCompareSideFigures,
+  toRatePercent,
   unionMetricOptions,
 } from '../utils';
 
@@ -121,5 +124,62 @@ describe('Compare Summary :: utils', () => {
     expect(maxBarValue({ a: 0.2 }, { a: 0.5 })).toBe(1);
     expect(maxBarValue({ a: 1.2 }, { a: 0.5 })).toBe(1.2);
     expect(maxBarValue({ a: null }, { a: 1.5 })).toBe(1.5);
+  });
+});
+
+describe('toCompareSideFigures', () => {
+  const slice: RunAnalyticsSlice = {
+    statusCounts: { passed: 20, failed: 25, error: 8, unscored: 2, total: 55 },
+    totalRunTimeMs: 341000,
+    totalMetricEvalDurationMs: 291000,
+  };
+
+  test('derives the threshold breakdown, rate and runtime total for a run with a threshold', () => {
+    const figures = toCompareSideFigures({ suiteSnapshot: { overallScoreThreshold: 0.6 } } as Run, slice);
+
+    expect(figures).toEqual({
+      threshold: 0.6,
+      hasThreshold: true,
+      breakdown: { total: 55, completed: 45, above: 20, below: 25, errorOrNa: 10 },
+      rate: 20 / 55,
+      sourceMs: 341000,
+      metricsMs: 291000,
+      totalMs: 632000,
+    });
+  });
+
+  test('completes every successful case and rates completion for a run without a threshold', () => {
+    const figures = toCompareSideFigures({ suiteSnapshot: {} } as Run, slice);
+
+    expect(figures.threshold).toBeNull();
+    expect(figures.hasThreshold).toBe(false);
+    expect(figures.breakdown).toEqual({ total: 55, completed: 47, above: 0, below: 0, errorOrNa: 8 });
+    expect(figures.rate).toBe(47 / 55);
+  });
+
+  test('treats a threshold of zero as set', () => {
+    expect(toCompareSideFigures({ suiteSnapshot: { overallScoreThreshold: 0 } } as Run, slice).hasThreshold).toBe(true);
+  });
+
+  test('has no runtime total when both parts are absent', () => {
+    const figures = toCompareSideFigures({} as Run, {
+      ...slice,
+      totalRunTimeMs: null,
+      totalMetricEvalDurationMs: null,
+    });
+
+    expect(figures.totalMs).toBeNull();
+  });
+});
+
+describe('toRatePercent', () => {
+  test('converts a fraction to a one-decimal percentage', () => {
+    expect(toRatePercent(0.985)).toBe(98.5);
+    expect(toRatePercent(0.125)).toBe(12.5);
+    expect(toRatePercent(1)).toBe(100);
+  });
+
+  test('is null for a missing rate', () => {
+    expect(toRatePercent(null)).toBeNull();
   });
 });
