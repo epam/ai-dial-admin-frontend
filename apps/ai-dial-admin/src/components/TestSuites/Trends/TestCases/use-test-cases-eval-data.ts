@@ -18,9 +18,8 @@ export const useTestCasesEvalData = (runOrder: TrendsRunPoint[]): TestCasesEvalD
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const runDataKey = JSON.stringify(
-    runOrder.map(({ runId, runName, overallScore, overallScoreThreshold, isFailed }) => [
+    runOrder.map(({ runId, overallScore, overallScoreThreshold, isFailed }) => [
       runId,
-      runName,
       overallScore,
       overallScoreThreshold,
       isFailed,

@@ -3,10 +3,12 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import { TEST_CASE_SEGMENT_BG, TEST_CASE_SEGMENT_HEX } from '@/src/components/TestSuites/Trends/constants';
 import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TREND_TOOLTIP_TEXT_ACCENT } from '@/src/components/TestSuites/Trends/utils/chart-tooltip-styles';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 
 const COMPLETED_SPLIT_STYLE = {
   backgroundImage: `linear-gradient(135deg, ${TEST_CASE_SEGMENT_HEX.above} 50%, ${TEST_CASE_SEGMENT_HEX.below} 50%)`,
@@ -55,10 +57,12 @@ const TestCasesBarTooltip: FC<TestCasesBarTooltipProps> = ({
   errorLabel,
 }) => {
   const { runId, runName, above, below, errorOrNa, total, overallScoreThreshold } = segments;
-  const hasThreshold = overallScoreThreshold != null;
+  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
   const completedCount = hasThreshold ? above + below : above;
-  const aboveWithThreshold = overallScoreThreshold != null ? `${aboveLabel} (${overallScoreThreshold})` : aboveLabel;
-  const belowWithThreshold = overallScoreThreshold != null ? `${belowLabel} (${overallScoreThreshold})` : belowLabel;
+  const aboveWithThreshold =
+    overallScoreThreshold != null ? `${aboveLabel} (${formatScore(overallScoreThreshold)})` : aboveLabel;
+  const belowWithThreshold =
+    overallScoreThreshold != null ? `${belowLabel} (${formatScore(overallScoreThreshold)})` : belowLabel;
   const href = getUrnForEntity(ApplicationRoute.Runs, { id: runId, testRunName: runName });
 
   return (

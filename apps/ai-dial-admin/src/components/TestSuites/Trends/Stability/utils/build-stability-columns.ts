@@ -16,6 +16,7 @@ import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 import { StabilityCellMeta } from '@/src/components/TestSuites/Trends/Stability/models';
 import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 
 const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
 
@@ -50,12 +51,14 @@ const buildStabilityTooltip = (
 
   const meta = cellMeta[row.id]?.[colId];
   const value = row.values[colId];
+  const treshold = thresholdByRowId[row.id];
+
   const tooltipRows = [
     { label: labels.testCase, value: testCaseLabel },
     { label: labels.run, value: row.label },
     {
       label: labels.threshold,
-      value: thresholdByRowId[row.id] == null ? labels.notApplicable : String(thresholdByRowId[row.id]),
+      value: treshold == null ? labels.notApplicable : formatScore(treshold),
     },
   ];
 

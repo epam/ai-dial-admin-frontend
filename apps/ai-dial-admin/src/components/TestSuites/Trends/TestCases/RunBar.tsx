@@ -11,6 +11,7 @@ import TrendRunNameLabel, {
 import TestCasesBarTooltip from '@/src/components/TestSuites/Trends/TestCases/TestCasesBarTooltip';
 import { TEST_CASE_SEGMENT_BG } from '@/src/components/TestSuites/Trends/constants';
 import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 
 /** Label column under each bar (shared Trends x-axis height, Figma 12405:245295). */
 export const BAR_LABEL_HEIGHT_PX = TREND_RUN_AXIS_LABEL_HEIGHT_PX;
@@ -38,7 +39,7 @@ const RunBar: FC<Props> = ({
   totalLabel,
 }) => {
   const { above, below, errorOrNa, total, runName, overallScoreThreshold } = segments;
-  const hasThreshold = overallScoreThreshold != null;
+  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
   const runBelowLabel = hasThreshold ? belowLabel : null;
   const ariaLabel =
     runBelowLabel != null
