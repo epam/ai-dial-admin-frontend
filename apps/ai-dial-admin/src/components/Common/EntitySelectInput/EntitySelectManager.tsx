@@ -41,15 +41,23 @@ const EntitySelectManager: FC<Props> = ({
     setFilePath,
     expandedFolders,
     setExpandedFolders,
+    fetchedFoldersData,
   } = useFolder();
 
   const [loadedPaths, setLoadedPaths] = useState(new Set<string>());
+  // The value points at something that no longer exists, so the picker opens at the root like it has no value.
+  const [isValueUnresolved, setIsValueUnresolved] = useState(false);
+  const effectiveValue = isValueUnresolved ? '' : value;
 
   useEffect(() => {
     if ((files == null || files.length === 0) && isModalOpen) {
-      if (value) {
-        const path = getFolderNameAndPath(value).path;
-        fetchFolderHierarchy?.(`${path}/`, true);
+      if (effectiveValue) {
+        const path = getFolderNameAndPath(effectiveValue).path;
+        // A missing folder leaves `files` empty, which re-runs this effect. Its listing is already known, so
+        // asking again would only repeat the failing request before the fallback below takes over.
+        if (fetchedFoldersData?.[`${path}/`] == null) {
+          fetchFolderHierarchy?.(`${path}/`, true);
+        }
       } else {
         fetchFiles(`${ROOT_FOLDER}/`);
         setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
@@ -59,12 +67,31 @@ const EntitySelectManager: FC<Props> = ({
   }, [files, isModalOpen]);
 
   useEffect(() => {
-    if (value && files !== null && files.length > 0 && isModalOpen) {
-      const path = getFolderNameAndPath(value).path;
+    if (effectiveValue && files !== null && files.length > 0 && isModalOpen) {
+      const path = getFolderNameAndPath(effectiveValue).path;
       fetchFolderHierarchy?.(`${path}/`, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, isModalOpen]);
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setIsValueUnresolved(false);
+      return;
+    }
+    if (!value || isValueUnresolved) {
+      return;
+    }
+    // A missing folder lists as empty rather than failing (the backend's 400 is swallowed upstream).
+    const isLeafEmpty = fetchedFoldersData?.[`${getFolderNameAndPath(value).path}/`]?.length === 0;
+    if (isLeafEmpty) {
+      setIsValueUnresolved(true);
+      // The array form replaces the tree outright, dropping the placeholder folders of the missing path.
+      fetchFiles([`${ROOT_FOLDER}/`], true, true);
+      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedFoldersData, isModalOpen]);
 
   const onPathChange = useCallback(
     (nextPath: string | undefined) => {
@@ -128,13 +155,13 @@ const EntitySelectManager: FC<Props> = ({
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,
-          value ? expandedFolders : loadedPaths,
+          effectiveValue ? expandedFolders : loadedPaths,
           expandedFolders,
           route,
           setExpandedFolders,
           t,
         )}
-        defaultSelectedPaths={value ? new Set([value]) : void 0}
+        defaultSelectedPaths={effectiveValue ? new Set([effectiveValue]) : void 0}
         gridOptions={getGridOptions(route, isReadOnlyAdmin, gridColumns, t, !isMultiple)}
         onPathChange={onPathChange}
         onFolderPopupPathChange={onFolderPopupPathChange}
