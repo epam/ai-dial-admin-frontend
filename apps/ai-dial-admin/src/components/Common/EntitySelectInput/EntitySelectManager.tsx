@@ -45,8 +45,10 @@ const EntitySelectManager: FC<Props> = ({
   } = useFolder();
 
   const [loadedPaths, setLoadedPaths] = useState(new Set<string>());
-  // The value points at something that no longer exists, so the picker opens at the root like it has no value.
-  const [isValueUnresolved, setIsValueUnresolved] = useState(false);
+  // The value that turned out to point at nothing: the picker opens at the root for it, like it has no value.
+  // Keyed by the value, so a different value is resolved afresh without waiting for the popup to reopen.
+  const [unresolvedValue, setUnresolvedValue] = useState<string | null>(null);
+  const isValueUnresolved = unresolvedValue === value;
   const effectiveValue = isValueUnresolved ? '' : value;
 
   useEffect(() => {
@@ -72,11 +74,11 @@ const EntitySelectManager: FC<Props> = ({
       fetchFolderHierarchy?.(`${path}/`, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, isModalOpen]);
+  }, [effectiveValue, isModalOpen]);
 
   useEffect(() => {
     if (!isModalOpen) {
-      setIsValueUnresolved(false);
+      setUnresolvedValue(null);
       return;
     }
     if (!value || isValueUnresolved) {
@@ -85,7 +87,7 @@ const EntitySelectManager: FC<Props> = ({
     // A missing folder lists as empty rather than failing (the backend's 400 is swallowed upstream).
     const isLeafEmpty = fetchedFoldersData?.[`${getFolderNameAndPath(value).path}/`]?.length === 0;
     if (isLeafEmpty) {
-      setIsValueUnresolved(true);
+      setUnresolvedValue(value);
       // The array form replaces the tree outright, dropping the placeholder folders of the missing path.
       fetchFiles([`${ROOT_FOLDER}/`], true, true);
       setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));

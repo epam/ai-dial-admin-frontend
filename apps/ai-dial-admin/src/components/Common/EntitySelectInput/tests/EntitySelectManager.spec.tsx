@@ -180,6 +180,30 @@ describe('EntitySelectManager', () => {
     expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
   });
 
+  test('does not request the value hierarchy again after falling back to the root', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    const { rerender } = renderManager({ value: 'bucket1/missing-skill' });
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+    mockFolder.fetchFolderHierarchy.mockClear();
+
+    mockFolder.files = [{ path: 'public/' }, { path: 'public/team/' }];
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/missing-skill" isModalOpen />);
+
+    expect(mockFolder.fetchFolderHierarchy).not.toHaveBeenCalled();
+  });
+
+  test('resolves a different value afresh after falling back for the previous one', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    const { rerender } = renderManager({ value: 'bucket1/missing-skill' });
+    mockFolder.fetchFolderHierarchy.mockClear();
+
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="public/team/my-skill" isModalOpen />);
+
+    expect(mockFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/', true);
+  });
+
   test('keeps the current value when its folder still holds entries', () => {
     mockFolder.fetchedFoldersData = { 'public/team/': [{ path: 'public/team/other-skill' }] };
     renderManager({ value: 'public/team/missing-skill' });
