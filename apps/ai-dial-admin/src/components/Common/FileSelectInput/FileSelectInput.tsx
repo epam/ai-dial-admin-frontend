@@ -18,12 +18,23 @@ interface Props {
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
+  wrapperClassName?: string;
   onChangeValue: (value: string) => void;
   view?: ApplicationRoute;
   id?: string;
 }
 
-const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputClassName, onChangeValue, view, id }) => {
+const FileSelectInput: FC<Props> = ({
+  value,
+  label,
+  elementId,
+  disabled,
+  inputClassName,
+  wrapperClassName,
+  onChangeValue,
+  view,
+  id,
+}) => {
   const t = useI18n();
 
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -53,6 +64,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
         elementId={elementId}
         disabled={disabled}
         inputClassName={inputClassName}
+        wrapperClassName={wrapperClassName}
         onOpen={() => setIsModalOpen(true)}
         onClose={() => setIsModalOpen(false)}
         onConfirm={onConfirm}

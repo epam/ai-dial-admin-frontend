@@ -41,6 +41,7 @@ const EntitySelectCellRenderer: FC<EntitySelectCellRendererParams> = ({
         value={localValue}
         onChangeValue={onChangeValue}
         inputClassName="h-8"
+        wrapperClassName="h-8 py-0"
         disabled={isReadonly}
       />
     </div>
