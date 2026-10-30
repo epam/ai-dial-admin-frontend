@@ -222,6 +222,14 @@ describe('EntitySelectManager', () => {
     expect(mockFolder.fetchFiles).toHaveBeenCalledTimes(2);
   });
 
+  test('does not fall back for a value without a folder', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { '/': [] };
+    renderManager({ value: 'bucket1' });
+
+    expect(mockFolder.fetchFiles).not.toHaveBeenCalled();
+  });
+
   test('keeps the current value when its folder still holds entries', () => {
     mockFolder.fetchedFoldersData = { 'public/team/': [{ path: 'public/team/other-skill' }] };
     renderManager({ value: 'public/team/missing-skill' });

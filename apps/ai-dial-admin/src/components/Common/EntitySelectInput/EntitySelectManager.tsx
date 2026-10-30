@@ -84,8 +84,13 @@ const EntitySelectManager: FC<Props> = ({
     if (!value || isValueUnresolved) {
       return;
     }
+    // A value without a folder (no `/`) has no listing to look up.
+    const folderPath = getFolderNameAndPath(value).path;
+    if (!folderPath) {
+      return;
+    }
     // A missing folder lists as empty rather than failing (the backend's 400 is swallowed upstream).
-    const isLeafEmpty = fetchedFoldersData?.[`${getFolderNameAndPath(value).path}/`]?.length === 0;
+    const isLeafEmpty = fetchedFoldersData?.[`${folderPath}/`]?.length === 0;
     if (isLeafEmpty) {
       setUnresolvedValue(value);
       // The array form replaces the tree outright, dropping the placeholder folders of the missing path.
