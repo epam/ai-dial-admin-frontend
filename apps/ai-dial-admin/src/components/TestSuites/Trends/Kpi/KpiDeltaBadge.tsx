@@ -25,6 +25,7 @@ const KpiDeltaBadge: FC<Props> = ({ label, higherIsBetter, className }) => {
   const [isOverflowing, setIsOverflowing] = useState(false);
 
   useEffect(() => {
+    // Relies on Badge rendering a .truncate span internally; revisit if ui-kit Badge internals change
     const badgeText = badgeRef.current?.querySelector<HTMLElement>('.truncate');
     if (!badgeText) return;
 
@@ -34,7 +35,7 @@ const KpiDeltaBadge: FC<Props> = ({ label, higherIsBetter, className }) => {
     const observer = new ResizeObserver(measureOverflow);
     observer.observe(badgeText);
     return () => observer.disconnect();
-  }, [badgeLabel, className]);
+  }, [badgeLabel]);
 
   return (
     <Tooltip tooltip={badgeLabel} hideTooltip={!isOverflowing} triggerClassName="min-w-0 max-w-full">
