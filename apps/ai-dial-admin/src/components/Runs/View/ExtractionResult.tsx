@@ -11,7 +11,7 @@ import { ColumnWidths } from '@/src/components/Grid/models';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
-import { ExecutionResultRowType } from '@/src/components/Runs/ExecutionResults/models';
+import { ExecutionResultRowType, GroupedAnalyticsResult } from '@/src/components/Runs/ExecutionResults/models';
 import {
   projectExecutionResultGroups,
   projectExecutionResultScores,
@@ -23,7 +23,7 @@ import {
 import { ExtractionResultTabUiState } from '@/src/components/Runs/View/models';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Run } from '@/src/models/evaluation/run';
+import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 import { hasVaryingExecutionIndices } from '@/src/utils/evaluation/column-variation';
 import { useDetailMode } from './use-detail-mode';
 import {
@@ -277,7 +277,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
         {isLoading ? (
           <Spinner size={40} fullWidth />
         ) : (
-          <GridView
+          <GridView<AnalyticsResult | GroupedAnalyticsResult>
             columnDefs={colDefs}
             columnWidths={columnWidths}
             onColumnWidthsChange={onColumnWidthsChange}

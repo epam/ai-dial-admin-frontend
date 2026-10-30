@@ -29,18 +29,26 @@ export const sortExecutionResultGroupRows = <T extends AnalyticsResult>(rows: T[
     })
     .map(({ row }) => row);
 
-const groupRows = <T extends AnalyticsResult>(rows: T[]): Map<string, T[]> => {
+const groupRows = <T extends AnalyticsResult>(rows: T[]): T[][] => {
   const groups = new Map<string, T[]>();
+  const orderedGroups: T[][] = [];
   rows.forEach((row) => {
     const key = getExecutionResultGroupKey(row);
+    // Without an identity, keep the row standalone instead of merging unrelated results.
+    if (!key) {
+      orderedGroups.push([row]);
+      return;
+    }
     const group = groups.get(key);
     if (group) {
       group.push(row);
     } else {
-      groups.set(key, [row]);
+      const newGroup = [row];
+      groups.set(key, newGroup);
+      orderedGroups.push(newGroup);
     }
   });
-  return groups;
+  return orderedGroups;
 };
 
 const toResultRow = <T extends AnalyticsResult>(row: T, groupKey: string): T & GroupedAnalyticsResult => ({
@@ -74,14 +82,15 @@ export const projectExecutionResultGroups = (
   threshold?: number,
 ): GroupedAnalyticsResult[] => {
   const findScore = buildTestCaseScoreLookup(summaries);
-  return [...groupRows(rows)].flatMap(([groupKey, group]) => {
+  return groupRows(rows).flatMap((group) => {
     const first = group[0];
+    const groupKey = getExecutionResultGroupKey(first);
+    if (!groupKey) return [toResultRow(first, groupKey)];
     const summary = findScore(runId, first.testCaseId, first.testCaseName);
     const isExpanded = !collapsedGroupKeys.has(groupKey);
     const groupRow: GroupedAnalyticsResult = {
       testCaseId: first.testCaseId,
       testCaseName: first.testCaseName,
-      responseStatusCode: undefined as unknown as number,
       runIndex: 0,
       resultRowType: ExecutionResultRowType.Group,
       groupKey,
@@ -104,8 +113,10 @@ export const projectCompareExecutionResultGroups = (
   comparedThreshold?: number,
 ): GroupedCompareAnalyticsRow[] => {
   const findScore = buildTestCaseScoreLookup(summaries);
-  return [...groupRows(rows)].flatMap(([groupKey, group]) => {
+  return groupRows(rows).flatMap((group) => {
     const first = group[0];
+    const groupKey = getExecutionResultGroupKey(first);
+    if (!groupKey) return [toResultRow(first, groupKey)];
     const primarySummary = findScore(primaryRunId, first.testCaseId, first.testCaseName);
     const comparedResult = first._compared;
     const comparedSummary = findScore(
@@ -117,7 +128,6 @@ export const projectCompareExecutionResultGroups = (
     const groupRow: GroupedCompareAnalyticsRow = {
       testCaseId: first.testCaseId,
       testCaseName: first.testCaseName,
-      responseStatusCode: undefined as unknown as number,
       runIndex: 0,
       resultRowType: ExecutionResultRowType.Group,
       groupKey,

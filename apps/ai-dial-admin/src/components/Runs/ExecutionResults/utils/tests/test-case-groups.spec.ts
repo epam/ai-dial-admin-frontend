@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
-import { ExecutionResultRowType, TestCaseThresholdStatus } from '@/src/components/Runs/ExecutionResults/models';
 import {
+  ExecutionResultRowType,
+  GroupedAnalyticsResult,
+  GroupedCompareAnalyticsRow,
+  TestCaseThresholdStatus,
+} from '@/src/components/Runs/ExecutionResults/models';
+import {
+  getExecutionResultGroupKey,
   projectCompareExecutionResultScores,
   projectCompareExecutionResultGroups,
   projectExecutionResultScores,
@@ -20,6 +26,74 @@ const result = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
 });
 
 describe('test-case result grouping', () => {
+  test('allows synthetic rows without an HTTP response status', () => {
+    const group: GroupedAnalyticsResult = {
+      resultRowType: ExecutionResultRowType.Group,
+      groupKey: 'case-1',
+      runIndex: 0,
+    };
+    const compareGroup: GroupedCompareAnalyticsRow = { ...group, primaryScore: 0.5 };
+
+    expect(group.responseStatusCode).toBeUndefined();
+    expect(compareGroup.responseStatusCode).toBeUndefined();
+  });
+
+  describe.each([
+    {
+      name: 'single-run results',
+      project: (rows: AnalyticsResult[], collapsed: ReadonlySet<string>) =>
+        projectExecutionResultGroups(rows, collapsed, [], 'run-id'),
+    },
+    {
+      name: 'comparison results',
+      project: (rows: AnalyticsResult[], collapsed: ReadonlySet<string>) =>
+        projectCompareExecutionResultGroups(rows, collapsed, [], 'primary', 'compared'),
+    },
+  ])('$name', ({ project }) => {
+    test('keeps unidentified rows standalone and visible even when the empty key is collapsed', () => {
+      const unidentified = result({ id: undefined, testCaseId: undefined, testCaseName: undefined });
+      const emptyIdentifiers = result({ id: '', testCaseId: '', testCaseName: '', responseStatusCode: 500 });
+      const rows = [unidentified, result(), emptyIdentifiers];
+      const projected = project(rows, new Set(['', 'case-1']));
+
+      expect(projected).toEqual([
+        { ...unidentified, resultRowType: ExecutionResultRowType.Result, groupKey: '' },
+        expect.objectContaining({ resultRowType: ExecutionResultRowType.Group, groupKey: 'case-1' }),
+        { ...emptyIdentifiers, resultRowType: ExecutionResultRowType.Result, groupKey: '' },
+      ]);
+      expect(rows).toEqual([unidentified, result(), emptyIdentifiers]);
+    });
+
+    test('omits HTTP status on group headers and preserves it on child rows', () => {
+      const projected = project([result({ responseStatusCode: 500 })], new Set());
+
+      expect(projected[0].resultRowType).toBe(ExecutionResultRowType.Group);
+      expect(projected[0]).not.toHaveProperty('responseStatusCode');
+      expect(projected[1].responseStatusCode).toBe(500);
+    });
+
+    test('uses name and result ID fallbacks without merging distinct identities', () => {
+      const rows = [
+        result({ testCaseId: undefined, testCaseName: 'By name', id: 'first' }),
+        result({ testCaseId: undefined, testCaseName: 'By name', id: 'second' }),
+        result({ testCaseId: undefined, testCaseName: undefined, id: 'third' }),
+        result({ testCaseId: undefined, testCaseName: undefined, id: 'fourth' }),
+      ];
+      const projected = project(rows, new Set());
+
+      expect(
+        projected.filter((row) => row.resultRowType === ExecutionResultRowType.Group).map((row) => row.groupKey),
+      ).toEqual(['By name', 'third', 'fourth']);
+      expect(
+        projected.filter((row) => row.resultRowType === ExecutionResultRowType.Result).map((row) => row.id),
+      ).toEqual(['first', 'second', 'third', 'fourth']);
+    });
+
+    test('returns no rows for empty results', () => {
+      expect(project([], new Set())).toEqual([]);
+    });
+  });
+
   test('orders child rows by run, request, and turn while preserving tied source order', () => {
     const rows = [
       result({ id: 'fourth', runIndex: 1, requestIndex: 0, turnIndex: 0 }),
@@ -144,5 +218,18 @@ describe('test-case result grouping', () => {
         comparedThresholdStatus: TestCaseThresholdStatus.Fail,
       }),
     );
+  });
+});
+
+describe('getExecutionResultGroupKey', () => {
+  test('prefers the test case ID, then its name, then the result ID', () => {
+    expect(getExecutionResultGroupKey(result())).toBe('case-1');
+    expect(getExecutionResultGroupKey(result({ testCaseId: undefined }))).toBe('Case 1');
+    expect(getExecutionResultGroupKey(result({ testCaseId: undefined, testCaseName: undefined }))).toBe('result-1');
+  });
+
+  test('signals that grouping is unavailable when all identifiers are missing', () => {
+    expect(getExecutionResultGroupKey({})).toBe('');
+    expect(getExecutionResultGroupKey({ testCaseId: '', testCaseName: '', id: '' })).toBe('');
   });
 });

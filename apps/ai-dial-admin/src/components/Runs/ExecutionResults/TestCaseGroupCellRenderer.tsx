@@ -1,3 +1,5 @@
+'use client';
+
 import { MouseEvent } from 'react';
 
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
