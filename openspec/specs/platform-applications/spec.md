@@ -253,7 +253,7 @@ end-users; this notification SHALL NOT be shown when `user_roles` is `undefined`
 #### Scenario: Roles tab appears on the platform application detail view
 - **WHEN** a user opens a platform-bucket application's detail view
 - **THEN** a `Roles` tab is present alongside Properties, Features, Parameters, Interceptors,
-  Dependencies, and App Routes
+  and App Routes, and no `Dependencies` tab is present
 
 #### Scenario: Roles selection round-trips on the platform application resource
 - **WHEN** a user selects roles on a platform application and saves

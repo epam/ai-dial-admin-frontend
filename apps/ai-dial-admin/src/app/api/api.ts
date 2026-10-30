@@ -12,6 +12,7 @@ import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
+import { AdminConsentApi } from '@/src/server/core/admin-consent-api';
 import { ExternalServiceConsentApi } from '@/src/server/core/external-service-consent-api';
 import { ExternalServiceOpsApi } from '@/src/server/core/external-service-ops-api';
 import { QueryAssistantApi } from '@/src/server/core/query-assistant-api';
@@ -259,6 +260,10 @@ export const externalServiceOpsApi = new ExternalServiceOpsApi({
 });
 
 export const externalServiceConsentApi = new ExternalServiceConsentApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+export const adminConsentApi = new AdminConsentApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

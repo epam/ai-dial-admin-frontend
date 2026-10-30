@@ -28,6 +28,7 @@ export enum EntityViewTab {
   Activities = 'Activities',
   Dashboard = 'Dashboard',
   Dependencies = 'Dependencies',
+  ResourceDependencies = 'ResourceDependencies',
   AppRoutes = 'AppRoutes',
   Routes = 'Routes',
   Traces = 'Traces',
@@ -168,6 +169,17 @@ export const dependenciesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Dependencies,
   label: t(TabsI18nKey.Dependencies),
 });
+
+export const resourceDependenciesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.ResourceDependencies,
+  label: t(TabsI18nKey.ResourceDependencies),
+});
+
+/** Public-bucket applications only: inserted where the removed Dependencies tab sat, before App Routes. */
+export const withResourceDependenciesTab = (tabs: TabItem[], t: (key: string) => string): TabItem[] => {
+  const appRoutesIndex = tabs.findIndex((tab) => tab.id === EntityViewTab.AppRoutes);
+  return tabs.toSpliced(appRoutesIndex === -1 ? tabs.length : appRoutesIndex, 0, resourceDependenciesTab(t));
+};
 
 export const appRouteTab = (t: (key: string) => string) => ({
   id: EntityViewTab.AppRoutes,
@@ -480,7 +492,6 @@ export const getTabsForAsset = (
       parametersTab(t),
       catalogTab(t),
       interceptorsTab(t),
-      dependenciesTab(t),
       appRouteTab(t),
       // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
       ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),

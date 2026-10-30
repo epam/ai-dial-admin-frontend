@@ -66,6 +66,7 @@ import {
   permissionsTab,
   promptsTab,
   propertiesTab,
+  resourceDependenciesTab,
   publicTab,
   rateLimitScheduleTab,
   relatedContainersTab,
@@ -85,7 +86,9 @@ import {
   routesTab,
   getTabStatusLabel,
   getTabStatusProps,
+  withResourceDependenciesTab,
 } from '../utils';
+import { EntityViewTab } from '../utils';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -219,9 +222,37 @@ describe('Entities :: tabs', () => {
       parametersTab(t),
       catalogTab(t),
       interceptorsTab(t),
-      dependenciesTab(t),
       appRouteTab(t),
     ]);
+  });
+
+  test('offers no Dependencies tab on AssetsApplications', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications)).not.toContainEqual(dependenciesTab(t));
+  });
+
+  test('builds the Resource Dependencies tab', () => {
+    expect(resourceDependenciesTab(t)).toEqual({
+      id: EntityViewTab.ResourceDependencies,
+      label: TabsI18nKey.ResourceDependencies,
+    });
+  });
+
+  test('inserts the Resource Dependencies tab before App Routes', () => {
+    const tabs = withResourceDependenciesTab(getTabsForAsset(t, ApplicationRoute.AssetsApplications), t);
+
+    expect(tabs.map((tab) => tab.id)).toEqual([
+      EntityViewTab.Properties,
+      EntityViewTab.Features,
+      EntityViewTab.Parameters,
+      EntityViewTab.Catalog,
+      EntityViewTab.Interceptors,
+      EntityViewTab.ResourceDependencies,
+      EntityViewTab.AppRoutes,
+    ]);
+  });
+
+  test('appends the Resource Dependencies tab when there is no App Routes tab', () => {
+    expect(withResourceDependenciesTab([propertiesTab(t)], t)).toEqual([propertiesTab(t), resourceDependenciesTab(t)]);
   });
 
   test('offers an asset application the Audit tab only behind the analytics usage flag', () => {
