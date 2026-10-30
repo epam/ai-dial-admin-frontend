@@ -225,6 +225,7 @@ describe('EntitySelectManager', () => {
 
   test('does not fall back for a value without a folder', () => {
     mockFolder.files = [{ path: 'public/' }];
+    // The `'/'` entry is what a folder-less value would hit without the guard: the test fails if the guard goes.
     mockFolder.fetchedFoldersData = { '/': [] };
     renderManager({ value: 'bucket1' });
 

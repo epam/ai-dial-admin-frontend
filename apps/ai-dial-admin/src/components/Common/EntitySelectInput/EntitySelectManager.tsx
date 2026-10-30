@@ -45,7 +45,8 @@ const EntitySelectManager: FC<Props> = ({
   } = useFolder();
 
   const [loadedPaths, setLoadedPaths] = useState(new Set<string>());
-  // The value that turned out to point at nothing: the picker opens at the root for it, like it has no value.
+  // The value that turned out to point at nothing. The picker shows the tree for it exactly as it does for an
+  // empty value, while the `value` prop itself stays as it was.
   // Keyed by the value, so a different value is resolved afresh without waiting for the popup to reopen.
   const [unresolvedValue, setUnresolvedValue] = useState<string | null>(null);
   const isValueUnresolved = unresolvedValue === value;
@@ -65,8 +66,11 @@ const EntitySelectManager: FC<Props> = ({
         setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
       }
     }
-    // `fetchedFoldersData` is read in the guard above but must not be a trigger: every cache update would
-    // restart the load sequence. The same goes for the other values read here.
+    // Runs only when the tree empties or the popup toggles. Deliberately not dependencies:
+    // - `fetchedFoldersData`: read by the guard above, but every cache update would restart the load sequence;
+    // - `effectiveValue`: a changed value is handled by the next effect once the tree is loaded;
+    // - `fetchFiles` / `fetchFolderHierarchy`: stable callbacks from the folder context.
+    // The effect below has no suppression, so it lists `fetchFiles` like any other dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files, isModalOpen]);
 
