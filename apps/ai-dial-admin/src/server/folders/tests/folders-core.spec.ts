@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, filesCoreApi, publicationsApi, skillsCoreApi } from '@/src/app/api/api';
+import { assetApi, filesCoreApi, projectsCoreApi, publicationsApi, skillsCoreApi } from '@/src/app/api/api';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { CoreResourceMetadataNode, ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ResourceType } from '@/src/types/resource-type';
@@ -63,6 +63,104 @@ describe('Server :: Folders :: folders-core :: getFoldersCore', () => {
       expect.objectContaining({ recursive: false }),
     );
     expect(filesCoreApi.getFileMetadata).toHaveBeenCalledWith(TOKEN_MOCK, 'public/', false, undefined);
+  });
+});
+
+describe('Server :: Folders :: folders-core :: getFoldersCore :: skill and project folders', () => {
+  const complexFolder = (prefix: string, children: { url: string; nodeType: string }[]) => ({
+    url: `${prefix}public/`,
+    nodeType: 'FOLDER',
+    parentPath: null,
+    bucket: 'b-1',
+    items: children,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (assetApi.getMetadata as any).mockResolvedValue(null);
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue(null);
+    (skillsCoreApi.listSkillMetadata as any).mockResolvedValue(null);
+    (projectsCoreApi.listProjectMetadata as any).mockResolvedValue(null);
+  });
+
+  test('lists a folder that exists only for skills, without the skills themselves', async () => {
+    (skillsCoreApi.listSkillMetadata as any).mockResolvedValue(
+      complexFolder('skills/', [
+        { url: 'skills/public/team/', nodeType: 'FOLDER' },
+        { url: 'skills/public/skill-a', nodeType: 'ITEM' },
+      ]),
+    );
+
+    const result = await getFoldersCore(TOKEN_MOCK, 'public/');
+
+    expect(result?.items?.map((item) => item.name)).toEqual(['team']);
+  });
+
+  test('lists a folder that exists only for projects', async () => {
+    (projectsCoreApi.listProjectMetadata as any).mockResolvedValue(
+      complexFolder('projects/', [{ url: 'projects/public/area/', nodeType: 'FOLDER' }]),
+    );
+
+    const result = await getFoldersCore(TOKEN_MOCK, 'public/');
+
+    expect(result?.items?.map((item) => item.name)).toEqual(['area']);
+  });
+
+  test('merges a folder shared by skills and another type without an inconsistency error', async () => {
+    (assetApi.getMetadata as any).mockImplementation((_t: unknown, type: ResourceType) =>
+      type === ResourceType.PROMPT
+        ? Promise.resolve({
+            url: 'prompts/public/',
+            nodeType: 'FOLDER',
+            parentPath: null,
+            bucket: 'b-1',
+            items: [{ url: 'prompts/public/team/', nodeType: 'FOLDER', parentPath: 'public/', bucket: 'b-1' }],
+          })
+        : Promise.resolve(null),
+    );
+    (skillsCoreApi.listSkillMetadata as any).mockResolvedValue(
+      complexFolder('skills/', [
+        { url: 'skills/public/team/', nodeType: 'FOLDER', parentPath: 'public/', bucket: 'b-1' } as any,
+      ]),
+    );
+
+    const result = await getFoldersCore(TOKEN_MOCK, 'public/');
+
+    expect(result?.items?.map((item) => item.name)).toEqual(['team']);
+  });
+
+  test('keeps the other folders when the skill or project listing fails', async () => {
+    (assetApi.getMetadata as any).mockImplementation((_t: unknown, type: ResourceType) =>
+      type === ResourceType.PROMPT
+        ? Promise.resolve({
+            url: 'prompts/public/',
+            nodeType: 'FOLDER',
+            parentPath: null,
+            bucket: 'b-1',
+            items: [{ url: 'prompts/public/p/', nodeType: 'FOLDER', parentPath: 'public/', bucket: 'b-1' }],
+          })
+        : Promise.resolve(null),
+    );
+    (skillsCoreApi.listSkillMetadata as any).mockRejectedValue(new Error('down'));
+    (projectsCoreApi.listProjectMetadata as any).mockRejectedValue(new Error('down'));
+
+    const result = await getFoldersCore(TOKEN_MOCK, 'public/');
+
+    expect(result?.items?.map((item) => item.name)).toEqual(['p']);
+  });
+
+  test('follows nextToken for the skill listing', async () => {
+    (skillsCoreApi.listSkillMetadata as any)
+      .mockResolvedValueOnce({
+        ...complexFolder('skills/', [{ url: 'skills/public/a/', nodeType: 'FOLDER' }]),
+        nextToken: 'n1',
+      })
+      .mockResolvedValueOnce(complexFolder('skills/', [{ url: 'skills/public/b/', nodeType: 'FOLDER' }]));
+
+    const result = await getFoldersCore(TOKEN_MOCK, 'public/');
+
+    expect(result?.items?.map((item) => item.name)).toEqual(['a', 'b']);
+    expect(skillsCoreApi.listSkillMetadata).toHaveBeenLastCalledWith(TOKEN_MOCK, 'public/', { nextToken: 'n1' });
   });
 });
 

@@ -27,18 +27,29 @@ describe('ProjectsList :: list affordances', () => {
     expect(labels.find((label) => label.key === 'newItem')?.label).toBe(FileManagerI18nKey.Project);
   });
 
-  test('Should offer delete and open-in-new-tab as row actions — but no move or duplicate', () => {
+  test('Should offer the folder actions and open-in-new-tab as row actions — but no move, rename or duplicate', () => {
     const actions = getGridActionLabels(ApplicationRoute.Projects, false);
 
-    expect(actions.map((action) => action.key)).toEqual(['delete', 'openInNewTab']);
+    expect(actions.map((action) => action.key)).toEqual([
+      'addSibling',
+      'addChild',
+      'managePermissions',
+      'delete',
+      'openInNewTab',
+    ]);
   });
 
   test('Should offer no row actions to a read-only admin', () => {
     expect(getGridActionLabels(ApplicationRoute.Projects, true)).toEqual([]);
   });
 
-  test('Should offer no folder-tree actions', () => {
-    expect(getTreeActionLabels(false, ApplicationRoute.Projects)).toEqual([]);
+  test('Should offer add sibling, add child, manage permissions and delete as folder-tree actions', () => {
+    expect(getTreeActionLabels(false, ApplicationRoute.Projects).map((action) => action.key)).toEqual([
+      'addSibling',
+      'addChild',
+      'managePermissions',
+      'delete',
+    ]);
   });
 });
 
