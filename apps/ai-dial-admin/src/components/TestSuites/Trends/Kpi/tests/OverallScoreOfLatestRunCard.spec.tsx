@@ -42,7 +42,11 @@ describe('OverallScoreOfLatestRunCard', () => {
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('0.580')).toBeInTheDocument();
-    expect(screen.getAllByText(TestSuitesI18nKey.TrendsDeltaVsPrev).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(TestSuitesI18nKey.TrendsDeltaVsPrev)).toBeInTheDocument();
+    const deltaBadgeTooltip = screen
+      .getAllByTestId('kpi-tooltip')
+      .find((node) => node.textContent?.includes(TestSuitesI18nKey.TrendsDeltaVsPrev));
+    expect(deltaBadgeTooltip).toHaveAttribute('data-hide', 'true');
     expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
