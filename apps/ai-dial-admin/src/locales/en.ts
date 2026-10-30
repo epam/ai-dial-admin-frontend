@@ -3465,6 +3465,7 @@ export default {
     Granularity: 'Granularity',
     GranularityHint:
       'How much time one chunk covers. Month suits almost every table. Year fits a small table or queries that span long periods; Day fits only a fast-growing table queried a day at a time — a table split into thousands of tiny chunks reads slower, not faster.',
+    GranularityRequired: 'Choose how much time one chunk covers; a partition cannot be defined without it.',
     PartitionNone: 'None',
     IdentityColumn: 'Identity column',
     VersionColumn: 'Version column',
