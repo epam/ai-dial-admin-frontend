@@ -2,10 +2,17 @@ import { ReactNode } from 'react';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
-import { getMetricStatCards } from '@/src/components/Runs/Summary/utils';
+import { MetricOption, MetricScoresData, RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import {
+  getCompletionRate,
+  getMetricStatCards,
+  hasOverallScoreThreshold,
+  sumRunTimeParts,
+  toCompletionBreakdown,
+} from '@/src/components/Runs/Summary/utils';
+import { Run } from '@/src/models/evaluation/run';
 
-import { CompareBarGroup, CompareCardItems, CompareMetricStatCard } from './models';
+import { CompareBarGroup, CompareCardItems, CompareMetricStatCard, CompareSideFigures } from './models';
 
 /** Titled values for a compare card, one per run, in the order the runs are displayed. */
 export const toCompareCardItems = (runs: CompareRun[], getValue: (run: CompareRun) => ReactNode): CompareCardItems => {
@@ -121,3 +128,24 @@ export const maxBarValue = (
   );
   return Math.max(1, ...values);
 };
+
+/** Per-run figures for the Summary KPI cards, from the run's snapshotted threshold and its analytics slice. */
+export const toCompareSideFigures = (run: Run, slice: RunAnalyticsSlice): CompareSideFigures => {
+  const threshold = run.suiteSnapshot?.overallScoreThreshold ?? null;
+  const hasThreshold = hasOverallScoreThreshold(threshold);
+  const breakdown = toCompletionBreakdown(slice.statusCounts, hasThreshold);
+
+  return {
+    threshold,
+    hasThreshold,
+    breakdown,
+    rate: getCompletionRate(breakdown, hasThreshold),
+    sourceMs: slice.totalRunTimeMs,
+    metricsMs: slice.totalMetricEvalDurationMs,
+    totalMs: sumRunTimeParts(slice.totalRunTimeMs, slice.totalMetricEvalDurationMs),
+  };
+};
+
+/** A rate as a percentage with one decimal, the unit the rate card's diff badge is measured in. */
+export const toRatePercent = (rate: number | null): number | null =>
+  rate == null ? null : Math.round(rate * 1000) / 10;

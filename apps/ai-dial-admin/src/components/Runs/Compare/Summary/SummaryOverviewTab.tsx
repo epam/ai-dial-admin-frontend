@@ -11,7 +11,6 @@ import MetricScoresSection from '@/src/components/Runs/Compare/Summary/MetricSco
 import { useSummaryOverviewData } from '@/src/components/Runs/Compare/Summary/use-summary-overview-data';
 import { CompareRun, SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
 import { SUMMARY_PANELS_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
-import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -38,6 +37,8 @@ const SummaryOverviewTab: FC<Props> = ({
     comparedRun,
     primaryTestSuite,
     comparedTestSuite,
+    primaryMetricCount,
+    comparedMetricCount,
     enrichedPrimaryScores,
     enrichedComparedScores,
     metricOptions,
@@ -84,16 +85,18 @@ const SummaryOverviewTab: FC<Props> = ({
         />
         {!hasNoMatchingTestCases && (
           <Analytics
-            primaryRunId={primaryRunId}
-            comparedRunId={comparedRunId}
+            primaryRun={primaryRun}
+            comparedRun={comparedRun}
             runs={runs}
             onlyMatchingTestCases={onlyMatchingTestCases}
             primaryMatchedAnalytics={primaryMatchedAnalytics}
             comparedMatchedAnalytics={comparedMatchedAnalytics}
             primaryOverallScore={enrichedPrimaryScores?.overallScore}
             comparedOverallScore={enrichedComparedScores?.overallScore}
-            hasPrimaryThreshold={hasOverallScoreThreshold(primaryRun.suiteSnapshot?.overallScoreThreshold)}
-            hasComparedThreshold={hasOverallScoreThreshold(comparedRun.suiteSnapshot?.overallScoreThreshold)}
+            primaryTestSuite={primaryTestSuite}
+            comparedTestSuite={comparedTestSuite}
+            primaryMetricCount={primaryMetricCount}
+            comparedMetricCount={comparedMetricCount}
           />
         )}
       </div>

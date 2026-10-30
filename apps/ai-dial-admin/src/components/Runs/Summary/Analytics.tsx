@@ -1,30 +1,34 @@
 'use client';
 
-import { FC, ReactNode, useMemo } from 'react';
+import { FC } from 'react';
 
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
-import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
-import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
-import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components/Common/RunStatus/utils';
-import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
-import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
-import { useModelPricing } from '@/src/components/Runs/Summary/use-model-pricing';
-import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
-import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
+import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
+import CostValue from '@/src/components/Runs/Summary/Cards/CostValue';
+import OverallScoreInfo from '@/src/components/Runs/Summary/Cards/OverallScoreInfo';
+import OverallScoreValue from '@/src/components/Runs/Summary/Cards/OverallScoreValue';
+import PassRateValue from '@/src/components/Runs/Summary/Cards/PassRateValue';
+import RuntimeValue from '@/src/components/Runs/Summary/Cards/RuntimeValue';
+import TestCasesCompletedValue from '@/src/components/Runs/Summary/Cards/TestCasesCompletedValue';
 import {
-  formatAvgRunTimeSeconds,
-  formatRunCost,
+  ANALYTICS_KPI_CARD_CLASS,
+  ANALYTICS_KPI_CARD_TOP_CLASS,
+  ANALYTICS_KPI_GRID_CLASS,
+} from '@/src/components/Runs/Summary/constants';
+import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
+import { useRunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
+import {
+  getCompletionRate,
   hasOverallScoreThreshold,
-  hasRunCostFigure,
+  sumRunTimeParts,
+  toCompletionBreakdown,
 } from '@/src/components/Runs/Summary/utils';
-import { isCostUnsupportedRun, isRunCostStale } from '@/src/components/Runs/utils/run-list-values';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { useSourceKindLabel } from '@/src/components/TestSuites/Trends/CostRuntime/use-source-kind-label';
+import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
-import classNames from 'classnames';
-
-const NO_DATA_VALUE = '—';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   run: Run;
@@ -32,50 +36,19 @@ interface Props {
   overallScore?: number | null;
   /** How many metrics the run computed; omitted while the snapshots are still loading. */
   metricSnapshotCount?: number;
+  /** The run's suite, for the overall-score calculation method; omitted until it has loaded. */
+  testSuite?: TestSuite | null;
 }
 
-const CostCalculatingValue: FC<{ label: string }> = ({ label }) => (
-  <div className="flex flex-col justify-center">
-    <span className="p-1 rounded bg-layer-4 dial-small-text text-secondary w-fit" role="status">
-      {label}
-    </span>
-  </div>
-);
-
-const getCardClassNames = (error?: boolean) =>
-  classNames(ANALYTICS_KPI_CARD_CLASS, {
-    'justify-start gap-2': !!error,
-  });
-
-const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
+const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount, testSuite }) => {
   const t = useI18n();
   const { data } = useRunAnalyticsSlice(run?.id);
-
-  const isRunInProgress = isTransitionalRunStatus(run?.status);
-  // Absent eval_summaries averages (avgRunTimeMs) — used for KPI dash/error presentation only.
-  // Must NOT gate the cost fetch: CANCELLED/FAILED runs often have /costs figures with no
-  // eval_summaries row, and flipping canHaveCosts false after an optimistic fetch would wipe them.
-  const hasNoResults = data != null && data.avgRunTimeMs == null;
-  // Cost aggregation doesn't support MCP-tool or Route suites at all yet — confirmed by QA reproduction
-  // (both cards stay in Calculating indefinitely regardless of whether the run computed metrics),
-  // which disproved the earlier "MCP bills only through its metrics" assumption. Skip the fetch
-  // unconditionally rather than polling toward a result the backend can never produce.
-  const isCostUnsupported = isCostUnsupportedRun(run);
-  // A model with no Prompt/Completion rate configured can never produce a cost figure either — the
-  // backend has nothing to multiply usage by. Resolved from the deployed model's own config, not
-  // from `/costs`, so a run against such a model shows a dash immediately instead of polling toward
-  // a result that will never arrive. Applications have no pricing of their own at the Admin level
-  // (see `resolveModelPricing`), so this only ever fires for a model deployment.
-  const { deploymentType } = useDeploymentType(run?.suiteSnapshot?.deploymentRef);
-  const { isDefinitelyUnpriced } = useModelPricing(run?.suiteSnapshot?.deploymentRef?.id, deploymentType);
-  // Evaluated once per run so a render landing on the 12h boundary can't flip it and restart the fetch.
-  const shouldPollCosts = useMemo(() => !isRunCostStale(run, Date.now()), [run]);
-  const canHaveCosts = !isRunInProgress && !isCostUnsupported && !isDefinitelyUnpriced;
-  const {
-    costs,
-    isPending: areCostsPending,
-    unavailable: costsUnavailable,
-  } = useRunCosts(run?.id, canHaveCosts, shouldPollCosts);
+  const sourceLabel = useSourceKindLabel(run?.suiteSnapshot ?? {});
+  const cost = useRunCostState({
+    run,
+    hasNoResults: data != null && data.totalRunTimeMs == null,
+    metricSnapshotCount,
+  });
 
   if (!data) {
     return (
@@ -85,93 +58,61 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
     );
   }
 
-  const { statusCounts, avgRunTimeMs, avgMetricEvalDurationMs } = data;
-  const avgSeconds = avgRunTimeMs != null ? formatAvgRunTimeSeconds(avgRunTimeMs) : null;
-  const avgMetricEvalSeconds =
-    avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(avgMetricEvalDurationMs) : null;
-
-  const testCaseCostDisplay = formatRunCost(costs?.avgTestCaseCost);
-  const metricEvalCostDisplay = formatRunCost(costs?.avgMetricEvalCost);
-
-  const showTestCasesPassed = hasOverallScoreThreshold(run.suiteSnapshot?.overallScoreThreshold);
-  const hasStatusCounts = statusCounts.total > 0;
+  const threshold = run.suiteSnapshot?.overallScoreThreshold;
+  const hasThreshold = hasOverallScoreThreshold(threshold);
+  const breakdown = toCompletionBreakdown(data.statusCounts, hasThreshold);
+  const rate = getCompletionRate(breakdown, hasThreshold);
+  const rateTitle = t(hasThreshold ? RunsI18nKey.ThresholdPassRate : RunsI18nKey.CompletionRate);
+  // Incomplete statuses (incl. CANCELLED/FAILED) never Error a card — missing figures are a dash.
   const isRunIncomplete = isIncompleteRunStatus(run.status);
-  // Incomplete statuses (incl. CANCELLED/FAILED) never Error the cost cards — missing figures are a
-  // dash. COMPLETED still Errors on endpoint failure or on no eval_summaries with no cost figures.
-  const hasCostError = !isRunIncomplete && (costsUnavailable || (hasNoResults && !hasRunCostFigure(costs)));
-  const costDescription = areCostsPending
-    ? t(RunsI18nKey.CostCalculatingElapsed)
-    : hasCostError
-      ? t(RunsI18nKey.CostDataUnavailable)
-      : t(RunsI18nKey.AvgPerTestCase);
-  const calculatingLabel = t(RunsI18nKey.Calculating);
-
-  const costCardValue = (display: string | null): ReactNode => {
-    if (areCostsPending) {
-      return <CostCalculatingValue label={calculatingLabel} />;
-    }
-    if (hasCostError) {
-      return undefined;
-    }
-    return display ?? NO_DATA_VALUE;
-  };
-
-  // A run that computed zero metrics can never have a metric-eval cost — there is no metric-eval
-  // usage to bill, independent of suite type or the test-case side's own pricing. That's known from
-  // the metric snapshots already fetched for the rest of the Summary tab, so this card can settle
-  // immediately instead of sharing the Test Case LLM Cost card's Calculating wait for a field that
-  // will always come back null.
-  const hasNoMetrics = metricSnapshotCount === 0;
-  const metricEvalCostError = hasNoMetrics ? false : hasCostError;
-  const metricEvalCostDescription = hasNoMetrics ? t(RunsI18nKey.AvgPerTestCase) : costDescription;
-  const metricEvalCostValue = hasNoMetrics ? NO_DATA_VALUE : costCardValue(metricEvalCostDisplay);
+  const hasNoTestCases = breakdown.total === 0 && !isRunIncomplete;
+  const hasRuntimeError =
+    sumRunTimeParts(data.totalRunTimeMs, data.totalMetricEvalDurationMs) == null && !isRunIncomplete;
 
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
+      <AnalyticsCard
+        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        title={t(RunsI18nKey.TestCasesCompleted)}
+        value={<TestCasesCompletedValue breakdown={breakdown} hasThreshold={hasThreshold} />}
+        error={hasNoTestCases}
+      />
+      <AnalyticsCard
+        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        title={rateTitle}
+        value={<PassRateValue rate={rate} threshold={threshold} label={rateTitle} />}
+        error={hasNoTestCases}
+      />
       {overallScore != null && (
         <AnalyticsCard
-          className={getCardClassNames()}
+          className={ANALYTICS_KPI_CARD_CLASS}
           title={t(RunsI18nKey.OverallScore)}
-          value={String(overallScore)}
-          description={t(RunsI18nKey.OverallScoreDescription)}
-        />
-      )}
-      {showTestCasesPassed && (
-        <AnalyticsCard
-          className={getCardClassNames(!hasStatusCounts && !isRunIncomplete)}
-          title={t(RunsI18nKey.TestCasesPassed)}
-          value={hasStatusCounts ? <PassFailFraction counts={statusCounts} /> : NO_DATA_VALUE}
-          description={hasStatusCounts ? <PassFailStatusBreakdown counts={statusCounts} /> : <div />}
-          error={!hasStatusCounts && !isRunIncomplete}
+          value={<OverallScoreValue score={overallScore} threshold={threshold} />}
+          description={
+            <span className="flex items-center gap-1">
+              <span>{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</span>
+              {testSuite && <OverallScoreInfo testSuite={testSuite} metricCount={metricSnapshotCount ?? 0} />}
+            </span>
+          }
         />
       )}
       <AnalyticsCard
-        className={getCardClassNames(avgSeconds == null && !isRunIncomplete)}
-        title={t(RunsI18nKey.AvgTestCaseRunTime)}
-        value={avgSeconds != null ? `${avgSeconds} ${t(RunsI18nKey.Seconds)}` : NO_DATA_VALUE}
-        description={t(RunsI18nKey.AvgPerTestCase)}
-        error={avgSeconds == null && !isRunIncomplete}
+        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        title={t(RunsI18nKey.TotalRuntime)}
+        value={
+          <RuntimeValue
+            sourceMs={data.totalRunTimeMs}
+            metricsMs={data.totalMetricEvalDurationMs}
+            sourceLabel={sourceLabel}
+          />
+        }
+        error={hasRuntimeError}
       />
       <AnalyticsCard
-        className={getCardClassNames(avgMetricEvalSeconds == null && !isRunIncomplete)}
-        title={t(RunsI18nKey.AvgMetricEvalLatency)}
-        value={avgMetricEvalSeconds != null ? `${avgMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : NO_DATA_VALUE}
-        description={t(RunsI18nKey.AvgPerTestCase)}
-        error={avgMetricEvalSeconds == null && !isRunIncomplete}
-      />
-      <AnalyticsCard
-        className={getCardClassNames(hasCostError)}
-        title={t(RunsI18nKey.TestCaseLlmCost)}
-        value={costCardValue(testCaseCostDisplay)}
-        description={costDescription}
-        error={hasCostError}
-      />
-      <AnalyticsCard
-        className={getCardClassNames(metricEvalCostError)}
-        title={t(RunsI18nKey.MetricEvalCost)}
-        value={metricEvalCostValue}
-        description={metricEvalCostDescription}
-        error={metricEvalCostError}
+        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        title={t(RunsI18nKey.TotalRunCost)}
+        value={<CostValue cost={cost} sourceLabel={sourceLabel} />}
+        error={cost.hasError}
       />
     </div>
   );

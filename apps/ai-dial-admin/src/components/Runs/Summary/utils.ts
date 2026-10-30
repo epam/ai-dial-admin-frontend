@@ -3,7 +3,7 @@ import { JSONSchema7 } from 'json-schema';
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { DialModelPricing } from '@/src/models/dial/model';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
-import { ExtractionResultStatus, RunCosts } from '@/src/models/evaluation/run';
+import { ExtractionResultStatus, RunTotalCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
@@ -20,8 +20,6 @@ import {
   sortItem,
 } from '@/src/utils/structured-query/build';
 import {
-  AVG_METRIC_EVAL_DURATION_ALIAS,
-  AVG_DURATION_ALIAS,
   COMPUTATION_ID_FIELD,
   COUNT_ALIAS,
   DEFAULT_METRIC_SCORE_FIELD,
@@ -43,15 +41,19 @@ import {
   RUN_ID_FIELD,
   TEST_CASE_EVAL_SCORES_ENTITY,
   TEST_CASE_ID_FIELD,
+  TOTAL_DURATION_ALIAS,
+  TOTAL_METRIC_EVAL_DURATION_ALIAS,
   VALUE_FIELD,
 } from './constants';
 import {
+  CompletionBreakdown,
   MetricInfo,
   MetricOption,
   MetricScoreGroup,
   MetricScoresData,
   MetricStatCard,
   MetricStatistic,
+  RunCostFigures,
   TestCaseStatusCounts,
 } from './models';
 import { toCount } from '@/src/utils/formatting/number-formatting';
@@ -79,38 +81,40 @@ export const buildTestCasesStatusQuery = (runId: string, excludeTestCaseIds: str
 };
 
 /**
- * Query: average execution duration (ms) across a run's test-case eval summaries.
- * Rows shape: `[{ avg_duration_ms: number }]`.
+ * Excludes `excludeEvalSummaryIds` rows from a run's `eval_summaries` filter so a total describes the
+ * matched-only population used in run comparison.
  */
-export const buildAvgRunTimeQuery = (runId: string): StructuredQuery =>
+const buildEvalSummariesFilter = (runId: string, excludeEvalSummaryIds: string[]) => {
+  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
+  return excludeEvalSummaryIds.length > 0
+    ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+    : runFilter;
+};
+
+/**
+ * Query: total execution duration (ms) across a run's test-case eval summaries.
+ * Rows shape: `[{ total_duration_ms: number }]`.
+ */
+export const buildTotalRunTimeQuery = (runId: string, excludeEvalSummaryIds: string[] = []): StructuredQuery =>
   aggregateQuery({
     entity: EVAL_SUMMARIES_ENTITY,
-    filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
-    select: [col(fn('avg', [field(EXEC_DURATION_MS_FIELD)]), AVG_DURATION_ALIAS)],
+    filter: buildEvalSummariesFilter(runId, excludeEvalSummaryIds),
+    select: [col(fn('sum', [field(EXEC_DURATION_MS_FIELD)]), TOTAL_DURATION_ALIAS)],
   });
 
 /**
- * Query: average metric-evaluation duration (ms) across a run's test-case eval summaries.
- * Rows shape: `[{ avg_metric_eval_duration_ms: number }]`.
- * When `excludeEvalSummaryIds` is non-empty, those rows are excluded so the average describes the
- * matched-only population used in run comparison.
+ * Query: total metric-evaluation duration (ms) across a run's test-case eval summaries.
+ * Rows shape: `[{ total_metric_eval_duration_ms: number }]`.
  */
-export const buildAvgMetricEvalDurationQuery = (
+export const buildTotalMetricEvalDurationQuery = (
   runId: string,
   excludeEvalSummaryIds: string[] = [],
-): StructuredQuery => {
-  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
-  const filter =
-    excludeEvalSummaryIds.length > 0
-      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
-      : runFilter;
-
-  return aggregateQuery({
+): StructuredQuery =>
+  aggregateQuery({
     entity: EVAL_SUMMARIES_ENTITY,
-    filter,
-    select: [col(fn('avg', [field(METRIC_EVAL_DURATION_MS_FIELD)]), AVG_METRIC_EVAL_DURATION_ALIAS)],
+    filter: buildEvalSummariesFilter(runId, excludeEvalSummaryIds),
+    select: [col(fn('sum', [field(METRIC_EVAL_DURATION_MS_FIELD)]), TOTAL_METRIC_EVAL_DURATION_ALIAS)],
   });
-};
 
 /** Builds the flattened metric field path, e.g. `metric::Ragas Answer Relevancy::score`. */
 export const getMetricFieldPath = (metricName: string, outputField: string): string =>
@@ -346,16 +350,10 @@ export const buildDistributionQuery = (
   metricField: string,
   excludeEvalSummaryIds: string[] = [],
 ): StructuredQuery => {
-  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
-  const filter =
-    excludeEvalSummaryIds.length > 0
-      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
-      : runFilter;
-
   return rowQuery({
     entity: EVAL_SUMMARIES_ENTITY,
     select: [col(field(metricField), DISTRIBUTION_VALUE_ALIAS)],
-    filter,
+    filter: buildEvalSummariesFilter(runId, excludeEvalSummaryIds),
     page: offsetPage(0, DISTRIBUTION_ROW_LIMIT),
   });
 };
@@ -428,7 +426,7 @@ const isPassedFalse = (value: unknown): boolean => value === false || value === 
  * SUCCESS with null `passed` (unscored) only increases total.
  */
 export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null): TestCaseStatusCounts => {
-  const counts: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, total: 0 };
+  const counts: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, unscored: 0, total: 0 };
 
   for (const row of result?.rows ?? []) {
     const status = row[EXECUTION_STATUS_FIELD];
@@ -445,17 +443,42 @@ export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null):
       counts.passed += count;
     } else if (isPassedFalse(passed)) {
       counts.failed += count;
+    } else {
+      counts.unscored += count;
     }
   }
 
   return counts;
 };
 
-/** Reads the single average-duration value for the provided alias, rounded to a whole ms, or null when absent. */
-export const parseAvgRunTimeMs = (
-  result: StructuredQueryResult | null,
-  alias: string = AVG_DURATION_ALIAS,
-): number | null => {
+/**
+ * Splits status counts into the Test Cases Completed breakdown. With a threshold, completed cases are
+ * the scored SUCCESS ones (above + below); without one, every SUCCESS case is completed and the
+ * above / below split does not apply. Everything else — non-SUCCESS, or SUCCESS the threshold could not
+ * classify — is Error or N/A.
+ */
+export const toCompletionBreakdown = (counts: TestCaseStatusCounts, hasThreshold: boolean): CompletionBreakdown => {
+  const above = hasThreshold ? counts.passed : 0;
+  const below = hasThreshold ? counts.failed : 0;
+  const completed = hasThreshold ? counts.passed + counts.failed : counts.passed + counts.failed + counts.unscored;
+
+  return { total: counts.total, completed, above, below, errorOrNa: counts.total - completed };
+};
+
+/**
+ * Completion / pass rate as a 0–1 fraction: above ÷ total with a threshold, completed ÷ total without.
+ * Null when the run has no test cases.
+ */
+export const getCompletionRate = (breakdown: CompletionBreakdown, hasThreshold: boolean): number | null => {
+  if (breakdown.total <= 0) {
+    return null;
+  }
+  const numerator = hasThreshold ? breakdown.above : breakdown.completed;
+  return numerator / breakdown.total;
+};
+
+/** Reads the single aggregated-duration value for the provided alias, rounded to a whole ms, or null when absent. */
+export const parseDurationMs = (result: StructuredQueryResult | null, alias: string): number | null => {
   const raw = result?.rows?.[0]?.[alias];
   if (raw == null) {
     return null;
@@ -464,8 +487,12 @@ export const parseAvgRunTimeMs = (
   return Number.isFinite(num) ? Math.round(num) : null;
 };
 
-/** Display seconds from avg duration ms (one decimal place). */
-export const formatAvgRunTimeSeconds = (avgRunTimeMs: number): number => Math.round(avgRunTimeMs / 100) / 10;
+/** Display seconds from a duration in ms (one decimal place). */
+export const formatRunTimeSeconds = (durationMs: number): number => Math.round(durationMs / 100) / 10;
+
+/** Sum of the runtime parts that are present; null only when both are missing. */
+export const sumRunTimeParts = (sourceMs: number | null, metricsMs: number | null): number | null =>
+  sourceMs == null && metricsMs == null ? null : (sourceMs ?? 0) + (metricsMs ?? 0);
 
 const RUN_COST_SIGNIFICANT_DIGITS = 2;
 
@@ -473,7 +500,7 @@ const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
 
 /**
- * Formats a run cost average as `$…`. Returns `null` when the value is missing/non-finite
+ * Formats a run cost as `$…`. Returns `null` when the value is missing/non-finite
  * so callers can render an em dash. Zero is a real value (`$0`).
  */
 export const formatRunCost = (value: number | null | undefined): string | null => {
@@ -495,14 +522,32 @@ export const formatRunCost = (value: number | null | undefined): string | null =
   return `$${stripTrailingZeros(value.toFixed(decimals))}`;
 };
 
+const toFiniteOrNull = (value: number | null | undefined): number | null =>
+  value != null && Number.isFinite(value) ? value : null;
+
 /**
- * Whether a `GET /costs` payload actually carries a figure. The endpoint responds before the backend
- * has aggregated the run's usage logs, and that not-ready answer reaches the client in several shapes
- * — all-null averages, `{}`, or an empty body that `BaseApi` degrades to `''`. None of them are a
- * result, so the caller must keep waiting rather than settle on them. Zero is a real average.
+ * Reads a run's cost split out of a `POST /costs/total` response. The endpoint responds before the
+ * backend has aggregated the run's usage logs, and that not-ready answer reaches the client in several
+ * shapes — an empty list, an entry with null parts, or an empty body that `BaseApi` degrades to `''`.
+ * All of them normalise to a figureless `{ null, null }` pair (see `hasRunCostFigure`), never to an
+ * error; only a null response is an error.
  */
-export const hasRunCostFigure = (costs: RunCosts | null | undefined): boolean =>
-  Number.isFinite(costs?.avgTestCaseCost) || Number.isFinite(costs?.avgMetricEvalCost);
+export const toRunCostFigures = (payload: RunTotalCosts[] | null | undefined, runId: string): RunCostFigures => {
+  const entries = Array.isArray(payload) ? payload : [];
+  const entry = entries.find((candidate) => candidate?.runId === runId) ?? entries[0];
+  return { sourceCost: toFiniteOrNull(entry?.testCaseCost), metricsCost: toFiniteOrNull(entry?.metricEvalCost) };
+};
+
+/**
+ * Whether cost figures actually carry a number — the not-ready shapes above are not a result, so the
+ * caller must keep waiting rather than settle on them. Zero is a real figure.
+ */
+export const hasRunCostFigure = (costs: RunCostFigures | null | undefined): boolean =>
+  costs?.sourceCost != null || costs?.metricsCost != null;
+
+/** Total cost of the parts that are present; null only when both are missing. */
+export const sumRunCostParts = (costs: RunCostFigures | null | undefined): number | null =>
+  hasRunCostFigure(costs) ? (costs?.sourceCost ?? 0) + (costs?.metricsCost ?? 0) : null;
 
 /**
  * Whether a model's pricing carries a usable rate. `prompt`/`completion` are the only flat rates a

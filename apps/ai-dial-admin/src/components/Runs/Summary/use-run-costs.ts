@@ -2,23 +2,23 @@
 
 import { useEffect, useState } from 'react';
 
-import { getRunCosts } from '@/src/app/[lang]/runs/actions';
+import { getRunsTotalCosts } from '@/src/app/[lang]/runs/actions';
 import { COST_FETCH_MAX_WAIT_MS, COST_FETCH_POLL_INTERVAL_MS } from '@/src/components/Runs/Summary/constants';
-import { hasRunCostFigure } from '@/src/components/Runs/Summary/utils';
-import { RunCosts } from '@/src/models/evaluation/run';
+import { RunCostFigures } from '@/src/components/Runs/Summary/models';
+import { hasRunCostFigure, toRunCostFigures } from '@/src/components/Runs/Summary/utils';
 
 export interface UseRunCostsResult {
-  costs: RunCosts | null;
+  costs: RunCostFigures | null;
   isPending: boolean;
   unavailable: boolean;
 }
 
 /**
- * Fetches run costs independently of the analytics structured-query slice so
+ * Fetches a run's total costs independently of the analytics structured-query slice so
  * dial-adas failures do not blank the rest of the Summary KPI strip.
  *
  * The endpoint answers as soon as the run row exists, but the backend aggregates usage logs
- * asynchronously, so a just-finished run gets an empty body or all-null averages back within
+ * asynchronously, so a just-finished run gets an empty body or all-null figures back within
  * milliseconds. That is "not computed yet", not a result: the hook keeps polling on
  * `COST_FETCH_POLL_INTERVAL_MS` and stays pending for as long as the cards are mounted — up to
  * `COST_FETCH_MAX_WAIT_MS`. A real figure or an endpoint error (null response or throw) settles the
@@ -34,14 +34,14 @@ export interface UseRunCostsResult {
  * `canHaveCosts` false skips the fetch entirely and reports idle, so a run that will never have
  * figures shows a dash immediately instead of waiting out the window. The caller owns that judgement
  * because the evidence for it — run status, result counts, suite type, metric snapshots — lives on
- * the Summary tab, not behind `/costs`.
+ * the Summary tab, not behind the costs endpoint.
  *
  * `shouldPoll` false is for a run that completed so long ago that aggregation is long finished: the
- * hook still reads `/costs` once, since an old run can have a real figure, but settles on whatever
+ * hook still reads the totals once, since an old run can have a real figure, but settles on whatever
  * comes back instead of waiting for one — a figureless payload renders as a dash.
  */
 export const useRunCosts = (runId: string | undefined, canHaveCosts = true, shouldPoll = true): UseRunCostsResult => {
-  const [costs, setCosts] = useState<RunCosts | null>(null);
+  const [costs, setCosts] = useState<RunCostFigures | null>(null);
   /** True whenever a fetch is due until the first effect flush — avoids an idle frame that paints as "—". */
   const [isPending, setIsPending] = useState(() => Boolean(runId) && canHaveCosts);
   const [unavailable, setUnavailable] = useState(false);
@@ -68,7 +68,7 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true, shou
       window.clearTimeout(retryId);
     };
 
-    const settle = (result: RunCosts | null) => {
+    const settle = (result: RunCostFigures | null) => {
       hasSettled = true;
       stopTimers();
       setCosts(result);
@@ -78,12 +78,17 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true, shou
 
     const attempt = async () => {
       try {
-        const result = await getRunCosts(runId);
+        const response = await getRunsTotalCosts([runId]);
 
         if (cancelled || hasSettled) {
           return;
         }
-        if (result == null || hasRunCostFigure(result)) {
+        if (response == null) {
+          settle(null);
+          return;
+        }
+        const result = toRunCostFigures(response, runId);
+        if (hasRunCostFigure(result)) {
           settle(result);
           return;
         }

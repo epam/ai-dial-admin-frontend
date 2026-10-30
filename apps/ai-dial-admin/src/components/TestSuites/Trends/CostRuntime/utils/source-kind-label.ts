@@ -2,8 +2,11 @@ import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { RunTargetKind } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
+/** The part of a test suite (or a run's suite snapshot) that identifies what it evaluates. */
+export type SourceKindSuite = Pick<TestSuite, 'deploymentRef' | 'mcpDeploymentRef' | 'routesRef'>;
+
 export const resolveSuiteSourceKind = (
-  suite: Pick<TestSuite, 'deploymentRef' | 'mcpDeploymentRef' | 'routesRef'>,
+  suite: SourceKindSuite,
   resolvedDeploymentType?: string,
 ): RunTargetKind | undefined => {
   if (suite.mcpDeploymentRef) {

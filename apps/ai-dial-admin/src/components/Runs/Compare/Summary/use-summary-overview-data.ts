@@ -11,7 +11,11 @@ import {
 import { getMetricLatestVersion, getTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { unionMetricOptions, unionStatistics } from '@/src/components/Runs/Compare/Summary/utils';
 import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
-import { AVG_METRIC_EVAL_DURATION_ALIAS, OVERALL_METRIC_SCORE_NAME } from '@/src/components/Runs/Summary/constants';
+import {
+  OVERALL_METRIC_SCORE_NAME,
+  TOTAL_DURATION_ALIAS,
+  TOTAL_METRIC_EVAL_DURATION_ALIAS,
+} from '@/src/components/Runs/Summary/constants';
 import {
   MetricInfo,
   MetricOption,
@@ -21,12 +25,13 @@ import {
 } from '@/src/components/Runs/Summary/models';
 import {
   attachMetricInfo,
-  buildAvgMetricEvalDurationQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
+  buildTotalMetricEvalDurationQuery,
+  buildTotalRunTimeQuery,
   fillUnscoredMetricBars,
-  parseAvgRunTimeMs,
   parseComparisonMetricScores,
+  parseDurationMs,
   parseMetricScores,
   parseTestCaseStatusCounts,
   toMetricInfoByName,
@@ -51,24 +56,24 @@ interface Params {
   setSummaryState: (patch: Partial<SummaryOverviewTabUiState>) => void;
 }
 
-const EMPTY_STATUS_COUNTS: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, total: 0 };
+const EMPTY_STATUS_COUNTS: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, unscored: 0, total: 0 };
 
 const EMPTY_METRIC_SCORES: MetricScoresData = { overallScore: null, statistics: [], byStatistic: {} };
 
 const EMPTY_MATCHED_ANALYTICS: RunAnalyticsSlice = {
   statusCounts: EMPTY_STATUS_COUNTS,
-  avgRunTimeMs: null,
-  avgMetricEvalDurationMs: null,
+  totalRunTimeMs: null,
+  totalMetricEvalDurationMs: null,
 };
 
 const toMatchedAnalyticsSlice = (
-  run: RunComparisonRun | undefined,
   statusCounts: TestCaseStatusCounts,
-  avgMetricEvalDurationMs: number | null = null,
+  totalRunTimeMs: number | null = null,
+  totalMetricEvalDurationMs: number | null = null,
 ): RunAnalyticsSlice => ({
   statusCounts,
-  avgRunTimeMs: run?.avgExecDurationMs ?? null,
-  avgMetricEvalDurationMs,
+  totalRunTimeMs,
+  totalMetricEvalDurationMs,
 });
 
 const findComparisonRun = (runs: RunComparisonRun[] | undefined, runId: string): RunComparisonRun | undefined =>
@@ -81,17 +86,12 @@ interface ComparisonRunDerived {
   scores: MetricScoresData;
   unmatchedIds: string[];
   unmatchedTestCaseIds: string[];
-  analytics: RunAnalyticsSlice;
 }
 
-const applyComparisonRun = (
-  run: RunComparisonRun | undefined,
-  statusCounts: TestCaseStatusCounts = EMPTY_STATUS_COUNTS,
-): ComparisonRunDerived => ({
+const applyComparisonRun = (run: RunComparisonRun | undefined): ComparisonRunDerived => ({
   scores: parseComparisonMetricScores(run?.scores),
   unmatchedIds: run?.unmatchedEvalSummaryIds ?? [],
   unmatchedTestCaseIds: run?.unmatchedEvalTestCaseIds ?? [],
-  analytics: toMatchedAnalyticsSlice(run, statusCounts),
 });
 
 export const useSummaryOverviewData = ({
@@ -117,6 +117,8 @@ export const useSummaryOverviewData = ({
   const [comparedMetricScores, setComparedMetricScores] = useState<MetricScoresData | null>(null);
   const [primaryMetricOptions, setPrimaryMetricOptions] = useState<MetricOption[]>([]);
   const [comparedMetricOptions, setComparedMetricOptions] = useState<MetricOption[]>([]);
+  const [primaryMetricCount, setPrimaryMetricCount] = useState<number | undefined>(undefined);
+  const [comparedMetricCount, setComparedMetricCount] = useState<number | undefined>(undefined);
   const [metricInfoByName, setMetricInfoByName] = useState<Record<string, MetricInfo>>({});
   const [primaryMatchedAnalytics, setPrimaryMatchedAnalytics] = useState<RunAnalyticsSlice | null>(null);
   const [comparedMatchedAnalytics, setComparedMatchedAnalytics] = useState<RunAnalyticsSlice | null>(null);
@@ -270,31 +272,32 @@ export const useSummaryOverviewData = ({
         setPrimaryUnmatchedIds(primaryPartial.unmatchedIds);
         setComparedUnmatchedIds(comparedPartial.unmatchedIds);
 
-        const [primaryStatusResult, comparedStatusResult, primaryMetricEvalResult, comparedMetricEvalResult] =
-          await Promise.all([
-            executeStructuredQuery(buildTestCasesStatusQuery(primaryRunId, primaryPartial.unmatchedTestCaseIds)),
-            executeStructuredQuery(buildTestCasesStatusQuery(comparedRunId, comparedPartial.unmatchedTestCaseIds)),
-            executeStructuredQuery(buildAvgMetricEvalDurationQuery(primaryRunId, primaryPartial.unmatchedIds)),
-            executeStructuredQuery(buildAvgMetricEvalDurationQuery(comparedRunId, comparedPartial.unmatchedIds)),
+        const loadMatchedAnalytics = async (
+          runId: string,
+          derived: ComparisonRunDerived,
+        ): Promise<RunAnalyticsSlice> => {
+          const [statusResult, runTimeResult, metricEvalResult] = await Promise.all([
+            executeStructuredQuery(buildTestCasesStatusQuery(runId, derived.unmatchedTestCaseIds)),
+            executeStructuredQuery(buildTotalRunTimeQuery(runId, derived.unmatchedIds)),
+            executeStructuredQuery(buildTotalMetricEvalDurationQuery(runId, derived.unmatchedIds)),
           ]);
+          return toMatchedAnalyticsSlice(
+            parseTestCaseStatusCounts(statusResult),
+            parseDurationMs(runTimeResult, TOTAL_DURATION_ALIAS),
+            parseDurationMs(metricEvalResult, TOTAL_METRIC_EVAL_DURATION_ALIAS),
+          );
+        };
+
+        const [primaryAnalytics, comparedAnalytics] = await Promise.all([
+          loadMatchedAnalytics(primaryRunId, primaryPartial),
+          loadMatchedAnalytics(comparedRunId, comparedPartial),
+        ]);
         if (cancelled) {
           return;
         }
 
-        setPrimaryMatchedAnalytics(
-          toMatchedAnalyticsSlice(
-            primaryComparison,
-            parseTestCaseStatusCounts(primaryStatusResult),
-            parseAvgRunTimeMs(primaryMetricEvalResult, AVG_METRIC_EVAL_DURATION_ALIAS),
-          ),
-        );
-        setComparedMatchedAnalytics(
-          toMatchedAnalyticsSlice(
-            comparedComparison,
-            parseTestCaseStatusCounts(comparedStatusResult),
-            parseAvgRunTimeMs(comparedMetricEvalResult, AVG_METRIC_EVAL_DURATION_ALIAS),
-          ),
-        );
+        setPrimaryMatchedAnalytics(primaryAnalytics);
+        setComparedMatchedAnalytics(comparedAnalytics);
       });
     } else {
       Promise.all([
@@ -317,12 +320,16 @@ export const useSummaryOverviewData = ({
     if (!primaryRunId || !comparedRunId) {
       setPrimaryMetricOptions([]);
       setComparedMetricOptions([]);
+      setPrimaryMetricCount(undefined);
+      setComparedMetricCount(undefined);
       setMetricInfoByName({});
       return;
     }
 
     let cancelled = false;
     setMetricInfoByName({});
+    setPrimaryMetricCount(undefined);
+    setComparedMetricCount(undefined);
 
     Promise.all([getMetricSnapshots(RUN_FILTER(primaryRunId)), getMetricSnapshots(RUN_FILTER(comparedRunId))]).then(
       async ([primarySnapshots, comparedSnapshots]) => {
@@ -331,6 +338,8 @@ export const useSummaryOverviewData = ({
         }
         setPrimaryMetricOptions(toMetricOptions(primarySnapshots));
         setComparedMetricOptions(toMetricOptions(comparedSnapshots));
+        setPrimaryMetricCount(primarySnapshots?.length ?? 0);
+        setComparedMetricCount(comparedSnapshots?.length ?? 0);
 
         const allSnapshots = [...(primarySnapshots ?? []), ...(comparedSnapshots ?? [])];
         const declarationIds = Array.from(
@@ -362,6 +371,8 @@ export const useSummaryOverviewData = ({
     comparedRun,
     primaryTestSuite,
     comparedTestSuite,
+    primaryMetricCount,
+    comparedMetricCount,
     enrichedPrimaryScores,
     enrichedComparedScores,
     metricOptions,
