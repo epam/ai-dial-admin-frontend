@@ -15,6 +15,7 @@ interface Props {
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
+  wrapperClassName?: string;
   onChangeValue: (value: string) => void;
 }
 
@@ -25,6 +26,7 @@ const EntitySelectInput: FC<Props> = ({
   elementId,
   disabled,
   inputClassName,
+  wrapperClassName,
   onChangeValue,
 }) => {
   const { prefix, headerI18nKey, portalId, isEditable, FolderProvider } = ENTITY_SELECT_CONFIGS[entityType];
@@ -64,6 +66,7 @@ const EntitySelectInput: FC<Props> = ({
         elementId={elementId}
         disabled={disabled}
         inputClassName={inputClassName}
+        wrapperClassName={wrapperClassName}
         isEditable={isEditable}
         onOpen={onOpen}
         onClose={onClose}
