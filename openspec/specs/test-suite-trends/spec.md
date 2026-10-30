@@ -26,7 +26,9 @@ When the Trends tab has at least one run, the KPI strip SHALL include four cards
 1. **Threshold Pass Rate of Latest Run** when `overallScoreThreshold` is set, otherwise
    **Completion Rate of Latest Run** (rate from the latest `test_case_eval_scores` segments;
    loading indicator while the combined eval aggregate is pending)
-2. **Overall Score of Latest Run** (latest `runOrder` overall score, threshold glyph/tooltip when   set, delta vs previous run, and the static "Based on completed test cases" subtitle; no calculation-method info)
+2. **Overall Score of Latest Run** (latest `runOrder` overall score, threshold glyph/tooltip when
+   set, delta vs previous run, and the static "Based on completed test cases" subtitle; no
+   calculation-method info)
 3. **Total Runtime of Latest Run** (latest combo total + source/Metrics breakdown)
 4. **Total Cost of Latest Run** (latest combo total + source/Metrics breakdown)
 

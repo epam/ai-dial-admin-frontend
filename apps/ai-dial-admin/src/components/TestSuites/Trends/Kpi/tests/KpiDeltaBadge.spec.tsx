@@ -44,8 +44,10 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {children}
     </div>
   ),
-  Badge: ({ label, textClassName }: { label: string; textClassName?: string }) => (
-    <span className={textClassName}>{label}</span>
+  Badge: ({ label, textClassName, color }: { label: string; textClassName?: string; color?: string }) => (
+    <span className={textClassName} data-color={color}>
+      {label}
+    </span>
   ),
   BadgeVariant: { Filled: 'filled' },
   BadgeColor: { Green: 'green', Red: 'red' },
@@ -88,5 +90,28 @@ describe('KpiDeltaBadge', () => {
     render(<KpiDeltaBadge label="+1.0%" higherIsBetter />);
 
     await waitFor(() => expect(screen.getByRole('tooltip')).toBeInTheDocument());
+  });
+
+  describe('badge color', () => {
+    const renderBadge = (label: string, higherIsBetter: boolean) => {
+      render(<KpiDeltaBadge label={label} higherIsBetter={higherIsBetter} />);
+      return screen.getByText('TestSuites.TrendsDeltaVsPrev');
+    };
+
+    test('uses a green badge for an increase when higher is better', () => {
+      expect(renderBadge('+1.0%', true)).toHaveAttribute('data-color', 'green');
+    });
+
+    test('uses a red badge for a decrease when higher is better', () => {
+      expect(renderBadge('-1.0%', true)).toHaveAttribute('data-color', 'red');
+    });
+
+    test('uses a green badge for a decrease when lower is better', () => {
+      expect(renderBadge('-1.0%', false)).toHaveAttribute('data-color', 'green');
+    });
+
+    test('uses a red badge for an increase when lower is better', () => {
+      expect(renderBadge('+1.0%', false)).toHaveAttribute('data-color', 'red');
+    });
   });
 });
