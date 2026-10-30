@@ -51,14 +51,14 @@ const buildStabilityTooltip = (
 
   const meta = cellMeta[row.id]?.[colId];
   const value = row.values[colId];
-  const treshold = thresholdByRowId[row.id];
+  const threshold = thresholdByRowId[row.id];
 
   const tooltipRows = [
     { label: labels.testCase, value: testCaseLabel },
     { label: labels.run, value: row.label },
     {
       label: labels.threshold,
-      value: treshold == null ? labels.notApplicable : formatScore(treshold),
+      value: threshold == null ? labels.notApplicable : formatScore(threshold),
     },
   ];
 
