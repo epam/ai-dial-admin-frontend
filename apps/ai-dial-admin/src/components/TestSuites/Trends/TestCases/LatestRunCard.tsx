@@ -14,6 +14,7 @@ import {
 import { getTestCasesSegmentLabels } from '@/src/components/TestSuites/Trends/TestCases/utils/test-cases-labels';
 import { TEST_CASE_SEGMENT_BG } from '@/src/components/TestSuites/Trends/constants';
 import { LatestRunGaugeSlice, RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -23,15 +24,15 @@ const GAUGE_HEIGHT_PX = 120;
 
 interface Props {
   segments: RunTestCaseSegments | null;
-  /** When false, legend is Completed / Error or N/A (Figma 11977:225357); below segment is hidden. */
-  hasThreshold?: boolean;
+  threshold?: number | null;
   isLoading?: boolean;
   hasError?: boolean;
   className?: string;
 }
 
-const LatestRunCard: FC<Props> = ({ segments, hasThreshold = true, isLoading, hasError, className }) => {
+const LatestRunCard: FC<Props> = ({ segments, threshold, isLoading, hasError, className }) => {
   const t = useI18n();
+  const hasThreshold = hasOverallScoreThreshold(threshold);
   const title = t(TestSuitesI18nKey.TrendsLatestRun);
   const labels = getTestCasesSegmentLabels(t, hasThreshold);
 

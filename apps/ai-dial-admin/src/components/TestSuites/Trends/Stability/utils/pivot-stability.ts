@@ -57,6 +57,7 @@ export const pivotStabilitySummaries = (
   const headerLabels = sortedNames;
 
   const cellMeta: Record<string, Record<string, StabilityCellMeta>> = {};
+  const thresholdByRowId: Record<string, number | null | undefined> = {};
   const rows: HeatMapGridRow[] = [...runOrder].reverse().map((run) => {
     const values: Record<string, number | null | undefined> = {};
     const metaForRow: Record<string, StabilityCellMeta> = {};
@@ -74,8 +75,9 @@ export const pivotStabilitySummaries = (
 
     const id = `run_${run.runId}`;
     cellMeta[id] = metaForRow;
+    thresholdByRowId[id] = run.overallScoreThreshold;
     return { id, label: run.runName || run.runId, values };
   });
 
-  return { rows, cellMeta, headerLabels, testCaseColIds };
+  return { rows, cellMeta, thresholdByRowId, headerLabels, testCaseColIds };
 };

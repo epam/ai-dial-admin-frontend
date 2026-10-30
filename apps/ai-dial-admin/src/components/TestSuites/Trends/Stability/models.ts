@@ -15,6 +15,7 @@ export interface StabilityCellMeta {
 export interface StabilityMatrix {
   rows: HeatMapGridRow[];
   cellMeta: Record<string, Record<string, StabilityCellMeta>>;
+  thresholdByRowId: Record<string, number | null | undefined>;
   headerLabels: string[];
   testCaseColIds: string[];
 }

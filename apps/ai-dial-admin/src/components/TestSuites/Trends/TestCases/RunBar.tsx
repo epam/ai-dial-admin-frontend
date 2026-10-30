@@ -11,6 +11,7 @@ import TrendRunNameLabel, {
 import TestCasesBarTooltip from '@/src/components/TestSuites/Trends/TestCases/TestCasesBarTooltip';
 import { TEST_CASE_SEGMENT_BG } from '@/src/components/TestSuites/Trends/constants';
 import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 
 /** Label column under each bar (shared Trends x-axis height, Figma 12405:245295). */
 export const BAR_LABEL_HEIGHT_PX = TREND_RUN_AXIS_LABEL_HEIGHT_PX;
@@ -20,8 +21,6 @@ export const BAR_PLOT_HEIGHT_PX = 211;
 
 interface Props {
   segments: RunTestCaseSegments;
-  hasThreshold: boolean;
-  threshold?: number | null;
   successLabel: string;
   completedLabel: string;
   belowLabel: string | null;
@@ -32,8 +31,6 @@ interface Props {
 
 const RunBar: FC<Props> = ({
   segments,
-  hasThreshold,
-  threshold,
   successLabel,
   completedLabel,
   belowLabel,
@@ -41,21 +38,21 @@ const RunBar: FC<Props> = ({
   errorLabel,
   totalLabel,
 }) => {
-  const { above, below, errorOrNa, total, runName } = segments;
+  const { above, below, errorOrNa, total, runName, overallScoreThreshold } = segments;
+  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
+  const runBelowLabel = hasThreshold ? belowLabel : null;
   const ariaLabel =
-    belowLabel != null
-      ? `${runName}: ${above} ${successLabel}, ${below} ${belowLabel}, ${errorOrNa} ${errorLabel}`
+    runBelowLabel != null
+      ? `${runName}: ${above} ${successLabel}, ${below} ${runBelowLabel}, ${errorOrNa} ${errorLabel}`
       : `${runName}: ${above} ${successLabel}, ${errorOrNa} ${errorLabel}`;
 
   const barTooltip = (
     <TestCasesBarTooltip
       segments={segments}
-      hasThreshold={hasThreshold}
-      threshold={threshold}
       totalLabel={totalLabel}
       completedLabel={completedLabel}
       aboveLabel={aboveLabel}
-      belowLabel={belowLabel ?? ''}
+      belowLabel={runBelowLabel ?? ''}
       errorLabel={errorLabel}
     />
   );
@@ -80,7 +77,7 @@ const RunBar: FC<Props> = ({
                   data-segment="errorOrNa"
                 />
               )}
-              {belowLabel != null && below > 0 && (
+              {runBelowLabel != null && below > 0 && (
                 <div
                   className={classNames('w-full min-h-0', TEST_CASE_SEGMENT_BG.below)}
                   style={{ flexGrow: below, flexShrink: 0, flexBasis: 0 }}

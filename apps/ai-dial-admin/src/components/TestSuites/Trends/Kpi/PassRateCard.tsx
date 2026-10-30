@@ -20,15 +20,15 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   segments: RunTestCaseSegments[];
-  overallScoreThreshold?: number | null;
+  threshold?: number | null;
   isLoading?: boolean;
   hasError?: boolean;
   className?: string;
 }
 
-const PassRateCard: FC<Props> = ({ segments, overallScoreThreshold, isLoading, hasError, className }) => {
+const PassRateCard: FC<Props> = ({ segments, threshold, isLoading, hasError, className }) => {
   const t = useI18n();
-  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
+  const hasThreshold = hasOverallScoreThreshold(threshold);
 
   const latest = segments.length > 0 ? segments[segments.length - 1] : null;
   const previous = segments.length > 1 ? segments[segments.length - 2] : null;
@@ -77,10 +77,10 @@ const PassRateCard: FC<Props> = ({ segments, overallScoreThreshold, isLoading, h
           )}
         </div>
       )}
-      {hasThreshold && overallScoreThreshold != null && !hasError && (
+      {hasThreshold && threshold != null && !hasError && (
         <div className="flex gap-1 dial-tiny-text">
           <span className="text-secondary">{t(TestSuitesI18nKey.TrendsThresholdLabel)}</span>
-          <span className="text-primary">{formatScore(overallScoreThreshold)}</span>
+          <span className="text-primary">{formatScore(threshold)}</span>
         </div>
       )}
     </KpiCardFrame>

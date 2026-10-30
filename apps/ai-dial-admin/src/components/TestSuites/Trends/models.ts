@@ -3,6 +3,7 @@ export interface TrendsRunPoint {
   runName: string;
   computedAtMs: number;
   overallScore: number | null;
+  overallScoreThreshold?: number | null;
   durationMs: number | null;
   isFailed: boolean;
   metricNames?: string[];
@@ -15,6 +16,7 @@ export interface TrendsRunPoint {
 export interface RunTestCaseSegments {
   runId: string;
   runName: string;
+  overallScoreThreshold?: number | null;
   above: number;
   below: number;
   errorOrNa: number;

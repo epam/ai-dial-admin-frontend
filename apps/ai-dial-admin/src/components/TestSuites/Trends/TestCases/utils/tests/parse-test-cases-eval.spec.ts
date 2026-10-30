@@ -5,8 +5,24 @@ import { parseTestCasesEvalResult } from '@/src/components/TestSuites/Trends/Tes
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const runOrder: TrendsRunPoint[] = [
-  { runId: 'run-1', runName: 'R1', computedAtMs: 1, overallScore: 0.9, durationMs: 10, isFailed: false },
-  { runId: 'run-2', runName: 'R2', computedAtMs: 2, overallScore: 0.4, durationMs: 20, isFailed: false },
+  {
+    runId: 'run-1',
+    runName: 'R1',
+    computedAtMs: 1,
+    overallScore: 0.9,
+    overallScoreThreshold: 0.5,
+    durationMs: 10,
+    isFailed: false,
+  },
+  {
+    runId: 'run-2',
+    runName: 'R2',
+    computedAtMs: 2,
+    overallScore: 0.4,
+    overallScoreThreshold: 0.5,
+    durationMs: 20,
+    isFailed: false,
+  },
 ];
 
 describe('parseTestCasesEvalResult', () => {
@@ -35,8 +51,6 @@ describe('parseTestCasesEvalResult', () => {
         ],
       },
       runOrder,
-      true,
-      0.5,
     );
 
     expect(segments[0]).toMatchObject({
@@ -49,7 +63,7 @@ describe('parseTestCasesEvalResult', () => {
   });
 
   test('fills empty segments from overall score when threshold is set', () => {
-    const { segments } = parseTestCasesEvalResult(null, runOrder, true, 0.5);
+    const { segments } = parseTestCasesEvalResult(null, runOrder);
     expect(segments[0]).toMatchObject({ above: 1, below: 0, errorOrNa: 0, total: 1 });
     expect(segments[1]).toMatchObject({ above: 0, below: 1, errorOrNa: 0, total: 1 });
   });
