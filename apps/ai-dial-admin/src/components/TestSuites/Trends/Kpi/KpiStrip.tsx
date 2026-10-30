@@ -47,7 +47,7 @@ const KpiStrip: FC<Props> = ({
   const latestThreshold = runOrder[runOrder.length - 1]?.overallScoreThreshold;
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:flex xl:flex-row xl:gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:flex xl:flex-row xl:gap-4">
       <PassRateCard
         className="flex-1 sm:min-w-[180px]"
         segments={segments}
