@@ -12,6 +12,19 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
   useIsReadOnlyAdmin: vi.fn(() => false),
 }));
 
+let capturedResourceDependenciesProps: { etag?: string; originalApplication?: unknown } | undefined;
+
+vi.mock('@/src/components/Assets/Entities/Apps/ResourceDependencies/ResourceDependencies', () => ({
+  default: (props: typeof capturedResourceDependenciesProps) => {
+    capturedResourceDependenciesProps = props;
+    return <section aria-label="resource-dependencies" />;
+  },
+}));
+
+vi.mock('@/src/components/Applications/View/Dependencies/Dependencies', () => ({
+  default: () => <section aria-label="dependencies" />,
+}));
+
 let capturedAssetRolesProps: { asset?: { userRoles?: string[] }; onChange?: (asset: unknown) => void } | undefined;
 let capturedEntityRolesProps: { entity?: unknown; onChangeEntity?: (entity: unknown) => void } | undefined;
 
@@ -163,5 +176,53 @@ describe('TabsContent — Discard remount scope (Issue #4477)', () => {
     );
 
     expect(entityRolesMountCount).toBe(2);
+  });
+});
+
+describe('TabsContent — Resource Dependencies tab', () => {
+  const original = { name: 'app', path: 'public/app' } as unknown as DialApplication;
+
+  test('renders the tab with the saved application and etag on the AssetsApplications view', () => {
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.ResourceDependencies}
+        view={ApplicationRoute.AssetsApplications}
+        selectedApplication={original}
+        originalApplication={original}
+        etag="etag-7"
+      />,
+    );
+
+    expect(screen.getByLabelText('resource-dependencies')).toBeInTheDocument();
+    expect(capturedResourceDependenciesProps?.etag).toBe('etag-7');
+    expect(capturedResourceDependenciesProps?.originalApplication).toBe(original);
+  });
+
+  test('renders nothing without the saved application to compare against', () => {
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.ResourceDependencies}
+        view={ApplicationRoute.AssetsApplications}
+        selectedApplication={original}
+      />,
+    );
+
+    expect(screen.queryByLabelText('resource-dependencies')).not.toBeInTheDocument();
+  });
+
+  test('keeps the deployment Dependencies tab for the admin-BE Applications view', () => {
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Dependencies}
+        view={ApplicationRoute.Applications}
+        selectedApplication={original}
+      />,
+    );
+
+    expect(screen.getByLabelText('dependencies')).toBeInTheDocument();
+    expect(screen.queryByLabelText('resource-dependencies')).not.toBeInTheDocument();
   });
 });

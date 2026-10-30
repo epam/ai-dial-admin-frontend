@@ -20,6 +20,7 @@ import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import Tools from '@/src/components/Tools/Tools';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -29,6 +30,7 @@ import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-opt
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
+import ResourceDependencies from '@/src/components/Assets/Entities/Apps/ResourceDependencies/ResourceDependencies';
 import Dependencies from './Dependencies/Dependencies';
 import TabContent from './Properties/TabContent';
 
@@ -58,6 +60,8 @@ interface Props {
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   isChanged?: boolean;
+  /** Core-direct asset surface only: the saved etag the consent status is re-read against. */
+  etag?: string;
   frameRef?: Ref<FrameRendererHandle>;
   frameCallbacks?: FrameCallbacks;
   onSave?: () => void;
@@ -83,6 +87,7 @@ const TabsContent: FC<Props> = ({
   discardKey,
   isEditorEnabled,
   isChanged,
+  etag,
   frameRef,
   frameCallbacks,
   onSave,
@@ -219,6 +224,15 @@ const TabsContent: FC<Props> = ({
           applications={applications || []}
           models={models || []}
           onChange={onChangeApplication}
+        />
+      )}
+      {activeTab === EntityViewTab.ResourceDependencies && originalApplication && (
+        <ResourceDependencies
+          key={discardKey}
+          selectedApplication={selectedApplication}
+          originalApplication={originalApplication as AssetApp}
+          etag={etag ?? ''}
+          onChangeApplication={onChangeApplication}
         />
       )}
       {activeTab === EntityViewTab.AppRoutes &&

@@ -88,6 +88,8 @@ describe('PlatformApplicationView', () => {
     const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
     expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeGreaterThan(-1);
     expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeLessThan(tabLabels.indexOf(TabsI18nKey.Interceptors));
+    expect(tabLabels).not.toContain(TabsI18nKey.Dependencies);
+    expect(tabLabels).not.toContain(TabsI18nKey.ResourceDependencies);
   });
 
   test('renders a Roles tab before Interceptors even when the MCP Tools tab is present', () => {
