@@ -15,7 +15,12 @@ import {
   isPlatformDualBucketView,
 } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
-import { allActionLabels, baseToolbarOptionLabels } from './constants';
+import {
+  allActionLabels,
+  baseToolbarOptionLabels,
+  SKILL_PROJECT_FOLDER_ACTIONS,
+  SKILL_PROJECT_ROW_ACTIONS,
+} from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
@@ -134,11 +139,14 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
-    case ApplicationRoute.Skills:
-    case ApplicationRoute.Projects:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
+    case ApplicationRoute.Skills:
+    case ApplicationRoute.Projects:
+      // One label set serves every row; the file manager shows the folder entries on folder rows only and
+      // `openInNewTab` on item rows only.
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => SKILL_PROJECT_ROW_ACTIONS.has(item.key));
     default:
       return [];
   }
@@ -153,12 +161,10 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
     return [];
   }
 
-  // Skills offers no folder-tree actions at all: creating/renaming/moving a folder isn't supported
-  // (no create/move on this surface — see design's Non-Goals), and folder delete isn't wired either
-  // (`getResourceTypeByRoute` deliberately has no SKILL case, since Skill has no `AssetApi`-shaped
-  // delete path), so offering it here would silently no-op.
+  // No rename or move here: Core-backed folder rename/move doesn't cover these types. Folder delete
+  // runs through its own recursive endpoints (`removeSkillFolder` / `removeProjectFolder`).
   if (view === ApplicationRoute.Skills || view === ApplicationRoute.Projects) {
-    return [];
+    return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => SKILL_PROJECT_FOLDER_ACTIONS.has(item.key));
   }
 
   if (view === ApplicationRoute.Conversations) {
