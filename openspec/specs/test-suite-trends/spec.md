@@ -31,8 +31,19 @@ When the Trends tab has at least one run, the KPI strip SHALL include four cards
 3. **Total Runtime of Latest Run** (latest combo total + source/Metrics breakdown)
 4. **Total Cost of Latest Run** (latest combo total + source/Metrics breakdown)
 
+KPI delta badges SHALL show a tooltip with the full label only when the label is clipped by the badge
+width.
+
 Overall Score Trend, Metric Trends, and Test Case Stability section headers SHALL NOT append a
 runs-count fragment (the Preview runs tab-line badge covers the window size).
+
+#### Scenario: KPI delta label fits its badge
+- **WHEN** a KPI delta label fits within its badge
+- **THEN** hovering the badge does not show a tooltip
+
+#### Scenario: KPI delta label is clipped
+- **WHEN** a KPI delta label is clipped by its badge width
+- **THEN** hovering the badge shows the full label in a tooltip
 
 #### Scenario: Chart section titles omit runs count
 - **WHEN** the Trends window has one or more runs
