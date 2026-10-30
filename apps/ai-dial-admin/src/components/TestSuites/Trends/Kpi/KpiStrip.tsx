@@ -48,19 +48,19 @@ const KpiStrip: FC<Props> = ({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:flex xl:flex-row xl:gap-4">
       <PassRateCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         segments={segments}
         overallScoreThreshold={selectedTestSuite.overallScoreThreshold}
         isLoading={isEvalLoading}
         hasError={hasEvalError}
       />
       <OverallScoreOfLatestRunCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         runOrder={runOrder}
         selectedTestSuite={selectedTestSuite}
       />
       <LatestComboTotalCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         points={runtimePoints}
         sourceLabel={sourceKind}
         isLoading={isRuntimeLoading}
@@ -69,7 +69,7 @@ const KpiStrip: FC<Props> = ({
         formatDelta={formatRuntimeDelta}
       />
       <LatestComboTotalCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         points={costPoints}
         sourceLabel={sourceKind}
         isLoading={isCostLoading}
