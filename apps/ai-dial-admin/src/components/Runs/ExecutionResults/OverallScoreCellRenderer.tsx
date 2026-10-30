@@ -1,3 +1,5 @@
+'use client';
+
 import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';

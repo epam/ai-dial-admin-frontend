@@ -38,7 +38,7 @@ import { applyCompareColumnMove } from '@/src/components/Runs/Compare/ExecutionR
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { CompareRun, ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { ExecutionResultRowType, GroupedCompareAnalyticsRow } from '@/src/components/Runs/ExecutionResults/models';
+import { CompareExecutionResultGridRow, ExecutionResultRowType } from '@/src/components/Runs/ExecutionResults/models';
 import {
   projectCompareExecutionResultGroups,
   projectCompareExecutionResultScores,
@@ -260,11 +260,8 @@ const ExecutionResultsTab: FC<Props> = ({
   ]);
 
   const onCellClicked = useCallback(
-    (event: CellClickedEvent<CompareAnalyticsRow>) => {
-      if (
-        !event.data ||
-        (event.data as Partial<GroupedCompareAnalyticsRow>).resultRowType === ExecutionResultRowType.Group
-      )
+    (event: CellClickedEvent<CompareExecutionResultGridRow>) => {
+      if (!event.data || ('resultRowType' in event.data && event.data.resultRowType === ExecutionResultRowType.Group))
         return;
       cellClickHandledRef.current = true;
       const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
@@ -275,11 +272,8 @@ const ExecutionResultsTab: FC<Props> = ({
   );
 
   const onRowClicked = useCallback(
-    (event: RowClickedEvent<CompareAnalyticsRow>) => {
-      if (
-        !event.data ||
-        (event.data as Partial<GroupedCompareAnalyticsRow>).resultRowType === ExecutionResultRowType.Group
-      )
+    (event: RowClickedEvent<CompareExecutionResultGridRow>) => {
+      if (!event.data || ('resultRowType' in event.data && event.data.resultRowType === ExecutionResultRowType.Group))
         return;
       if (cellClickHandledRef.current) {
         cellClickHandledRef.current = false;
@@ -291,11 +285,11 @@ const ExecutionResultsTab: FC<Props> = ({
   );
 
   const onCellKeyDown = useCallback(
-    (event: CellKeyDownEvent<CompareAnalyticsRow>) => {
+    (event: CellKeyDownEvent<CompareExecutionResultGridRow>) => {
       if (
         (event.event as KeyboardEvent | undefined)?.key !== 'Enter' ||
         !event.data ||
-        (event.data as Partial<GroupedCompareAnalyticsRow>).resultRowType === ExecutionResultRowType.Group
+        ('resultRowType' in event.data && event.data.resultRowType === ExecutionResultRowType.Group)
       )
         return;
       onOpenRowDetail(event.data);
@@ -380,10 +374,11 @@ const ExecutionResultsTab: FC<Props> = ({
     [mergedRowData, hiddenColIds],
   );
 
-  const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(
+  const rowClassRules = useMemo<RowClassRules<CompareExecutionResultGridRow>>(
     () => ({
       'ag-active-detail-row': (params) => {
         if (!params.data || !selectedRow) return false;
+        if ('resultRowType' in params.data && params.data.resultRowType === ExecutionResultRowType.Group) return false;
         return getCompareRowSelectionId(params.data) === getCompareRowSelectionId(selectedRow);
       },
     }),
@@ -558,7 +553,7 @@ const ExecutionResultsTab: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4 overflow-hidden">
       <div className="flex-1 min-h-0 relative overflow-hidden">
-        <GridView
+        <GridView<CompareExecutionResultGridRow>
           key={`${primaryRunId}-${comparedRunId}`}
           columnDefs={displayColDefs}
           columnWidths={columnWidths}

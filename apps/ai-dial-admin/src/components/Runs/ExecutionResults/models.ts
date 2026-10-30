@@ -59,5 +59,13 @@ export interface ExecutionResultColumnOptions {
   onToggleGroup: (groupKey: string) => void;
 }
 
-export type GroupedAnalyticsResult = AnalyticsResult & ExecutionResultGroupingFields;
-export type GroupedCompareAnalyticsRow = CompareAnalyticsRow & ExecutionResultGroupingFields & CompareTestCaseScores;
+// Synthetic group rows have no HTTP response; the backend result contract stays required.
+export type GroupedExecutionResult<T extends AnalyticsResult> =
+  | (T & ExecutionResultGroupingFields & { resultRowType: ExecutionResultRowType.Result })
+  | (Omit<T, 'responseStatusCode'> &
+      Partial<Pick<T, 'responseStatusCode'>> &
+      ExecutionResultGroupingFields & { resultRowType: ExecutionResultRowType.Group });
+
+export type GroupedAnalyticsResult = GroupedExecutionResult<AnalyticsResult>;
+export type GroupedCompareAnalyticsRow = GroupedExecutionResult<CompareAnalyticsRow> & CompareTestCaseScores;
+export type CompareExecutionResultGridRow = CompareAnalyticsRow | GroupedCompareAnalyticsRow;
