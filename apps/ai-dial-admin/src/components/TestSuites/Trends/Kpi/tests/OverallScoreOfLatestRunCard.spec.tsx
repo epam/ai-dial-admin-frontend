@@ -42,8 +42,7 @@ describe('OverallScoreOfLatestRunCard', () => {
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('0.580')).toBeInTheDocument();
-    const deltaLabels = screen.getAllByText(TestSuitesI18nKey.TrendsDeltaVsPrev);
-    expect(deltaLabels.some((element) => element.dataset.testid !== 'kpi-tooltip-content')).toBe(true);
+    expect(screen.getAllByText(TestSuitesI18nKey.TrendsDeltaVsPrev).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
