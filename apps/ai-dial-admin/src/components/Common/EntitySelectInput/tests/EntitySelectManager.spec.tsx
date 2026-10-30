@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getGridOptions } from '@/src/components/Common/FileManager/utils';
+import { MovableAssetListItem } from '@/src/models/dial/asset-list-item';
 import EntitySelectManager from '../EntitySelectManager';
 import { EntitySelectType } from '../models';
 
@@ -15,7 +16,7 @@ const mockFolder = {
   setFilePath: vi.fn(),
   expandedFolders: new Set<string>(),
   setExpandedFolders: vi.fn(),
-  fetchedFoldersData: {} as Record<string, unknown[]>,
+  fetchedFoldersData: {} as Record<string, Partial<MovableAssetListItem>[]>,
 };
 
 vi.mock('@/src/context/assets/SkillFolderContext', async (importOriginal) => ({

@@ -65,6 +65,8 @@ const EntitySelectManager: FC<Props> = ({
         setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
       }
     }
+    // `fetchedFoldersData` is read in the guard above but must not be a trigger: every cache update would
+    // restart the load sequence. The same goes for the other values read here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files, isModalOpen]);
 
