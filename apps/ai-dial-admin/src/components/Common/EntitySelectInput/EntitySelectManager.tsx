@@ -41,30 +41,69 @@ const EntitySelectManager: FC<Props> = ({
     setFilePath,
     expandedFolders,
     setExpandedFolders,
+    fetchedFoldersData,
   } = useFolder();
 
   const [loadedPaths, setLoadedPaths] = useState(new Set<string>());
+  // The value that turned out to point at nothing. The picker shows the tree for it exactly as it does for an
+  // empty value, while the `value` prop itself stays as it was.
+  // Keyed by the value, so a different value is resolved afresh without waiting for the popup to reopen.
+  const [unresolvedValue, setUnresolvedValue] = useState<string | null>(null);
+  const isValueUnresolved = unresolvedValue === value;
+  const effectiveValue = isValueUnresolved ? '' : value;
 
   useEffect(() => {
     if ((files == null || files.length === 0) && isModalOpen) {
-      if (value) {
-        const path = getFolderNameAndPath(value).path;
-        fetchFolderHierarchy?.(`${path}/`, true);
+      if (effectiveValue) {
+        const path = getFolderNameAndPath(effectiveValue).path;
+        // A missing folder leaves `files` empty, which re-runs this effect. Its listing is already known, so
+        // asking again would only repeat the failing request before the fallback below takes over.
+        if (fetchedFoldersData?.[`${path}/`] == null) {
+          fetchFolderHierarchy?.(`${path}/`, true);
+        }
       } else {
         fetchFiles(`${ROOT_FOLDER}/`);
         setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
       }
     }
+    // Runs only when the tree empties or the popup toggles. Deliberately not dependencies:
+    // - `fetchedFoldersData`: read by the guard above, but every cache update would restart the load sequence;
+    // - `effectiveValue`: a changed value is handled by the next effect once the tree is loaded;
+    // - `fetchFiles` / `fetchFolderHierarchy`: stable callbacks from the folder context.
+    // The effect below has no suppression, so it lists `fetchFiles` like any other dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files, isModalOpen]);
 
   useEffect(() => {
-    if (value && files !== null && files.length > 0 && isModalOpen) {
-      const path = getFolderNameAndPath(value).path;
+    if (effectiveValue && files !== null && files.length > 0 && isModalOpen) {
+      const path = getFolderNameAndPath(effectiveValue).path;
       fetchFolderHierarchy?.(`${path}/`, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, isModalOpen]);
+  }, [effectiveValue, isModalOpen]);
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setUnresolvedValue(null);
+      return;
+    }
+    if (!value || isValueUnresolved) {
+      return;
+    }
+    // A value without a folder (no `/`) has no listing to look up.
+    const folderPath = getFolderNameAndPath(value).path;
+    if (!folderPath) {
+      return;
+    }
+    // A missing folder lists as empty rather than failing (the backend's 400 is swallowed upstream).
+    const isLeafEmpty = fetchedFoldersData?.[`${folderPath}/`]?.length === 0;
+    if (isLeafEmpty) {
+      setUnresolvedValue(value);
+      // The array form replaces the tree outright, dropping the placeholder folders of the missing path.
+      fetchFiles([`${ROOT_FOLDER}/`], true, true);
+      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+    }
+  }, [value, isValueUnresolved, fetchedFoldersData, isModalOpen, fetchFiles]);
 
   const onPathChange = useCallback(
     (nextPath: string | undefined) => {
@@ -128,13 +167,13 @@ const EntitySelectManager: FC<Props> = ({
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,
-          value ? expandedFolders : loadedPaths,
+          effectiveValue ? expandedFolders : loadedPaths,
           expandedFolders,
           route,
           setExpandedFolders,
           t,
         )}
-        defaultSelectedPaths={value ? new Set([value]) : void 0}
+        defaultSelectedPaths={effectiveValue ? new Set([effectiveValue]) : void 0}
         gridOptions={getGridOptions(route, isReadOnlyAdmin, gridColumns, t, !isMultiple)}
         onPathChange={onPathChange}
         onFolderPopupPathChange={onFolderPopupPathChange}

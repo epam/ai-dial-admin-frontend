@@ -43,6 +43,24 @@ treated as empty (stale value of another type) and SHALL NOT be displayed.
 - **WHEN** the component receives the value `files/public/report.pdf` or an arbitrary non-path string
 - **THEN** the input SHALL display as empty
 
+### Requirement: Picker opens at the root when the current value cannot be resolved
+When the popup opens with a current value, the system SHALL load the folder tree down to the value's folder and
+show it expanded with the value selected. If the value's folder lists as empty because it does not exist (the
+backend rejects an unknown bucket and the rejection surfaces as an empty listing), the system SHALL load the root of
+the tree instead and show it exactly as it does for an empty value: root expanded, nothing selected, the confirm
+button disabled until the user picks a skill. The popup SHALL NOT stay on its loading state. The stale value SHALL
+stay displayed in the input until the user confirms a replacement, the fallback SHALL apply once per opening, and a
+different value received while the popup is open SHALL be resolved afresh.
+
+#### Scenario: Value points to a missing skill
+- **WHEN** the popup opens with `skills/bucket1/missing-skill` and `bucket1` does not exist
+- **THEN** the root of the Skills tree SHALL be loaded and shown
+- **AND** the user SHALL be able to select a skill and confirm it as the replacement value
+
+#### Scenario: Value's folder still holds skills
+- **WHEN** the popup opens with a value whose skill is missing but whose folder lists other skills
+- **THEN** the tree SHALL open expanded to that folder, as for any resolvable value
+
 ### Requirement: Skill picker states and accessibility
 The picker SHALL support a disabled state in which the open button cannot be activated. The open button and the
 tree rows SHALL be reachable by role and accessible name. A decorative icon inside a labeled control SHALL be

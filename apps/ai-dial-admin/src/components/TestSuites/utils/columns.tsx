@@ -28,7 +28,7 @@ import {
   getTurnExpanderColumn,
 } from '@/src/components/Grid/columns/turn-columns';
 import IncludeInRunCellRenderer from '@/src/components/TestSuites/TestCases/RunCondition/IncludeInRunCellRenderer';
-import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
+import { RESPONSE_COLUMN_TYPE_OPTIONS, TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -645,7 +645,7 @@ export const getColumnsGridColumns = (
       suppressSizeToFit: true,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        items: Object.values(TestCaseItemType).map((type) => ({ value: type, label: type.toLowerCase() })),
+        items: RESPONSE_COLUMN_TYPE_OPTIONS,
         onChange,
       },
       valueFormatter: ({ value }) => value.toLowerCase(),

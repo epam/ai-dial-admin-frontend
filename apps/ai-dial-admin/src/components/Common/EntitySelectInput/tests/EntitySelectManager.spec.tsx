@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getGridOptions } from '@/src/components/Common/FileManager/utils';
+import { MovableAssetListItem } from '@/src/models/dial/asset-list-item';
 import EntitySelectManager from '../EntitySelectManager';
 import { EntitySelectType } from '../models';
 
@@ -15,6 +16,7 @@ const mockFolder = {
   setFilePath: vi.fn(),
   expandedFolders: new Set<string>(),
   setExpandedFolders: vi.fn(),
+  fetchedFoldersData: {} as Record<string, Partial<MovableAssetListItem>[]>,
 };
 
 vi.mock('@/src/context/assets/SkillFolderContext', async (importOriginal) => ({
@@ -62,6 +64,7 @@ describe('EntitySelectManager', () => {
     vi.clearAllMocks();
     mockFolder.files = [];
     mockFolder.expandedFolders = new Set<string>();
+    mockFolder.fetchedFoldersData = {};
   });
 
   const renderManager = (props?: Partial<Parameters<typeof EntitySelectManager>[0]>) =>
@@ -155,6 +158,91 @@ describe('EntitySelectManager', () => {
     renderManager({ value: 'public/team/my-skill' });
 
     expect(mockFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/', true);
+    expect(mockFolder.fetchFiles).not.toHaveBeenCalled();
+  });
+
+  test('falls back to the root when the folder of the current value lists as empty', () => {
+    const { rerender } = renderManager({ value: 'bucket1/missing-skill' });
+    expect(mockFolder.fetchFiles).not.toHaveBeenCalled();
+
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/missing-skill" isModalOpen />);
+
+    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+  });
+
+  test('does not request the hierarchy again once the value folder is known to be empty', () => {
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    renderManager({ value: 'bucket1/missing-skill' });
+
+    expect(mockFolder.fetchFolderHierarchy).not.toHaveBeenCalled();
+    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+  });
+
+  test('does not request the value hierarchy again after falling back to the root', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    const { rerender } = renderManager({ value: 'bucket1/missing-skill' });
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+    mockFolder.fetchFolderHierarchy.mockClear();
+
+    mockFolder.files = [{ path: 'public/' }, { path: 'public/team/' }];
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/missing-skill" isModalOpen />);
+
+    expect(mockFolder.fetchFolderHierarchy).not.toHaveBeenCalled();
+  });
+
+  test('resolves a different value afresh after falling back for the previous one', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    const { rerender } = renderManager({ value: 'bucket1/missing-skill' });
+    mockFolder.fetchFolderHierarchy.mockClear();
+
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="public/team/my-skill" isModalOpen />);
+
+    expect(mockFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/', true);
+  });
+
+  test('falls back again for a second missing value in the same bucket', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    const { rerender } = renderManager({ value: 'bucket1/first-missing' });
+    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
+
+    // The root reload replaced the cache, so the next value's folder is requested again and lists empty.
+    mockFolder.fetchedFoldersData = {};
+    mockFolder.fetchFolderHierarchy.mockClear();
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/second-missing" isModalOpen />);
+    expect(mockFolder.fetchFolderHierarchy).toHaveBeenCalledWith('bucket1/', true);
+
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/second-missing" isModalOpen />);
+
+    expect(mockFolder.fetchFiles).toHaveBeenCalledTimes(2);
+  });
+
+  test('does not fall back for a value without a folder', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    // The `'/'` entry is what a folder-less value would hit without the guard: the test fails if the guard goes.
+    mockFolder.fetchedFoldersData = { '/': [] };
+    renderManager({ value: 'bucket1' });
+
+    expect(mockFolder.fetchFiles).not.toHaveBeenCalled();
+  });
+
+  test('keeps the current value when its folder still holds entries', () => {
+    mockFolder.fetchedFoldersData = { 'public/team/': [{ path: 'public/team/other-skill' }] };
+    renderManager({ value: 'public/team/missing-skill' });
+
+    expect(mockFolder.fetchFiles).not.toHaveBeenCalled();
+  });
+
+  test('does not fall back to the root while the popup is closed', () => {
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    renderManager({ value: 'bucket1/missing-skill', isModalOpen: false });
+
     expect(mockFolder.fetchFiles).not.toHaveBeenCalled();
   });
 
