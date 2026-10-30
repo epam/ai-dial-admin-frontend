@@ -27,6 +27,8 @@ class CapturingResizeObserver implements ResizeObserver {
   }
 }
 
+// Local mock is needed here to provide a lightweight Badge representation
+// and a role="tooltip" element specifically for testing overflow tooltips.
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Tooltip: ({
     children,
