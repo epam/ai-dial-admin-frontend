@@ -92,8 +92,7 @@ const EntitySelectManager: FC<Props> = ({
       fetchFiles([`${ROOT_FOLDER}/`], true, true);
       setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedFoldersData, isModalOpen]);
+  }, [value, isValueUnresolved, fetchedFoldersData, isModalOpen, fetchFiles]);
 
   const onPathChange = useCallback(
     (nextPath: string | undefined) => {

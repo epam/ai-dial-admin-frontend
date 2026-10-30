@@ -204,6 +204,24 @@ describe('EntitySelectManager', () => {
     expect(mockFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/', true);
   });
 
+  test('falls back again for a second missing value in the same bucket', () => {
+    mockFolder.files = [{ path: 'public/' }];
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    const { rerender } = renderManager({ value: 'bucket1/first-missing' });
+    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
+
+    // The root reload replaced the cache, so the next value's folder is requested again and lists empty.
+    mockFolder.fetchedFoldersData = {};
+    mockFolder.fetchFolderHierarchy.mockClear();
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/second-missing" isModalOpen />);
+    expect(mockFolder.fetchFolderHierarchy).toHaveBeenCalledWith('bucket1/', true);
+
+    mockFolder.fetchedFoldersData = { 'bucket1/': [] };
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/second-missing" isModalOpen />);
+
+    expect(mockFolder.fetchFiles).toHaveBeenCalledTimes(2);
+  });
+
   test('keeps the current value when its folder still holds entries', () => {
     mockFolder.fetchedFoldersData = { 'public/team/': [{ path: 'public/team/other-skill' }] };
     renderManager({ value: 'public/team/missing-skill' });
