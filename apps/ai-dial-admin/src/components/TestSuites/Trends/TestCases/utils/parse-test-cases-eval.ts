@@ -12,13 +12,7 @@ export interface TestCasesEvalParseResult {
 export const parseTestCasesEvalResult = (
   result: StructuredQueryResult | null,
   runOrder: TrendsRunPoint[],
-  hasThreshold: boolean,
-  overallScoreThreshold?: number | null,
 ): TestCasesEvalParseResult => {
-  const segments = fillEmptySegmentsFromOverallScore(
-    parseRunTestCaseSegments(result, runOrder, hasThreshold),
-    runOrder,
-    overallScoreThreshold,
-  );
+  const segments = fillEmptySegmentsFromOverallScore(parseRunTestCaseSegments(result, runOrder), runOrder);
   return { segments };
 };

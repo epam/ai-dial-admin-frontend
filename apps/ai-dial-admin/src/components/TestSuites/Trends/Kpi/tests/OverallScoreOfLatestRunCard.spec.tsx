@@ -28,7 +28,15 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 
 const runOrder: TrendsRunPoint[] = [
   { runId: 'run-1', runName: 'Run#1', computedAtMs: 1, overallScore: 0.46, durationMs: 100, isFailed: false },
-  { runId: 'run-2', runName: 'Run#2', computedAtMs: 2, overallScore: 0.58, durationMs: 200, isFailed: false },
+  {
+    runId: 'run-2',
+    runName: 'Run#2',
+    computedAtMs: 2,
+    overallScore: 0.58,
+    overallScoreThreshold: 0.6,
+    durationMs: 200,
+    isFailed: false,
+  },
 ];
 
 describe('OverallScoreOfLatestRunCard', () => {
@@ -36,7 +44,7 @@ describe('OverallScoreOfLatestRunCard', () => {
     render(
       <OverallScoreOfLatestRunCard
         runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
+        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
         metricCount={2}
       />,
     );
@@ -51,7 +59,7 @@ describe('OverallScoreOfLatestRunCard', () => {
     render(
       <OverallScoreOfLatestRunCard
         runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
+        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
         metricCount={2}
       />,
     );
@@ -59,11 +67,11 @@ describe('OverallScoreOfLatestRunCard', () => {
     expect(screen.getByText(TestSuitesI18nKey.TrendsOverallScoreBelowThresholdTooltip)).toBeInTheDocument();
   });
 
-  test('hides the score tip when suite has no threshold', () => {
+  test('hides the score tip when latest run snapshot has no threshold', () => {
     render(
       <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1' } as TestSuite}
+        runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
+        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
         metricCount={2}
       />,
     );
@@ -72,11 +80,11 @@ describe('OverallScoreOfLatestRunCard', () => {
     expect(scoreTip).toHaveAttribute('data-hide', 'true');
   });
 
-  test('omits threshold glyph when suite has no threshold', () => {
+  test('omits threshold glyph when latest run snapshot has no threshold', () => {
     const { container } = render(
       <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1' } as TestSuite}
+        runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
+        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
         metricCount={2}
       />,
     );

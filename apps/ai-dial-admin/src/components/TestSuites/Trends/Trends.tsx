@@ -12,7 +12,6 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
-import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import CostTrendCard from '@/src/components/TestSuites/Trends/CostRuntime/CostTrendCard';
 import RuntimeTrendCard from '@/src/components/TestSuites/Trends/CostRuntime/RuntimeTrendCard';
 import { useCostTrendData } from '@/src/components/TestSuites/Trends/CostRuntime/use-cost-trend-data';
@@ -46,12 +45,12 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
     segments: testCaseSegments,
     isLoading: isEvalLoading,
     hasError: hasEvalError,
-  } = useTestCasesEvalData(runOrder, selectedTestSuite.overallScoreThreshold);
+  } = useTestCasesEvalData(runOrder);
   const { points: costPoints, isLoading: isCostLoading } = useCostTrendData(runOrder);
   const { points: runtimePoints, isLoading: isRuntimeLoading } = useRuntimeTrendData(runOrder);
   const sourceKind = useSourceKindLabel(selectedTestSuite);
-  const hasThreshold = hasOverallScoreThreshold(selectedTestSuite.overallScoreThreshold);
   const latestRunSegments = testCaseSegments.length > 0 ? testCaseSegments[testCaseSegments.length - 1] : null;
+  const latestRunThreshold = runOrder[runOrder.length - 1]?.overallScoreThreshold;
 
   const metricCount = runOrder[runOrder.length - 1]?.metricNames?.length ?? 0;
 
@@ -124,16 +123,15 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
       <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-stretch">
         <TestCasesByRunCard
           segments={testCaseSegments}
+          runOrder={runOrder}
           isLoading={isEvalLoading}
           hasError={hasEvalError}
-          hasThreshold={hasThreshold}
-          overallScoreThreshold={selectedTestSuite.overallScoreThreshold}
         />
         <LatestRunCard
           segments={latestRunSegments}
+          threshold={latestRunThreshold}
           isLoading={isEvalLoading}
           hasError={hasEvalError}
-          hasThreshold={hasThreshold}
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <OverallScoreTrend

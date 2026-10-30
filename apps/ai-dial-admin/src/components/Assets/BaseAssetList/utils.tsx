@@ -354,6 +354,9 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
     status: __status,
     validationWarnings: __validationWarnings,
     reference: __reference,
+    // The row's grafted identity: `getEntityPath` prefers `_metadata.path` over the new name, so
+    // keeping it would redirect the post-duplicate navigation to the original.
+    _metadata: __metadata,
     ...duplicate
   } = asset as DialModelResource &
     DialAppRunnerResource & {

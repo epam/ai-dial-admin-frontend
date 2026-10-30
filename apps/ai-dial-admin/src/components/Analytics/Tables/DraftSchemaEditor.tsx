@@ -33,6 +33,7 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
     columnErrors,
     scanPairRequired,
     scanPairIncomplete,
+    isGranularityMissing,
   } = draft;
 
   // The pair is all-or-nothing: mark whichever half is still empty, so the disabled Save has a visible cause.
@@ -108,9 +109,12 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
                     hint={t(AnalyticsTablesI18nKey.GranularityHint)}
                   />
                 ),
+                required: true,
               }}
               options={PARTITION_GRANULARITY_OPTIONS}
               value={form.granularity}
+              error={isGranularityMissing ? t(AnalyticsTablesI18nKey.GranularityRequired) : ''}
+              invalid={isGranularityMissing}
               onChange={(v) => update('granularity', v as PartitionGranularity | '')}
             />
           )}
