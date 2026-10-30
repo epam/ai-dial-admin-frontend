@@ -152,7 +152,11 @@ const nestExtractedGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef
   };
 };
 
-const isMetricGroup = (group: ColDef): boolean => getLeaves(group).some((leaf) => getColId(leaf)?.startsWith('delta_'));
+const isOverallScoreGroup = (group: ColDef): boolean =>
+  (group.context as CompareColumnPanelContext | undefined)?.isOverallScoreGroup === true;
+
+const isMetricGroup = (group: ColDef): boolean =>
+  !isOverallScoreGroup(group) && getLeaves(group).some((leaf) => getColId(leaf)?.startsWith('delta_'));
 
 const nestTopLevelNode = (node: ColDef, runs: CompareRun[]): ColDef => {
   const children = getChildren(node);

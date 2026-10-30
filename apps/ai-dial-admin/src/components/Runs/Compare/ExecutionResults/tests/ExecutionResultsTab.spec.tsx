@@ -12,8 +12,10 @@ import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
+const executeStructuredQueryMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  executeStructuredQuery: (...args: unknown[]) => executeStructuredQueryMock(...args),
   getRun: (...args: unknown[]) => getRunMock(...args),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
 }));
@@ -48,6 +50,7 @@ const ControlledExecutionResultsTab: FC<
 > = ({ initialState, ...props }) => {
   const [executionResultsState, setState] = useState<ExecutionResultsTabUiState>(() => ({
     ...createDefaultCompareViewTabState().executionResults,
+    isGroupedByTestCase: false,
     ...initialState,
   }));
 
@@ -84,6 +87,8 @@ describe('ExecutionResultsTab', () => {
   beforeEach(() => {
     getRunMock.mockReset();
     getTestCaseRunResultsMock.mockReset();
+    executeStructuredQueryMock.mockReset();
+    executeStructuredQueryMock.mockResolvedValue({ rows: [] });
     defaultDisplayPanelProps.onToggleDisplayPanel.mockReset();
     defaultRowDetailProps.onOpenRowDetail.mockReset();
     getRunMock.mockImplementation((id: string) =>

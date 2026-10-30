@@ -15,7 +15,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Spinner } from '@epam/ai-dial-ui-kit';
 
-import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { executeStructuredQuery, getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ColumnWidths } from '@/src/components/Grid/models';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
@@ -38,6 +38,15 @@ import { applyCompareColumnMove } from '@/src/components/Runs/Compare/ExecutionR
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { CompareRun, ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { CompareExecutionResultGridRow, ExecutionResultRowType } from '@/src/components/Runs/ExecutionResults/models';
+import {
+  projectCompareExecutionResultGroups,
+  projectCompareExecutionResultScores,
+} from '@/src/components/Runs/ExecutionResults/utils/test-case-groups';
+import {
+  buildTestCaseScoresQuery,
+  parseTestCaseScores,
+} from '@/src/components/Runs/ExecutionResults/utils/test-case-scores';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import {
   getCompareRowSelectionId,
@@ -48,6 +57,7 @@ import {
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { hasVaryingExecutionIndices } from '@/src/utils/evaluation/column-variation';
 
 interface Props {
   primaryRunId: string;
@@ -64,14 +74,6 @@ interface Props {
 
 const DISPLAY_PANEL_CLASS_NAME =
   'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
-
-const loadRunResults = async (runId: string) => {
-  const run = await getRun(runId);
-  if (!run) {
-    return null;
-  }
-  return getTestCaseRunResults(RESULT_FILTERS(run));
-};
 
 const ExecutionResultsTab: FC<Props> = ({
   primaryRunId,
@@ -91,6 +93,7 @@ const ExecutionResultsTab: FC<Props> = ({
   const cellClickHandledRef = useRef(false);
   const [isGridReady, setIsGridReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
+  const [collapsedGroupKeys, setCollapsedGroupKeys] = useState<Set<string>>(new Set());
 
   const {
     viewDifferencesOnly,
@@ -101,7 +104,14 @@ const ExecutionResultsTab: FC<Props> = ({
     columnWidths,
     results,
     comparedResults,
+    isGroupedByTestCase,
+    testCaseScores,
+    primaryThreshold,
+    comparedThreshold,
   } = executionResultsState;
+  const canGroupByTestCase = hasVaryingExecutionIndices([...(results ?? []), ...(comparedResults ?? [])]);
+  const isGroupingEnabled = isGroupedByTestCase && canGroupByTestCase;
+  const showTestCaseSummary = isGroupingEnabled || !canGroupByTestCase;
 
   const panelColDefsRef = useRef(panelColDefs);
   panelColDefsRef.current = panelColDefs;
@@ -118,20 +128,26 @@ const ExecutionResultsTab: FC<Props> = ({
     let isCancelled = false;
     setHasLoadError(false);
 
-    loadRunResults(primaryRunId)
-      .then((resultsResponse) => {
+    const loadPrimaryResults = async () => {
+      try {
+        const runData = await getRun(primaryRunId);
         if (isCancelled) return;
-        if (resultsResponse === null) {
+        if (!runData) {
           setHasLoadError(true);
           return;
         }
-        setExecutionResultsState({ results: resultsResponse?.content || [] });
-      })
-      .catch(() => {
+        const resultsResponse = await getTestCaseRunResults(RESULT_FILTERS(runData));
         if (!isCancelled) {
-          setHasLoadError(true);
+          setExecutionResultsState({
+            results: resultsResponse?.content || [],
+            primaryThreshold: runData.suiteSnapshot?.overallScoreThreshold ?? null,
+          });
         }
-      });
+      } catch {
+        if (!isCancelled) setHasLoadError(true);
+      }
+    };
+    void loadPrimaryResults();
 
     return () => {
       isCancelled = true;
@@ -145,25 +161,58 @@ const ExecutionResultsTab: FC<Props> = ({
 
     let isCancelled = false;
 
-    loadRunResults(comparedRunId)
-      .then((resultsResponse) => {
+    const loadComparedResults = async () => {
+      try {
+        const comparedRun = await getRun(comparedRunId);
         if (isCancelled) return;
-        if (resultsResponse === null) {
+        if (!comparedRun) {
           setHasLoadError(true);
           return;
         }
-        setExecutionResultsState({ comparedResults: resultsResponse?.content || [] });
-      })
-      .catch(() => {
+        const response = await getTestCaseRunResults(RESULT_FILTERS(comparedRun));
         if (!isCancelled) {
-          setHasLoadError(true);
+          setExecutionResultsState({
+            comparedResults: response?.content || [],
+            comparedThreshold: comparedRun.suiteSnapshot?.overallScoreThreshold ?? null,
+          });
         }
-      });
+      } catch {
+        if (!isCancelled) setHasLoadError(true);
+      }
+    };
+    void loadComparedResults();
 
     return () => {
       isCancelled = true;
     };
   }, [comparedRunId, comparedResults, setExecutionResultsState]);
+
+  useEffect(() => {
+    if (testCaseScores !== null) return;
+
+    let isCancelled = false;
+    const loadScores = async () => {
+      try {
+        const result = await executeStructuredQuery(buildTestCaseScoresQuery([primaryRunId, comparedRunId]));
+        if (!isCancelled) setExecutionResultsState({ testCaseScores: parseTestCaseScores(result) });
+      } catch {
+        if (!isCancelled) setExecutionResultsState({ testCaseScores: [] });
+      }
+    };
+    void loadScores();
+    return () => {
+      isCancelled = true;
+    };
+  }, [primaryRunId, comparedRunId, testCaseScores, setExecutionResultsState]);
+
+  const onToggleGroup = useCallback((groupKey: string) => {
+    setCollapsedGroupKeys((current) => {
+      const next = new Set(current);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
+      return next;
+    });
+  }, []);
 
   const mergedRowData = useMemo(() => {
     if (results === null || comparedResults === null) return null;
@@ -186,12 +235,34 @@ const ExecutionResultsTab: FC<Props> = ({
       hideHighlights,
       metricsSchema,
       runs,
+      isGrouped: isGroupingEnabled,
+      showTestCaseSummary,
+      primaryThreshold,
+      comparedThreshold,
+      groupingLabels: {
+        score: t(RunsI18nKey.ExecutionOverallScore),
+        notApplicable: t(RunsI18nKey.NotApplicable),
+      },
+      onToggleGroup,
     });
-  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, runs]);
+  }, [
+    mergedRowData,
+    errorText,
+    t,
+    hideHighlights,
+    metricsSchema,
+    runs,
+    isGroupingEnabled,
+    showTestCaseSummary,
+    primaryThreshold,
+    comparedThreshold,
+    onToggleGroup,
+  ]);
 
   const onCellClicked = useCallback(
-    (event: CellClickedEvent<CompareAnalyticsRow>) => {
-      if (!event.data) return;
+    (event: CellClickedEvent<CompareExecutionResultGridRow>) => {
+      if (!event.data || ('resultRowType' in event.data && event.data.resultRowType === ExecutionResultRowType.Group))
+        return;
       cellClickHandledRef.current = true;
       const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
       const mappedFieldKey = mapGridColToPivotField(colId);
@@ -201,8 +272,9 @@ const ExecutionResultsTab: FC<Props> = ({
   );
 
   const onRowClicked = useCallback(
-    (event: RowClickedEvent<CompareAnalyticsRow>) => {
-      if (!event.data) return;
+    (event: RowClickedEvent<CompareExecutionResultGridRow>) => {
+      if (!event.data || ('resultRowType' in event.data && event.data.resultRowType === ExecutionResultRowType.Group))
+        return;
       if (cellClickHandledRef.current) {
         cellClickHandledRef.current = false;
         return;
@@ -213,8 +285,13 @@ const ExecutionResultsTab: FC<Props> = ({
   );
 
   const onCellKeyDown = useCallback(
-    (event: CellKeyDownEvent<CompareAnalyticsRow>) => {
-      if ((event.event as KeyboardEvent | undefined)?.key !== 'Enter' || !event.data) return;
+    (event: CellKeyDownEvent<CompareExecutionResultGridRow>) => {
+      if (
+        (event.event as KeyboardEvent | undefined)?.key !== 'Enter' ||
+        !event.data ||
+        ('resultRowType' in event.data && event.data.resultRowType === ExecutionResultRowType.Group)
+      )
+        return;
       onOpenRowDetail(event.data);
     },
     [onOpenRowDetail],
@@ -248,7 +325,7 @@ const ExecutionResultsTab: FC<Props> = ({
 
   const hiddenColIds = useMemo(() => collectHiddenColIds(displayColDefs), [displayColDefs]);
 
-  const displayedRowData = useMemo(() => {
+  const displayedRawRowData = useMemo(() => {
     if (mergedRowData === null) return null;
     if (!viewDifferencesOnly) return mergedRowData;
 
@@ -256,15 +333,52 @@ const ExecutionResultsTab: FC<Props> = ({
     return mergedRowData.filter((row) => hasCompareRowDiff(row, visibility));
   }, [mergedRowData, viewDifferencesOnly, hiddenColIds]);
 
+  const displayedRowData = useMemo(() => {
+    if (displayedRawRowData === null) return null;
+    if (isGroupingEnabled) {
+      return projectCompareExecutionResultGroups(
+        displayedRawRowData,
+        collapsedGroupKeys,
+        testCaseScores ?? [],
+        primaryRunId,
+        comparedRunId,
+        primaryThreshold ?? undefined,
+        comparedThreshold ?? undefined,
+      );
+    }
+    if (!canGroupByTestCase) {
+      return projectCompareExecutionResultScores(
+        displayedRawRowData,
+        testCaseScores ?? [],
+        primaryRunId,
+        comparedRunId,
+        primaryThreshold ?? undefined,
+        comparedThreshold ?? undefined,
+      );
+    }
+    return displayedRawRowData;
+  }, [
+    displayedRawRowData,
+    isGroupingEnabled,
+    canGroupByTestCase,
+    collapsedGroupKeys,
+    testCaseScores,
+    primaryRunId,
+    comparedRunId,
+    primaryThreshold,
+    comparedThreshold,
+  ]);
+
   const diffCounts = useMemo(
     () => countCompareDiffs(mergedRowData ?? [], { hiddenColIds }),
     [mergedRowData, hiddenColIds],
   );
 
-  const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(
+  const rowClassRules = useMemo<RowClassRules<CompareExecutionResultGridRow>>(
     () => ({
       'ag-active-detail-row': (params) => {
         if (!params.data || !selectedRow) return false;
+        if ('resultRowType' in params.data && params.data.resultRowType === ExecutionResultRowType.Group) return false;
         return getCompareRowSelectionId(params.data) === getCompareRowSelectionId(selectedRow);
       },
     }),
@@ -391,7 +505,7 @@ const ExecutionResultsTab: FC<Props> = ({
       return;
     }
 
-    if (filterModel && Object.keys(filterModel).length > 0) {
+    if (!isGroupingEnabled && filterModel && Object.keys(filterModel).length > 0) {
       const current = api.getFilterModel() ?? {};
       const isAlreadyApplied = Object.keys(filterModel).every(
         (key) => JSON.stringify(current[key]) === JSON.stringify(filterModel[key]),
@@ -403,17 +517,24 @@ const ExecutionResultsTab: FC<Props> = ({
 
     const stateToRestore = columnStateRef.current;
     if (stateToRestore?.length) {
+      const restoredColumnState = isGroupingEnabled
+        ? stateToRestore.map((column) => ({ ...column, sort: null, sortIndex: null }))
+        : stateToRestore;
       const liveColumns = api.getColumnState();
       if (!liveColumns) {
         return;
       }
       const liveOrder = liveColumns.map((column) => column.colId).join(',');
-      const applyOrder = stateToRestore.map((column) => column.colId).join(',');
-      if (liveOrder !== applyOrder) {
-        api.applyColumnState({ state: stateToRestore, applyOrder: true });
+      const applyOrder = restoredColumnState.map((column) => column.colId).join(',');
+      const hasActiveSort = isGroupingEnabled && liveColumns.some((column) => column.sort != null);
+      if (liveOrder !== applyOrder || hasActiveSort) {
+        api.applyColumnState({ state: restoredColumnState, applyOrder: true });
       }
+    } else if (isGroupingEnabled) {
+      api.applyColumnState({ defaultState: { sort: null } });
     }
-  }, [isGridReady, filterModel, displayColDefs]);
+    if (isGroupingEnabled) api.setFilterModel(null);
+  }, [isGridReady, filterModel, displayColDefs, isGroupingEnabled]);
 
   const isCompareDataReady = results !== null && comparedResults !== null;
 
@@ -432,7 +553,7 @@ const ExecutionResultsTab: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4 overflow-hidden">
       <div className="flex-1 min-h-0 relative overflow-hidden">
-        <GridView
+        <GridView<CompareExecutionResultGridRow>
           key={`${primaryRunId}-${comparedRunId}`}
           columnDefs={displayColDefs}
           columnWidths={columnWidths}

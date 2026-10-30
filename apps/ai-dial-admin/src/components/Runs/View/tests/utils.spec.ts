@@ -12,6 +12,8 @@ import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/Ellipsis
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { FilterOperatorDto } from '@/src/types/request';
+import { ExecutionResultRowType, TestCaseThresholdStatus } from '@/src/components/Runs/ExecutionResults/models';
+import { TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH } from '@/src/components/Runs/ExecutionResults/constants';
 import {
   RESULT_FILTERS,
   getTestCaseStatusClass,
@@ -71,6 +73,124 @@ describe('Runs View :: getCellClass', () => {
 
   test('Should return error for non-2xx/4xx status code', () => {
     expect(getTestCaseStatusClass(500)).toBe('text-error');
+  });
+});
+
+describe('Runs View :: grouped analytics columns', () => {
+  const labels = { score: 'Overall score', notApplicable: 'N/A' };
+  const onToggleGroup = () => {};
+
+  test('adds one overall score column when grouping with a configured threshold', () => {
+    const columns = getAnalyticsColumns([], {
+      isGrouped: true,
+      hasThreshold: true,
+      labels,
+      onToggleGroup,
+    });
+    const details = columns[0] as ColGroupDef;
+    const leaves = details.children as ColDef[];
+
+    expect(leaves.map((column) => column.colId)).toEqual(['status', 'testCaseName', 'testCaseScore']);
+    expect(leaves.find((column) => column.colId === 'testCaseScore')).toMatchObject({
+      width: TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
+      minWidth: TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
+      maxWidth: TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH,
+      flex: 0,
+    });
+    expect(leaves.every((column) => column.sortable === false && column.filter === false)).toBe(true);
+  });
+
+  test('keeps the score column without a threshold indicator and omits it when no summary is requested', () => {
+    const withoutThreshold = getAnalyticsColumns([], {
+      isGrouped: true,
+      hasThreshold: false,
+      labels,
+      onToggleGroup,
+    });
+    const score = ((withoutThreshold[0] as ColGroupDef).children as ColDef[]).find(
+      (column) => column.colId === 'testCaseScore',
+    );
+    expect(
+      (score?.valueGetter as any)({ data: { resultRowType: ExecutionResultRowType.Group, testCaseScore: 0.75 } }),
+    ).toEqual({ score: 0.75, thresholdStatus: undefined });
+
+    const flatLeaves = (getAnalyticsColumns([])[0] as ColGroupDef).children as ColDef[];
+    expect(flatLeaves.some((column) => column.colId === 'testCaseScore')).toBe(false);
+  });
+
+  test('adds the combined overall score column to flat single-execution results', () => {
+    const columns = getAnalyticsColumns([], {
+      isGrouped: false,
+      showTestCaseSummary: true,
+      hasThreshold: true,
+      labels,
+      onToggleGroup,
+    });
+    const leaves = (columns[0] as ColGroupDef).children as ColDef[];
+    const score = leaves.find((column) => column.colId === 'testCaseScore');
+
+    expect(
+      (score?.valueGetter as any)({
+        data: { testCaseScore: 0.75, thresholdStatus: TestCaseThresholdStatus.Pass },
+      }),
+    ).toEqual({ score: 0.75, thresholdStatus: TestCaseThresholdStatus.Pass });
+    expect((score?.valueGetter as any)({ data: {} })).toEqual({ score: 'N/A', thresholdStatus: undefined });
+  });
+
+  test('shows score only on synthetic group rows', () => {
+    const columns = getAnalyticsColumns([], {
+      isGrouped: true,
+      hasThreshold: true,
+      labels,
+      onToggleGroup,
+    });
+    const score = ((columns[0] as ColGroupDef).children as ColDef[]).find((column) => column.colId === 'testCaseScore');
+    const valueGetter = score?.valueGetter as (params: { data: Record<string, unknown> }) => unknown;
+
+    expect(
+      valueGetter({
+        data: {
+          resultRowType: ExecutionResultRowType.Group,
+          testCaseScore: 0.75,
+          thresholdStatus: TestCaseThresholdStatus.Pass,
+        },
+      }),
+    ).toEqual({ score: 0.75, thresholdStatus: TestCaseThresholdStatus.Pass });
+    expect(
+      valueGetter({ data: { resultRowType: ExecutionResultRowType.Result, testCaseScore: 0.75 } }),
+    ).toBeUndefined();
+    expect(valueGetter({ data: { resultRowType: ExecutionResultRowType.Group } })).toEqual({
+      score: 'N/A',
+      thresholdStatus: undefined,
+    });
+  });
+
+  test('leaves non-group data columns blank on synthetic group rows', () => {
+    const columns = getAnalyticsColumns(
+      [
+        makeResult({
+          metricValues: { Accuracy: { score: 0.8 } },
+          testCaseData: { question: 'Q' },
+          extractedColumns: { answer: 'A' },
+        }),
+      ],
+      { isGrouped: true, hasThreshold: true, labels, onToggleGroup },
+    );
+    const groupRow = { resultRowType: ExecutionResultRowType.Group };
+    const metric = (columns.find((column) => column.headerName === 'Accuracy') as ColGroupDef).children[0] as ColDef;
+    const input = (columns.find((column) => column.headerName === 'INPUT BINDINGS') as ColGroupDef)
+      .children[0] as ColDef;
+    const extracted = (columns.find((column) => column.headerName === 'Extracted') as ColGroupDef)
+      .children[0] as ColDef;
+    const duration = (columns.find((column) => column.headerName === 'Execution') as ColGroupDef).children.find(
+      (column) => (column as ColDef).colId === 'duration',
+    ) as ColDef;
+
+    expect((metric.valueGetter as any)({ data: groupRow })).toBe('');
+    expect((input.valueGetter as any)({ data: groupRow })).toBeNull();
+    expect((extracted.valueGetter as any)({ data: groupRow })).toBeNull();
+    expect((duration.valueGetter as any)({ data: groupRow })).toBeNull();
+    expect((duration.valueFormatter as any)({ data: groupRow, value: null })).toBe('');
   });
 });
 
@@ -890,13 +1010,10 @@ describe('Runs View :: executionColumns Turn valueGetter', () => {
         headerName: 'Turn',
         colId: 'turnIndex',
         sortable: true,
-        headerComponentParams: {
-          innerHeaderComponent: expect.any(Function),
-          innerHeaderComponentParams: { isRightAligned: true },
-        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();
+    expect(col.headerComponentParams).toBeUndefined();
   });
 
   test('Should display 1-based turn number for a 0-based turnIndex', () => {

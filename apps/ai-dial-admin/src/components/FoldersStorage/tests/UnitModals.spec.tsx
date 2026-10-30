@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -24,11 +24,12 @@ const unit: OrgUnit = {
   folder: 'public/Acme/Risk/',
 };
 
-const enterName = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
-  // The popup's focus manager moves focus once after mount, which swallows the first interaction.
-  await user.click(await screen.findByRole('dialog'));
-  await user.click(screen.getByRole('textbox', { name: new RegExp(FoldersI18nKey.UnitName) }));
-  await user.paste(value);
+const enterText = (name: string | RegExp, value: string) => {
+  // These tests exercise form values, not clipboard behavior. Target the native input so the popup's
+  // delayed focus management cannot redirect a paste to another element.
+  const input = screen.getByRole('textbox', { name });
+  fireEvent.change(input, { target: { value } });
+  expect(input).toHaveValue(value);
 };
 
 describe('NewUnitModal', () => {
@@ -52,11 +53,13 @@ describe('NewUnitModal', () => {
     const onCreated = vi.fn();
     renderModal(onCreated);
 
-    await enterName(user, 'USRisk');
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+    enterText(new RegExp(FoldersI18nKey.UnitName), 'USRisk');
+    const createButton = screen.getByRole('button', { name: ButtonsI18nKey.Create });
+    await user.click(createButton);
 
-    await vi.waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
+    await waitFor(() => expect(createButton).toBeEnabled());
     expect(createOrgUnit).toHaveBeenCalledWith('public/Acme', { name: 'USRisk' });
+    expect(onCreated).toHaveBeenCalledWith(created);
   });
 
   test.each([
@@ -68,7 +71,7 @@ describe('NewUnitModal', () => {
     const onCreated = vi.fn();
     renderModal(onCreated);
 
-    await enterName(user, 'roles');
+    enterText(new RegExp(FoldersI18nKey.UnitName), 'roles');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
     expect(await screen.findByText(message)).toBeTruthy();
@@ -76,12 +79,10 @@ describe('NewUnitModal', () => {
   });
 
   test('disables Create for a too long display name', async () => {
-    const user = userEvent.setup();
     renderModal();
 
-    await enterName(user, 'x');
-    await user.click(screen.getByRole('textbox', { name: FoldersI18nKey.UnitDisplayName }));
-    await user.paste('a'.repeat(129));
+    enterText(new RegExp(FoldersI18nKey.UnitName), 'x');
+    enterText(FoldersI18nKey.UnitDisplayName, 'a'.repeat(129));
 
     expect(await screen.findByText(FoldersI18nKey.UnitDisplayNameTooLong)).toBeTruthy();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
@@ -100,15 +101,13 @@ describe('RenameUnitModal', () => {
     const onRenamed = vi.fn();
     render(<RenameUnitModal unit={unit} onClose={vi.fn()} onRenamed={onRenamed} />);
 
-    await user.click(await screen.findByRole('dialog'));
-    const input = screen.getByRole('textbox', { name: FoldersI18nKey.UnitDisplayName });
-    await user.click(input);
-    await user.clear(input);
-    await user.paste('Risk Department');
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+    enterText(FoldersI18nKey.UnitDisplayName, 'Risk Department');
+    const saveButton = screen.getByRole('button', { name: ButtonsI18nKey.Save });
+    await user.click(saveButton);
 
-    await vi.waitFor(() => expect(onRenamed).toHaveBeenCalledOnce());
+    await waitFor(() => expect(saveButton).toBeEnabled());
     expect(renameOrgUnit).toHaveBeenCalledWith('public/Acme/Risk', 'Risk Department');
+    expect(onRenamed).toHaveBeenCalledOnce();
   });
 });
 
@@ -145,11 +144,13 @@ describe('RemoveUnitModal', () => {
     expect(screen.getByText('US Risk')).toBeTruthy();
     expect(screen.getByText('EU Risk')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
+    const removeButton = screen.getByRole('button', { name: ButtonsI18nKey.Remove });
+    await user.click(removeButton);
 
-    await vi.waitFor(() => expect(onRemoved).toHaveBeenCalledOnce());
+    await waitFor(() => expect(removeButton).toBeEnabled());
     expect(deleteOrgUnit).toHaveBeenCalledOnce();
     expect(deleteOrgUnit).toHaveBeenCalledWith('public/Acme/Risk', true);
+    expect(onRemoved).toHaveBeenCalledOnce();
   });
 
   test('stays open and shows core message when the unit still holds content', async () => {
@@ -179,10 +180,12 @@ describe('Unit dialogs recover from a thrown server action', () => {
     vi.mocked(createOrgUnit).mockRejectedValue(new Error('network'));
     render(<NewUnitModal parentPath="public/Acme" onClose={vi.fn()} onCreated={vi.fn()} />);
 
-    await enterName(user, 'Risk');
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+    enterText(new RegExp(FoldersI18nKey.UnitName), 'Risk');
+    const createButton = screen.getByRole('button', { name: ButtonsI18nKey.Create });
+    await user.click(createButton);
 
-    await vi.waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeEnabled());
+    await waitFor(() => expect(createButton).toBeEnabled());
+    expect(createOrgUnit).toHaveBeenCalledWith('public/Acme', { name: 'Risk' });
     expect(useNotification().showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: ErrorI18nKey.SystemUnavailable }),
     );
@@ -193,10 +196,14 @@ describe('Unit dialogs recover from a thrown server action', () => {
     vi.mocked(renameOrgUnit).mockRejectedValue(new Error('network'));
     render(<RenameUnitModal unit={unit} onClose={vi.fn()} onRenamed={vi.fn()} />);
 
-    await user.click(await screen.findByRole('dialog'));
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+    const saveButton = screen.getByRole('button', { name: ButtonsI18nKey.Save });
+    await user.click(saveButton);
 
-    await vi.waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled());
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    expect(renameOrgUnit).toHaveBeenCalledWith(unit.path, unit.displayName);
+    expect(useNotification().showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: ErrorI18nKey.SystemUnavailable }),
+    );
   });
 
   test('RemoveUnitModal re-enables Remove after the action throws', async () => {
@@ -204,8 +211,13 @@ describe('Unit dialogs recover from a thrown server action', () => {
     vi.mocked(deleteOrgUnit).mockRejectedValue(new Error('network'));
     render(<RemoveUnitModal unit={unit} subUnits={[]} onClose={vi.fn()} onRemoved={vi.fn()} />);
 
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
+    const removeButton = screen.getByRole('button', { name: ButtonsI18nKey.Remove });
+    await user.click(removeButton);
 
-    await vi.waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Remove })).toBeEnabled());
+    await waitFor(() => expect(removeButton).toBeEnabled());
+    expect(deleteOrgUnit).toHaveBeenCalledWith(unit.path, true);
+    expect(useNotification().showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: ErrorI18nKey.SystemUnavailable }),
+    );
   });
 });
