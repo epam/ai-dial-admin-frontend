@@ -21,7 +21,7 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', async (importOriginal) =
 
 const setEntityReadOnly = vi.fn();
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ setEntityReadOnly, featureFlags: {} }),
+  useAppContext: () => ({ setEntityReadOnly, featureFlags: {}, isUnitMode: false, canWriteAt: () => true }),
 }));
 
 /**

@@ -10,11 +10,13 @@ import classNames from 'classnames';
 import '@/src/app/[lang]/global.scss';
 import Page403Wrapper from '@/src/components/Page403/Page403Wrapper';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { AccessMode } from '@/src/models/user-access';
+import { getUserAccess } from '@/src/server/user-access';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getIconPath } from '@/src/utils/themes/icon-path';
-import { getUserInfo, themesApi } from './api/api';
+import { themesApi } from './api/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +45,7 @@ export default async function RootLayout({
   if (isInvalidSession) {
     return redirect(SIGN_IN_LINK);
   }
-  const userInfo = await getUserInfo(token);
+  const { mode } = await getUserAccess();
   const themesConfig = await themesApi.getThemesConfiguration();
   const themeImages = await themesApi.getImages();
 
@@ -58,7 +60,7 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href={faviconUrl || '/favicon.ico'} type="image/png" />
       </head>
       <body className={classNames(inter.variable, 'font dial-body-text min-w-[360px]')}>
-        {userInfo.success ? (
+        {mode !== AccessMode.DENIED ? (
           children
         ) : (
           <Page403Wrapper lang={lang || 'en'} themesConfiguration={themesConfig} themeImages={themeImages} />

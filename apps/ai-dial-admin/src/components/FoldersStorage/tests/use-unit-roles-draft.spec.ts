@@ -177,3 +177,17 @@ describe('useUnitRolesDraft', () => {
     expect(result.current.isSaving).toBe(false);
   });
 });
+
+describe('useUnitRolesDraft — role assignments not readable', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('reports forbidden without asking core when the caller cannot read assignments here', async () => {
+    const { result } = renderHook(() => useUnitRolesDraft(UNIT, false));
+
+    await waitFor(() => expect(result.current.status).toBe(RolesCardStatus.FORBIDDEN));
+    expect(getOrgUnitRoles).not.toHaveBeenCalled();
+    expect(getOrgUnitAssignments).not.toHaveBeenCalled();
+  });
+});

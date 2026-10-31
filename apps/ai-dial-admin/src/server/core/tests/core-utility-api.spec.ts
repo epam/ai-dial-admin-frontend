@@ -76,7 +76,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     expect(result).toBeNull();
   });
 
-  test('getUserInfo maps a JWT caller into id/email', async () => {
+  test('getUserInfo maps a JWT caller into id/email and carries no roles', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         roles: ['admin'],
@@ -90,11 +90,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     const [calledUrl] = fetch.mock.calls[0];
     expect(calledUrl).toContain('/v1/user/info');
-    expect(result.response?.userInfo).toEqual({
-      id: 'user-1',
-      email: 'user@example.com',
-      roles: [],
-    });
+    expect(result.response?.userInfo).toEqual({ id: 'user-1', email: 'user@example.com' });
   });
 
   test('getUserInfo falls back to the project as id for an API-key caller', async () => {
@@ -104,7 +100,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     const result = await instance.getUserInfo(TOKEN_MOCK);
 
-    expect(result.response?.userInfo).toEqual({ id: 'proj-1', email: '', roles: [] });
+    expect(result.response?.userInfo).toEqual({ id: 'proj-1', email: '' });
   });
 
   test('getUserInfo passes through a failed response unchanged', async () => {
@@ -114,5 +110,25 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
+  });
+  test('getUserOrgUnits calls the Core user org-units route and returns the access', async () => {
+    const body = { adminAccess: 'NONE', items: [{ id: '1', name: 'Acme', folder: 'public/Acme/', roles: [] }] };
+    fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getUserOrgUnits(TOKEN_MOCK);
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/user/org-units');
+    expect(calledUrl).not.toContain('/api/');
+    expect(result.response).toEqual(body);
+  });
+
+  test('getUserOrgUnits keeps the 404 status when org units are off', async () => {
+    fetch.mockResponseOnce('Not Found', { status: 404 });
+
+    const result = await instance.getUserOrgUnits(TOKEN_MOCK);
+
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(404);
   });
 });

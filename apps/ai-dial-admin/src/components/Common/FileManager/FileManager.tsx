@@ -29,6 +29,7 @@ import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
+import { getRouteNamespace } from '@/src/utils/org-units/namespaces';
 import { useNotification } from '@/src/context/NotificationContext';
 import UnitFolderIcon from '@/src/components/Common/UnitFolderIcon/UnitFolderIcon';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
@@ -121,12 +122,17 @@ const FileManager: FC<Props> = ({
 
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, isUnitMode, canWriteAt } = useAppContext();
   const { showNotification } = useNotification();
   const { units, ensureUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
+  // In unit mode the unit owning the open folder decides; a view with no unit namespace stays read-only.
+  // The platform bucket is admin-only, so a unit user's roots stop at the shared space.
+  const isPlatformBucketEnabled = featureFlags.catalogEnabled && !isUnitMode;
+  const namespace = getRouteNamespace(view);
+  const isReadOnly = isReadOnlyAdmin || (isUnitMode && (namespace == null || !canWriteAt(namespace, filePath ?? '')));
   const [gridApi, setGridApi] = useState<GridApi>();
   const [isShowHiddenFiles, onShowHiddenFilesChange] = useShowHiddenFiles(view);
   const isHiddenFilesToggleVisible = isHiddenFilesToggleSupported(view);
@@ -170,7 +176,7 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      const rootPaths = getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`);
+      const rootPaths = getRootFolders(view, isPlatformBucketEnabled).map((root) => `${root}/`);
       fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
       setLoadedPaths(new Set(rootPaths));
     }
@@ -180,7 +186,7 @@ const FileManager: FC<Props> = ({
   // Applications is the one view with two top-level buckets (`platform`/`public` — see
   // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
   // wrapper instead of reusing one bucket's own node as the tree's virtual root.
-  const isMultiRootView = getRootFolders(view, featureFlags.catalogEnabled).length > 1;
+  const isMultiRootView = getRootFolders(view, isPlatformBucketEnabled).length > 1;
   // Conversations and the flat platform views have no folder concept for their rows — the row
   // context menu and bulk toolbar already hide "Move to" for them (`Assets/utils.ts`,
   // `FileManager/utils.ts`), but `onMoveToFiles` also drives drag-and-drop independently of those
@@ -440,7 +446,7 @@ const FileManager: FC<Props> = ({
   const onGridColumnsChanged = useCallback((event: GridColumnsChangedEvent) => reapplyState(event.api), [reapplyState]);
 
   const gridOptions = useMemo(() => {
-    const base = getGridOptions(view, isReadOnlyAdmin, persistedColumnDefs ?? columnDefs, t, undefined, filePath);
+    const base = getGridOptions(view, isReadOnly, persistedColumnDefs ?? columnDefs, t, undefined, filePath);
     return {
       ...base,
       getItemIcon: getUnitIcon,
@@ -460,7 +466,7 @@ const FileManager: FC<Props> = ({
     // options regardless of path, so this dependency is a no-op for them.
   }, [
     view,
-    isReadOnlyAdmin,
+    isReadOnly,
     getUnitIcon,
     persistedColumnDefs,
     columnDefs,
@@ -476,10 +482,10 @@ const FileManager: FC<Props> = ({
 
   const toolbarOptions = useMemo(
     () => ({
-      ...getToolbarOptions(view, isReadOnlyAdmin, t, filePath),
+      ...getToolbarOptions(view, isReadOnly, t, filePath),
       additionalButtons: <ResetFiltersButton gridApi={gridApi} />,
     }),
-    [view, isReadOnlyAdmin, t, filePath, gridApi],
+    [view, isReadOnly, t, filePath, gridApi],
   );
 
   return (
@@ -502,7 +508,7 @@ const FileManager: FC<Props> = ({
         showHiddenFileSwitcherInDestinationPopup={isHiddenFilesToggleVisible ? true : undefined}
         treeOptions={{
           ...getTreeOptions(
-            isReadOnlyAdmin,
+            isReadOnly,
             isFetchingFiles,
             loadedPaths,
             expandedFolders,
@@ -520,23 +526,23 @@ const FileManager: FC<Props> = ({
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         {...props}
         getItemActionRestriction={getItemActionRestriction}
-        onCreateFolder={isReadOnlyAdmin || isFileRootActive ? undefined : handleCreateFolder}
+        onCreateFolder={isReadOnly || isFileRootActive ? undefined : handleCreateFolder}
         onDownloadFiles={isFileRootActive ? undefined : handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
         onRenameValidate={handleCreateFolderValidate}
-        onDeleteFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDeleteFileNodes}
-        onMoveToFiles={isReadOnlyAdmin || isFileRootActive || !isMoveSupported ? undefined : handleMoveToFiles}
+        onDeleteFiles={isReadOnly || isFileRootActive ? undefined : handleDeleteFileNodes}
+        onMoveToFiles={isReadOnly || isFileRootActive || !isMoveSupported ? undefined : handleMoveToFiles}
         onFolderPopupPathChange={handleFolderPopupPathChange}
-        onManagePermissions={isReadOnlyAdmin || isFileRootActive ? undefined : handleManagePermissions}
+        onManagePermissions={isReadOnly || isFileRootActive ? undefined : handleManagePermissions}
         onPreview={isFileRootActive ? undefined : handlePreviewFile}
-        onUploadFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDragAndDropFiles}
+        onUploadFiles={isReadOnly || isFileRootActive ? undefined : handleDragAndDropFiles}
         folderCreationValidationMessages={getValidationMessages(t)}
         renameValidationMessages={getValidationMessages(t)}
         destinationFolderPopupOptions={getDestinationFolderPopupOptions(
           view,
           t,
           handleFolderNestingDepthExceeded,
-          isReadOnlyAdmin || isFileRootActive ? undefined : handleDestinationFolderCreate,
+          isReadOnly || isFileRootActive ? undefined : handleDestinationFolderCreate,
         )}
         isRenameFileAvailable={false}
         isDuplicateFolderAvailable={false}

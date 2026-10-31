@@ -27,6 +27,7 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPlatformToolsetResource, DialToolsetResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -67,17 +68,15 @@ const PlatformToolsetView: FC<Props> = ({
 }) => {
   const t = useI18n();
   const router = useRouter();
-  const { featureFlags, setEntityReadOnly } = useAppContext();
+  const { featureFlags } = useAppContext();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
   // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
-  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`. In unit mode the
+  // owning unit's `write` decides too.
+  useEntityReadOnlyAt(ApplicationRoute.AssetsToolsets, originalToolset.folderId, !!isConfigFileSource);
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing role reads as deleted. Mirrors

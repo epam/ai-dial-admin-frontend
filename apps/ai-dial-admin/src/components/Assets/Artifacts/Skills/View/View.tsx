@@ -20,6 +20,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialSkillResource } from '@/src/models/dial/resource';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { removeTrailingSlash } from '@/src/utils/files/path';
@@ -48,6 +49,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   const { fetchFiles } = useSkillFolder();
   const { showNotification } = useNotification();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  useEntityReadOnlyAt(ApplicationRoute.Skills, originalSkill.folderId);
   const tabs = getTabsForAsset(t, ApplicationRoute.Skills);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);

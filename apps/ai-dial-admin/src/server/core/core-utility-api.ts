@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { CoreUserInfoResponse } from '@/src/models/dial/core-user-info';
+import { CoreUserOrgUnitsResponse } from '@/src/models/dial/core-user-org-units';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { UserInfo } from '@/src/models/user-info';
 import { CoreApi } from './core-api';
@@ -8,6 +9,7 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 export const DEPLOYMENTS_URL = 'v1/deployments';
 export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const USER_INFO_URL = 'v1/user/info';
+export const USER_ORG_UNITS_URL = 'v1/user/org-units';
 export const VERSION_URL = 'version';
 
 /** Claim Core reports the caller's email under, inside `/v1/user/info`'s `userClaims` map. */
@@ -43,10 +45,13 @@ export class CoreUtilityApi extends CoreApi {
     const userInfo: UserInfo = {
       id: raw?.userId || raw?.project || '',
       email: raw?.userClaims?.[EMAIL_CLAIM]?.[0] || '',
-      // Core's raw DIAL roles aren't used here — role checks are out of scope for this identity read.
-      roles: [],
     };
 
     return { ...result, response: { userInfo } };
+  }
+
+  /** The caller's admin access and units. Answers 404 while org units are off, so callers keep the `status`. */
+  getUserOrgUnits(token: Token): Promise<ServerActionResponse<CoreUserOrgUnitsResponse>> {
+    return this.getAction(USER_ORG_UNITS_URL, token);
   }
 }

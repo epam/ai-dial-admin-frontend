@@ -14,6 +14,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
@@ -36,6 +37,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+  useEntityReadOnlyAt(ApplicationRoute.Prompts, originalPrompt.folderId);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(structuredClone(originalPrompt));
