@@ -47,9 +47,9 @@ const ResourceDependencies: FC<Props> = ({ selectedApplication, originalApplicat
   const { status, isLoading, hasFailed, isMutating, approve, revoke } = useAdminConsent(appPath, etag);
 
   const dependencies = useMemo(() => selectedApplication.resource_dependencies ?? [], [selectedApplication]);
-  const isDirty = isDeclarationDirty(
-    originalApplication.resource_dependencies,
-    selectedApplication.resource_dependencies,
+  const isDirty = useMemo(
+    () => isDeclarationDirty(originalApplication.resource_dependencies, selectedApplication.resource_dependencies),
+    [originalApplication.resource_dependencies, selectedApplication.resource_dependencies],
   );
 
   const onChangeDependencies = useCallback(

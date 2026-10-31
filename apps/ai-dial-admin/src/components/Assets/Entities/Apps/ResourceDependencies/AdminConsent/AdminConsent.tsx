@@ -54,7 +54,11 @@ const AdminConsent: FC<Props> = ({
   const onCloseDialog = () => setDialogType(null);
 
   const onConfirmDialog = async () => {
-    await (dialogType === ConsentDialogType.Revoke ? onRevoke() : onApprove());
+    if (dialogType === ConsentDialogType.Revoke) {
+      await onRevoke();
+    } else if (dialogType === ConsentDialogType.Approve) {
+      await onApprove();
+    }
     onCloseDialog();
   };
 

@@ -21,8 +21,7 @@ const decodeSegment = (segment: string): string => {
 };
 
 const getSegments = (path: string): string[] => {
-  const withoutTrailingSlash = path.endsWith('/') ? path.slice(0, -1) : path;
-  const segments = withoutTrailingSlash.split('/');
+  const segments = path.split('/');
   while (segments.length > 0 && segments[segments.length - 1] === '') {
     segments.pop();
   }
