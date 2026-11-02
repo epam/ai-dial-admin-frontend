@@ -13,10 +13,12 @@ vi.mock('@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field', 
   scrollPivotToField: vi.fn(),
 }));
 
-vi.mock('@/src/components/Runs/View/RowDetails/FullscreenValueViewer', () => ({
-  default: ({ fieldLabel, value }: { fieldLabel: string; value: string }) => (
-    <div role="dialog" aria-label={fieldLabel}>
-      {value}
+vi.mock('@/src/components/Runs/View/RowDetails/RunValueModal', () => ({
+  default: ({ field, onClose }: { field: RowDetailField; onClose: () => void }) => (
+    <div role="dialog" aria-label={field.label}>
+      <span>{field.isMetric ? 'score popup' : 'text popup'}</span>
+      <span>{field.primaryRaw}</span>
+      <button onClick={onClose}>close popup</button>
     </div>
   ),
 }));
@@ -49,11 +51,6 @@ const sections: RowDetailSection[] = [
 ];
 
 const getFieldRow = (fieldKey: string) => document.querySelector(`[data-field-key="${fieldKey}"]`);
-
-const mockOverflow = () => {
-  vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockReturnValue(100);
-  vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(60);
-};
 
 describe('ExecutionRowDetailTable', () => {
   afterEach(() => {
@@ -171,24 +168,56 @@ describe('ExecutionRowDetailTable', () => {
   });
 
   describe('opening a value', () => {
-    test('opens a pop-up with the field name and the full value', async () => {
-      const user = userEvent.setup();
-      mockOverflow();
-      renderTable({ sections: [{ key: 'extractedColumns', label: 'Extracted', rows: [row('answer', 'Romans')] }] });
+    const getCellButton = (fieldKey: string) =>
+      within(getFieldRow(fieldKey)!.nextElementSibling as HTMLElement).getByRole('button', {
+        name: RunsI18nKey.OpenFullValue,
+      });
 
-      await user.click(screen.getByRole('button', { name: RunsI18nKey.OpenFullValue }));
-
-      const dialog = screen.getByRole('dialog', { name: 'answer' });
-      expect(within(dialog).getByText('Romans')).toBeTruthy();
-    });
-
-    test('does not open anything for a value that fits', async () => {
+    test('opens the text popup for the field of the clicked cell', async () => {
       const user = userEvent.setup();
       renderTable();
 
-      await user.click(screen.getByText('Romans'));
+      await user.click(getCellButton('answer'));
+
+      const dialog = screen.getByRole('dialog', { name: 'answer' });
+      expect(within(dialog).getByText('text popup')).toBeTruthy();
+      expect(within(dialog).getByText('Romans')).toBeTruthy();
+    });
+
+    test('opens the score popup for a metric cell', async () => {
+      const user = userEvent.setup();
+      renderTable();
+
+      await user.click(getCellButton('Accuracy_precision'));
+
+      expect(within(screen.getByRole('dialog', { name: 'Accuracy_precision' })).getByText('score popup')).toBeTruthy();
+    });
+
+    test('makes every cell clickable, including a short value and the status', () => {
+      renderTable();
+
+      expect(screen.getAllByRole('button', { name: RunsI18nKey.OpenFullValue })).toHaveLength(5);
+    });
+
+    test('closes the popup', async () => {
+      const user = userEvent.setup();
+      renderTable();
+      await user.click(getCellButton('answer'));
+
+      await user.click(screen.getByRole('button', { name: 'close popup' }));
 
       expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    test('opens another field after the first is closed', async () => {
+      const user = userEvent.setup();
+      renderTable();
+      await user.click(getCellButton('answer'));
+      await user.click(screen.getByRole('button', { name: 'close popup' }));
+
+      await user.click(getCellButton('question'));
+
+      expect(screen.getByRole('dialog', { name: 'question' })).toBeTruthy();
     });
   });
 

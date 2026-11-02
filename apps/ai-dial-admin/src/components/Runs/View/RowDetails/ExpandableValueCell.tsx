@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback } from 'react';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 
@@ -23,9 +23,9 @@ interface Props {
   onOpen: (field: RowDetailField) => void;
 }
 
+/** A value cell of the side panel: the value clamped to three lines under a button that covers the whole cell. */
 const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
   const t = useI18n();
-  const [isOverflowing, setIsOverflowing] = useState(false);
   const raw = field.primaryRaw;
   const isFailed = field.primaryFailed ?? false;
   const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
@@ -51,25 +51,22 @@ const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
           isScoreIndicator={field.isScoreIndicator}
           failedLabel={t(RunsI18nKey.MetricFailedText)}
           clampClassName={EXECUTION_ROW_DETAIL_CLAMP_CLASS}
-          onOverflowChange={setIsOverflowing}
         />
       )}
-      {isOverflowing && (
-        <button
-          type="button"
-          onClick={onOpenFullValue}
-          aria-label={t(RunsI18nKey.OpenFullValue, { field: field.label })}
-          aria-haspopup="dialog"
-          className="group/open absolute inset-0 cursor-pointer outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus"
+      <button
+        type="button"
+        onClick={onOpenFullValue}
+        aria-label={t(RunsI18nKey.OpenFullValue, { field: field.label })}
+        aria-haspopup="dialog"
+        className="group/open absolute inset-0 cursor-pointer outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus"
+      >
+        <span
+          className="absolute bottom-1 right-1 size-4 text-secondary opacity-0 transition-opacity group-hover/cell:opacity-100 group-focus-visible/open:opacity-100"
+          aria-hidden
         >
-          <span
-            className="absolute bottom-1 right-1 size-4 text-secondary opacity-0 transition-opacity group-hover/cell:opacity-100 group-focus-visible/open:opacity-100"
-            aria-hidden
-          >
-            <OpenPopup />
-          </span>
-        </button>
-      )}
+          <OpenPopup />
+        </span>
+      </button>
     </div>
   );
 };

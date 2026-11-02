@@ -7,6 +7,16 @@ export type RowDetailValueFilter = TextGridFilter;
 
 export type RowDetailDeltaFilter = NumericGridFilter;
 
+/**
+ * What a metric's `metricInfos` entry says about one run's value for a field. `error` is the leaf's own message
+ * (`metricInfos[group][leaf].error`), or the group-level one written beside the leaf entries when the leaf has none.
+ */
+export interface MetricFieldInfo {
+  reason: string | null;
+  logs: string | null;
+  error: string | null;
+}
+
 export interface RowDetailField {
   fieldKey: string;
   label: string;
@@ -14,6 +24,8 @@ export interface RowDetailField {
   secondaryRaw: string | null;
   primaryFailed?: boolean;
   secondaryFailed?: boolean;
+  primaryInfo?: MetricFieldInfo;
+  secondaryInfo?: MetricFieldInfo;
   diffKind: MetricDeltaKind;
   isNumeric: boolean;
   isScoreIndicator: boolean;

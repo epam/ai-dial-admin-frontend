@@ -54,7 +54,7 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
             gridTemplateColumns,
             // minmax(0, 1fr), not bare 1fr: a bare fr track can't shrink below its content's
             // min-content height, so a long cell value would blow out the row instead of
-            // scrolling inside PivotValueCell.
+            // being truncated to the cell by PivotValueCell.
             gridTemplateRows: 'auto auto minmax(0, 1fr)',
             minWidth: gridMinWidth,
           }}
@@ -85,7 +85,11 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
           ))}
 
           {columns.map((column) => (
-            <PivotValueCell key={`value-${column.sectionKey}-${column.field.fieldKey}`} field={column.field} />
+            <PivotValueCell
+              key={`value-${column.sectionKey}-${column.field.fieldKey}`}
+              field={column.field}
+              isTruncated
+            />
           ))}
         </div>
       </div>

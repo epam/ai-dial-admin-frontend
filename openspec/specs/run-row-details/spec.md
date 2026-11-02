@@ -76,39 +76,46 @@ different row is opened.
 - **WHEN** a search is active and the user selects a different row
 - **THEN** the new row is shown with empty search and no active filter
 
-### Requirement: Long values are truncated and open in a pop-up
+### Requirement: Value cells truncate long content and open a popup
 
 A value cell SHALL show at most three lines of its content, ending with an ellipsis when the content
-does not fit, instead of growing the row or scrolling inside the cell. When a value is truncated, the
-whole cell SHALL be one control that opens a pop-up titled with the field name and showing the full
-value. While the pointer is over such a cell, or keyboard focus is on it, an "open in pop-up" icon
-SHALL appear at its bottom-right. A cell whose content fits SHALL show no icon and SHALL NOT open a
-pop-up. The pop-up SHALL present JSON values pretty-printed and SHALL close on its close control or
-Escape.
+does not fit, instead of growing the row or scrolling inside the cell. Every value cell SHALL be one
+control over the whole cell, whether or not its content is truncated, and activating it SHALL open the
+popup defined by `run-value-popups`: the score popup for a metric field and the text popup for any other.
+While the pointer is over a cell, or keyboard focus is on it, an "open in pop-up" icon SHALL appear at its
+bottom-right. The popup SHALL close on its close control or Escape.
 
 #### Scenario: Long value is clamped
 - **WHEN** a field value needs more than three lines at the current width
 - **THEN** the cell shows three lines ending in an ellipsis and the row is no taller than a three-line row
 
 #### Scenario: Hover reveals the pop-up icon
-- **WHEN** the pointer is over a truncated value cell
+- **WHEN** the pointer is over a value cell
 - **THEN** an open-in-pop-up icon appears at the bottom-right of the cell
 
 #### Scenario: Focus reveals the pop-up icon
-- **WHEN** keyboard focus moves onto a truncated value cell
-- **THEN** the same icon is shown, and Enter or Space opens the pop-up
+- **WHEN** keyboard focus moves onto a value cell
+- **THEN** the same icon is shown, and Enter or Space opens the popup
 
-#### Scenario: Clicking anywhere on the cell opens the full value
-- **WHEN** the user clicks any part of a truncated value cell
-- **THEN** a pop-up opens with the field name as its title and the complete value in it
+#### Scenario: Clicking anywhere on a text cell opens the text popup
+- **WHEN** the user clicks any part of a non-metric value cell
+- **THEN** the text popup opens with the field name as its title and the complete value in it
 
-#### Scenario: Short value is not interactive
-- **WHEN** a field value fits within its cell
-- **THEN** no icon appears on hover and clicking the cell opens nothing
+#### Scenario: A metric cell opens the score popup
+- **WHEN** the user clicks a metric value cell
+- **THEN** the score popup opens with the metric name as its title
+
+#### Scenario: A short value is clickable too
+- **WHEN** a field value fits within its cell and the user clicks the cell
+- **THEN** the text popup opens with the value
+
+#### Scenario: The execution status cell is clickable
+- **WHEN** the user clicks the Execution status cell
+- **THEN** the text popup opens with the status value
 
 #### Scenario: Widening the panel can remove truncation
 - **WHEN** a truncated value fits after the panel width changes
-- **THEN** the cell stops showing the ellipsis and the icon
+- **THEN** the cell stops showing the ellipsis and keeps the icon on hover
 
 ### Requirement: Display settings are shared between side panel and bottom drawer
 

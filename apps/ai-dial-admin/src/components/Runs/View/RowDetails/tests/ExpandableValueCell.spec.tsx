@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
@@ -19,20 +19,13 @@ const field = (overrides: Partial<RowDetailField> = {}): RowDetailField => ({
   ...overrides,
 });
 
-const mockOverflow = (isOverflowing: boolean) => {
-  vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockReturnValue(isOverflowing ? 100 : 20);
-  vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(60);
-};
-
 describe('ExpandableValueCell', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   const renderCell = (overrides?: Partial<RowDetailField>, onOpen = vi.fn()) => {
     render(<ExpandableValueCell field={field(overrides)} onOpen={onOpen} />);
     return onOpen;
   };
+
+  const getOpenButton = () => screen.getByRole('button', { name: RunsI18nKey.OpenFullValue });
 
   test('clamps the value to three lines', () => {
     renderCell();
@@ -40,26 +33,17 @@ describe('ExpandableValueCell', () => {
     expect(screen.getByText('a long value')).toHaveClass('line-clamp-3');
   });
 
-  test('is not interactive when the value fits', () => {
-    mockOverflow(false);
-    renderCell();
+  test('is a button naming the field, whether or not the value is truncated', () => {
+    renderCell({ primaryRaw: 'short' });
 
-    expect(screen.queryByRole('button')).toBeNull();
-  });
-
-  test('becomes a button naming the field when the value is truncated', () => {
-    mockOverflow(true);
-    renderCell();
-
-    expect(screen.getByRole('button', { name: RunsI18nKey.OpenFullValue })).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(getOpenButton()).toHaveAttribute('aria-haspopup', 'dialog');
   });
 
   test('opens the field when the button is clicked', async () => {
     const user = userEvent.setup();
-    mockOverflow(true);
     const onOpen = renderCell({ label: 'Answer' });
 
-    await user.click(screen.getByRole('button', { name: RunsI18nKey.OpenFullValue }));
+    await user.click(getOpenButton());
 
     expect(onOpen).toHaveBeenCalledOnce();
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ label: 'Answer', primaryRaw: 'a long value' }));
@@ -67,11 +51,10 @@ describe('ExpandableValueCell', () => {
 
   test('opens with Enter and Space from the keyboard', async () => {
     const user = userEvent.setup();
-    mockOverflow(true);
     const onOpen = renderCell();
 
     await user.tab();
-    expect(screen.getByRole('button', { name: RunsI18nKey.OpenFullValue })).toHaveFocus();
+    expect(getOpenButton()).toHaveFocus();
 
     await user.keyboard('{Enter}');
     await user.keyboard(' ');
@@ -80,33 +63,47 @@ describe('ExpandableValueCell', () => {
   });
 
   test('keeps the open icon out of the accessibility tree', () => {
-    mockOverflow(true);
     renderCell();
 
-    const button = screen.getByRole('button', { name: RunsI18nKey.OpenFullValue });
-    expect(button.querySelector('[aria-hidden="true"]')).toBeTruthy();
+    expect(getOpenButton().querySelector('[aria-hidden="true"]')).toBeTruthy();
   });
 
-  test('never makes a score cell a button', () => {
-    mockOverflow(true);
+  test('makes a missing value clickable too', async () => {
+    const user = userEvent.setup();
+    const onOpen = renderCell({ primaryRaw: null });
+
+    await user.click(getOpenButton());
+
+    expect(onOpen).toHaveBeenCalledOnce();
+  });
+
+  test('makes a score cell a button and keeps its heat-map fill unpadded', () => {
     renderCell({ fieldKey: 'Accuracy_precision', isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' });
 
     expect(screen.getByText('0.800')).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(getOpenButton()).toBeInTheDocument();
+    expect(getOpenButton().parentElement).toHaveClass('p-0');
   });
 
-  test('never makes the execution status cell a button', () => {
-    mockOverflow(true);
+  test('opens a metric field as the field itself, so the score popup can be chosen', async () => {
+    const user = userEvent.setup();
+    const onOpen = renderCell({ isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' });
+
+    await user.click(getOpenButton());
+
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ isMetric: true }));
+  });
+
+  test('makes the execution status cell a button', () => {
     renderCell({ fieldKey: 'executionStatus', label: 'executionStatus', primaryRaw: 'COMPLETED' });
 
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(getOpenButton()).toBeInTheDocument();
   });
 
-  test('shows the failed label for a failed metric without a button', () => {
-    mockOverflow(true);
+  test('shows the failed label for a failed metric and keeps the cell clickable', () => {
     renderCell({ isMetric: true, primaryFailed: true, primaryRaw: null });
 
     expect(screen.getByText(RunsI18nKey.MetricFailedText)).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(getOpenButton()).toBeInTheDocument();
   });
 });

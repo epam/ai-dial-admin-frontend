@@ -26,8 +26,7 @@ import {
   EXECUTION_ROW_DETAIL_SCROLL_PADDING_TOP,
 } from '@/src/components/Runs/View/RowDetails/constants';
 import ExpandableValueCell from '@/src/components/Runs/View/RowDetails/ExpandableValueCell';
-import FullscreenValueViewer from '@/src/components/Runs/View/RowDetails/FullscreenValueViewer';
-import { ExecutionRowDetailViewedValue } from '@/src/components/Runs/View/RowDetails/models';
+import RunValueModal from '@/src/components/Runs/View/RowDetails/RunValueModal';
 import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { mergeClasses } from '@/src/utils/merge-classes';
@@ -49,7 +48,7 @@ const ExecutionRowDetailTable: FC<Props> = ({ sections, focusFieldKey, focusRequ
   const [fieldFilter, setFieldFilter] = useState<RowDetailFieldFilter | null>(null);
   const [valueSearchQuery, setValueSearchQuery] = useState('');
   const [valueFilter, setValueFilter] = useState<RowDetailValueFilter | null>(null);
-  const [viewedValue, setViewedValue] = useState<ExecutionRowDetailViewedValue | null>(null);
+  const [viewedField, setViewedField] = useState<RowDetailField | null>(null);
 
   const filteredSections = useMemo(
     () =>
@@ -79,11 +78,9 @@ const ExecutionRowDetailTable: FC<Props> = ({ sections, focusFieldKey, focusRequ
     setValueSearchQuery(event.target.value);
   }, []);
 
-  const onOpenValue = useCallback((field: RowDetailField) => {
-    setViewedValue({ fieldLabel: field.label, value: field.primaryRaw ?? '' });
-  }, []);
+  const onOpenValue = useCallback((field: RowDetailField) => setViewedField(field), []);
 
-  const onCloseValue = useCallback(() => setViewedValue(null), []);
+  const onCloseValue = useCallback(() => setViewedField(null), []);
 
   const searchPlaceholder = t(BasicI18nKey.Search);
   const filterTitle = t(RunsI18nKey.RunCompareFilterField);
@@ -138,14 +135,7 @@ const ExecutionRowDetailTable: FC<Props> = ({ sections, focusFieldKey, focusRequ
           })}
         </div>
       </div>
-      {viewedValue && (
-        <FullscreenValueViewer
-          isOpen
-          fieldLabel={viewedValue.fieldLabel}
-          value={viewedValue.value}
-          onClose={onCloseValue}
-        />
-      )}
+      {viewedField && <RunValueModal field={viewedField} onClose={onCloseValue} />}
     </div>
   );
 };
