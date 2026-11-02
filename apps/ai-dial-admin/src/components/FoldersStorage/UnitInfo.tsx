@@ -103,7 +103,7 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
                 onClick={() => setIsRenaming(true)}
               />
               <Button
-                variant={ButtonVariant.Neutral}
+                variant={ButtonVariant.Danger}
                 label={t(FoldersI18nKey.RemoveUnit)}
                 onClick={() => setIsRemoving(true)}
               />

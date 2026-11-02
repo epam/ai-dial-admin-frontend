@@ -118,11 +118,11 @@ describe('RemoveUnitModal', () => {
   });
 
   const subUnits: OrgUnit[] = [
-    { ...unit, id: 's1', displayName: 'US Risk' },
-    { ...unit, id: 's2', displayName: 'EU Risk' },
+    { ...unit, id: 's1', name: 'US Risk' },
+    { ...unit, id: 's2', name: 'EU Risk' },
   ];
 
-  test('falls back to the unit name when there is no display name', () => {
+  test('shows the unit name, and the display name only when it is set', () => {
     render(
       <RemoveUnitModal
         unit={{ ...unit, displayName: '' }}
@@ -133,6 +133,8 @@ describe('RemoveUnitModal', () => {
     );
 
     expect(screen.getByText(FoldersI18nKey.RemoveUnitDescription)).toBeTruthy();
+    expect(screen.getByText(unit.name)).toBeTruthy();
+    expect(screen.queryByText(FoldersI18nKey.UnitDisplayName + ':')).toBeNull();
     expect(screen.getByText('EU')).toBeTruthy();
   });
 

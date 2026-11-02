@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { ConfirmationPopup, ConfirmationPopupVariant } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, ConfirmationPopupVariant, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { deleteOrgUnit } from '@/src/app/[lang]/folders-storage/actions';
 import { ButtonsI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -57,26 +57,39 @@ const RemoveUnitModal: FC<Props> = ({ unit, subUnits, onClose, onRemoved }) => {
       onConfirm={onConfirm}
       onCancel={onClose}
       onClose={onClose}
-    >
-      <div className="flex flex-col gap-3">
-        <p>{t(FoldersI18nKey.RemoveUnitDescription, { unit: unit.displayName || unit.name })}</p>
-        {subUnits.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <p>{t(FoldersI18nKey.RemoveUnitSubunits)}</p>
-            <ul className="list-disc pl-6">
-              {subUnits.map((subUnit) => (
-                <li key={subUnit.id}>{subUnit.displayName || subUnit.name}</li>
-              ))}
-            </ul>
+      description={
+        <div className="flex flex-col gap-y-3">
+          <span>{t(FoldersI18nKey.RemoveUnitDescription)}</span>
+          <div className="flex flex-col gap-y-1 bg-layer-4 rounded px-4 py-3">
+            <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
+              <span className="shrink-0 text-secondary">{t(FoldersI18nKey.UnitName)}:</span>
+              <EllipsisTooltip text={unit.name} />
+            </div>
+            {unit.displayName && (
+              <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
+                <span className="shrink-0 text-secondary">{t(FoldersI18nKey.UnitDisplayName)}:</span>
+                <EllipsisTooltip text={unit.displayName} />
+              </div>
+            )}
           </div>
-        )}
-        {blockMessage && (
-          <p role="alert" className="text-error">
-            {blockMessage}
-          </p>
-        )}
-      </div>
-    </ConfirmationPopup>
+          {subUnits.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <span>{t(FoldersI18nKey.RemoveUnitSubunits)}</span>
+              <ul className="list-disc pl-6">
+                {subUnits.map((subUnit) => (
+                  <li key={subUnit.id}>{subUnit.name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {blockMessage && (
+            <span role="alert" className="text-error">
+              {blockMessage}
+            </span>
+          )}
+        </div>
+      }
+    />
   );
 };
 

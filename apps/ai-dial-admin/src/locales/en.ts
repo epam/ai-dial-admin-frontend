@@ -1228,7 +1228,7 @@ export default {
       RenameUnit: 'Rename unit',
       RemoveUnit: 'Remove unit',
       RemoveUnitDescription:
-        'Remove the unit {unit}? Its roles are removed with it. A unit that still holds content cannot be removed.',
+        'Remove this unit? Its roles are removed with it. A unit that still holds content cannot be removed.',
       RemoveUnitSubunits: 'These units below it are removed too:',
       UnitRoles: 'Roles',
       UnitRolesLoadError: "Roles can't be loaded right now.",
