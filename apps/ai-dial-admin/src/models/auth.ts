@@ -11,6 +11,8 @@ export interface NextAuthToken extends JWT {
   accessTokenExpires?: number;
   error?: string;
   token?: string;
+  // The IdP supplied an inline picture; it is served by the picture route, never stored in the cookie.
+  hasInlinePicture?: boolean;
 }
 
 export interface UserSession extends Session {
