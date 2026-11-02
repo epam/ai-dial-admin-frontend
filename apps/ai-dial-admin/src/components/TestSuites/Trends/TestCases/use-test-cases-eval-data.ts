@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
-import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import { RunTestCaseSegments, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { buildTrendsTestCasesEvalQuery } from '@/src/components/TestSuites/Trends/TestCases/utils/build-test-cases-eval-query';
 import { parseTestCasesEvalResult } from '@/src/components/TestSuites/Trends/TestCases/utils/parse-test-cases-eval';
@@ -14,15 +13,18 @@ interface TestCasesEvalDataState {
   hasError: boolean;
 }
 
-export const useTestCasesEvalData = (
-  runOrder: TrendsRunPoint[],
-  overallScoreThreshold?: number | null,
-): TestCasesEvalDataState => {
+export const useTestCasesEvalData = (runOrder: TrendsRunPoint[]): TestCasesEvalDataState => {
   const [segments, setSegments] = useState<RunTestCaseSegments[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const runIdsKey = runOrder.map((point) => point.runId).join(',');
-  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
+  const runDataKey = JSON.stringify(
+    runOrder.map(({ runId, overallScore, overallScoreThreshold, isFailed }) => [
+      runId,
+      overallScore,
+      overallScoreThreshold,
+      isFailed,
+    ]),
+  );
 
   useEffect(() => {
     if (!runOrder.length) {
@@ -45,7 +47,7 @@ export const useTestCasesEvalData = (
         if (cancelled) {
           return;
         }
-        const parsed = parseTestCasesEvalResult(result, runOrder, hasThreshold, overallScoreThreshold);
+        const parsed = parseTestCasesEvalResult(result, runOrder);
         setSegments(parsed.segments);
       } catch {
         if (!cancelled) {
@@ -64,7 +66,7 @@ export const useTestCasesEvalData = (
     return () => {
       cancelled = true;
     };
-  }, [runIdsKey, overallScoreThreshold, hasThreshold]); // eslint-disable-line react-hooks/exhaustive-deps -- runOrder captured when runIdsKey changes
+  }, [runDataKey]); // eslint-disable-line react-hooks/exhaustive-deps -- runOrder captured when runDataKey changes
 
   return { segments, isLoading, hasError };
 };

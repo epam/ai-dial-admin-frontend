@@ -8,12 +8,14 @@ describe('parseTrendsData', () => {
     {
       id: 'run-1',
       testRunName: 'Run#1',
+      suiteSnapshot: { overallScoreThreshold: 0.6 },
       startedAt: 1000,
       completedAt: 1400,
     },
     {
       id: 'run-2',
       testRunName: 'Run#2',
+      suiteSnapshot: {},
       startedAt: 2000,
       completedAt: 2600,
     },
@@ -65,6 +67,7 @@ describe('parseTrendsData', () => {
 
     expect(parsed.runOrder.map((point) => point.runId)).toEqual(['run-1', 'run-2']);
     expect(parsed.runOrder.map((point) => point.isFailed)).toEqual([false, false]);
+    expect(parsed.runOrder.map((point) => point.overallScoreThreshold)).toEqual([0.6, undefined]);
     expect(parsed.kpis).toEqual({
       runCount: 2,
     });
@@ -134,6 +137,7 @@ describe('parseTrendsData', () => {
         runName: 'Run#1',
         computedAtMs: 1400,
         overallScore: null,
+        overallScoreThreshold: undefined,
         durationMs: 400,
         isFailed: false,
       },

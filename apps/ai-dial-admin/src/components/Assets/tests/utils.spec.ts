@@ -1072,3 +1072,32 @@ describe('getAgentLinkForConversation', () => {
     );
   });
 });
+
+describe.each([ApplicationRoute.Skills, ApplicationRoute.Projects])('%s folder actions', (view) => {
+  test('getTreeActionLabels offers add sibling, add child, manage permissions, and delete', () => {
+    const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+
+    expect(keys).toEqual(['addSibling', 'addChild', 'managePermissions', 'delete']);
+  });
+
+  test('getTreeActionLabels offers neither rename nor move', () => {
+    const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+
+    expect(keys).not.toContain('rename');
+    expect(keys).not.toContain('move');
+  });
+
+  test('getTreeActionLabels returns no options for a read-only admin', () => {
+    expect(getTreeActionLabels(true, view, 'public/')).toEqual([]);
+  });
+
+  test('getGridActionLabels adds the folder actions to the item actions', () => {
+    const keys = getGridActionLabels(view, false, 'public/').map((item) => item.key);
+
+    expect(keys).toEqual(['addSibling', 'addChild', 'managePermissions', 'delete', 'openInNewTab']);
+  });
+
+  test('getGridActionLabels returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(view, true, 'public/')).toEqual([]);
+  });
+});

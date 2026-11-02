@@ -12,7 +12,7 @@ const segments: RunTestCaseSegments[] = [
 
 describe('PassRateCard', () => {
   test('shows threshold pass rate, delta, and threshold footer when threshold is set', () => {
-    render(<PassRateCard segments={segments} overallScoreThreshold={0.6} />);
+    render(<PassRateCard segments={segments} threshold={0.6} />);
 
     expect(screen.getByText(TestSuitesI18nKey.ThresholdPassRateOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('98%')).toBeInTheDocument();
@@ -22,7 +22,7 @@ describe('PassRateCard', () => {
   });
 
   test('shows completion rate without threshold footer when threshold is unset', () => {
-    render(<PassRateCard segments={segments} />);
+    render(<PassRateCard segments={segments} threshold={null} />);
 
     expect(screen.getByText(TestSuitesI18nKey.CompletionRateOfLatestRun)).toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.TrendsThresholdLabel)).not.toBeInTheDocument();

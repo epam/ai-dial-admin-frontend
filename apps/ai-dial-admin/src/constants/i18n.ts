@@ -2873,6 +2873,7 @@ export enum AnalyticsTablesI18nKey {
   PartitionColumnHint = 'AnalyticsTables.PartitionColumnHint',
   Granularity = 'AnalyticsTables.Granularity',
   GranularityHint = 'AnalyticsTables.GranularityHint',
+  GranularityRequired = 'AnalyticsTables.GranularityRequired',
   PartitionNone = 'AnalyticsTables.PartitionNone',
   IdentityColumn = 'AnalyticsTables.IdentityColumn',
   VersionColumn = 'AnalyticsTables.VersionColumn',

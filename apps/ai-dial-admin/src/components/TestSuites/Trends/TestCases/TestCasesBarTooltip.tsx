@@ -3,10 +3,12 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import { TEST_CASE_SEGMENT_BG, TEST_CASE_SEGMENT_HEX } from '@/src/components/TestSuites/Trends/constants';
 import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TREND_TOOLTIP_TEXT_ACCENT } from '@/src/components/TestSuites/Trends/utils/chart-tooltip-styles';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 
 const COMPLETED_SPLIT_STYLE = {
   backgroundImage: `linear-gradient(135deg, ${TEST_CASE_SEGMENT_HEX.above} 50%, ${TEST_CASE_SEGMENT_HEX.below} 50%)`,
@@ -39,8 +41,6 @@ const TooltipRow: FC<RowProps> = ({ label, value, swatchClass, swatchStyle, inde
 
 export interface TestCasesBarTooltipProps {
   segments: RunTestCaseSegments;
-  hasThreshold: boolean;
-  threshold?: number | null;
   totalLabel: string;
   completedLabel: string;
   aboveLabel: string;
@@ -50,18 +50,19 @@ export interface TestCasesBarTooltipProps {
 
 const TestCasesBarTooltip: FC<TestCasesBarTooltipProps> = ({
   segments,
-  hasThreshold,
-  threshold,
   totalLabel,
   completedLabel,
   aboveLabel,
   belowLabel,
   errorLabel,
 }) => {
-  const { runId, runName, above, below, errorOrNa, total } = segments;
+  const { runId, runName, above, below, errorOrNa, total, overallScoreThreshold } = segments;
+  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
   const completedCount = hasThreshold ? above + below : above;
-  const aboveWithThreshold = threshold != null ? `${aboveLabel} (${threshold})` : aboveLabel;
-  const belowWithThreshold = threshold != null ? `${belowLabel} (${threshold})` : belowLabel;
+  const aboveWithThreshold =
+    overallScoreThreshold != null ? `${aboveLabel} (${formatScore(overallScoreThreshold)})` : aboveLabel;
+  const belowWithThreshold =
+    overallScoreThreshold != null ? `${belowLabel} (${formatScore(overallScoreThreshold)})` : belowLabel;
   const href = getUrnForEntity(ApplicationRoute.Runs, { id: runId, testRunName: runName });
 
   return (

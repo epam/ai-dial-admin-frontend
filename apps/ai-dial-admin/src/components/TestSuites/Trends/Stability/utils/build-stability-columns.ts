@@ -16,6 +16,7 @@ import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 import { StabilityCellMeta } from '@/src/components/TestSuites/Trends/Stability/models';
 import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 
 const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
 
@@ -23,9 +24,11 @@ interface BuildStabilityColumnsOptions {
   testCaseColIds: string[];
   headerLabels: string[];
   cellMeta: Record<string, Record<string, StabilityCellMeta>>;
+  thresholdByRowId: Record<string, number | null | undefined>;
   labels: {
     testCase: string;
     run: string;
+    threshold: string;
     score: string;
     passed: string;
     notApplicable: string;
@@ -39,6 +42,7 @@ const buildStabilityTooltip = (
   colId: string,
   testCaseLabel: string,
   cellMeta: Record<string, Record<string, StabilityCellMeta>>,
+  thresholdByRowId: Record<string, number | null | undefined>,
   labels: BuildStabilityColumnsOptions['labels'],
 ): HeatMapCellTooltipContent | undefined => {
   if (!row) {
@@ -47,9 +51,15 @@ const buildStabilityTooltip = (
 
   const meta = cellMeta[row.id]?.[colId];
   const value = row.values[colId];
+  const threshold = thresholdByRowId[row.id];
+
   const tooltipRows = [
     { label: labels.testCase, value: testCaseLabel },
     { label: labels.run, value: row.label },
+    {
+      label: labels.threshold,
+      value: threshold == null ? labels.notApplicable : formatScore(threshold),
+    },
   ];
 
   if (value === undefined || meta == null) {
@@ -86,6 +96,7 @@ export const buildStabilityColumns = ({
   testCaseColIds,
   headerLabels,
   cellMeta,
+  thresholdByRowId,
   labels,
 }: BuildStabilityColumnsOptions): ColDef<HeatMapGridRow>[] => {
   const labelColumn: ColDef<HeatMapGridRow> = {
@@ -128,7 +139,8 @@ export const buildStabilityColumns = ({
         return getHeatMapDefaultCellStyle();
       },
       tooltipComponent: HeatMapCellTooltip,
-      tooltipValueGetter: (params) => buildStabilityTooltip(params.data, colId, headerLabel, cellMeta, labels),
+      tooltipValueGetter: (params) =>
+        buildStabilityTooltip(params.data, colId, headerLabel, cellMeta, thresholdByRowId, labels),
     };
   });
 

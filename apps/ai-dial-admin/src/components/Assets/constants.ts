@@ -13,6 +13,20 @@ export const allActionLabels = [
   { key: 'openInNewTab', label: ActionMenuOperationI18nKey.Open_in_new_tab },
 ];
 
+/** Folder-row actions on the Skills and Projects lists; rename and move have no Core-backed support there. */
+export const SKILL_PROJECT_FOLDER_ACTIONS: ReadonlySet<string> = new Set([
+  'addSibling',
+  'addChild',
+  'managePermissions',
+  'delete',
+]);
+
+/** The grid serves one label set for every row, so item rows' `openInNewTab` rides along with the folder actions. */
+export const SKILL_PROJECT_ROW_ACTIONS: ReadonlySet<string> = new Set([
+  ...SKILL_PROJECT_FOLDER_ACTIONS,
+  'openInNewTab',
+]);
+
 export const baseToolbarOptionLabels = [
   {
     key: 'newFolder',

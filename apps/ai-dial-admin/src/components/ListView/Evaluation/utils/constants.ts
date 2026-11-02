@@ -103,6 +103,7 @@ export const RUN_SELECT_FIELDS = [
   'created_at_ms',
   'updated_at_ms',
   'suite_type',
+  'overall_score_threshold',
   'deployment_ref::id',
   'deployment_ref::name',
   'deployment_ref::version',

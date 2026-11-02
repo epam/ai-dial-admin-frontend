@@ -46,13 +46,14 @@ const KpiStrip: FC<Props> = ({
   hasEvalError,
 }) => {
   const t = useI18n();
+  const latestThreshold = runOrder[runOrder.length - 1]?.overallScoreThreshold;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
       <PassRateCard
         className="flex-1 sm:min-w-[180px]"
         segments={segments}
-        overallScoreThreshold={selectedTestSuite.overallScoreThreshold}
+        threshold={latestThreshold}
         isLoading={isEvalLoading}
         hasError={hasEvalError}
       />

@@ -1,5 +1,5 @@
 import { DraftSchemaDto } from '@/src/models/analytics/table';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -7,7 +7,7 @@ import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEdit
 import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
-import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, PartitionGranularity, TableStatus } from '@/src/models/analytics/table';
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
 
 // Render Tooltip content inline so the hint message is queryable (the real component only mounts
@@ -56,10 +56,12 @@ interface DraftOverrides extends Partial<DraftSchemaForm> {
   versionNames?: string[];
   scanPairRequired?: boolean;
   scanPairIncomplete?: boolean;
+  isGranularityMissing?: boolean;
 }
 
 const fixtureDraft = (overrides?: DraftOverrides): ReturnType<typeof useDraftSchemaForm> => {
-  const { identityNames, versionNames, scanPairRequired, scanPairIncomplete, ...formOverrides } = overrides ?? {};
+  const { identityNames, versionNames, scanPairRequired, scanPairIncomplete, isGranularityMissing, ...formOverrides } =
+    overrides ?? {};
   const form: DraftSchemaForm = {
     columns: [createColumnRow()],
     orderingKey: [],
@@ -81,6 +83,7 @@ const fixtureDraft = (overrides?: DraftOverrides): ReturnType<typeof useDraftSch
     columnErrors: [{}],
     scanPairRequired: scanPairRequired ?? false,
     scanPairIncomplete: scanPairIncomplete ?? false,
+    isGranularityMissing: isGranularityMissing ?? false,
     canMaterialize: false,
     baselineDto: { columns: [] } as DraftSchemaDto,
     isChanged: false,
@@ -118,6 +121,36 @@ describe('DraftSchemaEditor source', () => {
   test('hides Granularity until a partition column is chosen', () => {
     render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
     expect(screen.queryByText(AnalyticsTablesI18nKey.Granularity)).not.toBeInTheDocument();
+  });
+
+  test('offers the day, month and year granularities only, with no none choice', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft({ partitionColumn: 'event_time' })} />);
+
+    const select = screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsTablesI18nKey.Granularity}`) });
+    const options = within(select).getAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual(['Day', 'Month', 'Year']);
+  });
+
+  test('states that Granularity is needed while a chosen partition column has none', () => {
+    render(
+      <DraftSchemaEditor
+        table={source}
+        draft={fixtureDraft({ partitionColumn: 'event_time', isGranularityMissing: true })}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(AnalyticsTablesI18nKey.GranularityRequired);
+  });
+
+  test('shows no Granularity message once one is chosen', () => {
+    render(
+      <DraftSchemaEditor
+        table={source}
+        draft={fixtureDraft({ partitionColumn: 'event_time', granularity: PartitionGranularity.Month })}
+      />,
+    );
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.GranularityRequired)).not.toBeInTheDocument();
   });
 
   test('shows Granularity once a partition column is selected', () => {

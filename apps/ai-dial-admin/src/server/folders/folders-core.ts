@@ -11,7 +11,7 @@ import { CoreResourceAction, CorePublicationResource, CorePublicationRule } from
 import { ResourceType } from '@/src/types/resource-type';
 import { removeTrailingSlash, replacePathPrefix } from '@/src/utils/files/path';
 import { addTrailingSlash } from '@/src/utils/url';
-import { FolderNode, mergeFolderTrees, toFolderTree } from './folder-tree';
+import { FolderNode, mergeFolderTrees, toFolderTree, withRootOf } from './folder-tree';
 import { ComplexFolderOps } from './models';
 import { fetchAllPages, gatherResourceUrls, WalkableNode } from './resource-walk';
 
@@ -28,6 +28,26 @@ const ALL_TYPES: ResourceType[] = [
   ResourceType.CONVERSATION,
   ResourceType.PROMPT,
   ResourceType.FILE,
+];
+
+/**
+ * Skills and Projects list through their own v2 endpoints, so they sit beside `ALL_TYPES` rather than in
+ * it — that list also drives delete and move, which these types do not take part in. Only their
+ * folders reach the tree (`toFolderTree` drops item rows). The extra calls go away once Core syncs
+ * folders across resource types.
+ */
+const COMPLEX_FOLDER_READERS: {
+  type: ResourceType;
+  read: (token: Token, path: string, nextToken?: string) => Promise<WalkableNode | null>;
+}[] = [
+  {
+    type: ResourceType.SKILL,
+    read: (token, path, nextToken) => skillsCoreApi.listSkillMetadata(token, path, { nextToken }),
+  },
+  {
+    type: ResourceType.PROJECT,
+    read: (token, path, nextToken) => projectsCoreApi.listProjectMetadata(token, path, { nextToken }),
+  },
 ];
 
 const DEFAULT_ETAG = '*';
@@ -123,7 +143,15 @@ export async function getFoldersCore(token: Token, path: string): Promise<Folder
       return node ? toFolderTree(node, RESOURCE_TYPE_PREFIX[type]) : null;
     }),
   );
-  return mergeFolderTrees(trees);
+  const complexTrees = await Promise.all(
+    COMPLEX_FOLDER_READERS.map(async ({ type, read }) => {
+      const node = await fetchAllPages((nextToken) => read(token, path, nextToken)).catch(() => null);
+      return node ? toFolderTree(node, RESOURCE_TYPE_PREFIX[type]) : null;
+    }),
+  );
+  const root = trees.find(Boolean) ?? complexTrees.find(Boolean);
+  const reRootedComplexTrees = complexTrees.map((tree) => (tree && root ? withRootOf(root, tree) : tree));
+  return mergeFolderTrees([...trees, ...reRootedComplexTrees]);
 }
 
 /** Reads a folder's rules via the Core publications rule-list op (design D2). */

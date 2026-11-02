@@ -32,7 +32,7 @@ const segments: RunTestCaseSegments = {
 
 describe('LatestRunCard', () => {
   test('renders title, run name, center total, and threshold legend', () => {
-    render(<LatestRunCard segments={segments} hasThreshold />);
+    render(<LatestRunCard segments={segments} threshold={0.6} />);
 
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.TrendsLatestRun })).toBeInTheDocument();
     expect(screen.getByText('Run #28')).toBeInTheDocument();
@@ -49,10 +49,7 @@ describe('LatestRunCard', () => {
 
   test('shows Completed / Error legend without Below when threshold is unset', () => {
     render(
-      <LatestRunCard
-        segments={{ ...segments, above: 130, below: 0, errorOrNa: 20, total: 150 }}
-        hasThreshold={false}
-      />,
+      <LatestRunCard segments={{ ...segments, above: 130, below: 0, errorOrNa: 20, total: 150 }} threshold={null} />,
     );
 
     expect(screen.getByText(TestSuitesI18nKey.TrendsTestCasesCompleted)).toBeInTheDocument();
@@ -70,7 +67,7 @@ describe('LatestRunCard', () => {
 
   test('exposes the full run name in a tooltip', () => {
     const longName = '116181d1-cf76-4c07-af7b-647c90ce3916';
-    render(<LatestRunCard segments={{ ...segments, runName: longName }} hasThreshold />);
+    render(<LatestRunCard segments={{ ...segments, runName: longName }} threshold={0.6} />);
 
     expect(screen.getByTestId('tooltip')).toHaveAttribute('data-tooltip', longName);
   });

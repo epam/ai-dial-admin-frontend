@@ -28,11 +28,11 @@ interface Props {
 
 const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, selectedTestSuite, metricCount, className }) => {
   const t = useI18n();
-  const threshold = selectedTestSuite.overallScoreThreshold;
-  const hasThreshold = hasOverallScoreThreshold(threshold);
 
   const latest = runOrder.length > 0 ? runOrder[runOrder.length - 1] : null;
   const previous = runOrder.length > 1 ? runOrder[runOrder.length - 2] : null;
+  const threshold = latest?.overallScoreThreshold;
+  const hasThreshold = hasOverallScoreThreshold(threshold);
   const score = latest?.overallScore ?? null;
   const previousScore = previous?.overallScore ?? null;
 

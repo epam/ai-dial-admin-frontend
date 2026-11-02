@@ -34,6 +34,7 @@ import UnitFolderIcon from '@/src/components/Common/UnitFolderIcon/UnitFolderIco
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useFileManagerExpansion } from '@/src/hooks/use-file-manager-expansion';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -125,8 +126,22 @@ const FileManager: FC<Props> = ({
   const { showNotification } = useNotification();
   const { units, ensureUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
-  const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
-    getContext();
+  const folderContext = getContext();
+  const {
+    files,
+    fetchFiles,
+    isFetchingFiles,
+    filePath,
+    setFilePath,
+    expandedFolders,
+    setExpandedFolders,
+    fetchedFoldersData,
+  } = folderContext;
+  const { onExpandedPathsChange, onFetchFolder } = useFileManagerExpansion(folderContext);
+  const treeLoadedPaths = useMemo(
+    () => new Set([...loadedPaths, ...Object.keys(fetchedFoldersData ?? {})]),
+    [loadedPaths, fetchedFoldersData],
+  );
   const [gridApi, setGridApi] = useState<GridApi>();
   const [isShowHiddenFiles, onShowHiddenFilesChange] = useShowHiddenFiles(view);
   const isHiddenFilesToggleVisible = isHiddenFilesToggleSupported(view);
@@ -305,14 +320,14 @@ const FileManager: FC<Props> = ({
         newExpanded.add(nextPath);
       }
       if (!loadedPaths.has(nextPath)) {
-        fetchFiles(nextPath);
+        onFetchFolder(nextPath);
       }
       setFilePath(nextPath);
       setLoadedPaths((prev) => new Set(prev).add(nextPath));
       setExpandedFolders(newExpanded);
       onPathChange?.(nextPath);
     },
-    [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath, onPathChange],
+    [expandedFolders, onFetchFolder, loadedPaths, setExpandedFolders, setFilePath, onPathChange],
   );
 
   const handleFolderPopupPathChange = useCallback(
@@ -504,10 +519,10 @@ const FileManager: FC<Props> = ({
           ...getTreeOptions(
             isReadOnlyAdmin,
             isFetchingFiles,
-            loadedPaths,
+            treeLoadedPaths,
             expandedFolders,
             view,
-            setExpandedFolders,
+            onExpandedPathsChange,
             t,
             filePath,
             label,
