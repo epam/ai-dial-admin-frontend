@@ -107,6 +107,12 @@ describe('RemoveRoleDialog', () => {
     expect(screen.getByText('project_id = X-PRJ-1')).toBeInTheDocument();
   });
 
+  test('lists the row limit a role keeps without Read, because removing the role deletes it', () => {
+    renderDialog({ row: row({ rowsKind: RowsCellKind.None, filter: policyFilter }) });
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.RemoveRowLimit)).toBeInTheDocument();
+  });
+
   test('lists no row limit for a role without one', () => {
     renderDialog();
 

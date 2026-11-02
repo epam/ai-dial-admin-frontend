@@ -217,6 +217,24 @@ describe('AccessTab — search and filters', () => {
     );
   });
 
+  test('marks the policy a role keeps without Read as kept, and still counts it as limited', async () => {
+    const user = userEvent.setup();
+    const kept: RoleRow = {
+      role: 'analysts',
+      marks: { ...none, modify: PrivilegeMark.Stored },
+      isSensitive: false,
+      rowsKind: RowsCellKind.None,
+      filter,
+    };
+    renderTab(makeState({ rows: [...ROWS, kept] }));
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.CannotReadRowsFilterKept)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.FilterRowsLimited }));
+
+    expect(screen.getByRole('group', { name: 'row-analysts' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'row-ingest-bot' })).toBeNull();
+  });
+
   test('keeps only the roles with a row limit when Rows limited is selected', async () => {
     const user = userEvent.setup();
     renderTab();
