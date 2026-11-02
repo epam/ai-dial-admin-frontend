@@ -2635,6 +2635,26 @@ a table schema", "Table detail row writes" and "Connect panel snippets are gener
 - **THEN** the columns grid shows its type as Map
 - **AND** its type badge uses a colour distinct from an Object column's
 
+### Requirement: An assigned role is edited from the roles grid
+
+The roles grid SHALL offer **Edit** on each row, beside **Remove**, in the row's action menu. Choosing Edit SHALL open the same drawer that activating the row opens, in its edit mode and pre-filled with that role's privileges and row limit. Edit SHALL be unavailable under the same condition as Remove: while the table's access has not finished loading. Activating a row, by click or by Enter on a focused cell, SHALL remain an equivalent way to open the drawer, so changing a role's permissions never requires removing it and adding it again.
+
+#### Scenario: The row menu offers Edit and Remove
+
+- **WHEN** the user opens the action menu of a roles-grid row
+- **THEN** the menu offers Edit and Remove
+
+#### Scenario: Edit opens the drawer pre-filled for the role
+
+- **WHEN** the user chooses Edit on a role's row
+- **THEN** the drawer opens in edit mode for that role
+- **AND** it shows that role's current privileges and row limit
+
+#### Scenario: Editing and removing stay separate
+
+- **WHEN** the user chooses Remove on a role's row
+- **THEN** the removal confirmation opens and the drawer does not
+
 ### Requirement: A source column that keys an enrichment cannot be renamed or dropped
 
 The detail page of an `ACTIVE` **source** table SHALL determine which of its columns are the grain key of an enrichment, from the enrichments the service lists as built on this table: an enrichment's own definition names its grain key, and a column whose source name equals it is locked. For each such column the page SHALL lock the two changes the service refuses — renaming and dropping — and SHALL leave every other edit available. The edit modal's Name field SHALL be disabled and SHALL state, next to the field, that the column is the grain key of the named enrichment and that the enrichment has to be dropped first if the column has to change. The columns grid SHALL NOT allow the column's name to be edited inline, and the column's drop action SHALL NOT be offered. The column's display name, tag, description and sensitive fields SHALL remain editable. When the listing or an enrichment's definition cannot be read, the page SHALL apply no lock on that account and SHALL leave the service's own rejection to explain the refusal.
