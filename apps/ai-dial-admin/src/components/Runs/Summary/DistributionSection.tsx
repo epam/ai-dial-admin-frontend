@@ -13,6 +13,7 @@ import {
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { RunsI18nKey } from '@/src/constants/i18n';
+import { CONTENT_WIDTH_SELECT_CLASS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { DISTRIBUTION_STAT_CARD_CLASS, DISTRIBUTION_STAT_CARDS_GRID_CLASS } from './constants';
@@ -75,6 +76,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
 
   const control = (
     <Select
+      className={CONTENT_WIDTH_SELECT_CLASS}
       size={ElementSize.Small}
       prefix={t(RunsI18nKey.Metric)}
       ariaLabel={t(RunsI18nKey.Metric)}
