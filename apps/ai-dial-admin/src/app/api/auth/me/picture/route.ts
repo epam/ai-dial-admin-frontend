@@ -21,7 +21,8 @@ const getAzurePicture = async (accessToken: string) => {
   }
   // Re-validated against the inline-picture rules so only a raster image of a bounded size is served.
   const base64 = Buffer.from(await response.arrayBuffer()).toString('base64');
-  return parseInlinePicture(`data:${response.headers.get('Content-Type') ?? ''};base64,${base64}`);
+  const mimeType = (response.headers.get('Content-Type') ?? '').split(';')[0].trim();
+  return parseInlinePicture(`data:${mimeType};base64,${base64}`);
 };
 
 const getUserInfoPicture = async (providerId: string, accessToken: string, sub?: string) => {
