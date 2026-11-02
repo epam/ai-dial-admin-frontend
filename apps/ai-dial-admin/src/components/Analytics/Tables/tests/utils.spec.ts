@@ -964,9 +964,7 @@ describe('a column that keys an enrichment', () => {
       },
     ]);
 
-    expect(isRenameRestricted({ name: 'orders', type: AnalyticsTableType.Source }, plain, keyed)).toBe(
-      false,
-    );
+    expect(isRenameRestricted({ name: 'orders', type: AnalyticsTableType.Source }, plain, keyed)).toBe(false);
   });
 
   const table: AnalyticsTable = { name: 'orders', type: AnalyticsTableType.Source };

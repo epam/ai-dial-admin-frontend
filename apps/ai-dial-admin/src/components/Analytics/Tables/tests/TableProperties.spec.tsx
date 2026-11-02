@@ -46,7 +46,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
         <div>headers: {columnDefs?.map((c) => c.headerName).join('|')}</div>
         <div>columns: {rowData?.length ?? 0}</div>
         <div>pinned: {additionalGridOptions?.pinnedTopRowData?.map((r) => r.name).join('|') ?? 'none'}</div>
-        <div>name editable: {String(Boolean(nameColumn?.editable?.({ node: { rowPinned: null }, data: rowData?.[0] })))}</div>
+        <div>
+          name editable: {String(Boolean(nameColumn?.editable?.({ node: { rowPinned: null }, data: rowData?.[0] })))}
+        </div>
         <div>action column: {String(columnDefs?.some((c) => !!c.cellRendererParams?.items))}</div>
         <button
           onClick={() => onCellValueChanged?.({ colDef: { field: 'name' }, oldValue: 'total', newValue: 'total_usd' })}
