@@ -118,6 +118,24 @@ describe('EditColumnPopup', () => {
     });
   });
 
+  test('names the enrichment that keys on the column and still lets the metadata change', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup({ renameDisabled: true, keyedByEnrichment: 'orders_enriched' });
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ColumnKeysEnrichment)).toBeInTheDocument();
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.ColumnName)).toBeDisabled();
+    setInput(AnalyticsTablesI18nKey.Tag, 'cost');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', tag: 'cost' }] });
+  });
+
+  test('shows no enrichment note for a column no enrichment keys on', () => {
+    renderPopup();
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ColumnKeysEnrichment)).not.toBeInTheDocument();
+  });
+
   test('editing the description submits it in the update entry', async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderPopup();

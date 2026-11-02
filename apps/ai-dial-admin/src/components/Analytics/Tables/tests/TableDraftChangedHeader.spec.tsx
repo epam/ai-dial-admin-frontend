@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { defineTableSchema, updateTable } from '@/src/app/[lang]/tables/actions';
+import { defineTableSchema, getTables, updateTable } from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -118,6 +118,7 @@ const confirmDiscard = async (user: ReturnType<typeof userEvent.setup>) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getTables).mockResolvedValue({ success: true, response: [] });
   mocks.jsonErrors = [];
   permissions.value = { ...permissions.value, canDelete: true, canWrite: true, canModify: true, canManageRoles: true };
 });

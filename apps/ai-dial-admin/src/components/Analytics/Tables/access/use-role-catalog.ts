@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { getRoles } from '@/src/app/[lang]/tables/actions';
+import { CatalogRole } from '@/src/components/Analytics/Tables/access/models';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -10,10 +11,10 @@ import { getErrorNotification } from '@/src/utils/notification';
 
 // `getRoles` reads both populations of Core roles (written through its API, declared in its configuration
 // file). The bare name is the raw provider role the service matches grants against.
-export const useRoleCatalog = (isEnabled: boolean): { roles: string[]; isLoading: boolean } => {
+export const useRoleCatalog = (isEnabled: boolean): { roles: CatalogRole[]; isLoading: boolean } => {
   const t = useI18n();
   const { showNotification } = useNotification();
-  const [catalog, setCatalog] = useState<string[]>([]);
+  const [catalog, setCatalog] = useState<CatalogRole[]>([]);
   const [isLoading, setIsLoading] = useState(isEnabled);
 
   useEffect(() => {
@@ -23,7 +24,11 @@ export const useRoleCatalog = (isEnabled: boolean): { roles: string[]; isLoading
     void getRoles().then((res) => {
       if (!isActive) return;
 
-      setCatalog(res.roles.map((role) => role.displayName ?? '').filter(Boolean));
+      setCatalog(
+        res.roles
+          .filter((role) => !!role.displayName)
+          .map((role) => ({ name: role.displayName as string, origin: role.origin })),
+      );
       setIsLoading(false);
       res.warnings.forEach((warning) =>
         showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.RolesLoadFailed), t(warning))),
@@ -38,7 +43,7 @@ export const useRoleCatalog = (isEnabled: boolean): { roles: string[]; isLoading
   }, [isEnabled]);
 
   const roles = useMemo(
-    () => [...catalog].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })),
+    () => [...catalog].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })),
     [catalog],
   );
 

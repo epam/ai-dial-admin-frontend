@@ -26,6 +26,7 @@ interface Props {
   draft: ReturnType<typeof useDraftSchemaForm>;
   actions: ActionMenuOperationDeclaration<AnalyticsTableColumn>[];
   canModify: boolean;
+  isRenameLocked: (column: AnalyticsTableColumn) => boolean;
   onRenameCell: (from: string, to: string) => void;
 }
 
@@ -39,7 +40,15 @@ const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({
   </span>
 );
 
-const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canModify, onRenameCell }) => {
+const TableProperties: FC<Props> = ({
+  table,
+  grainKeyRow,
+  draft,
+  actions,
+  canModify,
+  isRenameLocked,
+  onRenameCell,
+}) => {
   const t = useI18n();
 
   const isActive = table.status === TableStatus.Active;
@@ -51,7 +60,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
       {
         headerName: t(AnalyticsTablesI18nKey.ColumnName),
         field: 'name',
-        editable: (params) => canModify && !params.node.rowPinned,
+        editable: (params) => canModify && !params.node.rowPinned && !(params.data && isRenameLocked(params.data)),
         cellRenderer: ColumnNameCellRenderer,
         // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
         tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
@@ -85,7 +94,7 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
       },
       ...(canModify ? [ACTION_COLUMN(actions)] : []),
     ],
-    [t, actions, canModify],
+    [t, actions, canModify, isRenameLocked],
   );
 
   return (

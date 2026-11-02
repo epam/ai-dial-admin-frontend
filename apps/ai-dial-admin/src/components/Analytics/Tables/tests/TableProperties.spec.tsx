@@ -28,10 +28,10 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     columnDefs,
     additionalGridOptions,
   }: {
-    rowData?: { name: string }[];
+    rowData?: { name: string; source_name?: string }[];
     columnDefs?: {
       headerName?: string;
-      editable?: (params: { node: { rowPinned: string | null } }) => boolean;
+      editable?: (params: { node: { rowPinned: string | null }; data?: { name: string } }) => boolean;
       cellRendererParams?: { items?: unknown[] };
     }[];
     additionalGridOptions?: {
@@ -46,7 +46,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
         <div>headers: {columnDefs?.map((c) => c.headerName).join('|')}</div>
         <div>columns: {rowData?.length ?? 0}</div>
         <div>pinned: {additionalGridOptions?.pinnedTopRowData?.map((r) => r.name).join('|') ?? 'none'}</div>
-        <div>name editable: {String(Boolean(nameColumn?.editable?.({ node: { rowPinned: null } })))}</div>
+        <div>
+          name editable: {String(Boolean(nameColumn?.editable?.({ node: { rowPinned: null }, data: rowData?.[0] })))}
+        </div>
         <div>action column: {String(columnDefs?.some((c) => !!c.cellRendererParams?.items))}</div>
         <button
           onClick={() => onCellValueChanged?.({ colDef: { field: 'name' }, oldValue: 'total', newValue: 'total_usd' })}
@@ -87,6 +89,7 @@ const renderProperties = (tbl: AnalyticsTable, props?: Partial<ComponentProps<ty
       draft={draftStub}
       actions={[]}
       canModify
+      isRenameLocked={() => false}
       onRenameCell={vi.fn()}
       {...props}
     />,
@@ -122,6 +125,13 @@ describe('TableProperties columns grid', () => {
 
     expect(screen.getByText('name editable: true')).toBeInTheDocument();
     expect(screen.getByText('action column: true')).toBeInTheDocument();
+  });
+
+  test('keeps the name cell of a rename-locked column from being edited inline', () => {
+    const column = { source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid };
+    renderProperties(table({ columns: [column] }), { isRenameLocked: (c) => c.name === 'event_id' });
+
+    expect(screen.getByText('name editable: false')).toBeInTheDocument();
   });
 
   test('offers neither an editable name cell nor the action column to a viewer who may not modify it', () => {

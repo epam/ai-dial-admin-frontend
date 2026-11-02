@@ -5,12 +5,15 @@ import { getRoles } from '@/src/app/[lang]/tables/actions';
 import { useRoleCatalog } from '@/src/components/Analytics/Tables/access/use-role-catalog';
 import { AnalyticsTablesI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { ConfigEntityRow } from '@/src/models/dial/config-file';
+import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
 const showNotification = vi.hoisted(() => vi.fn());
 vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
 vi.mock('@/src/app/[lang]/tables/actions');
 
-const role = (displayName?: string) => ({ displayName }) as ConfigEntityRow;
+const role = (displayName?: string, origin = ConfigEntityOrigin.ConfigFile) =>
+  ({ displayName, origin }) as ConfigEntityRow;
+const entry = (name: string, origin = ConfigEntityOrigin.ConfigFile) => ({ name, origin });
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -21,7 +24,19 @@ describe('useRoleCatalog', () => {
     const { result } = renderHook(() => useRoleCatalog(true));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.roles).toEqual(['Analysts', 'team-x', 'team-z']);
+    expect(result.current.roles).toEqual([entry('Analysts'), entry('team-x'), entry('team-z')]);
+  });
+
+  test('keeps the population each role came from', async () => {
+    vi.mocked(getRoles).mockResolvedValue({
+      roles: [role('team-x', ConfigEntityOrigin.Api), role('team-y')],
+      warnings: [],
+    });
+
+    const { result } = renderHook(() => useRoleCatalog(true));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.roles).toEqual([entry('team-x', ConfigEntityOrigin.Api), entry('team-y')]);
   });
 
   test('drops entries that carry no name', async () => {
@@ -30,7 +45,7 @@ describe('useRoleCatalog', () => {
     const { result } = renderHook(() => useRoleCatalog(true));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.roles).toEqual(['team-x']);
+    expect(result.current.roles).toEqual([entry('team-x')]);
   });
 
   test('notifies of a partial or failed read and keeps what could be read', async () => {
@@ -42,7 +57,7 @@ describe('useRoleCatalog', () => {
     const { result } = renderHook(() => useRoleCatalog(true));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.roles).toEqual(['team-x']);
+    expect(result.current.roles).toEqual([entry('team-x')]);
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({
         title: AnalyticsTablesI18nKey.RolesLoadFailed,
