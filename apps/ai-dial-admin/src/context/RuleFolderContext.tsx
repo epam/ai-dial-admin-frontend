@@ -11,13 +11,16 @@ import { addTrailingSlash } from '@/src/utils/url';
 import { getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
 
 export interface RuleFolderContextType {
-  fetchFiles: (path: string) => void;
+  /** Resolves once the folder's children are merged into `files`. */
+  fetchFiles: (path: string) => Promise<void> | void;
   fetchRules?: (path: string) => void;
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
   files: DialFolder[] | null;
   expandedFolders: Set<string>;
   filePath: string;
   toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
+  /** Selects `folder` and keeps it and every ancestor expanded, without toggling anything closed. */
+  revealFolder: (folder: DialFolder) => void;
   fetchedFoldersData: Record<string, DialFolder[]>;
   fetchedFoldersRule?: Record<string, Record<string, DialRule[]>>;
   currentFolder?: DialFolder;
@@ -132,7 +135,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     if (isInitialLoad) {
       setIsLoading(true);
     }
-    Promise.all([getFolders(path), getRules(path)])
+    return Promise.all([getFolders(path), getRules(path)])
       .then(([folders, rules]) => {
         setFetchedFoldersRule((prev) => ({
           ...prev,
@@ -194,8 +197,17 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     setExpandedFolders(newExpanded);
   };
 
+  const revealFolder = (folder: DialFolder) => {
+    const segments = folder.path.split('/').filter(Boolean);
+    const ancestors = segments.slice(0, -1).map((_, index) => `${segments.slice(0, index + 1).join('/')}/`);
+    setFilePath(folder.path);
+    setCurrentFolder(folder);
+    setExpandedFolders((prev) => new Set([...prev, ...ancestors]));
+  };
+
   const value = {
     fetchFiles,
+    revealFolder,
     fetchRules,
     fetchFolderHierarchy,
     files,

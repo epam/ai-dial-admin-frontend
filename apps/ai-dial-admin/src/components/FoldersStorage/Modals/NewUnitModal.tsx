@@ -21,6 +21,8 @@ interface Props {
   onCreated: (unit: OrgUnit) => void;
 }
 
+const HTTP_CONFLICT = 409;
+
 const NewUnitModal: FC<Props> = ({ parentPath, onClose, onCreated }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -44,7 +46,7 @@ const NewUnitModal: FC<Props> = ({ parentPath, onClose, onCreated }) => {
       }
       const error = mapOrgUnitError(res);
       if (error.kind === OrgUnitErrorKind.FIELD || error.kind === OrgUnitErrorKind.NOT_FOUND) {
-        setNameError(error.message);
+        setNameError(error.status === HTTP_CONFLICT ? t(FoldersI18nKey.UnitNameExists) : error.message);
         return;
       }
       showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

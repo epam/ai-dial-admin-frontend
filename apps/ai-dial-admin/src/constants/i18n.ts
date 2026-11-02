@@ -1167,6 +1167,7 @@ export enum FoldersI18nKey {
   UnitDisplayName = 'Folder.Units.UnitDisplayName',
   UnitDisplayNamePlaceholder = 'Folder.Units.UnitDisplayNamePlaceholder',
   UnitDisplayNameTooLong = 'Folder.Units.UnitDisplayNameTooLong',
+  UnitNameExists = 'Folder.Units.UnitNameExists',
   NewUnitBlockedNotUnit = 'Folder.Units.NewUnitBlockedNotUnit',
   NewUnitBlockedDepth = 'Folder.Units.NewUnitBlockedDepth',
   RenameUnit = 'Folder.Units.RenameUnit',
