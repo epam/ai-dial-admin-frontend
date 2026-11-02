@@ -8,6 +8,18 @@ vi.mock('@/public/images/icons/cell-triangle.svg', () => ({
   default: () => <span>triangle</span>,
 }));
 
+// The real `EllipsisTooltip` clips at the rendered width and exposes the full string as its
+// `aria-label` only while clipped. jsdom reports every width as 0, so it would never clip there —
+// the stub stands in for that behaviour, keeping the class it was given and always exposing the label.
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
+  EllipsisTooltip: ({ text, className }: { text: string; className?: string }) => (
+    <span className={className} aria-label={text}>
+      {text}
+    </span>
+  ),
+}));
+
 // The renderer reads only the props each case sets; ag-grid's other cell params come from one
 // typed fake.
 const cellParams = {} as ICellRendererParams;
@@ -135,12 +147,16 @@ describe('EditableCellRenderer', () => {
 
   test('right-aligns the read-only value when isRightAligned is set', () => {
     render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly isRightAligned />);
-    expect(screen.getByText('42')).toHaveClass('text-right');
+    const value = screen.getByText('42');
+    expect(value).toHaveClass('text-right');
+    expect(value).toHaveAttribute('aria-label', '42');
   });
 
   test('does not right-align the read-only value by default', () => {
     render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly />);
-    expect(screen.getByText('42')).not.toHaveClass('text-right');
+    const value = screen.getByText('42');
+    expect(value).not.toHaveClass('text-right');
+    expect(value).toHaveAttribute('aria-label', '42');
   });
 
   test('passes inputProps to the input', () => {

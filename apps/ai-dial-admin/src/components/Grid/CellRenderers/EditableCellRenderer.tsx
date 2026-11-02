@@ -1,5 +1,6 @@
 import { ChangeEvent, ComponentProps, InputHTMLAttributes, KeyboardEvent, useEffect, useMemo, useState } from 'react';
 
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
 import classNames from 'classnames';
 
@@ -114,7 +115,14 @@ const EditableCellRenderer = ({
   }, [value, valueFormatter, translatedPlaceholder]);
 
   if (isReadonly) {
-    return <div className={classNames(isRightAligned && 'text-right')}>{correctValue}</div>;
+    return (
+      <div className="flex min-w-0 max-w-full flex-1 overflow-hidden">
+        <EllipsisTooltip
+          className={classNames('min-w-0', isRightAligned && 'text-right')}
+          text={String(correctValue ?? '')}
+        />
+      </div>
+    );
   }
 
   return (
