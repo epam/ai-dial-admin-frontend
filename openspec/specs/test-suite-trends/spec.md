@@ -235,9 +235,15 @@ below the `xl` breakpoint). The card SHALL:
 - show a click tooltip with: a header of the run-name link (accent, with an external-link icon) and
   the run’s real timestamp as `MMM YYYY, HH:mm` (24-hour, semibold); and a second row of the label
   `Score` and the formatted overall score
-- when the suite’s `overallScoreThreshold` is set (including `0`), draw a 1px dashed horizontal
-  threshold line in the accent-secondary stroke color with a left-side label `Threshold (value)`
-- omit the threshold line and label when `overallScoreThreshold` is unset
+- draw the threshold line from each run’s snapshot `overallScoreThreshold` (including `0`) as 1px
+  dashed horizontal segments in the accent-secondary stroke color, with a left-side label
+  `Threshold (value)` at the start of each constant-threshold segment
+- merge neighboring runs that share the same snapshot threshold into one continuous dashed segment
+  with a single label
+- when the snapshot threshold changes between neighboring runs, join the segments with a vertical
+  transition drawn as a short dash with a wide gap (sparser than the horizontal dash), same color
+- break the threshold line at any run whose snapshot threshold is unset
+- omit the threshold line and label when no run in the window has a snapshot threshold
 
 #### Scenario: Same-day runs use equal slots
 - **WHEN** the Trends window has seven runs computed on the same local calendar day with varying
@@ -248,12 +254,18 @@ below the `xl` breakpoint). The card SHALL:
 - **WHEN** the Overall Score Trend has a run named `Run #19`
 - **THEN** the axis label shows `#19` and the hover tooltip shows `Run #19`
 
-#### Scenario: Threshold line when configured
-- **WHEN** the suite has `overallScoreThreshold` set to `0.6`
-- **THEN** the chart shows a dashed horizontal line at `0.6` labeled `Threshold (0.6)`
+#### Scenario: Threshold line follows each run snapshot
+- **WHEN** the Trends window has runs whose snapshot thresholds are `0.6`, `0.6`, and `0.8`
+- **THEN** the chart shows one continuous dashed segment at `0.6` labeled `Threshold (0.6)`, a
+  sparse vertical join where the threshold changes, and a dashed segment at `0.8` labeled
+  `Threshold (0.8)`
+
+#### Scenario: Threshold line breaks when a run has no snapshot threshold
+- **WHEN** a run in the middle of the Trends window has no snapshot `overallScoreThreshold`
+- **THEN** the threshold line has a gap at that run and does not connect across it
 
 #### Scenario: No threshold line when unset
-- **WHEN** the suite has no `overallScoreThreshold`
+- **WHEN** no run in the Trends window has a snapshot `overallScoreThreshold`
 - **THEN** the chart has no threshold markLine
 
 #### Scenario: Tooltip shows run link, month-year time, and score
