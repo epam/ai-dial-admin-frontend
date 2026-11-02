@@ -70,6 +70,18 @@ export interface MetricOption {
   computationId: string;
 }
 
+/** One run's figures behind the Summary KPI cards, from its snapshotted threshold and analytics slice. */
+export interface RunKpiFigures {
+  threshold: number | null;
+  hasThreshold: boolean;
+  breakdown: CompletionBreakdown;
+  /** 0–1 fraction, null when the run has no test cases. */
+  rate: number | null;
+  sourceMs: number | null;
+  metricsMs: number | null;
+  totalMs: number | null;
+}
+
 /** Status counts + total runtime parts for a single run's analytics KPI cards. */
 export interface RunAnalyticsSlice {
   statusCounts: TestCaseStatusCounts;

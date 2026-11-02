@@ -2,7 +2,11 @@ import { ComponentProps, ReactNode } from 'react';
 
 import { AnalyticsCard } from '@epam/ai-dial-ui-kit';
 
-import { CompletionBreakdown } from '@/src/components/Runs/Summary/models';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { MetricDelta } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import { RunKpiFigures } from '@/src/components/Runs/Summary/models';
+import { RunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
+import { RunsI18nKey } from '@/src/constants/i18n';
 
 /** Dual-run statistic card for the Distribution section. */
 export interface CompareMetricStatCard {
@@ -31,14 +35,25 @@ export interface DualRunFieldEntry {
 /** The two-slot `compareValues` shape AnalyticsCard takes. */
 export type CompareCardItems = NonNullable<ComponentProps<typeof AnalyticsCard>['compareValues']>;
 
-/** One compared run's figures behind the Summary KPI cards. */
-export interface CompareSideFigures {
-  threshold: number | null;
-  hasThreshold: boolean;
-  breakdown: CompletionBreakdown;
-  /** 0–1 fraction, null when the run has no test cases. */
-  rate: number | null;
-  sourceMs: number | null;
-  metricsMs: number | null;
-  totalMs: number | null;
+/** Everything the Compare Summary KPI cards render, derived once from both runs. */
+export interface CompareKpiCards {
+  figures: Record<CompareRunSlot, RunKpiFigures>;
+  sourceLabels: Record<CompareRunSlot, string>;
+  costs: Record<CompareRunSlot, RunCostState>;
+  /** Pass rate per run; null for a run that cannot be rated against the other (mixed thresholds). */
+  rates: Record<CompareRunSlot, number | null>;
+  rateTitleKey: RunsI18nKey;
+  /** Second run minus baseline; `rate` is null when the thresholds are mixed, `costLabel` while a cost is unsettled. */
+  deltas: {
+    completed: MetricDelta;
+    rate: MetricDelta | null;
+    overallScore: MetricDelta;
+    runtime: MetricDelta;
+    costLabel: string | null;
+  };
+  hasNoTestCases: boolean;
+  hasRuntimeError: Record<CompareRunSlot, boolean>;
+  hasBothRuntimeErrors: boolean;
+  hasBothCostErrors: boolean;
+  hasOverallScore: boolean;
 }

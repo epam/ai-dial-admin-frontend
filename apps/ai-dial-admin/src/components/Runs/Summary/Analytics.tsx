@@ -4,7 +4,6 @@ import { FC } from 'react';
 
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
-import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
 import CostValue from '@/src/components/Runs/Summary/Cards/CostValue';
 import OverallScoreInfo from '@/src/components/Runs/Summary/Cards/OverallScoreInfo';
 import OverallScoreValue from '@/src/components/Runs/Summary/Cards/OverallScoreValue';
@@ -16,15 +15,7 @@ import {
   ANALYTICS_KPI_CARD_TOP_CLASS,
   ANALYTICS_KPI_GRID_CLASS,
 } from '@/src/components/Runs/Summary/constants';
-import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
-import { useRunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
-import {
-  getCompletionRate,
-  hasOverallScoreThreshold,
-  sumRunTimeParts,
-  toCompletionBreakdown,
-} from '@/src/components/Runs/Summary/utils';
-import { useSourceKindLabel } from '@/src/components/TestSuites/Trends/CostRuntime/use-source-kind-label';
+import { useRunKpiCards } from '@/src/components/Runs/Summary/use-run-kpi-cards';
 import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
@@ -42,15 +33,9 @@ interface Props {
 
 const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount, testSuite }) => {
   const t = useI18n();
-  const { data } = useRunAnalyticsSlice(run?.id);
-  const sourceLabel = useSourceKindLabel(run?.suiteSnapshot ?? {});
-  const cost = useRunCostState({
-    run,
-    hasNoResults: data != null && data.totalRunTimeMs == null,
-    metricSnapshotCount,
-  });
+  const kpis = useRunKpiCards({ run, metricSnapshotCount });
 
-  if (!data) {
+  if (!kpis) {
     return (
       <div className="flex h-24 items-center">
         <Spinner size={32} fullWidth />
@@ -58,36 +43,28 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount, testSuit
     );
   }
 
-  const threshold = run.suiteSnapshot?.overallScoreThreshold;
-  const hasThreshold = hasOverallScoreThreshold(threshold);
-  const breakdown = toCompletionBreakdown(data.statusCounts, hasThreshold);
-  const rate = getCompletionRate(breakdown, hasThreshold);
-  const rateTitle = t(hasThreshold ? RunsI18nKey.ThresholdPassRate : RunsI18nKey.CompletionRate);
-  // Incomplete statuses (incl. CANCELLED/FAILED) never Error a card — missing figures are a dash.
-  const isRunIncomplete = isIncompleteRunStatus(run.status);
-  const hasNoTestCases = breakdown.total === 0 && !isRunIncomplete;
-  const hasRuntimeError =
-    sumRunTimeParts(data.totalRunTimeMs, data.totalMetricEvalDurationMs) == null && !isRunIncomplete;
+  const { figures, sourceLabel, cost } = kpis;
+  const rateTitle = t(kpis.rateTitleKey);
 
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
       <AnalyticsCard
         className={ANALYTICS_KPI_CARD_TOP_CLASS}
         title={t(RunsI18nKey.TestCasesCompleted)}
-        value={<TestCasesCompletedValue breakdown={breakdown} hasThreshold={hasThreshold} />}
-        error={hasNoTestCases}
+        value={<TestCasesCompletedValue breakdown={figures.breakdown} hasThreshold={figures.hasThreshold} />}
+        error={kpis.hasNoTestCases}
       />
       <AnalyticsCard
         className={ANALYTICS_KPI_CARD_TOP_CLASS}
         title={rateTitle}
-        value={<PassRateValue rate={rate} threshold={threshold} label={rateTitle} />}
-        error={hasNoTestCases}
+        value={<PassRateValue rate={figures.rate} threshold={figures.threshold} label={rateTitle} />}
+        error={kpis.hasNoTestCases}
       />
       {overallScore != null && (
         <AnalyticsCard
           className={ANALYTICS_KPI_CARD_CLASS}
           title={t(RunsI18nKey.OverallScore)}
-          value={<OverallScoreValue score={overallScore} threshold={threshold} />}
+          value={<OverallScoreValue score={overallScore} threshold={figures.threshold} />}
           description={
             <span className="flex items-center gap-1">
               <span>{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</span>
@@ -99,14 +76,8 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount, testSuit
       <AnalyticsCard
         className={ANALYTICS_KPI_CARD_TOP_CLASS}
         title={t(RunsI18nKey.TotalRuntime)}
-        value={
-          <RuntimeValue
-            sourceMs={data.totalRunTimeMs}
-            metricsMs={data.totalMetricEvalDurationMs}
-            sourceLabel={sourceLabel}
-          />
-        }
-        error={hasRuntimeError}
+        value={<RuntimeValue sourceMs={figures.sourceMs} metricsMs={figures.metricsMs} sourceLabel={sourceLabel} />}
+        error={kpis.hasRuntimeError}
       />
       <AnalyticsCard
         className={ANALYTICS_KPI_CARD_TOP_CLASS}

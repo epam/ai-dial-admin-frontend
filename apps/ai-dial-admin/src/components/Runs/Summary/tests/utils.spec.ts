@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { RunTotalCosts } from '@/src/models/evaluation/run';
+import { Run, RunTotalCosts } from '@/src/models/evaluation/run';
 import {
   ComparisonOp,
   ExprType,
@@ -16,7 +16,7 @@ import {
   TOTAL_DURATION_ALIAS,
   TOTAL_METRIC_EVAL_DURATION_ALIAS,
 } from '../constants';
-import { MetricScoresData, TestCaseStatusCounts } from '../models';
+import { MetricScoresData, RunAnalyticsSlice, TestCaseStatusCounts } from '../models';
 import {
   attachMetricInfo,
   buildDistributionQuery,
@@ -47,6 +47,7 @@ import {
   toMetricInfoByName,
   toMetricOptions,
   toRunCostFigures,
+  toRunKpiFigures,
 } from '../utils';
 
 describe('Runs Summary :: query builders', () => {
@@ -802,5 +803,50 @@ describe('hasModelPricing', () => {
     expect(hasModelPricing({})).toBe(false);
     expect(hasModelPricing({ prompt: '', completion: '' })).toBe(false);
     expect(hasModelPricing(undefined)).toBe(false);
+  });
+});
+
+describe('Runs Summary :: toRunKpiFigures', () => {
+  const slice: RunAnalyticsSlice = {
+    statusCounts: { passed: 20, failed: 25, error: 8, unscored: 2, total: 55 },
+    totalRunTimeMs: 341000,
+    totalMetricEvalDurationMs: 291000,
+  };
+
+  test('derives the threshold breakdown, rate and runtime total for a run with a threshold', () => {
+    const figures = toRunKpiFigures({ suiteSnapshot: { overallScoreThreshold: 0.6 } } as Run, slice);
+
+    expect(figures).toEqual({
+      threshold: 0.6,
+      hasThreshold: true,
+      breakdown: { total: 55, completed: 45, above: 20, below: 25, errorOrNa: 10 },
+      rate: 20 / 55,
+      sourceMs: 341000,
+      metricsMs: 291000,
+      totalMs: 632000,
+    });
+  });
+
+  test('completes every successful case and rates completion for a run without a threshold', () => {
+    const figures = toRunKpiFigures({ suiteSnapshot: {} } as Run, slice);
+
+    expect(figures.threshold).toBeNull();
+    expect(figures.hasThreshold).toBe(false);
+    expect(figures.breakdown).toEqual({ total: 55, completed: 47, above: 0, below: 0, errorOrNa: 8 });
+    expect(figures.rate).toBe(47 / 55);
+  });
+
+  test('treats a threshold of zero as set', () => {
+    expect(toRunKpiFigures({ suiteSnapshot: { overallScoreThreshold: 0 } } as Run, slice).hasThreshold).toBe(true);
+  });
+
+  test('has no runtime total when both parts are absent', () => {
+    const figures = toRunKpiFigures({} as Run, {
+      ...slice,
+      totalRunTimeMs: null,
+      totalMetricEvalDurationMs: null,
+    });
+
+    expect(figures.totalMs).toBeNull();
   });
 });

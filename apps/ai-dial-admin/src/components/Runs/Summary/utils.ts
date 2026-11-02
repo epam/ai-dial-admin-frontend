@@ -3,7 +3,7 @@ import { JSONSchema7 } from 'json-schema';
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { DialModelPricing } from '@/src/models/dial/model';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
-import { ExtractionResultStatus, RunTotalCosts } from '@/src/models/evaluation/run';
+import { ExtractionResultStatus, Run, RunTotalCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
@@ -53,7 +53,9 @@ import {
   MetricScoresData,
   MetricStatCard,
   MetricStatistic,
+  RunAnalyticsSlice,
   RunCostFigures,
+  RunKpiFigures,
   TestCaseStatusCounts,
 } from './models';
 import { toCount } from '@/src/utils/formatting/number-formatting';
@@ -485,6 +487,23 @@ export const parseDurationMs = (result: StructuredQueryResult | null, alias: str
   }
   const num = Number(raw);
   return Number.isFinite(num) ? Math.round(num) : null;
+};
+
+/** A run's KPI figures: threshold, completion breakdown, rate and runtime parts. */
+export const toRunKpiFigures = (run: Run | null | undefined, slice: RunAnalyticsSlice): RunKpiFigures => {
+  const threshold = run?.suiteSnapshot?.overallScoreThreshold ?? null;
+  const hasThreshold = hasOverallScoreThreshold(threshold);
+  const breakdown = toCompletionBreakdown(slice.statusCounts, hasThreshold);
+
+  return {
+    threshold,
+    hasThreshold,
+    breakdown,
+    rate: getCompletionRate(breakdown, hasThreshold),
+    sourceMs: slice.totalRunTimeMs,
+    metricsMs: slice.totalMetricEvalDurationMs,
+    totalMs: sumRunTimeParts(slice.totalRunTimeMs, slice.totalMetricEvalDurationMs),
+  };
 };
 
 /** Display seconds from a duration in ms (one decimal place). */
