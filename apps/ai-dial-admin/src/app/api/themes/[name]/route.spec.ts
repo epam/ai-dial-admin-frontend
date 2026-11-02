@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { themesApi } from '@/src/app/api/api';
 
@@ -27,7 +27,7 @@ describe('GET /api/themes/[name]', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 404 when the icon is not found', async () => {
+  test('returns 404 when the icon is not found', async () => {
     vi.mocked(themesApi.getThemeIconUrl).mockResolvedValue(undefined);
 
     const res = await GET(makeRequest(), params);
@@ -37,7 +37,7 @@ describe('GET /api/themes/[name]', () => {
     expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
-  it('returns 200 with the image, the cache policy and a content hash ETag', async () => {
+  test('returns 200 with the image, the cache policy and a content hash ETag', async () => {
     mockIcon();
 
     const res = await GET(makeRequest(), params);
@@ -49,7 +49,7 @@ describe('GET /api/themes/[name]', () => {
     expect(res.headers.get('etag')).toMatch(/^"[\w-]+"$/);
   });
 
-  it('returns the same ETag for the same content', async () => {
+  test('returns the same ETag for the same content', async () => {
     mockIcon();
     const first = await GET(makeRequest(), params);
     mockIcon();
@@ -58,7 +58,7 @@ describe('GET /api/themes/[name]', () => {
     expect(second.headers.get('etag')).toBe(first.headers.get('etag'));
   });
 
-  it('forwards the upstream ETag when there is one', async () => {
+  test('forwards the upstream ETag when there is one', async () => {
     mockIcon({ etag: '"upstream-v1"' });
 
     const res = await GET(makeRequest(), params);
@@ -66,7 +66,7 @@ describe('GET /api/themes/[name]', () => {
     expect(res.headers.get('etag')).toBe('"upstream-v1"');
   });
 
-  it('returns 304 without a body when If-None-Match matches', async () => {
+  test('returns 304 without a body when If-None-Match matches', async () => {
     mockIcon({ etag: '"upstream-v1"' });
 
     const res = await GET(makeRequest({ 'if-none-match': 'W/"other", W/"upstream-v1"' }), params);
@@ -77,7 +77,7 @@ describe('GET /api/themes/[name]', () => {
     expect(res.headers.get('cache-control')).toBe(CACHE_CONTROL);
   });
 
-  it('returns 200 when If-None-Match does not match', async () => {
+  test('returns 200 when If-None-Match does not match', async () => {
     mockIcon({ etag: '"upstream-v2"' });
 
     const res = await GET(makeRequest({ 'if-none-match': '"upstream-v1"' }), params);
