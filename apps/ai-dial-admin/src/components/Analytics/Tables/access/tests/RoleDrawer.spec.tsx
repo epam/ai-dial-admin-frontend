@@ -11,12 +11,20 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryExprType, QueryFilterNode, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsTableColumn, IneffectiveGrantReason, TableAccess, TableGrantKey } from '@/src/models/analytics/table';
 import { AccessStatus } from '@/src/components/Analytics/Tables/access/models';
+import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
 const showNotification = vi.hoisted(() => vi.fn());
 vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
 
 vi.mock('@/src/components/Analytics/Tables/access/use-role-catalog', () => ({
-  useRoleCatalog: () => ({ roles: ['analysts', 'team-x', 'team-z'], isLoading: false }),
+  useRoleCatalog: () => ({
+    roles: [
+      { name: 'analysts', origin: ConfigEntityOrigin.ConfigFile },
+      { name: 'team-x', origin: ConfigEntityOrigin.ConfigFile },
+      { name: 'team-z', origin: ConfigEntityOrigin.Api },
+    ],
+    isLoading: false,
+  }),
 }));
 
 const FILTER: QueryFilterNode = {
@@ -212,6 +220,16 @@ describe('RoleDrawer — adding a role', () => {
     expect(saveButton()).toBeDisabled();
   });
 
+  test('states which population each offered role came from', async () => {
+    const user = userEvent.setup();
+    renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+
+    expect(screen.getByRole('option', { name: /^analysts/ })).toHaveTextContent('Configuration file');
+    expect(screen.getByRole('option', { name: /^team-z/ })).toHaveTextContent('API');
+  });
+
   test('shows no privilege step until a role is chosen', async () => {
     const user = userEvent.setup();
     renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
@@ -220,7 +238,7 @@ describe('RoleDrawer — adding a role', () => {
     expect(screen.queryByRole('checkbox')).toBeNull();
 
     await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
-    await user.click(screen.getByRole('option', { name: 'team-z' }));
+    await user.click(screen.getByRole('option', { name: /^team-z/ }));
 
     expect(screen.getByText(AnalyticsTableAccessI18nKey.StepAccess)).toBeInTheDocument();
     expect(card(AnalyticsTableAccessI18nKey.ColRead)).toBeInTheDocument();
@@ -231,8 +249,8 @@ describe('RoleDrawer — adding a role', () => {
     const { access, onClose } = renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
 
     await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
-    expect(screen.queryByRole('option', { name: 'team-x' })).toBeNull();
-    await user.click(screen.getByRole('option', { name: 'team-z' }));
+    expect(screen.queryByRole('option', { name: /^team-x/ })).toBeNull();
+    await user.click(screen.getByRole('option', { name: /^team-z/ }));
     await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
     await user.click(saveButton());
 

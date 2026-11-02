@@ -2053,7 +2053,7 @@ Turning **Read** off SHALL leave the role's existing row policy untouched: that 
 
 ### Requirement: Role catalog for the drawer
 
-The role picker SHALL be fed from DIAL Core's own merged role population, and the option rules of the earlier per-table role panel SHALL be kept: the catalog is the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested. Each option's value SHALL be the role's bare name, which is the raw provider-role string the service matches against; no resource reference is ever stored.
+The role picker SHALL be fed from DIAL Core's own merged role population, and the option rules of the earlier per-table role panel SHALL be kept: the catalog is the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested. Each option's value SHALL be the role's bare name, which is the raw provider-role string the service matches against; no resource reference is ever stored. Each option SHALL state the population its entry came from after the merge — **API** or **Configuration file** — with the same labels as the Source column of the entity pickers.
 
 Options SHALL be presented in alphabetical order, independently of the order the two populations were read in. A role the table already names in any list or policy SHALL always be offered when editing that role, even when the catalog does not contain it, so a grant to a role outside the catalog is never invisible and never silently revoked.
 
@@ -2063,6 +2063,12 @@ While the catalog is being fetched the picker SHALL show a loading state. A fail
 
 - **WHEN** the catalog resolves in an order other than alphabetical
 - **THEN** the picker presents its options sorted by name
+
+#### Scenario: Each option states where the role came from
+
+- **GIVEN** the catalog holds `team-x` written through Core's API and `analysts` declared only in Core's configuration file
+- **WHEN** the user opens the picker
+- **THEN** `team-x` is labelled **API** and `analysts` is labelled **Configuration file**
 
 #### Scenario: The admin backend's roles list is not requested
 
