@@ -7,6 +7,10 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import { COLUMN_PANEL_PREFIX } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 
+const screenMock = vi.hoisted(() => ({ isMobile: false }));
+
+vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => screenMock.isMobile }));
+
 let capturedColumnDefs: ColDef[] | undefined;
 let onGridReadyCb: ((event: GridReadyEvent) => void) | undefined;
 
@@ -65,6 +69,7 @@ beforeEach(() => {
   capturedColumnDefs = undefined;
   onGridReadyCb = undefined;
   vi.clearAllMocks();
+  screenMock.isMobile = false;
   getFilterModel.mockReturnValue({});
   getColumnState.mockReturnValue([]);
   localStorage.clear();
@@ -267,5 +272,23 @@ describe('GridView columns panel :: grouped grids', () => {
 
     expect(capturedColumnDefs).toEqual(GROUPED);
     expect(screen.queryByText(ButtonsI18nKey.ResetToDefault)).not.toBeInTheDocument();
+  });
+});
+
+describe('GridView columns panel :: mobile', () => {
+  test('opens the overlay below the app header so the close button stays reachable', () => {
+    screenMock.isMobile = true;
+    renderPanel(FLAT);
+
+    const overlay = screen.getByRole('toolbar', { name: ButtonsI18nKey.Columns }).parentElement;
+    expect(overlay).toHaveClass('fixed', 'top-12', 'bottom-0');
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Close })).toBeInTheDocument();
+  });
+
+  test('keeps the desktop overlay anchored to the grid', () => {
+    renderPanel(FLAT);
+
+    const overlay = screen.getByRole('toolbar', { name: ButtonsI18nKey.Columns }).parentElement;
+    expect(overlay).toHaveClass('absolute', 'top-0');
   });
 });

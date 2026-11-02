@@ -53,10 +53,7 @@ const GridView = <T extends object>({
   getRowId,
   getHref,
 }: GridViewProps<T>) => {
-  const staticPanelContainerClassName = classNames(
-    'left-0 top-0 size-full bg-blackout z-[15]',
-    showColumnsPanel ? 'flex' : 'hidden',
-  );
+  const staticPanelContainerClassName = classNames('bg-blackout z-[15]', showColumnsPanel ? 'flex' : 'hidden');
 
   const staticPanelClassName = classNames(
     'flex flex-col absolute right-0 top-0 bottom-0 bg-layer-3 z-10 divide-tertiary divide-y',
@@ -100,7 +97,13 @@ const GridView = <T extends object>({
   }, [columnDefs, storageKey, showColumnsPanel]);
 
   useEffect(() => {
-    setPanelContainerClassName(classNames(staticPanelContainerClassName, isMobile || isTablet ? 'fixed' : 'absolute'));
+    // The fixed overlay starts below the app header (h-12, z-40), which would otherwise cover the panel's close button.
+    setPanelContainerClassName(
+      classNames(
+        staticPanelContainerClassName,
+        isMobile || isTablet ? 'fixed inset-x-0 top-12 bottom-0' : 'absolute left-0 top-0 size-full',
+      ),
+    );
 
     setPanelClassName(
       classNames(
