@@ -39,12 +39,17 @@ describe('Components - Breadcrumbs', () => {
 
   test('Should render breadcrumbs for desktop', () => {
     render(<Breadcrumbs mobile={false} />);
-    expect(screen.getByText(MenuI18nKey.Models)).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.Models })).toBeInTheDocument();
+    expect(screen.getByText('1').closest('[aria-current="page"]')).toBeTruthy();
+  });
 
-    // Check that the chevron is rendered between breadcrumbs
-    const allText = screen.getByText(MenuI18nKey.Models).parentElement?.parentElement?.textContent;
-    expect(allText).toContain(MenuI18nKey.Models);
+  test('Should open a section crumb through the router', async () => {
+    const user = userEvent.setup();
+    render(<Breadcrumbs mobile={false} />);
+
+    await user.click(screen.getByRole('link', { name: MenuI18nKey.Models }));
+
+    expect(navigation.router.push).toHaveBeenCalledWith('/models');
   });
 
   test('Should render breadcrumbs for mobile', () => {
@@ -71,7 +76,7 @@ describe('Components - Breadcrumbs', () => {
   describe('Components - Breadcrumbs - folders on a details page', () => {
     beforeEach(() => {
       navigation.pathname = '/assets-applications/MyApp';
-      navigation.search = 'path=public%2Fteam%2Fsub%2FMyApp__1.0';
+      navigation.search = 'path=public%2Fteam%2FMyApp__1.0';
     });
 
     test('Should show the entity folders between the section and the entity', () => {
@@ -81,7 +86,6 @@ describe('Components - Breadcrumbs', () => {
         MenuI18nKey.Applications,
         'public',
         'team',
-        'sub',
         'MyApp',
       ]);
     });
@@ -101,7 +105,7 @@ describe('Components - Breadcrumbs', () => {
       const user = userEvent.setup();
       render(<Breadcrumbs mobile={false} />);
 
-      await user.click(screen.getByRole('link', { name: 'team' }));
+      await user.click(screen.getByRole('button', { name: 'team' }));
 
       expect(appsFolder.setFilePath).toHaveBeenCalledWith('public/team/');
       expect(navigation.router.push).toHaveBeenCalledWith('/assets-applications');
@@ -112,19 +116,19 @@ describe('Components - Breadcrumbs', () => {
       appsFolder.fetchedFoldersData = { 'public/team/': [] };
       render(<Breadcrumbs mobile={false} />);
 
-      await user.click(screen.getByRole('link', { name: 'team' }));
+      await user.click(screen.getByRole('button', { name: 'team' }));
 
       expect(appsFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/', true);
     });
 
-    test('Should load the ancestors of a nested folder the shared context does not hold yet', async () => {
-      const user = userEvent.setup();
+    test('Should collapse the middle of a deep trail behind a menu', () => {
+      navigation.search = 'path=public%2Fteam%2Fsub%2FMyApp__1.0';
+
       render(<Breadcrumbs mobile={false} />);
 
-      await user.click(screen.getByRole('link', { name: 'sub' }));
-
-      expect(appsFolder.fetchFolderHierarchy).toHaveBeenCalledWith('public/team/sub/', true);
-      expect(navigation.router.push).toHaveBeenCalledWith('/assets-applications');
+      expect(screen.getByRole('button', { name: 'Show hidden path segments' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'public' })).toBeNull();
+      expect(screen.getByRole('button', { name: 'sub' })).toBeInTheDocument();
     });
   });
 });
