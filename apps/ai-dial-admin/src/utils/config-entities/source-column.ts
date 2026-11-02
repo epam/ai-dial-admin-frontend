@@ -12,7 +12,7 @@ import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
  */
 const SOURCE_COLUMN_ID = 'origin';
 
-const ORIGIN_LABEL: Record<ConfigEntityOrigin, string> = {
+export const CONFIG_ENTITY_ORIGIN_LABEL: Record<ConfigEntityOrigin, string> = {
   [ConfigEntityOrigin.Api]: 'API',
   [ConfigEntityOrigin.ConfigFile]: 'Configuration file',
 };
@@ -23,7 +23,7 @@ const SOURCE_COLUMN: ColDef = {
   headerName: 'Source',
   hide: false,
   maxWidth: 180,
-  valueGetter: ({ data }) => ORIGIN_LABEL[data?.[SOURCE_COLUMN_ID] as ConfigEntityOrigin] ?? '',
+  valueGetter: ({ data }) => CONFIG_ENTITY_ORIGIN_LABEL[data?.[SOURCE_COLUMN_ID] as ConfigEntityOrigin] ?? '',
 };
 
 /**
