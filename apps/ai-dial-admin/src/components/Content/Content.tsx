@@ -7,7 +7,6 @@ import Blackout from '@/src/components/Common/Blackout/Blackout';
 import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import Footer from '@/src/components/Footer/Footer';
-import UserMobile from '@/src/components/Header/User/UserMobile';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -21,13 +20,12 @@ import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   children: ReactNode;
-  isEnableAuth: boolean;
 }
 
 const CHECK_CORE_VERSION_INTERVAL = 60 * 1000;
 const CHECK_STATUS_INTERVAL = 2 * 60 * 1000;
 
-const Content: FC<Props> = ({ children, isEnableAuth }) => {
+const Content: FC<Props> = ({ children }) => {
   const isTabletScreen = useIsTabletScreen();
   const { sidebar, featureFlags } = useAppContext();
   const isBottomSidebarOpen = sidebar.show && sidebar.position === SidebarPosition.Bottom;
@@ -96,7 +94,6 @@ const Content: FC<Props> = ({ children, isEnableAuth }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 min-w-0 relative overflow-clip">
       <Blackout />
-      <UserMobile isEnableAuth={isEnableAuth} />
       <div className="flex flex-row flex-1 min-h-0 relative">
         <div
           className={mergeClasses(

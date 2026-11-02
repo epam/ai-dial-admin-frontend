@@ -245,6 +245,25 @@ describe('RoleDrawer — adding a role', () => {
     });
     await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
+
+  test('keeps showing the chosen role once it has an entry on the table', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess({ read: ['team-x'] });
+    const props = {
+      tableName: 'project_costs_daily',
+      columns: COLUMNS,
+      isSystem: false,
+      role: null,
+      onClose: vi.fn(),
+    };
+    const { rerender } = render(<RoleDrawer {...props} access={access} />);
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+    await user.click(screen.getByRole('option', { name: 'team-z' }));
+    rerender(<RoleDrawer {...props} access={{ ...access, rows: ['team-x', 'team-z'].map(row) }} />);
+
+    expect(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole })).toHaveValue('team-z');
+  });
 });
 
 describe('RoleDrawer — saving', () => {
@@ -345,6 +364,31 @@ describe('RoleDrawer — grants that change nothing', () => {
     expect(screen.queryByRole('button', { name: AnalyticsTableAccessI18nKey.SaveRole })).toBeNull();
     expect(showNotification).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  test('shows no banner for another role named in the same answer', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess({ read: ['team-x'] });
+    access.saveGrants.mockResolvedValue({
+      isOk: true,
+      result: {
+        ineffective_grants: [
+          {
+            role: 'admin',
+            key: TableGrantKey.Get,
+            reason: IneffectiveGrantReason.AlreadyGlobal,
+            message: 'admin already global',
+          },
+          ...answer.ineffective_grants,
+        ],
+      },
+    });
+    renderDrawer(access);
+
+    await user.click(saveButton());
+
+    expect(await screen.findByText('already global')).toBeTruthy();
+    expect(screen.queryByText('admin already global')).toBeNull();
   });
 
   test('locks the steps once saved and closes without a request on Done', async () => {
