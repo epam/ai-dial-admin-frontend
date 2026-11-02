@@ -6,7 +6,6 @@ import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { COMPARE_CARD_BOTTOM_LABEL_CLASS, COMPARE_CARD_CLASS } from '@/src/components/Runs/Compare/Summary/constants';
 import { useCompareKpiCards } from '@/src/components/Runs/Compare/Summary/use-compare-kpi-cards';
 import { toCompareCardItems, toSlotRecord } from '@/src/components/Runs/Compare/Summary/utils';
 import CostValue from '@/src/components/Runs/Summary/Cards/CostValue';
@@ -38,6 +37,8 @@ interface Props {
   primaryMetricCount?: number;
   comparedMetricCount?: number;
 }
+
+const CARD_CLASS = 'min-w-0 flex-1';
 
 const toDeltaValue = (delta: ReturnType<typeof getMetricDelta>): number | undefined =>
   delta.kind === MetricDeltaKind.Changed ? delta.value : undefined;
@@ -86,7 +87,7 @@ const Analytics: FC<Props> = ({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
       <AnalyticsCard
-        className={COMPARE_CARD_CLASS}
+        className={CARD_CLASS}
         title={t(RunsI18nKey.TestCasesCompleted)}
         delta={toDeltaValue(deltas.completed)}
         compareValues={toCompareCardItems(runs, (run) => (
@@ -99,7 +100,7 @@ const Analytics: FC<Props> = ({
         error={kpis.hasNoTestCases}
       />
       <AnalyticsCard
-        className={COMPARE_CARD_CLASS}
+        className={CARD_CLASS}
         title={rateTitle}
         delta={deltas.rate ? toDeltaValue(deltas.rate) : undefined}
         deltaUnit="%"
@@ -114,7 +115,7 @@ const Analytics: FC<Props> = ({
       />
       {kpis.hasOverallScore && (
         <AnalyticsCard
-          className={COMPARE_CARD_BOTTOM_LABEL_CLASS}
+          className={CARD_CLASS}
           title={t(RunsI18nKey.OverallScore)}
           description={t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}
           delta={toDeltaValue(deltas.overallScore)}
@@ -130,7 +131,7 @@ const Analytics: FC<Props> = ({
         />
       )}
       <AnalyticsCard
-        className={COMPARE_CARD_CLASS}
+        className={CARD_CLASS}
         title={t(RunsI18nKey.TotalRuntime)}
         delta={toDeltaValue(deltas.runtime)}
         deltaPositive={deltas.runtime.value != null && deltas.runtime.value < 0}
@@ -149,7 +150,7 @@ const Analytics: FC<Props> = ({
         error={kpis.hasBothRuntimeErrors}
       />
       <AnalyticsCard
-        className={COMPARE_CARD_CLASS}
+        className={CARD_CLASS}
         title={
           <span className="flex items-center gap-2">
             <span>{t(RunsI18nKey.TotalRunCost)}</span>

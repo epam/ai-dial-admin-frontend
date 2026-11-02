@@ -379,27 +379,6 @@ describe('Compare Summary :: Analytics', () => {
     expect(await side(/Runs\.TotalRunCost/, 'Run #316').findByText('$120')).toBeInTheDocument();
   });
 
-  test('pins every divider to the value line so dividers line up across cards of different heights', async () => {
-    await renderLoaded({ primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
-
-    for (const region of screen.getAllByRole('region')) {
-      expect(region.className).toContain('[&_.w-px]:self-start');
-      expect(region.className).toContain('[&_.w-px]:mt-[30px]');
-    }
-  });
-
-  test('pushes the overall score footer to the bottom of the card, away from the values', async () => {
-    await renderLoaded({ primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
-
-    expect(card(RunsI18nKey.OverallScore).getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeTruthy();
-    expect(screen.getByRole('region', { name: RunsI18nKey.OverallScore }).className).toContain(
-      '[&>span:last-child]:mt-auto',
-    );
-    expect(screen.getByRole('region', { name: RunsI18nKey.TotalRuntime }).className).not.toContain(
-      '[&>span:last-child]:mt-auto',
-    );
-  });
-
   test('omits a diff badge when both runs have the same completed count', async () => {
     STATUS_BY_RUN['run-2'] = status(20, 25, 10);
     await renderLoaded();
