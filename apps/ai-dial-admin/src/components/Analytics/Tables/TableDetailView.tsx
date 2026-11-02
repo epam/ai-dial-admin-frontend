@@ -26,6 +26,7 @@ import {
   defineTableSchema,
   deleteTable,
   getTable,
+  getTables,
   updateTable,
   updateTableSchema,
 } from '@/src/app/[lang]/tables/actions';
@@ -47,13 +48,16 @@ import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
 import TableProperties from '@/src/components/Analytics/Tables/TableProperties';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
+import { KeyedEnrichments } from '@/src/components/Analytics/Tables/models';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
   buildRowsTemplate,
   createColumnRow,
   getColumnRowErrors,
   hasColumnRowErrors,
+  getKeyedEnrichments,
   isDropRestrictedColumn,
+  isKeyedColumn,
   isRenameRestricted,
   isScanMetadataColumn,
   parseRowsJson,
@@ -125,6 +129,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const [rowsJson, setRowsJson] = useState('[]');
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
   const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
+  const [keyedEnrichments, setKeyedEnrichments] = useState<KeyedEnrichments>({});
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [draftDocument, setDraftDocument] = useState<DraftTableDocument | null>(null);
 
@@ -172,6 +177,36 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       cancelled = true;
     };
   }, [table.type, table.source_table]);
+
+  useEffect(() => {
+    if (table.type !== AnalyticsTableType.Source || table.status !== TableStatus.Active) {
+      setKeyedEnrichments({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const listing = await getTables();
+        const names = (listing?.response ?? [])
+          .filter((candidate) => candidate.type === AnalyticsTableType.Enrichment && candidate.source_table === name)
+          .map((candidate) => candidate.name);
+        const definitions = await Promise.all(names.map((enrichment) => getTable(enrichment)));
+        if (!cancelled) {
+          setKeyedEnrichments(
+            getKeyedEnrichments(
+              name,
+              definitions.flatMap((read) => (read?.response ? [read.response] : [])),
+            ),
+          );
+        }
+      } catch {
+        if (!cancelled) setKeyedEnrichments({});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [table.type, table.status, name]);
 
   // New columns must not collide with the table's existing source/exposed names (the backend rejects
   // duplicates); validate the add-columns rows against them plus each other.
@@ -289,6 +324,11 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
     [applyPatch],
   );
 
+  const isRenameLocked = useCallback(
+    (column: AnalyticsTableColumn) => isKeyedColumn(column, keyedEnrichments),
+    [keyedEnrichments],
+  );
+
   const onRenameCell = useCallback(
     (from: string, to: string) => {
       const target = to.trim();
@@ -375,9 +415,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       if (isPinnedRow(api, node)) return true;
       const column = node.data as AnalyticsTableColumn | undefined;
       if (!column) return false;
-      return isDropRestrictedColumn(table, column);
+      return isDropRestrictedColumn(table, column, keyedEnrichments);
     },
-    [table],
+    [table, keyedEnrichments],
   );
 
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
@@ -422,6 +462,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       draft={draft}
       actions={actions}
       canModify={canModify}
+      isRenameLocked={isRenameLocked}
       onRenameCell={onRenameCell}
     />
   );
@@ -643,7 +684,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       {editColumn && (
         <EditColumnPopup
           column={editColumn}
-          renameDisabled={isRenameRestricted(table, editColumn)}
+          renameDisabled={isRenameRestricted(table, editColumn, keyedEnrichments)}
+          keyedByEnrichment={keyedEnrichments[editColumn.source_name]}
           sensitiveDisabled={isScanMetadataColumn(table, editColumn)}
           isSensitiveLocked={!canChangeSensitive}
           existingNames={columns.filter((c) => c.name !== editColumn.name).map((c) => c.name)}

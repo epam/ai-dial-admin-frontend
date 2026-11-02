@@ -3479,6 +3479,8 @@ export default {
     ScanPairRequired:
       'Identity column and Version column are both required here — this table already declares them, and re-saving cannot clear them.',
     ScanColumnNotSensitive: 'A column used by the incremental scan cannot be marked sensitive.',
+    ColumnKeysEnrichment:
+      'This column is the grain key of the enrichment "{enrichment}", so it cannot be renamed or dropped. Drop the enrichment first if the column has to change.',
     NotScannable:
       'This table is not scannable: it declares no identity and version columns, so it cannot be read incrementally.',
     ColumnNullableFixed: 'Whether a column accepts empty values is fixed when the column is created.',
