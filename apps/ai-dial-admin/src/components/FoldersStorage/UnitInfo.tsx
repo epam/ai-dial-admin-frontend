@@ -19,7 +19,7 @@ import { RolesCardStatus } from '@/src/components/FoldersStorage/models';
 import UnitRolesCard from '@/src/components/FoldersStorage/UnitRolesCard';
 import { useUnitRolesDraft } from '@/src/components/FoldersStorage/use-unit-roles-draft';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import { ActionMenuOperationI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
@@ -55,7 +55,10 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
     showNotification(
       result.isSuccess
         ? getSuccessNotification(t(FoldersI18nKey.RolesSaved))
-        : getErrorNotification(t(FoldersI18nKey.RolesSaveFailed), result.errorMessage),
+        : getErrorNotification(
+            t(ErrorI18nKey.Error),
+            [t(FoldersI18nKey.RolesSaveFailed), result.errorMessage].filter(Boolean).join(' '),
+          ),
     );
   }, [draft, showNotification, t]);
 

@@ -1212,7 +1212,7 @@ export default {
       UnitBadge: 'Unit',
       UnitsLoadError: "Units can't be loaded right now. Try again.",
       UnitsRetry: 'Try again',
-      InsideUnitNote: 'Access in this folder is decided by the roles of the unit {unit}.',
+      InsideUnitNote: 'Access in this folder is decided by the roles of the unit:',
       OpenUnit: 'Open unit',
       NewUnit: 'New unit',
       NewUnitTitle: 'Create unit',
