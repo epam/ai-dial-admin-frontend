@@ -14,12 +14,13 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getIconPath } from '@/src/utils/themes/icon-path';
+import { getAppName } from '@/src/utils/env/get-app-name';
 import { getUserInfo, themesApi } from './api/api';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: process.env.APP_NAME || 'AI Dial Admin',
+  title: getAppName(),
 };
 
 const inter = Inter({

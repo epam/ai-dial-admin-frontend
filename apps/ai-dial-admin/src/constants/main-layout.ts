@@ -1,5 +1,7 @@
 export const CENTRAL_WINDOW_MIN_WIDTH = 800;
 
+export const MAIN_MENU_ID = 'main-menu';
+
 // local storage keys
 export const LOCAL_STORAGE_CENTRAL_WINDOW_KEY = 'central-window-width';
 export const LOCAL_STORAGE_SIDEBAR_OPEN_KEY = 'sidebar-open';
