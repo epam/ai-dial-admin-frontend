@@ -106,8 +106,10 @@ export async function getRunnerPipelines(): Promise<ServerActionResponse<RunnerP
 }
 
 /**
- * Guards the host the way the reads do: without a runner there is nothing to act on, and a request to an
- * empty host would fail as a service error rather than as the deployment choice it is.
+ * Lifts the circuit-breaker pause on one pipeline.
+ *
+ * Guards the host the way the other runner actions do: without a runner there is nothing to act on, and a
+ * request to an empty host would fail as a service error rather than as the deployment choice it is.
  */
 export async function resumePipeline(name: string): Promise<ServerActionResponse> {
   if (!analyticsRunnerApi.isConfigured) return noRunner();
