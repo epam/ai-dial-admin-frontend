@@ -20,12 +20,12 @@ const AvatarButton: FC<Props> = ({ isActive, tooltip, ...buttonProps }) => {
     <IconButton
       variant={isActive ? ButtonVariant.Neutral : ButtonVariant.Primary}
       appearance={isActive ? ButtonAppearance.Outlined : ButtonAppearance.Ghost}
-      aria-label={name}
       tooltipProps={{
         tooltip: isActive ? name : tooltip || name,
         placement: isActive ? TooltipPlacement.Left : TOOLTIP_PLACEMENT_BOTTOM_END,
       }}
       {...buttonProps}
+      aria-label={name}
       icon={isActive ? <IconX size={20} stroke={1.5} aria-hidden /> : <UserIcon />}
     />
   );

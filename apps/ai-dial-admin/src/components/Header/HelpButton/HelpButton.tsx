@@ -4,7 +4,7 @@ import { Dropdown, DropdownItem, GhostIconButton, TooltipPlacement } from '@epam
 import { IconHelpCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { usePathname } from 'next/navigation';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { HELP_DOCUMENTATION_LINKS } from '@/src/constants/help-documentation-links';
 import { HeaderI18nKey } from '@/src/constants/i18n';
@@ -33,26 +33,13 @@ const HelpButton: FC<Props> = ({ docLink }) => {
     window.open(`${docLink}${url}`, '_blank', 'noopener,noreferrer');
   }, [docLink, helpUrl?.listView, helpUrl?.selectedView, pathname]);
 
-  const dropdownItems = useMemo<DropdownItem[]>(() => {
-    if (!hasHelpLink) {
-      return [];
-    }
-
-    const items: DropdownItem[] = [
-      {
-        key: 'help-link',
-        label: helpUrl?.title || 'View documentation',
-        onClick,
-      },
-    ];
-
-    return items;
-  }, [hasHelpLink, helpUrl, onClick]);
-
   if (!hasHelpLink) {
     return null;
   }
-  return dropdownItems.length > 0 ? (
+
+  const dropdownItems: DropdownItem[] = [{ key: 'help-link', label: helpUrl?.title || 'View documentation', onClick }];
+
+  return (
     <Dropdown items={dropdownItems} allowedPlacements={['bottom-end']} onOpenChange={setIsOpen} listClassName="mt-2">
       <GhostIconButton
         aria-label={t(HeaderI18nKey.Help)}
@@ -64,13 +51,6 @@ const HelpButton: FC<Props> = ({ docLink }) => {
         icon={<IconHelpCircle size={24} stroke={1.5} aria-hidden />}
       />
     </Dropdown>
-  ) : (
-    <GhostIconButton
-      aria-label={t(HeaderI18nKey.Help)}
-      tooltipProps={{ tooltip: t(HeaderI18nKey.Help), placement: TOOLTIP_PLACEMENT_BOTTOM_END }}
-      icon={<IconHelpCircle size={24} stroke={1.5} aria-hidden />}
-      onClick={onClick}
-    />
   );
 };
 

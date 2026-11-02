@@ -1,6 +1,6 @@
 import { ConfirmationPopup, Dropdown, DropdownItem, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconLogout, IconSettings } from '@tabler/icons-react';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
 import { AuthI18nKey, SettingsModalI18nKey } from '@/src/constants/i18n';
@@ -20,7 +20,6 @@ interface Props {
 
 const UserMenu: FC<Props> = ({ isEnableAuth }) => {
   const t = useI18n();
-  const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -32,12 +31,10 @@ const UserMenu: FC<Props> = ({ isEnableAuth }) => {
   };
 
   const handleSettingsClick = () => {
-    dismissRef.current?.dismiss();
     setIsSettingsModalOpen(true);
   };
 
   const handleLogOutClick = () => {
-    dismissRef.current?.dismiss();
     if (!session) {
       handleLogout();
       return;
