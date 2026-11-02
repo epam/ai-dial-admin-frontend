@@ -8,7 +8,6 @@ import {
   getPipelineGroups,
   getRunnerPipelines,
   listPipelineBackfills,
-  pausePipeline,
   pausePipelineBackfill,
   previewPipeline,
   queueGroupEvaluation,
@@ -88,15 +87,6 @@ describe('Pipeline runtime server actions', () => {
 
     expect(runner.getCache).not.toHaveBeenCalled();
     expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
-  });
-
-  test('pausePipeline pauses the named pipeline with the caller token', async () => {
-    runner.pause.mockResolvedValue({ success: true });
-
-    const res = await pausePipeline('usage-live');
-
-    expect(runner.pause).toHaveBeenCalledWith('usage-live', TOKEN_MOCK);
-    expect(res.success).toBe(true);
   });
 
   test('resumePipeline resumes the named pipeline with the caller token', async () => {

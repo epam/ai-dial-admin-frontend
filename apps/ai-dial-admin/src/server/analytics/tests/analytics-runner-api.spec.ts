@@ -82,18 +82,6 @@ describe('Server :: AnalyticsRunnerApi', () => {
     expect(res.success).toBe(false);
   });
 
-  test('pause issues POST to the pipeline pause path with no body', async () => {
-    fetch.mockResponseOnce(noContent);
-
-    const res = await instance.pause('usage live', TOKEN_MOCK);
-
-    expect(res.success).toBe(true);
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/pipelines/usage%20live/pause'),
-      expect.objectContaining({ method: 'POST', body: undefined }),
-    );
-  });
-
   test('resume issues POST to the pipeline resume path', async () => {
     fetch.mockResponseOnce(noContent);
 

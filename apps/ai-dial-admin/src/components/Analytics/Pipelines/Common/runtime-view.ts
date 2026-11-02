@@ -17,6 +17,7 @@ const STATUS_OF_STATE: Record<PipelineRuntimeState, PipelineRuntimeStatus> = {
   [PipelineRuntimeState.Held]: PipelineRuntimeStatus.Held,
   [PipelineRuntimeState.OverBudget]: PipelineRuntimeStatus.OverBudget,
   [PipelineRuntimeState.Backpressured]: PipelineRuntimeStatus.Backpressured,
+  [PipelineRuntimeState.Stopped]: PipelineRuntimeStatus.NotTracked,
 };
 
 /**
@@ -58,25 +59,6 @@ export const runtimeStatusOfView = (
   if (!read.view) return PipelineRuntimeStatus.Unknown;
 
   return STATUS_OF_STATE[read.view.status.state] ?? PipelineRuntimeStatus.Running;
-};
-
-/**
- * Whether to offer the pause and resume controls.
- *
- * Deliberately **not** the same question as what the chip states. A read that did not land leaves the
- * console with nothing to state and the pipeline still running — and the moment an operator most wants
- * to stop a pipeline is the moment its runtime read is failing. Withholding the control there was the
- * regression that collapsing two runner reads into one introduced: the old pair failed independently,
- * and the rule written against it was to keep the affordance rather than withhold it on a guess.
- *
- * Two answers do withhold it. A pipeline the runner does not hold has no work to stop. And nothing is
- * offered before the first answer, so the control does not appear as `Pause` and then turn into
- * `Resume` a moment later on a pipeline that was paused all along.
- */
-export const isPauseOfferedFor = (read: PipelineRuntimeViewRead, isEnabled: boolean, kind: PipelineKind): boolean => {
-  if (!isEnabled || !isRunnerDriven(kind)) return false;
-
-  return read.outcome !== RuntimeReadOutcome.NotHeld && read.outcome !== RuntimeReadOutcome.Pending;
 };
 
 /**
