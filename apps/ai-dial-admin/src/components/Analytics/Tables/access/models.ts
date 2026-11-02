@@ -1,5 +1,6 @@
 import { QueryFilterNode } from '@/src/models/analytics/query';
 import { TableGrantKey } from '@/src/models/analytics/table';
+import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
 export enum PrivilegeMark {
   Stored = 'stored',
@@ -21,6 +22,12 @@ export interface RoleRow {
   isSensitive: boolean;
   rowsKind: RowsCellKind;
   filter?: QueryFilterNode;
+}
+
+// `name` is the bare provider role; `origin` is which of Core's populations supplied it after the merge.
+export interface CatalogRole {
+  name: string;
+  origin: ConfigEntityOrigin;
 }
 
 // `get` is the stored flag: while `read` or `modify` is on, the Get card shows as held without changing it.
