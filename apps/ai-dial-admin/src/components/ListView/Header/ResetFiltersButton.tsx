@@ -46,7 +46,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
   return (
     <GhostButton
       label={t(ButtonsI18nKey.ResetFilters)}
-      textClassName="whitespace-nowrap max-md:hidden"
+      textClassName="whitespace-nowrap mobile:hidden"
       iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
       onClick={onResetFilters}
     />
