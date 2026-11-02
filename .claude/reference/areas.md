@@ -115,6 +115,7 @@ The Dashboards item exists in both Analytics and Audit; `/dashboards` belongs to
 | `ConfigFiles` | — (toggle on the seven entity list views) | `Common/ConfigFilesToggle` |
 | `CatalogAvailability` | — (`catalog` token of `DISABLE_MENU_ITEMS` hiding the Core-direct items + dual-bucket root folders) | `Common/FileManager`, `Common/FilePath`, `Menu` |
 | `CatalogProperties` | — (catalog schema picker on entity properties) | `CatalogProperties` |
+| `Header` | — (app header on every page) | `Header`, `Breadcrumbs`, `Common/ReadOnlyBadge` |
 
 ---
 

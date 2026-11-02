@@ -76,6 +76,12 @@ export enum MenuI18nKey {
   AnalyticsSessions = 'Menu.AnalyticsSessions',
 }
 
+export enum HeaderI18nKey {
+  ToggleSidebar = 'Header.ToggleSidebar',
+  Help = 'Header.Help',
+  AccountSettings = 'Header.AccountSettings',
+}
+
 export enum ReadOnlyI18nKey {
   BannerTitle = 'ReadOnlyAdmin.BannerTitle',
   Description = 'ReadOnlyAdmin.Description',

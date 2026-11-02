@@ -1,21 +1,24 @@
-import { ConfirmationPopup, Dropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { ConfirmationPopup, Dropdown, DropdownItem, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { IconLogout, IconSettings } from '@tabler/icons-react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
-import { AuthI18nKey, GlobalI18nKey } from '@/src/constants/i18n';
+import { AuthI18nKey, SettingsModalI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useLogout } from '@/src/hooks/use-logout';
 import { useI18n } from '@/src/locales/client';
-import LogoutItem from './LogoutItem';
-import SettingsItem from './SettingsItem';
+import AvatarButton from '@/src/components/Header/User/AvatarButton';
 import { UserIcon } from './UserIcon';
+
+const settingsIcon = <IconSettings {...BASE_BUTTON_ICON_PROPS} aria-hidden />;
+const logoutIcon = <IconLogout {...BASE_BUTTON_ICON_PROPS} aria-hidden />;
 
 interface Props {
   isEnableAuth: boolean;
-  isMobile: boolean;
 }
 
-const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
+const UserMenu: FC<Props> = ({ isEnableAuth }) => {
   const t = useI18n();
   const dismissRef = useRef<{ dismiss: () => void }>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -55,53 +58,47 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
-  const dropdownItems: DropdownItem[] = useMemo(() => {
-    const res = [];
-    if (themes?.length) {
-      res.push({ key: 'settings', label: <SettingsItem />, onClick: handleSettingsClick });
-    }
+  const hasSettings = Boolean(themes?.length);
+  const settingsLabel = t(SettingsModalI18nKey.Settings);
+  const logoutLabel = session ? t(AuthI18nKey.Logout) : t(AuthI18nKey.Login);
+  const isLogoutDanger = Boolean(session);
 
-    if (isEnableAuth) {
-      res.push({
-        key: 'logout',
-        label: <LogoutItem session={session} />,
-        onClick: () => {
-          if (!session) {
-            handleLogout();
-          } else {
-            setIsLogoutConfirmationOpen(true);
-          }
-        },
-      });
-    }
-    return res;
-  }, [handleLogout, isEnableAuth, session, themes?.length]);
+  const dropdownItems: DropdownItem[] = [];
+  if (hasSettings) {
+    dropdownItems.push({ key: 'settings', label: settingsLabel, icon: settingsIcon, onClick: handleSettingsClick });
+  }
+  if (isEnableAuth) {
+    dropdownItems.push({
+      key: 'logout',
+      label: logoutLabel,
+      icon: logoutIcon,
+      danger: isLogoutDanger,
+      onClick: handleLogOutClick,
+    });
+  }
 
   return (
     <>
-      {isMobile ? (
-        <div className="flex flex-col gap-3 p-4 w-full">
-          {themes?.length && <SettingsItem onClick={handleSettingsClick} />}
-          {isEnableAuth && <LogoutItem session={session} onClick={handleLogOutClick} />}
-        </div>
-      ) : (
-        <Dropdown
-          listClassName="!w-[280px]"
-          onOpenChange={(open) => setIsOpen(open)}
-          items={dropdownItems}
-          menuHeader={
-            <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
-              <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
+      <Dropdown
+        listClassName="!w-[280px] mt-2"
+        placement="bottom-end"
+        onOpenChange={(open) => setIsOpen(open)}
+        items={dropdownItems}
+        menuHeader={
+          <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
+            <UserIcon />
 
-              <p className="dial-small-semi-text">{session?.user?.name}</p>
+            <div className="flex min-w-0 flex-col">
+              <EllipsisTooltip text={<span className="dial-small-semi-text">{session?.user?.name}</span>} />
+              {session?.user?.email && (
+                <EllipsisTooltip text={<span className="dial-tiny-text text-secondary">{session.user.email}</span>} />
+              )}
             </div>
-          }
-        >
-          <div role="menuitem" className="flex cursor-pointer items-center justify-between gap-2 pr-6">
-            <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
           </div>
-        </Dropdown>
-      )}
+        }
+      >
+        <AvatarButton isActive={isOpen} tooltip={session?.user?.name ?? undefined} />
+      </Dropdown>
       {isLogoutConfirmationOpen && (
         <ConfirmationPopup
           open={isLogoutConfirmationOpen}

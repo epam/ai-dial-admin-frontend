@@ -34,6 +34,7 @@ import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
 import { isValueTruthy } from '@/src/utils/types';
 import { normalizeUrl } from '@/src/utils/url';
+import { getAppName } from '@/src/utils/env/get-app-name';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -90,11 +91,12 @@ export default async function Layout({ children, params }: { children: ReactNode
                         <Header
                           isEnableAuth={isEnableAuth}
                           docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                          appName={getAppName()}
                         />
                         <div className="flex-1 min-h-0">
                           <div className="flex flex-row h-full relative">
                             <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                            <Content isEnableAuth={isEnableAuth}>{children}</Content>
+                            <Content>{children}</Content>
                           </div>
                         </div>
                       </div>
