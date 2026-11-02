@@ -131,7 +131,6 @@ For work with no feature home, use a technical area:
 | `infra` | CI, scripts, Docker, agent tooling (`.claude`, `.github`, `.cursor`) |
 | `openspec` | Specification framework (`openspec/specs`, `openspec/changes`) |
 | `theming` | Color tokens, global SCSS, chart/editor palettes (`src/scss`, theme-token consumers across components) |
-| `Grid` | Shared data grid (`src/components/Grid`) |
 
 ---
 
