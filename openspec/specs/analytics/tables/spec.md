@@ -2628,3 +2628,32 @@ a table schema", "Table detail row writes" and "Connect panel snippets are gener
 - **WHEN** an `ACTIVE` table's schema reports a column typed `map`
 - **THEN** the columns grid shows its type as Map
 - **AND** its type badge uses a colour distinct from an Object column's
+
+### Requirement: A source column that keys an enrichment cannot be renamed or dropped
+
+The detail page of an `ACTIVE` **source** table SHALL determine which of its columns are the grain key of an enrichment, from the enrichments the service lists as built on this table: an enrichment's own definition names its grain key, and a column whose source name equals it is locked. For each such column the page SHALL lock the two changes the service refuses — renaming and dropping — and SHALL leave every other edit available. The edit modal's Name field SHALL be disabled and SHALL state, next to the field, that the column is the grain key of the named enrichment and that the enrichment has to be dropped first if the column has to change. The columns grid SHALL NOT allow the column's name to be edited inline, and the column's drop action SHALL NOT be offered. The column's display name, tag, description and sensitive fields SHALL remain editable. When the listing or an enrichment's definition cannot be read, the page SHALL apply no lock on that account and SHALL leave the service's own rejection to explain the refusal.
+
+#### Scenario: The name of a column that keys an enrichment is locked in the edit modal
+
+- **WHEN** the user opens the edit modal for a column of an `ACTIVE` source table that is the grain key of an enrichment
+- **THEN** the Name field is disabled
+- **AND** a note beside it names the enrichment and says it has to be dropped first for the column to change
+- **AND** the display name, tag, description and sensitive fields remain editable
+
+#### Scenario: A column that keys an enrichment is not renamed inline or dropped
+
+- **WHEN** the columns grid of an `ACTIVE` source table shows a column that is the grain key of an enrichment
+- **THEN** double-clicking the column's name does not start an edit
+- **AND** the column's action menu does not offer drop
+
+#### Scenario: A column that keys no enrichment stays editable
+
+- **WHEN** the user opens the edit modal for a column that no enrichment uses as its grain key
+- **THEN** the Name field is enabled and no enrichment note is shown
+
+#### Scenario: An unreadable table listing leaves the columns unlocked
+
+- **WHEN** the tables listing, or the definition of an enrichment it names, cannot be read while the detail page of an `ACTIVE` source table renders
+- **THEN** no column is locked on account of an enrichment
+- **AND** the page still renders and the other restrictions apply as before
+
