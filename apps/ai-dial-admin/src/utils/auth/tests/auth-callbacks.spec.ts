@@ -166,6 +166,58 @@ describe('callbacks.jwt', () => {
     expect(first.sessionKey).not.toBe(second.sessionKey);
   });
 
+  describe('profile picture', () => {
+    const signIn = (picture: unknown, provider = 'google') =>
+      callbacks.jwt!({
+        token: { picture, sub: 'sub-1' },
+        account: { provider, access_token: 'access', expires_in: 1800 },
+        user: { id: 'sub-1' },
+      } as any);
+
+    test('keeps an http(s) picture in the token', async () => {
+      const result = await signIn('https://example.com/a.png');
+
+      expect(result.picture).toBe('https://example.com/a.png');
+      expect(result.hasInlinePicture).toBe(false);
+    });
+
+    test('moves an inline picture out of the token into a flag', async () => {
+      const result = await signIn('data:image/jpeg;base64,AAAA');
+
+      expect(result.picture).toBeUndefined();
+      expect(result.hasInlinePicture).toBe(true);
+    });
+
+    test('falls back to Keycloak UserInfo when the token has no picture', async () => {
+      const userinfo = vi.fn().mockResolvedValue({ sub: 'sub-1', picture: 'data:image/png;base64,AAAA' });
+      vi.spyOn(NextClient, 'getClient').mockReturnValue({ userinfo } as any);
+
+      const result = await signIn(undefined, 'keycloak');
+
+      expect(userinfo).toHaveBeenCalledWith('access');
+      expect(result.hasInlinePicture).toBe(true);
+    });
+
+    test('ignores UserInfo for a different subject', async () => {
+      const userinfo = vi.fn().mockResolvedValue({ sub: 'other', picture: 'https://example.com/a.png' });
+      vi.spyOn(NextClient, 'getClient').mockReturnValue({ userinfo } as any);
+
+      const result = await signIn(undefined, 'keycloak');
+
+      expect(result.picture).toBeUndefined();
+      expect(result.hasInlinePicture).toBe(false);
+    });
+
+    test('points the session image at the picture route when the picture is inline', async () => {
+      const session = await callbacks.session!({
+        session: { user: { name: 'A' } },
+        token: { hasInlinePicture: true, providerId: 'keycloak', user: {} },
+      } as any);
+
+      expect(session.user?.image).toBe('/api/auth/me/picture');
+    });
+  });
+
   test('refreshes a token that expires within the safety margin', async () => {
     const refresh = mockClient(idpResponse());
     const token = expiredToken({ accessTokenExpires: Date.now() + ACCESS_TOKEN_EXPIRY_MARGIN_MS / 2 });
