@@ -34,7 +34,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
     };
   }, [gridApi]);
 
-  const resetFilters = () => {
+  const onResetFilters = () => {
     if (gridApi) {
       gridApi.setFilterModel(null);
       setFiltersActive(false);
@@ -48,7 +48,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
       label={t(ButtonsI18nKey.ResetFilters)}
       textClassName="whitespace-nowrap max-md:hidden"
       iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-      onClick={resetFilters}
+      onClick={onResetFilters}
     />
   );
 };
