@@ -14,6 +14,18 @@ export const ROW_DETAIL_PIVOT_SCORE_COL_WIDTH = 124;
 export const ROW_DETAIL_PIVOT_DEFAULT_COL_WIDTH = 200;
 export const ROW_DETAIL_PIVOT_TEXT_COL_WIDTH = 320;
 
+export const ROW_DETAIL_FIELD_COL_MIN = 212;
+export const ROW_DETAIL_HEADER_HEIGHT = 40;
+/** Keeps the section toggle row in view when pinning a field below sticky chrome. */
+export const ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP = 48;
+
+export const ROW_DETAIL_HEADER_CELL_BASE =
+  'sticky top-0 z-10 bg-layer-1 h-10 px-3 border-b border-r border-secondary flex items-center';
+/** Height defaults to the compact 28px filter row; callers override it with a later `h-*` class. */
+export const ROW_DETAIL_FILTER_CELL_BASE =
+  'sticky z-10 bg-layer-2 h-7 border-b border-r border-secondary flex items-center';
+export const ROW_DETAIL_FIELD_INDENT = 'pl-16';
+
 export const ROW_DETAIL_EXECUTION_SECTION_KEY = 'execution';
 export const ROW_DETAIL_RUN_NUMBER_FIELD_KEY = 'runNumber';
 export const ROW_DETAIL_HTTP_FIELD_KEY = 'httpStatusCode';
@@ -25,3 +37,8 @@ export const ROW_DETAIL_HTTP_LABEL = 'HTTP';
 
 /** Execution Result pivot defaults — Duration hidden; Request/Response bodies visible. */
 export const EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS = new Set<string>([ROW_DETAIL_DURATION_FIELD_KEY]);
+
+/** Keys of a leaf's `metricInfos` entry that the compare score view shows. */
+export const METRIC_INFO_REASON_KEY = 'reason';
+export const METRIC_INFO_LOGS_KEY = 'verbose_logs';
+export const METRIC_INFO_ERROR_KEY = 'error';

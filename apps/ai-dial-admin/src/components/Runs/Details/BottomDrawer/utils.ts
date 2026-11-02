@@ -1,4 +1,5 @@
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { getMetricFieldInfo } from '@/src/components/Runs/Details/RowDetails/utils/metric-field-info';
 import { MetricBinding, MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { serializeValue } from '@/src/utils/serialize';
@@ -153,12 +154,17 @@ export function buildComparisonSections(
     const rows: ComparisonRow[] = [...fieldKeys].map((fieldKey) => {
       const activeRaw = serializeValue(activeGroup?.[fieldKey]);
       const pinnedRaw = serializeValue(pinnedGroup?.[fieldKey]);
-      const values: ComparisonRow['values'] = hasTwoResults
-        ? [
-            { raw: activeRaw, isFailed: activeGroupExists && activeRaw === null },
-            { raw: pinnedRaw, isFailed: pinnedGroupExists && pinnedRaw === null },
-          ]
-        : [{ raw: activeRaw, isFailed: activeGroupExists && activeRaw === null }];
+      const activeCell = {
+        raw: activeRaw,
+        isFailed: activeGroupExists && activeRaw === null,
+        info: getMetricFieldInfo(active.metricInfos?.[groupKey], fieldKey),
+      };
+      const pinnedCell = {
+        raw: pinnedRaw,
+        isFailed: pinnedGroupExists && pinnedRaw === null,
+        info: getMetricFieldInfo(effectivePinned?.metricInfos?.[groupKey], fieldKey),
+      };
+      const values: ComparisonRow['values'] = hasTwoResults ? [activeCell, pinnedCell] : [activeCell];
 
       return {
         fieldKey,

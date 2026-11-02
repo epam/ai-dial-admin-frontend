@@ -5,13 +5,10 @@ import { ChangeEvent, FC } from 'react';
 import classNames from 'classnames';
 
 import NumericFilterDropdown from '@/src/components/Grid/Filter/NumericFilterDropdown';
-import { ROW_DETAIL_FILTER_CELL_BASE } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
-import {
-  RowDetailDeltaFilter,
-  RowDetailFieldFilter,
-  RowDetailRunFilter,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
-import TextFilterCell from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/TextFilterCell';
+import { RowDetailRunFilter } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { ROW_DETAIL_FILTER_CELL_BASE } from '@/src/components/Runs/Details/RowDetails/constants';
+import { RowDetailDeltaFilter, RowDetailFieldFilter } from '@/src/components/Runs/Details/RowDetails/models';
+import TextFilterCell from '@/src/components/Runs/Details/RowDetails/TextFilterCell';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 

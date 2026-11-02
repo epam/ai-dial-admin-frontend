@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import FullscreenValueViewer from '@/src/components/Runs/View/RowDetails/FullscreenValueViewer';
@@ -18,6 +19,34 @@ describe('FullscreenValueViewer', () => {
     renderViewer({ value: '{"a":1}' });
 
     expect(screen.getByText(/"a": 1/)).toBeTruthy();
+  });
+
+  test('shows text that only looks like JSON as it is', () => {
+    renderViewer({ value: '[not json' });
+
+    expect(screen.getByText('[not json')).toBeTruthy();
+  });
+
+  test('shows escaped newlines in a plain string without reformatting them', () => {
+    renderViewer({ value: 'first\\n\\nsecond' });
+
+    expect(screen.getByText('first\\n\\nsecond')).toBeTruthy();
+  });
+
+  test('shows the value in the monospace code style and keeps its line breaks', () => {
+    renderViewer({ value: 'line one\nline two' });
+
+    const body = screen.getByText(/line one/);
+    expect(body).toHaveClass('dial-code-text', 'whitespace-pre-wrap');
+  });
+
+  test('offers a close control that closes the viewer', async () => {
+    const onClose = vi.fn();
+    renderViewer({ onClose });
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /close/i }));
+
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   test('renders nothing while closed', () => {
