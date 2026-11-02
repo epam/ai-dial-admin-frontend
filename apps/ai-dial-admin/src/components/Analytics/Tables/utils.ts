@@ -1,3 +1,4 @@
+import { KeyedEnrichments } from '@/src/components/Analytics/Tables/models';
 import {
   ANALYTICS_DESCRIPTION_MAX_LENGTH,
   ANALYTICS_DISPLAY_NAME_MAX_LENGTH,
@@ -254,19 +255,41 @@ export const buildColumnEditPatch = (
   return Object.keys(patch).length ? patch : null;
 };
 
-export const isRenameRestricted = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
+export const getKeyedEnrichments = (sourceName: string, enrichments: AnalyticsTable[]): KeyedEnrichments =>
+  enrichments.reduce<KeyedEnrichments>((keyed, enrichment) => {
+    const grainKey = enrichment.grain?.grain_key;
+    if (enrichment.type === AnalyticsTableType.Enrichment && enrichment.source_table === sourceName && grainKey) {
+      keyed[grainKey] ??= enrichment.name;
+    }
+    return keyed;
+  }, Object.create(null));
+
+export const isKeyedColumn = (column: AnalyticsTableColumn, keyedEnrichments: KeyedEnrichments): boolean =>
+  Object.hasOwn(keyedEnrichments, column.source_name);
+
+export const isRenameRestricted = (
+  table: AnalyticsTable,
+  column: AnalyticsTableColumn,
+  keyedEnrichments: KeyedEnrichments = {},
+): boolean =>
   column.source_name.startsWith('_') ||
   column.source_name === table.grain?.grain_key ||
   column.source_name === table.partition_by?.column ||
-  Boolean(table.ordering_key?.includes(column.source_name));
+  Boolean(table.ordering_key?.includes(column.source_name)) ||
+  isKeyedColumn(column, keyedEnrichments);
 
 export const isScanMetadataColumn = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
   column.source_name === table.identity_column || column.source_name === table.version_column;
 
-export const isDropRestrictedColumn = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
+export const isDropRestrictedColumn = (
+  table: AnalyticsTable,
+  column: AnalyticsTableColumn,
+  keyedEnrichments: KeyedEnrichments = {},
+): boolean =>
   isScanMetadataColumn(table, column) ||
   column.source_name === table.partition_by?.column ||
-  Boolean(table.ordering_key?.includes(column.source_name));
+  Boolean(table.ordering_key?.includes(column.source_name)) ||
+  isKeyedColumn(column, keyedEnrichments);
 
 export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
   rows
