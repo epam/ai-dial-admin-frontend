@@ -33,6 +33,7 @@ export const PIPELINE_PAUSE_REASON_MESSAGE: Record<PipelineBackfillPauseReason, 
   [PipelineBackfillPauseReason.CursorStalled]: BackfillI18nKey.PauseReasonCursorStalled,
   [PipelineBackfillPauseReason.PipelineAbsent]: BackfillI18nKey.PauseReasonPipelineAbsent,
   [PipelineBackfillPauseReason.PipelineChanged]: BackfillI18nKey.PauseReasonPipelineChanged,
+  [PipelineBackfillPauseReason.PipelineStopped]: BackfillI18nKey.PauseReasonPipelineStopped,
 };
 
 /**

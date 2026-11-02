@@ -21,7 +21,6 @@ import { BaseApi } from '@/src/server/base-api';
 export const RUNNER_PIPELINES_URL = 'v1/pipelines';
 export const RUNNER_PAUSED_URL = `${RUNNER_PIPELINES_URL}/paused`;
 export const RUNNER_CACHE_URL = `${RUNNER_PIPELINES_URL}/cache`;
-export const RUNNER_PAUSE_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/pause`;
 export const RUNNER_RESUME_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/resume`;
 export const RUNNER_RUNTIME_URL = (name: string): string =>
   `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/runtime`;
@@ -130,9 +129,9 @@ export class AnalyticsRunnerApi extends BaseApi {
   }
 
   /**
-   * The pipelines the runner has taken on. It admits one only when the pipeline is enabled and it can
-   * execute it, then schedules the recurring work from that set — so membership is the difference
-   * between a pipeline something is driving and one that only looks healthy in the registry.
+   * The pipelines the runner holds, stopped ones marked `enabled: false`. It admits one only when it can
+   * execute it and schedules the recurring work from the enabled entries — so enabled membership is the
+   * difference between a pipeline something is driving and one that only looks healthy in the registry.
    */
   async getCache(token: Token): Promise<ServerActionResponse<RunnerPipelineEntry[]>> {
     const res = await this.getAction(RUNNER_CACHE_URL, token);
@@ -160,12 +159,8 @@ export class AnalyticsRunnerApi extends BaseApi {
     return view?.status?.state ? { ...res, response: view } : { ...res, success: false };
   }
 
-  // Both verbs answer 204 with no body, so neither sends one: a JSON object here would be a body the
-  // endpoint does not read and a content type it did not ask for.
-  pause(name: string, token: Token): Promise<ServerActionResponse> {
-    return this.sendActionRequest(RUNNER_PAUSE_URL(name), 'POST', token);
-  }
-
+  // Answers 204 with no body, so it sends none: a JSON object here would be a body the endpoint does not
+  // read and a content type it did not ask for.
   resume(name: string, token: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(RUNNER_RESUME_URL(name), 'POST', token);
   }

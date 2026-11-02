@@ -57,8 +57,7 @@ const PipelinePauseBanner: FC<Props> = ({ pause, isResuming, onResume }) => {
     isBreaker ? t(AnalyticsPipelinesI18nKey.PausedByBreaker) : null,
     // The evidence the breaker tripped on — how much of the recent work was dead-lettered — presented as
     // the service worded it, because the threshold and the window are its configuration and a console
-    // that restated them would be quoting a copy. Not for an operator pause: the service records a fixed
-    // string there saying only that an operator paused it, which the sentence above already says.
+    // that restated them would be quoting a copy.
     isBreaker && pause.reason ? t(AnalyticsPipelinesI18nKey.PausedReason, { reason: pause.reason }) : null,
     isBreaker && resumesAt ? t(AnalyticsPipelinesI18nKey.PausedResumesAt, { time: resumesAt }) : null,
   ]

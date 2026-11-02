@@ -46,6 +46,25 @@ describe('usePausedPipelines', () => {
     expect(result.current.tracked.has('usage-live')).toBe(true);
   });
 
+  test('tracks the cache entries the runner does not list as disabled', async () => {
+    read.mockResolvedValue({ success: true, response: [] });
+    readCache.mockResolvedValue({
+      success: true,
+      response: [
+        { name: 'usage-live', enabled: true, generation: 1 },
+        { name: 'usage-stopped', enabled: false, generation: 1 },
+        { name: 'usage-unflagged', generation: 1 },
+      ],
+    });
+
+    const { result } = renderHook(() => usePausedPipelines());
+
+    await waitFor(() => expect(result.current.isTrackingRead).toBe(true));
+    expect(result.current.tracked.has('usage-live')).toBe(true);
+    expect(result.current.tracked.has('usage-stopped')).toBe(false);
+    expect(result.current.tracked.has('usage-unflagged')).toBe(true);
+  });
+
   // The runner authorizes its reads on full-admin rights, so a request from anyone else is one the
   // service would refuse — and a 403 in the log of every read-only admin who opens a pipeline.
   test('issues no request for a caller who is not a full admin', async () => {
@@ -59,7 +78,7 @@ describe('usePausedPipelines', () => {
   });
 
   // The two reads fail independently: a runner that does not serve the cache listing must still let an
-  // operator pause, which withholding everything on one failure took away.
+  // operator resume, which withholding everything on one failure took away.
   test('keeps the pauses when the cache listing could not be read', async () => {
     read.mockResolvedValue({ success: true, response: [PAUSE] });
     readCache.mockResolvedValue({ success: false });
