@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
 import { getMetricStatCards } from '@/src/components/Runs/Summary/utils';
@@ -121,3 +122,13 @@ export const maxBarValue = (
   );
   return Math.max(1, ...values);
 };
+
+/** A rate as a percentage with one decimal, the unit the rate card's diff badge is measured in. */
+export const toRatePercent = (rate: number | null): number | null =>
+  rate == null ? null : Math.round(rate * 1000) / 10;
+
+/** A value for each compared run, keyed by its slot. */
+export const toSlotRecord = <T>(primary: T, compared: T): Record<CompareRunSlot, T> => ({
+  [CompareRunSlot.Primary]: primary,
+  [CompareRunSlot.Secondary]: compared,
+});
