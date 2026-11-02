@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
 import {
   getCompareBarGroups,
   getCompareMetricStatCards,
   unionStatistics,
   maxBarValue,
+  toRatePercent,
+  toSlotRecord,
   unionMetricOptions,
 } from '../utils';
 
@@ -121,5 +124,27 @@ describe('Compare Summary :: utils', () => {
     expect(maxBarValue({ a: 0.2 }, { a: 0.5 })).toBe(1);
     expect(maxBarValue({ a: 1.2 }, { a: 0.5 })).toBe(1.2);
     expect(maxBarValue({ a: null }, { a: 1.5 })).toBe(1.5);
+  });
+});
+
+describe('toRatePercent', () => {
+  test('converts a fraction to a one-decimal percentage', () => {
+    expect(toRatePercent(0.985)).toBe(98.5);
+    expect(toRatePercent(0.125)).toBe(12.5);
+    expect(toRatePercent(1)).toBe(100);
+  });
+
+  test('is null for a missing rate', () => {
+    expect(toRatePercent(null)).toBeNull();
+  });
+});
+
+describe('toSlotRecord', () => {
+  test('keys the baseline value under the primary slot and the other under the secondary slot', () => {
+    expect(toSlotRecord('a', 'b')).toEqual({ [CompareRunSlot.Primary]: 'a', [CompareRunSlot.Secondary]: 'b' });
+  });
+
+  test('keeps undefined values so a missing suite stays missing', () => {
+    expect(toSlotRecord(undefined, 'b')[CompareRunSlot.Primary]).toBeUndefined();
   });
 });
