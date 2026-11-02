@@ -105,7 +105,8 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       const { href, key, name, callback, hiddenBreadcrumbs } = breadcrumb;
       const label = key ? t(key) : name;
       const linkClassName = classNames(
-        'flex-1 min-w-0 text-secondary relative group-[:last-child]:text-primary',
+        'flex-1 min-w-0 rounded text-secondary relative group-[:last-child]:text-primary',
+        'focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus',
         'group-[:last-child]:cursor-default group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
         !href.length && 'pointer-events-none',
       );
@@ -144,8 +145,8 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   return (
     <div
       className={classNames(
-        'flex-row items-center pr-4 pl-10',
-        mobile ? 'lg:hidden flex md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
+        'flex-row items-center pr-4',
+        mobile ? 'lg:hidden flex pl-10 md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
       )}
     >
       <ol className="flex dial-tiny-text whitespace-nowrap">
