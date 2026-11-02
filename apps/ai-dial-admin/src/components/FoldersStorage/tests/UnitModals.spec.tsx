@@ -60,11 +60,11 @@ describe('NewUnitModal', () => {
   });
 
   test.each([
-    [400, '"roles" is reserved. Choose another name.'],
-    [409, 'public/Acme already has a folder named Policies. Choose another name.'],
-  ])('shows core %s message next to the name and stays open', async (status, message) => {
+    [400, '"roles" is reserved. Choose another name.', '"roles" is reserved. Choose another name.'],
+    [409, 'public/Acme already has a unit named roles', FoldersI18nKey.UnitNameExists],
+  ])('shows the %s error next to the name and stays open', async (status, errorMessage, message) => {
     const user = userEvent.setup();
-    vi.mocked(createOrgUnit).mockResolvedValue({ success: false, status, errorMessage: message });
+    vi.mocked(createOrgUnit).mockResolvedValue({ success: false, status, errorMessage });
     const onCreated = vi.fn();
     renderModal(onCreated);
 

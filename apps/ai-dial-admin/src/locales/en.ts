@@ -1222,6 +1222,7 @@ export default {
       UnitDisplayName: 'Display name',
       UnitDisplayNamePlaceholder: 'Enter display name',
       UnitDisplayNameTooLong: 'Display name can have at most 128 characters.',
+      UnitNameExists: 'A unit with this name already exists in this location',
       NewUnitBlockedNotUnit: 'Units can only be created at the top of the shared space or in another unit.',
       NewUnitBlockedDepth: 'Units can be at most 4 levels deep.',
       RenameUnit: 'Rename unit',

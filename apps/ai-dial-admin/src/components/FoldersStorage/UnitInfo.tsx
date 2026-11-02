@@ -78,10 +78,17 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
   return (
     <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-wrap justify-between items-center w-full gap-3">
-        <div className="flex flex-1 min-w-0 items-center gap-3">
-          <h2 className="min-w-0">
-            <EllipsisTooltip contentClassName="truncate" text={unit.displayName || unit.name} />
-          </h2>
+        <div className="flex flex-1 min-w-0 items-start gap-3">
+          <div className="flex min-w-0 flex-col">
+            <h2 className="min-w-0">
+              <EllipsisTooltip contentClassName="truncate" text={unit.name} />
+            </h2>
+            {unit.displayName && (
+              <span className="dial-small-text text-secondary min-w-0">
+                <EllipsisTooltip contentClassName="truncate" text={unit.displayName} />
+              </span>
+            )}
+          </div>
           <Tag label={t(FoldersI18nKey.UnitBadge)} appearance={TagAppearance.Bordered} />
         </div>
         {!isReadonly &&
