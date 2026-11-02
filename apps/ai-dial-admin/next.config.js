@@ -87,18 +87,27 @@ const nextConfig = {
   },
   poweredByHeader: false,
   async headers() {
-    return [
+    const securityHeaders = [
       {
-        source: '/((?!api/v1).*)',
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'DENY',
+      },
+    ];
+
+    return [
+      // Theme images set their own Cache-Control in the route; a config header here would override it.
+      {
+        source: '/api/themes/:path*',
+        headers: securityHeaders,
+      },
+      {
+        source: '/((?!api/v1|api/themes).*)',
         headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
+          ...securityHeaders,
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate', // Adjust as needed

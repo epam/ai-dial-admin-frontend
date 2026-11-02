@@ -1,9 +1,14 @@
 export default {
   User: 'User',
+  Header: {
+    ToggleSidebar: 'Toggle sidebar',
+    Help: 'Help',
+    AccountSettings: 'Account settings',
+  },
   ReadOnlyAdmin: {
     BannerTitle: 'Read-only mode access',
-    Description: 'No changes can be made. Access is managed by administrator',
-    BadgeLabel: 'READ ONLY',
+    Description: 'No changes can be made. Access is managed by administrator.',
+    BadgeLabel: 'Read only',
   },
   Home: {
     Title: 'Powering Artificial Intelligence with DIAL',

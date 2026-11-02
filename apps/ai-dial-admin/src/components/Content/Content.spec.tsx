@@ -31,7 +31,7 @@ describe('Content', () => {
 
   test('renders children', () => {
     render(
-      <Content isEnableAuth={true}>
+      <Content>
         <div>Test Content</div>
       </Content>,
     );
@@ -40,7 +40,7 @@ describe('Content', () => {
 
   test('clips the shell without making it scrollable', () => {
     render(
-      <Content isEnableAuth={true}>
+      <Content>
         <div>Test Content</div>
       </Content>,
     );
@@ -53,7 +53,7 @@ describe('Content', () => {
 
   test('renders the Footer and polls status/core-version/BE-version when the admin API is enabled', async () => {
     render(
-      <Content isEnableAuth={false}>
+      <Content>
         <div>Test Content</div>
       </Content>,
     );
@@ -68,7 +68,7 @@ describe('Content', () => {
     adminApiEnabled.value = false;
     (getCoreVersions as any).mockResolvedValue({ response: { autoDetectedVersion: '1.2.3' } });
     render(
-      <Content isEnableAuth={false}>
+      <Content>
         <div>Test Content</div>
       </Content>,
     );
@@ -83,7 +83,7 @@ describe('Content', () => {
     vi.useFakeTimers();
     adminApiEnabled.value = false;
     render(
-      <Content isEnableAuth={false}>
+      <Content>
         <div>Test Content</div>
       </Content>,
     );

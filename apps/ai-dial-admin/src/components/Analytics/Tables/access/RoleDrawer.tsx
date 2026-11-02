@@ -78,8 +78,10 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
   const roleOptions = useMemo(() => {
     const taken = new Set(access.rows.map((row) => row.role));
 
-    return catalogRoles.filter((name) => !taken.has(name)).map((name) => ({ value: name, label: name }));
-  }, [catalogRoles, access.rows]);
+    return catalogRoles
+      .filter((name) => name === role || !taken.has(name))
+      .map((name) => ({ value: name, label: name }));
+  }, [catalogRoles, access.rows, role]);
 
   const canSave =
     !isSaving &&
@@ -144,7 +146,7 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
 
   const banners = (keys: TableGrantKey[]) =>
     ineffectiveGrants
-      .filter((grant) => keys.includes(grant.key))
+      .filter((grant) => grant.role === role && keys.includes(grant.key))
       .map((grant) => (
         <Notification
           key={`${grant.key}:${grant.reason}`}
