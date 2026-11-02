@@ -1,10 +1,10 @@
+import { KeyedEnrichments } from '@/src/components/Analytics/Tables/models';
 import {
   ANALYTICS_DESCRIPTION_MAX_LENGTH,
   ANALYTICS_DISPLAY_NAME_MAX_LENGTH,
   ANALYTICS_TAG_MAX_LENGTH,
   PARTITION_NONE,
 } from '@/src/constants/analytics/tables';
-import { KeyedEnrichments } from '@/src/components/Analytics/Tables/models';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ApplicationRoute } from '@/src/types/routes';
