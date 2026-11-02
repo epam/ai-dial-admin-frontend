@@ -146,7 +146,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
     <div
       className={classNames(
         'flex-row items-center pr-4',
-        mobile ? 'lg:hidden flex pl-10 md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
+        mobile ? 'lg:hidden flex shrink-0 pl-10 md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
       )}
     >
       <ol className="flex dial-tiny-text whitespace-nowrap">
