@@ -172,6 +172,8 @@ export const buildRowDetailSections = (
         secondaryRaw,
         primaryFailed: row.values[0]?.isFailed,
         secondaryFailed: row.values[1]?.isFailed,
+        primaryInfo: row.values[0]?.info,
+        secondaryInfo: hasCompared ? row.values[1]?.info : undefined,
         diffKind: getFieldDiffKind(primaryRaw, secondaryRaw, row.isNumeric, hasCompared),
         isNumeric: row.isNumeric,
         isScoreIndicator:

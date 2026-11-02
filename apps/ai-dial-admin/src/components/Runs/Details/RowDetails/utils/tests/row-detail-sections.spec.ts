@@ -69,6 +69,32 @@ describe('buildRowDetailSections', () => {
     expect(precisionRow?.isScoreIndicator).toBe(true);
   });
 
+  test('carries each run’s metric info onto the field', () => {
+    const sections = buildRowDetailSections(
+      { ...primaryResult, metricInfos: { Accuracy: { precision: { reason: 'primary reason' } } } },
+      { ...comparedResult, metricInfos: { Accuracy: { precision: { verbose_logs: 'secondary logs' } } } },
+    );
+    const precisionRow = sections
+      .find((section) => section.key === 'metric:Accuracy')
+      ?.rows.find((row) => row.fieldKey === 'precision');
+
+    expect(precisionRow?.primaryInfo).toEqual({ reason: 'primary reason', logs: null, error: null });
+    expect(precisionRow?.secondaryInfo).toEqual({ reason: null, logs: 'secondary logs', error: null });
+  });
+
+  test('leaves secondary info empty without a compared result', () => {
+    const sections = buildRowDetailSections(
+      { ...primaryResult, metricInfos: { Accuracy: { precision: { reason: 'primary reason' } } } },
+      null,
+    );
+    const precisionRow = sections
+      .find((section) => section.key === 'metric:Accuracy')
+      ?.rows.find((row) => row.fieldKey === 'precision');
+
+    expect(precisionRow?.primaryInfo?.reason).toBe('primary reason');
+    expect(precisionRow?.secondaryInfo).toBeUndefined();
+  });
+
   test('orders execution fields as status, run number, HTTP, duration', () => {
     const sections = buildRowDetailSections(primaryResult, comparedResult);
     const execution = sections.find((section) => section.key === 'execution');
@@ -174,6 +200,23 @@ describe('buildRowDetailSections', () => {
     const counts = countRowDetailDiffs(sections);
 
     expect(counts.changed).toBeGreaterThan(0);
+  });
+
+  // The shape the eval service returns for a metric that failed to evaluate (run 3080, DeepEval: G-Eval).
+  test('carries the leaf-level error of a failed metric and marks the field failed', () => {
+    const failedResult: AnalyticsResult = {
+      ...primaryResult,
+      metricValues: { 'DeepEval: G-Eval': { score: null as never } },
+      metricInfos: { 'DeepEval: G-Eval': { score: { error: '422 Unprocessable Content' } } },
+    };
+
+    const sections = buildRowDetailSections(failedResult, null);
+    const scoreRow = sections
+      .find((section) => section.key === 'metric:DeepEval: G-Eval')
+      ?.rows.find((row) => row.fieldKey === 'score');
+
+    expect(scoreRow?.primaryFailed).toBe(true);
+    expect(scoreRow?.primaryInfo).toEqual({ reason: null, logs: null, error: '422 Unprocessable Content' });
   });
 });
 
