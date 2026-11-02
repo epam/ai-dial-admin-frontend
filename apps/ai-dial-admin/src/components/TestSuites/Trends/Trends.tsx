@@ -107,7 +107,6 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
       )}
       <KpiStrip
         runOrder={data.runOrder}
-        selectedTestSuite={selectedTestSuite}
         segments={testCaseSegments}
         costPoints={costPoints}
         runtimePoints={runtimePoints}

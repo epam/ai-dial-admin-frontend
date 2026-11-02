@@ -12,14 +12,12 @@ import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { formatScore, roundScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ChevronBadge } from '@/src/components/Common/ChevronBadge/ChevronBadge';
 
 const formatOverallScore = (value: number): string => roundScore(value).toFixed(3);
 
 interface Props {
   runOrder: TrendsRunPoint[];
-  selectedTestSuite: TestSuite;
   className?: string;
 }
 

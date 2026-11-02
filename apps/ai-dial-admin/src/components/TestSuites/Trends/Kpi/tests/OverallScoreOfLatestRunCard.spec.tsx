@@ -4,7 +4,6 @@ import { render, screen } from '@testing-library/react';
 import OverallScoreOfLatestRunCard from '@/src/components/TestSuites/Trends/Kpi/OverallScoreOfLatestRunCard';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Tooltip: ({
@@ -41,12 +40,7 @@ const runOrder: TrendsRunPoint[] = [
 
 describe('OverallScoreOfLatestRunCard', () => {
   test('shows latest overall score and delta vs previous run', () => {
-    render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
-      />,
-    );
+    render(<OverallScoreOfLatestRunCard runOrder={runOrder} />);
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('0.580')).toBeInTheDocument();
@@ -62,22 +56,14 @@ describe('OverallScoreOfLatestRunCard', () => {
   });
 
   test('shows above/below threshold tip on the score when suite has a threshold', () => {
-    render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
-      />,
-    );
+    render(<OverallScoreOfLatestRunCard runOrder={runOrder} />);
 
     expect(screen.getByText(TestSuitesI18nKey.TrendsOverallScoreBelowThresholdTooltip)).toBeInTheDocument();
   });
 
   test('hides the score tip when latest run snapshot has no threshold', () => {
     render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-      />,
+      <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))} />,
     );
 
     const scoreTip = screen.getAllByTestId('kpi-tooltip').find((node) => node.textContent?.includes('0.580'));
@@ -86,10 +72,7 @@ describe('OverallScoreOfLatestRunCard', () => {
 
   test('omits threshold glyph when latest run snapshot has no threshold', () => {
     const { container } = render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-      />,
+      <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))} />,
     );
 
     expect(container.querySelector('.bg-score-abs-11')).not.toBeInTheDocument();

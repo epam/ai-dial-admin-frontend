@@ -11,11 +11,9 @@ import { ComboTrendPoint, RunTestCaseSegments, TrendsRunPoint } from '@/src/comp
 import { formatSuiteRunTime } from '@/src/components/TestSuites/Trends/utils/format';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   runOrder: TrendsRunPoint[];
-  selectedTestSuite: TestSuite;
   segments: RunTestCaseSegments[];
   costPoints: ComboTrendPoint[];
   runtimePoints: ComboTrendPoint[];
@@ -33,7 +31,6 @@ const formatRuntimeValue = (value: number | null): string =>
 
 const KpiStrip: FC<Props> = ({
   runOrder,
-  selectedTestSuite,
   segments,
   costPoints,
   runtimePoints,
@@ -55,11 +52,7 @@ const KpiStrip: FC<Props> = ({
         isLoading={isEvalLoading}
         hasError={hasEvalError}
       />
-      <OverallScoreOfLatestRunCard
-        className="w-full xl:flex-1 xl:min-w-[180px]"
-        runOrder={runOrder}
-        selectedTestSuite={selectedTestSuite}
-      />
+      <OverallScoreOfLatestRunCard className="w-full xl:flex-1 xl:min-w-[180px]" runOrder={runOrder} />
       <LatestComboTotalCard
         className="w-full xl:flex-1 xl:min-w-[180px]"
         points={runtimePoints}
