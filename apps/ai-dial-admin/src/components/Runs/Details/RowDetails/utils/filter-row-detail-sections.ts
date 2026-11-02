@@ -1,9 +1,10 @@
 import {
   RowDetailDeltaFilter,
+  RowDetailField,
   RowDetailFieldFilter,
+  RowDetailSection,
   RowDetailValueFilter,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
-import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+} from '@/src/components/Runs/Details/RowDetails/models';
 import {
   getMetricDeltaSortValue,
   MetricDeltaKind,

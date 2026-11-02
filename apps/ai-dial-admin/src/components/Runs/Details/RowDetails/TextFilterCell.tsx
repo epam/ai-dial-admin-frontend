@@ -3,14 +3,11 @@
 import { ChangeEvent, FC } from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
-import classNames from 'classnames';
 
 import TextFilterDropdown from '@/src/components/Grid/Filter/TextFilterDropdown';
-import { ROW_DETAIL_FILTER_CELL_BASE } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
-import {
-  RowDetailFieldFilter,
-  RowDetailValueFilter,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { ROW_DETAIL_FILTER_CELL_BASE } from '@/src/components/Runs/Details/RowDetails/constants';
+import { RowDetailFieldFilter, RowDetailValueFilter } from '@/src/components/Runs/Details/RowDetails/models';
+import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   searchQuery: string;
@@ -19,6 +16,8 @@ interface Props {
   filter: RowDetailFieldFilter | RowDetailValueFilter | null;
   onFilterChange: (filter: RowDetailFieldFilter | RowDetailValueFilter | null) => void;
   filterTitle: string;
+  /** Overrides the compact default height, e.g. `h-10`. */
+  className?: string;
 }
 
 const TextFilterCell: FC<Props> = ({
@@ -28,8 +27,9 @@ const TextFilterCell: FC<Props> = ({
   filter,
   onFilterChange,
   filterTitle,
+  className,
 }) => (
-  <div className={classNames(ROW_DETAIL_FILTER_CELL_BASE, 'top-10 gap-2 pl-3 pr-2')}>
+  <div className={mergeClasses(ROW_DETAIL_FILTER_CELL_BASE, 'top-10 gap-2 pl-3 pr-2', className)}>
     <div className="flex-1 min-w-0 h-6 pl-2 flex flex-row items-center border border-primary rounded text-secondary">
       <IconSearch width={12} height={12} className="shrink-0" />
       <input
@@ -38,6 +38,7 @@ const TextFilterCell: FC<Props> = ({
         value={searchQuery}
         onChange={onSearchChange}
         placeholder={searchPlaceholder}
+        aria-label={searchPlaceholder}
       />
     </div>
     <TextFilterDropdown title={filterTitle} filter={filter} onChange={onFilterChange} />

@@ -1,0 +1,77 @@
+'use client';
+
+import { FC, useCallback, useState } from 'react';
+
+import OpenPopup from '@/public/images/icons/open-pop-up.svg';
+
+import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
+import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
+import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
+import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
+import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
+import {
+  EXECUTION_ROW_DETAIL_CELL_BASE,
+  EXECUTION_ROW_DETAIL_CLAMP_CLASS,
+} from '@/src/components/Runs/View/RowDetails/constants';
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { mergeClasses } from '@/src/utils/merge-classes';
+
+interface Props {
+  field: RowDetailField;
+  onOpen: (field: RowDetailField) => void;
+}
+
+const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
+  const t = useI18n();
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const raw = field.primaryRaw;
+  const isFailed = field.primaryFailed ?? false;
+  const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
+  const hasScore = !isStatusRow && getScoreFieldValue(raw, field.isScoreIndicator, isFailed) != null;
+
+  const onOpenFullValue = useCallback(() => onOpen(field), [onOpen, field]);
+
+  return (
+    <div
+      className={mergeClasses(
+        EXECUTION_ROW_DETAIL_CELL_BASE,
+        'group/cell',
+        isRightAlignedRowDetailField(field) && 'justify-end text-right',
+        hasScore ? 'p-0' : 'group-hover:bg-accent-primary-alpha',
+      )}
+    >
+      {isStatusRow ? (
+        <StatusValue raw={raw} />
+      ) : (
+        <FieldValue
+          raw={raw}
+          isFailed={isFailed}
+          isScoreIndicator={field.isScoreIndicator}
+          failedLabel={t(RunsI18nKey.MetricFailedText)}
+          clampClassName={EXECUTION_ROW_DETAIL_CLAMP_CLASS}
+          onOverflowChange={setIsOverflowing}
+        />
+      )}
+      {isOverflowing && (
+        <button
+          type="button"
+          onClick={onOpenFullValue}
+          aria-label={t(RunsI18nKey.OpenFullValue, { field: field.label })}
+          aria-haspopup="dialog"
+          className="group/open absolute inset-0 cursor-pointer outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus"
+        >
+          <span
+            className="absolute bottom-1 right-1 size-4 text-secondary opacity-0 transition-opacity group-hover/cell:opacity-100 group-focus-visible/open:opacity-100"
+            aria-hidden
+          >
+            <OpenPopup />
+          </span>
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default ExpandableValueCell;

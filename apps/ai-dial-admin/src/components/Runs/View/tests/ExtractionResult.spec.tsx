@@ -46,7 +46,6 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
-  getMetricSnapshots: vi.fn().mockResolvedValue([]),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
   getTestCaseRunResultDetails: vi.fn().mockResolvedValue({
     id: 'r1',
@@ -105,7 +104,7 @@ vi.mock('@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel', () => ({
   ),
 }));
 
-vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel', () => ({
+vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailPanel', () => ({
   default: () => <div data-testid="execution-row-detail-bottom-panel" />,
 }));
 
@@ -179,7 +178,6 @@ describe('ExtractionResultTab', () => {
               testCaseName: 'Test Case 1',
             },
           ],
-          snapshots: [],
         }}
       />,
     );

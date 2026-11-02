@@ -24,6 +24,7 @@ import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import ExecutionRowDetailDisplayPanel from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailDisplayPanel';
 import ExecutionRowDetailPivotTable from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailPivotTable';
+import ExecutionRowDetailTable from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailTable';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -31,7 +32,8 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 interface Props {
   resultId: string;
   onClose: () => void;
-  onSwitchToSidebar: () => void;
+  position: SidebarPosition;
+  onSwitchDisplayMode: () => void;
   focusFieldKey?: string | null;
   focusRequestId?: number;
   metricGroupOrder?: readonly string[];
@@ -41,13 +43,16 @@ interface Props {
   onDisplayTreeChange?: (tree: ColDef[]) => void;
 }
 
-const ExecutionRowDetailBottomPanel: FC<Props> = ({
+const NO_METRIC_GROUP_ORDER: readonly string[] = [];
+
+const ExecutionRowDetailPanel: FC<Props> = ({
   resultId,
   onClose,
-  onSwitchToSidebar,
+  position,
+  onSwitchDisplayMode,
   focusFieldKey,
   focusRequestId = 0,
-  metricGroupOrder = [],
+  metricGroupOrder = NO_METRIC_GROUP_ORDER,
   fieldSchema,
   className,
   initialDisplayTree,
@@ -59,6 +64,8 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   const [hasError, setHasError] = useState(false);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [displayTree, setDisplayTree] = useState<ColDef[]>(() => initialDisplayTree ?? []);
+
+  const isPivotView = position === SidebarPosition.Bottom;
 
   useEffect(() => {
     let isCancelled = false;
@@ -118,6 +125,37 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   const onToggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
   const onCloseDisplayPanel = useCallback(() => setShowDisplayPanel(false), []);
 
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <Spinner size={40} fullWidth />
+        </div>
+      );
+    }
+    if (hasError) {
+      return <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>;
+    }
+    if (isPivotView) {
+      return (
+        <ExecutionRowDetailPivotTable
+          key={resultId}
+          sections={displaySections}
+          focusFieldKey={focusFieldKey}
+          focusRequestId={focusRequestId}
+        />
+      );
+    }
+    return (
+      <ExecutionRowDetailTable
+        key={resultId}
+        sections={displaySections}
+        focusFieldKey={focusFieldKey}
+        focusRequestId={focusRequestId}
+      />
+    );
+  };
+
   return (
     <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
       <RowDetailHeader
@@ -125,27 +163,12 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
         onClose={onClose}
         onOpenDisplay={onToggleDisplayPanel}
         isDisplayOpen={showDisplayPanel}
-        position={SidebarPosition.Bottom}
-        onSwitchDisplayMode={onSwitchToSidebar}
+        position={position}
+        onSwitchDisplayMode={onSwitchDisplayMode}
         grafanaUrl={detail?.grafanaTraceUrl}
       />
 
-      <div className="flex flex-col flex-1 min-h-0 gap-4 px-6 pb-6 overflow-hidden">
-        {isLoading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <Spinner size={40} fullWidth />
-          </div>
-        ) : hasError ? (
-          <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>
-        ) : (
-          <ExecutionRowDetailPivotTable
-            key={resultId}
-            sections={displaySections}
-            focusFieldKey={focusFieldKey}
-            focusRequestId={focusRequestId}
-          />
-        )}
-      </div>
+      <div className="flex flex-col flex-1 min-h-0 gap-4 px-6 pb-6 overflow-hidden">{renderContent()}</div>
 
       {showDisplayPanel && (
         <div className="absolute inset-0 flex bg-blackout z-[15]">
@@ -161,4 +184,4 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   );
 };
 
-export default ExecutionRowDetailBottomPanel;
+export default ExecutionRowDetailPanel;

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
-import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
+import { filterRowDetailSections } from '@/src/components/Runs/Details/RowDetails/utils/filter-row-detail-sections';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 

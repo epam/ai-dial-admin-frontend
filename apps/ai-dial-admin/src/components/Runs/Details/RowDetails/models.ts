@@ -1,4 +1,11 @@
+import { NumericGridFilter, TextGridFilter } from '@/src/components/Grid/Filter/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+
+export type RowDetailFieldFilter = TextGridFilter;
+
+export type RowDetailValueFilter = TextGridFilter;
+
+export type RowDetailDeltaFilter = NumericGridFilter;
 
 export interface RowDetailField {
   fieldKey: string;

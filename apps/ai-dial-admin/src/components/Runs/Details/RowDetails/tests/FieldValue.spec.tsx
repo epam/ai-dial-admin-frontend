@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import FieldValue from '../FieldValue';
 
@@ -25,5 +25,32 @@ describe('FieldValue fill variant', () => {
     const { container } = render(<FieldValue raw="a long value" isScoreIndicator={false} failedLabel="Failed" fill />);
 
     expect(container.querySelector('.overflow-y-auto')).toBeTruthy();
+  });
+});
+
+describe('FieldValue clamp', () => {
+  test('clamps to four lines by default', () => {
+    render(<FieldValue raw="a long value" isScoreIndicator={false} failedLabel="Failed" />);
+
+    expect(screen.getByText('a long value')).toHaveClass('line-clamp-4');
+  });
+
+  test('applies the given clamp class instead of the default', () => {
+    render(
+      <FieldValue raw="a long value" isScoreIndicator={false} failedLabel="Failed" clampClassName="line-clamp-3" />,
+    );
+
+    const value = screen.getByText('a long value');
+    expect(value).toHaveClass('line-clamp-3');
+    expect(value).not.toHaveClass('line-clamp-4');
+  });
+
+  test('reports that a value which fits is not overflowing', () => {
+    const onOverflowChange = vi.fn();
+    render(
+      <FieldValue raw="short" isScoreIndicator={false} failedLabel="Failed" onOverflowChange={onOverflowChange} />,
+    );
+
+    expect(onOverflowChange).toHaveBeenCalledWith(false);
   });
 });

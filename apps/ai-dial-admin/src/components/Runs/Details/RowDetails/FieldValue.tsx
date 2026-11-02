@@ -18,6 +18,8 @@ interface Props {
   singleLine?: boolean;
   /** Wrap within the cell without line-clamp (e.g. stretched pivot value cells). */
   fill?: boolean;
+  /** Line-clamp utility for the default (non-`fill`, non-`singleLine`) layout. */
+  clampClassName?: string;
 }
 
 const FieldValue: FC<Props> = ({
@@ -28,6 +30,7 @@ const FieldValue: FC<Props> = ({
   onOverflowChange,
   singleLine,
   fill,
+  clampClassName = 'line-clamp-4',
 }) => {
   const textRef = useRef<HTMLSpanElement>(null);
 
@@ -83,7 +86,7 @@ const FieldValue: FC<Props> = ({
   return (
     <span
       ref={textRef}
-      className={classNames(textClassName, 'line-clamp-4 break-words', isLong && 'whitespace-pre-wrap')}
+      className={classNames(textClassName, clampClassName, 'break-words', isLong && 'whitespace-pre-wrap')}
     >
       {displayText}
     </span>

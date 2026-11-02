@@ -13,7 +13,7 @@ import {
   getPivotGridMinWidth,
   getPivotGridTemplateColumns,
 } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
-import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
+import { filterRowDetailSections } from '@/src/components/Runs/Details/RowDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';

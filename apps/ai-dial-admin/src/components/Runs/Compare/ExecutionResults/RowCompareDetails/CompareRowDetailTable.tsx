@@ -11,18 +11,19 @@ import FilterRow from '@/src/components/Runs/Compare/ExecutionResults/RowCompare
 import SectionRows from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/SectionRows';
 import {
   ROW_DETAIL_GRID_TEMPLATE_COLUMNS,
-  ROW_DETAIL_HEADER_CELL_BASE,
   ROW_DETAIL_MINIMAP_COL_WIDTH,
   ROW_DETAIL_TABLE_SCROLL_PADDING_TOP,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+import { RowDetailRunFilter } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { ROW_DETAIL_HEADER_CELL_BASE } from '@/src/components/Runs/Details/RowDetails/constants';
 import {
   RowDetailDeltaFilter,
+  RowDetailField,
   RowDetailFieldFilter,
-  RowDetailRunFilter,
+  RowDetailSection,
   RowDetailValueFilter,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
-import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
-import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+} from '@/src/components/Runs/Details/RowDetails/models';
+import { filterRowDetailSections } from '@/src/components/Runs/Details/RowDetails/utils/filter-row-detail-sections';
 import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
