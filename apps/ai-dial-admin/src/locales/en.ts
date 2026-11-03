@@ -1209,7 +1209,6 @@ export default {
     CollapseAll: 'Collapse all folders',
     NoPreviewArchive: 'Preview is not available for DIAL Admin Archive file type',
     Units: {
-      UnitBadge: 'Unit',
       UnitsLoadError: "Units can't be loaded right now. Try again.",
       UnitsRetry: 'Try again',
       InsideUnitNote: 'Access in this folder is decided by the roles of the unit:',
@@ -1230,6 +1229,8 @@ export default {
       RemoveUnitDescription:
         'Remove this unit? Its roles are removed with it. A unit that still holds content cannot be removed.',
       RemoveUnitSubunits: 'These units below it are removed too:',
+      RemoveUnitHoldsContent: 'This unit still holds content:',
+      RemoveUnitDeleteOrMove: 'Delete or move it first.',
       UnitRoles: 'Roles',
       UnitRolesLoadError: "Roles can't be loaded right now.",
       NoHolders: 'Nobody holds this role',
@@ -1247,8 +1248,7 @@ export default {
       UnitCreated: 'Unit created',
       UnitRenamed: 'Unit renamed',
       UnitRemoved: 'Unit removed',
-      UnitFolderRestriction:
-        'This folder is an org unit and keeps its path. Use Remove unit in Folders Storage to delete it.',
+      UnitFolderRestriction: 'This folder is an org unit, so its path cannot change. Manage it from Folders Storage.',
       ContainsUnitRestriction: 'This folder contains an org unit, so its path cannot change.',
     },
   },
@@ -1479,6 +1479,7 @@ export default {
     clientSecret: 'Client Secret',
     codeChallengeMethod: 'PKCE method',
     tokenEndpoint: 'Default token endpoint',
+    resource: 'Resource',
     authorizationEndpoint: 'Default authorization endpoint',
     scopes: 'Scopes Supported',
     share: 'Sharing',
@@ -1584,6 +1585,7 @@ export default {
     ClientSecretMasked: '••••••••••••',
     TokenEndpoint: 'Enter token endpoint',
     AuthorizationEndpoint: 'Enter authorization endpoint',
+    Resource: 'Enter resource URL',
     UpstreamEndpoint: 'Enter upstream endpoint',
     UpstreamId: 'Enter ID',
     UpstreamEndpointWithResponses: 'Enter chat completion endpoint',
@@ -1780,6 +1782,8 @@ export default {
     TokenEndpointAuthMethodNone: 'None',
     DynamicRegistration: 'Dynamic registration',
     ExistingClient: 'Existing client',
+    ResourceCaption:
+      'Optional. Sent as the OAuth resource indicator (RFC 8707). When empty, the value published by the MCP server is used, if any.',
     ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',
     ApiKey: 'API Key',
     OAuth: 'OAuth',

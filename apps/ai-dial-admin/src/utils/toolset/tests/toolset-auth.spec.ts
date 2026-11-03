@@ -188,6 +188,16 @@ describe('stripClientSecretHint', () => {
     ).toEqual({ client_id: 'id', client_secret: 'typed-secret' });
   });
 
+  test.each(['https://mcp.example.com/mcp', ''])(
+    'keeps resource %j, since an empty one tells Core to clear it',
+    (resource) => {
+      expect(stripClientSecretHint({ client_id: 'id', client_secret_hint: 'cret', resource })).toEqual({
+        client_id: 'id',
+        resource,
+      });
+    },
+  );
+
   test('does not mutate its input', () => {
     const input = { client_secret: '', client_secret_hint: 'cret' };
 

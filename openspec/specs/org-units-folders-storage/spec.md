@@ -165,8 +165,9 @@ panel title SHALL show the display name after a successful rename.
 
 ### Requirement: Remove unit
 **Remove unit** SHALL open one dialog listing the unit and its sub-units, and on confirm SHALL call
-`DELETE /v1/org-units/public/<unit>?recursive=true`. On 409 the dialog SHALL stay open and show core's
-message naming up to three blocking items; the panel SHALL NOT delete content. On success the units SHALL be
+`DELETE /v1/org-units/public/<unit>?recursive=true`. On 409 the dialog SHALL first delete any blocking
+`.dial_folder` markers in the files tree and retry; if other content still blocks, the dialog SHALL stay open
+and list the blocking item names, with a Close-only footer. The panel SHALL NOT delete other content. On success the units SHALL be
 reloaded and the nearest surviving ancestor selected.
 
 #### Scenario: Remove with sub-units
@@ -175,7 +176,11 @@ reloaded and the nearest surviving ancestor selected.
 
 #### Scenario: Unit still holds content
 - **WHEN** core answers 409 naming `Reports/q3.xlsx`
-- **THEN** the dialog stays open showing that message
+- **THEN** the dialog stays open listing `q3.xlsx` and its footer offers only Close
+
+#### Scenario: Unit holds only folder markers
+- **WHEN** core answers 409 naming only files-tree `.dial_folder` markers
+- **THEN** the markers are deleted and the removal is retried without showing a block
 
 ### Requirement: Structural actions are disabled on unit folders in content pages
 The content-page file managers SHALL load the unit map through the shared org units context and SHALL disable
