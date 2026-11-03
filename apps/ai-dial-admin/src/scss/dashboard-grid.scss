@@ -1,0 +1,12 @@
+// The grid engine ships a red drop placeholder and a dark resize corner; both are restated in theme tokens.
+// The parent class outranks the engine's own rule, so the result does not depend on stylesheet order.
+.react-grid-layout > .react-grid-item.react-grid-placeholder {
+  background: var(--background-color-accent-primary-alpha);
+  border: 1px dashed var(--border-color-accent);
+  border-radius: 4px;
+  opacity: 1;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--text-color-secondary);
+}

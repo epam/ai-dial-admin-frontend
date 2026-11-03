@@ -38,6 +38,14 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[0].href).toEqual('/application-runners');
   });
 
+  test('A custom dashboard route links back to Dashboards and names the dashboard without a link', () => {
+    const config = getBreadcrumbs('/en/dashboards/d1', 'en');
+    expect(config).toEqual([
+      { key: MenuI18nKey.Dashboard, name: 'dashboards', href: '/en/dashboards' },
+      { key: undefined, name: 'd1', href: '' },
+    ]);
+  });
+
   test('Should return empty array for home page', () => {
     const config = getBreadcrumbs('/home', 'en');
     expect(config.length).toEqual(0);

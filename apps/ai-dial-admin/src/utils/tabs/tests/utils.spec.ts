@@ -104,6 +104,7 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
+  analyticsCustomDashboardsEnabled: false,
   ...overrides,
 });
 

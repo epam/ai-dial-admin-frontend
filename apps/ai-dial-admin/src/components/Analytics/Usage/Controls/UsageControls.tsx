@@ -1,10 +1,11 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import { IconRefresh } from '@tabler/icons-react';
 import { GhostButton, ElementSize, Select } from '@epam/ai-dial-ui-kit';
 
+import CompareSelect from '@/src/components/Analytics/Usage/Controls/CompareSelect';
 import { ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
 import { TimeFilterAppearance } from '@/src/components/Common/TimeFilter/models';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -17,6 +18,8 @@ import { VIEW_LABEL_KEY } from '@/src/components/Analytics/Usage/utils/labels';
 const ALL_VIEWS: UsageView[] = [UsageView.Llm, UsageView.Mcp, UsageView.Routes];
 
 interface Props {
+  // Rendered ahead of the controls: the dashboard switcher, while custom dashboards are on.
+  leadingControl?: ReactNode;
   view: UsageView;
   onViewChange: (view: UsageView) => void;
   /** The views `View by` offers, in order; an entity offers only the ones it has traffic of. */
@@ -34,13 +37,13 @@ interface Props {
 /*
  * Explicit widths, because the 2.0 `Select` cannot shrink-wrap its own text: its field is an
  * `<input>` at `width: 100%`, and an input with no `size` falls back to a twenty-character
- * intrinsic width — which is why both of these rendered the same ~200px whatever they said. These
- * are sized to their longest option instead, so the three controls make one row.
+ * intrinsic width — which is why both selects rendered the same ~200px whatever they said. Each one
+ * is sized to its longest option instead, so the controls make one row.
  */
 const VIEW_SELECT_WIDTH = 'w-[124px]';
-const COMPARE_SELECT_WIDTH = 'w-[200px]';
 
 const UsageControls: FC<Props> = ({
+  leadingControl,
   view,
   views = ALL_VIEWS,
   onViewChange,
@@ -60,18 +63,9 @@ const UsageControls: FC<Props> = ({
     [views, t],
   );
 
-  const compareOptions = useMemo(
-    () => [
-      { value: ComparePeriod.Off, label: t(AnalyticsUsageI18nKey.CompareOff) },
-      { value: ComparePeriod.PreviousPeriod, label: t(AnalyticsUsageI18nKey.ComparePreviousPeriod) },
-      { value: ComparePeriod.PreviousMonth, label: t(AnalyticsUsageI18nKey.ComparePreviousMonth) },
-      { value: ComparePeriod.PreviousYear, label: t(AnalyticsUsageI18nKey.ComparePreviousYear) },
-    ],
-    [t],
-  );
-
   return (
     <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-2">
+      {leadingControl}
       <Select
         size={ElementSize.Small}
         className={`!w-auto ${VIEW_SELECT_WIDTH}`}
@@ -88,15 +82,7 @@ const UsageControls: FC<Props> = ({
         onTimeRangeChange={onTimeRangeChange}
         appearance={TimeFilterAppearance.Modern}
       />
-      <Select
-        size={ElementSize.Small}
-        className={`!w-auto ${COMPARE_SELECT_WIDTH}`}
-        options={compareOptions}
-        value={compare}
-        prefix={t(AnalyticsUsageI18nKey.CompareLabel)}
-        ariaLabel={t(AnalyticsUsageI18nKey.CompareLabel)}
-        onChange={(next) => onCompareChange(next as ComparePeriod)}
-      />
+      <CompareSelect value={compare} onChange={onCompareChange} />
       <div className="grow" />
       <GhostButton
         iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}

@@ -1,6 +1,6 @@
 import { EChartsOption } from 'echarts-for-react/src/types';
 
-import { BucketPoint } from '@/src/components/Analytics/Usage/models';
+import { BucketPoint, ComparedSeries, TimedValue } from '@/src/components/Analytics/Usage/models';
 import { GROUPING_LOCALE } from '@/src/components/Analytics/Usage/utils/format';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
 import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
@@ -102,11 +102,16 @@ const axisPointerStyle = (colors: ChartColors) => ({ color: colors.neutral, widt
 export const LATENCY_P50_COLOR = '#7FCFC4';
 export const LATENCY_P95_COLOR = '#B49BE8';
 
-export const buildTimeSeriesOptions = (
+/**
+ * One measure over time. A compared window, where one is given, is drawn dashed in the neutral colour and
+ * both lines are then named in the tooltip; alone, the line needs no name.
+ */
+export const buildValueTimeSeriesOptions = (
   colors: ChartColors,
-  points: BucketPoint[],
+  points: TimedValue[],
   formatBucket: (bucketMs: number) => string,
   periods?: string[],
+  compared?: ComparedSeries,
 ): EChartsOption => ({
   grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
@@ -123,21 +128,48 @@ export const buildTimeSeriesOptions = (
     trigger: 'axis',
     axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     // A single series needs no colour marker to say which one it is.
-    formatter: axisTooltip(periods),
+    formatter: axisTooltip(periods, !!compared),
   },
   animation: false,
   series: [
     {
       type: 'line',
+      name: compared?.currentLabel,
       color: colors.accent,
-      data: points.map((point) => point.measures.calls),
+      data: points.map((point) => point.value),
       showSymbol: false,
       sampling: LINE_SAMPLING,
       lineStyle: { width: 1.5, color: colors.accent },
       areaStyle: { color: colors.accent, opacity: 0.12 },
     },
+    ...(compared
+      ? [
+          {
+            type: 'line' as const,
+            name: compared.label,
+            color: colors.neutral,
+            data: compared.values,
+            showSymbol: false,
+            sampling: LINE_SAMPLING,
+            lineStyle: { width: 1.5, type: 'dashed' as const, color: colors.neutral },
+          },
+        ]
+      : []),
   ],
 });
+
+export const buildTimeSeriesOptions = (
+  colors: ChartColors,
+  points: BucketPoint[],
+  formatBucket: (bucketMs: number) => string,
+  periods?: string[],
+): EChartsOption =>
+  buildValueTimeSeriesOptions(
+    colors,
+    points.map((point) => ({ bucketMs: point.bucketMs, value: point.measures.calls })),
+    formatBucket,
+    periods,
+  );
 
 export interface NamedSeries {
   id: string;

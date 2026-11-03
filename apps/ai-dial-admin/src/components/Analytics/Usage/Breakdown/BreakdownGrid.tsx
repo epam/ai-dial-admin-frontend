@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { ColDef, IDatasource, ModelUpdatedEvent } from 'ag-grid-community';
 import { Spinner } from '@epam/ai-dial-ui-kit';
@@ -9,17 +9,27 @@ import classNames from 'classnames';
 import { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import { BreakdownRowModel, WidestFigures } from '@/src/components/Analytics/Usage/models';
-import { getFigureRulerVar, pickWidestFigures } from '@/src/components/Analytics/Usage/utils/figure-width';
+import {
+  getDeltaRulerKey,
+  getFigureRulerVar,
+  pickWidestFigures,
+} from '@/src/components/Analytics/Usage/utils/figure-width';
+import { formatPercent } from '@/src/components/Analytics/Usage/utils/format';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QUERY_ROW_LIMIT } from '@/src/components/Analytics/Usage/constants';
 import { infiniteGridOptions } from '@/src/constants/ag-grid';
 
-interface Props {
+// Any row with an id; the usage breakdown's own rows are the default.
+interface BreakdownGridRow {
+  id: string;
+}
+
+interface Props<TRow extends BreakdownGridRow> {
   /** The rows to show when the caller already holds them; ignored once `datasource` is given. */
-  rows: BreakdownRowModel[];
-  columnDefs: ColDef<BreakdownRowModel>[];
+  rows: TRow[];
+  columnDefs: ColDef<TRow>[];
   isLoading: boolean;
   hasFailed: boolean;
   className?: string;
@@ -37,7 +47,7 @@ const HEADER_OFFSET_CLASS = 'top-[42px]';
 const LOADER_SIZE = 24;
 const BREAKDOWN_ROW_HEIGHT = 40;
 
-const BreakdownGrid: FC<Props> = ({
+const BreakdownGrid = <TRow extends BreakdownGridRow = BreakdownRowModel>({
   rows,
   columnDefs,
   isLoading,
@@ -48,26 +58,34 @@ const BreakdownGrid: FC<Props> = ({
   blockSize,
   isLoadingBlock,
   isAutoHeight,
-}) => {
+}: Props<TRow>) => {
   const t = useI18n();
   const gridRef = useRef<HTMLDivElement>(null);
 
   const figureFormats = useMemo(() => {
-    const formats: Record<string, MeasureCellParams['format']> = {};
+    const formats: Record<string, NonNullable<MeasureCellParams<TRow>['format']>> = {};
 
     for (const { colId, cellRendererParams } of columnDefs) {
       if (colId && cellRendererParams?.format) {
         formats[colId] = cellRendererParams.format;
+      }
+      // A change as wide as `2,486.3%` outgrows the badge's minimum, so the badges get a ruler too.
+      const getDelta: MeasureCellParams<TRow>['getDelta'] | undefined = cellRendererParams?.getDelta;
+      if (colId && getDelta) {
+        formats[getDeltaRulerKey(colId)] = (row) => {
+          const delta = getDelta(row);
+          return delta == null ? null : formatPercent(Math.abs(delta));
+        };
       }
     }
 
     return formats;
   }, [columnDefs]);
 
-  const widestRef = useRef<WidestFigures>({ widest: {} });
+  const widestRef = useRef<WidestFigures<TRow>>({ widest: {} });
 
   const onModelUpdated = useCallback(
-    (event: ModelUpdatedEvent<BreakdownRowModel>) => {
+    (event: ModelUpdatedEvent<TRow>) => {
       const grid = gridRef.current;
 
       if (!grid) {
@@ -76,7 +94,7 @@ const BreakdownGrid: FC<Props> = ({
 
       const previous = widestRef.current;
       const isSameList = Boolean(datasource) && previous.formats === figureFormats && previous.key === datasourceKey;
-      const loadedRows: BreakdownRowModel[] = [];
+      const loadedRows: TRow[] = [];
 
       event.api.forEachNode((node) => {
         if (node.data) {
@@ -115,7 +133,7 @@ const BreakdownGrid: FC<Props> = ({
 
   return (
     <div ref={gridRef} className={classNames('relative', className)}>
-      <GridView<BreakdownRowModel>
+      <GridView<TRow>
         key={datasourceKey}
         rowData={datasource ? void 0 : rows}
         columnDefs={columnDefs}

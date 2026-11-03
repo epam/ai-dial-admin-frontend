@@ -142,6 +142,19 @@ export interface BucketPoint {
   measures: UsageMeasures;
 }
 
+/** One figure per time bucket: what a time series or a heatmap draws, whichever measure it is. */
+export interface TimedValue {
+  bucketMs: number;
+  value: number | null;
+}
+
+/** A second line drawn dashed under the first: the compared window, aligned bucket by bucket. */
+export interface ComparedSeries {
+  label: string;
+  currentLabel: string;
+  values: (number | null)[];
+}
+
 export enum TimeSeriesView {
   Requests = 'requests',
   ByDimension = 'by-dimension',
@@ -201,8 +214,15 @@ export interface KpiFigure {
 }
 
 export interface KpiCardModel {
-  metric: KpiMetric;
+  // Absent on a custom dashboard's card, whose figure has no welcome direction.
+  metric?: KpiMetric;
   titleKey: string;
+  // Shown instead of `titleKey` for a title that is not an i18n key, such as a widget's own.
+  title?: string;
+  // An info hint beside the title: a custom dashboard widget's description, which the card has no room to print.
+  hint?: string;
+  // The welcome direction of a card with no metric; see `getDeltaTone`.
+  isRiseGood?: boolean;
   value: string | null;
   unit?: string;
   deltaRatio: number | null;
@@ -245,8 +265,8 @@ export interface BreakdownRowModel {
   routeKind?: RouteKind;
 }
 
-export interface WidestFigures {
-  formats?: Record<string, (row: BreakdownRowModel) => string | null>;
+export interface WidestFigures<TRow = BreakdownRowModel> {
+  formats?: Record<string, (row: TRow) => string | null>;
   key?: string;
   widest: Record<string, string>;
 }
