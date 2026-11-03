@@ -52,8 +52,8 @@ describe('ScoreThreshold', () => {
 
     expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdPass)).toBeInTheDocument();
     expect(screen.getByText(new RegExp(TestSuitesI18nKey.ScoreThresholdConditionGe))).toBeInTheDocument();
-    expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdFail)).not.toBeInTheDocument();
-    expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdOtherwise)).not.toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdFail)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(TestSuitesI18nKey.ScoreThresholdOtherwise))).toBeInTheDocument();
     expect(screen.getByRole('spinbutton')).toBeInTheDocument();
   });
 
@@ -86,6 +86,48 @@ describe('ScoreThreshold', () => {
 
     expect(onChange).toHaveBeenLastCalledWith({ ...selectedTestSuite, overallScoreThreshold: 2 });
     expect(screen.getByText(ErrorI18nKey.AllowedRange)).toBeInTheDocument();
+  });
+
+  test('keeps the field visible when the threshold value is cleared', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+
+    const { rerender } = render(
+      <ScoreThreshold selectedTestSuite={{ ...selectedTestSuite, overallScoreThreshold: 0.5 }} onChange={onChange} />,
+    );
+
+    await user.clear(screen.getByRole('spinbutton'));
+
+    expect(onChange).toHaveBeenCalledWith({ id: 'suite-1', overallScoreThreshold: null });
+
+    rerender(
+      <ScoreThreshold selectedTestSuite={{ ...selectedTestSuite, overallScoreThreshold: null }} onChange={onChange} />,
+    );
+
+    expect(screen.getByRole('switch', { name: TestSuitesI18nKey.EnableScoreThreshold })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.getByRole('spinbutton')).toHaveValue(null);
+  });
+
+  test('ignores a minus or plus sign and keeps the current threshold', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+
+    render(
+      <ScoreThreshold selectedTestSuite={{ ...selectedTestSuite, overallScoreThreshold: 0.5 }} onChange={onChange} />,
+    );
+
+    const input = screen.getByRole('spinbutton');
+    await user.type(input, '-+');
+
+    expect(screen.getByRole('switch', { name: TestSuitesI18nKey.EnableScoreThreshold })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(input).toHaveValue(0.5);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   test('disabling the switch clears the threshold', async () => {

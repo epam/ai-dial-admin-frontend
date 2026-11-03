@@ -1,7 +1,7 @@
 'use client';
 
 import { NumberInput, Switch } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -21,30 +21,51 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
 
   const [error, setError] = useState<FieldError | null>(null);
   const isEnabled = selectedTestSuite.overallScoreThreshold !== undefined;
+  const ignoreEmptyChangeRef = useRef(false);
 
-  const clearThreshold = useCallback(() => {
+  const omitThreshold = useCallback(() => {
     const { overallScoreThreshold: __, ...rest } = selectedTestSuite;
     setError(null);
     dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: true });
     onChange(rest);
   }, [dispatch, onChange, selectedTestSuite]);
 
+  const clearThresholdValue = useCallback(() => {
+    setError(null);
+    dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: true });
+    onChange({ ...selectedTestSuite, overallScoreThreshold: null });
+  }, [dispatch, onChange, selectedTestSuite]);
+
   const onEnabledChange = useCallback(
     (enabled: boolean) => {
       if (!enabled) {
-        clearThreshold();
+        omitThreshold();
         return;
       }
 
-      onChange({ ...selectedTestSuite, overallScoreThreshold: selectedTestSuite.overallScoreThreshold ?? 0.5 });
+      const currentThreshold = selectedTestSuite.overallScoreThreshold;
+
+      onChange({
+        ...selectedTestSuite,
+        overallScoreThreshold: typeof currentThreshold === 'number' ? currentThreshold : 0.5,
+      });
     },
-    [clearThreshold, onChange, selectedTestSuite],
+    [omitThreshold, onChange, selectedTestSuite],
   );
 
   const onThresholdChange = useCallback(
     (value?: number | string) => {
-      if (value === undefined) {
-        clearThreshold();
+      if (typeof value === 'string' && !Number.isFinite(Number(value))) {
+        return;
+      }
+
+      if (value === undefined || value === '') {
+        if (ignoreEmptyChangeRef.current) {
+          ignoreEmptyChangeRef.current = false;
+          return;
+        }
+
+        clearThresholdValue();
         return;
       }
 
@@ -54,7 +75,7 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
       dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: !fieldError });
       onChange({ ...selectedTestSuite, overallScoreThreshold: numericValue });
     },
-    [clearThreshold, dispatch, onChange, selectedTestSuite, t],
+    [clearThresholdValue, dispatch, onChange, selectedTestSuite, t],
   );
 
   useEffect(() => {
@@ -64,6 +85,21 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
       dispatch({ type: ValidationActionType.SetField, field: 'overallScoreThreshold', isValid: !fieldError });
     }
   }, [dispatch, resetCounter, selectedTestSuite.overallScoreThreshold, t]);
+
+  const onThresholdKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === '+' || event.key === '-' || event.key === 'e' || event.key === 'E') {
+      event.preventDefault();
+      ignoreEmptyChangeRef.current = true;
+    }
+  };
+
+  const onThresholdKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === '+' || event.key === '-' || event.key === 'e' || event.key === 'E') {
+      queueMicrotask(() => {
+        ignoreEmptyChangeRef.current = false;
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-1">
@@ -89,11 +125,21 @@ const ScoreThreshold: FC<Props> = ({ selectedTestSuite, onChange }) => {
               containerClassName="relative max-w-[108px] [&>[role='alert']]:absolute [&>[role='alert']]:top-full [&>[role='alert']]:left-0 [&>[role='alert']]:pt-1 [&>[role='alert']]:whitespace-nowrap"
               id="overallScoreThreshold"
               step={0.01}
-              value={selectedTestSuite.overallScoreThreshold}
+              value={
+                typeof selectedTestSuite.overallScoreThreshold === 'number'
+                  ? selectedTestSuite.overallScoreThreshold
+                  : undefined
+              }
               invalid={!!error}
               error={error?.text}
               onChange={onThresholdChange}
+              onKeyDown={onThresholdKeyDown}
+              onKeyUp={onThresholdKeyUp}
             />
+            <span>
+              {`${t(TestSuitesI18nKey.ScoreThresholdOtherwise)} `}
+              <span className="text-error">{t(TestSuitesI18nKey.ScoreThresholdFail)}</span>
+            </span>
           </div>
         )}
       </div>

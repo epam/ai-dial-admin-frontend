@@ -54,7 +54,8 @@ export interface TestSuite {
   datasetId?: string;
   disabledTestCaseIds?: string[];
   testCaseFilter?: FilterNode | null;
-  overallScoreThreshold?: number;
+  /** `null` means the threshold is enabled but the value is empty. Omitted means it is off. */
+  overallScoreThreshold?: number | null;
   overallScore?: OverallScoreConfig;
   /**
    * Per-test-case score when `overallScore` is a suite-level `custom_function` (e.g. ROC AUC).
