@@ -55,6 +55,25 @@ const mockQueries = (status: unknown = STATUS_ROWS, runTime: unknown = { rows: [
   });
 };
 
+const execution = (testCaseId: string, status: string, count = 1) => ({
+  test_case_id: testCaseId,
+  execution_status: status,
+  count,
+});
+
+/** A run whose suite has no metrics: the scores table is empty, the executions are `executions`. */
+const mockNoMetricsQueries = (executions: unknown[]) => {
+  executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
+    if (query.entity === 'test_case_eval_scores') {
+      return Promise.resolve({ rows: [] });
+    }
+    if (query.group_by) {
+      return Promise.resolve({ rows: executions });
+    }
+    return Promise.resolve({ rows: [{ total_duration_ms: 341000 }] });
+  });
+};
+
 const renderKpis = (run: Run) => renderHook(() => useRunKpiCards({ run, metricSnapshotCount: 2 }));
 
 describe('useRunKpiCards', () => {
@@ -130,5 +149,47 @@ describe('useRunKpiCards', () => {
 
     await waitFor(() => expect(result.current?.cost.isPending).toBe(false));
     expect(result.current?.cost.totalCost).toBe(1);
+  });
+
+  describe('for a run without score rows', () => {
+    test('derives the counts from executions and uses the reported total for a finished run', async () => {
+      mockNoMetricsQueries([execution('a', 'SUCCESS')]);
+
+      const { result } = renderKpis(buildRun({ numberOfTestCases: 3 }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.figures.breakdown).toEqual({ total: 3, completed: 1, above: 0, below: 0, errorOrNa: 2 });
+      expect(result.current?.hasNoTestCases).toBe(false);
+    });
+
+    test('counts what an in-flight run has seen instead of its reported total', async () => {
+      mockNoMetricsQueries([execution('a', 'SUCCESS'), execution('b', 'SUCCESS')]);
+
+      const { result } = renderKpis(buildRun({ status: RunStatus.RUNNING, numberOfTestCases: 10 }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.figures.breakdown.total).toBe(2);
+    });
+
+    test('rates a threshold run by completion because there are no scores to apply it to', async () => {
+      mockNoMetricsQueries([execution('a', 'SUCCESS'), execution('b', 'SUCCESS')]);
+
+      const { result } = renderKpis(buildRun({ numberOfTestCases: 2 }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.figures.hasThreshold).toBe(false);
+      expect(result.current?.figures.threshold).toBeNull();
+      expect(result.current?.rateTitleKey).toBe(RunsI18nKey.CompletionRate);
+      expect(result.current?.figures.rate).toBe(1);
+    });
+
+    test('still flags a finished run that reports no test cases', async () => {
+      mockNoMetricsQueries([]);
+
+      const { result } = renderKpis(buildRun({ numberOfTestCases: 0 }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.hasNoTestCases).toBe(true);
+    });
   });
 });

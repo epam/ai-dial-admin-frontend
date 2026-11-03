@@ -133,6 +133,30 @@ const mockQueries = () => {
   });
 };
 
+const execution = (testCaseId: string, status: string, count = 1) => ({
+  test_case_id: testCaseId,
+  execution_status: status,
+  count,
+});
+const FOUR_SUCCESSFUL = ['a', 'b', 'c', 'd'].map((id) => execution(id, 'SUCCESS'));
+
+/** Runs in `withoutScores` have no score rows (no metrics); their executions are `executionsByRun[id]`. */
+const mockMixedQueries = (withoutScores: string[], executionsByRun: Record<string, unknown[]>) => {
+  executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
+    const runId = runIdOf(query);
+    if (query.entity === 'test_case_eval_scores') {
+      return Promise.resolve(withoutScores.includes(runId) ? { rows: [] } : STATUS_BY_RUN[runId]);
+    }
+    if (query.group_by) {
+      return Promise.resolve({ rows: executionsByRun[runId] ?? [] });
+    }
+    const alias = query.select?.[0]?.as;
+    return Promise.resolve(
+      alias === 'total_duration_ms' ? { rows: [{ total_duration_ms: RUN_TIME_BY_RUN[runId] }] } : { rows: [] },
+    );
+  });
+};
+
 const RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
 
 const renderAnalytics = (overrides: Partial<ComponentProps<typeof Analytics>> = {}) =>
@@ -363,6 +387,7 @@ describe('Compare Summary :: Analytics', () => {
   test('uses the matched-only slices for counts and runtime but still fetches whole-run cost', async () => {
     const matched = (passed: number, failed: number, error: number, runTime: number): RunAnalyticsSlice => ({
       statusCounts: { passed, failed, error, unscored: 0, total: passed + failed + error },
+      hasScoreRows: true,
       totalRunTimeMs: runTime,
       totalMetricEvalDurationMs: null,
     });
@@ -396,5 +421,77 @@ describe('Compare Summary :: Analytics', () => {
     });
 
     expect(await screen.findAllByText('error-tag')).toHaveLength(4);
+  });
+
+  describe('runs whose suites have no metrics', () => {
+    const noMetricsRun = (id: string) =>
+      buildRun(id, {
+        numberOfTestCases: 4,
+        suiteSnapshot: { deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model } },
+      });
+
+    test('shows completed over total for each run, with no error line and no diff', async () => {
+      mockMixedQueries(['run-1', 'run-2'], { 'run-1': FOUR_SUCCESSFUL, 'run-2': FOUR_SUCCESSFUL });
+      await renderLoaded({ primaryRun: noMetricsRun('run-1'), comparedRun: noMetricsRun('run-2') });
+
+      for (const runName of ['Run #316', 'Run #315']) {
+        const run = side(RunsI18nKey.TestCasesCompleted, runName);
+        expect(run.getByText('/4')).toBeInTheDocument();
+        expect(run.queryByText(ErrorI18nKey.Error)).not.toBeInTheDocument();
+        expect(side(RunsI18nKey.CompletionRate, runName).getByText('100%')).toBeInTheDocument();
+      }
+      expect(card(RunsI18nKey.TestCasesCompleted).queryByText(/^delta:/)).not.toBeInTheDocument();
+      expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+    });
+
+    test('counts a run with a failed execution among its successes as not completed, beside a run that completed', async () => {
+      mockMixedQueries(['run-1', 'run-2'], {
+        'run-1': FOUR_SUCCESSFUL,
+        'run-2': [execution('a', 'SUCCESS'), execution('a', 'FAILED'), ...FOUR_SUCCESSFUL.slice(1)],
+      });
+      await renderLoaded({ primaryRun: noMetricsRun('run-1'), comparedRun: noMetricsRun('run-2') });
+
+      expect(side(RunsI18nKey.TestCasesCompleted, 'Run #316').getByText('/4')).toBeInTheDocument();
+      expect(
+        side(RunsI18nKey.TestCasesCompleted, 'Run #315').getByText('3', { selector: 'span.dial-display2-text' }),
+      ).toBeInTheDocument();
+      expect(side(RunsI18nKey.TestCasesCompleted, 'Run #315').getByText(ErrorI18nKey.Error)).toBeInTheDocument();
+      expect(card(RunsI18nKey.TestCasesCompleted).getByText('delta:-1')).toBeInTheDocument();
+    });
+
+    test('does not rate a run without scores against a run with a threshold', async () => {
+      mockMixedQueries(['run-2'], { 'run-2': FOUR_SUCCESSFUL });
+      await renderLoaded({ comparedRun: noMetricsRun('run-2') });
+
+      expect(side(RunsI18nKey.TestCasesCompleted, 'Run #316').getByText('/55')).toBeInTheDocument();
+      expect(side(RunsI18nKey.TestCasesCompleted, 'Run #315').getByText('/4')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: RunsI18nKey.ThresholdPassRate })).toBeInTheDocument();
+      expect(side(RunsI18nKey.ThresholdPassRate, 'Run #315').getByText('—')).toBeInTheDocument();
+      expect(card(RunsI18nKey.ThresholdPassRate).queryByText(/^delta:/)).not.toBeInTheDocument();
+    });
+
+    test('rates matched-only counts derived from executions by completion, not by threshold', async () => {
+      const derived = (completed: number, notCompleted: number): RunAnalyticsSlice => ({
+        statusCounts: {
+          passed: 0,
+          failed: 0,
+          error: notCompleted,
+          unscored: completed,
+          total: completed + notCompleted,
+        },
+        hasScoreRows: false,
+        totalRunTimeMs: 100000,
+        totalMetricEvalDurationMs: null,
+      });
+      await renderLoaded({
+        onlyMatchingTestCases: true,
+        primaryMatchedAnalytics: derived(4, 0),
+        comparedMatchedAnalytics: derived(3, 1),
+      });
+
+      expect(screen.getByRole('region', { name: RunsI18nKey.CompletionRate })).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: RunsI18nKey.ThresholdPassRate })).not.toBeInTheDocument();
+      expect(side(RunsI18nKey.TestCasesCompleted, 'Run #315').getByText('/4')).toBeInTheDocument();
+    });
   });
 });

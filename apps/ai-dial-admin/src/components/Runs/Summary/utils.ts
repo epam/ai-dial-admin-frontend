@@ -24,6 +24,7 @@ import {
   COUNT_ALIAS,
   DEFAULT_METRIC_SCORE_FIELD,
   DISTRIBUTION_ROW_LIMIT,
+  TEST_CASE_EXECUTIONS_ROW_LIMIT,
   DISTRIBUTION_VALUE_ALIAS,
   EVAL_SUMMARIES_ENTITY,
   EVAL_SUMMARY_ID_FIELD,
@@ -92,6 +93,21 @@ const buildEvalSummariesFilter = (runId: string, excludeEvalSummaryIds: string[]
     ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
     : runFilter;
 };
+
+/**
+ * Query: a run's executions grouped by test case and execution status. `eval_summaries` holds one row per
+ * execution, so a test case that ran several times contributes one group per distinct status. This is the
+ * count source for runs with no `test_case_eval_scores` rows (suites without metrics); fold the rows with
+ * `foldTestCaseExecutions`. Rows shape: `{ test_case_id, execution_status, count }`.
+ */
+export const buildTestCaseExecutionsQuery = (runId: string, excludeEvalSummaryIds: string[] = []): StructuredQuery =>
+  aggregateQuery({
+    entity: EVAL_SUMMARIES_ENTITY,
+    filter: buildEvalSummariesFilter(runId, excludeEvalSummaryIds),
+    groupBy: [TEST_CASE_ID_FIELD, EXECUTION_STATUS_FIELD],
+    select: [col(field(TEST_CASE_ID_FIELD)), col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
+    page: offsetPage(0, TEST_CASE_EXECUTIONS_ROW_LIMIT),
+  });
 
 /**
  * Query: total execution duration (ms) across a run's test-case eval summaries.
@@ -454,6 +470,29 @@ export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null):
 };
 
 /**
+ * Folds execution groups into per-test-case outcomes. A test case is completed only when every execution of
+ * it succeeded; one failed or errored execution makes it not completed. Repeat executions of a test case count
+ * once. Groups without a test case id are ignored.
+ */
+export const foldTestCaseExecutions = (
+  result: StructuredQueryResult | null,
+): { completed: number; notCompleted: number } => {
+  const hasOnlySuccessByTestCase = new Map<string, boolean>();
+
+  for (const row of result?.rows ?? []) {
+    const testCaseId = row[TEST_CASE_ID_FIELD];
+    if (typeof testCaseId !== 'string') {
+      continue;
+    }
+    const isSuccess = row[EXECUTION_STATUS_FIELD] === ExtractionResultStatus.SUCCESS;
+    hasOnlySuccessByTestCase.set(testCaseId, (hasOnlySuccessByTestCase.get(testCaseId) ?? true) && isSuccess);
+  }
+
+  const completed = [...hasOnlySuccessByTestCase.values()].filter(Boolean).length;
+  return { completed, notCompleted: hasOnlySuccessByTestCase.size - completed };
+};
+
+/**
  * Splits status counts into the Test Cases Completed breakdown. With a threshold, completed cases are
  * the scored SUCCESS ones (above + below); without one, every SUCCESS case is completed and the
  * above / below split does not apply. Everything else — non-SUCCESS, or SUCCESS the threshold could not
@@ -491,8 +530,10 @@ export const parseDurationMs = (result: StructuredQueryResult | null, alias: str
 
 /** A run's KPI figures: threshold, completion breakdown, rate and runtime parts. */
 export const toRunKpiFigures = (run: Run | null | undefined, slice: RunAnalyticsSlice): RunKpiFigures => {
-  const threshold = run?.suiteSnapshot?.overallScoreThreshold ?? null;
-  const hasThreshold = hasOverallScoreThreshold(threshold);
+  const snapshotThreshold = run?.suiteSnapshot?.overallScoreThreshold ?? null;
+  // Pass/fail against a threshold needs per-test-case scores; without them the counts are rated by completion.
+  const hasThreshold = hasOverallScoreThreshold(snapshotThreshold) && slice.hasScoreRows;
+  const threshold = hasThreshold ? snapshotThreshold : null;
   const breakdown = toCompletionBreakdown(slice.statusCounts, hasThreshold);
 
   return {

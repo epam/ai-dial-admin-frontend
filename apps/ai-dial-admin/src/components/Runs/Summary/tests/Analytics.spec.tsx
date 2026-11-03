@@ -1,7 +1,8 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
@@ -86,6 +87,26 @@ const mockQueries = (status = STATUS_ROWS, runTime = RUN_TIME_ROWS, metricEval =
   });
 };
 
+const execution = (testCaseId: string, status: string, count = 1) => ({
+  test_case_id: testCaseId,
+  execution_status: status,
+  count,
+});
+
+/** A run whose suite has no metrics: the scores table is empty, the executions are `executions`. */
+const mockNoMetricsQueries = (executions: unknown[]) => {
+  executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
+    if (query.entity === 'test_case_eval_scores') {
+      return Promise.resolve({ rows: [] });
+    }
+    if (query.group_by) {
+      return Promise.resolve({ rows: executions });
+    }
+    const alias = query.select?.[0]?.as;
+    return Promise.resolve(alias === 'total_duration_ms' ? RUN_TIME_ROWS : { rows: [] });
+  });
+};
+
 const renderLoaded = async (props: Partial<React.ComponentProps<typeof Analytics>> = {}) => {
   render(<Analytics run={buildRun()} {...props} />);
   await screen.findByRole('region', { name: RunsI18nKey.TestCasesCompleted });
@@ -140,7 +161,8 @@ describe('Runs Summary :: Analytics', () => {
 
     for (const title of [
       RunsI18nKey.TestCasesCompleted,
-      RunsI18nKey.ThresholdPassRate,
+      // A threshold needs score rows; this run has none, so it is rated by completion.
+      RunsI18nKey.CompletionRate,
       RunsI18nKey.TotalRuntime,
       RunsI18nKey.TotalRunCost,
     ]) {
@@ -303,5 +325,102 @@ describe('Runs Summary :: Analytics', () => {
 
     expect(getRunsTotalCostsMock).not.toHaveBeenCalled();
     expect(within(card(RunsI18nKey.TotalRunCost)).queryByRole('status')).not.toBeInTheDocument();
+  });
+  describe('a run whose suite has no metrics', () => {
+    const renderNoMetrics = async (
+      executions: unknown[],
+      run: Partial<Run> = { numberOfTestCases: 4, suiteSnapshot: {} },
+    ) => {
+      mockNoMetricsQueries(executions);
+      await renderLoaded({ run: buildRun(run) });
+    };
+    const completedCard = () => within(card(RunsI18nKey.TestCasesCompleted));
+
+    test('shows completed over total, no error line, and a full Completion Rate', async () => {
+      await renderNoMetrics([
+        execution('a', 'SUCCESS'),
+        execution('b', 'SUCCESS'),
+        execution('c', 'SUCCESS'),
+        execution('d', 'SUCCESS'),
+      ]);
+
+      expect(completedCard().getByText('4', { selector: 'span.dial-display2-text' })).toBeInTheDocument();
+      expect(completedCard().getByText('/4')).toBeInTheDocument();
+      expect(completedCard().queryByText(ErrorI18nKey.Error)).not.toBeInTheDocument();
+      expect(within(card(RunsI18nKey.CompletionRate)).getByText('100%')).toBeInTheDocument();
+      expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+    });
+
+    test('counts repeat executions of a test case once', async () => {
+      await renderNoMetrics([execution('a', 'SUCCESS', 3), execution('b', 'SUCCESS', 3)], {
+        numberOfTestCases: 2,
+        suiteSnapshot: {},
+      });
+
+      expect(completedCard().getByText('/2')).toBeInTheDocument();
+      expect(completedCard().queryByText('/6')).not.toBeInTheDocument();
+    });
+
+    test('does not complete a test case with a failed execution', async () => {
+      await renderNoMetrics(
+        [execution('a', 'SUCCESS'), execution('a', 'FAILED'), execution('b', 'SUCCESS'), execution('c', 'SUCCESS')],
+        { numberOfTestCases: 3, suiteSnapshot: {} },
+      );
+
+      expect(completedCard().getByText('2', { selector: 'span.dial-display2-text' })).toBeInTheDocument();
+      expect(completedCard().getByText('/3')).toBeInTheDocument();
+      expect(completedCard().getByText(ErrorI18nKey.Error)).toBeInTheDocument();
+      expect(within(card(RunsI18nKey.CompletionRate)).getByText('66.7%')).toBeInTheDocument();
+    });
+
+    test('shows a test case that never executed as N/A', async () => {
+      const user = userEvent.setup();
+      await renderNoMetrics([execution('a', 'SUCCESS')], { numberOfTestCases: 3, suiteSnapshot: {} });
+
+      expect(completedCard().getByText('/3')).toBeInTheDocument();
+      await user.hover(completedCard().getByText('1', { selector: 'span.dial-display2-text' }));
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip.textContent).toContain(TestSuitesI18nKey.TrendsTestCasesErrorOrNa);
+      expect(tooltip.textContent).not.toContain(TestSuitesI18nKey.TrendsScoreAboveThreshold);
+      expect(tooltip.textContent).not.toContain(TestSuitesI18nKey.TrendsScoreBelowThreshold);
+    });
+
+    test('rates a threshold without score rows by completion', async () => {
+      await renderNoMetrics([execution('a', 'SUCCESS'), execution('b', 'SUCCESS')], {
+        numberOfTestCases: 2,
+        suiteSnapshot: { overallScoreThreshold: 0.5 },
+      });
+
+      expect(screen.getByRole('region', { name: RunsI18nKey.CompletionRate })).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: RunsI18nKey.ThresholdPassRate })).not.toBeInTheDocument();
+      expect(screen.queryByText(TestSuitesI18nKey.TrendsThresholdLabel)).not.toBeInTheDocument();
+    });
+
+    test('still shows Error for a COMPLETED run that reports no test cases at all', async () => {
+      await renderNoMetrics([], { numberOfTestCases: 0, suiteSnapshot: {} });
+
+      expect(completedCard().getByText('error-tag')).toBeInTheDocument();
+    });
+
+    test('counts only what an in-flight run has seen, not its reported total', async () => {
+      await renderNoMetrics([execution('a', 'SUCCESS'), execution('b', 'SUCCESS'), execution('c', 'SUCCESS')], {
+        status: RunStatus.RUNNING,
+        numberOfTestCases: 10,
+        suiteSnapshot: {},
+      });
+
+      expect(completedCard().getByText('/3')).toBeInTheDocument();
+      expect(completedCard().queryByText(ErrorI18nKey.Error)).not.toBeInTheDocument();
+    });
+
+    test('keeps the per-test-case scores for a run that has them', async () => {
+      await renderLoaded({ run: buildRun({ numberOfTestCases: 99 }) });
+
+      expect(completedCard().getByText('/43')).toBeInTheDocument();
+      expect(
+        executeStructuredQueryMock.mock.calls.every(([query]) => query.entity !== 'eval_summaries' || !query.group_by),
+      ).toBe(true);
+    });
   });
 });

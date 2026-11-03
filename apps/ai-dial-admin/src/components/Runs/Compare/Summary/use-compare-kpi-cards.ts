@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 
-import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
+import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components/Common/RunStatus/utils';
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { getMetricDelta } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { CompareKpiCards } from '@/src/components/Runs/Compare/Summary/models';
@@ -29,6 +29,10 @@ interface Params {
   comparedMetricCount?: number;
 }
 
+/** The run's reported number of test cases, only once it has finished — an in-flight run counts what it has seen. */
+const getReportedTestCaseCount = (run: Run): number | undefined =>
+  isTransitionalRunStatus(run.status) ? undefined : run.numberOfTestCases;
+
 /**
  * Everything the Run Comparison Summary KPI cards render, derived once from both runs — per-run figures,
  * source labels, cost states, rates, diffs (second run minus baseline) and Error flags — or null while
@@ -45,8 +49,14 @@ export const useCompareKpiCards = ({
   primaryMetricCount,
   comparedMetricCount,
 }: Params): CompareKpiCards | null => {
-  const { data: primaryFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : primaryRun.id);
-  const { data: comparedFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : comparedRun.id);
+  const { data: primaryFull } = useRunAnalyticsSlice(
+    onlyMatchingTestCases ? undefined : primaryRun.id,
+    getReportedTestCaseCount(primaryRun),
+  );
+  const { data: comparedFull } = useRunAnalyticsSlice(
+    onlyMatchingTestCases ? undefined : comparedRun.id,
+    getReportedTestCaseCount(comparedRun),
+  );
   const primary = onlyMatchingTestCases ? primaryMatchedAnalytics : primaryFull;
   const compared = onlyMatchingTestCases ? comparedMatchedAnalytics : comparedFull;
 

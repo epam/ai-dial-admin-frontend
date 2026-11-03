@@ -21,10 +21,12 @@ import {
   attachMetricInfo,
   buildDistributionQuery,
   buildMetricScoresQuery,
+  buildTestCaseExecutionsQuery,
   buildTestCasesStatusQuery,
   buildTotalMetricEvalDurationQuery,
   buildTotalRunTimeQuery,
   fillUnscoredMetricBars,
+  foldTestCaseExecutions,
   formatRunCost,
   formatRunTimeSeconds,
   getCompletionRate,
@@ -809,6 +811,7 @@ describe('hasModelPricing', () => {
 describe('Runs Summary :: toRunKpiFigures', () => {
   const slice: RunAnalyticsSlice = {
     statusCounts: { passed: 20, failed: 25, error: 8, unscored: 2, total: 55 },
+    hasScoreRows: true,
     totalRunTimeMs: 341000,
     totalMetricEvalDurationMs: 291000,
   };
@@ -836,6 +839,19 @@ describe('Runs Summary :: toRunKpiFigures', () => {
     expect(figures.rate).toBe(47 / 55);
   });
 
+  test('does not apply the threshold to counts derived from executions', () => {
+    const figures = toRunKpiFigures({ suiteSnapshot: { overallScoreThreshold: 0.6 } } as Run, {
+      ...slice,
+      statusCounts: { passed: 0, failed: 0, error: 1, unscored: 3, total: 4 },
+      hasScoreRows: false,
+    });
+
+    expect(figures.hasThreshold).toBe(false);
+    expect(figures.threshold).toBeNull();
+    expect(figures.breakdown).toEqual({ total: 4, completed: 3, above: 0, below: 0, errorOrNa: 1 });
+    expect(figures.rate).toBe(3 / 4);
+  });
+
   test('treats a threshold of zero as set', () => {
     expect(toRunKpiFigures({ suiteSnapshot: { overallScoreThreshold: 0 } } as Run, slice).hasThreshold).toBe(true);
   });
@@ -848,5 +864,96 @@ describe('Runs Summary :: toRunKpiFigures', () => {
     });
 
     expect(figures.totalMs).toBeNull();
+  });
+});
+
+describe('Runs Summary :: test case executions', () => {
+  test("buildTestCaseExecutionsQuery groups a run's eval_summaries by test case and execution status", () => {
+    const query = buildTestCaseExecutionsQuery('run-1');
+
+    expect(query.entity).toBe('eval_summaries');
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toEqual(['test_case_id', 'execution_status']);
+    expect(query.select).toEqual([
+      { expr: { type: ExprType.Field, name: 'test_case_id' } },
+      { expr: { type: ExprType.Field, name: 'execution_status' } },
+      { expr: { type: ExprType.Fn, name: 'count', args: [] }, as: COUNT_ALIAS },
+    ]);
+    expect(query.page).toEqual({ type: 'offset', offset: 0, limit: 10000, include_total: false });
+    expect(query.filter).toEqual({
+      op: ComparisonOp.Eq,
+      args: [
+        { type: ExprType.Field, name: 'test_suite_run_id' },
+        { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+      ],
+    });
+  });
+
+  test('buildTestCaseExecutionsQuery ANDs a NOT IN exclusion on the eval summary id', () => {
+    const query = buildTestCaseExecutionsQuery('run-1', ['id-1']);
+
+    expect(query.filter).toMatchObject({
+      op: LogicalOp.And,
+      args: [
+        expect.objectContaining({ op: ComparisonOp.Eq }),
+        {
+          op: LogicalOp.Not,
+          args: [
+            expect.objectContaining({
+              op: ComparisonOp.In,
+              args: [{ type: ExprType.Field, name: 'id' }, expect.anything()],
+            }),
+          ],
+        },
+      ],
+    });
+  });
+
+  const group = (testCaseId: string, status: string, count = 1) => ({
+    test_case_id: testCaseId,
+    execution_status: status,
+    [COUNT_ALIAS]: count,
+  });
+
+  test('foldTestCaseExecutions completes a test case whose every execution succeeded', () => {
+    expect(foldTestCaseExecutions({ rows: [group('a', 'SUCCESS'), group('b', 'SUCCESS', 3)] })).toEqual({
+      completed: 2,
+      notCompleted: 0,
+    });
+  });
+
+  test('foldTestCaseExecutions counts repeat executions of a test case once', () => {
+    expect(foldTestCaseExecutions({ rows: [group('a', 'SUCCESS', 3)] })).toEqual({ completed: 1, notCompleted: 0 });
+  });
+
+  test('foldTestCaseExecutions does not complete a test case with a failed execution among its successes', () => {
+    expect(foldTestCaseExecutions({ rows: [group('a', 'SUCCESS', 2), group('a', 'FAILED')] })).toEqual({
+      completed: 0,
+      notCompleted: 1,
+    });
+  });
+
+  test.each(['FAILED', 'ERROR', 'TIMEOUT'])('foldTestCaseExecutions does not complete a %s test case', (status) => {
+    expect(foldTestCaseExecutions({ rows: [group('a', status)] })).toEqual({ completed: 0, notCompleted: 1 });
+  });
+
+  test('foldTestCaseExecutions is order independent', () => {
+    const rows = [group('a', 'FAILED'), group('a', 'SUCCESS'), group('b', 'SUCCESS')];
+
+    expect(foldTestCaseExecutions({ rows })).toEqual(foldTestCaseExecutions({ rows: [...rows].reverse() }));
+    expect(foldTestCaseExecutions({ rows })).toEqual({ completed: 1, notCompleted: 1 });
+  });
+
+  test('foldTestCaseExecutions ignores groups without a test case id', () => {
+    expect(
+      foldTestCaseExecutions({ rows: [{ execution_status: 'SUCCESS', count: 1 }, group('a', 'SUCCESS')] }),
+    ).toEqual({
+      completed: 1,
+      notCompleted: 0,
+    });
+  });
+
+  test.each([[null], [{ rows: [] }]])('foldTestCaseExecutions returns zeros for %j', (result) => {
+    expect(foldTestCaseExecutions(result)).toEqual({ completed: 0, notCompleted: 0 });
   });
 });

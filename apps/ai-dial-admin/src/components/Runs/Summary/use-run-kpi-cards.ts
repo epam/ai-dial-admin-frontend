@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 
-import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
+import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components/Common/RunStatus/utils';
 import { RunKpiFigures } from '@/src/components/Runs/Summary/models';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { RunCostState, useRunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
@@ -31,7 +31,9 @@ export interface RunKpiCards {
  * Error flags — or null while the run's analytics slice is still loading.
  */
 export const useRunKpiCards = ({ run, metricSnapshotCount }: Params): RunKpiCards | null => {
-  const { data } = useRunAnalyticsSlice(run?.id);
+  // The reported total only holds for a finished run; an in-flight one counts the test cases seen so far.
+  const testCaseCount = isTransitionalRunStatus(run?.status) ? undefined : run?.numberOfTestCases;
+  const { data } = useRunAnalyticsSlice(run?.id, testCaseCount);
   const sourceLabel = useSourceKindLabel(run?.suiteSnapshot ?? {});
   const cost = useRunCostState({
     run,
