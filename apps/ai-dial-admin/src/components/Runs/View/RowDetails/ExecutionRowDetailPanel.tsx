@@ -1,0 +1,187 @@
+'use client';
+
+import { ColDef } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+
+import classNames from 'classnames';
+import { Spinner } from '@epam/ai-dial-ui-kit';
+
+import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
+import RowDetailHeader from '@/src/components/Runs/Details/RowDetails/RowDetailHeader';
+import {
+  EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS,
+  ROW_DETAIL_DISPLAY_PANEL_CLASS,
+} from '@/src/components/Runs/Details/RowDetails/constants';
+import {
+  applyRowDetailDisplayTree,
+  buildRowDetailDisplayTree,
+} from '@/src/components/Runs/Details/RowDetails/utils/row-detail-display-tree';
+import {
+  buildRowDetailSections,
+  getRowDetailTitle,
+} from '@/src/components/Runs/Details/RowDetails/utils/row-detail-sections';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import ExecutionRowDetailDisplayPanel from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailDisplayPanel';
+import ExecutionRowDetailPivotTable from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailPivotTable';
+import ExecutionRowDetailTable from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailTable';
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { AnalyticsResult } from '@/src/models/evaluation/run';
+
+interface Props {
+  resultId: string;
+  onClose: () => void;
+  position: SidebarPosition;
+  onSwitchDisplayMode: () => void;
+  focusFieldKey?: string | null;
+  focusRequestId?: number;
+  metricGroupOrder?: readonly string[];
+  fieldSchema?: RowDetailFieldSchema;
+  className?: string;
+  initialDisplayTree?: ColDef[];
+  onDisplayTreeChange?: (tree: ColDef[]) => void;
+}
+
+const NO_METRIC_GROUP_ORDER: readonly string[] = [];
+
+const ExecutionRowDetailPanel: FC<Props> = ({
+  resultId,
+  onClose,
+  position,
+  onSwitchDisplayMode,
+  focusFieldKey,
+  focusRequestId = 0,
+  metricGroupOrder = NO_METRIC_GROUP_ORDER,
+  fieldSchema,
+  className,
+  initialDisplayTree,
+  onDisplayTreeChange,
+}) => {
+  const t = useI18n();
+  const [detail, setDetail] = useState<AnalyticsResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [showDisplayPanel, setShowDisplayPanel] = useState(false);
+  const [displayTree, setDisplayTree] = useState<ColDef[]>(() => initialDisplayTree ?? []);
+
+  const isPivotView = position === SidebarPosition.Bottom;
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    setIsLoading(true);
+    setHasError(false);
+    setDetail(null);
+
+    getTestCaseRunResultDetails(resultId)
+      .then((res) => {
+        if (isCancelled) return;
+        if (!res) {
+          setHasError(true);
+          return;
+        }
+        setDetail(res);
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setHasError(true);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [resultId]);
+
+  const sections = useMemo(() => {
+    if (!detail) return [];
+    return buildRowDetailSections(detail, null, metricGroupOrder, fieldSchema);
+  }, [detail, metricGroupOrder, fieldSchema]);
+
+  useEffect(() => {
+    if (sections.length === 0) {
+      return;
+    }
+    setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev, EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS));
+  }, [sections]);
+
+  useEffect(() => {
+    if (displayTree.length === 0) {
+      return;
+    }
+    onDisplayTreeChange?.(displayTree);
+  }, [displayTree, onDisplayTreeChange]);
+
+  const displaySections = useMemo(() => applyRowDetailDisplayTree(sections, displayTree), [sections, displayTree]);
+
+  const title = useMemo(() => (detail ? getRowDetailTitle(detail) : null), [detail]);
+
+  const onToggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
+  const onCloseDisplayPanel = useCallback(() => setShowDisplayPanel(false), []);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <Spinner size={40} fullWidth />
+        </div>
+      );
+    }
+    if (hasError) {
+      return <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>;
+    }
+    if (isPivotView) {
+      return (
+        <ExecutionRowDetailPivotTable
+          key={resultId}
+          sections={displaySections}
+          focusFieldKey={focusFieldKey}
+          focusRequestId={focusRequestId}
+        />
+      );
+    }
+    return (
+      <ExecutionRowDetailTable
+        key={resultId}
+        sections={displaySections}
+        focusFieldKey={focusFieldKey}
+        focusRequestId={focusRequestId}
+      />
+    );
+  };
+
+  return (
+    <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
+      <RowDetailHeader
+        title={title ?? ''}
+        onClose={onClose}
+        onOpenDisplay={onToggleDisplayPanel}
+        isDisplayOpen={showDisplayPanel}
+        position={position}
+        onSwitchDisplayMode={onSwitchDisplayMode}
+        grafanaUrl={detail?.grafanaTraceUrl}
+      />
+
+      <div className="flex flex-col flex-1 min-h-0 gap-4 px-6 pb-6 overflow-hidden">{renderContent()}</div>
+
+      {showDisplayPanel && (
+        <div className="absolute inset-0 flex bg-blackout z-[15]">
+          <ExecutionRowDetailDisplayPanel
+            columns={displayTree}
+            onColumnsChange={setDisplayTree}
+            onClose={onCloseDisplayPanel}
+            panelClassName={ROW_DETAIL_DISPLAY_PANEL_CLASS}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ExecutionRowDetailPanel;

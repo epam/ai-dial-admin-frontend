@@ -10,6 +10,7 @@ import ComboTrendLine, { ComboLinePoint } from '@/src/components/TestSuites/Tren
 import ComboTrendYAxis from '@/src/components/TestSuites/Trends/CostRuntime/ComboTrendYAxis';
 import {
   buildComboYTicks,
+  COMBO_TREND_COLUMN_MAX_PX,
   COMBO_TREND_PLOT_HEIGHT_PX,
   COMBO_TREND_Y_LABEL_WIDTH_PX,
 } from '@/src/components/TestSuites/Trends/CostRuntime/utils/combo-axis';
@@ -175,7 +176,8 @@ const ComboTrendChart: FC<Props> = ({
               {points.map((point) => (
                 <div
                   key={point.runId}
-                  className="flex min-w-px max-w-[72px] flex-1 items-end justify-center overflow-hidden"
+                  className="flex min-w-px flex-1 items-end justify-center overflow-hidden"
+                  style={{ maxWidth: COMBO_TREND_COLUMN_MAX_PX }}
                 >
                   <TrendRunNameLabel
                     name={point.runName}

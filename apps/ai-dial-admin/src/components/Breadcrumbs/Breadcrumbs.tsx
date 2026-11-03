@@ -4,8 +4,6 @@ import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 import classNames from 'classnames';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
-import { IconChevronRight } from '@tabler/icons-react';
-import Link from 'next/link';
 import {
   enrichDetailsWithFolderBreadcrumbs,
   enrichWithFolderBreadcrumbs,
@@ -16,7 +14,7 @@ import {
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { Dropdown, EllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { Breadcrumbs as KitBreadcrumbs, BreadcrumbsItem, BreadcrumbsSize } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -81,61 +79,27 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   const breadcrumbs = enrichedBreadcrumbs ?? basicBreadcrumbs;
 
-  const getHiddenBreadcrumbsDropdown = useCallback(
-    (name: string, hiddenBreadcrumbs: Breadcrumb[]) => (
-      <Dropdown
-        className="cursor-pointer text-secondary hover:text-accent-primary"
-        placement="bottom-start"
-        items={hiddenBreadcrumbs.map(
-          (b): DropdownItem => ({
-            key: b.href,
-            label: <span className="dial-small-text">{b.name}</span>,
-            onClick: () => (b.callback ? b.callback(b.href) : void 0),
-          }),
-        )}
-      >
-        {name}
-      </Dropdown>
-    ),
-    [],
-  );
+  const items = useMemo(
+    () =>
+      breadcrumbs.map(({ href, key, name, callback }): BreadcrumbsItem => {
+        const label = key ? t(key) : name;
 
-  const getBreadcrumbItem = useCallback(
-    (breadcrumb: Breadcrumb) => {
-      const { href, key, name, callback, hiddenBreadcrumbs } = breadcrumb;
-      const label = key ? t(key) : name;
-      const linkClassName = classNames(
-        'flex-1 min-w-0 rounded text-secondary relative group-[:last-child]:text-primary',
-        'focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus',
-        'group-[:last-child]:cursor-default group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
-        !href.length && 'pointer-events-none',
-      );
-
-      if (callback) {
-        return (
-          <Link
-            prefetch={false}
-            onClick={(e) => {
-              e.preventDefault();
-              callback(href);
-            }}
-            href="/"
-            className={linkClassName}
-          >
-            <EllipsisTooltip text={label} />
-          </Link>
-        );
-      } else if (hiddenBreadcrumbs && hiddenBreadcrumbs.length > 0) {
-        return getHiddenBreadcrumbsDropdown(name, hiddenBreadcrumbs);
-      } else {
-        return (
-          <Link prefetch={false} href={href} className={linkClassName}>
-            <EllipsisTooltip text={label} />
-          </Link>
-        );
-      }
-    },
-    [getHiddenBreadcrumbsDropdown, t],
+        if (callback) {
+          return { label, onClick: () => callback(href) };
+        }
+        if (!href) {
+          return { label };
+        }
+        return {
+          label,
+          href,
+          onClick: (event) => {
+            event.preventDefault();
+            router.push(href);
+          },
+        };
+      }),
+    [breadcrumbs, router, t],
   );
 
   if (!pathname) {
@@ -145,22 +109,11 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   return (
     <div
       className={classNames(
-        'flex-row items-center pr-4',
-        mobile ? 'lg:hidden flex shrink-0 pl-10 md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
+        'w-full min-w-0 flex-row items-center pr-4',
+        mobile ? 'lg:hidden flex shrink-0 pl-10 md:px-0 pb-2 mb-2' : 'lg:flex hidden',
       )}
     >
-      <ol className="flex dial-tiny-text whitespace-nowrap">
-        {breadcrumbs.map((breadcrumb, index) => {
-          return (
-            <li key={`${breadcrumb.href}_${index}`} className="flex items-center group max-w-[300px] overflow-hidden">
-              {getBreadcrumbItem(breadcrumb)}
-              {breadcrumbs.length !== index + 1 && (
-                <IconChevronRight width={12} height={12} className="text-secondary m-1" />
-              )}
-            </li>
-          );
-        })}
-      </ol>
+      <KitBreadcrumbs items={items} size={BreadcrumbsSize.Tiny} />
     </div>
   );
 };

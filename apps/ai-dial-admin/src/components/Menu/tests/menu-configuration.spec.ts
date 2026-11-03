@@ -21,6 +21,7 @@ const baseFlags: FeatureFlags = {
   analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
+  analyticsCustomDashboardsEnabled: false,
 };
 
 const findDeploymentsGroup = (flags: FeatureFlags) =>

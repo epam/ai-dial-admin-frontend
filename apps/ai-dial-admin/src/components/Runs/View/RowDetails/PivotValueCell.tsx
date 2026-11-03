@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 
@@ -10,7 +10,7 @@ import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models'
 import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
-import FullscreenValueViewer from '@/src/components/Runs/View/RowDetails/FullscreenValueViewer';
+import RunValueModal from '@/src/components/Runs/View/RowDetails/RunValueModal';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { mergeClasses } from '@/src/utils/merge-classes';
@@ -23,8 +23,10 @@ interface Props {
   isFailed?: boolean;
   className?: string;
   'data-compare-diff'?: string;
-  /** When set, opens this instead of the single-value FullscreenValueViewer (e.g. compare dual-run popup). */
+  /** When set, opens this instead of the single-run popup (e.g. compare dual-run popup). */
   onOpenFullscreen?: () => void;
+  /** Truncate long content with an ellipsis that fits the cell height; by default it scrolls inside the cell. */
+  isTruncated?: boolean;
 }
 
 const VALUE_CELL_BASE =
@@ -37,6 +39,7 @@ const PivotValueCell: FC<Props> = ({
   className,
   'data-compare-diff': dataCompareDiff,
   onOpenFullscreen,
+  isTruncated,
 }) => {
   const t = useI18n();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -55,17 +58,23 @@ const PivotValueCell: FC<Props> = ({
     setIsPopupOpen(true);
   }, [onOpenFullscreen]);
   const onClose = useCallback(() => setIsPopupOpen(false), []);
+  // The popup shows what the cell shows, so a value passed in `raw` / `isFailed` reaches it too.
+  const popupField = useMemo<RowDetailField>(
+    () => ({ ...field, primaryRaw: raw, primaryFailed: isFailed }),
+    [field, raw, isFailed],
+  );
 
   return (
     <>
       <button
         type="button"
         onClick={onOpen}
+        aria-haspopup="dialog"
         data-field-key={field.fieldKey}
         {...(dataCompareDiff ? { 'data-compare-diff': dataCompareDiff } : {})}
         className={mergeClasses(
           VALUE_CELL_BASE,
-          'relative group hover:bg-layer-4 bg-layer-3',
+          'relative group bg-layer-3 hover:bg-layer-4 focus-visible:bg-layer-4 outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus',
           isRightAligned ? 'justify-end text-right' : 'text-left',
           hasScore && 'p-0 border-r-0 border-b-0',
           className,
@@ -79,19 +88,18 @@ const PivotValueCell: FC<Props> = ({
             isFailed={isFailed}
             isScoreIndicator={field.isScoreIndicator}
             failedLabel={failedLabel}
-            fill
+            fill={!isTruncated}
+            isFitted={isTruncated}
           />
         )}
         <span
-          className="pointer-events-none absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity size-4 text-secondary"
+          className="pointer-events-none absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity size-4 text-secondary"
           aria-hidden
         >
           <OpenPopup />
         </span>
       </button>
-      {!onOpenFullscreen && isPopupOpen && (
-        <FullscreenValueViewer isOpen fieldLabel={field.label} value={raw ?? ''} onClose={onClose} />
-      )}
+      {!onOpenFullscreen && isPopupOpen && <RunValueModal field={popupField} onClose={onClose} />}
     </>
   );
 };

@@ -6,6 +6,7 @@ import {
   HEATMAP_DAYS,
   HEATMAP_HOURS,
   buildHeatmapMatrix,
+  buildValueHeatmapMatrix,
   getHeatmapCellColor,
   getHeatmapCellOpacity,
   getHeatmapHourColId,
@@ -126,5 +127,24 @@ describe('isFutureCell', () => {
     expect(isFutureCell(local(2026, 9, 18).getTime(), 0)).toBe(true);
 
     vi.useRealTimers();
+  });
+});
+
+describe('buildValueHeatmapMatrix', () => {
+  test('sums any measure per day and hour, as the calls grid does', () => {
+    const matrix = buildValueHeatmapMatrix(
+      [
+        { bucketMs: local(2026, 9, 15, 10).getTime(), value: 2 },
+        { bucketMs: local(2026, 9, 15, 10).getTime() + 30 * 60 * 1000, value: 3 },
+        { bucketMs: local(2026, 9, 16, 4).getTime(), value: null },
+      ],
+      WEEK,
+      (dayStartMs) => String(dayStartMs),
+    );
+
+    expect(matrix.rows).toHaveLength(HEATMAP_DAYS);
+    expect(matrix.rows[1].values[getHeatmapHourColId(10)]).toBe(5);
+    expect(matrix.rows[2].values[getHeatmapHourColId(4)]).toBe(0);
+    expect(matrix.maxValue).toBe(5);
   });
 });

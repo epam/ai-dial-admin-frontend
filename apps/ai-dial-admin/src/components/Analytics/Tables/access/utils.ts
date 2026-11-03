@@ -45,9 +45,9 @@ const markOf = (key: MarkedPrivilege, role: string, access: TableAccess): Privil
 };
 
 const rowsKindOf = (role: string, access: TableAccess, policies: RowPolicies): RowsCellKind => {
-  if (policies[role]) return RowsCellKind.Policy;
+  if (!access[TableGrantKey.Read].includes(role)) return RowsCellKind.None;
 
-  return access[TableGrantKey.Read].includes(role) ? RowsCellKind.All : RowsCellKind.None;
+  return policies[role] ? RowsCellKind.Policy : RowsCellKind.All;
 };
 
 export const buildRoleRows = (access: TableAccess, policies: RowPolicies): RoleRow[] => {

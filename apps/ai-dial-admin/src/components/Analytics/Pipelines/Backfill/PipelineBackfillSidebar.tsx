@@ -18,6 +18,7 @@ interface Props {
   pipelineName: string;
   isGroupTrigger: boolean;
   isPipelinePaused: boolean;
+  isPipelineEnabled: boolean;
   /** Called with every answer, so the banner above the tab strip stays current while this is open. */
   onRunsChange: (runs: PipelineBackfillRun[]) => void;
 }
@@ -27,7 +28,13 @@ interface Props {
  * running or paused run (a paused one is ended by cancelling it); then one run (the chosen one, else the active
  * one, else the newest); then the latest runs, absent when there are none.
  */
-const PipelineBackfillSidebar: FC<Props> = ({ pipelineName, isGroupTrigger, isPipelinePaused, onRunsChange }) => {
+const PipelineBackfillSidebar: FC<Props> = ({
+  pipelineName,
+  isGroupTrigger,
+  isPipelinePaused,
+  isPipelineEnabled,
+  onRunsChange,
+}) => {
   const t = useI18n();
   const { runs, isBusy, start, applyVerb } = usePipelineBackfillRuns({ pipelineName, onRunsChange });
   const [selectedRunId, setSelectedRunId] = useState<string>();
@@ -46,7 +53,11 @@ const PipelineBackfillSidebar: FC<Props> = ({ pipelineName, isGroupTrigger, isPi
     <div className="flex flex-col gap-y-4">
       {!activeRun && (
         <BackfillSection title={t(BackfillI18nKey.SectionStart)}>
-          <PipelineBackfillStartForm isBusy={isBusy} onStart={(window) => void onStart(window)} />
+          {isPipelineEnabled ? (
+            <PipelineBackfillStartForm isBusy={isBusy} onStart={(window) => void onStart(window)} />
+          ) : (
+            <p className="m-0 text-warning dial-small">{t(BackfillI18nKey.StartBlockedByDisabledPipeline)}</p>
+          )}
         </BackfillSection>
       )}
       {presented && (
@@ -58,6 +69,7 @@ const PipelineBackfillSidebar: FC<Props> = ({ pipelineName, isGroupTrigger, isPi
             run={presented}
             isGroupTrigger={isGroupTrigger}
             isPipelinePaused={isPipelinePaused}
+            isPipelineEnabled={isPipelineEnabled}
             isBusy={isBusy}
             onVerb={applyVerb}
           />

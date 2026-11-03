@@ -6,6 +6,7 @@ import { forwardRef } from 'react';
 import { InteractiveTooltip } from '@epam/ai-dial-ui-kit';
 
 import ComboTrendTooltip from '@/src/components/TestSuites/Trends/CostRuntime/ComboTrendTooltip';
+import { COMBO_TREND_COLUMN_MAX_PX } from '@/src/components/TestSuites/Trends/CostRuntime/utils/combo-axis';
 import { comboTrendTotal } from '@/src/components/TestSuites/Trends/CostRuntime/utils/fold-combo-points';
 import { ComboTrendPoint } from '@/src/components/TestSuites/Trends/models';
 
@@ -61,8 +62,8 @@ const ComboTrendBar = forwardRef<HTMLDivElement, Props>(
 
     return (
       <div
-        className="flex h-full min-w-px max-w-[52px] flex-1 flex-col items-center justify-end"
-        style={{ height: plotHeightPx }}
+        className="flex h-full min-w-px flex-1 flex-col items-center justify-end"
+        style={{ height: plotHeightPx, maxWidth: COMBO_TREND_COLUMN_MAX_PX }}
       >
         <InteractiveTooltip
           content={barTooltip}

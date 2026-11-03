@@ -14,7 +14,7 @@ import {
 } from '@/src/models/analytics/pipeline-runtime';
 
 export interface PausedPipelinesRead extends PipelineRuntimeRead {
-  /** Re-reads the runner. Called after a pause or a resume, so the page states what the service holds. */
+  /** Re-reads the runner, so the page states what the service holds. */
   reload: () => Promise<void>;
 }
 
@@ -23,7 +23,8 @@ const NOT_READ: PipelineRuntimeRead = { isRead: false, isTrackingRead: false, pa
 const byName = (entries: PausedPipeline[]): Record<string, PausedPipeline> =>
   Object.fromEntries(entries.map((entry) => [entry.pipeline_name, entry]));
 
-const names = (entries: RunnerPipelineEntry[]): Set<string> => new Set(entries.map((entry) => entry.name));
+const enabledNames = (entries: RunnerPipelineEntry[]): Set<string> =>
+  new Set(entries.filter((entry) => entry.enabled !== false).map((entry) => entry.name));
 
 /**
  * Whether this pipeline is the runner's to drive at all.
@@ -32,9 +33,6 @@ const names = (entries: RunnerPipelineEntry[]): Set<string> => new Set(entries.m
  * an `aggregate` pipeline has neither — ADAS runs those itself, on its own cron, which is why they
  * report `next_run_at` while being absent from the runner's cache. Reading that absence as a fault
  * flagged every healthy rollup on the page as "nothing is running this pipeline".
- *
- * A pause is the same story from the other side: the runner would accept one for an aggregate pipeline
- * and answer 204, but only its own executors consult the pause registry, so nothing would stop.
  */
 export const isRunnerDriven = (kind: PipelineKind): boolean => kind === PipelineKind.Enrich;
 
@@ -55,7 +53,7 @@ export const runtimeStatusOf = (
   if (!read.isRead || !isEnabled || !isRunnerDriven(kind)) return PipelineRuntimeStatus.Unknown;
   if (read.paused[name]) return PipelineRuntimeStatus.Paused;
   // Without the cache listing the two remaining states are indistinguishable, so the console keeps the
-  // one it can act on: `running` still offers a pause, where `not running` would withhold it on a guess.
+  // one that states no fault: `not running` on an unread cache would be a guess.
   if (!read.isTrackingRead) return PipelineRuntimeStatus.Running;
   return read.tracked.has(name) ? PipelineRuntimeStatus.Running : PipelineRuntimeStatus.NotTracked;
 };
@@ -71,7 +69,7 @@ export const runtimeStatusOf = (
  *
  * The two reads fail independently. The pauses are the load-bearing one — without them nothing runtime
  * is stated at all. The cache listing only adds the third state, `not running`; where it is missing the
- * console keeps `running` and its pause rather than withholding both on a guess, which is what a
+ * console keeps `running` rather than stating a fault on a guess, which is what a
  * deployment whose runner does not serve that route would otherwise get.
  *
  * A failed read and an unconfigured runner are the same answer — `isRead: false`, nothing known. Neither
@@ -103,7 +101,7 @@ export const usePausedPipelines = (): PausedPipelinesRead => {
             isRead: true,
             isTrackingRead,
             paused: byName(paused.response as PausedPipeline[]),
-            tracked: isTrackingRead ? names(tracked.response as RunnerPipelineEntry[]) : new Set<string>(),
+            tracked: isTrackingRead ? enabledNames(tracked.response as RunnerPipelineEntry[]) : new Set<string>(),
           }
         : NOT_READ,
     );

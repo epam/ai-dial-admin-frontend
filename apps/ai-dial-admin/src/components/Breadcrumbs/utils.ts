@@ -56,7 +56,7 @@ export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcr
 const getFolderBreadcrumbs = (path: string, onFolderClick?: (href: string) => void): Breadcrumb[] => {
   const trimmedPath = path.replace(/^\/|\/$/g, '');
   const parts = trimmedPath.split('/');
-  let newBreadcrumbs: Breadcrumb[] = [];
+  const newBreadcrumbs: Breadcrumb[] = [];
   let href = '';
 
   parts.forEach((part) => {
@@ -69,22 +69,6 @@ const getFolderBreadcrumbs = (path: string, onFolderClick?: (href: string) => vo
       },
     });
   });
-
-  if (newBreadcrumbs.length > 3) {
-    const firstPart = newBreadcrumbs[0];
-    const hiddenPart = newBreadcrumbs.slice(1, -2);
-    const secondPart = newBreadcrumbs.slice(-2);
-
-    newBreadcrumbs = [
-      firstPart,
-      {
-        name: '...',
-        href: '',
-        hiddenBreadcrumbs: hiddenPart,
-      },
-      ...secondPart,
-    ];
-  }
 
   return newBreadcrumbs;
 };

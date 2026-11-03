@@ -3,8 +3,13 @@ import type { editor, IRange } from 'monaco-editor';
 
 import { serializeNode } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
-import { QueryFilterNode } from '@/src/models/analytics/query';
-import { FilterNode, FilterNodeKind } from '@/src/models/analytics/query-builder';
+import { QueryFilterNode, QueryOperator } from '@/src/models/analytics/query';
+import {
+  FilterNode,
+  FilterNodeKind,
+  FilterOperandKind,
+  FilterPredicateNode,
+} from '@/src/models/analytics/query-builder';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
 // The table's own stored columns as the filter editor's fields — sensitive ones included, because the
@@ -51,11 +56,18 @@ export const findNamedField = (message: string | undefined, filter: QueryFilterN
   return (message.match(/[A-Za-z_][\w.]*/g) ?? []).find((word) => json.includes(`"name":"${word}"`)) ?? null;
 };
 
-// Serialization skips a condition with no column and a group with no members. For a row limit that widens
-// what the role reads, so such a tree is not storable as shown. The root may be empty: there is then nothing
-// to store at all.
+const hasBlankLiteral = (node: FilterPredicateNode): boolean => {
+  if (node.rightKind !== FilterOperandKind.Literal || node.isNull) return false;
+  if (node.op === QueryOperator.In) return !node.value.split(',').some((item) => item.trim());
+
+  return !node.value.trim();
+};
+
+// Serialization skips a condition with no column and a group with no members, and keeps a blank literal as an
+// empty string that matches no row. For a row limit that widens or empties what the role reads, so such a tree is
+// not storable as shown. The root may be empty: there is then nothing to store at all.
 export const hasUnfinishedCondition = (node: FilterNode, isRoot = true): boolean => {
-  if (node.kind === FilterNodeKind.Predicate) return serializeNode(node, []) === null;
+  if (node.kind === FilterNodeKind.Predicate) return serializeNode(node, []) === null || hasBlankLiteral(node);
   if (!node.children.length) return !isRoot;
 
   return node.children.some((child) => hasUnfinishedCondition(child, false));

@@ -1,46 +1,20 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
-import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
-import { GhostButton, Spinner, ElementSize } from '@epam/ai-dial-ui-kit';
+import { GhostButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
-import {
-  HEATMAP_BODY_HEIGHT,
-  HEATMAP_HEADER_HEIGHT,
-  HEATMAP_FLAT_COLUMN_WIDTH,
-  HEATMAP_NARROW_ROW_HEIGHT,
-} from '@/src/components/Analytics/Usage/constants';
+import HeatmapWeekGrid, { formatHeatmapDayLabel } from '@/src/components/Analytics/Usage/Charts/HeatmapWeekGrid';
 import { HeatmapMetric, UsageView } from '@/src/components/Analytics/Usage/models';
 import { HeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
-import HeatmapScale from '@/src/components/Analytics/Usage/Charts/HeatmapScale';
 import { formatGroupedMoney, formatGroupedNumber } from '@/src/components/Analytics/Usage/utils/format';
-import {
-  HEATMAP_COL_PREFIX,
-  HEATMAP_DAYS,
-  HEATMAP_HOURS,
-  HeatmapRow,
-  buildHeatmapMatrix,
-  getHeatmapCellColor,
-  getHeatmapCellOpacity,
-  getHeatmapHourColId,
-  isFutureCell,
-} from '@/src/components/Analytics/Usage/utils/heatmap';
+import { buildHeatmapMatrix } from '@/src/components/Analytics/Usage/utils/heatmap';
 import { formatWeekLabel } from '@/src/components/Analytics/Usage/utils/weeks';
 import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
-import {
-  HEAT_MAP_LABEL_COL_ID,
-  HEAT_MAP_VALUE_COL_MIN_WIDTH,
-  getHeatMapDefaultCellStyle,
-  getHeatMapGridCellBorderStyle,
-} from '@/src/components/Common/HeatMap/constants';
-import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
-import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
-import HeatMapLabelCellRenderer from '@/src/components/Common/HeatMap/HeatMapLabelCellRenderer';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
-import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
+import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -53,39 +27,10 @@ interface Props {
 
 const PAGER_ICON_PROPS = { size: 16, stroke: 2 };
 
-const formatDayLabel = (dayStartMs: number): string =>
-  new Date(dayStartMs).toLocaleDateString(void 0, { weekday: 'short', day: 'numeric' });
-
-const formatHourLabel = (hour: number): string => String(hour).padStart(2, '0');
-
-/**
- * The shared label column is sized for run names; a weekday and a date need a fraction of it, and
- * at the shared width the text sat alone against a hand's breadth of empty cell.
- */
-const DAY_LABEL_COL_WIDTH = 88;
-
 const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOfferedOverride }) => {
   const t = useI18n();
   // Cost first wherever it is offered; where it is not, `activeMetric` below reads calls.
   const [metric, setMetric] = useState<HeatmapMetric>(HeatmapMetric.Cost);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const [bodyWidth, setBodyWidth] = useState(0);
-
-  useEffect(() => {
-    const body = bodyRef.current;
-
-    if (!body || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-
-    const observer = new ResizeObserver(([entry]) => setBodyWidth(entry.contentRect.width));
-    observer.observe(body);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const hourColumnWidth = bodyWidth ? (bodyWidth - DAY_LABEL_COL_WIDTH) / HEATMAP_HOURS : 0;
-  const rowHeight = hourColumnWidth && hourColumnWidth < HEATMAP_FLAT_COLUMN_WIDTH ? HEATMAP_NARROW_ROW_HEIGHT : void 0;
   const { buckets, week, weekOffset, onPreviousWeek, onNextWeek, onCurrentWeek } = heatmap;
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
@@ -94,7 +39,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
   const activeMetric = isCostOffered ? metric : HeatmapMetric.Calls;
 
   const matrix = useMemo(
-    () => buildHeatmapMatrix(buckets.data ?? [], week, formatDayLabel, activeMetric),
+    () => buildHeatmapMatrix(buckets.data ?? [], week, formatHeatmapDayLabel, activeMetric),
     [buckets.data, week, activeMetric],
   );
 
@@ -117,97 +62,6 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
   // The grid always draws its seven days, so an empty week is stated in the subtitle rather than by
   // replacing the grid with a message.
   const isEmptyWeek = !buckets.isLoading && (buckets.hasFailed || matrix.maxValue === 0);
-
-  const columnDefs = useMemo<ColDef<HeatmapRow>[]>(() => {
-    const labelColumn: ColDef<HeatmapRow> = {
-      colId: HEAT_MAP_LABEL_COL_ID,
-      field: 'label',
-      headerName: t(AnalyticsUsageI18nKey.HeatmapDayColumn),
-      pinned: 'left',
-      width: DAY_LABEL_COL_WIDTH,
-      minWidth: DAY_LABEL_COL_WIDTH,
-      maxWidth: DAY_LABEL_COL_WIDTH,
-      sortable: false,
-      filter: false,
-      resizable: false,
-      suppressMovable: true,
-      cellRenderer: HeatMapLabelCellRenderer,
-      cellStyle: () => getHeatMapDefaultCellStyle(),
-    };
-
-    const hourColumns = Array.from({ length: HEATMAP_HOURS }, (_, hour): ColDef<HeatmapRow> => {
-      const colId = getHeatmapHourColId(hour);
-      const headerLabel = formatHourLabel(hour);
-
-      return {
-        colId,
-        headerName: headerLabel,
-        headerComponent: HeatMapAxisHeader,
-        headerComponentParams: { label: headerLabel },
-        minWidth: HEAT_MAP_VALUE_COL_MIN_WIDTH,
-        sortable: false,
-        filter: false,
-        resizable: false,
-        suppressMovable: true,
-        // The cell draws colour and nothing else, so its day, hour and count reach a pointer
-        // through the tooltip and a screen reader through a visually hidden label — a cell with
-        // neither is an unnamed square to anyone not looking at the shade.
-        valueGetter: (params: ValueGetterParams<HeatmapRow>) => Number(params.data?.values?.[colId] ?? 0),
-        cellRenderer: (params: ICellRendererParams<HeatmapRow>) => {
-          if (!params.data || isFutureCell(params.data.dayStartMs, hour)) {
-            return null;
-          }
-
-          return (
-            <span className="sr-only">
-              {readCellLabel(params.data.label ?? '', headerLabel, params.data.values?.[colId] ?? 0)}
-            </span>
-          );
-        },
-        tooltipValueGetter: (params) => {
-          if (!params.data || isFutureCell(params.data.dayStartMs, hour)) {
-            return void 0;
-          }
-
-          return readCellLabel(params.data.label ?? '', headerLabel, params.data.values?.[colId] ?? 0);
-        },
-        cellStyle: (params) => {
-          if (!params.data || isFutureCell(params.data.dayStartMs, hour)) {
-            return getHeatMapGridCellBorderStyle();
-          }
-
-          const value = Number(params.data.values?.[colId] ?? 0);
-          const opacity = getHeatmapCellOpacity(value, matrix.maxValue);
-          return getHeatMapGridCellBorderStyle(opacity === 0 ? void 0 : getHeatmapCellColor(opacity));
-        },
-      };
-    });
-
-    return [labelColumn, ...hourColumns];
-  }, [matrix.maxValue, readCellLabel, t]);
-
-  const renderGrid = () => {
-    if (buckets.isLoading) {
-      return (
-        <div className="flex justify-center">
-          <Spinner size={24} fullWidth />
-        </div>
-      );
-    }
-
-    return (
-      <HeatMapGrid
-        columnDefs={columnDefs}
-        rowData={matrix.rows}
-        headerLabels={Array.from({ length: HEATMAP_HOURS }, (_, hour) => formatHourLabel(hour))}
-        emptyTitle={t(BasicI18nKey.NoData)}
-        valueColumnIdPrefix={HEATMAP_COL_PREFIX}
-        rowHeight={rowHeight}
-        showColorScale={false}
-        className="flex min-h-0 flex-col"
-      />
-    );
-  };
 
   return (
     <DashboardCard
@@ -254,15 +108,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOffere
         </div>
       }
     >
-      <div
-        ref={bodyRef}
-        className="flex flex-col justify-center"
-        style={{ minHeight: rowHeight ? HEATMAP_DAYS * rowHeight + HEATMAP_HEADER_HEIGHT : HEATMAP_BODY_HEIGHT }}
-      >
-        {renderGrid()}
-      </div>
-
-      <HeatmapScale className="mt-3 justify-start" />
+      <HeatmapWeekGrid matrix={matrix} isLoading={buckets.isLoading} readCellLabel={readCellLabel} />
     </DashboardCard>
   );
 };

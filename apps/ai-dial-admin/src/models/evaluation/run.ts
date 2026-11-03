@@ -120,17 +120,12 @@ export interface RunTarget {
   kind?: RunTargetKind;
 }
 
-/** Averages from GET /api/v1/test-suite-runs/{id}/costs (null when no usage-log rows for that phase). */
-export interface RunCosts {
-  avgTestCaseCost: number | null;
-  avgMetricEvalCost: number | null;
-}
-
 export interface RunTotalCosts {
   runId: string;
   totalCost: number;
-  testCaseCost: number;
-  metricEvalCost: number;
+  /** Null while no usage row exists for that phase. */
+  testCaseCost: number | null;
+  metricEvalCost: number | null;
 }
 
 export interface RunsTotalCostsRequest {

@@ -77,12 +77,12 @@ describe('SpecificFunction', () => {
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreFunctionSuiteOnlyAlertSuffix)).toBeInTheDocument();
     expect(
       screen.getByText(
-        `row-${TestSuitesI18nKey.OverallScoreDatasetColumn}-${FunctionParameterSourceType.TestCase}-y_true_float`,
+        `row-${TestSuitesI18nKey.OverallScoreGroundTruth}-${FunctionParameterSourceType.TestCase}-y_true_float`,
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        `row-${TestSuitesI18nKey.OverallScoreParameterP}-${FunctionParameterSourceType.TestCase}-y_pred`,
+        `row-${TestSuitesI18nKey.OverallScorePrediction}-${FunctionParameterSourceType.TestCase}-y_pred`,
       ),
     ).toBeInTheDocument();
   });
@@ -115,9 +115,7 @@ describe('SpecificFunction', () => {
 
     render(<SpecificFunction expression={expression} onChange={onChange} />);
 
-    await userEvent.click(
-      screen.getByRole('button', { name: `update-${TestSuitesI18nKey.OverallScoreDatasetColumn}` }),
-    );
+    await userEvent.click(screen.getByRole('button', { name: `update-${TestSuitesI18nKey.OverallScoreGroundTruth}` }));
 
     expect(onChange).toHaveBeenCalledWith(OverallScoreFunctionName.RocAuc, [
       { $type: FunctionParameterSourceType.TestCase, columnName: 'updated' },
@@ -135,7 +133,7 @@ describe('SpecificFunction', () => {
 
     render(<SpecificFunction expression={expression} onChange={onChange} />);
 
-    await userEvent.click(screen.getByRole('button', { name: `update-${TestSuitesI18nKey.OverallScoreParameterP}` }));
+    await userEvent.click(screen.getByRole('button', { name: `update-${TestSuitesI18nKey.OverallScorePrediction}` }));
 
     expect(onChange).toHaveBeenCalledWith(OverallScoreFunctionName.RocAuc, [
       parameterSources[0],

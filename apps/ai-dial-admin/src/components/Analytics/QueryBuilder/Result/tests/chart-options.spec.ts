@@ -23,7 +23,13 @@ const ROWS = [
 
 const COLORS = getChartColors(fallbackDarkTheme);
 
-const CONTEXT = { colors: COLORS, dimensionColumns: ['deployment'], otherLabel: 'Other', columnLabels: {} };
+const CONTEXT = {
+  colors: COLORS,
+  dimensionColumns: ['deployment'],
+  otherLabel: 'Other',
+  emptyLabel: '(no value)',
+  columnLabels: {},
+};
 
 describe('QueryBuilder :: chart-options', () => {
   test('bar options map x categories and numeric y values', () => {
@@ -184,6 +190,19 @@ describe('QueryBuilder :: chart-options', () => {
   });
 
   describe('buildChartOptions dispatch', () => {
+    test('names a category with no value on the axis and in a pie', () => {
+      const rows = [
+        { deployment: '', total: 2 },
+        { deployment: 'gpt', total: 1 },
+      ];
+      const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', 'total', CONTEXT);
+      expect((bar.xAxis as { data: string[] }).data).toContain('(no value)');
+      const pie = buildChartOptions(ChartType.Pie, rows, 'deployment', 'total', CONTEXT);
+      expect((pie.series as Array<{ data: Array<{ name: string }> }>)[0].data.map((slice) => slice.name)).toContain(
+        '(no value)',
+      );
+    });
+
     test('routes each type to its series shape', () => {
       expect(buildChartOptions(ChartType.Bar, ROWS, 'deployment', 'total', CONTEXT).series[0].type).toBe('bar');
       expect(buildChartOptions(ChartType.Line, ROWS, 'deployment', 'total', CONTEXT).series[0].type).toBe('line');

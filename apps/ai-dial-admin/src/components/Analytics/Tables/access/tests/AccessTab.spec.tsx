@@ -217,6 +217,24 @@ describe('AccessTab — search and filters', () => {
     );
   });
 
+  test('marks the policy a role keeps without Read as kept, and still counts it as limited', async () => {
+    const user = userEvent.setup();
+    const kept: RoleRow = {
+      role: 'analysts',
+      marks: { ...none, modify: PrivilegeMark.Stored },
+      isSensitive: false,
+      rowsKind: RowsCellKind.None,
+      filter,
+    };
+    renderTab(makeState({ rows: [...ROWS, kept] }));
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.CannotReadRowsFilterKept)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.FilterRowsLimited }));
+
+    expect(screen.getByRole('group', { name: 'row-analysts' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'row-ingest-bot' })).toBeNull();
+  });
+
   test('keeps only the roles with a row limit when Rows limited is selected', async () => {
     const user = userEvent.setup();
     renderTab();
@@ -278,6 +296,23 @@ describe('AccessTab — opening and removing', () => {
     expect(screen.queryByText(/drawer:/)).toBeNull();
   });
 
+  test('offers Edit beside Remove in the row menu', () => {
+    renderTab();
+
+    expect(screen.getByRole('button', { name: /Edit:team-x/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Remove:team-x/ })).toBeInTheDocument();
+  });
+
+  test('opens the drawer in edit mode for the row whose Edit action is chosen', async () => {
+    const user = userEvent.setup();
+    renderTab();
+
+    await user.click(screen.getByRole('button', { name: /Edit:ingest-bot/ }));
+
+    expect(screen.getByText(/drawer: ingest-bot/)).toBeInTheDocument();
+    expect(screen.queryByText(/remove-dialog:/)).toBeNull();
+  });
+
   test('opens the removal dialog for the row whose action is chosen', async () => {
     const user = userEvent.setup();
     renderTab();
@@ -295,6 +330,7 @@ describe('AccessTab — before the data has loaded', () => {
 
     expect(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.AddRole })).toBeDisabled();
     expect(screen.queryByRole('button', { name: /Remove:team-x/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Edit:team-x/ })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'open-team-x' }));
     expect(screen.queryByText(/drawer:/)).toBeNull();
   });

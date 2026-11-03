@@ -27,7 +27,7 @@ const Header: FC<Props> = ({ isEnableAuth, appName, docLink }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   return (
-    <header className="relative z-40 flex h-12 w-full items-center gap-3 border-b border-tertiary bg-layer-base px-4 lg:pl-5 lg:pr-6">
+    <header className="relative z-40 flex w-full items-center gap-3 bg-layer-base px-4 py-3 shadow-[inset_0_-1px_0_var(--border-color-tertiary)] lg:pl-5 lg:pr-6">
       <div className="flex min-w-0 items-center gap-4 lg:gap-6">
         <GhostIconButton
           aria-label={t(HeaderI18nKey.ToggleSidebar)}
@@ -39,12 +39,16 @@ const Header: FC<Props> = ({ isEnableAuth, appName, docLink }) => {
         />
         <Logo appName={appName} />
       </div>
-      <div className="min-w-0 flex-1 overflow-hidden lg:pl-10">
+      <div className="min-w-0 flex-1 lg:pl-10">
         <Breadcrumbs mobile={false} />
       </div>
 
       <div className="flex shrink-0 items-center gap-5">
-        {isReadOnlyAdmin && <ReadOnlyAdminBadge />}
+        {isReadOnlyAdmin && (
+          <div className="-my-1 flex">
+            <ReadOnlyAdminBadge />
+          </div>
+        )}
         <div className="flex items-center gap-5 lg:gap-6">
           {docLink && (
             <div className="-m-2 flex">

@@ -4,7 +4,7 @@ import { ConfirmationPopup, ConfirmationPopupVariant } from '@epam/ai-dial-ui-ki
 import { FC, useState } from 'react';
 
 import { MARKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
-import { PrivilegeMark, RoleRow, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
+import { PrivilegeMark, RoleRow } from '@/src/components/Analytics/Tables/access/models';
 import { summarizeFilter } from '@/src/components/Analytics/Tables/access/utils';
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -53,7 +53,7 @@ const RemoveRoleDialog: FC<Props> = ({ tableName, row, onRemove, onClose }) => {
   const privileges = describePrivileges(row, t);
   const details: Array<[AnalyticsTableAccessI18nKey, string]> = [[AnalyticsTableAccessI18nKey.RemoveTable, tableName]];
   if (privileges) details.push([AnalyticsTableAccessI18nKey.RemoveAccess, privileges]);
-  if (row.rowsKind === RowsCellKind.Policy && row.filter) {
+  if (row.filter != null) {
     details.push([AnalyticsTableAccessI18nKey.RemoveRowLimit, summarizeFilter(row.filter)]);
   }
 
@@ -66,20 +66,21 @@ const RemoveRoleDialog: FC<Props> = ({ tableName, row, onRemove, onClose }) => {
       isLoading={isRemoving}
       onConfirm={() => void onConfirm()}
       onCancel={onClose}
+      description={
+        <div className="flex flex-col gap-3">
+          <dl className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-1 dial-small-text">
+            {details.map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="text-secondary">{t(label)}</dt>
+                <dd className="break-words">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="dial-small-text">{t(AnalyticsTableAccessI18nKey.RemoveWarning)}</p>
+        </div>
+      }
       onClose={onClose}
-    >
-      <div className="flex flex-col gap-3">
-        <dl className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-1 dial-small-text">
-          {details.map(([label, value]) => (
-            <div key={label} className="contents">
-              <dt className="text-secondary">{t(label)}</dt>
-              <dd className="break-words">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="dial-small-text">{t(AnalyticsTableAccessI18nKey.RemoveWarning)}</p>
-      </div>
-    </ConfirmationPopup>
+    />
   );
 };
 

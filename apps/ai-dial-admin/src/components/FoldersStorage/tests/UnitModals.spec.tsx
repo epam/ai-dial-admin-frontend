@@ -2,7 +2,12 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { createOrgUnit, deleteOrgUnit, renameOrgUnit } from '@/src/app/[lang]/folders-storage/actions';
+import {
+  createOrgUnit,
+  deleteOrgUnit,
+  removeFolderMarkers,
+  renameOrgUnit,
+} from '@/src/app/[lang]/folders-storage/actions';
 import { ButtonsI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { OrgUnit } from '@/src/models/dial/org-unit';
@@ -14,6 +19,7 @@ vi.mock('@/src/app/[lang]/folders-storage/actions', () => ({
   createOrgUnit: vi.fn(),
   renameOrgUnit: vi.fn(),
   deleteOrgUnit: vi.fn(),
+  removeFolderMarkers: vi.fn(),
 }));
 
 const unit: OrgUnit = {
@@ -60,11 +66,11 @@ describe('NewUnitModal', () => {
   });
 
   test.each([
-    [400, '"roles" is reserved. Choose another name.'],
-    [409, 'public/Acme already has a folder named Policies. Choose another name.'],
-  ])('shows core %s message next to the name and stays open', async (status, message) => {
+    [400, '"roles" is reserved. Choose another name.', '"roles" is reserved. Choose another name.'],
+    [409, 'public/Acme already has a unit named roles', FoldersI18nKey.UnitNameExists],
+  ])('shows the %s error next to the name and stays open', async (status, errorMessage, message) => {
     const user = userEvent.setup();
-    vi.mocked(createOrgUnit).mockResolvedValue({ success: false, status, errorMessage: message });
+    vi.mocked(createOrgUnit).mockResolvedValue({ success: false, status, errorMessage });
     const onCreated = vi.fn();
     renderModal(onCreated);
 
@@ -118,11 +124,11 @@ describe('RemoveUnitModal', () => {
   });
 
   const subUnits: OrgUnit[] = [
-    { ...unit, id: 's1', displayName: 'US Risk' },
-    { ...unit, id: 's2', displayName: 'EU Risk' },
+    { ...unit, id: 's1', name: 'US Risk' },
+    { ...unit, id: 's2', name: 'EU Risk' },
   ];
 
-  test('falls back to the unit name when there is no display name', () => {
+  test('shows the unit name, and the display name only when it is set', () => {
     render(
       <RemoveUnitModal
         unit={{ ...unit, displayName: '' }}
@@ -133,6 +139,8 @@ describe('RemoveUnitModal', () => {
     );
 
     expect(screen.getByText(FoldersI18nKey.RemoveUnitDescription)).toBeTruthy();
+    expect(screen.getByText(unit.name)).toBeTruthy();
+    expect(screen.queryByText(FoldersI18nKey.UnitDisplayName + ':')).toBeNull();
     expect(screen.getByText('EU')).toBeTruthy();
   });
 
@@ -152,20 +160,62 @@ describe('RemoveUnitModal', () => {
     expect(deleteOrgUnit).toHaveBeenCalledWith('public/Acme/Risk', true);
   });
 
-  test('stays open and shows core message when the unit still holds content', async () => {
+  test('lists item names in red-labelled sections and offers only Close when the unit still holds content', async () => {
     const user = userEvent.setup();
     vi.mocked(deleteOrgUnit).mockResolvedValue({
       success: false,
       status: 409,
-      errorMessage: 'Unit holds Reports/q3.xlsx',
+      errorMessage:
+        'public/Acme still holds content: applications/public/Acme/sla-app__1.0.0, files/public/Acme/.dial_folder, files/public/Acme/q3.xlsx. Delete or move it first.',
     });
+    vi.mocked(removeFolderMarkers).mockResolvedValue({ success: false });
+    const onClose = vi.fn();
+    const onRemoved = vi.fn();
+    render(<RemoveUnitModal unit={unit} subUnits={[]} onClose={onClose} onRemoved={onRemoved} />);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
+
+    expect(await screen.findByText(FoldersI18nKey.RemoveUnitHoldsContent)).toBeTruthy();
+    expect(screen.getByText(FoldersI18nKey.RemoveUnitDescription)).toBeTruthy();
+    expect(screen.getByText(FoldersI18nKey.RemoveUnitDeleteOrMove)).toBeTruthy();
+    expect(screen.getByText('sla-app__1.0.0')).toBeTruthy();
+    expect(screen.getByText('q3.xlsx')).toBeTruthy();
+    expect(screen.queryByText('.dial_folder')).toBeNull();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Remove })).toBeNull();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Cancel })).toBeNull();
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Close }));
+    expect(onClose).toHaveBeenCalled();
+    expect(onRemoved).not.toHaveBeenCalled();
+  });
+
+  test('removes the .dial_folder markers core reports and retries when nothing else is left', async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteOrgUnit)
+      .mockResolvedValueOnce({
+        success: false,
+        status: 409,
+        errorMessage: 'public/Acme still holds content: files/public/Acme/.dial_folder. Delete or move it first.',
+      })
+      .mockResolvedValueOnce({ success: true });
+    vi.mocked(removeFolderMarkers).mockResolvedValue({ success: true });
     const onRemoved = vi.fn();
     render(<RemoveUnitModal unit={unit} subUnits={[]} onClose={vi.fn()} onRemoved={onRemoved} />);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
 
-    expect((await screen.findByRole('alert')).textContent).toContain('Reports/q3.xlsx');
-    expect(onRemoved).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(onRemoved).toHaveBeenCalledOnce());
+    expect(removeFolderMarkers).toHaveBeenCalledWith(['public/Acme/.dial_folder']);
+    expect(deleteOrgUnit).toHaveBeenCalledTimes(2);
+  });
+
+  test('shows any other core refusal as an alert and keeps the dialog actionable', async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteOrgUnit).mockResolvedValue({ success: false, status: 409, errorMessage: 'Unit is busy' });
+    render(<RemoveUnitModal unit={unit} subUnits={[]} onClose={vi.fn()} onRemoved={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Unit is busy');
   });
 });
 

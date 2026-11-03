@@ -172,7 +172,10 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   [ApplicationRoute.Routes]: auditSubIdBreadcrumb('Routes', MenuI18nKey.Routes),
   [ApplicationRoute.Toolsets]: auditSubIdBreadcrumb('Toolsets', MenuI18nKey.Toolsets),
   [ApplicationRoute.Dashboard]: {
-    segments: [{ name: 'Dashboard', i18nKey: MenuI18nKey.Dashboard }],
+    segments: [
+      { name: 'Dashboard', i18nKey: MenuI18nKey.Dashboard },
+      { name: 'Id', href: false },
+    ],
   },
   [ApplicationRoute.ImportConfig]: {
     segments: [{ name: 'Import Config', i18nKey: MenuI18nKey.ImportConfig }],

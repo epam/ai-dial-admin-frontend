@@ -109,7 +109,10 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
 
 // A 2xx whose body is not a shape the read accepts: `handleResponse` found no error to describe, so the
 // envelope carries the failure and no words.
-const unreadableBody = <T extends object>({ status, requestId }: ServerActionResponse): ServerActionResponse<T> => ({
+export const unreadableBody = <T extends object>({
+  status,
+  requestId,
+}: ServerActionResponse): ServerActionResponse<T> => ({
   success: false,
   status,
   requestId,

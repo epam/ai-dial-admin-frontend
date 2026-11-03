@@ -7,11 +7,11 @@ import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
+import { ROW_DETAIL_CELL_BASE } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import {
-  ROW_DETAIL_CELL_BASE,
   ROW_DETAIL_FIELD_INDENT,
   ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+} from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';

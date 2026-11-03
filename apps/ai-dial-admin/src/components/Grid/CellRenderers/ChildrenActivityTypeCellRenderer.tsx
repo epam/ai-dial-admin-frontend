@@ -1,17 +1,18 @@
-import { IconLetterL } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
+import classNames from 'classnames';
 
 interface ChildrenActivityTypeCellRendererParams extends ICellRendererParams {
-  /** When false, the child-activity indicator icon is not shown. Defaults to true. */
-  showIcon?: boolean;
+  /** When false, child activities are not indented. Defaults to true. */
+  shouldIndent?: boolean;
 }
 
-const ChildrenActivityTypeCellRenderer = ({ data, showIcon = true }: ChildrenActivityTypeCellRendererParams) => {
+const ChildrenActivityTypeCellRenderer = ({ data, shouldIndent = true }: ChildrenActivityTypeCellRendererParams) => {
+  const isIndented = shouldIndent && !!data?.parentActivityId;
+
   return (
-    <>
-      {showIcon && data?.parentActivityId ? <IconLetterL size={14} className="text-secondary m-1" /> : null}
+    <div className={classNames('flex items-center min-w-0', isIndented && 'pl-6')}>
       <span>{data?.activityType}</span>
-    </>
+    </div>
   );
 };
 export default ChildrenActivityTypeCellRenderer;

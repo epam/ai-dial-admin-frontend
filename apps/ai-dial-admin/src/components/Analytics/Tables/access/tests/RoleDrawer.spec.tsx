@@ -373,7 +373,7 @@ describe('RoleDrawer — grants that change nothing', () => {
     ],
   };
 
-  test('stays open with a banner inside the Read card, and offers Done instead of Save', async () => {
+  test('stays open with the Read banner in the shared stack, and offers Done instead of Save', async () => {
     const user = userEvent.setup();
     const access = makeAccess({ read: ['team-x'] });
     access.saveGrants.mockResolvedValue({ isOk: true, result: answer });
