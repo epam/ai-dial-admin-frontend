@@ -14,7 +14,7 @@ import {
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { Breadcrumbs as KitBreadcrumbs, BreadcrumbsItem } from '@epam/ai-dial-ui-kit';
+import { Breadcrumbs as KitBreadcrumbs, BreadcrumbsItem, BreadcrumbsSize } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -113,7 +113,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         mobile ? 'lg:hidden flex shrink-0 pl-10 md:px-0 pb-2 mb-2' : 'lg:flex hidden',
       )}
     >
-      <KitBreadcrumbs items={items} className="-m-1 p-1" />
+      <KitBreadcrumbs items={items} size={BreadcrumbsSize.Tiny} />
     </div>
   );
 };
