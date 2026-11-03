@@ -333,7 +333,7 @@ describe('DuplicatePlatformAsset', () => {
     const user = userEvent.setup();
     const route = {
       name: 'bearer-route',
-      upstreams: [{ endpoint: 'https://example.test', authType: UpstreamAuthType.BEARER }],
+      upstreams: [{ endpoint: 'https://example.test', authType: { type: UpstreamAuthType.BEARER } }],
     } as PlatformAsset;
     const { onDuplicate } = renderModal(ApplicationRoute.PlatformRoutes, route);
 
@@ -349,7 +349,34 @@ describe('DuplicatePlatformAsset', () => {
     expect(onDuplicate).toHaveBeenCalledWith({
       ...route,
       name: 'bearer-route-copy',
-      upstreams: [{ endpoint: 'https://example.test', authType: UpstreamAuthType.BEARER, key: 'replacement-key' }],
+      upstreams: [
+        { endpoint: 'https://example.test', authType: { type: UpstreamAuthType.BEARER }, key: 'replacement-key' },
+      ],
+    });
+  });
+
+  test('collects replacement keys for Custom Header route upstreams before duplicating', async () => {
+    const user = userEvent.setup();
+    const authType = { type: UpstreamAuthType.CUSTOM_HEADER, headerName: 'X-Key' };
+    const route = {
+      name: 'header-route',
+      upstreams: [{ endpoint: 'https://example.test', authType }],
+    } as PlatformAsset;
+    const { onDuplicate } = renderModal(ApplicationRoute.PlatformRoutes, route);
+
+    const duplicateButton = screen.getByRole('button', { name: ButtonsI18nKey.Duplicate });
+    expect(duplicateButton).toBeDisabled();
+
+    fireEvent.change(screen.getByPlaceholderText('EntityPlaceholders.UpstreamKey'), {
+      target: { value: 'replacement-key' },
+    });
+    await waitFor(() => expect(duplicateButton).toBeEnabled());
+    await user.click(duplicateButton);
+
+    expect(onDuplicate).toHaveBeenCalledWith({
+      ...route,
+      name: 'header-route-copy',
+      upstreams: [{ endpoint: 'https://example.test', authType, key: 'replacement-key' }],
     });
   });
 });

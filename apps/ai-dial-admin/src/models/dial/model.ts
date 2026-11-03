@@ -90,6 +90,13 @@ export interface DialUpstreamInterface {
 export enum UpstreamAuthType {
   API_KEY = 'API_KEY',
   BEARER = 'BEARER',
+  CUSTOM_HEADER = 'CUSTOM_HEADER',
+}
+
+// Mirrors Core's UpstreamAuthConfig. `headerName` is required for CUSTOM_HEADER and forbidden otherwise.
+export interface DialUpstreamAuth {
+  type: UpstreamAuthType;
+  headerName?: string;
 }
 
 export interface DialModelEndpoint {
@@ -99,7 +106,7 @@ export interface DialModelEndpoint {
   // of its own falls back to. The ingress path plays no part in it, unlike a deployment's own base_url.
   baseUrl?: string;
   key?: string;
-  authType?: UpstreamAuthType;
+  authType?: DialUpstreamAuth;
   weight?: number | string;
   tier?: number | string;
   extraData?: DialEndpointExtraData | null;

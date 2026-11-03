@@ -615,7 +615,9 @@ export default {
     AuthenticationType: 'Authentication type',
     ApiKey: 'API key',
     Bearer: 'Bearer',
-    BearerKey: 'Bearer key for upstream {index}',
+    CustomHeader: 'Custom header',
+    HeaderName: 'Header name',
+    AuthKey: 'Key for upstream {index}',
   },
   ModelView: {
     InteractionLimit: {
@@ -1591,6 +1593,7 @@ export default {
     UpstreamId: 'Enter ID',
     UpstreamEndpointWithResponses: 'Enter chat completion endpoint',
     UpstreamKey: 'Enter upstream key',
+    UpstreamAuthHeaderName: 'e.g. X-Api-Token',
     Value: 'Enter value',
     Select: 'Select value',
     OverrideName: 'Enter override name',
@@ -1660,6 +1663,7 @@ export default {
     ValidationError: 'Validation Error',
     EmptyField: 'This field could not be empty',
     RequiredField: 'This field is required',
+    InvalidHeaderName: 'Enter a valid HTTP header name',
     ClientSecretMinLength: 'Client secret must be at least {number} characters',
     PageNotFound: 'Page Not Found',
     ResourceNotFound: 'Resource not found or no longer available.',
