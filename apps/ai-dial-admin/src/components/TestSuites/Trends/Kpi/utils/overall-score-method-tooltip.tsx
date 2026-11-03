@@ -40,7 +40,12 @@ const MethodHeader = ({ title, subtitle }: { title: string; subtitle: string }) 
   </div>
 );
 
-export const buildOverallScoreMethodTooltip = (suite: TestSuite, t: Translate, metricCount: number): ReactNode => {
+/** Only the overall-score method is read, so a run's snapshot works as well as a live suite. */
+export const buildOverallScoreMethodTooltip = (
+  suite: Pick<TestSuite, 'overallScore'>,
+  t: Translate,
+  metricCount: number,
+): ReactNode => {
   const methodLabel = t(TestSuitesI18nKey.OverallScoreCalculationMethod);
   const type = suite.overallScore?.type ?? OverallScoreType.Mean;
 

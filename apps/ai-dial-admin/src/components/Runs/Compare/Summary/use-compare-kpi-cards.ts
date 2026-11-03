@@ -10,7 +10,7 @@ import { toRatePercent, toSlotRecord } from '@/src/components/Runs/Compare/Summa
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
-import { formatRunTimeSeconds, toRunKpiFigures } from '@/src/components/Runs/Summary/utils';
+import { formatRunTimeSeconds, resolveRunScoreMethod, toRunKpiFigures } from '@/src/components/Runs/Summary/utils';
 import { useSourceKindLabel } from '@/src/components/TestSuites/Trends/CostRuntime/use-source-kind-label';
 import { formatCostDelta } from '@/src/components/TestSuites/Trends/Kpi/utils/kpi-delta';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -102,6 +102,7 @@ export const useCompareKpiCards = ({
     figures: toSlotRecord(primaryFigures, comparedFigures),
     sourceLabels: toSlotRecord(primarySourceLabel, comparedSourceLabel),
     costs: toSlotRecord(primaryCost, comparedCost),
+    scoreMethods: toSlotRecord(resolveRunScoreMethod(primaryRun), resolveRunScoreMethod(comparedRun)),
     rates: toSlotRecord(rateOf(primaryFigures), rateOf(comparedFigures)),
     rateTitleKey:
       primaryFigures.hasThreshold || comparedFigures.hasThreshold

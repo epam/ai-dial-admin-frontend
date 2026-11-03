@@ -9,7 +9,7 @@ import { ErrorI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i1
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
-import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreConfig, OverallScoreType } from '@/src/models/evaluation/test-suite';
 import Analytics from '../Analytics';
 
 const executeStructuredQueryMock = vi.fn();
@@ -92,7 +92,14 @@ const STATUS_BY_RUN: Record<string, ReturnType<typeof status>> = {
 const RUN_TIME_BY_RUN: Record<string, number> = { 'run-1': 241000, 'run-2': 351000 };
 
 const SECONDS = RunsI18nKey.Seconds;
-const MEAN_SUITE: TestSuite = { id: 'suite-1', overallScore: { type: OverallScoreType.Mean } };
+const withMethod = (id: string, overallScore: OverallScoreConfig) =>
+  buildRun(id, {
+    suiteSnapshot: {
+      overallScoreThreshold: 0.6,
+      deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+      overallScore,
+    },
+  });
 
 const buildRun = (id: string, overrides: Partial<Run> = {}): Run => ({
   id,
@@ -264,8 +271,6 @@ describe('Compare Summary :: Analytics', () => {
     await renderLoaded({
       primaryOverallScore: 0.812,
       comparedOverallScore: 0.265,
-      primaryTestSuite: MEAN_SUITE,
-      comparedTestSuite: MEAN_SUITE,
     });
 
     const overall = card(RunsI18nKey.OverallScore);
@@ -293,20 +298,35 @@ describe('Compare Summary :: Analytics', () => {
     );
   });
 
-  test('describes each run’s own suite in its info tooltip', async () => {
+  test('describes each run with the method stored on that run', async () => {
     const user = userEvent.setup();
     await renderLoaded({
       primaryOverallScore: 0.812,
       comparedOverallScore: 0.265,
-      primaryTestSuite: MEAN_SUITE,
-      comparedTestSuite: {
-        id: 'suite-2',
-        overallScore: {
-          type: OverallScoreType.WeightedMean,
-          weights: [{ metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 }],
-        },
-      },
+      primaryRun: withMethod('run-1', { type: OverallScoreType.Mean }),
+      comparedRun: withMethod('run-2', {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 }],
+      }),
     });
+    const infoOf = (runName: string) =>
+      side(RunsI18nKey.OverallScore, runName).getByRole('button', {
+        name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+      });
+
+    await user.hover(infoOf('Run #315'));
+    expect((await screen.findByRole('tooltip')).textContent).toContain(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics);
+
+    await user.unhover(infoOf('Run #315'));
+    await user.hover(infoOf('Run #316'));
+    const meanTooltip = await screen.findByRole('tooltip');
+    expect(meanTooltip.textContent).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
+    expect(meanTooltip.textContent).not.toContain(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics);
+  });
+
+  test('describes a run whose snapshot stores no method as the default mean', async () => {
+    const user = userEvent.setup();
+    await renderLoaded({ primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
 
     await user.hover(
       side(RunsI18nKey.OverallScore, 'Run #315').getByRole('button', {
@@ -314,7 +334,26 @@ describe('Compare Summary :: Analytics', () => {
       }),
     );
 
-    expect((await screen.findByRole('tooltip')).textContent).toContain(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics);
+    expect((await screen.findByRole('tooltip')).textContent).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
+  });
+
+  test("shows no info control for a run without a suite snapshot, and keeps the other run's", async () => {
+    await renderLoaded({
+      primaryOverallScore: 0.812,
+      comparedOverallScore: 0.265,
+      comparedRun: buildRun('run-2', { suiteSnapshot: undefined }),
+    });
+
+    expect(
+      side(RunsI18nKey.OverallScore, 'Run #316').getByRole('button', {
+        name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      side(RunsI18nKey.OverallScore, 'Run #315').queryByRole('button', {
+        name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+      }),
+    ).not.toBeInTheDocument();
   });
 
   test('omits the overall score card when neither run has a score', async () => {

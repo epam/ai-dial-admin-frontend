@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Run, RunTotalCosts } from '@/src/models/evaluation/run';
+import { OverallScoreType } from '@/src/models/evaluation/test-suite';
 import {
   ComparisonOp,
   ExprType,
@@ -42,6 +43,7 @@ import {
   parseHistogramValues,
   parseMetricScores,
   parseTestCaseStatusCounts,
+  resolveRunScoreMethod,
   splitMetricName,
   sumRunCostParts,
   sumRunTimeParts,
@@ -955,5 +957,33 @@ describe('Runs Summary :: test case executions', () => {
 
   test.each([[null], [{ rows: [] }]])('foldTestCaseExecutions returns zeros for %j', (result) => {
     expect(foldTestCaseExecutions(result)).toEqual({ completed: 0, notCompleted: 0 });
+  });
+});
+
+describe('Runs Summary :: resolveRunScoreMethod', () => {
+  const runWith = (overallScore?: object) => ({ suiteSnapshot: { snapshotVersion: '2', overallScore } }) as Run;
+
+  test('returns the method stored on the run for each method type', () => {
+    const weighted = {
+      type: OverallScoreType.WeightedMean,
+      weights: [{ metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 }],
+    };
+    const fn = { type: OverallScoreType.Function, expression: { entity: 'eval_summaries' } };
+
+    expect(resolveRunScoreMethod(runWith({ type: OverallScoreType.Mean }))).toEqual({ type: OverallScoreType.Mean });
+    expect(resolveRunScoreMethod(runWith(weighted))).toEqual(weighted);
+    expect(resolveRunScoreMethod(runWith(fn))).toEqual(fn);
+  });
+
+  test('describes a snapshot that stores no method as the default mean', () => {
+    expect(resolveRunScoreMethod(runWith())).toEqual({ type: OverallScoreType.Mean });
+  });
+
+  test('returns null when the run has no snapshot, so nothing is guessed', () => {
+    expect(resolveRunScoreMethod({} as Run)).toBeNull();
+  });
+
+  test.each([[null], [undefined]])('returns null for a missing run (%s)', (run) => {
+    expect(resolveRunScoreMethod(run)).toBeNull();
   });
 });

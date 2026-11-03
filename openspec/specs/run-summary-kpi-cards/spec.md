@@ -117,17 +117,20 @@ focusing the value SHALL show a tooltip stating `Overall score is above the thre
 `Overall score is below the threshold (<threshold>).`. The above/below state SHALL also be available to
 assistive technology as text, since the glyph is decorative. Without a threshold the card SHALL show neither
 glyph nor tooltip on the value. The card SHALL show a static "Based on completed test cases" label and an info
-control; hovering or focusing the control SHALL show the suite's calculation method:
+control; hovering or focusing the control SHALL show the calculation method the run was evaluated with:
 - Mean: "Calculation method:", "Mean of <N> metrics" and the formula `score = mean(m₁, m₂, … mₙ)`;
 - Weighted mean: "Calculation method:", "Weighted mean of <N> metrics" and one `<metric>.<field> × <weight>`
   line per weight;
 - Specific function: a table of Calculation method (Specific function), Function, Dataset column, Dataset
   value, P column and P column value.
 
-The calculation method SHALL come from the run's test suite as currently configured, because the run's
-suite snapshot does not carry the suite-level overall score definition. While the test suite has not
-loaded, or failed to load, the info control SHALL be omitted rather than describing a method that may be
-wrong.
+The calculation method SHALL come from the overall-score method stored in the run's own suite snapshot, never
+from the test suite as it is configured now, so editing the suite afterwards does not change what the tooltip
+says about a finished run. A run whose snapshot exists but stores no method — a run created
+before the method was configurable, or of a suite that never had one set — SHALL be described as the default
+Mean. A run with no suite snapshot at all SHALL show no
+info control, because nothing records how it was scored. The info control SHALL NOT depend on the live test
+suite request.
 
 #### Scenario: Above threshold
 - **WHEN** the score is 0.812 and the threshold is 0.6
@@ -148,22 +151,34 @@ wrong.
 - **THEN** the card shows `0.580` with no glyph and no tooltip on the value
 
 #### Scenario: Mean method tooltip
-- **WHEN** the suite uses the mean method over 4 metrics and the user hovers the info control
+- **WHEN** the run's stored method is the mean over 4 metrics and the user hovers the info control
 - **THEN** the tooltip shows `Calculation method:`, `Mean of 4 metrics` and `score = mean(m₁, m₂, … mₙ)`
 
 #### Scenario: Weighted mean method tooltip
-- **WHEN** the suite uses a weighted mean of `aidial_rag_eval.retrieval.f1` × 0.7 and
+- **WHEN** the run's stored method is a weighted mean of `aidial_rag_eval.retrieval.f1` × 0.7 and
   `deepeval.context_prec.score` × 0.3
 - **THEN** the tooltip shows `Weighted mean of 2 metrics` and both `<metric> × <weight>` lines
 
 #### Scenario: Specific function tooltip
-- **WHEN** the suite uses the ROC AUC function
+- **WHEN** the run's stored method is the ROC AUC function
 - **THEN** the tooltip shows Calculation method Specific function, Function roc auc and the dataset and P
   column rows
 
 #### Scenario: Suite not loaded
-- **WHEN** the test suite request has not resolved
-- **THEN** the card shows the score without an info control
+- **WHEN** the live test suite request has not resolved, or failed
+- **THEN** the info control is still shown and describes the run's stored method
+
+#### Scenario: The method comes from the run, not the current suite
+- **WHEN** a run was evaluated with the mean method and its test suite has since been changed to a weighted mean
+- **THEN** the info tooltip still shows the mean method
+
+#### Scenario: A snapshot without a stored method shows Mean
+- **WHEN** a run's suite snapshot stores no overall-score method
+- **THEN** the info tooltip shows `Mean of <N> metrics`, whatever the live suite is configured with
+
+#### Scenario: A run without a snapshot has no info control
+- **WHEN** a run has no suite snapshot
+- **THEN** the Overall Score card shows no info control
 
 ### Requirement: Total Runtime card
 
@@ -204,8 +219,9 @@ headed by its run name, separated by a divider, with the card title followed by 
 exists. Per-run content SHALL match the single-run card (Test Cases Completed value, error line and hover
 tooltip, headed by the run name; per-run rate with bar and threshold line; per-run overall score; per-run
 runtime and cost breakdown). On the Overall Score card each run's value SHALL be followed by its own info
-control with that run's calculation-method tooltip, and the "Based on completed test cases" label SHALL stay
-below both runs. Each run's glyph, threshold tooltip and `Threshold:` line SHALL use that run's own threshold.
+control with that run's calculation-method tooltip, taken from that run's own stored method as the single-run
+card does, and the "Based on completed test cases" label SHALL stay below both runs. Each run's glyph,
+threshold tooltip and `Threshold:` line SHALL use that run's own threshold.
 The rate card SHALL be titled Threshold Pass Rate when either run has a threshold and Completion Rate when
 neither does. In a pair where only one run has a threshold, the run without a threshold SHALL show an em dash
 on the rate card and the rate diff badge SHALL be hidden. The strip SHALL show a spinner until both runs'
@@ -228,7 +244,8 @@ aggregates have loaded.
 
 #### Scenario: Per-run calculation method
 - **WHEN** the user hovers the info control of the second run
-- **THEN** the tooltip describes the calculation method of the second run's test suite
+- **THEN** the tooltip describes the calculation method stored on the second run, even when the baseline run
+  was evaluated with a different one
 
 #### Scenario: Mixed thresholds
 - **WHEN** only the baseline run's suite snapshot has a threshold

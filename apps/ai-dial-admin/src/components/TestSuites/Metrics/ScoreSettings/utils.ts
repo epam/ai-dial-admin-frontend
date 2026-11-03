@@ -334,7 +334,7 @@ export const getOverallScoreCardMethodLabelKey = (suite: TestSuite): string => {
   }
 };
 
-export const getOverallScoreFormulaLabelKey = (suite: TestSuite): string | null => {
+export const getOverallScoreFormulaLabelKey = (suite: Pick<TestSuite, 'overallScore'>): string | null => {
   switch (suite.overallScore?.type) {
     case OverallScoreType.WeightedMean:
       return TestSuitesI18nKey.OverallScoreWeightedMeanFormula;

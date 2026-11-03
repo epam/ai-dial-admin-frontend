@@ -5,6 +5,7 @@ import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
+import { OverallScoreType } from '@/src/models/evaluation/test-suite';
 import { useRunKpiCards } from '../use-run-kpi-cards';
 
 const executeStructuredQueryMock = vi.fn();
@@ -190,6 +191,40 @@ describe('useRunKpiCards', () => {
 
       await waitFor(() => expect(result.current).not.toBeNull());
       expect(result.current?.hasNoTestCases).toBe(true);
+    });
+  });
+
+  describe('the overall-score method', () => {
+    const snapshot = (overrides: object = {}) => ({
+      overallScoreThreshold: 0.5,
+      deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+      ...overrides,
+    });
+
+    test('is the method stored on the run', async () => {
+      const weighted = {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 }],
+      };
+
+      const { result } = renderKpis(buildRun({ suiteSnapshot: snapshot({ overallScore: weighted }) }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethod).toEqual(weighted);
+    });
+
+    test('is the default mean when the snapshot stores no method', async () => {
+      const { result } = renderKpis(buildRun({ suiteSnapshot: snapshot() }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethod).toEqual({ type: OverallScoreType.Mean });
+    });
+
+    test('is null when the run has no snapshot', async () => {
+      const { result } = renderKpis(buildRun({ suiteSnapshot: undefined }));
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethod).toBeNull();
     });
   });
 });

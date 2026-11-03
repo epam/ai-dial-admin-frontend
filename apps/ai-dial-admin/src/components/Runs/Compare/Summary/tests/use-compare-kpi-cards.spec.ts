@@ -8,6 +8,7 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
+import { OverallScoreType } from '@/src/models/evaluation/test-suite';
 import { useCompareKpiCards } from '../use-compare-kpi-cards';
 
 const executeStructuredQueryMock = vi.fn();
@@ -290,6 +291,53 @@ describe('useCompareKpiCards', () => {
       await waitFor(() => expect(result.current).not.toBeNull());
       expect(result.current?.figures[Primary].hasThreshold).toBe(false);
       expect(result.current?.rateTitleKey).toBe(RunsI18nKey.CompletionRate);
+    });
+  });
+
+  describe('the overall-score methods', () => {
+    const withMethod = (id: string, overallScore?: object) =>
+      buildRun(id, {
+        suiteSnapshot: {
+          overallScoreThreshold: 0.6,
+          deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+          ...(overallScore ? { overallScore } : {}),
+        } as Run['suiteSnapshot'],
+      });
+
+    test("are each run's own stored method", async () => {
+      const weighted = {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 }],
+      };
+
+      const { result } = renderKpis({
+        primaryRun: withMethod('run-1', { type: OverallScoreType.Mean }),
+        comparedRun: withMethod('run-2', weighted),
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethods).toEqual({
+        [Primary]: { type: OverallScoreType.Mean },
+        [Secondary]: weighted,
+      });
+    });
+
+    test('default to the mean for a run whose snapshot stores no method', async () => {
+      const { result } = renderKpis({ primaryRun: withMethod('run-1'), comparedRun: withMethod('run-2') });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethods[Secondary]).toEqual({ type: OverallScoreType.Mean });
+    });
+
+    test('are null for a run without a snapshot, without affecting the other run', async () => {
+      const { result } = renderKpis({
+        primaryRun: withMethod('run-1', { type: OverallScoreType.Mean }),
+        comparedRun: buildRun('run-2', { suiteSnapshot: undefined }),
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethods[Primary]).toEqual({ type: OverallScoreType.Mean });
+      expect(result.current?.scoreMethods[Secondary]).toBeNull();
     });
   });
 });

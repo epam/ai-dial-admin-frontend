@@ -6,7 +6,7 @@ import { ErrorI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i1
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
-import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreConfig, OverallScoreType, SuiteSnapshot } from '@/src/models/evaluation/test-suite';
 import Analytics from '../Analytics';
 
 const executeStructuredQueryMock = vi.fn();
@@ -54,7 +54,6 @@ const RUN_TIME_ROWS = { rows: [{ total_duration_ms: 341000 }] };
 const METRIC_EVAL_ROWS = { rows: [{ total_metric_eval_duration_ms: 291123.6 }] };
 
 const SECONDS = RunsI18nKey.Seconds;
-const MEAN_SUITE: TestSuite = { id: 'suite-1', overallScore: { type: OverallScoreType.Mean } };
 
 const buildRun = (overrides: Partial<Run> = {}): Run => ({
   id: 'run-1',
@@ -206,7 +205,7 @@ describe('Runs Summary :: Analytics', () => {
   });
 
   test('shows the overall score with its glyph, footer and info control', async () => {
-    await renderLoaded({ overallScore: 0.812, testSuite: MEAN_SUITE, metricSnapshotCount: 3 });
+    await renderLoaded({ overallScore: 0.812, metricSnapshotCount: 3 });
 
     const overall = within(card(RunsI18nKey.OverallScore));
     expect(overall.getByText('0.812')).toBeInTheDocument();
@@ -214,14 +213,73 @@ describe('Runs Summary :: Analytics', () => {
     expect(overall.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeInTheDocument();
   });
 
-  test('omits the info control until the test suite has loaded', async () => {
-    await renderLoaded({ overallScore: 0.812, testSuite: null });
+  test('omits the info control for a run that has no suite snapshot', async () => {
+    await renderLoaded({ run: buildRun({ suiteSnapshot: undefined }), overallScore: 0.812 });
 
     expect(
       within(card(RunsI18nKey.OverallScore)).queryByRole('button', {
         name: TestSuitesI18nKey.OverallScoreCalculationMethod,
       }),
     ).not.toBeInTheDocument();
+  });
+
+  describe('the calculation method tooltip', () => {
+    const snapshotWith = (overallScore?: OverallScoreConfig): SuiteSnapshot => ({
+      overallScoreThreshold: 0.5,
+      deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+      ...(overallScore ? { overallScore } : {}),
+    });
+    const openMethodTooltip = async (run: Run) => {
+      const user = userEvent.setup();
+      await renderLoaded({ run, overallScore: 0.812, metricSnapshotCount: 2 });
+      await user.hover(
+        within(card(RunsI18nKey.OverallScore)).getByRole('button', {
+          name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+        }),
+      );
+      return (await screen.findByRole('tooltip')).textContent ?? '';
+    };
+
+    test('describes the weighted mean stored on the run, with its stored weights', async () => {
+      const text = await openMethodTooltip(
+        buildRun({
+          suiteSnapshot: snapshotWith({
+            type: OverallScoreType.WeightedMean,
+            weights: [
+              { metricName: 'aidial_rag_eval.retrieval', outputField: 'f1', weight: 0.7 },
+              { metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 },
+            ],
+          }),
+        }),
+      );
+
+      expect(text).toContain(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics);
+      expect(text).toContain('aidial_rag_eval.retrieval.f1 × 0.7');
+      expect(text).toContain('deepeval.context_prec.score × 0.3');
+    });
+
+    test('describes the mean stored on the run', async () => {
+      const text = await openMethodTooltip(buildRun({ suiteSnapshot: snapshotWith({ type: OverallScoreType.Mean }) }));
+
+      expect(text).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
+      expect(text).toContain(TestSuitesI18nKey.OverallScoreMeanFormula);
+    });
+
+    test('describes a snapshot that stores no method as the default mean', async () => {
+      const text = await openMethodTooltip(buildRun({ suiteSnapshot: snapshotWith() }));
+
+      expect(text).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
+    });
+
+    test('shows the control without any test suite being loaded', async () => {
+      await renderLoaded({ overallScore: 0.812 });
+
+      expect(
+        within(card(RunsI18nKey.OverallScore)).getByRole('button', {
+          name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+        }),
+      ).toBeInTheDocument();
+    });
   });
 
   test.each([[null], [undefined]])('omits the overall score card when the score is %s', async (overallScore) => {

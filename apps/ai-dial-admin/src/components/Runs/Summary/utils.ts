@@ -2,6 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { DialModelPricing } from '@/src/models/dial/model';
+import { OverallScoreConfig, OverallScoreType } from '@/src/models/evaluation/test-suite';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus, Run, RunTotalCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
@@ -428,6 +429,20 @@ export const getMetricStatCards = (data: MetricScoresData | null, metricName: st
     }
   }
   return cards;
+};
+
+/**
+ * The overall-score method a run was evaluated with, from its own suite snapshot — never the suite as it is
+ * configured now. A snapshot without the method means the suite had none set (a run from before the method was
+ * configurable, or a suite that never configured one), which is the default mean. A run with no snapshot at all has nothing recording its method, so it
+ * resolves to `null` rather than a guess.
+ */
+export const resolveRunScoreMethod = (run: Run | null | undefined): OverallScoreConfig | null => {
+  const snapshot = run?.suiteSnapshot;
+  if (snapshot == null) {
+    return null;
+  }
+  return snapshot.overallScore ?? { type: OverallScoreType.Mean };
 };
 
 /** True when a snapshotted (or live) overall score threshold is set, including `0`. */
