@@ -15,8 +15,8 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     tooltip?: React.ReactNode;
     hideTooltip?: boolean;
   }) => (
-    <div data-testid="kpi-tooltip" data-hide={String(!!hideTooltip)}>
-      {!hideTooltip && <span data-testid="kpi-tooltip-content">{tooltip}</span>}
+    <div role="tooltip" aria-hidden={!!hideTooltip}>
+      {!hideTooltip && <span>{tooltip}</span>}
       {children}
     </div>
   ),
@@ -46,9 +46,9 @@ describe('OverallScoreOfLatestRunCard', () => {
     expect(screen.getByText('0.580')).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.TrendsDeltaVsPrev)).toBeInTheDocument();
     const deltaBadgeTooltip = screen
-      .getAllByTestId('kpi-tooltip')
+      .getAllByRole('tooltip', { hidden: true })
       .find((node) => node.textContent?.includes(TestSuitesI18nKey.TrendsDeltaVsPrev));
-    expect(deltaBadgeTooltip).toHaveAttribute('data-hide', 'true');
+    expect(deltaBadgeTooltip).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
@@ -66,8 +66,10 @@ describe('OverallScoreOfLatestRunCard', () => {
       <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))} />,
     );
 
-    const scoreTip = screen.getAllByTestId('kpi-tooltip').find((node) => node.textContent?.includes('0.580'));
-    expect(scoreTip).toHaveAttribute('data-hide', 'true');
+    const scoreTip = screen
+      .getAllByRole('tooltip', { hidden: true })
+      .find((node) => node.textContent?.includes('0.580'));
+    expect(scoreTip).toHaveAttribute('aria-hidden', 'true');
   });
 
   test('omits threshold glyph when latest run snapshot has no threshold', () => {
