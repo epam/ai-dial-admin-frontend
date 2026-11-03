@@ -109,6 +109,7 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
         <h3>{t(TestSuitesI18nKey.ToolSchema)}</h3>
         {isSchemaTab && (
           <Select
+            className="w-auto"
             prefix={`${t(CompareI18nKey.View)}: `}
             ariaLabel={t(CompareI18nKey.View)}
             size={ElementSize.Small}

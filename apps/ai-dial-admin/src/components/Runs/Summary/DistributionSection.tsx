@@ -75,6 +75,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
 
   const control = (
     <Select
+      className="w-auto"
       size={ElementSize.Small}
       prefix={t(RunsI18nKey.Metric)}
       ariaLabel={t(RunsI18nKey.Metric)}
