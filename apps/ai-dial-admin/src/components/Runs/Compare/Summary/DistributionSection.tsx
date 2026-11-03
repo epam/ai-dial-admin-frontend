@@ -24,7 +24,6 @@ import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/mo
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { buildDistributionQuery, parseHistogramValues } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
-import { CONTENT_WIDTH_SELECT_CLASS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -109,7 +108,7 @@ const DistributionSection: FC<Props> = ({
 
   const control = (
     <Select
-      className={CONTENT_WIDTH_SELECT_CLASS}
+      className="w-auto"
       size={ElementSize.Small}
       prefix={t(RunsI18nKey.Metric)}
       ariaLabel={t(RunsI18nKey.Metric)}

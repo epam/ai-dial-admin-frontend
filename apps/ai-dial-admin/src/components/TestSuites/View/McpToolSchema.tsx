@@ -10,7 +10,6 @@ import TableView from '@/src/components/Common/ViewSelector/TableView';
 import Columns from '@/src/components/TestSuites/EndpointSchema/Columns/Columns';
 import { TOOL_SCHEMA_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { CompareI18nKey, EntitiesI18nKey, TestSuitesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { VIEW_SELECT_WIDTH_CLASS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
@@ -109,16 +108,15 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
       <div className="flex flex-row justify-between items-start mb-3">
         <h3>{t(TestSuitesI18nKey.ToolSchema)}</h3>
         {isSchemaTab && (
-          <div className={VIEW_SELECT_WIDTH_CLASS}>
-            <Select
-              prefix={`${t(CompareI18nKey.View)}: `}
-              ariaLabel={t(CompareI18nKey.View)}
-              size={ElementSize.Small}
-              options={viewOptions}
-              value={isJsonView ? 'json' : 'table'}
-              onChange={onViewSelectChange}
-            />
-          </div>
+          <Select
+            className="w-auto"
+            prefix={`${t(CompareI18nKey.View)}: `}
+            ariaLabel={t(CompareI18nKey.View)}
+            size={ElementSize.Small}
+            options={viewOptions}
+            value={isJsonView ? 'json' : 'table'}
+            onChange={onViewSelectChange}
+          />
         )}
       </div>
 

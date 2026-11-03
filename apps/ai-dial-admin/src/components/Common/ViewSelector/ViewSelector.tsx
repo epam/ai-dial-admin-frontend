@@ -3,7 +3,6 @@ import { FC, useMemo } from 'react';
 import { Select, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { CompareI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
-import { VIEW_SELECT_WIDTH_CLASS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ParamsView } from '@/src/types/parameters';
 
@@ -27,16 +26,15 @@ const ViewSelector: FC<Props> = ({ view, changeView }) => {
     ];
   }, [t]);
   return (
-    <div className={VIEW_SELECT_WIDTH_CLASS}>
-      <Select
-        prefix={`${t(CompareI18nKey.View)}: `}
-        ariaLabel={t(CompareI18nKey.View)}
-        size={ElementSize.Small}
-        options={items}
-        value={view}
-        onChange={(v) => changeView(v as ParamsView)}
-      />
-    </div>
+    <Select
+      className="w-auto"
+      prefix={`${t(CompareI18nKey.View)}: `}
+      ariaLabel={t(CompareI18nKey.View)}
+      size={ElementSize.Small}
+      options={items}
+      value={view}
+      onChange={(v) => changeView(v as ParamsView)}
+    />
   );
 };
 
