@@ -36,7 +36,7 @@ const MultiselectContentModal: FC<Props> = ({
   // clipped by a second one. The padding keeps that ring off this clip edge too.
   return (
     <div className="flex max-h-[464px] flex-col gap-y-2 overflow-auto p-0.5">
-      {items.length > 10 && <Search onChange={onFilterItems} />}
+      {items.length > 10 && <Search onChange={onFilterItems} initialPattern={filter} />}
       {draggable ? (
         <DraggableList
           items={items}
