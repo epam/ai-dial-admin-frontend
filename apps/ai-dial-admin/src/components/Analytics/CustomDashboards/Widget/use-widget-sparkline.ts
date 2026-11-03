@@ -37,7 +37,7 @@ export const useWidgetSparkline = ({ widgetQuery, column, range, period, isEnabl
     }
     const timeField = findTimestampField(widgetQuery.fields);
     const request = buildWidgetRunRequest(widgetQuery, MAX_WIDGET_ROWS, range, period);
-    if (!timeField || request?.kind !== QueryRequestKind.Structured) {
+    if (!timeField || request?.kind !== QueryRequestKind.Structured || request.query.group_by?.length) {
       setPoints([]);
       return;
     }

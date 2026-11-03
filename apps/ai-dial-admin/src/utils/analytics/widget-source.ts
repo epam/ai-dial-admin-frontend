@@ -58,6 +58,13 @@ export interface CopiedPersonalQueries {
   copiedNames: string[];
 }
 
+export const hasUnresolvedSavedQueries = (widgets: DashboardWidget[], queries: Record<string, WidgetQuery>): boolean =>
+  widgets.some(
+    (widget) =>
+      widget.saved_query_id != null &&
+      (queries[widget.saved_query_id] == null || queries[widget.saved_query_id].kind === WidgetQueryKind.Failed),
+  );
+
 /**
  * Turns every widget on a personal saved query into an inline copy of it, so viewers who cannot read the
  * personal query can still run the widget. An untitled widget takes the query's name, which would otherwise

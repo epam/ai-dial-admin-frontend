@@ -16,6 +16,7 @@ import {
   WidgetQuery,
   WidgetQueryKind,
 } from '@/src/models/analytics/dashboard';
+import { useNotification } from '@/src/context/NotificationContext';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
 
@@ -413,6 +414,21 @@ describe('CustomDashboardView — access', () => {
       3,
     );
     await vi.waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+  });
+
+  test('refuses to publish while a widget has not resolved its saved query', async () => {
+    renderView(DASHBOARD, { 'q-2': QUERIES['q-2'] });
+    const user = userEvent.setup();
+
+    await publish(user);
+
+    await vi.waitFor(() =>
+      expect(useNotification().showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: CustomDashboardsI18nKey.PublishUnresolved }),
+      ),
+    );
+    expect(screen.queryByText(CustomDashboardsI18nKey.PublishMessage)).toBeNull();
+    expect(replaceDashboard).not.toHaveBeenCalled();
   });
 
   test('writes nothing when publishing is cancelled', async () => {

@@ -54,8 +54,10 @@ import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query'
 import { ApplicationRoute } from '@/src/types/routes';
 import { getDashboardHref, toDashboardRequest } from '@/src/utils/analytics/dashboard-request';
 import {
+  CopiedPersonalQueries,
   copyPersonalQueries,
   getWidgetQueryKey,
+  hasUnresolvedSavedQueries,
   getWidgetQuerySource,
   toInlineQuery,
   toSqlInlineQuery,
@@ -111,10 +113,10 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
   }, []);
 
   const writeDetails = useCallback(
-    async ({ name, description, compare: storedCompare, visibility }: DashboardDetails): Promise<boolean> => {
-      // Publishing copies each personal query in, since no other viewer could read it by reference.
-      const isPublishing = visibility === DashboardVisibility.Public && !isPublic;
-      const copied = isPublishing ? copyPersonalQueries(stored.widgets, queries) : null;
+    async (
+      { name, description, compare: storedCompare, visibility }: DashboardDetails,
+      copied: CopiedPersonalQueries | null,
+    ): Promise<boolean> => {
       const request = {
         ...toDashboardRequest(stored),
         name,
@@ -135,24 +137,35 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
       router.refresh();
       return true;
     },
-    [stored, queries, isPublic, dashboard, router, showNotification, t],
+    [stored, dashboard, router, showNotification, t],
   );
 
-  // Publishing a dashboard that copies personal queries waits for a confirmation naming them.
+  // Publishing copies each personal query in, since no other viewer could read it by reference, and waits for a
+  // confirmation naming them.
   const onEditDetails = useCallback(
     async (details: DashboardDetails): Promise<boolean> => {
       const isPublishing = details.visibility === DashboardVisibility.Public && !isPublic;
-      const names = isPublishing ? copyPersonalQueries(stored.widgets, queries).copiedNames : [];
-      if (!names.length) return writeDetails(details);
-      setPendingPublish({ details, names });
+      if (!isPublishing) return writeDetails(details, null);
+      if (hasUnresolvedSavedQueries(stored.widgets, queries)) {
+        showNotification(
+          getErrorNotification(
+            t(CustomDashboardsI18nKey.PublishUnresolved),
+            t(CustomDashboardsI18nKey.PublishUnresolvedHint),
+          ),
+        );
+        return false;
+      }
+      const copied = copyPersonalQueries(stored.widgets, queries);
+      if (!copied.copiedNames.length) return writeDetails(details, copied);
+      setPendingPublish({ details, copied });
       return false;
     },
-    [isPublic, stored.widgets, queries, writeDetails],
+    [isPublic, stored.widgets, queries, writeDetails, showNotification, t],
   );
 
   const onConfirmPublish = useCallback(async () => {
     if (!pendingPublish) return;
-    const isDone = await writeDetails(pendingPublish.details);
+    const isDone = await writeDetails(pendingPublish.details, pendingPublish.copied);
     setPendingPublish(null);
     if (isDone) setIsDetailsOpen(false);
   }, [pendingPublish, writeDetails]);
@@ -430,7 +443,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
 
       {pendingPublish && (
         <PublishDashboardPopup
-          queryNames={pendingPublish.names}
+          queryNames={pendingPublish.copied.copiedNames}
           onConfirm={onConfirmPublish}
           onCancel={() => setPendingPublish(null)}
         />

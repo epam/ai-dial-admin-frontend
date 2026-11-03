@@ -5,7 +5,6 @@ import {
   buildShareFigure,
   buildSingleValueFigure,
   getBucketWidthMs,
-  getDeltaRatio,
   toTimedValues,
 } from '@/src/components/Analytics/CustomDashboards/utils/widget-view-options';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
@@ -22,18 +21,6 @@ const COLORS: ChartColors = {
 
 const HOUR_MS = 60 * 60 * 1000;
 const START = Date.parse('2026-10-26T00:00:00Z');
-
-describe('getDeltaRatio', () => {
-  test('is the relative change against the compared value', () => {
-    expect(getDeltaRatio(150, 100)).toBe(0.5);
-  });
-
-  test('is null without both values or against zero', () => {
-    expect(getDeltaRatio(null, 100)).toBeNull();
-    expect(getDeltaRatio(10, null)).toBeNull();
-    expect(getDeltaRatio(10, 0)).toBeNull();
-  });
-});
 
 describe('buildSingleValueFigure', () => {
   test('reads the column from the only row, with its change when compared', () => {

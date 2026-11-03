@@ -125,7 +125,7 @@ copy of that query — its name, body, result view and chart configuration — a
 widget the query's name as its title, because other viewers could not read the personal query. A widget
 that references a common saved query SHALL keep its reference. Before the change is written, a
 confirmation SHALL name each personal query that will be copied and state that its text becomes visible to
-everyone who can open the dashboard. Making a dashboard Private SHALL leave inline copies as they are.
+everyone who can open the dashboard. Publishing SHALL be refused with an error notification while a widget's saved query is still loading or failed to load, since whether it is personal is not yet known. Making a dashboard Private SHALL leave inline copies as they are.
 Adding a personal saved query to a Public dashboard, from Add widget or from a query page's Add to
 dashboard, SHALL store it as an inline copy for the same reason. Once that pair is picked — a personal
 query and a Public dashboard — the modal SHALL show a warning banner beneath the field just chosen, before

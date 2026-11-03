@@ -4170,6 +4170,8 @@ export enum CustomDashboardsI18nKey {
   Saved = 'CustomDashboards.Saved',
   ChangedElsewhere = 'CustomDashboards.ChangedElsewhere',
   ChangedElsewhereHint = 'CustomDashboards.ChangedElsewhereHint',
+  PublishUnresolved = 'CustomDashboards.PublishUnresolved',
+  PublishUnresolvedHint = 'CustomDashboards.PublishUnresolvedHint',
   EmptyTitle = 'CustomDashboards.EmptyTitle',
   EmptyDescription = 'CustomDashboards.EmptyDescription',
   AddWidget = 'CustomDashboards.AddWidget',

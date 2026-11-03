@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   replaceDashboard,
@@ -72,6 +72,10 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
   const storedQueriesRef = useRef<Record<string, WidgetQuery>>(resolved.queries);
   // The latest resolution asked for each query key; an earlier answer that lands after it is dropped.
   const resolutionIdsRef = useRef<Record<string, number>>({});
+  const queriesRef = useRef(queries);
+  useEffect(() => {
+    queriesRef.current = queries;
+  }, [queries]);
 
   const onEdit = useCallback(() => {
     storedQueriesRef.current = queries;
@@ -143,7 +147,7 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
   const resolveQuery = useCallback(
     async (widget: Pick<DashboardWidget, 'id' | 'saved_query_id' | 'inline_query'>, isForced = false) => {
       const key = getWidgetQueryKey(widget);
-      if (queries[key] && !isForced) return;
+      if (queriesRef.current[key] && !isForced) return;
       const ids = resolutionIdsRef.current;
       const resolutionId = (ids[key] ?? 0) + 1;
       ids[key] = resolutionId;
@@ -158,7 +162,7 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
       }
       if (widgetQuery && ids[key] === resolutionId) setQueries((prev) => ({ ...prev, [key]: widgetQuery }));
     },
-    [queries],
+    [],
   );
 
   /** Resolves a widget's query again, after a resolution that failed. */

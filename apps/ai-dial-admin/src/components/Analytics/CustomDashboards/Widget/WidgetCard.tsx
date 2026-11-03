@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 import {
@@ -110,7 +110,9 @@ const WidgetCard: FC<Props> = ({
 
   // A heatmap reads the calendar week holding the range's end, as the usage heatmap does, at the widget maximum so a week of hours fits; decided from
   // the stored view, like the compared run.
-  const isHeatmap = widget.view === WidgetView.Heatmap;
+  const [isHeatmapRefused, setIsHeatmapRefused] = useState(false);
+  const isHeatmap = widget.view === WidgetView.Heatmap && !isHeatmapRefused;
+  useEffect(() => setIsHeatmapRefused(false), [widget.view]);
   const heatmapWeek = useMemo(() => getWeekRange(0, range.endDate), [range]);
 
   const { result, meta, previousResult, isLoading, hasFailed, isDenied, onRetry } = useDashboardWidgetData({
@@ -138,6 +140,9 @@ const WidgetCard: FC<Props> = ({
     return widget.view && widget.view !== WidgetView.Query ? [WidgetView.Query, widget.view] : [WidgetView.Query];
   }, [result, meta, isComposite, widget.view]);
   const view = resolveWidgetView(widget.view, fittingViews);
+  useEffect(() => {
+    if (isHeatmap && result && view !== WidgetView.Heatmap) setIsHeatmapRefused(true);
+  }, [isHeatmap, result, view]);
 
   const singleValueColumn = widget.value_column ?? meta?.aggregateColumns[0] ?? '';
   const sparkline = useWidgetSparkline({

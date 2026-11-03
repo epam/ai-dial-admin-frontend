@@ -6,6 +6,7 @@ import {
   WidgetValueFormat,
   WidgetView,
 } from '@/src/models/analytics/dashboard';
+import { CopiedPersonalQueries } from '@/src/utils/analytics/widget-source';
 
 export interface DashboardDetails {
   name: string;
@@ -59,7 +60,7 @@ export interface EditedWidget extends WidgetResultOptions {
 // Details waiting on the publish confirmation, with the names of the personal queries publishing would copy.
 export interface PendingPublish {
   details: DashboardDetails;
-  names: string[];
+  copied: CopiedPersonalQueries;
 }
 
 export interface WidgetRunState {

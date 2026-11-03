@@ -205,6 +205,14 @@ describe('WidgetCard', () => {
     );
   });
 
+  test('reads the dashboard range once a heatmap week does not fit a heatmap', () => {
+    renderCard({ widget: { ...WIDGET, view: WidgetView.Heatmap } });
+
+    expect(useDashboardWidgetData).toHaveBeenLastCalledWith(
+      expect.objectContaining({ rowLimit: WIDGET.row_limit, range: RANGE }),
+    );
+  });
+
   test('asks for the compared window for a query whose own view is a table', () => {
     renderCard({ compare: ComparePeriod.PreviousPeriod });
 

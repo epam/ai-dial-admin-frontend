@@ -1,7 +1,7 @@
 import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { DonutSliceView, TimedValue } from '@/src/components/Analytics/Usage/models';
 import { formatChartNumber, getSliceColor } from '@/src/components/Analytics/Usage/utils/chart-options';
-import { formatPercent } from '@/src/components/Analytics/Usage/utils/format';
+import { formatPercent, getDeltaRatio } from '@/src/components/Analytics/Usage/utils/format';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
 
 type ResultRows = Array<Record<string, unknown>>;
@@ -29,9 +29,6 @@ const toTimeMs = (value: unknown): number | null => {
   const ms = typeof value === 'number' ? value : new Date(String(value)).getTime();
   return Number.isFinite(ms) ? ms : null;
 };
-
-export const getDeltaRatio = (current: number | null, previous: number | null): number | null =>
-  current == null || previous == null || previous === 0 ? null : (current - previous) / previous;
 
 /**
  * Each row's change per aggregate column against the compared result's row with the same dimension values, the

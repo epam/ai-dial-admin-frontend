@@ -4370,6 +4370,9 @@ export default {
     Saved: 'Dashboard saved',
     ChangedElsewhere: 'Dashboard changed elsewhere',
     ChangedElsewhereHint: 'Reload to get the latest version.',
+    PublishUnresolved: 'Dashboard not published',
+    PublishUnresolvedHint:
+      'Some widgets have not loaded their query yet. Wait for them, or retry the failed ones, then publish again.',
     EmptyTitle: 'No widgets yet',
     EmptyDescription: 'Add a widget to show a saved query on this dashboard.',
     AddWidget: 'Add widget',

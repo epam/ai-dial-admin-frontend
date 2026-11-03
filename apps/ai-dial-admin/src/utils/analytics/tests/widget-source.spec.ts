@@ -6,6 +6,7 @@ import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQueryScope } from '@/src/models/analytics/saved-query';
 import {
   copyPersonalQueries,
+  hasUnresolvedSavedQueries,
   formatQueryPreview,
   getWidgetQueryKey,
   getWidgetQuerySource,
@@ -176,5 +177,27 @@ describe('copyPersonalQueries', () => {
     );
     expect(result.copiedNames).toEqual(['Spend', 'Latency']);
     expect(result.widgets.every((item) => item.saved_query_id === undefined)).toBe(true);
+  });
+});
+
+describe('hasUnresolvedSavedQueries', () => {
+  const layout = { x: 0, y: 0, w: 6, h: 4 };
+  const onQuery: DashboardWidget = { id: 'w-1', saved_query_id: 'q-1', row_limit: 100, layout };
+  const inline: DashboardWidget = {
+    id: 'w-2',
+    row_limit: 100,
+    layout,
+    inline_query: { name: 'Inline', sql: 'SELECT 1', result_view: QueryResultView.Table },
+  };
+
+  test('is true while a saved query has no answer or failed to resolve', () => {
+    expect(hasUnresolvedSavedQueries([onQuery], {})).toBe(true);
+    expect(hasUnresolvedSavedQueries([onQuery], { 'q-1': { kind: WidgetQueryKind.Failed } })).toBe(true);
+  });
+
+  test('is false once every saved query is resolved or known to be unavailable', () => {
+    expect(hasUnresolvedSavedQueries([onQuery], { 'q-1': { kind: WidgetQueryKind.Unavailable } })).toBe(false);
+    expect(hasUnresolvedSavedQueries([inline], {})).toBe(false);
+    expect(hasUnresolvedSavedQueries([], {})).toBe(false);
   });
 });
