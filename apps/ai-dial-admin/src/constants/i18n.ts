@@ -569,7 +569,9 @@ export enum UpstreamEndpointsI18nKey {
   AuthenticationType = 'UpstreamEndpoints.AuthenticationType',
   ApiKey = 'UpstreamEndpoints.ApiKey',
   Bearer = 'UpstreamEndpoints.Bearer',
-  BearerKey = 'UpstreamEndpoints.BearerKey',
+  CustomHeader = 'UpstreamEndpoints.CustomHeader',
+  HeaderName = 'UpstreamEndpoints.HeaderName',
+  AuthKey = 'UpstreamEndpoints.AuthKey',
 }
 
 export enum ModelViewI18nKey {
@@ -1272,6 +1274,7 @@ export enum RollbackI18nKey {
 export enum ErrorI18nKey {
   EmptyField = 'Error.EmptyField',
   RequiredField = 'Error.RequiredField',
+  InvalidHeaderName = 'Error.InvalidHeaderName',
   ClientSecretMinLength = 'Error.ClientSecretMinLength',
   PageNotFound = 'Error.PageNotFound',
   ResourceNotFound = 'Error.ResourceNotFound',
@@ -1425,6 +1428,7 @@ export enum EntityPlaceholdersI18nKey {
   UpstreamId = 'EntityPlaceholders.UpstreamId',
   UpstreamEndpointWithResponses = 'EntityPlaceholders.UpstreamEndpointWithResponses',
   UpstreamKey = 'EntityPlaceholders.UpstreamKey',
+  UpstreamAuthHeaderName = 'EntityPlaceholders.UpstreamAuthHeaderName',
   Value = 'EntityPlaceholders.Value',
   Select = 'EntityPlaceholders.Select',
   OverrideName = 'EntityPlaceholders.OverrideName',

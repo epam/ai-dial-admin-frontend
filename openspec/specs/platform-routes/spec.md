@@ -160,9 +160,9 @@ response/upstreams output choice (status and body when response is selected, ups
 otherwise), max-retry-attempts, order, and request/response attachment paths, composed from the same
 individual controls `Entities > Routes`' Properties tab uses.
 
-For each upstream shown on this Assets > Routes surface, the system SHALL expose an authentication-type selector with `API_KEY` and `BEARER` values. An absent `authType` value SHALL render as `API_KEY` and remain eligible to be omitted from the write payload, relying on DIAL Core's default. The selector SHALL NOT be enabled by this requirement on other consumers of the shared upstream editor.
+For each upstream shown on this Assets > Routes surface, the system SHALL expose an authentication-type selector with `API_KEY`, `BEARER` and `CUSTOM_HEADER` values. The editor SHALL work with `authType` as an object `{ type, headerName? }`, as DIAL Core serializes it, and SHALL lift Core's bare-string form into that object on read. `CUSTOM_HEADER` SHALL expose a required header-name input validated against Core's HTTP header-name grammar, and `headerName` SHALL be omitted for every other type. An absent `authType` value SHALL render as `API_KEY` and remain eligible to be omitted from the write payload, relying on DIAL Core's default. The selector SHALL NOT be enabled by this requirement on other consumers of the shared upstream editor.
 
-A new Bearer upstream, or an existing upstream whose authentication type changes from `API_KEY`/unset to `BEARER`, SHALL require a newly entered key before the route can be saved. An existing Bearer upstream that retains its authentication type SHALL remain saveable with an empty displayed key, because Core withholds that stored secret on read and restores an omitted secret during the write.
+A new non-`API_KEY` upstream, or an existing upstream whose authentication (type, or header name for `CUSTOM_HEADER`) changes to a non-`API_KEY` value, SHALL require a newly entered key before the route can be saved. An existing upstream that retains its authentication SHALL remain saveable with an empty displayed key, because Core withholds that stored secret on read and restores an omitted secret during the write.
 
 #### Scenario: Properties are editable and persist
 - **WHEN** a user edits a Properties field and saves
@@ -183,7 +183,12 @@ A new Bearer upstream, or an existing upstream whose authentication type changes
 
 #### Scenario: A route upstream can use Bearer authentication
 - **WHEN** an administrator selects `BEARER` for a platform route upstream and supplies a key
-- **THEN** saving writes `authType: "BEARER"` and the supplied key for that upstream
+- **THEN** saving writes `authType: { type: "BEARER" }` and the supplied key for that upstream
+
+#### Scenario: A route upstream can use a custom header
+- **WHEN** an administrator selects `CUSTOM_HEADER`, enters a valid header name and supplies a key
+- **THEN** saving writes `authType: { type: "CUSTOM_HEADER", headerName }` and the supplied key for that upstream
+- **AND** an empty or malformed header name blocks saving with a validation error
 
 #### Scenario: A new Bearer upstream requires a key
 - **WHEN** an administrator selects `BEARER` for a newly added platform route upstream without entering a key

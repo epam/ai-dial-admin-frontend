@@ -333,7 +333,7 @@ describe('DuplicatePlatformAsset', () => {
     const user = userEvent.setup();
     const route = {
       name: 'bearer-route',
-      upstreams: [{ endpoint: 'https://example.test', authType: UpstreamAuthType.BEARER }],
+      upstreams: [{ endpoint: 'https://example.test', authType: { type: UpstreamAuthType.BEARER } }],
     } as PlatformAsset;
     const { onDuplicate } = renderModal(ApplicationRoute.PlatformRoutes, route);
 
@@ -349,7 +349,7 @@ describe('DuplicatePlatformAsset', () => {
     expect(onDuplicate).toHaveBeenCalledWith({
       ...route,
       name: 'bearer-route-copy',
-      upstreams: [{ endpoint: 'https://example.test', authType: UpstreamAuthType.BEARER, key: 'replacement-key' }],
+      upstreams: [{ endpoint: 'https://example.test', authType: { type: UpstreamAuthType.BEARER }, key: 'replacement-key' }],
     });
   });
 });
