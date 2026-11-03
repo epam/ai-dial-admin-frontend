@@ -2997,6 +2997,7 @@ export enum AnalyticsTableAccessI18nKey {
   MarkNone = 'AnalyticsTableAccess.MarkNone',
   AllRows = 'AnalyticsTableAccess.AllRows',
   CannotReadRows = 'AnalyticsTableAccess.CannotReadRows',
+  CannotReadRowsFilterKept = 'AnalyticsTableAccess.CannotReadRowsFilterKept',
   SensitiveScope = 'AnalyticsTableAccess.SensitiveScope',
   RowsScope = 'AnalyticsTableAccess.RowsScope',
   EmptyTitle = 'AnalyticsTableAccess.EmptyTitle',
