@@ -8,7 +8,7 @@ export const useScrollSelectedFolder = () =>
   useCallback(() => {
     let attempts = 0;
     const scrollInterval = setInterval(() => {
-      const selectedElement = document.querySelector('[aria-selected="true"]');
+      const selectedElement = document.querySelector('[role="tree"] [aria-selected="true"]');
       if (selectedElement) {
         selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         clearInterval(scrollInterval);

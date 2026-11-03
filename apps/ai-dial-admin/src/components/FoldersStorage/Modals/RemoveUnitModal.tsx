@@ -70,7 +70,7 @@ const RemoveUnitModal: FC<Props> = ({ unit, subUnits, onClose, onRemoved }) => {
       }
       if (mapOrgUnitError(res).kind === OrgUnitErrorKind.FIELD) {
         const content = parseUnitContentBlock(res.errorMessage)?.filter((url) => !isFolderMarkerUrl(url));
-        if (content) {
+        if (content?.length) {
           setBlockingContent(content.map(getContentItemName));
         } else {
           setBlockMessage(res.errorMessage);

@@ -3,10 +3,10 @@
 import { cookies, headers } from 'next/headers';
 
 import { coreOrgUnitsApi, filesCoreApi } from '@/src/app/api/api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DialFolder } from '@/src/models/dial/folder';
 import { NewOrgUnit, NewOrgUnitRoleAssignment } from '@/src/models/dial/org-unit';
 import { DialRule } from '@/src/models/dial/rule';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ConflictResolutionPolicy } from '@/src/types/import';
