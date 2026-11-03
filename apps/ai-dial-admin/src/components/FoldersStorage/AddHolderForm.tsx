@@ -57,6 +57,7 @@ const AddHolderForm: FC<Props> = ({ roleName, groupClaim, onAdd }) => {
             id={`${id}-value`}
             containerClassName="flex-1 min-w-0"
             aria-label={t(FoldersI18nKey.AddHolder)}
+            autoComplete="off"
             placeholder={
               kind === SubjectKind.PERSON
                 ? t(FoldersI18nKey.HolderPersonPlaceholder)

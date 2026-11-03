@@ -39,7 +39,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
     <div className="flex flex-col size-full overflow-auto sm:px-2">
       {isReadOnlyAdmin && <ReadOnlyAdminBanner />}
       <div className="mb-6 flex flex-row justify-between bg-layer-2 p-[32px] relative">
-        <div className="flex flex-col w-full xl:w-[55%] xl:z-10">
+        <div className="flex flex-col w-full xl:w-[calc(100%-523px)] xl:z-10">
           <h1 className="mb-3">{t(WelcomeViewI18nKey.Title)}</h1>
           <p className="mb-2">{t(WelcomeViewI18nKey.Description)}</p>
           {docLink && (

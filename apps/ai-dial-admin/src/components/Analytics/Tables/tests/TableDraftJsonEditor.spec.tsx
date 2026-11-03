@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { defineTableSchema, getTable, updateTable } from '@/src/app/[lang]/tables/actions';
+import { defineTableSchema, getTable, getTables, updateTable } from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -135,6 +135,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.jsonErrors = [];
   vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
+  vi.mocked(getTables).mockResolvedValue({ success: true, response: [] });
   vi.mocked(updateTable).mockResolvedValue({ success: true });
   vi.mocked(defineTableSchema).mockResolvedValue({ success: true });
 });

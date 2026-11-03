@@ -6,6 +6,7 @@ import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 
 import CompareRowDetailPivotTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPivotTable';
 import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 
 vi.mock('@/src/components/Runs/Details/BottomDrawer/FullscreenDiffViewer', () => ({
@@ -104,6 +105,45 @@ describe('CompareRowDetailPivotTable', () => {
     expect(dialog).toHaveTextContent('Primary long answer');
     expect(dialog).toHaveTextContent('Run B');
     expect(dialog).toHaveTextContent('Secondary long answer');
+  });
+
+  test('opens the score view, not the text diff, for a metric cell', async () => {
+    const metricSections: RowDetailSection[] = [
+      {
+        key: 'metric:Accuracy',
+        label: 'Accuracy',
+        rows: [
+          {
+            fieldKey: 'precision',
+            label: 'precision',
+            primaryRaw: '0',
+            secondaryRaw: '1',
+            primaryInfo: { reason: 'primary reason', logs: null, error: null },
+            secondaryInfo: { reason: 'secondary reason', logs: null, error: null },
+            diffKind: MetricDeltaKind.Changed,
+            isNumeric: true,
+            isScoreIndicator: false,
+            isMetric: true,
+          },
+        ],
+      },
+    ];
+
+    render(
+      <CompareRowDetailPivotTable
+        sections={metricSections}
+        runs={runs}
+        hasComparedMatch
+        showDiffsOnly={false}
+        hideHighlights={false}
+      />,
+    );
+
+    await userEvent.click(document.querySelectorAll<HTMLElement>('[data-field-key="precision"]')[0]);
+
+    expect(screen.getByText('primary reason')).toBeInTheDocument();
+    expect(screen.getByText('secondary reason')).toBeInTheDocument();
+    expect(screen.getAllByText(RunsI18nKey.MetricScoreLabel)).toHaveLength(2);
   });
 
   test('right-aligns the header label of a right-aligned field', () => {

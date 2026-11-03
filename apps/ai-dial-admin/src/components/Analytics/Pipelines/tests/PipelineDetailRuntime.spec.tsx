@@ -8,7 +8,6 @@ import {
   listPipelineBackfills,
   getTable,
   getTables,
-  pausePipeline,
   resumePipeline,
 } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
@@ -80,9 +79,9 @@ const pipeline: Pipeline = {
   state: { last_run_at: '2026-09-21T16:12:08Z', lag_seconds: 38 },
 };
 
-const OPERATOR_PAUSE: PipelinePause = {
-  origin: PauseOrigin.Operator,
-  reason: 'paused by an operator',
+const BREAKER_PAUSE: PipelinePause = {
+  origin: PauseOrigin.Breaker,
+  reason: '7 of its last 50 group(s) dead-lettered',
   since: '2026-09-21T15:40:00Z',
 };
 
@@ -101,9 +100,6 @@ const asPaused = (pause?: PipelinePause) =>
 const asNotHeld = () =>
   vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false, errorHeader: RUNNER_PIPELINE_NOT_FOUND });
 
-/** The control lives in the Runtime tab's bar; the banner carries a second Resume while paused. */
-const tabControl = (name: string) => screen.getAllByRole('button', { name }).at(-1) as HTMLElement;
-
 const openRuntime = async (user: ReturnType<typeof userEvent.setup>) =>
   user.click(await screen.findByText(TabsI18nKey.Runtime));
 
@@ -117,7 +113,7 @@ const page = (total: number): DlqPage => ({
 const renderView = (override?: Partial<Pipeline>) =>
   render(<PipelineDetailView pipeline={{ ...pipeline, ...override }} takenTargets={['turn_feedback']} />);
 
-describe('PipelineDetailView — runtime and pause', () => {
+describe('PipelineDetailView — runtime and resume', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
@@ -128,7 +124,6 @@ describe('PipelineDetailView — runtime and pause', () => {
     );
     asRuntime();
     vi.mocked(getPipelineFailures).mockResolvedValue({ success: true, response: page(0) });
-    vi.mocked(pausePipeline).mockResolvedValue({ success: true });
     vi.mocked(resumePipeline).mockResolvedValue({ success: true });
   });
 
@@ -182,14 +177,23 @@ describe('PipelineDetailView — runtime and pause', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusEnabled)).toBeTruthy();
   });
 
-  // Pausing leaves the declaration untouched, so a paused pipeline that read as disabled would send an
+  // The breaker leaves the declaration untouched, so a paused pipeline that read as disabled would send an
   // operator to re-enable something nobody disabled.
   test('states a paused pipeline as paused and still enabled', async () => {
-    asPaused(OPERATOR_PAUSE);
+    asPaused(BREAKER_PAUSE);
     renderView();
 
     expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeTruthy();
     expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusEnabled)).toBeTruthy();
+  });
+
+  test('raises no pause banner for a disabled pipeline the runner still reports paused', async () => {
+    asPaused(BREAKER_PAUSE);
+    renderView({ enabled: false });
+
+    expect(await screen.findByRole('button', { name: BackfillI18nKey.Title })).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitleUndated)).toBeNull();
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).toBeNull();
   });
 
   test('states no runtime status for a disabled pipeline', async () => {
@@ -216,14 +220,27 @@ describe('PipelineDetailView — runtime and pause', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeTruthy();
   });
 
-  test('offers no pause for a pipeline nothing is running', async () => {
+  test('offers no runtime control besides re-reading on a running pipeline', async () => {
     const user = userEvent.setup();
-    asNotHeld();
     renderView();
 
-    await user.click(await screen.findByText(TabsI18nKey.Runtime));
+    await openRuntime(user);
 
-    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.Pause })).toBeNull();
+    expect(await screen.findByRole('button', { name: AnalyticsPipelinesI18nKey.RuntimeReadAgain })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).toBeNull();
+  });
+
+  test('states an enabled pipeline the runner still reports stopped as not running', async () => {
+    const user = userEvent.setup();
+    asRuntime({ status: { state: PipelineRuntimeState.Stopped } });
+    renderView();
+
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitleUndated)).toBeNull();
+
+    await openRuntime(user);
+
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)).toBeTruthy();
   });
 
   // ADAS drives aggregate pipelines on its own scheduler and the runner has never heard of them, so
@@ -249,7 +266,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   });
 
   test('raises a pause banner that names no author and offers to resume', async () => {
-    asPaused(OPERATOR_PAUSE);
+    asPaused(BREAKER_PAUSE);
     renderView();
 
     const banner = await screen.findByRole('status');
@@ -261,7 +278,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   });
 
   test('states when a breaker pause lifts itself', async () => {
-    asPaused({ ...OPERATOR_PAUSE, origin: PauseOrigin.Breaker, resumes_at: '2026-09-21T16:40:00Z' });
+    asPaused({ ...BREAKER_PAUSE, resumes_at: '2026-09-21T16:40:00Z' });
     renderView();
 
     const banner = await screen.findByRole('status');
@@ -273,11 +290,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   // The evidence the breaker tripped on, worded by the service: the threshold and the window are its
   // configuration, so a console that restated them would be quoting a copy.
   test('states the reason a breaker pause was taken', async () => {
-    asPaused({
-      ...OPERATOR_PAUSE,
-      origin: PauseOrigin.Breaker,
-      reason: '7 of its last 50 group(s) dead-lettered',
-    });
+    asPaused(BREAKER_PAUSE);
     renderView();
 
     const banner = await screen.findByRole('status');
@@ -285,15 +298,16 @@ describe('PipelineDetailView — runtime and pause', () => {
     expect(banner.textContent).toContain(AnalyticsPipelinesI18nKey.PausedReason);
   });
 
-  // The service records a fixed string for an operator pause that says only what the origin already
-  // says, so repeating it would be the same sentence twice.
-  test('states no reason for an operator pause', async () => {
-    asPaused({ ...OPERATOR_PAUSE, reason: 'paused by an operator' });
+  // An older runner can still report an operator pause; it is stated without the breaker's wording.
+  test('states a pause that is not the breaker without the breaker wording', async () => {
+    asPaused({ origin: PauseOrigin.Operator, reason: 'paused by an operator', since: BREAKER_PAUSE.since });
     renderView();
 
     const banner = await screen.findByRole('status');
 
+    expect(banner.textContent).not.toContain(AnalyticsPipelinesI18nKey.PausedByBreaker);
     expect(banner.textContent).not.toContain(AnalyticsPipelinesI18nKey.PausedReason);
+    expect(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).toBeTruthy();
   });
 
   test('raises no banner for a pipeline the runner does not report as paused', async () => {
@@ -303,101 +317,103 @@ describe('PipelineDetailView — runtime and pause', () => {
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitle)).toBeNull();
   });
 
-  test('confirms a pause, stating what stops and that it does not survive a restart', async () => {
+  test('resumes without a confirmation step and re-reads the runner', async () => {
     const user = userEvent.setup();
+    asPaused(BREAKER_PAUSE);
     renderView();
 
-    await openRuntime(user);
-    await user.click(tabControl(AnalyticsPipelinesI18nKey.Pause));
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.PauseConfirmTitle)).toBeTruthy();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.PauseConfirmBody)).toBeTruthy();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.PauseConfirmRuntimeAction)).toBeTruthy();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.PauseConfirmRestart)).toBeTruthy();
-  });
-
-  test('pauses the pipeline once the confirmation is accepted, and re-reads the runner', async () => {
-    const user = userEvent.setup();
-    renderView();
-
-    await openRuntime(user);
-    await user.click(tabControl(AnalyticsPipelinesI18nKey.Pause));
-    asPaused(OPERATOR_PAUSE);
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: AnalyticsPipelinesI18nKey.Pause }));
-
-    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeTruthy();
-    expect(pausePipeline).toHaveBeenCalledWith('feedback-live');
-    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
-  });
-
-  test('resumes without a confirmation step', async () => {
-    const user = userEvent.setup();
-    asPaused(OPERATOR_PAUSE);
-    renderView();
-
-    await openRuntime(user);
-    await user.click(tabControl(AnalyticsPipelinesI18nKey.Resume));
+    const banner = await screen.findByRole('status');
+    asRuntime();
+    await user.click(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume }));
 
     await vi.waitFor(() => expect(resumePipeline).toHaveBeenCalledWith('feedback-live'));
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PauseConfirmTitle)).toBeNull();
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: AnalyticsPipelinesI18nKey.PipelineResumed }),
+    );
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitle)).toBeNull();
   });
 
-  test('reports a refused pause with the cause the operator can act on', async () => {
+  test('reports a refused resume and re-reads the runner', async () => {
     const user = userEvent.setup();
-    vi.mocked(pausePipeline).mockResolvedValue({
+    vi.mocked(resumePipeline).mockResolvedValue({
+      success: false,
+      status: 409,
+      errorHeader: 'pipeline_not_paused',
+      errorMessage: 'pipeline is not paused',
+      requestId: 'trace-1',
+    });
+    asPaused(BREAKER_PAUSE);
+    renderView();
+
+    const banner = await screen.findByRole('status');
+    asRuntime();
+    await user.click(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume }));
+
+    await vi.waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: AnalyticsPipelinesI18nKey.ResumeFailed,
+          description: 'pipeline is not paused',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitle)).toBeNull();
+  });
+
+  test('reports a resume refused by a cold runner with the cause the operator can act on', async () => {
+    const user = userEvent.setup();
+    vi.mocked(resumePipeline).mockResolvedValue({
       success: false,
       errorHeader: 'pipeline_cache_cold',
       errorMessage: 'not loaded',
-      requestId: 'trace-1',
+      requestId: 'trace-2',
     });
+    asPaused(BREAKER_PAUSE);
     renderView();
 
-    await openRuntime(user);
-    await user.click(tabControl(AnalyticsPipelinesI18nKey.Pause));
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: AnalyticsPipelinesI18nKey.Pause }));
+    const banner = await screen.findByRole('status');
+    await user.click(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume }));
 
-    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
-    expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: AnalyticsPipelinesI18nKey.PauseFailed,
-        description: AnalyticsPipelinesI18nKey.RunnerCold,
-        requestId: 'trace-1',
-      }),
+    await vi.waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ description: AnalyticsPipelinesI18nKey.RunnerCold, requestId: 'trace-2' }),
+      ),
     );
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeNull();
   });
 
-  // Unlike Disable, a pause sends no part of the document, so a pending edit has nothing to lose.
-  test('keeps the pause control actionable while the form has unsaved edits', async () => {
+  // Unlike Disable, a resume sends no part of the document, so a pending edit has nothing to lose.
+  test('keeps Resume actionable while the form has unsaved edits', async () => {
     const user = userEvent.setup();
+    asPaused(BREAKER_PAUSE);
     renderView();
 
     await user.click(await screen.findByRole('radio', { name: AnalyticsPipelinesI18nKey.FilterViewSql }));
     await user.type(screen.getByRole('textbox', { name: AnalyticsPipelinesI18nKey.Filter }), 'x');
-    await openRuntime(user);
 
-    // The change bar is up, so Delete and the enable toggle are hidden — the pause is not.
+    // The change bar is up, so Delete and the enable toggle are hidden — Resume is not.
     expect(
       screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }).closest('[inert]'),
     ).toBeTruthy();
-    expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).toBeTruthy();
-    expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).not.toHaveProperty('disabled', true);
+    const banner = screen.getByRole('status');
+    expect(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).not.toHaveProperty(
+      'disabled',
+      true,
+    );
   });
 
   // The gates are pipelines that are enabled, taken on and consuming nothing. Each clears for a
   // different reason, and collapsing them into `running` would state the opposite of what an operator
   // has to act on.
-  test('states a gated pipeline as gated and still offers to pause it', async () => {
-    const user = userEvent.setup();
+  test('states a gated pipeline as gated and offers no resume', async () => {
     asRuntime({ status: { state: PipelineRuntimeState.OverBudget } });
     renderView();
 
     expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeOverBudget)).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
-
-    await openRuntime(user);
-
-    expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).toBeNull();
   });
 
   // The runner holds the pause metadata in memory, so a restart can lose it while the pause survives.
@@ -412,15 +428,12 @@ describe('PipelineDetailView — runtime and pause', () => {
     expect(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).toBeTruthy();
   });
 
-  // The moment an operator most wants to stop a pipeline is the moment its runtime read is failing.
-  test('keeps the pause control when the runtime read did not land', async () => {
-    const user = userEvent.setup();
+  // Stopping a pipeline reads only the registry, so a failing runtime read does not take the control away.
+  test('keeps the enable/disable control when the runtime read did not land', async () => {
     vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false, errorHeader: 'runtime_store_down' });
     renderView();
 
-    await openRuntime(user);
-
-    expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).toBeTruthy();
+    expect(await screen.findByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
   });
 

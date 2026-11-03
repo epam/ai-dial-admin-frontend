@@ -66,20 +66,21 @@ const RemoveRoleDialog: FC<Props> = ({ tableName, row, onRemove, onClose }) => {
       isLoading={isRemoving}
       onConfirm={() => void onConfirm()}
       onCancel={onClose}
+      description={
+        <div className="flex flex-col gap-3">
+          <dl className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-1 dial-small-text">
+            {details.map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="text-secondary">{t(label)}</dt>
+                <dd className="break-words">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="dial-small-text">{t(AnalyticsTableAccessI18nKey.RemoveWarning)}</p>
+        </div>
+      }
       onClose={onClose}
-    >
-      <div className="flex flex-col gap-3">
-        <dl className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-1 dial-small-text">
-          {details.map(([label, value]) => (
-            <div key={label} className="contents">
-              <dt className="text-secondary">{t(label)}</dt>
-              <dd className="break-words">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="dial-small-text">{t(AnalyticsTableAccessI18nKey.RemoveWarning)}</p>
-      </div>
-    </ConfirmationPopup>
+    />
   );
 };
 

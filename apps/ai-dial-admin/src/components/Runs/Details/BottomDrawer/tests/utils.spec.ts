@@ -53,6 +53,25 @@ describe('buildComparisonSections', () => {
     expect(metricSection!.rows.length).toBe(2);
   });
 
+  it('attaches reason, logs and the group error to a metric field from metricInfos', () => {
+    const active = makeResult({
+      metricValues: { 'eval.accuracy': { f1: 0.5 }, 'eval.judge': { error: null } },
+      metricInfos: {
+        'eval.accuracy': { f1: { reason: 'Low overlap', verbose_logs: 'details' } },
+        'eval.judge': { error: '422 Unprocessable Content' },
+      },
+    });
+    const pinned = makeResult({ id: 'r2', metricValues: { 'eval.accuracy': { f1: 0.9 } }, metricInfos: {} });
+    const sections = buildComparisonSections(active, pinned, defaultVisibility, defaultOrder, defaultHidden);
+
+    const f1 = sections.find((s) => s.key === 'metric:eval.accuracy')!.rows.find((r) => r.fieldKey === 'f1')!;
+    expect(f1.values[0].info).toEqual({ reason: 'Low overlap', logs: 'details', error: null });
+    expect(f1.values[1].info).toBeUndefined();
+
+    const error = sections.find((s) => s.key === 'metric:eval.judge')!.rows.find((r) => r.fieldKey === 'error')!;
+    expect(error.values[0].info).toEqual({ reason: null, logs: null, error: '422 Unprocessable Content' });
+  });
+
   it('builds two-column sections with values ordered [active, pinned]', () => {
     const active = makeResult({ id: 'r1', testCaseData: { input: 'a' } });
     const pinned = makeResult({ id: 'r2', testCaseData: { input: 'b' } });

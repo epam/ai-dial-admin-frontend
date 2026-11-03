@@ -1,5 +1,5 @@
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
-import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { MetricFieldInfo, RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 
 export interface RowDetailRunValue {
   raw: string | null;
@@ -11,3 +11,7 @@ export const getRowDetailRunValue = (field: RowDetailField, slot: CompareRunSlot
   slot === CompareRunSlot.Primary
     ? { raw: field.primaryRaw, isFailed: field.primaryFailed ?? false }
     : { raw: field.secondaryRaw, isFailed: field.secondaryFailed ?? false };
+
+/** The `metricInfos` entry a row-detail field holds for a run, laid out like `getRowDetailRunValue`. */
+export const getRowDetailRunInfo = (field: RowDetailField, slot: CompareRunSlot): MetricFieldInfo | undefined =>
+  slot === CompareRunSlot.Primary ? field.primaryInfo : field.secondaryInfo;

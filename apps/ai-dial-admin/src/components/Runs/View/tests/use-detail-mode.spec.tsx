@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { ROW_DETAIL_BOTTOM_CLASS, ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import { DetailMode } from '../../Details/BottomDrawer/models';
 import { useDetailMode } from '../use-detail-mode';
 
@@ -20,13 +21,12 @@ vi.mock('@/src/context/AppContext', () => ({
   }),
 }));
 
-vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel', () => ({
+vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailPanel', () => ({
   default: () => null,
 }));
 
-vi.mock('@/src/components/Runs/Details/RunMetricDetailPanel', () => ({
-  default: () => null,
-}));
+const getShownPanelProps = (callIndex = 0) =>
+  (mockShowSidebar.mock.calls[callIndex][0] as { props: Record<string, unknown> }).props;
 
 describe('useDetailMode', () => {
   beforeEach(() => {
@@ -46,7 +46,8 @@ describe('useDetailMode', () => {
     act(() => result.current.openDetail('r1'));
 
     expect(result.current.selectedResultId).toBe('r1');
-    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), ROW_DETAIL_BOTTOM_CLASS, SidebarPosition.Bottom);
+    expect(getShownPanelProps().position).toBe(SidebarPosition.Bottom);
   });
 
   it('keeps the panel open on same-row cell click and updates the focus field', () => {
@@ -62,7 +63,7 @@ describe('useDetailMode', () => {
     expect(mockShowSidebar).toHaveBeenCalled();
   });
 
-  it('switches to sidebar and shows RunMetricDetailPanel', () => {
+  it('switches to the right side panel at the shared row-detail width', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
@@ -70,7 +71,32 @@ describe('useDetailMode', () => {
     act(() => result.current.switchToSidebar());
 
     expect(result.current.detailMode).toBe(DetailMode.Sidebar);
-    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-[750px]', SidebarPosition.Right);
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), ROW_DETAIL_SIDEBAR_CLASS, SidebarPosition.Right);
+    expect(getShownPanelProps().position).toBe(SidebarPosition.Right);
+    expect(getShownPanelProps().resultId).toBe('r1');
+  });
+
+  it('wires the panel switch button to the opposite mode in each position', () => {
+    const { result } = renderHook(() => useDetailMode());
+
+    act(() => result.current.openDetail('r1'));
+    act(() => (getShownPanelProps().onSwitchDisplayMode as () => void)());
+    expect(result.current.detailMode).toBe(DetailMode.Sidebar);
+
+    act(() => (getShownPanelProps(mockShowSidebar.mock.calls.length - 1).onSwitchDisplayMode as () => void)());
+    expect(result.current.detailMode).toBe(DetailMode.Drawer);
+  });
+
+  it('opens the side panel on a cell click with the field to scroll to', () => {
+    const { result } = renderHook(() => useDetailMode());
+
+    act(() => result.current.openDetail('r1'));
+    act(() => result.current.switchToSidebar());
+    mockShowSidebar.mockClear();
+    act(() => result.current.openDetail('r1', { focusFieldKey: 'answer' }));
+
+    expect(getShownPanelProps().position).toBe(SidebarPosition.Right);
+    expect(getShownPanelProps().focusFieldKey).toBe('answer');
   });
 
   it('closeDetail preserves mode preference', () => {
@@ -115,5 +141,41 @@ describe('useDetailMode', () => {
 
     const reopenedPanel = mockShowSidebar.mock.calls[0][0] as { props: { initialDisplayTree?: unknown } };
     expect(reopenedPanel.props.initialDisplayTree).toBe(persistedTree);
+  });
+
+  it('keeps the Display tree chosen in the bottom panel when switching to the side panel and back', () => {
+    const { result } = renderHook(() => useDetailMode());
+    const persistedTree = [{ headerName: 'Execution', hide: false, children: [] }];
+
+    act(() => result.current.openDetail('r1'));
+    act(() => {
+      (getShownPanelProps().onDisplayTreeChange as (tree: unknown) => void)(persistedTree);
+    });
+
+    mockShowSidebar.mockClear();
+    act(() => result.current.switchToSidebar());
+    expect(getShownPanelProps().initialDisplayTree).toBe(persistedTree);
+
+    mockShowSidebar.mockClear();
+    act(() => result.current.switchToDrawer());
+    expect(getShownPanelProps().initialDisplayTree).toBe(persistedTree);
+  });
+
+  it('keeps the Display tree chosen in the side panel when switching to the bottom panel', () => {
+    const { result } = renderHook(() => useDetailMode());
+    const persistedTree = [{ headerName: 'Test Case Data', hide: true, children: [] }];
+
+    act(() => result.current.openDetail('r1'));
+    act(() => result.current.switchToSidebar());
+    act(() => {
+      (getShownPanelProps(mockShowSidebar.mock.calls.length - 1).onDisplayTreeChange as (tree: unknown) => void)(
+        persistedTree,
+      );
+    });
+
+    mockShowSidebar.mockClear();
+    act(() => result.current.switchToDrawer());
+
+    expect(getShownPanelProps().initialDisplayTree).toBe(persistedTree);
   });
 });

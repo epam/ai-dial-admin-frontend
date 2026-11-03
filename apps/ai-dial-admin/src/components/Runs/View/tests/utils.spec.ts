@@ -19,15 +19,11 @@ import {
   getMetricGroupOrder,
   getRowDetailFieldSchema,
   createEmptyComparePrimaryRow,
-  getDetailEntries,
   getDetailNestedEntries,
   getFormattedDuration,
-  getMetricGroups,
-  getPanelTitle,
   getCompareRowSelectionId,
   isMatchedCompareRow,
   mergeByTestCaseId,
-  snapshotsToBindingsMap,
 } from '../utils';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
@@ -396,49 +392,6 @@ describe('Runs View :: getFormattedDuration', () => {
   });
 });
 
-describe('Runs View :: getPanelTitle', () => {
-  test('Should format title with test case name and run index', () => {
-    expect(getPanelTitle({ testCaseName: 'Login Test', runIndex: 3 } as any)).toBe('Login Test - Run #4');
-  });
-
-  test('Should default run index to 0 when missing', () => {
-    expect(getPanelTitle({ testCaseName: 'Test' } as any)).toBe('Test - Run #1');
-  });
-
-  test('Should handle null result', () => {
-    expect(getPanelTitle(null)).toBe('undefined - Run #1');
-  });
-});
-
-describe('Runs View :: getDetailEntries', () => {
-  test('Should convert record to key-value tuple array', () => {
-    expect(getDetailEntries({ prompt: 'hello', score: 0.95 })).toEqual([
-      ['prompt', 'hello'],
-      ['score', '0.95'],
-    ]);
-  });
-
-  test('Should keep object values as objects', () => {
-    expect(getDetailEntries({ data: { nested: true } })).toEqual([['data', { nested: true }]]);
-  });
-
-  test('Should handle empty record', () => {
-    expect(getDetailEntries({})).toEqual([]);
-  });
-
-  test('Should return string-array values as string[]', () => {
-    expect(getDetailEntries({ tags: ['alpha', 'beta', 'gamma'] })).toEqual([['tags', ['alpha', 'beta', 'gamma']]]);
-  });
-
-  test('Should keep mixed arrays as arrays', () => {
-    expect(getDetailEntries({ mixed: ['a', 1, true] })).toEqual([['mixed', ['a', 1, true]]]);
-  });
-
-  test('Should stringify number values', () => {
-    expect(getDetailEntries({ count: 42 })).toEqual([['count', '42']]);
-  });
-});
-
 describe('Runs View :: getDetailNestedEntries', () => {
   test('Should create sections from nested metric values', () => {
     const data = {
@@ -622,142 +575,6 @@ describe('Runs View :: getDetailNestedEntries', () => {
 
   test('Should handle empty data', () => {
     expect(getDetailNestedEntries({})).toEqual([]);
-  });
-});
-
-describe('Runs View :: getMetricGroups', () => {
-  test('Should return empty array for undefined metricValues', () => {
-    expect(getMetricGroups(undefined)).toEqual([]);
-  });
-
-  test('Should return empty array for empty metricValues', () => {
-    expect(getMetricGroups({})).toEqual([]);
-  });
-
-  test('Should return normal metric group with numeric values', () => {
-    const metricValues = {
-      'aidial_rag_eval.retrieval': { f1: 0.118, mrr: 1, recall: 1, precision: 0.063 },
-    };
-    const result = getMetricGroups(metricValues);
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('aidial_rag_eval.retrieval');
-    expect(result[0].hasError).toBe(false);
-    expect(result[0].metrics).toEqual([
-      { key: 'f1', value: 0.118, isError: false },
-      { key: 'mrr', value: 1, isError: false },
-      { key: 'recall', value: 1, isError: false },
-      { key: 'precision', value: 0.063, isError: false },
-    ]);
-  });
-
-  test('Should detect failed metric group with error fallback from metricInfos', () => {
-    const metricValues = {
-      custom_eval: { error: null },
-    };
-    const metricInfos = {
-      custom_eval: { error: 'Connection refused' },
-    };
-    const result = getMetricGroups(metricValues, metricInfos);
-    expect(result).toHaveLength(1);
-    expect(result[0].hasError).toBe(true);
-    expect(result[0].errorMessage).toBe('Connection refused');
-    expect(result[0].metrics).toEqual([]);
-  });
-
-  test('Should include metricInfos for groups with additional data', () => {
-    const metricValues = {
-      retrieval: { f1: 0.5 },
-    };
-    const metricInfos = {
-      retrieval: { f1: { reason: 'Low overlap', verbose_logs: 'details...' } },
-    };
-    const result = getMetricGroups(metricValues, metricInfos);
-    expect(result[0].info).toEqual({
-      f1: { reason: 'Low overlap', verbose_logs: 'details...' },
-    });
-  });
-
-  test('Should handle multiple groups with mixed success and failure', () => {
-    const metricValues = {
-      retrieval: { f1: 0.5, recall: 1 },
-      custom: { error: null },
-    };
-    const metricInfos = {
-      custom: { error: 'Timeout' },
-    };
-    const result = getMetricGroups(metricValues, metricInfos);
-    expect(result).toHaveLength(2);
-    expect(result[0].hasError).toBe(false);
-    expect(result[0].metrics).toHaveLength(2);
-    expect(result[1].hasError).toBe(true);
-    expect(result[1].errorMessage).toBe('Timeout');
-  });
-
-  test('Should handle null metric values as errors', () => {
-    const metricValues = {
-      group: { score: null, confidence: null },
-    };
-    const result = getMetricGroups(metricValues);
-    expect(result[0].metrics[0]).toEqual({ key: 'score', value: null, isError: true });
-    expect(result[0].metrics[1]).toEqual({ key: 'confidence', value: null, isError: true });
-  });
-
-  test('Should omit a metric skipped by a false condition (absent from metricValues) without crashing', () => {
-    const metricValues = {
-      retrieval: { f1: 0.5 },
-    };
-    const result = getMetricGroups(metricValues);
-    expect(result).toHaveLength(1);
-    expect(result.find((group) => group.title === 'conditional_metric')).toBeUndefined();
-  });
-
-  test('Should surface metric whose JSONata condition errored via metricInfos error', () => {
-    // Metric present in result but empty: condition evaluation failed, so metric never ran
-    const metricValues = {
-      jsonata_eval: {},
-    };
-    const metricInfos = {
-      jsonata_eval: { error: 'JSONata condition evaluation failed' },
-    };
-    const result = getMetricGroups(metricValues, metricInfos);
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('jsonata_eval');
-    expect(result[0].hasError).toBe(true);
-    expect(result[0].errorMessage).toBe('JSONata condition evaluation failed');
-    expect(result[0].metrics).toEqual([]);
-  });
-});
-
-describe('Runs View :: snapshotsToBindingsMap', () => {
-  test('Should map named snapshots to bindings record', () => {
-    const snapshots = [
-      { tsmdName: 'Metric A', configBindings: [{ property: 'p1', source: { $type: 'Constant' } }], inputBindings: [] },
-      { tsmdName: 'Metric B', configBindings: [], inputBindings: [{ property: 'p2', source: { $type: 'TestCase' } }] },
-    ];
-    const result = snapshotsToBindingsMap(snapshots as any);
-    expect(Object.keys(result)).toEqual(['Metric A', 'Metric B']);
-    expect(result['Metric A'].configBindings).toHaveLength(1);
-    expect(result['Metric B'].inputBindings).toHaveLength(1);
-  });
-
-  test('Should skip snapshots without tsmdName', () => {
-    const snapshots = [
-      { configBindings: [], inputBindings: [] },
-      { tsmdName: 'Metric A', configBindings: [], inputBindings: [] },
-    ];
-    const result = snapshotsToBindingsMap(snapshots as any);
-    expect(Object.keys(result)).toEqual(['Metric A']);
-  });
-
-  test('Should return empty record for empty array', () => {
-    expect(snapshotsToBindingsMap([])).toEqual({});
-  });
-
-  test('Should default undefined bindings to empty arrays', () => {
-    const snapshots = [{ tsmdName: 'Metric A' }];
-    const result = snapshotsToBindingsMap(snapshots as any);
-    expect(result['Metric A'].configBindings).toEqual([]);
-    expect(result['Metric A'].inputBindings).toEqual([]);
   });
 });
 
