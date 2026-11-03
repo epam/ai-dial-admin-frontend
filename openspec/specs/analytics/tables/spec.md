@@ -1924,9 +1924,9 @@ The tab SHALL render a roles table with one row per such role, sorted by role na
 
 - **Role**: the role name, with a sensitive indicator when the role is in the `sensitive` list.
 - **Get**, **Read**, **Write**, **Modify**: a mark per privilege. A privilege the role holds through its own stored list SHALL show a full mark. A privilege the role holds only by implication — `get` through `read` or `modify` — SHALL show a lighter mark, and a stored list SHALL NOT be reported as expanded by that implication. A privilege the role does not hold SHALL show a neutral placeholder.
-- **Rows**: the role's row limit rendered as a readable condition summary when the role has a row policy; otherwise **All rows** when the role holds `read`; otherwise **Cannot read rows**.
+- **Rows**: the role's row limit rendered as a readable condition summary when the role has a row policy and holds `read`; otherwise **All rows** when the role holds `read`; otherwise **Cannot read rows**. A role that has a row policy but does not hold `read` SHALL show **Cannot read rows** followed by a muted note that the filter is kept, naming the condition summary, because the policy stays stored and applies to the role by whatever path it reads the table, while this table's own grants give it no read scope.
 
-A role that has a row policy and no grant SHALL be listed, with every privilege mark neutral and its row limit shown. The roles table SHALL offer a role-name search and two filters, **Can read** and **Rows limited**, applied on the client to the loaded rows. Selecting a row SHALL open the role drawer on that role (see "Role drawer edits one role's access and row limit"); **Add role** SHALL open it on a new role.
+A role that has a row policy and no grant SHALL be listed, with every privilege mark neutral and its kept row limit shown in the Rows column. The roles table SHALL offer a role-name search and two filters, **Can read** and **Rows limited**, applied on the client to the loaded rows. Selecting a row SHALL open the role drawer on that role (see "Role drawer edits one role's access and row limit"); **Add role** SHALL open it on a new role.
 
 Every row SHALL be operable by keyboard, and a row's mark cells SHALL carry an accessible name stating the privilege and whether it is stored or implied.
 
@@ -1945,15 +1945,23 @@ Every row SHALL be operable by keyboard, and a row's mark cells SHALL carry an a
 
 #### Scenario: Rows column states what each role reads
 
-- **GIVEN** `team-x` has a row policy, `pii-analysts` holds `read` and has none, and `ingest-bot` holds only `write`
+- **GIVEN** `team-x` holds `read` and has a row policy, `pii-analysts` holds `read` and has none, and `ingest-bot` holds only `write`
 - **WHEN** the tab renders
 - **THEN** `team-x` shows its condition summary, `pii-analysts` shows **All rows**, and `ingest-bot` shows **Cannot read rows**
+
+#### Scenario: A row policy kept after Read is removed is marked as kept
+
+- **GIVEN** `analysts` holds `modify` only and still has a stored row policy
+- **WHEN** the tab renders
+- **THEN** the Rows column of `analysts` shows **Cannot read rows** followed by a muted note that the filter is kept with its condition summary
+- **AND** the **Rows limited** filter still lists `analysts`
 
 #### Scenario: A role with only a row policy is listed
 
 - **GIVEN** a role that has a row policy and appears in no grant list
 - **WHEN** the tab renders
-- **THEN** the role is listed with every privilege mark neutral and its row limit shown
+- **THEN** the role is listed with every privilege mark neutral
+- **AND** its Rows column shows **Cannot read rows** with the kept filter noted
 
 #### Scenario: The tab is hidden when the access read is forbidden
 
@@ -2099,7 +2107,7 @@ When the user chooses **Only some rows**, the drawer SHALL show a row-limit edit
 
 The editor SHALL also offer a **JSON** view of the same predicate in the service's stable filter serialization — the one the Query Builder's JSON view uses — and a predicate that nests deeper than the visual editor can hold SHALL open in the JSON view with a note saying why, without changing it. Editing the predicate in either view SHALL keep the other in step when the predicate is representable visually.
 
-Saving a role with **Only some rows** SHALL send `PUT /v1/tables/{name}/row-policies/{role}` with the body `{"filter": …}`. Saving with **All rows** for a role that has a row policy SHALL send `DELETE /v1/tables/{name}/row-policies/{role}`; a `404` answer to that delete SHALL be treated as success, because it means the policy is already gone. Saving with **All rows** for a role that has no row policy SHALL send nothing to that endpoint. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter (an empty or blank document is an empty predicate, not such text) SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
+Saving a role with **Only some rows** SHALL send `PUT /v1/tables/{name}/row-policies/{role}` with the body `{"filter": …}`. Saving with **All rows** for a role that has a row policy SHALL send `DELETE /v1/tables/{name}/row-policies/{role}`; a `404` answer to that delete SHALL be treated as success, because it means the policy is already gone. Saving with **All rows** for a role that has no row policy SHALL send nothing to that endpoint. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, a condition compared with a blank literal value (other than an explicit null comparison), an **is one of** condition with no non-blank item, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter (an empty or blank document is an empty predicate, not such text) SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
 
 The two requests of **Save role** are independent. When the grants save succeeds and the row-policy request fails, the drawer SHALL stay open, the roles table SHALL show the saved grants, an error notification SHALL carry the service's message — which names the offending field for a `422` — and the footer's action SHALL become **Save row limit**, which repeats only the row-policy request. The note on screen SHALL state exactly what was saved. A predicate the service rejects for a field the user can see in JSON SHALL have that field highlighted there when the service names it.
 
@@ -2150,6 +2158,18 @@ The two requests of **Save role** are independent. When the grants save succeeds
 - **GIVEN** one condition on `project_id` is filled and a second condition has no column chosen
 - **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
 
+#### Scenario: A condition with a blank value cannot be saved
+
+- **GIVEN** a condition on `status` with the operator **Equals** and an empty value
+- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
+- **AND WHEN** the user fills the value
+- **THEN** **Save role** is enabled
+
+#### Scenario: An explicit null comparison is complete
+
+- **WHEN** the user compares a column with null instead of typing a value
+- **THEN** the condition is complete and **Save role** is enabled
+
 #### Scenario: An empty JSON document returns to the visual view
 
 - **WHEN** no condition was added, the user switches to the JSON view, and then back to the visual view
@@ -2167,7 +2187,7 @@ The two requests of **Save role** are independent. When the grants save succeeds
 
 ### Requirement: Drawer reports grants that change nothing
 
-When `PUT /access` answers with `ineffective_grants`, the drawer SHALL stay open after the save, SHALL render one in-drawer banner entry per reported grant beside the card or step it concerns, using the entry's `message` verbatim, and SHALL change its primary action from **Save role** to **Done**. A banner is for a grant that was stored and has no effect — it is not an error and SHALL NOT be shown as a notification. An entry whose `key` is `read` SHALL mark the **Read** card; an entry whose `key` is `sensitive` SHALL mark the sensitive step.
+When `PUT /access` answers with `ineffective_grants`, the drawer SHALL stay open after the save, SHALL render one in-drawer banner entry per reported grant, using the entry's `message` verbatim, with the entries for `get`, `read`, `write` and `modify` stacked together in one group under the privilege cards, in one layout whichever privilege they name, and SHALL change its primary action from **Save role** to **Done**. A banner is for a grant that was stored and has no effect — it is not an error and SHALL NOT be shown as a notification. An entry whose `key` is `sensitive` SHALL mark the sensitive step.
 
 The row limit of a role whose grant changed nothing SHALL still be saved and shown, because a row policy applies to its role whatever path the role reads the table by.
 
@@ -2176,7 +2196,7 @@ An error response to `PUT /access` — a `403`, a `404`, a `409 table_is_system`
 #### Scenario: A grant the service reports as redundant shows a banner
 
 - **GIVEN** the service answers with `ineffective_grants` of reason `already_global` for the `read` key
-- **THEN** the drawer stays open and the **Read** card carries a banner with the entry's `message`
+- **THEN** the drawer stays open and a banner with the entry's `message` appears in the group of banners under the privilege cards, not inside the **Read** card
 - **AND** the primary action reads **Done**
 - **AND** no notification is shown for it
 
@@ -2634,6 +2654,26 @@ a table schema", "Table detail row writes" and "Connect panel snippets are gener
 - **WHEN** an `ACTIVE` table's schema reports a column typed `map`
 - **THEN** the columns grid shows its type as Map
 - **AND** its type badge uses a colour distinct from an Object column's
+
+### Requirement: An assigned role is edited from the roles grid
+
+The roles grid SHALL offer **Edit** on each row, beside **Remove**, in the row's action menu. Choosing Edit SHALL open the same drawer that activating the row opens, in its edit mode and pre-filled with that role's privileges and row limit. Edit SHALL be unavailable under the same condition as Remove: while the table's access has not finished loading. Activating a row, by click or by Enter on a focused cell, SHALL remain an equivalent way to open the drawer, so changing a role's permissions never requires removing it and adding it again.
+
+#### Scenario: The row menu offers Edit and Remove
+
+- **WHEN** the user opens the action menu of a roles-grid row
+- **THEN** the menu offers Edit and Remove
+
+#### Scenario: Edit opens the drawer pre-filled for the role
+
+- **WHEN** the user chooses Edit on a role's row
+- **THEN** the drawer opens in edit mode for that role
+- **AND** it shows that role's current privileges and row limit
+
+#### Scenario: Editing and removing stay separate
+
+- **WHEN** the user chooses Remove on a role's row
+- **THEN** the removal confirmation opens and the drawer does not
 
 ### Requirement: A source column that keys an enrichment cannot be renamed or dropped
 

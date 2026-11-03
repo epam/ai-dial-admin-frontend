@@ -1,69 +1,76 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
 
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
-import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
-import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
-import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { toCompareCardItems } from '@/src/components/Runs/Compare/Summary/utils';
-import { RunAnalyticsSlice, TestCaseStatusCounts } from '@/src/components/Runs/Summary/models';
-import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
-import { formatAvgRunTimeSeconds } from '@/src/components/Runs/Summary/utils';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { useCompareKpiCards } from '@/src/components/Runs/Compare/Summary/use-compare-kpi-cards';
+import { toCompareCardItems, toSlotRecord } from '@/src/components/Runs/Compare/Summary/utils';
+import CostValue from '@/src/components/Runs/Summary/Cards/CostValue';
+import DeltaBadge from '@/src/components/Runs/Summary/Cards/DeltaBadge';
+import ErrorTag from '@/src/components/Runs/Summary/Cards/ErrorTag';
+import OverallScoreValue from '@/src/components/Runs/Summary/Cards/OverallScoreValue';
+import PassRateValue from '@/src/components/Runs/Summary/Cards/PassRateValue';
+import RuntimeValue from '@/src/components/Runs/Summary/Cards/RuntimeValue';
+import TestCasesCompletedValue from '@/src/components/Runs/Summary/Cards/TestCasesCompletedValue';
+import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-
-const THRESHOLD_UNAVAILABLE_VALUE = '—';
+import { Run } from '@/src/models/evaluation/run';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
-  primaryRunId: string;
-  comparedRunId: string;
+  primaryRun: Run;
+  comparedRun: Run;
   runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   primaryMatchedAnalytics: RunAnalyticsSlice | null;
   comparedMatchedAnalytics: RunAnalyticsSlice | null;
   primaryOverallScore?: number | null;
   comparedOverallScore?: number | null;
-  hasPrimaryThreshold: boolean;
-  hasComparedThreshold: boolean;
+  /** Each run's suite, for the overall-score calculation method; omitted until it has loaded. */
+  primaryTestSuite?: TestSuite | null;
+  comparedTestSuite?: TestSuite | null;
+  /** How many metrics each run computed; omitted while the snapshots are still loading. */
+  primaryMetricCount?: number;
+  comparedMetricCount?: number;
 }
 
-const thresholdSideValue = (hasThreshold: boolean, runName: string, counts: TestCaseStatusCounts) => {
-  if (!hasThreshold) {
-    return THRESHOLD_UNAVAILABLE_VALUE;
-  }
+const CARD_CLASS = 'min-w-0 flex-1';
 
-  return (
-    <div className="flex flex-col gap-0.5">
-      <PassFailFraction counts={counts} />
-      <PassFailStatusBreakdown counts={counts} compact tooltipTitle={runName} />
-    </div>
-  );
-};
+const toDeltaValue = (delta: ReturnType<typeof getMetricDelta>): number | undefined =>
+  delta.kind === MetricDeltaKind.Changed ? delta.value : undefined;
 
 const Analytics: FC<Props> = ({
-  primaryRunId,
-  comparedRunId,
+  primaryRun,
+  comparedRun,
   runs,
   onlyMatchingTestCases,
   primaryMatchedAnalytics,
   comparedMatchedAnalytics,
   primaryOverallScore,
   comparedOverallScore,
-  hasPrimaryThreshold,
-  hasComparedThreshold,
+  primaryTestSuite,
+  comparedTestSuite,
+  primaryMetricCount,
+  comparedMetricCount,
 }) => {
   const t = useI18n();
-  const { data: primaryFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : primaryRunId);
-  const { data: comparedFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : comparedRunId);
+  const kpis = useCompareKpiCards({
+    primaryRun,
+    comparedRun,
+    onlyMatchingTestCases,
+    primaryMatchedAnalytics,
+    comparedMatchedAnalytics,
+    primaryOverallScore,
+    comparedOverallScore,
+    primaryMetricCount,
+    comparedMetricCount,
+  });
 
-  const primary = onlyMatchingTestCases ? primaryMatchedAnalytics : primaryFull;
-  const compared = onlyMatchingTestCases ? comparedMatchedAnalytics : comparedFull;
-
-  if (!primary || !compared) {
+  if (!kpis) {
     return (
       <div className="flex h-24 items-center">
         <Spinner size={32} fullWidth />
@@ -71,82 +78,95 @@ const Analytics: FC<Props> = ({
     );
   }
 
-  const showOverall = primaryOverallScore != null || comparedOverallScore != null;
-  const overallDelta = getMetricDelta(primaryOverallScore, comparedOverallScore);
-  const showTestCasesPassed = hasPrimaryThreshold || hasComparedThreshold;
-  const passedDelta =
-    hasPrimaryThreshold && hasComparedThreshold
-      ? getMetricDelta(primary.statusCounts.passed, compared.statusCounts.passed)
-      : null;
-  const isPrimaryPassedEmpty = !hasPrimaryThreshold || primary.statusCounts.total === 0;
-  const isComparedPassedEmpty = !hasComparedThreshold || compared.statusCounts.total === 0;
-  const primarySeconds = primary.avgRunTimeMs != null ? formatAvgRunTimeSeconds(primary.avgRunTimeMs) : null;
-  const comparedSeconds = compared.avgRunTimeMs != null ? formatAvgRunTimeSeconds(compared.avgRunTimeMs) : null;
-  const runtimeDelta = getMetricDelta(primarySeconds, comparedSeconds);
-  const primaryMetricEvalSeconds =
-    primary.avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(primary.avgMetricEvalDurationMs) : null;
-  const comparedMetricEvalSeconds =
-    compared.avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(compared.avgMetricEvalDurationMs) : null;
-  const metricEvalDelta = getMetricDelta(primaryMetricEvalSeconds, comparedMetricEvalSeconds);
-
-  const toCompareValues = (valueBySlot: Record<CompareRunSlot, ReactNode>) =>
-    toCompareCardItems(runs, (run) => valueBySlot[run.slot]);
-  const formatSeconds = (seconds: number | null) => (seconds != null ? `${seconds} ${t(RunsI18nKey.Seconds)}` : '—');
-  const thresholdBySlot = {
-    [CompareRunSlot.Primary]: { hasThreshold: hasPrimaryThreshold, counts: primary.statusCounts },
-    [CompareRunSlot.Secondary]: { hasThreshold: hasComparedThreshold, counts: compared.statusCounts },
-  };
+  const { figures, sourceLabels, costs, rates, deltas } = kpis;
+  const rateTitle = t(kpis.rateTitleKey);
+  const scores = toSlotRecord(primaryOverallScore ?? null, comparedOverallScore ?? null);
+  const suites = toSlotRecord(primaryTestSuite, comparedTestSuite);
+  const metricCounts = toSlotRecord(primaryMetricCount, comparedMetricCount);
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-      {showOverall && (
-        <AnalyticsCard
-          className="min-w-0 flex-1"
-          title={t(RunsI18nKey.OverallScore)}
-          description={t(RunsI18nKey.OverallScoreDescription)}
-          delta={overallDelta.kind === MetricDeltaKind.Changed ? overallDelta.value : undefined}
-          compareValues={toCompareValues({
-            [CompareRunSlot.Primary]: primaryOverallScore != null ? String(primaryOverallScore) : '—',
-            [CompareRunSlot.Secondary]: comparedOverallScore != null ? String(comparedOverallScore) : '—',
-          })}
-        />
-      )}
-      {showTestCasesPassed && (
-        <AnalyticsCard
-          className="min-w-0 flex-1"
-          title={t(RunsI18nKey.TestCasesPassed)}
-          delta={passedDelta?.kind === MetricDeltaKind.Changed ? passedDelta.value : undefined}
-          compareValues={toCompareCardItems(runs, (run) =>
-            thresholdSideValue(thresholdBySlot[run.slot].hasThreshold, run.name, thresholdBySlot[run.slot].counts),
-          )}
-          error={isPrimaryPassedEmpty && isComparedPassedEmpty}
-        />
-      )}
       <AnalyticsCard
-        className="min-w-0 flex-1"
-        title={t(RunsI18nKey.AvgTestCaseRunTime)}
-        description={t(RunsI18nKey.AvgPerTestCase)}
-        delta={runtimeDelta.kind === MetricDeltaKind.Changed ? runtimeDelta.value : undefined}
-        deltaPositive={runtimeDelta.value != null && runtimeDelta.value < 0}
-        deltaUnit={t(RunsI18nKey.Seconds)}
-        compareValues={toCompareValues({
-          [CompareRunSlot.Primary]: formatSeconds(primarySeconds),
-          [CompareRunSlot.Secondary]: formatSeconds(comparedSeconds),
-        })}
-        error={primarySeconds == null && comparedSeconds == null}
+        className={CARD_CLASS}
+        title={t(RunsI18nKey.TestCasesCompleted)}
+        delta={toDeltaValue(deltas.completed)}
+        compareValues={toCompareCardItems(runs, (run) => (
+          <TestCasesCompletedValue
+            breakdown={figures[run.slot].breakdown}
+            hasThreshold={figures[run.slot].hasThreshold}
+            tooltipTitle={run.name}
+          />
+        ))}
+        error={kpis.hasNoTestCases}
       />
       <AnalyticsCard
-        className="min-w-0 flex-1"
-        title={t(RunsI18nKey.AvgMetricEvalLatency)}
-        description={t(RunsI18nKey.AvgPerTestCase)}
-        delta={metricEvalDelta.kind === MetricDeltaKind.Changed ? metricEvalDelta.value : undefined}
-        deltaPositive={metricEvalDelta.value != null && metricEvalDelta.value < 0}
+        className={CARD_CLASS}
+        title={rateTitle}
+        delta={deltas.rate ? toDeltaValue(deltas.rate) : undefined}
+        deltaUnit="%"
+        compareValues={toCompareCardItems(runs, (run) => (
+          <PassRateValue
+            rate={rates[run.slot]}
+            threshold={figures[run.slot].threshold}
+            label={`${rateTitle}: ${run.name}`}
+          />
+        ))}
+        error={kpis.hasNoTestCases}
+      />
+      {kpis.hasOverallScore && (
+        <AnalyticsCard
+          className={CARD_CLASS}
+          title={t(RunsI18nKey.OverallScore)}
+          description={t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}
+          delta={toDeltaValue(deltas.overallScore)}
+          compareValues={toCompareCardItems(runs, (run) => (
+            <OverallScoreValue
+              score={scores[run.slot]}
+              threshold={figures[run.slot].threshold}
+              isInfoInline
+              testSuite={suites[run.slot]}
+              metricCount={metricCounts[run.slot]}
+            />
+          ))}
+        />
+      )}
+      <AnalyticsCard
+        className={CARD_CLASS}
+        title={t(RunsI18nKey.TotalRuntime)}
+        delta={toDeltaValue(deltas.runtime)}
+        deltaPositive={deltas.runtime.value != null && deltas.runtime.value < 0}
         deltaUnit={t(RunsI18nKey.Seconds)}
-        compareValues={toCompareValues({
-          [CompareRunSlot.Primary]: formatSeconds(primaryMetricEvalSeconds),
-          [CompareRunSlot.Secondary]: formatSeconds(comparedMetricEvalSeconds),
-        })}
-        error={primaryMetricEvalSeconds == null && comparedMetricEvalSeconds == null}
+        compareValues={toCompareCardItems(runs, (run) =>
+          kpis.hasRuntimeError[run.slot] ? (
+            <ErrorTag />
+          ) : (
+            <RuntimeValue
+              sourceMs={figures[run.slot].sourceMs}
+              metricsMs={figures[run.slot].metricsMs}
+              sourceLabel={sourceLabels[run.slot]}
+            />
+          ),
+        )}
+        error={kpis.hasBothRuntimeErrors}
+      />
+      <AnalyticsCard
+        className={CARD_CLASS}
+        title={
+          <span className="flex items-center gap-2">
+            <span>{t(RunsI18nKey.TotalRunCost)}</span>
+            {deltas.costLabel != null && (
+              <DeltaBadge label={deltas.costLabel} isPositive={deltas.costLabel.startsWith('-')} />
+            )}
+          </span>
+        }
+        compareValues={toCompareCardItems(runs, (run) =>
+          costs[run.slot].hasError ? (
+            <ErrorTag />
+          ) : (
+            <CostValue cost={costs[run.slot]} sourceLabel={sourceLabels[run.slot]} />
+          ),
+        )}
+        error={kpis.hasBothCostErrors}
       />
     </div>
   );

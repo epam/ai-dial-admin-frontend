@@ -168,48 +168,12 @@ describe('Breadcrumbs :: enrichWithFolderBreadcrumbs', () => {
     expect(result[2].name).toBe('b');
   });
 
-  it('limits breadcrumbs to 4 items when more than 4 folders in path', () => {
+  it('keeps every folder of a deep path', () => {
     const breadcrumbs: Breadcrumb[] = [];
     const path = '/a/b/c/d/e/';
     const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
 
-    expect(result.length).toBe(4);
-    expect(result[0].name).toBe('a');
-    expect(result[1].name).toBe('...');
-    expect(result[1].href).toBe('');
-    expect(result[2].name).toBe('d');
-    expect(result[3].name).toBe('e');
-  });
-
-  it('preserves callback for first and last two breadcrumbs when limiting', () => {
-    const breadcrumbs: Breadcrumb[] = [];
-    const path = 'a/b/c/d/e';
-    const setFilePath = vi.fn();
-
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path, setFilePath);
-
-    // First item should have callback
-    result[0].callback?.('a/');
-    expect(setFilePath).toHaveBeenCalledWith('a/');
-
-    // Middle ellipsis should not have callback
-    expect(result[1].callback).toBeUndefined();
-
-    // Last two items should have callbacks
-    result[2].callback?.('a/b/c/d/');
-    expect(setFilePath).toHaveBeenCalledWith('a/b/c/d/');
-
-    result[3].callback?.('a/b/c/d/e/');
-    expect(setFilePath).toHaveBeenCalledWith('a/b/c/d/e/');
-  });
-
-  it('does not limit breadcrumbs when 3 or fewer folders in path', () => {
-    const breadcrumbs: Breadcrumb[] = [];
-    const path = '/a/b/c/';
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
-
-    expect(result.length).toBe(3);
-    expect(result.map((b) => b.name)).toEqual(['a', 'b', 'c']);
+    expect(result.map((b) => b.name)).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 });
 
@@ -253,11 +217,10 @@ describe('Breadcrumbs :: enrichDetailsWithFolderBreadcrumbs', () => {
     expect(onFolderClick).toHaveBeenCalledWith('public/team/');
   });
 
-  test('Should collapse a deep folder trail the same way the list page does', () => {
+  test('Should keep every folder of a deep folder trail', () => {
     const result = enrichDetailsWithFolderBreadcrumbs([section, entity], 'public/a/b/c/d/');
 
-    expect(result.map((crumb) => crumb.name)).toEqual(['assets-applications', 'public', '...', 'c', 'd', 'MyApp']);
-    expect(result[2].hiddenBreadcrumbs?.map((crumb) => crumb.name)).toEqual(['a', 'b']);
+    expect(result.map((crumb) => crumb.name)).toEqual(['assets-applications', 'public', 'a', 'b', 'c', 'd', 'MyApp']);
   });
 
   test('Should leave the breadcrumbs as they are without a folder', () => {

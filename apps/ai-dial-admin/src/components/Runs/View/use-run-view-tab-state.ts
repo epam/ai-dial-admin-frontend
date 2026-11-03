@@ -19,7 +19,6 @@ const createDefaultExtractionResultState = (): ExtractionResultTabUiState => {
     panelColDefs: defaultColDefs,
     columnWidths: {},
     results: null,
-    snapshots: [],
   };
 };
 

@@ -55,8 +55,6 @@ interface Props {
    * hooks. The frame owns it because only the frame holds them.
    */
   onReload: () => void;
-  /** The pause control, which the frame owns: it holds the runner read and the confirmation. */
-  actions?: ReactNode;
 }
 
 /**
@@ -186,7 +184,6 @@ const PipelineRuntime: FC<Props> = ({
   isPaused,
   isNotTracked,
   onReload,
-  actions,
 }) => {
   const t = useI18n();
 
@@ -263,8 +260,7 @@ const PipelineRuntime: FC<Props> = ({
     <div className="flex min-h-0 flex-1 flex-col gap-y-4">
       <div className="flex flex-row flex-wrap items-center justify-end gap-3">
         {/* Both upstreams, not a page reload: the state comes with the pipeline and the runtime view,
-            the pause and the failures from the frame's own reads. Outlined, because it only re-reads —
-            the control that changes something stands beside it in solid. */}
+            the pause and the failures from the frame's own reads. */}
         <Button
           variant={ButtonVariant.Neutral}
           appearance={ButtonAppearance.Outlined}
@@ -272,7 +268,6 @@ const PipelineRuntime: FC<Props> = ({
           iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
           onClick={onReload}
         />
-        {actions}
       </div>
 
       {/* A runner that has not finished starting. Information rather than a warning: it clears on its

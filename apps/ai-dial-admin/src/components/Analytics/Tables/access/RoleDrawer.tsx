@@ -250,16 +250,14 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
                         : undefined
                     }
                     onChange={onToggle(key)}
-                  >
-                    {key === TableGrantKey.Read && banners([TableGrantKey.Read])}
-                  </PrivilegeCard>
+                  />
                 );
               })}
             </div>
             {isSystem && (
               <p className="dial-small-text text-secondary">{t(AnalyticsTableAccessI18nKey.SystemLockReason)}</p>
             )}
-            {banners([TableGrantKey.Get, TableGrantKey.Write, TableGrantKey.Modify])}
+            {banners([TableGrantKey.Get, TableGrantKey.Read, TableGrantKey.Write, TableGrantKey.Modify])}
           </section>
 
           {isSensitiveStepOffered(selection) && (

@@ -104,6 +104,34 @@ describe('PivotValueCell', () => {
     expect(screen.getByRole('dialog', { name: 'responseBody' })).toHaveTextContent(longValue);
   });
 
+  test('opens the score view with reason and logs for a metric field', async () => {
+    render(
+      <PivotValueCell
+        field={field('precision', {
+          isMetric: true,
+          isScoreIndicator: true,
+          primaryRaw: '0.5',
+          primaryInfo: { reason: 'Low overlap', logs: 'verbose details', error: null },
+        })}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /0\.500/ }));
+
+    expect(screen.getByText('Runs.MetricScoreLabel')).toBeInTheDocument();
+    expect(screen.getByText('Low overlap')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Runs.MetricLogs' })).toBeInTheDocument();
+  });
+
+  test('keeps the plain value viewer for a field that is not a metric', async () => {
+    render(<PivotValueCell field={field('responseBody')} raw="body" />);
+
+    await userEvent.click(screen.getByRole('button'));
+
+    expect(screen.getByRole('dialog', { name: 'responseBody' })).toHaveTextContent('body');
+    expect(screen.queryByText('Runs.MetricScoreLabel')).toBeNull();
+  });
+
   test('calls onOpenFullscreen instead of the default popup when provided', async () => {
     const onOpenFullscreen = vi.fn();
     const longValue = 'x'.repeat(2000);
@@ -113,5 +141,77 @@ describe('PivotValueCell', () => {
 
     expect(onOpenFullscreen).toHaveBeenCalledOnce();
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  describe('truncation', () => {
+    test('scrolls inside the cell by default, as the Compare pivot does', () => {
+      const { container } = render(<PivotValueCell field={field('answer', { primaryRaw: 'a long value' })} />);
+
+      expect(container.querySelector('.overflow-y-auto')).toBeTruthy();
+    });
+
+    test('truncates to the cell instead of scrolling when isTruncated is set', () => {
+      const { container } = render(
+        <PivotValueCell field={field('answer', { primaryRaw: 'a long value' })} isTruncated />,
+      );
+
+      expect(container.querySelector('.overflow-y-auto')).toBeNull();
+      expect(screen.getByText('a long value')).toBeInTheDocument();
+    });
+
+    test('keeps the heat-map fill of a score cell when isTruncated is set', () => {
+      render(
+        <PivotValueCell
+          field={field('Accuracy_precision', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' })}
+          isTruncated
+        />,
+      );
+
+      expect(screen.getByText('0.800')).toHaveClass('bg-score-abs-09');
+    });
+  });
+
+  describe('opening', () => {
+    test('is one button announcing a dialog, whether the cell holds text, a score or the status', () => {
+      render(
+        <>
+          <PivotValueCell field={field('answer', { primaryRaw: 'text' })} isTruncated />
+          <PivotValueCell
+            field={field('score', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' })}
+            isTruncated
+          />
+          <PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} isTruncated />
+        </>,
+      );
+
+      const buttons = screen.getAllByRole('button');
+      expect(buttons).toHaveLength(3);
+      buttons.forEach((button) => expect(button).toHaveAttribute('aria-haspopup', 'dialog'));
+    });
+
+    test('shows the open icon on keyboard focus as well as on hover, hidden from assistive technology', () => {
+      render(<PivotValueCell field={field('answer', { primaryRaw: 'text' })} isTruncated />);
+
+      const icon = screen.getByRole('button').querySelector('[aria-hidden="true"]');
+      expect(icon).toHaveClass('group-hover:opacity-100', 'group-focus-visible:opacity-100');
+    });
+
+    test('opens from the keyboard with Enter and Space', async () => {
+      const user = userEvent.setup();
+      render(<PivotValueCell field={field('responseBody', { primaryRaw: 'body' })} isTruncated />);
+
+      await user.tab();
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByRole('dialog', { name: 'responseBody' })).toBeInTheDocument();
+    });
+
+    test('opens the text popup for a short value and the status as well', async () => {
+      render(<PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} isTruncated />);
+
+      await userEvent.click(screen.getByRole('button'));
+
+      expect(screen.getByRole('dialog', { name: 'executionStatus' })).toHaveTextContent('COMPLETED');
+    });
   });
 });

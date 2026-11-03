@@ -349,12 +349,6 @@ describe('PipelineRuntime', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.FailuresNone)).toBeTruthy();
   });
 
-  test('renders the actions its caller supplies in the control bar', () => {
-    renderRuntime(RAN, { actions: <button>Pause</button> });
-
-    expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy();
-  });
-
   // Both upstreams: the pipeline comes from the page, the pause from a read only the frame holds.
   test('asks its caller to read both upstreams again', async () => {
     const user = userEvent.setup();

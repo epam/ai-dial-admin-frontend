@@ -27,6 +27,7 @@ const ViewSelector: FC<Props> = ({ view, changeView }) => {
   }, [t]);
   return (
     <Select
+      className="w-auto"
       prefix={`${t(CompareI18nKey.View)}: `}
       ariaLabel={t(CompareI18nKey.View)}
       size={ElementSize.Small}
