@@ -261,7 +261,7 @@ against its global `routes` map rather than through a per-entity reference list.
 ### Requirement: Route asset list offers a duplicate action
 
 The system SHALL offer a `duplicate` row action for route assets. Activating it SHALL open the
-shared `DuplicatePlatformAsset` modal, which for routes collects the new name and replacement keys for every `BEARER` upstream. It SHALL create a copy of the selected route under the new name without revealing or copying a stored source credential.
+shared `DuplicatePlatformAsset` modal, which for routes collects the new name and replacement keys for every upstream whose authentication type is not `API_KEY` (`BEARER` or `CUSTOM_HEADER`). It SHALL create a copy of the selected route under the new name without revealing or copying a stored source credential.
 
 #### Scenario: Duplicate action opens a name-only modal
 
@@ -275,9 +275,9 @@ shared `DuplicatePlatformAsset` modal, which for routes collects the new name an
 - **THEN** a new route resource is created as a copy of the original under the new name, and the list
   refreshes to include it
 
-#### Scenario: Bearer upstreams require replacement keys in the duplicate modal
+#### Scenario: Bearer and Custom Header upstreams require replacement keys in the duplicate modal
 
-- **WHEN** a user activates duplicate for a route containing one or more `BEARER` upstreams
+- **WHEN** a user activates duplicate for a route containing one or more `BEARER` or `CUSTOM_HEADER` upstreams
 - **THEN** the modal shows one labelled password input for each affected upstream
 - **AND** the source keys are not displayed or pre-filled
 - **AND** the Duplicate action remains unavailable until every replacement key is non-empty

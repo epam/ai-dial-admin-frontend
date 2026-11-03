@@ -46,9 +46,3 @@ export const isUpstreamAuthKeyRequired = (
   original?: DialUpstreamAuth | string | null,
 ) => normalizeUpstreamAuth(edited).type !== UpstreamAuthType.API_KEY && !isUpstreamAuthEqual(edited, original);
 
-/** CUSTOM_HEADER is only valid with a well-formed header name; every other type needs nothing more. */
-export const isUpstreamAuthValid = (auth?: DialUpstreamAuth | string | null) => {
-  const { type, headerName } = normalizeUpstreamAuth(auth);
-
-  return type !== UpstreamAuthType.CUSTOM_HEADER || isValidUpstreamHeaderName(headerName);
-};

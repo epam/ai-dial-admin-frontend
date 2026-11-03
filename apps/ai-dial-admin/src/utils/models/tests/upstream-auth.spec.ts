@@ -3,7 +3,6 @@ import {
   createUpstreamAuth,
   isUpstreamAuthEqual,
   isUpstreamAuthKeyRequired,
-  isUpstreamAuthValid,
   isValidUpstreamHeaderName,
   normalizeUpstreamAuth,
 } from '@/src/utils/models/upstream-auth';
@@ -84,11 +83,5 @@ describe('header name validation', () => {
 
   test.each([undefined, '', 'has space', 'bad:name'])('rejects %s', (name) => {
     expect(isValidUpstreamHeaderName(name)).toBe(false);
-  });
-
-  test('only CUSTOM_HEADER needs a valid name', () => {
-    expect(isUpstreamAuthValid({ type: UpstreamAuthType.BEARER })).toBe(true);
-    expect(isUpstreamAuthValid({ type: UpstreamAuthType.CUSTOM_HEADER, headerName: '' })).toBe(false);
-    expect(isUpstreamAuthValid({ type: UpstreamAuthType.CUSTOM_HEADER, headerName: 'X-Key' })).toBe(true);
   });
 });
