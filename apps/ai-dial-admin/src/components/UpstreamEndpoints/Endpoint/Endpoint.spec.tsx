@@ -264,10 +264,10 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         disabled={false}
-        endpoint={{ endpoint: 'http://test', authType: UpstreamAuthType.BEARER } as any}
+        endpoint={{ endpoint: 'http://test', authType: { type: UpstreamAuthType.BEARER } } as any}
         view={ApplicationRoute.PlatformRoutes}
         isAuthTypeSupported
-        isBearerKeyRequired
+        isAuthKeyRequired
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
       />,
@@ -344,15 +344,81 @@ describe('Endpoint', () => {
       <Endpoint
         index={0}
         disabled={false}
-        endpoint={{ endpoint: 'http://test', authType: UpstreamAuthType.BEARER } as any}
+        endpoint={{ endpoint: 'http://test', authType: { type: UpstreamAuthType.BEARER } } as any}
         view={ApplicationRoute.PlatformRoutes}
         isAuthTypeSupported
-        isBearerKeyRequired={false}
+        isAuthKeyRequired={false}
         updateEndpoint={updateEndpoint}
         removeEndpoint={removeEndpoint}
       />,
     );
 
     expect(screen.queryByText(ErrorI18nKey.RequiredField)).toBeNull();
+  });
+
+  test('shows a required header name input for a CUSTOM_HEADER upstream and reports it invalid', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={
+          { endpoint: 'http://test', authType: { type: UpstreamAuthType.CUSTOM_HEADER, headerName: '' } } as any
+        }
+        view={ApplicationRoute.PlatformRoutes}
+        isAuthTypeSupported
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.getByRole('textbox', { name: /UpstreamEndpoints.HeaderName/ })).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.InvalidHeaderName)).toBeInTheDocument();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: 'upstream-header-name-0',
+      isValid: false,
+    });
+  });
+
+  test('writes the typed header name into the authType object', async () => {
+    const user = userEvent.setup();
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={
+          { endpoint: 'http://test', authType: { type: UpstreamAuthType.CUSTOM_HEADER, headerName: '' } } as any
+        }
+        view={ApplicationRoute.PlatformRoutes}
+        isAuthTypeSupported
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'toggle expanded fields' }));
+    await user.type(screen.getByRole('textbox', { name: /UpstreamEndpoints.HeaderName/ }), 'X');
+
+    expect(updateEndpoint).toHaveBeenLastCalledWith(
+      expect.objectContaining({ authType: { type: UpstreamAuthType.CUSTOM_HEADER, headerName: 'X' } }),
+    );
+  });
+
+  test('hides the header name input for non-CUSTOM_HEADER upstreams', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={{ endpoint: 'http://test', authType: { type: UpstreamAuthType.BEARER } } as any}
+        view={ApplicationRoute.PlatformRoutes}
+        isAuthTypeSupported
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.queryByRole('textbox', { name: /UpstreamEndpoints.HeaderName/ })).toBeNull();
   });
 });

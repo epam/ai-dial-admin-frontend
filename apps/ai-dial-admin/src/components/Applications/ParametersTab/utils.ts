@@ -44,7 +44,9 @@ export const getCorrectConfig = (
   currentTheme: string,
   session?: UserSession,
 ) => {
-  if (scheme) {
+  // A Code App has no runner (`resolveAppRunnerScheme` hands back an empty placeholder scheme),
+  // so its custom UI comes from the application's own `editor_url`.
+  if (scheme?.['dial:applicationTypeEditorUrl']) {
     return getFrameConfig(scheme, currentTheme, session as UserSession);
   } else if ((application as DialApplication)?.editorUrl || (application as DialApplicationResource)?.editor_url) {
     return getFrameConfig(application, currentTheme, session as UserSession);

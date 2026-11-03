@@ -78,9 +78,11 @@ const ApplicationAssetProperties: FC<Props> = ({
     (!schemaSourceId && !!assetApp.responses_endpoint) ||
     (!!schemaSourceId && !!appRunner?.['dial:applicationTypeResponsesEndpoint']);
 
-  const headerPrefix = !isPlatformBucketPath(folderId) ? (
-    <LabelledText label={t(EntityFieldsI18nKey.version)} text={asset._metadata?.version ?? asset.version ?? ''} />
-  ) : undefined;
+  const version = asset._metadata?.version ?? asset.version ?? '';
+  const headerPrefix =
+    !isPlatformBucketPath(folderId) && version ? (
+      <LabelledText label={t(EntityFieldsI18nKey.version)} text={version} />
+    ) : undefined;
 
   const headerPostfix = useMemo(() => {
     return (

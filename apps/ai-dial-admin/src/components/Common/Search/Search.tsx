@@ -1,24 +1,20 @@
 import { Search } from '@epam/ai-dial-ui-kit';
-import { FC } from 'react';
+import { FC, useId } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  initialPattern?: string;
+  value: string;
   onChange: (value: string) => void;
 }
 
-const SearchField: FC<Props> = ({ initialPattern, onChange }) => {
+const SearchField: FC<Props> = ({ value, onChange }) => {
   const t = useI18n();
+  const id = useId();
 
   return (
-    <Search
-      id="search"
-      placeholder={t(BasicI18nKey.Search)}
-      value={initialPattern}
-      onChange={(value) => onChange(value ?? '')}
-    />
+    <Search id={id} placeholder={t(BasicI18nKey.Search)} value={value} onChange={(value) => onChange(value ?? '')} />
   );
 };
 

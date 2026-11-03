@@ -1,40 +1,48 @@
 'use client';
 
-import { CSSProperties, FC } from 'react';
+import { CSSProperties } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
 import { Tooltip } from '@epam/ai-dial-ui-kit';
 
 import DeltaBadge from '@/src/components/Analytics/Usage/Delta/DeltaBadge';
-import { BreakdownDeltas, BreakdownRowModel, KpiMetric } from '@/src/components/Analytics/Usage/models';
-import { getFigureRulerVar } from '@/src/components/Analytics/Usage/utils/figure-width';
+import { BreakdownRowModel, KpiMetric } from '@/src/components/Analytics/Usage/models';
+import { getDeltaRulerKey, getFigureRulerVar } from '@/src/components/Analytics/Usage/utils/figure-width';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
-export interface MeasureCellParams {
+/** Generic over the row, so a custom dashboard's table can draw its figures with the breakdown's own cell. */
+export interface MeasureCellParams<TRow = BreakdownRowModel> {
   /** Decides which direction of change reads as welcome, the way the KPI cards decide it. */
-  metric: KpiMetric;
-  deltaKey: keyof BreakdownDeltas;
-  /** The figure as the column states it; null renders the no-value dash. */
-  format: (row: BreakdownRowModel) => string | null;
+  metric?: KpiMetric;
+  /** Says it instead where there is no metric to decide from. */
+  isRiseGood?: boolean;
+  getDelta: (row: TRow) => number | null | undefined;
+  /** Whether the row is absent from the compared window, which this column says in place of a change. */
+  isNew?: (row: TRow) => boolean;
+  /** The figure as the column states it; null renders the no-value dash. Absent, the grid's formatted value. */
+  format?: (row: TRow) => string | null;
   /**
    * The same figure unrounded, shown on hover. A column rounds to stay readable, and the rounding
    * can hide what the change beside it is measuring: an error rate printed `0.0%` still rose by
    * half again, because it was never zero.
    */
-  formatExact?: (row: BreakdownRowModel) => string | null;
+  formatExact?: (row: TRow) => string | null;
 }
 
 const RULER_VAR = '--breakdown-figure-ruler';
 
-const MeasureCell: FC<ICellRendererParams<BreakdownRowModel> & MeasureCellParams> = ({
+const MeasureCell = <TRow = BreakdownRowModel,>({
   data,
   column,
+  valueFormatted,
   metric,
-  deltaKey,
+  isRiseGood,
+  getDelta,
+  isNew,
   format,
   formatExact,
-}) => {
+}: ICellRendererParams<TRow> & MeasureCellParams<TRow>) => {
   const t = useI18n();
   const colId = column?.getColId();
 
@@ -42,8 +50,8 @@ const MeasureCell: FC<ICellRendererParams<BreakdownRowModel> & MeasureCellParams
     return null;
   }
 
-  const value = format(data);
-  const delta = data.deltas[deltaKey];
+  const value = format ? format(data) : (valueFormatted ?? null);
+  const delta = getDelta(data);
   const exact = formatExact?.(data);
   const figure = (
     <span className="tabular-nums text-primary">
@@ -56,9 +64,22 @@ const MeasureCell: FC<ICellRendererParams<BreakdownRowModel> & MeasureCellParams
 
   return (
     <span className="flex w-full items-center justify-end gap-2.5">
-      <span className="flex items-center justify-end">
-        {delta != null && <DeltaBadge ratio={delta} metric={metric} />}
-        {delta == null && data.isNewRow && deltaKey === 'calls' && (
+      <span className="grid items-center justify-items-end">
+        {/* Sized like the column's widest badge — its text plus the arrow and padding — so every badge in
+            the column takes that width and their left edges line up as the figures' right edges do. */}
+        {colId && delta != null && (
+          <span
+            aria-hidden
+            className="invisible col-start-1 row-start-1 h-0 overflow-hidden pl-[30px] pr-3 dial-tiny-semi-text tabular-nums after:content-[var(--breakdown-figure-ruler)]"
+            style={{ [RULER_VAR]: `var(${getFigureRulerVar(getDeltaRulerKey(colId))}, "")` } as CSSProperties}
+          />
+        )}
+        {delta != null && (
+          <span className="col-start-1 row-start-1 flex w-full justify-end">
+            <DeltaBadge ratio={delta} metric={metric} isRiseGood={isRiseGood} className="w-full" />
+          </span>
+        )}
+        {delta == null && isNew?.(data) && (
           <span className="dial-tiny-text text-secondary">{t(AnalyticsUsageI18nKey.RowIsNew)}</span>
         )}
       </span>

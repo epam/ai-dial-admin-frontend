@@ -30,14 +30,14 @@ export const formatCompactNumber = (value: number): { value: string; unit?: stri
   return { value: (value / unit.threshold).toFixed(1), unit: unit.suffix };
 };
 
-export const formatMoney = (value: number): { value: string; unit?: string } => {
+export const formatMoney = (value: number, symbol = '$'): { value: string; unit?: string } => {
   if (Math.abs(value) >= 1000) {
     const compact = formatCompactNumber(value);
 
-    return { value: `$${compact.value}`, unit: compact.unit };
+    return { value: `${symbol}${compact.value}`, unit: compact.unit };
   }
 
-  return { value: `$${value.toFixed(2)}` };
+  return { value: `${symbol}${value.toFixed(2)}` };
 };
 
 /**
@@ -56,7 +56,7 @@ export const formatPercent = (ratio: number, fractionDigits = 1): string =>
   `${formatGroupedNumber(ratio * 100, fractionDigits)}%`;
 
 /** Money in full: the same grouping, and the two decimals a price is quoted in. */
-export const formatGroupedMoney = (value: number): string => `$${formatGroupedNumber(value, 2)}`;
+export const formatGroupedMoney = (value: number, symbol = '$'): string => `${symbol}${formatGroupedNumber(value, 2)}`;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -73,6 +73,10 @@ const DATE_AND_TIME: Intl.DateTimeFormatOptions = {
   minute: '2-digit',
 };
 const TIME_ONLY: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+
+/** A time series bucket's axis label: its start, to the minute. */
+export const formatBucketLabel = (bucketMs: number): string =>
+  new Date(bucketMs).toLocaleString(void 0, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 /**
  * A bucket as the period it covers, from its start to the start of the next one.

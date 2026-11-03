@@ -74,6 +74,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.2.5",
+    "react-grid-layout": "2.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "sql-formatter": "^15.8.2",

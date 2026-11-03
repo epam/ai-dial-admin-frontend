@@ -13,7 +13,13 @@ import {
 } from '@/src/constants/i18n';
 import { SaveValidationContextProvider, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { GlobalSettings, RateLimitSchedule, WeekDay } from '@/src/models/system-properties';
+import {
+  GlobalSettings,
+  RateLimitSchedule,
+  SpendingLimitMode,
+  SpendingLimits,
+  WeekDay,
+} from '@/src/models/system-properties';
 
 const routerRefresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: routerRefresh }) }));
@@ -82,6 +88,24 @@ vi.mock('@/src/components/SystemProperties/RateLimitSchedule', async (importOrig
   };
 });
 
+// Same stand-in idea: a button fires the onChangeSpendingLimits contract and the read-back span mirrors
+// the value the page passes down, so absence, round-trip and discard are observable.
+const VALID_SPENDING_LIMITS: SpendingLimits = { mode: SpendingLimitMode.Enforce, defaultCostObject: 'TEAM-A' };
+vi.mock('@/src/components/SystemProperties/SpendingLimits', () => ({
+  default: ({
+    spendingLimits,
+    onChangeSpendingLimits,
+  }: {
+    spendingLimits?: SpendingLimits;
+    onChangeSpendingLimits: (spendingLimits: SpendingLimits) => void;
+  }) => (
+    <div>
+      <span>spending-mode:{spendingLimits?.mode ?? 'absent'}</span>
+      <button onClick={() => onChangeSpendingLimits(VALID_SPENDING_LIMITS)}>change-spending-limits</button>
+    </div>
+  ),
+}));
+
 const INTERCEPTORS_MOCK: DialInterceptor[] = [];
 
 const renderSystemProperties = (props?: {
@@ -102,6 +126,10 @@ const renderSystemProperties = (props?: {
 
 const openRateLimitScheduleTab = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByText(TabsI18nKey.RateLimitSchedule));
+};
+
+const openSpendingLimitsTab = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByText(TabsI18nKey.SpendingLimits));
 };
 
 describe('SystemProperties', () => {
@@ -325,5 +353,111 @@ describe('SystemProperties', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
     expect(updateProperties).not.toHaveBeenCalled();
     expect(showNotification).not.toHaveBeenCalled();
+  });
+
+  test('shows no unsaved-changes state for absent spending limits on the Spending Limits tab', async () => {
+    const user = userEvent.setup();
+    renderSystemProperties({ globalSettings: { globalInterceptors: [] } });
+
+    await openSpendingLimitsTab(user);
+
+    expect(screen.getByText('spending-mode:absent')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
+  });
+
+  test('saves a spending-limits change while keeping the other settings intact', async () => {
+    const user = userEvent.setup();
+    (updateProperties as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true });
+    renderSystemProperties({
+      doesSettingsExist: true,
+      globalSettings: { globalInterceptors: [], retriableErrorCodes: [500], rateLimitSchedule: VALID_SCHEDULE },
+    });
+
+    await openSpendingLimitsTab(user);
+    await user.click(screen.getByText('change-spending-limits'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(updateProperties).toHaveBeenCalledWith(
+      {
+        globalInterceptors: [],
+        retriableErrorCodes: [500],
+        rateLimitSchedule: VALID_SCHEDULE,
+        spendingLimits: VALID_SPENDING_LIMITS,
+      },
+      '*',
+    );
+  });
+
+  test('creates the settings object when spending limits are the first edit and no blob exists', async () => {
+    const user = userEvent.setup();
+    (updateProperties as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true });
+    renderSystemProperties({ doesSettingsExist: false, globalSettings: null });
+
+    await openSpendingLimitsTab(user);
+    await user.click(screen.getByText('change-spending-limits'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(updateProperties).toHaveBeenCalledWith(
+      { globalInterceptors: [], spendingLimits: VALID_SPENDING_LIMITS },
+      undefined,
+    );
+  });
+
+  test('preserves existing spending limits when only the interceptors are saved', async () => {
+    const user = userEvent.setup();
+    (updateProperties as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true });
+    const stored: SpendingLimits = { mode: SpendingLimitMode.Shadow, defaultCostObject: 'ORG' };
+    renderSystemProperties({
+      doesSettingsExist: true,
+      globalSettings: { globalInterceptors: [], spendingLimits: stored },
+    });
+
+    await user.click(screen.getByText('change-interceptors'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(updateProperties).toHaveBeenCalledWith(
+      { globalInterceptors: ['new-interceptor'], spendingLimits: stored },
+      '*',
+    );
+  });
+
+  test('discard restores the spending limits from the last read', async () => {
+    const user = userEvent.setup();
+    renderSystemProperties({
+      globalSettings: {
+        globalInterceptors: [],
+        spendingLimits: { mode: SpendingLimitMode.Off, defaultCostObject: 'ORG' },
+      },
+    });
+
+    await openSpendingLimitsTab(user);
+    await user.click(screen.getByText('change-spending-limits'));
+    expect(screen.getByText('spending-mode:enforce')).toBeTruthy();
+
+    // The discard popup makes the page inert, so the second click lands on its own confirm button.
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+
+    expect(screen.getByText('spending-mode:off')).toBeTruthy();
+  });
+
+  test('shows Core’s rejection as an error notification and keeps the edit on screen', async () => {
+    const user = userEvent.setup();
+    (updateProperties as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: false,
+      errorHeader: 'Bad Request',
+      errorMessage: 'Invalid spendingLimits',
+    });
+    renderSystemProperties({ doesSettingsExist: true, globalSettings: { globalInterceptors: [] } });
+
+    await openSpendingLimitsTab(user);
+    await user.click(screen.getByText('change-spending-limits'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Bad Request', description: 'Invalid spendingLimits' }),
+    );
+    expect(routerRefresh).not.toHaveBeenCalled();
+    expect(screen.getByText('spending-mode:enforce')).toBeTruthy();
   });
 });
