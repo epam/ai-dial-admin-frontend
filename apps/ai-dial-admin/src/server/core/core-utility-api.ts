@@ -67,7 +67,7 @@ export class CoreUtilityApi extends CoreApi {
     return this.getAction(APPLICATION_TYPE_SCHEMAS_URL, token);
   }
 
-  /** The deployments the caller may use — exactly what Core accepts as a dependency from them. */
+  /** The deployments the caller may use â€” exactly what Core accepts as a dependency from them. */
   getCallerDeployments(
     token: Token,
     kind: CallerDeploymentKind,
