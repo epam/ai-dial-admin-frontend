@@ -10,7 +10,7 @@ const ControlledSearch = ({ onChange }: { onChange: (value: string) => void }) =
 
   return (
     <Search
-      initialPattern={pattern}
+      value={pattern}
       onChange={(value) => {
         setPattern(value);
         onChange(value);
@@ -20,10 +20,23 @@ const ControlledSearch = ({ onChange }: { onChange: (value: string) => void }) =
 };
 
 describe('Search', () => {
-  test('shows the provided initial pattern', () => {
-    render(<Search initialPattern="abc" onChange={vi.fn()} />);
+  test('shows the provided value', () => {
+    render(<Search value="abc" onChange={vi.fn()} />);
 
     expect(screen.getByRole('textbox')).toHaveValue('abc');
+  });
+
+  test('gives every instance a document-unique id', () => {
+    render(
+      <>
+        <Search value="" onChange={vi.fn()} />
+        <Search value="" onChange={vi.fn()} />
+      </>,
+    );
+
+    const [first, second] = screen.getAllByRole('textbox');
+
+    expect(first.id).not.toBe(second.id);
   });
 
   test('keeps the typed value visible and reports it through onChange', async () => {
