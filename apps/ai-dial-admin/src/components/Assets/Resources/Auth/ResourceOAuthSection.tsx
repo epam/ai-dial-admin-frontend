@@ -158,7 +158,8 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           endpoint={authSettings?.resource || ''}
           placeholder={t(EntityPlaceholdersI18nKey.Resource)}
           caption={t(ToolsetI18nKey.ResourceCaption)}
-          // EndpointControl reports a cleared field as undefined, which Core reads as "keep the stored value".
+          // EndpointControl emits undefined when cleared; map it to '' so Core clears the stored value
+          // (omitting the key would tell Core to keep it).
           onChange={(resource) => onChange?.({ ...(authSettings || {}), resource: resource ?? '' })}
         />
 
