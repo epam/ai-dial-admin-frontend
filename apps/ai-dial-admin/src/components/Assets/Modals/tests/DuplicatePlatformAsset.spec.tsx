@@ -349,7 +349,9 @@ describe('DuplicatePlatformAsset', () => {
     expect(onDuplicate).toHaveBeenCalledWith({
       ...route,
       name: 'bearer-route-copy',
-      upstreams: [{ endpoint: 'https://example.test', authType: { type: UpstreamAuthType.BEARER }, key: 'replacement-key' }],
+      upstreams: [
+        { endpoint: 'https://example.test', authType: { type: UpstreamAuthType.BEARER }, key: 'replacement-key' },
+      ],
     });
   });
 
