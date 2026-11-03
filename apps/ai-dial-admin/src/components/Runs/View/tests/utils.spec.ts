@@ -76,6 +76,33 @@ describe('Runs View :: grouped analytics columns', () => {
   const labels = { score: 'Overall score', notApplicable: 'N/A' };
   const onToggleGroup = () => {};
 
+  test.each([false, true])('keeps Turn and Overall score on the shared header when grouped is %s', (isGrouped) => {
+    const columns = getAnalyticsColumns([], {
+      isGrouped,
+      showTestCaseSummary: true,
+      hasThreshold: true,
+      labels,
+      onToggleGroup,
+    });
+    const leaves = columns.flatMap((column) => ('children' in column ? column.children : [column])) as ColDef[];
+
+    for (const [colId, headerName] of [
+      ['turnIndex', 'Turn'],
+      ['testCaseScore', 'Overall score'],
+    ]) {
+      const column = leaves.find((leaf) => leaf.colId === colId);
+      expect(column).toMatchObject({
+        headerName,
+        headerClass: 'align-right',
+        headerComponentParams: {
+          innerHeaderComponent: EllipsisHeader,
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
+      });
+      expect(column?.headerComponent).toBeUndefined();
+    }
+  });
+
   test('adds one overall score column when grouping with a configured threshold', () => {
     const columns = getAnalyticsColumns([], {
       isGrouped: true,
@@ -330,7 +357,16 @@ describe('Runs View :: getAnalyticsColumns', () => {
     for (const group of columns.filter((column) => column.headerName?.trim())) {
       expect(group.headerGroupComponent).toBe(EllipsisHeaderGroup);
     }
-    for (const colId of ['testCaseName', 'totalRequests', 'totalTurns', 'http', 'duration']) {
+    for (const colId of [
+      'testCaseName',
+      'runIndex',
+      'requestIndex',
+      'turnIndex',
+      'totalRequests',
+      'totalTurns',
+      'http',
+      'duration',
+    ]) {
       const leaf = leaves.find((column) => column.colId === colId);
       expect(leaf.headerComponent).toBeUndefined();
       expect(leaf.headerComponentParams.innerHeaderComponent).toBe(EllipsisHeader);
@@ -830,7 +866,10 @@ describe('Runs View :: executionColumns Turn valueGetter', () => {
       }),
     );
     expect(col.headerComponent).toBeUndefined();
-    expect(col.headerComponentParams).toBeUndefined();
+    expect(col.headerComponentParams).toEqual({
+      innerHeaderComponent: EllipsisHeader,
+      innerHeaderComponentParams: { isRightAligned: true },
+    });
   });
 
   test('Should display 1-based turn number for a 0-based turnIndex', () => {

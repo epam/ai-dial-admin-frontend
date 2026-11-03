@@ -168,15 +168,10 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
 
 type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 
-const buildIndexColumn = (
-  field: IndexColumnField,
-  headerName: string,
-  width: number,
-  hasEllipsisHeader = true,
-): ColDef => ({
+const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
   field,
   headerName,
-  ...(hasEllipsisHeader ? { headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS } : {}),
+  headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
   colId: field,
   sortable: true,
   ...lockedWidthColDef(width),
@@ -203,7 +198,7 @@ const executionColumns: ColDef[] = [
     valueGetter: (params) =>
       params.data?.resultRowType === ExecutionResultRowType.Group ? null : (params.data?.totalRequests ?? null),
   },
-  buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH, false),
+  buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
   {
     field: 'totalTurns',
     headerName: 'Total turns',
@@ -283,6 +278,7 @@ const getDetailsColumns = (options?: ExecutionResultColumnOptions): ColGroupDef 
           {
             field: 'testCaseScore',
             headerName: options.labels.score,
+            headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
             colId: 'testCaseScore',
             ...lockedWidthColDef(TEST_CASE_OVERALL_SCORE_COLUMN_WIDTH),
             ...NO_FILTER_COL_DEF,

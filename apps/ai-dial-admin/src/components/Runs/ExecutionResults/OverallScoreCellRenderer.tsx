@@ -1,9 +1,9 @@
 'use client';
 
-import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
+import { IconMinus } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
-import classNames from 'classnames';
 
+import { ChevronBadge } from '@/src/components/Common/ChevronBadge/ChevronBadge';
 import { formatHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
 import {
   GroupedAnalyticsResult,
@@ -21,8 +21,12 @@ const OverallScoreCellRenderer = ({ value }: ICellRendererParams<GroupedAnalytic
   const displayScore = typeof score === 'number' ? formatHeatMapCellValue(score) : score;
   const isPass = thresholdStatus === TestCaseThresholdStatus.Pass;
   const isFail = thresholdStatus === TestCaseThresholdStatus.Fail;
-  const StatusIcon = isPass ? IconArrowUp : isFail ? IconArrowDown : IconMinus;
-  const statusLabel = isPass ? t(RunsI18nKey.Above) : isFail ? t(RunsI18nKey.Below) : t(RunsI18nKey.NotApplicable);
+  let statusLabel = t(RunsI18nKey.NotApplicable);
+  if (isPass) {
+    statusLabel = t(RunsI18nKey.Above);
+  } else if (isFail) {
+    statusLabel = t(RunsI18nKey.Below);
+  }
   const accessibleLabel = thresholdStatus == null ? displayScore : `${displayScore}, ${statusLabel}`;
 
   return (
@@ -31,17 +35,8 @@ const OverallScoreCellRenderer = ({ value }: ICellRendererParams<GroupedAnalytic
       role="group"
       aria-label={accessibleLabel}
     >
-      {thresholdStatus != null && (
-        <StatusIcon
-          className={classNames({
-            'text-success': isPass,
-            'text-error': isFail,
-            'text-secondary': !isPass && !isFail,
-          })}
-          size={12}
-          aria-hidden
-        />
-      )}
+      {(isPass || isFail) && <ChevronBadge isPositive={isPass} />}
+      {thresholdStatus != null && !isPass && !isFail && <IconMinus className="text-secondary" size={12} aria-hidden />}
       <span className="text-primary" aria-hidden>
         {displayScore}
       </span>
