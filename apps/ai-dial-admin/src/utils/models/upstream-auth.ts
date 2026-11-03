@@ -45,4 +45,3 @@ export const isUpstreamAuthKeyRequired = (
   edited?: DialUpstreamAuth | string | null,
   original?: DialUpstreamAuth | string | null,
 ) => normalizeUpstreamAuth(edited).type !== UpstreamAuthType.API_KEY && !isUpstreamAuthEqual(edited, original);
-
