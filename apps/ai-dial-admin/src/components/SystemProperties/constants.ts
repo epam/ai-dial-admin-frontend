@@ -1,5 +1,5 @@
 import { SystemPropertiesI18nKey } from '@/src/constants/i18n';
-import { RateLimitSchedule, WeekDay } from '@/src/models/system-properties';
+import { RateLimitSchedule, SpendingLimitMode, SpendingLimits, WeekDay } from '@/src/models/system-properties';
 
 /** Core's implicit values when `rateLimitSchedule` is omitted from the settings blob. */
 export const DEFAULT_RATE_LIMIT_SCHEDULE: RateLimitSchedule = {
@@ -19,4 +19,28 @@ export const WEEK_DAY_I18N_KEYS: Record<WeekDay, SystemPropertiesI18nKey> = {
   [WeekDay.Fri]: SystemPropertiesI18nKey.WeekdayFriday,
   [WeekDay.Sat]: SystemPropertiesI18nKey.WeekdaySaturday,
   [WeekDay.Sun]: SystemPropertiesI18nKey.WeekdaySunday,
+};
+
+/** Core's implicit values when `spendingLimits` is omitted from the settings blob. */
+export const DEFAULT_SPENDING_LIMITS: SpendingLimits = {
+  mode: SpendingLimitMode.Off,
+  defaultCostObject: 'ORG',
+};
+
+export const SPENDING_LIMIT_MODE_I18N_KEYS: Record<
+  SpendingLimitMode,
+  { label: SystemPropertiesI18nKey; hint: SystemPropertiesI18nKey }
+> = {
+  [SpendingLimitMode.Off]: {
+    label: SystemPropertiesI18nKey.SpendingLimitModeOff,
+    hint: SystemPropertiesI18nKey.SpendingLimitModeOffHint,
+  },
+  [SpendingLimitMode.Shadow]: {
+    label: SystemPropertiesI18nKey.SpendingLimitModeShadow,
+    hint: SystemPropertiesI18nKey.SpendingLimitModeShadowHint,
+  },
+  [SpendingLimitMode.Enforce]: {
+    label: SystemPropertiesI18nKey.SpendingLimitModeEnforce,
+    hint: SystemPropertiesI18nKey.SpendingLimitModeEnforceHint,
+  },
 };
