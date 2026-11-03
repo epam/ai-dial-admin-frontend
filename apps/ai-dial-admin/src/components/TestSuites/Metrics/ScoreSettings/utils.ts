@@ -41,10 +41,10 @@ import { JSONSchema7 } from 'json-schema';
 const DEFAULT_METRIC_SCORE_FIELD = 'score';
 
 export const getOverallScoreThresholdError = (
-  value: number | string | undefined,
+  value: number | string | null | undefined,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
-  if (value === undefined || value === '') {
+  if (value == null || value === '') {
     return null;
   }
 
