@@ -48,7 +48,7 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         (row) =>
           row.role.toLowerCase().includes(search.trim().toLowerCase()) &&
           (!isCanReadOnly || row.marks.read !== PrivilegeMark.None) &&
-          (!isRowsLimitedOnly || Boolean(row.filter)),
+          (!isRowsLimitedOnly || row.filter != null),
       ),
     [access.rows, search, isCanReadOnly, isRowsLimitedOnly],
   );

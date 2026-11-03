@@ -53,7 +53,7 @@ const RemoveRoleDialog: FC<Props> = ({ tableName, row, onRemove, onClose }) => {
   const privileges = describePrivileges(row, t);
   const details: Array<[AnalyticsTableAccessI18nKey, string]> = [[AnalyticsTableAccessI18nKey.RemoveTable, tableName]];
   if (privileges) details.push([AnalyticsTableAccessI18nKey.RemoveAccess, privileges]);
-  if (row.filter) {
+  if (row.filter != null) {
     details.push([AnalyticsTableAccessI18nKey.RemoveRowLimit, summarizeFilter(row.filter)]);
   }
 
