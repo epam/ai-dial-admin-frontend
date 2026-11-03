@@ -150,6 +150,18 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           onChange={(token_endpoint) => onChange?.({ ...(authSettings || {}), token_endpoint })}
         />
 
+        <EndpointControl
+          id="resource"
+          disabled={isAuthDisabled}
+          isFullWidth
+          label={t(EntityFieldsI18nKey.resource)}
+          endpoint={authSettings?.resource || ''}
+          placeholder={t(EntityPlaceholdersI18nKey.Resource)}
+          caption={t(ToolsetI18nKey.ResourceCaption)}
+          // EndpointControl reports a cleared field as undefined, which Core reads as "keep the stored value".
+          onChange={(resource) => onChange?.({ ...(authSettings || {}), resource: resource ?? '' })}
+        />
+
         <Select
           className="w-[192px]"
           id="type"

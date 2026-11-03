@@ -102,6 +102,9 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
       if (authSettings.scopes_supported) {
         url.searchParams.set('scope', authSettings.scopes_supported.join(' '));
       }
+      if (authSettings.resource) {
+        url.searchParams.set('resource', authSettings.resource);
+      }
 
       const sep = window.location.search ? '&' : '?';
       setExternalServiceLevels(levels);
