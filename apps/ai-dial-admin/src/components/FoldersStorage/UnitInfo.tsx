@@ -2,19 +2,13 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  Button,
-  ButtonVariant,
-  EllipsisTooltip,
-  NoDataContent,
-  Spinner,
-  Tag,
-  TagAppearance,
-} from '@epam/ai-dial-ui-kit';
+import { Button, ButtonVariant, EllipsisTooltip, NoDataContent, Spinner } from '@epam/ai-dial-ui-kit';
+import { IconSitemap } from '@tabler/icons-react';
 
 import RemoveUnitModal from '@/src/components/FoldersStorage/Modals/RemoveUnitModal';
 import RenameUnitModal from '@/src/components/FoldersStorage/Modals/RenameUnitModal';
 import NewUnitButton from '@/src/components/FoldersStorage/NewUnitButton';
+import { LARGE_ICON_SIZE } from '@/src/components/FoldersStorage/constants';
 import { RolesCardStatus } from '@/src/components/FoldersStorage/models';
 import UnitRolesCard from '@/src/components/FoldersStorage/UnitRolesCard';
 import { useUnitRolesDraft } from '@/src/components/FoldersStorage/use-unit-roles-draft';
@@ -81,7 +75,8 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
   return (
     <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-wrap justify-between items-center w-full gap-3">
-        <div className="flex flex-1 min-w-0 items-start gap-3">
+        <div className="flex flex-1 min-w-0 items-center gap-3">
+          <IconSitemap size={LARGE_ICON_SIZE} className="shrink-0 text-secondary" aria-hidden />
           <div className="flex min-w-0 flex-col">
             <h2 className="min-w-0">
               <EllipsisTooltip contentClassName="truncate" text={unit.name} />
@@ -92,7 +87,6 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
               </span>
             )}
           </div>
-          <Tag label={t(FoldersI18nKey.UnitBadge)} appearance={TagAppearance.Bordered} />
         </div>
         {!isReadonly &&
           (draft.isChanged ? (

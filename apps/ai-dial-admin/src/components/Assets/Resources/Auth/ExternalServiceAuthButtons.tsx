@@ -99,6 +99,9 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
       if (authSettings.code_challenge_method) {
         url.searchParams.set('code_challenge_method', authSettings.code_challenge_method);
       }
+      if (authSettings.resource) {
+        url.searchParams.set('resource', authSettings.resource);
+      }
       if (authSettings.scopes_supported) {
         url.searchParams.set('scope', authSettings.scopes_supported.join(' '));
       }

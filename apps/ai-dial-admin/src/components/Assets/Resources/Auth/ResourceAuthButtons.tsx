@@ -107,6 +107,9 @@ const ResourceAuthButtons: FC<Props> = ({
         toolsetId: selectedToolset.name,
         credentialsLevel: authSettings.authentication_type,
       };
+      if (authSettings.resource) {
+        url.searchParams.set('resource', authSettings.resource);
+      }
       url.searchParams.set('state', encodeToolsetRedirectState(state));
       if (authSettings.scopes_supported) {
         url.searchParams.set('scope', authSettings.scopes_supported.join(' '));

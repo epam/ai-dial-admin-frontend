@@ -481,6 +481,8 @@ export interface DialToolsetResourceAuthSettings {
   code_challenge_method?: ToolsetCodeChallengeMethod;
   token_endpoint?: string;
   token_endpoint_auth_method?: TokenEndpointAuthMethod;
+  /** RFC 8707 resource indicator. A blank value tells Core to clear it; an omitted one keeps the stored value. */
+  resource?: string;
   scopes_supported?: string[];
 }
 
