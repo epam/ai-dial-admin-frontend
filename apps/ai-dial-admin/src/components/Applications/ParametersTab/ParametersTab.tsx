@@ -3,10 +3,9 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, Ref, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Spinner, NoDataContent, PrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
+import { JsonSchema, NoDataContent, PrimaryButton, SelectOption, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
-import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import {
   convertJsonSchema,
   generateViewItems,
@@ -19,6 +18,7 @@ import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIR
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import { FrameCallbacks, FrameRendererHandle } from '@/src/components/FrameRenderer/models';
+import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -28,7 +28,6 @@ import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -93,7 +92,7 @@ const ParametersTab: FC<Props> = ({
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [(application as AssetApp)?.version]);
+  }, []);
 
   const schemeProperties = useMemo(() => {
     if (!scheme?.properties) return [];

@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import MeasureCell from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
+import { ICellRendererParams } from 'ag-grid-community';
+
+import MeasureCell, { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import { BreakdownDeltas, BreakdownRowModel, KpiMetric } from '@/src/components/Analytics/Usage/models';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
@@ -22,15 +24,16 @@ const rowModel = (overrides: Partial<BreakdownRowModel> = {}): BreakdownRowModel
   ...overrides,
 });
 
-type Params = Parameters<typeof MeasureCell>[0];
+type Params = ICellRendererParams<BreakdownRowModel> & MeasureCellParams;
 
 const renderCell = (props: Partial<Params> = {}) =>
   render(
-    <MeasureCell
+    <MeasureCell<BreakdownRowModel>
       {...({} as Params)}
       data={rowModel()}
       metric={KpiMetric.Requests}
-      deltaKey="calls"
+      getDelta={(row) => row.deltas.calls}
+      isNew={(row) => row.isNewRow}
       format={(row) => String(row.calls)}
       {...props}
     />,
@@ -84,7 +87,8 @@ describe('MeasureCell', () => {
   test('does not repeat that on every other column', () => {
     renderCell({
       data: rowModel({ isNewRow: true }),
-      deltaKey: 'spend',
+      getDelta: (row) => row.deltas.spend,
+      isNew: undefined,
       metric: KpiMetric.TotalSpend,
       format: (row) => String(row.spend),
     });
@@ -111,5 +115,11 @@ describe('MeasureCell', () => {
 
     expect(screen.getByText('—')).toBeTruthy();
     expect(screen.queryByText('never shown')).toBeNull();
+  });
+
+  test('states the grid formatted value when the column passes no format', () => {
+    renderCell({ format: undefined, valueFormatted: '1,200' });
+
+    expect(screen.getByText('1,200')).toBeTruthy();
   });
 });

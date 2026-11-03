@@ -5,6 +5,8 @@ import { ReactNode } from 'react';
 // @ts-ignore
 import '@epam/ai-dial-ui-kit/styles.css';
 import '@epam/ai-dial-react-file-manager/styles.css';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';
@@ -29,6 +31,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsAdminApiEnabled } from '@/src/utils/env/get-admin-api-toggle';
 import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
+import { getIsCustomDashboardsEnabled } from '@/src/utils/env/get-custom-dashboards-toggle';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
@@ -58,6 +61,7 @@ export default async function Layout({ children, params }: { children: ReactNode
     analyticsEnabled: isAnalyticsEnabled,
     analyticsSessionsEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_SESSIONS_ENABLED),
     analyticsUsageEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
+    analyticsCustomDashboardsEnabled: getIsCustomDashboardsEnabled(),
     queryAssistantEnabled: isAnalyticsEnabled && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
   };
 

@@ -5,7 +5,7 @@ import { FC } from 'react';
 import { Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
-import { buildOverallScoreMethodTooltip } from '@/src/components/TestSuites/Trends/Kpi/utils/overall-score-method-tooltip';
+import { buildOverallScoreMethodTooltip } from '@/src/components/TestSuites/Metrics/ScoreSettings/overall-score-method-tooltip';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { OverallScoreConfig } from '@/src/models/evaluation/test-suite';

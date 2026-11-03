@@ -1,16 +1,10 @@
 import { ReactNode } from 'react';
 
-import {
-  FunctionParameterSource,
-  FunctionParameterSourceType,
-} from '@/src/components/TestSuites/Metrics/ScoreSettings/models';
-import {
-  getFunctionName,
-  getFunctionParameterSources,
-  getOverallScoreFormulaLabelKey,
-} from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+
+import { FunctionParameterSource, FunctionParameterSourceType } from './models';
+import { getFunctionName, getFunctionParameterSources, getOverallScoreFormulaLabelKey } from './utils';
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
@@ -40,7 +34,10 @@ const MethodHeader = ({ title, subtitle }: { title: string; subtitle: string }) 
   </div>
 );
 
-/** Only the overall-score method is read, so a run's snapshot works as well as a live suite. */
+/**
+ * Tooltip body describing how an overall score is calculated. Only the overall-score method is read, so a run's
+ * snapshot works as well as a live suite.
+ */
 export const buildOverallScoreMethodTooltip = (
   suite: Pick<TestSuite, 'overallScore'>,
   t: Translate,

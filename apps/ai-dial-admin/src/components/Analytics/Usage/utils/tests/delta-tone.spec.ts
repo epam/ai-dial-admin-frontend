@@ -21,6 +21,12 @@ describe('getDeltaTone', () => {
     },
   );
 
+  test('judges a card without a metric by the direction it is given', () => {
+    expect(getDeltaTone(undefined, 0.2, true)).toBe(DeltaTone.Good);
+    expect(getDeltaTone(undefined, 0.2, false)).toBe(DeltaTone.Bad);
+    expect(getDeltaTone(undefined, 0.2)).toBe(DeltaTone.Neutral);
+  });
+
   test('passes no judgement on no change', () => {
     expect(getDeltaTone(KpiMetric.Requests, 0)).toBe(DeltaTone.Neutral);
   });

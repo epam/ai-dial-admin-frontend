@@ -258,7 +258,8 @@ const BreakdownTable: FC<Props> = ({
         cellRenderer: MeasureCell,
         cellRendererParams: {
           metric: KpiMetric.Requests,
-          deltaKey: 'calls',
+          getDelta: (row: BreakdownRowModel) => row.deltas.calls,
+          isNew: (row: BreakdownRowModel) => row.isNewRow,
           format: (row: BreakdownRowModel) => formatGroupedNumber(row.calls),
         } satisfies MeasureCellParams,
       },
@@ -269,7 +270,7 @@ const BreakdownTable: FC<Props> = ({
         cellRenderer: MeasureCell,
         cellRendererParams: {
           metric: KpiMetric.ErrorRate,
-          deltaKey: 'errorRate',
+          getDelta: (row: BreakdownRowModel) => row.deltas.errorRate,
           format: (row: BreakdownRowModel) => (row.errorRate == null ? null : formatPercent(row.errorRate, 1)),
           // A rate of one failure in thirty thousand prints `0.0%` while its change reads 150%, so
           // the exact reading states the counts it came from.
@@ -290,7 +291,7 @@ const BreakdownTable: FC<Props> = ({
         cellRenderer: MeasureCell,
         cellRendererParams: {
           metric: KpiMetric.AvgLatency,
-          deltaKey: 'avgLatencyMs',
+          getDelta: (row: BreakdownRowModel) => row.deltas.avgLatencyMs,
           format: (row: BreakdownRowModel) => {
             if (row.avgLatencyMs == null) {
               return null;
@@ -315,7 +316,7 @@ const BreakdownTable: FC<Props> = ({
         cellRenderer: MeasureCell,
         cellRendererParams: {
           metric: KpiMetric.TotalSpend,
-          deltaKey: 'spend',
+          getDelta: (row: BreakdownRowModel) => row.deltas.spend,
           format: (row: BreakdownRowModel) => (row.spend == null ? null : formatGroupedMoney(row.spend)),
           // Cents hide a price of a few thousandths, which is what a cheap model's row costs.
           formatExact: (row: BreakdownRowModel) =>

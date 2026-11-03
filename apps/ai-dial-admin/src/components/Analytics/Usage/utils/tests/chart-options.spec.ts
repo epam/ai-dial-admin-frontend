@@ -8,6 +8,8 @@ import {
   buildDonutOptions,
   buildLatencyOptions,
   buildSplitSeriesOptions,
+  buildTimeSeriesOptions,
+  buildValueTimeSeriesOptions,
   formatChartNumber,
 } from '@/src/components/Analytics/Usage/utils/chart-options';
 
@@ -164,5 +166,44 @@ describe('buildDonutOptions', () => {
     expect(
       seriesOf(buildDonutOptions([{ name: 'gpt-4o', value: 10, itemStyle: { color: '#7DA4FF' } }])).emphasis?.scale,
     ).toBe(false);
+  });
+});
+
+describe('buildValueTimeSeriesOptions', () => {
+  const points = [
+    { bucketMs: 0, value: 3 },
+    { bucketMs: 1, value: 5 },
+  ];
+
+  test('draws one unnamed line, as the requests chart does', () => {
+    const options = buildValueTimeSeriesOptions(COLORS, points, String);
+    expect(options.series).toHaveLength(1);
+    expect(options.series[0]).toEqual(expect.objectContaining({ data: [3, 5], name: undefined }));
+  });
+
+  test('draws a compared window dashed beside it and names both', () => {
+    const options = buildValueTimeSeriesOptions(COLORS, points, String, undefined, {
+      currentLabel: 'Current',
+      label: 'Previous',
+      values: [1, null],
+    });
+    expect(options.series[0].name).toBe('Current');
+    expect(options.series[1]).toEqual(
+      expect.objectContaining({
+        name: 'Previous',
+        data: [1, null],
+        lineStyle: expect.objectContaining({ type: 'dashed' }),
+      }),
+    );
+  });
+
+  test('is what the requests chart draws from its buckets', () => {
+    const buckets = [{ bucketMs: 0, measures: { calls: 7 } }] as Parameters<typeof buildTimeSeriesOptions>[1];
+    const fromBuckets = buildTimeSeriesOptions(COLORS, buckets, String);
+    const fromValues = buildValueTimeSeriesOptions(COLORS, [{ bucketMs: 0, value: 7 }], String);
+
+    // The tooltip formatter is a fresh closure on each call, so the drawn parts are compared.
+    expect(fromBuckets.series).toEqual(fromValues.series);
+    expect(fromBuckets.xAxis).toEqual(fromValues.xAxis);
   });
 });

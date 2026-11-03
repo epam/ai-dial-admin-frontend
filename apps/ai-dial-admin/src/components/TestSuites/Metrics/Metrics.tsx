@@ -10,16 +10,19 @@ import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
   getDetailedMetricDeclarations,
+  getTestSuite,
   getTestSuiteMetrics,
   getTestSuiteMetricsAggregated,
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
+import { mergeSuiteValidity } from '@/src/components/TestSuites/utils/suite-validity';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, DeleteI18nKey, EntitiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { Metric } from '@/src/models/evaluation/metric';
 import { Dataset } from '@/src/models/evaluation/dataset';
+import { Metric } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AddMetricModal from './AddMetric/AddMetricModal';
@@ -67,6 +70,25 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
     );
   }, [selectedTestSuite.id]);
 
+  /** Pull BE suite validity after metric mutations (revalidation lands on the suite resource). */
+  const refreshSuiteValidity = useCallback(
+    async (suite: TestSuite) => {
+      const suiteId = suite.id as string;
+      if (!suiteId) {
+        return;
+      }
+
+      const res = await getTestSuite(suiteId, DEFAULT_ETAG);
+      const refreshed = res?.response as TestSuite | undefined;
+      const next = refreshed ? mergeSuiteValidity(suite, refreshed) : suite;
+      // `suite` may already differ from selected (e.g. sanitized weights on add); always push when needed.
+      if (next !== selectedTestSuite) {
+        onChange(next);
+      }
+    },
+    [onChange, selectedTestSuite],
+  );
+
   const onRemoveMetric = useCallback(
     (metricId: string) => {
       deleteTestSuiteMetric(selectedTestSuite.id as string, metricId).then((response) => {
@@ -76,22 +98,13 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
           const remainingMetrics = (metrics ?? []).filter((metric) => metric.id !== metricId);
           setMetrics(remainingMetrics);
           loadMetrics();
-
-          const remainingMetricNames = remainingMetrics
-            .map((metric) => metric.name)
-            .filter((name): name is string => Boolean(name));
-          // Deleting the final metric is already persisted; don't turn it into an unsaved suite edit.
-          if (remainingMetricNames.length > 0) {
-            const nextSuite = sanitizeOverallScoreForMetricNames(selectedTestSuite, remainingMetricNames);
-
-            if (nextSuite !== selectedTestSuite) {
-              onChange(nextSuite);
-            }
-          }
+          // Keep overallScore weights as stored; BE revalidation surfaces Invalid. Do not sanitize
+          // here — that would dirty Save/Discard for a metric delete that is already persisted.
+          void refreshSuiteValidity(selectedTestSuite);
         }
       });
     },
-    [loadMetrics, metrics, onChange, selectedTestSuite],
+    [loadMetrics, metrics, refreshSuiteValidity, selectedTestSuite],
   );
 
   const onAddMetric = useCallback(
@@ -106,11 +119,9 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
               .filter((name): name is string => Boolean(name));
             const nextSuite = sanitizeOverallScoreForMetricNames(selectedTestSuite, remainingMetricNames);
 
-            if (nextSuite !== selectedTestSuite) {
-              onChange(nextSuite);
-            }
             showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricAddSuccess)));
             loadMetrics();
+            void refreshSuiteValidity(nextSuite);
           } else {
             showNotification(
               getErrorNotification(t(TestSuitesI18nKey.MetricAddFailed), response?.errorMessage || 'Unknown error'),
@@ -119,7 +130,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         });
       }
     },
-    [loadMetrics, metrics, onChange, selectedTestSuite, showNotification, t],
+    [loadMetrics, metrics, refreshSuiteValidity, selectedTestSuite, showNotification, t],
   );
 
   const onEditMetric = useCallback(
@@ -135,6 +146,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
           if (response?.success) {
             showNotification(getSuccessNotification(t(TestSuitesI18nKey.MetricUpdateSuccess)));
             loadMetrics();
+            void refreshSuiteValidity(selectedTestSuite);
           } else {
             showNotification(
               getErrorNotification(t(TestSuitesI18nKey.MetricUpdateFailed), response?.errorMessage || 'Unknown error'),
@@ -143,7 +155,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         });
       }
     },
-    [loadMetrics, metricToEdit, selectedTestSuite.id, showNotification, t],
+    [loadMetrics, metricToEdit, refreshSuiteValidity, selectedTestSuite, showNotification, t],
   );
 
   useEffect(() => {
@@ -217,16 +229,14 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
             <Spinner size={44} fullWidth />
           </div>
         ) : (
-          hasMetrics && (
-            <div className="w-[420px] shrink-0">
-              <ScoreSettings
-                selectedTestSuite={selectedTestSuite}
-                metrics={metrics}
-                testCaseSchema={dataset?.testCaseSchema}
-                onChange={onChange}
-              />
-            </div>
-          )
+          <div className="w-[420px] shrink-0">
+            <ScoreSettings
+              selectedTestSuite={selectedTestSuite}
+              metrics={metrics}
+              testCaseSchema={dataset?.testCaseSchema}
+              onChange={onChange}
+            />
+          </div>
         )}
       </div>
 

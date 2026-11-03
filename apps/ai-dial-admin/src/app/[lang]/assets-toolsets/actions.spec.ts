@@ -264,6 +264,28 @@ describe('Assets Toolset :: server actions', () => {
     );
   });
 
+  test('updateToolset forwards resource as is, including a blank one that clears it', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', resource: '' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'public/my-toolset__1.0',
+      expect.objectContaining({ auth_settings: { client_id: 'id', resource: '' } }),
+      { etag: 'etag' },
+    );
+  });
+
   test('updateToolset keeps a client secret the user typed', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 

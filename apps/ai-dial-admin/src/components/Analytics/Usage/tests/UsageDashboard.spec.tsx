@@ -66,6 +66,20 @@ describe('UsageDashboard', () => {
     await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalled());
   });
 
+  test('renders the switcher in the controls row when one is given', async () => {
+    render(
+      <UsageDashboard
+        callerSource={CallerSource.Principal}
+        switcher={<button type="button">switch dashboard</button>}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'switch dashboard' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: MenuI18nKey.Dashboard })).toBeTruthy();
+
+    await settled();
+  });
+
   test('reads each window exactly once on mount, since comparison starts on', async () => {
     render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
