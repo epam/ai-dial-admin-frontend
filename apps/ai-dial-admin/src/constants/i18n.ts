@@ -733,6 +733,7 @@ export enum TabsI18nKey {
   Interceptors = 'Tabs.Interceptors',
   GlobalInterceptors = 'Tabs.GlobalInterceptors',
   RateLimitSchedule = 'Tabs.RateLimitSchedule',
+  SpendingLimits = 'Tabs.SpendingLimits',
   ErrorCodes = 'Tabs.ErrorCodes',
   Keys = 'Tabs.Keys',
   Entities = 'Tabs.Entities',
@@ -3894,6 +3895,17 @@ export enum SystemPropertiesI18nKey {
   ResetTimeLabel = 'SystemProperties.ResetTimeLabel',
   ResetTimePlaceholder = 'SystemProperties.ResetTimePlaceholder',
   ResetTimeInvalid = 'SystemProperties.ResetTimeInvalid',
+  SpendingLimitsDescription = 'SystemProperties.SpendingLimitsDescription',
+  SpendingLimitModeLabel = 'SystemProperties.SpendingLimitModeLabel',
+  SpendingLimitModeOff = 'SystemProperties.SpendingLimitModeOff',
+  SpendingLimitModeShadow = 'SystemProperties.SpendingLimitModeShadow',
+  SpendingLimitModeEnforce = 'SystemProperties.SpendingLimitModeEnforce',
+  SpendingLimitModeOffHint = 'SystemProperties.SpendingLimitModeOffHint',
+  SpendingLimitModeShadowHint = 'SystemProperties.SpendingLimitModeShadowHint',
+  SpendingLimitModeEnforceHint = 'SystemProperties.SpendingLimitModeEnforceHint',
+  SpendingLimitEnforceWarning = 'SystemProperties.SpendingLimitEnforceWarning',
+  DefaultCostObjectLabel = 'SystemProperties.DefaultCostObjectLabel',
+  DefaultCostObjectInvalid = 'SystemProperties.DefaultCostObjectInvalid',
 }
 
 export enum BackfillI18nKey {

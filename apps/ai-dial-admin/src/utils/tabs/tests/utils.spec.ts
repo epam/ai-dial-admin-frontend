@@ -68,6 +68,7 @@ import {
   propertiesTab,
   publicTab,
   rateLimitScheduleTab,
+  spendingLimitsTab,
   relatedContainersTab,
   responseTab,
   resourcesTab,
@@ -442,7 +443,11 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for system properties', () => {
-    expect(getSystemPropertiesTabs(t)).toEqual([globalInterceptorsTab(t), rateLimitScheduleTab(t)]);
+    expect(getSystemPropertiesTabs(t)).toEqual([
+      globalInterceptorsTab(t),
+      rateLimitScheduleTab(t),
+      spendingLimitsTab(t),
+    ]);
   });
 
   test('returns correct tabs for interceptor', () => {
