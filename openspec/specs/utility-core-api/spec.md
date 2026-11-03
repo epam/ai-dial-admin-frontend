@@ -56,3 +56,14 @@ The System Properties page's interceptor picker SHALL read from the same Core-di
 - **WHEN** one of the two population reads fails while the other succeeds
 - **THEN** the page still renders the surviving population
 - **AND** shows the same "incomplete option list" notification `ModelView` shows for the same condition
+
+### Requirement: Caller-scoped option reads come from DIAL Core
+`CoreUtilityApi` SHALL read runner schemas from `GET /v1/application_type_schemas/schemas` and the caller's deployments from `GET /openai/models` and `GET /openai/applications`. These lists are readable by any user, and the deployment lists SHALL be treated as exactly the valid dependency choices for that caller. A server helper SHALL map them to the picker shapes and degrade a failed read to an empty list with an option-list-unavailable warning.
+
+#### Scenario: Deployment list read
+- **WHEN** the caller's models are requested
+- **THEN** `GET /openai/models` is called and each `{id, display_name}` becomes a picker option, falling back to the id for the label
+
+#### Scenario: Failed read
+- **WHEN** a caller-scoped read fails
+- **THEN** that picker is empty and the warning is raised, and the other pickers still load

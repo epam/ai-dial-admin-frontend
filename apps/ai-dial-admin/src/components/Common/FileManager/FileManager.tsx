@@ -176,7 +176,7 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      const rootPaths = getRootFolders(view, isPlatformBucketEnabled).map((root) => `${root}/`);
+      const rootPaths = getRootFolders(view, isPlatformBucketEnabled, !isUnitMode).map((root) => `${root}/`);
       fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
       setLoadedPaths(new Set(rootPaths));
     }
@@ -186,7 +186,7 @@ const FileManager: FC<Props> = ({
   // Applications is the one view with two top-level buckets (`platform`/`public` — see
   // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
   // wrapper instead of reusing one bucket's own node as the tree's virtual root.
-  const isMultiRootView = getRootFolders(view, isPlatformBucketEnabled).length > 1;
+  const isMultiRootView = getRootFolders(view, isPlatformBucketEnabled, !isUnitMode).length > 1;
   // Conversations and the flat platform views have no folder concept for their rows — the row
   // context menu and bulk toolbar already hide "Move to" for them (`Assets/utils.ts`,
   // `FileManager/utils.ts`), but `onMoveToFiles` also drives drag-and-drop independently of those

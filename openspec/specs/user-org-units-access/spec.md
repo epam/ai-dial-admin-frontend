@@ -142,3 +142,46 @@ the call and handle a 403.
 #### Scenario: No read
 - **WHEN** a unit grants no `role-assignments` read
 - **THEN** the tab is not shown
+
+### Requirement: Admin-only reads are gated by admin access
+The panel SHALL make admin-only Core reads (the config-file endpoints, platform runners and translators, roles, interceptors, the global interceptor chain and platform settings) only when `adminAccess` is `FULL`, never by testing for unit mode. A failed access read resolves to denied and SHALL NOT fall back to admin reads. One server helper SHALL make the decision for every page.
+
+#### Scenario: Unit user
+- **WHEN** `adminAccess` is `NONE` with units
+- **THEN** no admin-only read is made on the application, applications-list, publication or toolset pages
+
+#### Scenario: Access read failed
+- **WHEN** the access read resolved to denied
+- **THEN** the pages still make no admin-only read
+
+#### Scenario: Full admin
+- **WHEN** `adminAccess` is `FULL`
+- **THEN** every picker reads the same sources as before
+
+### Requirement: Dependency pickers use caller-scoped lists
+For a caller without full admin access, runner options SHALL come from `GET /v1/application_type_schemas/schemas`, models from `GET /openai/models` and applications from `GET /openai/applications`. These hold exactly the deployments Core accepts as a dependency from that caller, which can be fewer than the config-file lists (a model limited by `userRoles` is refused even to an admin without the role). Platform runners, translators, roles, interceptors and global interceptors SHALL be skipped because no non-admin source exists.
+
+#### Scenario: Pickers in the application editor
+- **WHEN** a unit user opens the application editor
+- **THEN** the runner, model and application pickers list the caller-scoped options and the roles and interceptor pickers have no options
+
+### Requirement: Runner details resolve through the schema read
+A runner's routes, interceptors and features SHALL be read through `GET /v1/application_type_schemas/schema?id=` for a caller without full admin access.
+
+#### Scenario: Interceptors tab for a unit user
+- **WHEN** a unit user opens an application whose runner is from the config file
+- **THEN** the tab shows the resolved schema's interceptors and no config-file read is made
+
+### Requirement: File roots exclude the config-file and platform buckets
+For a caller in unit mode, the FileManager, breadcrumbs and create dialog SHALL build their roots without the `file` and `platform` roots.
+
+#### Scenario: Create dialog
+- **WHEN** a unit user opens the create dialog for an application
+- **THEN** only the `public` root is offered
+
+### Requirement: Interceptors and user roles are read-only without admin access
+Interceptors and user roles SHALL be shown read-only to a caller without full admin access, because Core refuses interceptors from non-admins and drops their `userRoles` without an error. Whether unit users should see the roles field at all remains a product decision.
+
+#### Scenario: Unit user with write permission
+- **WHEN** a unit user with `write` on applications opens an application
+- **THEN** the Interceptors and user-roles controls cannot be edited

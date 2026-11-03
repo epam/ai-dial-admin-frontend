@@ -95,6 +95,14 @@ describe('Root Folder Utils :: getRootFolders', () => {
     expect(getRootFolders(ApplicationRoute.AssetsApplications, true)).toEqual(['file', 'platform', 'public']);
   });
 
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should drop the file root for %s when it is disabled',
+    (view) => {
+      expect(getRootFolders(view, true, false)).toEqual(['platform', 'public']);
+      expect(getRootFolders(view, false, false)).toEqual(['public']);
+    },
+  );
+
   test('Should ignore the platform bucket flag for non-dual-bucket views', () => {
     const views = [ApplicationRoute.Prompts, ApplicationRoute.Conversations, ApplicationRoute.PlatformKeys];
 

@@ -2,7 +2,7 @@ import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-import { CoreUtilityApi } from '../core-utility-api';
+import { CallerDeploymentKind, CoreUtilityApi } from '../core-utility-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -122,6 +122,31 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     expect(calledUrl).not.toContain('/api/');
     expect(result.response).toEqual(body);
   });
+
+  test('getRunnerSchemas reads the caller-scoped schema list from Core', async () => {
+    const body = [{ $id: 'runner' }];
+    fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getRunnerSchemas(TOKEN_MOCK);
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/application_type_schemas/schemas');
+    expect(result.response).toEqual(body);
+  });
+
+  test.each([CallerDeploymentKind.Models, CallerDeploymentKind.Applications])(
+    'getCallerDeployments reads the caller-scoped %s list from Core',
+    async (kind) => {
+      const body = { data: [{ id: 'a', display_name: 'A' }] };
+      fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+      const result = await instance.getCallerDeployments(TOKEN_MOCK, kind);
+
+      const [calledUrl] = fetch.mock.calls[0];
+      expect(calledUrl).toContain(`/openai/${kind}`);
+      expect(result.response).toEqual(body);
+    },
+  );
 
   test('getUserOrgUnits keeps the 404 status when org units are off', async () => {
     fetch.mockResponseOnce('Not Found', { status: 404 });

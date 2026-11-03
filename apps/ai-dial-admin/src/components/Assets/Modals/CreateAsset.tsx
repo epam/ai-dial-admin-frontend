@@ -61,7 +61,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, sho
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, isUnitMode } = useAppContext();
   const router = useRouter();
   const folderContext = context?.();
   const filePath = folderContext?.filePath as string;
@@ -85,8 +85,8 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, sho
   // Both bucket roots for dual-bucket views (platform only when the Catalog menu group is enabled),
   // the single root for every other view — the same resolution the file manager sidebar uses.
   const rootPaths = useMemo(
-    () => getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`),
-    [view, featureFlags.catalogEnabled],
+    () => getRootFolders(view, featureFlags.catalogEnabled && !isUnitMode, !isUnitMode).map((root) => `${root}/`),
+    [view, featureFlags.catalogEnabled, isUnitMode],
   );
 
   // The folder context opens on the last physical root (`public/`); move to `platform/` once, after

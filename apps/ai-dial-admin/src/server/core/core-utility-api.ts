@@ -1,4 +1,5 @@
 import { Token } from '@/src/models/auth';
+import { CoreCallerDeploymentsResponse } from '@/src/models/dial/core-caller-options';
 import { CoreUserInfoResponse } from '@/src/models/dial/core-user-info';
 import { CoreUserOrgUnitsResponse } from '@/src/models/dial/core-user-org-units';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -11,6 +12,12 @@ export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const USER_INFO_URL = 'v1/user/info';
 export const USER_ORG_UNITS_URL = 'v1/user/org-units';
 export const VERSION_URL = 'version';
+export const APPLICATION_TYPE_SCHEMAS_URL = 'v1/application_type_schemas/schemas';
+
+export enum CallerDeploymentKind {
+  Models = 'models',
+  Applications = 'applications',
+}
 
 /** Claim Core reports the caller's email under, inside `/v1/user/info`'s `userClaims` map. */
 const EMAIL_CLAIM = 'email';
@@ -53,5 +60,18 @@ export class CoreUtilityApi extends CoreApi {
   /** The caller's admin access and units. Answers 404 while org units are off, so callers keep the `status`. */
   getUserOrgUnits(token: Token): Promise<ServerActionResponse<CoreUserOrgUnitsResponse>> {
     return this.getAction(USER_ORG_UNITS_URL, token);
+  }
+
+  /** Every runner schema, config-file and platform folder alike. Readable by any caller, unlike the config-file read. */
+  getRunnerSchemas(token: Token): Promise<ServerActionResponse> {
+    return this.getAction(APPLICATION_TYPE_SCHEMAS_URL, token);
+  }
+
+  /** The deployments the caller may use — exactly what Core accepts as a dependency from them. */
+  getCallerDeployments(
+    token: Token,
+    kind: CallerDeploymentKind,
+  ): Promise<ServerActionResponse<CoreCallerDeploymentsResponse>> {
+    return this.getAction(`openai/${kind}`, token);
   }
 }
