@@ -52,8 +52,8 @@ describe('ScoreThreshold', () => {
 
     expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdPass)).toBeInTheDocument();
     expect(screen.getByText(new RegExp(TestSuitesI18nKey.ScoreThresholdConditionGe))).toBeInTheDocument();
-    expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdFail)).not.toBeInTheDocument();
-    expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdOtherwise)).not.toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdFail)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(TestSuitesI18nKey.ScoreThresholdOtherwise))).toBeInTheDocument();
     expect(screen.getByRole('spinbutton')).toBeInTheDocument();
   });
 
