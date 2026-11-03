@@ -117,6 +117,16 @@ describe('images utils', () => {
       expect(list[0].label).toBe('1.0.0');
       expect(list[0].icon).toBeDefined();
     });
+
+    test('orders versions from newest to oldest', () => {
+      const versions = [
+        { id: 'v1', version: '1.0.2' },
+        { id: 'v2', version: '1000.0.35000' },
+        { id: 'v3', version: '1.0.10' },
+        { id: 'v4', version: '1.0.0' },
+      ] as any;
+      expect(getVersionsList(versions).map(({ label }) => label)).toEqual(['1000.0.35000', '1.0.10', '1.0.2', '1.0.0']);
+    });
   });
 
   describe('getUniqueLatestImages', () => {

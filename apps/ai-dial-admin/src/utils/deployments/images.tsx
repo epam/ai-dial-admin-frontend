@@ -13,6 +13,7 @@ import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/contai
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageSource, ImageVersion } from '@/src/models/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { compareVersions } from '@/src/utils/entities/versions';
 
 export const METADATA_ONLY_IMAGE_FIELDS: readonly (keyof Image)[] = ['description', 'author', 'topics'] as const;
 
@@ -81,13 +82,15 @@ export function validateImageChanged(originalImage: Image, updatedImage: Image) 
 }
 
 export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
-  return versions.map(({ id, version, status }) => {
-    return {
-      value: id,
-      label: version,
-      icon: <StatusIcon status={status} />,
-    };
-  });
+  return [...versions]
+    .sort((a, b) => compareVersions(b.version, a.version))
+    .map(({ id, version, status }) => {
+      return {
+        value: id,
+        label: version,
+        icon: <StatusIcon status={status} />,
+      };
+    });
 };
 
 export function getUniqueLatestImages(images: Image[]): Image[] {
