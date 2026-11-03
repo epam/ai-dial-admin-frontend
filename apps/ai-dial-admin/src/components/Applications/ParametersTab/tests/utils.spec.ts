@@ -724,6 +724,14 @@ describe('getCorrectConfig', () => {
 
     expect(result?.host).toBe('https://scheme-editor.com');
   });
+
+  test('should fall back to the application editor_url when the scheme has no editor url (Code App)', () => {
+    const placeholderScheme = { $id: undefined };
+    const application = { name: 'Code App', editor_url: 'https://code-app-editor.com' };
+    const result = getCorrectConfig(placeholderScheme as any, application as any, 'dark', session);
+
+    expect(result?.host).toBe('https://code-app-editor.com');
+  });
 });
 
 describe('getTargetUrl', () => {
