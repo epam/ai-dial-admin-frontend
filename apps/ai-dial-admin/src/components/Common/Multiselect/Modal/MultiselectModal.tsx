@@ -102,6 +102,9 @@ const MultiselectModal: FC<Props> = ({
       header={heading}
       portalId="itemsMultiSelect"
       open={isModalOpen}
+      // The kit caps the dialog at max-h-screen, but the overlay pads it, so the backdrop overflows and scrolls.
+      className="max-h-full"
+      overlayStyle={{ overflow: 'hidden' }}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: applyButtonText || t(ButtonsI18nKey.Apply),
@@ -110,7 +113,7 @@ const MultiselectModal: FC<Props> = ({
         onSubmit: onApply,
       })}
     >
-      <div className="flex flex-col overflow-auto px-6 py-4">
+      <div className="flex min-h-0 flex-col overflow-auto px-6 py-4">
         {isLoading ? (
           <Spinner size={40} fullWidth />
         ) : (
