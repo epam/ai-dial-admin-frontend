@@ -17,7 +17,7 @@ import { summarizeFilter } from '@/src/components/Analytics/Tables/access/utils'
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getEditOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
@@ -55,6 +55,10 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
 
   const rowActions: ActionMenuOperationDeclaration<RoleRow>[] = useMemo(
     () => [
+      getEditOperation<RoleRow>(
+        (row) => row && setDrawerRole(row.role),
+        () => !isReady,
+      ),
       getRemoveOperation<RoleRow>(
         (row) => row && setRemovedRow(row),
         () => !isReady,
@@ -165,6 +169,7 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
             rowData={rows}
             getRowId={(params) => params.data.role}
             additionalGridOptions={{
+              rowClassRules: { 'ag-activity-row-clickable': () => true },
               onCellClicked: (e) => onOpenRow(e.colDef.field, e.data),
               onCellKeyDown: (e) => {
                 if ((e.event as KeyboardEvent | null)?.key !== 'Enter') return;

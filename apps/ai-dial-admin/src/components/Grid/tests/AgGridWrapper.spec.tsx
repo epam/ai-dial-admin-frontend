@@ -102,13 +102,17 @@ describe('AgGridWrapper', () => {
   test('suppresses Ctrl/Cmd+A inside a text field and still suppresses arrow keys', () => {
     render(<AgGridWrapper columnDefs={[{ field: 'name' }]} rowData={[]} />);
     const suppress = (gridOptions().defaultColDef as ColDef).suppressKeyboardEvent;
-    const params = (event: { key: string; ctrlKey?: boolean; metaKey?: boolean; target: EventTarget }) =>
+    const params = (event: { key: string; code?: string; ctrlKey?: boolean; metaKey?: boolean; target: EventTarget }) =>
       ({ event, editing: false }) as unknown as Parameters<NonNullable<ColDef['suppressKeyboardEvent']>>[0];
 
     const input = document.createElement('input');
-    expect(suppress?.(params({ key: 'a', ctrlKey: true, target: input }))).toBe(true);
-    expect(suppress?.(params({ key: 'a', metaKey: true, target: input }))).toBe(true);
-    expect(suppress?.(params({ key: 'a', ctrlKey: true, target: document.createElement('div') }))).toBe(false);
+    expect(suppress?.(params({ key: 'a', code: 'KeyA', ctrlKey: true, target: input }))).toBe(true);
+    expect(suppress?.(params({ key: 'a', code: 'KeyA', metaKey: true, target: input }))).toBe(true);
+    // Layout-independent: Russian layout reports key "ф" but physical code KeyA
+    expect(suppress?.(params({ key: 'ф', code: 'KeyA', ctrlKey: true, target: input }))).toBe(true);
+    expect(suppress?.(params({ key: 'a', code: 'KeyA', ctrlKey: true, target: document.createElement('div') }))).toBe(
+      false,
+    );
     expect(suppress?.(params({ key: 'ArrowLeft', target: document.body }))).toBe(true);
   });
 

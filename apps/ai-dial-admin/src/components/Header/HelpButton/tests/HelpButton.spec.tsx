@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import HelpButton from '../HelpButton';
 import { HELP_DOCUMENTATION_LINKS } from '@/src/constants/help-documentation-links';
+import { HeaderI18nKey } from '@/src/constants/i18n';
 import { HelpTopicProvider, useHelpRoute } from '@/src/context/HelpTopicContext';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -38,7 +39,7 @@ describe('HelpButton', () => {
     const user = userEvent.setup();
     renderButton(ApplicationRoute.AdapterContainers);
 
-    await user.click(screen.getByRole('button', { name: 'Help button' }));
+    await user.click(screen.getByRole('button', { name: HeaderI18nKey.Help }));
     await user.click(
       await screen.findByText(HELP_DOCUMENTATION_LINKS[ApplicationRoute.AdapterContainers]?.title as string),
     );
@@ -50,12 +51,25 @@ describe('HelpButton', () => {
     );
   });
 
+  test('reports the menu as expanded while it is open', async () => {
+    const user = userEvent.setup();
+    renderButton(ApplicationRoute.AdapterContainers);
+    const button = screen.getByRole('button', { name: HeaderI18nKey.Help });
+
+    await user.click(button);
+
+    expect(
+      await screen.findByText(HELP_DOCUMENTATION_LINKS[ApplicationRoute.AdapterContainers]?.title as string),
+    ).toBeTruthy();
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+  });
+
   test('falls back to the URL-derived documentation when no page topic is set', async () => {
     vi.mocked(usePathname).mockReturnValue('/en/deployment-images');
     const user = userEvent.setup();
     renderButton();
 
-    await user.click(screen.getByRole('button', { name: 'Help button' }));
+    await user.click(screen.getByRole('button', { name: HeaderI18nKey.Help }));
     await user.click(await screen.findByText(HELP_DOCUMENTATION_LINKS[ApplicationRoute.Images]?.title as string));
 
     expect(window.open).toHaveBeenCalledWith(
@@ -69,7 +83,7 @@ describe('HelpButton', () => {
     vi.mocked(usePathname).mockReturnValue('/en/containers');
     renderButton();
 
-    expect(screen.queryByRole('button', { name: 'Help button' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: HeaderI18nKey.Help })).not.toBeInTheDocument();
   });
 
   test('renders nothing without a documentation link', () => {
@@ -79,6 +93,15 @@ describe('HelpButton', () => {
       </HelpTopicProvider>,
     );
 
-    expect(screen.queryByRole('button', { name: 'Help button' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: HeaderI18nKey.Help })).not.toBeInTheDocument();
+  });
+
+  test('shows its name as a tooltip on hover', async () => {
+    const user = userEvent.setup();
+    renderButton(ApplicationRoute.AdapterContainers);
+
+    await user.hover(screen.getByRole('button', { name: HeaderI18nKey.Help }));
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(HeaderI18nKey.Help);
   });
 });

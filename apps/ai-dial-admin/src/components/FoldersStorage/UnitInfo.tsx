@@ -12,14 +12,14 @@ import {
   TagAppearance,
 } from '@epam/ai-dial-ui-kit';
 
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import RemoveUnitModal from '@/src/components/FoldersStorage/Modals/RemoveUnitModal';
 import RenameUnitModal from '@/src/components/FoldersStorage/Modals/RenameUnitModal';
-import NewUnitButton from '@/src/components/FoldersStorage/NewUnitButton';
 import { RolesCardStatus } from '@/src/components/FoldersStorage/models';
+import NewUnitButton from '@/src/components/FoldersStorage/NewUnitButton';
 import UnitRolesCard from '@/src/components/FoldersStorage/UnitRolesCard';
 import { useUnitRolesDraft } from '@/src/components/FoldersStorage/use-unit-roles-draft';
-import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import { ActionMenuOperationI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
@@ -29,8 +29,8 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { OrgUnit } from '@/src/models/dial/org-unit';
 import { UnitAction, UnitNamespace } from '@/src/models/user-access';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { hasActionAt } from '@/src/utils/org-units/access';
 import { getUnitWithDescendants, normalizeFolder } from '@/src/utils/org-units/units';
 
@@ -64,7 +64,10 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
     showNotification(
       result.isSuccess
         ? getSuccessNotification(t(FoldersI18nKey.RolesSaved))
-        : getErrorNotification(t(FoldersI18nKey.RolesSaveFailed), result.errorMessage),
+        : getErrorNotification(
+            t(ErrorI18nKey.Error),
+            [t(FoldersI18nKey.RolesSaveFailed), result.errorMessage].filter(Boolean).join(' '),
+          ),
     );
   }, [draft, showNotification, t]);
 
@@ -87,10 +90,17 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
   return (
     <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-wrap justify-between items-center w-full gap-3">
-        <div className="flex flex-1 min-w-0 items-center gap-3">
-          <h2 className="min-w-0">
-            <EllipsisTooltip contentClassName="truncate" text={unit.displayName || unit.name} />
-          </h2>
+        <div className="flex flex-1 min-w-0 items-start gap-3">
+          <div className="flex min-w-0 flex-col">
+            <h2 className="min-w-0">
+              <EllipsisTooltip contentClassName="truncate" text={unit.name} />
+            </h2>
+            {unit.displayName && (
+              <span className="dial-small-text text-secondary min-w-0">
+                <EllipsisTooltip contentClassName="truncate" text={unit.displayName} />
+              </span>
+            )}
+          </div>
           <Tag label={t(FoldersI18nKey.UnitBadge)} appearance={TagAppearance.Bordered} />
         </div>
         {!isRolesReadonly && draft.isChanged ? (
@@ -105,7 +115,7 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
                 onClick={() => setIsRenaming(true)}
               />
               <Button
-                variant={ButtonVariant.Neutral}
+                variant={ButtonVariant.Danger}
                 label={t(FoldersI18nKey.RemoveUnit)}
                 onClick={() => setIsRemoving(true)}
               />

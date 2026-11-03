@@ -3,8 +3,9 @@
 ## Purpose
 The row-detail panel of the Run Comparison page's Execution Results tab: which surface a row click
 opens (bottom pivot by default, right sidebar on request) and how that choice survives a close, how a
-cell click scrolls to the field its column maps to, how a truncated pivot cell opens both runs' values,
-and which display settings the panel keeps between openings.
+cell click scrolls to the field its column maps to, how a truncated pivot cell opens both runs' values
+(or, for a metric, the score popup defined by `run-value-popups`), and which display settings the panel
+keeps between openings.
 ## Requirements
 ### Requirement: Compare page row click opens bottom detail by default
 
@@ -49,7 +50,7 @@ When the user clicks a cell in the Compare Execution Results grid whose column m
 
 ### Requirement: Compare pivot cells truncate and open a dual-run popup
 
-Compare pivot value cells SHALL be capped to a fixed cell height and SHALL scroll vertically within that height when content does not fit, instead of expanding the row. Each cell's scroll is independent — scrolling one primary or secondary cell SHALL NOT move any other cell's scroll position. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a popup titled with the field label that shows both the primary and compared run values for that field (side-by-side), not only the clicked cell’s value. Delta-row cells SHALL remain non-clickable.
+Compare pivot value cells SHALL be capped to a fixed cell height and SHALL scroll vertically within that height when content does not fit, instead of expanding the row. Each cell's scroll is independent — scrolling one primary or secondary cell SHALL NOT move any other cell's scroll position. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking a cell of a field that is not a metric SHALL open a popup titled with the field label that shows both the primary and compared run values for that field (side-by-side) as a text diff, not only the clicked cell’s value. Clicking a metric cell SHALL open the score popup defined by `run-value-popups`. Delta-row cells SHALL remain non-clickable.
 
 #### Scenario: Truncate long value
 - **WHEN** a primary or secondary field value is taller than the cell's fixed height
@@ -68,9 +69,13 @@ Compare pivot value cells SHALL be capped to a fixed cell height and SHALL scrol
 - **THEN** an open-in-popup icon appears at the bottom-right of the cell
 
 #### Scenario: Click opens dual-run popup
-- **WHEN** the user clicks a primary or secondary value cell
+- **WHEN** the user clicks a primary or secondary value cell of a field that is not a metric
 - **THEN** a popup opens with the field label as title
-- **AND** both the primary and compared run values for that field are shown
+- **AND** both the primary and compared run values for that field are shown as a text diff
+
+#### Scenario: Click on a metric opens the score popup
+- **WHEN** the user clicks a primary or secondary value cell of a metric field
+- **THEN** the score popup opens with one column per displayed run
 
 ### Requirement: Display has no table/pivot switcher
 
@@ -204,3 +209,15 @@ bar-and-value pair within its cell, for both the primary and secondary values.
 - **WHEN** the right-sidebar table shows a metric field whose value renders as a `ScoreBar`
 - **THEN** that field's primary and secondary bar-and-value pairs are right-aligned within their cells
 
+### Requirement: Compare table metric rows open the score popup
+
+In the right-sidebar table of a comparison, the control that opens a field's popup SHALL open the score popup
+defined by `run-value-popups` for a metric field and the text diff for any other field.
+
+#### Scenario: Metric row opens the score popup from the table
+- **WHEN** the user activates the popup control of a metric row in the sidebar table
+- **THEN** the score popup opens with one column per displayed run
+
+#### Scenario: Other rows keep the text diff
+- **WHEN** the user activates the popup control of a non-metric row in the sidebar table
+- **THEN** the text diff of both runs opens

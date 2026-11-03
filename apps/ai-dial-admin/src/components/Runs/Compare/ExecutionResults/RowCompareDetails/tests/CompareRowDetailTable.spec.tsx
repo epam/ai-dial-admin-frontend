@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CompareRowDetailTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailTable';
@@ -6,6 +7,7 @@ import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
+import { RunsI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field', () => ({
   scrollPivotToField: vi.fn(),
@@ -79,6 +81,32 @@ describe('CompareRowDetailTable', () => {
     );
 
     await vi.waitFor(() => expect(scrollPivotToField).toHaveBeenCalledTimes(2));
+  });
+
+  test('collapses and expands a section from its header', async () => {
+    const user = userEvent.setup();
+    render(
+      <CompareRowDetailTable
+        sections={sections}
+        runs={runs}
+        hasComparedMatch
+        showDiffsOnly={false}
+        hideHighlights={false}
+      />,
+    );
+    const header = screen.getByRole('button', { name: RunsI18nKey.ExtractedColumns });
+
+    expect(header).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(header);
+
+    expect(header).toHaveAttribute('aria-expanded', 'false');
+    expect(document.querySelector('[data-field-key="answer"]')).toBeNull();
+
+    await user.click(header);
+
+    expect(header).toHaveAttribute('aria-expanded', 'true');
+    expect(document.querySelector('[data-field-key="answer"]')).toBeTruthy();
   });
 
   describe('run order', () => {

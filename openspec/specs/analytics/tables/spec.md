@@ -2054,7 +2054,7 @@ Turning **Read** off SHALL leave the role's existing row policy untouched: that 
 
 ### Requirement: Role catalog for the drawer
 
-The role picker SHALL be fed from DIAL Core's own merged role population, and the option rules of the earlier per-table role panel SHALL be kept: the catalog is the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested. Each option's value SHALL be the role's bare name, which is the raw provider-role string the service matches against; no resource reference is ever stored.
+The role picker SHALL be fed from DIAL Core's own merged role population, and the option rules of the earlier per-table role panel SHALL be kept: the catalog is the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested. Each option's value SHALL be the role's bare name, which is the raw provider-role string the service matches against; no resource reference is ever stored. Each option SHALL state the population its entry came from after the merge — **API** or **Configuration file** — with the same labels as the Source column of the entity pickers.
 
 Options SHALL be presented in alphabetical order, independently of the order the two populations were read in. A role the table already names in any list or policy SHALL always be offered when editing that role, even when the catalog does not contain it, so a grant to a role outside the catalog is never invisible and never silently revoked.
 
@@ -2064,6 +2064,12 @@ While the catalog is being fetched the picker SHALL show a loading state. A fail
 
 - **WHEN** the catalog resolves in an order other than alphabetical
 - **THEN** the picker presents its options sorted by name
+
+#### Scenario: Each option states where the role came from
+
+- **GIVEN** the catalog holds `team-x` written through Core's API and `analysts` declared only in Core's configuration file
+- **WHEN** the user opens the picker
+- **THEN** `team-x` is labelled **API** and `analysts` is labelled **Configuration file**
 
 #### Scenario: The admin backend's roles list is not requested
 
@@ -2629,3 +2635,52 @@ a table schema", "Table detail row writes" and "Connect panel snippets are gener
 - **WHEN** an `ACTIVE` table's schema reports a column typed `map`
 - **THEN** the columns grid shows its type as Map
 - **AND** its type badge uses a colour distinct from an Object column's
+
+### Requirement: An assigned role is edited from the roles grid
+
+The roles grid SHALL offer **Edit** on each row, beside **Remove**, in the row's action menu. Choosing Edit SHALL open the same drawer that activating the row opens, in its edit mode and pre-filled with that role's privileges and row limit. Edit SHALL be unavailable under the same condition as Remove: while the table's access has not finished loading. Activating a row, by click or by Enter on a focused cell, SHALL remain an equivalent way to open the drawer, so changing a role's permissions never requires removing it and adding it again.
+
+#### Scenario: The row menu offers Edit and Remove
+
+- **WHEN** the user opens the action menu of a roles-grid row
+- **THEN** the menu offers Edit and Remove
+
+#### Scenario: Edit opens the drawer pre-filled for the role
+
+- **WHEN** the user chooses Edit on a role's row
+- **THEN** the drawer opens in edit mode for that role
+- **AND** it shows that role's current privileges and row limit
+
+#### Scenario: Editing and removing stay separate
+
+- **WHEN** the user chooses Remove on a role's row
+- **THEN** the removal confirmation opens and the drawer does not
+
+### Requirement: A source column that keys an enrichment cannot be renamed or dropped
+
+The detail page of an `ACTIVE` **source** table SHALL determine which of its columns are the grain key of an enrichment, from the enrichments the service lists as built on this table: an enrichment's own definition names its grain key, and a column whose source name equals it is locked. For each such column the page SHALL lock the two changes the service refuses — renaming and dropping — and SHALL leave every other edit available. The edit modal's Name field SHALL be disabled and SHALL state, next to the field, that the column is the grain key of the named enrichment and that the enrichment has to be dropped first if the column has to change. The columns grid SHALL NOT allow the column's name to be edited inline, and the column's drop action SHALL NOT be offered. The column's display name, tag, description and sensitive fields SHALL remain editable. When the listing or an enrichment's definition cannot be read, the page SHALL apply no lock on that account and SHALL leave the service's own rejection to explain the refusal.
+
+#### Scenario: The name of a column that keys an enrichment is locked in the edit modal
+
+- **WHEN** the user opens the edit modal for a column of an `ACTIVE` source table that is the grain key of an enrichment
+- **THEN** the Name field is disabled
+- **AND** a note beside it names the enrichment and says it has to be dropped first for the column to change
+- **AND** the display name, tag, description and sensitive fields remain editable
+
+#### Scenario: A column that keys an enrichment is not renamed inline or dropped
+
+- **WHEN** the columns grid of an `ACTIVE` source table shows a column that is the grain key of an enrichment
+- **THEN** double-clicking the column's name does not start an edit
+- **AND** the column's action menu does not offer drop
+
+#### Scenario: A column that keys no enrichment stays editable
+
+- **WHEN** the user opens the edit modal for a column that no enrichment uses as its grain key
+- **THEN** the Name field is enabled and no enrichment note is shown
+
+#### Scenario: An unreadable table listing leaves the columns unlocked
+
+- **WHEN** the tables listing, or the definition of an enrichment it names, cannot be read while the detail page of an `ACTIVE` source table renders
+- **THEN** no column is locked on account of an enrichment
+- **AND** the page still renders and the other restrictions apply as before
+

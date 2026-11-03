@@ -2,11 +2,10 @@
 
 import { FC } from 'react';
 
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-
 import DetailRow from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/DetailRow';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import SectionHeaderRow from '@/src/components/Runs/Details/RowDetails/SectionHeaderRow';
 
 interface Props {
   section: RowDetailSection;
@@ -36,18 +35,7 @@ const SectionRows: FC<Props> = ({
   runs,
 }) => (
   <>
-    <button
-      type="button"
-      className="cursor-pointer hover:bg-layer-2 p-3 border-b border-tertiary bg-layer-3 text-left w-full"
-      style={{ gridColumn: '1 / -1' }}
-      onClick={onToggle}
-      aria-expanded={!isCollapsed}
-    >
-      <div className="flex items-center gap-1 dial-small-text text-secondary">
-        {isCollapsed ? <IconChevronRight size={12} aria-hidden /> : <IconChevronDown size={12} aria-hidden />}
-        {sectionLabel}
-      </div>
-    </button>
+    <SectionHeaderRow label={sectionLabel} isCollapsed={isCollapsed} onToggle={onToggle} />
     {!isCollapsed &&
       section.rows.map((row) => (
         <DetailRow

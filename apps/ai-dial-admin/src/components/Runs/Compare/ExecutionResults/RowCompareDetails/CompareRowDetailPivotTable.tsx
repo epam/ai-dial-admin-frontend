@@ -13,7 +13,7 @@ import {
   getPivotGridMinWidth,
   getPivotGridTemplateColumns,
 } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
-import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
+import { filterRowDetailSections } from '@/src/components/Runs/Details/RowDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
@@ -28,9 +28,8 @@ import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexB
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { getRowDetailRunValue } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
+import FieldCompareModal from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/FieldCompareModal';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
-import FullscreenDiffViewer from '@/src/components/Runs/Details/BottomDrawer/FullscreenDiffViewer';
-import { DiffViewState } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -62,19 +61,9 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [diffView, setDiffView] = useState<DiffViewState | null>(null);
+  const [diffField, setDiffField] = useState<RowDetailField | null>(null);
 
-  const onOpenDiff = useCallback(
-    (field: RowDetailField) => {
-      const [original, modified] = [runs[0], runs[runs.length - 1]].map(
-        (run) => getRowDetailRunValue(field, run.slot).raw ?? '',
-      );
-      setDiffView({ fieldLabel: field.label, original, modified });
-    },
-    [runs],
-  );
-
-  const onCloseDiff = useCallback(() => setDiffView(null), []);
+  const onCloseDiff = useCallback(() => setDiffField(null), []);
 
   const filteredSections = useMemo(
     () => filterRowDetailSections(sections, { searchQuery: '', showDiffsOnly }),
@@ -94,8 +83,11 @@ const CompareRowDetailPivotTable: FC<Props> = ({
     ...runs.map(() => 'minmax(0, 1fr)'),
     ...(hasComparedMatch ? ['auto'] : []),
   ].join(' ');
-  const getRunLabel = (run: CompareRun) =>
-    run.slot === CompareRunSlot.Secondary && !hasComparedMatch ? t(RunsI18nKey.RunCompareNoMatch) : run.name;
+  const getRunLabel = useCallback(
+    (run: CompareRun) =>
+      run.slot === CompareRunSlot.Secondary && !hasComparedMatch ? t(RunsI18nKey.RunCompareNoMatch) : run.name,
+    [hasComparedMatch, t],
+  );
 
   useLayoutEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
@@ -120,7 +112,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
         isFailed={isFailed}
         className={mergeClasses(rowBg, props.className)}
         data-compare-diff={props['data-compare-diff']}
-        onOpenFullscreen={() => onOpenDiff(field)}
+        onOpenFullscreen={() => setDiffField(field)}
       />
     );
   };
@@ -219,14 +211,12 @@ const CompareRowDetailPivotTable: FC<Props> = ({
       <div className="relative shrink-0 h-4">
         <DiffMiniMap scrollContainerRef={scrollContainerRef} isHorizontal />
       </div>
-      {diffView && (
-        <FullscreenDiffViewer
-          isOpen
-          fieldLabel={diffView.fieldLabel}
-          original={diffView.original}
-          modified={diffView.modified}
-          originalLabel={getRunLabel(runs[0])}
-          modifiedLabel={getRunLabel(runs[runs.length - 1])}
+      {diffField && (
+        <FieldCompareModal
+          field={diffField}
+          runs={runs}
+          hasComparedMatch={hasComparedMatch}
+          getRunLabel={getRunLabel}
           onClose={onCloseDiff}
         />
       )}

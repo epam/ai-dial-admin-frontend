@@ -26,6 +26,7 @@ export enum PipelineBackfillPauseReason {
   CursorStalled = 'cursor_stalled',
   PipelineAbsent = 'pipeline_absent',
   PipelineChanged = 'pipeline_changed',
+  PipelineStopped = 'pipeline_stopped',
 }
 
 /**

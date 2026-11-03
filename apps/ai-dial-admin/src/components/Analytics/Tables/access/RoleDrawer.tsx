@@ -32,6 +32,7 @@ import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } f
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsTableColumn, IneffectiveGrant, TableGrantKey } from '@/src/models/analytics/table';
+import { CONFIG_ENTITY_ORIGIN_LABEL } from '@/src/utils/config-entities/source-column';
 import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -78,8 +79,10 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
   const roleOptions = useMemo(() => {
     const taken = new Set(access.rows.map((row) => row.role));
 
-    return catalogRoles.filter((name) => !taken.has(name)).map((name) => ({ value: name, label: name }));
-  }, [catalogRoles, access.rows]);
+    return catalogRoles
+      .filter(({ name }) => name === role || !taken.has(name))
+      .map(({ name, origin }) => ({ value: name, label: name, description: CONFIG_ENTITY_ORIGIN_LABEL[origin] }));
+  }, [catalogRoles, access.rows, role]);
 
   const canSave =
     !isSaving &&
@@ -144,7 +147,7 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
 
   const banners = (keys: TableGrantKey[]) =>
     ineffectiveGrants
-      .filter((grant) => keys.includes(grant.key))
+      .filter((grant) => grant.role === role && keys.includes(grant.key))
       .map((grant) => (
         <Notification
           key={`${grant.key}:${grant.reason}`}

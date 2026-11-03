@@ -16,8 +16,6 @@ export interface AppContextType {
   themeUrl?: string;
   sidebarOpen: boolean;
   toggleSidebar: (e?: MouseEvent<HTMLButtonElement>) => void;
-  userMenuOpen: boolean;
-  toggleUserMenu: () => void;
   visualizerConnector?: VisualizerConnector | null;
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
   featureFlags: FeatureFlags;
@@ -102,7 +100,6 @@ export const AppContextProvider = ({
     }
   }, []);
 
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [visualizerConnector, setVisualizerConnector] = useState<VisualizerConnector | null>(null);
   const [show, setShow] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
@@ -115,10 +112,6 @@ export const AppContextProvider = ({
     e?.currentTarget.blur();
     setToLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY, String(!sidebarOpen));
     setSidebarOpen(!sidebarOpen);
-  };
-
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
   };
 
   const toggleIsMenuClosed = () => {
@@ -152,8 +145,6 @@ export const AppContextProvider = ({
     sidebarOpen,
     toggleSidebar,
     themeUrl,
-    userMenuOpen,
-    toggleUserMenu,
     visualizerConnector,
     setVisualizerConnector,
     featureFlags,

@@ -4,6 +4,9 @@ export const COMBO_TREND_Y_TICK_COUNT = 5;
 /** Width reserved left of the bordered plot for combo Y labels (Figma 48px). */
 export const COMBO_TREND_Y_LABEL_WIDTH_PX = 48;
 
+/** Shared column cap so a run label and its stacked bar share one center pitch. */
+export const COMBO_TREND_COLUMN_MAX_PX = 52;
+
 /** Bordered plot height from Figma 12405:243511 / 12405:243610. */
 export const COMBO_TREND_PLOT_HEIGHT_PX = 211;
 

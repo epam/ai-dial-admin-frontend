@@ -4,9 +4,11 @@ import { Account, CallbacksOptions, Profile } from 'next-auth';
 import { TokenEndpointHandler } from 'next-auth/providers';
 import { TokenSet } from 'openid-client';
 
+import { ApiRoute } from '@/src/constants/api-routes';
 import { NextAuthToken, UserSession } from '@/src/models/auth';
 import { errorObjLog, warnLog } from '@/src/server/logger';
 import { NextClient } from './nextauth-client';
+import { getHttpPicture, parseInlinePicture } from './picture';
 import { getListProvidersPassIdToken } from './token';
 import { isAccessTokenExpired } from './token-expiry';
 
@@ -40,6 +42,46 @@ const getUser = (accessToken: string | undefined, idToken: string | undefined, p
 
   return { isAdmin };
 };
+
+interface SignInPicture {
+  picture?: string;
+  hasInlinePicture: boolean;
+}
+
+const classifyPicture = (value: unknown): SignInPicture | undefined => {
+  const httpPicture = getHttpPicture(value);
+  if (httpPicture) {
+    return { picture: httpPicture, hasInlinePicture: false };
+  }
+
+  return parseInlinePicture(value) ? { hasInlinePicture: true } : undefined;
+};
+
+/**
+ * Keycloak realms often expose `picture` only in UserInfo, not in the ID token, and as an inline `data:` URL.
+ * Reads it from there when the profile mapped from the ID token has none.
+ */
+const getKeycloakUserInfoPicture = async (account: Account, sub?: string): Promise<SignInPicture | undefined> => {
+  if (account.provider !== 'keycloak' || !account.access_token) {
+    return undefined;
+  }
+
+  try {
+    const userInfo = await NextClient.getClient(account.provider)?.userinfo(account.access_token);
+    return userInfo && userInfo.sub === sub ? classifyPicture(userInfo.picture) : undefined;
+  } catch (err) {
+    errorObjLog(err, 'UserInfo lookup failed; continuing without profile picture');
+    return undefined;
+  }
+};
+
+/**
+ * Only an http(s) URL is kept in the token. An inline image would bloat every request cookie, so just a
+ * flag is stored and the picture route serves the bytes.
+ */
+const resolveSignInPicture = async (account: Account, profilePicture: unknown, sub?: string) =>
+  classifyPicture(profilePicture) ??
+  (await getKeycloakUserInfoPicture(account, sub)) ?? { picture: undefined, hasInlinePicture: false };
 
 // Need to be set for all providers
 export const tokenConfig: TokenEndpointHandler = {
@@ -120,8 +162,16 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
     }
 
     if (options.account) {
+      const { picture, hasInlinePicture } = await resolveSignInPicture(
+        options.account,
+        options.token.picture ?? options.user?.image,
+        options.token.sub,
+      );
+
       return {
         ...options.token,
+        picture,
+        hasInlinePicture,
         user: getUser(options.account.access_token, options.account.id_token, options.account.provider),
         jobTitle: options.profile?.job_title,
         access_token: options.account.access_token,
@@ -170,6 +220,9 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
     if (options.session.user) {
       (options?.token?.user as { isAdmin?: boolean }).isAdmin = isAdmin;
       (options.session as UserSession).providerId = providerId;
+      if ((options.token as NextAuthToken).hasInlinePicture) {
+        options.session.user.image = ApiRoute.AuthMePicture;
+      }
     }
 
     return options.session;

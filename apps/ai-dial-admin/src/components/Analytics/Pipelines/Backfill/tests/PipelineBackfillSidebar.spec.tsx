@@ -79,11 +79,12 @@ const serve = (runs: PipelineBackfillRun[]) =>
 interface Options {
   isGroupTrigger?: boolean;
   isPipelinePaused?: boolean;
+  isPipelineEnabled?: boolean;
 }
 
 const renderSidebar = async (
   runs: PipelineBackfillRun[],
-  { isGroupTrigger = false, isPipelinePaused = false }: Options = {},
+  { isGroupTrigger = false, isPipelinePaused = false, isPipelineEnabled = true }: Options = {},
 ) => {
   serve(runs);
   const props = { onRunsChange: vi.fn() };
@@ -92,6 +93,7 @@ const renderSidebar = async (
       pipelineName={NAME}
       isGroupTrigger={isGroupTrigger}
       isPipelinePaused={isPipelinePaused}
+      isPipelineEnabled={isPipelineEnabled}
       {...props}
     />,
   );
@@ -396,12 +398,71 @@ describe('PipelineBackfillSidebar', () => {
           pipelineName={NAME}
           isGroupTrigger={false}
           isPipelinePaused={false}
+          isPipelineEnabled
           onRunsChange={onRunsChange}
         />,
       );
 
       expect(screen.getByRole('button', { name: BackfillI18nKey.Resume })).toBeEnabled();
       expect(screen.queryByText(BackfillI18nKey.ResumeBlockedByPipeline)).toBeNull();
+    });
+
+    test('withholds Resume while the pipeline is disabled, says why, states the reason and leaves Cancel', async () => {
+      await renderSidebar(
+        [makeRun({ state: PipelineBackfillState.Paused, paused_reason: PipelineBackfillPauseReason.PipelineStopped })],
+        { isPipelineEnabled: false },
+      );
+
+      expect(screen.queryByRole('button', { name: BackfillI18nKey.Resume })).toBeNull();
+      expect(screen.getByText(BackfillI18nKey.ResumeBlockedByDisabledPipeline)).toBeInTheDocument();
+      expect(screen.getByText(BackfillI18nKey.PauseReasonPipelineStopped)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: BackfillI18nKey.Cancel })).toBeEnabled();
+    });
+
+    test('offers Resume again once the pipeline is enabled while the sidebar is open', async () => {
+      const paused = makeRun({
+        state: PipelineBackfillState.Paused,
+        paused_reason: PipelineBackfillPauseReason.PipelineStopped,
+      });
+      const { rerender, onRunsChange } = await renderSidebar([paused], { isPipelineEnabled: false });
+
+      rerender(
+        <PipelineBackfillSidebar
+          pipelineName={NAME}
+          isGroupTrigger={false}
+          isPipelinePaused={false}
+          isPipelineEnabled
+          onRunsChange={onRunsChange}
+        />,
+      );
+
+      expect(screen.getByRole('button', { name: BackfillI18nKey.Resume })).toBeEnabled();
+      expect(screen.queryByText(BackfillI18nKey.ResumeBlockedByDisabledPipeline)).toBeNull();
+    });
+
+    test('offers no start on a disabled pipeline, says why, and still lists the runs', async () => {
+      await renderSidebar([makeRun({ id: 'run-2' }), makeRun()], { isPipelineEnabled: false });
+
+      expect(screen.queryByRole('button', { name: BackfillI18nKey.Start })).toBeNull();
+      expect(screen.getByText(BackfillI18nKey.StartBlockedByDisabledPipeline)).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: BackfillI18nKey.RecentRuns })).toBeInTheDocument();
+    });
+
+    test('offers Start again once the pipeline is enabled while the sidebar is open', async () => {
+      const { rerender, onRunsChange } = await renderSidebar([makeRun()], { isPipelineEnabled: false });
+
+      rerender(
+        <PipelineBackfillSidebar
+          pipelineName={NAME}
+          isGroupTrigger={false}
+          isPipelinePaused={false}
+          isPipelineEnabled
+          onRunsChange={onRunsChange}
+        />,
+      );
+
+      expect(screen.getByRole('button', { name: BackfillI18nKey.Start })).toBeInTheDocument();
+      expect(screen.queryByText(BackfillI18nKey.StartBlockedByDisabledPipeline)).toBeNull();
     });
 
     test('shows the service’s message when a resume is refused for a reason the console cannot see', async () => {

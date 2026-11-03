@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Button, ButtonVariant, Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
+import { Button, ButtonVariant, EllipsisTooltip, Spinner, NoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
 import RulesList from '@/src/components/Rules/RulesList';
@@ -119,20 +119,30 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
     return (
       <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
         <FolderInfoHeader isChanged={false} title={currentFolder.name as string} />
-        <div className="flex flex-row flex-wrap items-center gap-3">
-          <span className="dial-small-text">
-            {t(FoldersI18nKey.InsideUnitNote, { unit: owningUnit.displayName || owningUnit.name })}
-          </span>
-          <Button
-            variant={ButtonVariant.Neutral}
-            label={t(FoldersI18nKey.OpenUnit)}
-            onClick={() =>
-              toggleFolder(
-                { path: normalizeFolder(owningUnit.folder), nodeType: DialFileNodeType.FOLDER } as DialFolder,
-                true,
-              )
-            }
-          />
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="dial-small-text text-secondary">{t(FoldersI18nKey.InsideUnitNote)}</span>
+          <div className="flex flex-row items-center justify-between gap-3 p-4 rounded bg-layer-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <EllipsisTooltip className="min-w-0" contentClassName="truncate" text={owningUnit.name} />
+              {owningUnit.displayName && (
+                <EllipsisTooltip
+                  className="min-w-0 truncate dial-tiny-text text-secondary"
+                  text={owningUnit.displayName}
+                />
+              )}
+            </div>
+            <Button
+              className="shrink-0"
+              variant={ButtonVariant.Neutral}
+              label={t(FoldersI18nKey.OpenUnit)}
+              onClick={() =>
+                toggleFolder(
+                  { path: normalizeFolder(owningUnit.folder), nodeType: DialFileNodeType.FOLDER } as DialFolder,
+                  true,
+                )
+              }
+            />
+          </div>
         </div>
       </div>
     );

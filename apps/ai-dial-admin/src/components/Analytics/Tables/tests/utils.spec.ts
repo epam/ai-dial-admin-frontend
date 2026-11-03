@@ -13,6 +13,7 @@ import {
   getPartitionColumnNames,
   getVersionColumnNames,
   hasColumnRowErrors,
+  getKeyedEnrichments,
   isDropRestrictedColumn,
   isNullableLockedType,
   isRenameRestricted,
@@ -912,5 +913,75 @@ describe('parseRowsJson', () => {
 
   test('returns null for valid JSON that is not an array', () => {
     expect(parseRowsJson('{"a": 1}')).toBeNull();
+  });
+});
+
+describe('getKeyedEnrichments', () => {
+  const source: AnalyticsTable = { name: 'orders', type: AnalyticsTableType.Source };
+  const enrichment = (name: string, sourceTable: string, grainKey?: string): AnalyticsTable => ({
+    name,
+    type: AnalyticsTableType.Enrichment,
+    source_table: sourceTable,
+    ...(grainKey ? { grain: { grain_key: grainKey } } : {}),
+  });
+
+  test('maps each grain key of an enrichment of the table to that enrichment', () => {
+    const tables = [
+      source,
+      enrichment('orders_geo', 'orders', 'order_id'),
+      enrichment('orders_tax', 'orders', 'customer_id'),
+    ];
+
+    expect(getKeyedEnrichments('orders', tables)).toEqual({ order_id: 'orders_geo', customer_id: 'orders_tax' });
+  });
+
+  test('names the first enrichment in listing order when several key on one column', () => {
+    const tables = [enrichment('first', 'orders', 'order_id'), enrichment('second', 'orders', 'order_id')];
+
+    expect(getKeyedEnrichments('orders', tables)).toEqual({ order_id: 'first' });
+  });
+
+  test('ignores enrichments of other tables, sources and enrichments without a grain key', () => {
+    const tables = [source, enrichment('elsewhere', 'payments', 'order_id'), enrichment('keyless', 'orders')];
+
+    expect(getKeyedEnrichments('orders', tables)).toEqual({});
+  });
+});
+
+describe('a column that keys an enrichment', () => {
+  test('is not confused with a column named like an inherited object member', () => {
+    const plain: AnalyticsTableColumn = {
+      source_name: 'constructor',
+      name: 'constructor',
+      type: AnalyticsFieldType.String,
+    };
+    const keyed = getKeyedEnrichments('orders', [
+      {
+        name: 'orders_geo',
+        type: AnalyticsTableType.Enrichment,
+        source_table: 'orders',
+        grain: { grain_key: 'order_id' },
+      },
+    ]);
+
+    expect(isRenameRestricted({ name: 'orders', type: AnalyticsTableType.Source }, plain, keyed)).toBe(false);
+  });
+
+  const table: AnalyticsTable = { name: 'orders', type: AnalyticsTableType.Source };
+  const column = (source_name: string): AnalyticsTableColumn => ({
+    source_name,
+    name: source_name,
+    type: AnalyticsFieldType.String,
+  });
+  const keyed = { order_id: 'orders_geo' };
+
+  test('can be neither renamed nor dropped', () => {
+    expect(isRenameRestricted(table, column('order_id'), keyed)).toBe(true);
+    expect(isDropRestrictedColumn(table, column('order_id'), keyed)).toBe(true);
+  });
+
+  test('leaves every other column editable', () => {
+    expect(isRenameRestricted(table, column('status'), keyed)).toBe(false);
+    expect(isDropRestrictedColumn(table, column('status'), keyed)).toBe(false);
   });
 });

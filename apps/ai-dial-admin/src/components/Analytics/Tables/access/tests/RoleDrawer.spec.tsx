@@ -11,12 +11,20 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryExprType, QueryFilterNode, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsTableColumn, IneffectiveGrantReason, TableAccess, TableGrantKey } from '@/src/models/analytics/table';
 import { AccessStatus } from '@/src/components/Analytics/Tables/access/models';
+import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
 const showNotification = vi.hoisted(() => vi.fn());
 vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
 
 vi.mock('@/src/components/Analytics/Tables/access/use-role-catalog', () => ({
-  useRoleCatalog: () => ({ roles: ['analysts', 'team-x', 'team-z'], isLoading: false }),
+  useRoleCatalog: () => ({
+    roles: [
+      { name: 'analysts', origin: ConfigEntityOrigin.ConfigFile },
+      { name: 'team-x', origin: ConfigEntityOrigin.ConfigFile },
+      { name: 'team-z', origin: ConfigEntityOrigin.Api },
+    ],
+    isLoading: false,
+  }),
 }));
 
 const FILTER: QueryFilterNode = {
@@ -212,6 +220,16 @@ describe('RoleDrawer — adding a role', () => {
     expect(saveButton()).toBeDisabled();
   });
 
+  test('states which population each offered role came from', async () => {
+    const user = userEvent.setup();
+    renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+
+    expect(screen.getByRole('option', { name: /^analysts/ })).toHaveTextContent('Configuration file');
+    expect(screen.getByRole('option', { name: /^team-z/ })).toHaveTextContent('API');
+  });
+
   test('shows no privilege step until a role is chosen', async () => {
     const user = userEvent.setup();
     renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
@@ -220,7 +238,7 @@ describe('RoleDrawer — adding a role', () => {
     expect(screen.queryByRole('checkbox')).toBeNull();
 
     await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
-    await user.click(screen.getByRole('option', { name: 'team-z' }));
+    await user.click(screen.getByRole('option', { name: /^team-z/ }));
 
     expect(screen.getByText(AnalyticsTableAccessI18nKey.StepAccess)).toBeInTheDocument();
     expect(card(AnalyticsTableAccessI18nKey.ColRead)).toBeInTheDocument();
@@ -231,8 +249,8 @@ describe('RoleDrawer — adding a role', () => {
     const { access, onClose } = renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
 
     await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
-    expect(screen.queryByRole('option', { name: 'team-x' })).toBeNull();
-    await user.click(screen.getByRole('option', { name: 'team-z' }));
+    expect(screen.queryByRole('option', { name: /^team-x/ })).toBeNull();
+    await user.click(screen.getByRole('option', { name: /^team-z/ }));
     await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
     await user.click(saveButton());
 
@@ -244,6 +262,28 @@ describe('RoleDrawer — adding a role', () => {
       sensitive: false,
     });
     await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  });
+
+  test('keeps showing the chosen role once it has an entry on the table', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess({ read: ['team-x'] });
+    const props = {
+      tableName: 'project_costs_daily',
+      columns: COLUMNS,
+      isSystem: false,
+      role: null,
+      onClose: vi.fn(),
+    };
+    const { rerender } = render(<RoleDrawer {...props} access={access} />);
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+    await user.click(screen.getByRole('option', { name: /^team-z/ }));
+    rerender(<RoleDrawer {...props} access={{ ...access, rows: ['team-x', 'team-z'].map(row) }} />);
+
+    // With an option description the kit renders the chosen label beside the input and names the field with it.
+    expect(
+      screen.getByRole('combobox', { name: `${AnalyticsTableAccessI18nKey.StepRole}, team-z` }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -345,6 +385,31 @@ describe('RoleDrawer — grants that change nothing', () => {
     expect(screen.queryByRole('button', { name: AnalyticsTableAccessI18nKey.SaveRole })).toBeNull();
     expect(showNotification).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  test('shows no banner for another role named in the same answer', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess({ read: ['team-x'] });
+    access.saveGrants.mockResolvedValue({
+      isOk: true,
+      result: {
+        ineffective_grants: [
+          {
+            role: 'admin',
+            key: TableGrantKey.Get,
+            reason: IneffectiveGrantReason.AlreadyGlobal,
+            message: 'admin already global',
+          },
+          ...answer.ineffective_grants,
+        ],
+      },
+    });
+    renderDrawer(access);
+
+    await user.click(saveButton());
+
+    expect(await screen.findByText('already global')).toBeTruthy();
+    expect(screen.queryByText('admin already global')).toBeNull();
   });
 
   test('locks the steps once saved and closes without a request on Done', async () => {

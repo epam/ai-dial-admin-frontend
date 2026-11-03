@@ -34,7 +34,7 @@ export const RUNNER_INVALID_CURSOR = 'invalid_cursor';
 
 /** Who paused a pipeline, which decides whether the pause can expire. */
 export enum PauseOrigin {
-  /** A deliberate decision. It never expires and is lifted only by resuming. */
+  /** Reported only by a runner older than the one that made `enabled` the sole run control. */
   Operator = 'operator',
   /** The runner's dead-letter circuit breaker. It lifts itself at `resumes_at`. */
   Breaker = 'breaker',
@@ -73,13 +73,13 @@ export interface PausedPipelinesResponse {
 }
 
 /**
- * One pipeline the runner has taken on. Its presence is the fact worth reading: the runner caches a
- * pipeline only when it is enabled **and** the runner can actually execute it, and it schedules the
- * recurring work from exactly this set. An enabled pipeline missing from it is one nothing is driving.
+ * One pipeline the runner holds. It caches a pipeline only when it can execute it, stopped ones included,
+ * and schedules the recurring work from the enabled entries. An enabled pipeline missing from those is one
+ * nothing is driving.
  */
 export interface RunnerPipelineEntry {
   name: string;
-  enabled: boolean;
+  enabled?: boolean;
   generation: number;
 }
 
@@ -162,6 +162,8 @@ export enum PipelineRuntimeState {
   OverBudget = 'over_budget',
   /** Its queue is at the depth the runner holds back at. */
   Backpressured = 'backpressured',
+  /** Disabled in the registry; the runner holds its queued work until it is enabled again. */
+  Stopped = 'stopped',
 }
 
 /**

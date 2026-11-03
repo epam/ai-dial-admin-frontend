@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   defineTableSchema,
   getTable,
+  getTables,
   getTableAccess,
   updateTable,
   updateTableSchema,
@@ -142,9 +143,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 // The popup's own behavior is covered in EditColumnPopup.spec.tsx; here we only assert which column it
 // opens for and the guard props it receives.
 vi.mock('@/src/components/Analytics/Tables/EditColumnPopup', () => ({
-  default: ({ column, renameDisabled, sensitiveDisabled, isSensitiveLocked }: any) => (
+  default: ({ column, renameDisabled, keyedByEnrichment, sensitiveDisabled, isSensitiveLocked }: any) => (
     <div>
-      {`edit-popup: ${column.name} rename-disabled: ${Boolean(renameDisabled)} sensitive-disabled: ${Boolean(
+      {`edit-popup: ${column.name} rename-disabled: ${Boolean(renameDisabled)} keyed-by: ${keyedByEnrichment ?? 'none'} sensitive-disabled: ${Boolean(
         sensitiveDisabled,
       )} sensitive-locked: ${Boolean(isSensitiveLocked)}`}
     </div>
@@ -230,6 +231,7 @@ beforeEach(() => {
   // An enrichment table looks up its source table (see TableDetailView's grain-key-metadata effect);
   // default to none found so tests that don't care about it aren't broken by an unhandled promise.
   vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
+  vi.mocked(getTables).mockResolvedValue({ success: true, response: [] });
   // The Connect panel reads the table's access lists on open; default to none so tests that only
   // exercise the header aren't tripped by an unhandled promise.
   vi.mocked(getTableAccess).mockResolvedValue({
@@ -856,6 +858,86 @@ describe('TableDetailView scan-metadata column guards', () => {
     expect(screen.getByText(/edit-popup: event_id/)).toBeInTheDocument();
     expect(screen.getByText(/rename-disabled: false/)).toBeInTheDocument();
     expect(screen.getByText(/sensitive-disabled: true/)).toBeInTheDocument();
+  });
+
+  describe('a column that keys an enrichment', () => {
+    const keyedColumns = [
+      { source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid },
+      { source_name: 'note', name: 'note', type: AnalyticsFieldType.String },
+    ];
+    const activeSource = () => table({ status: TableStatus.Active, columns: keyedColumns });
+    const listed: AnalyticsTable = {
+      name: 'usage_geo',
+      type: AnalyticsTableType.Enrichment,
+      source_table: 'dial_usage_log',
+    };
+    const enrichment: AnalyticsTable = { ...listed, grain: { grain_key: 'event_id' } };
+
+    test('is locked against rename and drop, and the popup is told which enrichment keys on it', async () => {
+      const user = userEvent.setup();
+      vi.mocked(getTables).mockResolvedValue({ success: true, response: [listed] });
+      vi.mocked(getTable).mockResolvedValue({ success: true, response: enrichment });
+      render(<TableDetailView name="dial_usage_log" initialTable={activeSource()} apiBaseUrl="" flightUri="" />);
+
+      await act(async () => {});
+      expect(
+        screen.queryByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Delete}` }),
+      ).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Edit}` }));
+
+      expect(screen.getByText(/rename-disabled: true keyed-by: usage_geo/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `note:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
+    });
+
+    test('stays unlocked when the definition of the listed enrichment cannot be read', async () => {
+      const user = userEvent.setup();
+      vi.mocked(getTables).mockResolvedValue({ success: true, response: [listed] });
+      vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
+      render(<TableDetailView name="dial_usage_log" initialTable={activeSource()} apiBaseUrl="" flightUri="" />);
+
+      await act(async () => {});
+      await user.click(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Edit}` }));
+
+      expect(screen.getByText(/rename-disabled: false keyed-by: none/)).toBeInTheDocument();
+    });
+
+    test('stays unlocked when a read throws', async () => {
+      const user = userEvent.setup();
+      vi.mocked(getTables).mockRejectedValue(new Error('network'));
+      render(<TableDetailView name="dial_usage_log" initialTable={activeSource()} apiBaseUrl="" flightUri="" />);
+
+      await act(async () => {});
+      await user.click(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Edit}` }));
+
+      expect(screen.getByText(/rename-disabled: false keyed-by: none/)).toBeInTheDocument();
+    });
+
+    test('reads no listing for a draft table', async () => {
+      render(
+        <TableDetailView
+          name="dial_usage_log"
+          initialTable={table({ status: TableStatus.Pending, columns: keyedColumns })}
+          apiBaseUrl=""
+          flightUri=""
+        />,
+      );
+
+      await act(async () => {});
+
+      expect(getTables).not.toHaveBeenCalled();
+    });
+
+    test('stays unlocked when the table listing cannot be read', async () => {
+      const user = userEvent.setup();
+      vi.mocked(getTables).mockResolvedValue({ success: false, status: 500 });
+      render(<TableDetailView name="dial_usage_log" initialTable={activeSource()} apiBaseUrl="" flightUri="" />);
+
+      await act(async () => {});
+      await user.click(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Edit}` }));
+
+      expect(screen.getByText(/rename-disabled: false keyed-by: none/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
+    });
   });
 
   test('leaves both guards off for a column outside the pair', async () => {

@@ -39,6 +39,7 @@ interface Props {
   /** From the pipeline's declaration, not from the run: it decides whether a finished run reads Queued. */
   isGroupTrigger: boolean;
   isPipelinePaused: boolean;
+  isPipelineEnabled: boolean;
   isBusy: boolean;
   onVerb: (verb: PipelineBackfillVerb, runId: string) => Promise<void>;
 }
@@ -46,8 +47,8 @@ interface Props {
 /**
  * One pipeline run: its controls, then its figures.
  *
- * Resume is withheld while the pipeline is paused: the runner repeats the start checks on a resume and refuses it
- * then, so the button could only fail. Cancel has no such check and stays.
+ * Resume is withheld while the pipeline is paused or disabled: the runner repeats the start checks on a resume and
+ * refuses it then, so the button could only fail. Cancel has no such check and stays.
  *
  * A finished run is repeated by re-running its dead letters, never by a new run over the same window: the runner has
  * no "already processed" test, so that would replay every row at full cost.
@@ -57,6 +58,7 @@ const PipelineBackfillRunView: FC<Props> = ({
   run,
   isGroupTrigger,
   isPipelinePaused,
+  isPipelineEnabled,
   isBusy,
   onVerb,
 }) => {
@@ -75,7 +77,7 @@ const PipelineBackfillRunView: FC<Props> = ({
   const isRunning = run.state === PipelineBackfillState.Running;
   const isPaused = run.state === PipelineBackfillState.Paused;
   const isControlDisabled = isBusy || requeue.isBusy;
-  const isResumeOffered = isPaused && !isPipelinePaused;
+  const isResumeOffered = isPaused && isPipelineEnabled && !isPipelinePaused;
   const windowText = formatBackfillWindow(getWindowView(run.window_from, run.window_to), getTodayUtc(new Date()), t);
 
   const onPause = useCallback(() => void onVerb(PipelineBackfillVerb.Pause, run.id), [onVerb, run.id]);
@@ -126,7 +128,10 @@ const PipelineBackfillRunView: FC<Props> = ({
         </div>
       )}
 
-      {isPaused && isPipelinePaused && (
+      {isPaused && !isPipelineEnabled && (
+        <p className="m-0 text-warning dial-small">{t(BackfillI18nKey.ResumeBlockedByDisabledPipeline)}</p>
+      )}
+      {isPaused && isPipelineEnabled && isPipelinePaused && (
         <p className="m-0 text-warning dial-small">{t(BackfillI18nKey.ResumeBlockedByPipeline)}</p>
       )}
 

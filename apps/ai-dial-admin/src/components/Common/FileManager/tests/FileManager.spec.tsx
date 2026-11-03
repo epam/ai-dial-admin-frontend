@@ -1,16 +1,20 @@
+import type { DialFileManager } from '@epam/ai-dial-react-file-manager';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ColDef } from 'ag-grid-community';
+import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
-import FileManager from '../FileManager';
-import { SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX } from '../constants';
+import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { BucketType } from '@/src/models/dial/asset-list-item';
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { UnitNamespace } from '@/src/models/user-access';
 import { ApplicationRoute } from '@/src/types/routes';
+import FileManager from '../FileManager';
+import { SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX } from '../constants';
 
 const { dialFileManagerPropsSpy } = vi.hoisted(() => ({ dialFileManagerPropsSpy: vi.fn() }));
 
@@ -95,6 +99,99 @@ describe('FileManager', () => {
 
     const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onMoveToFiles).toBeInstanceOf(Function);
+  });
+});
+
+describe('FileManager — folder expansion', () => {
+  const root = 'public/';
+  const folder = 'public/examples/';
+  const lastProps = () => dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as ComponentProps<typeof DialFileManager>;
+
+  const renderFolders = (overrides: Partial<AssetsFolderContextReader> = {}) => {
+    const context: AssetsFolderContextReader = {
+      files: [{ name: 'public', path: root, bucket: BucketType.Public, nodeType: DialFileNodeType.FOLDER }],
+      fetchFiles: vi.fn(),
+      isFetchingFiles: false,
+      filePath: root,
+      setFilePath: vi.fn(),
+      expandedFolders: new Set([root]),
+      setExpandedFolders: vi.fn(),
+      fetchedFoldersData: { [root]: [] },
+      hasFetchError: false,
+      ...overrides,
+    };
+    const onPathChange = vi.fn();
+    const renderManager = () => (
+      <FileManager
+        view={ApplicationRoute.Prompts}
+        label="label"
+        columnDefs={[]}
+        getContext={() => context}
+        onPathChange={onPathChange}
+      />
+    );
+    const view = render(renderManager());
+    return { context, onPathChange, rerender: () => view.rerender(renderManager()) };
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('loads an expanded folder without changing the selected path or navigation', () => {
+    const { context, onPathChange } = renderFolders();
+    const paths = new Set([root, folder]);
+
+    act(() => lastProps().treeOptions?.onExpandedPathsChange?.(paths));
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+    expect(context.fetchFiles).toHaveBeenCalledWith(folder);
+    expect(context.setExpandedFolders).toHaveBeenCalledWith(paths);
+    expect(context.setFilePath).not.toHaveBeenCalled();
+    expect(onPathChange).not.toHaveBeenCalled();
+    expect(lastProps().path).toBe(root);
+    expect(lastProps().treeOptions?.selectOnCaretClick).not.toBe(true);
+  });
+
+  test('does not fetch or select when the expansion callback collapses a folder', () => {
+    const { context, onPathChange } = renderFolders({ expandedFolders: new Set([root, folder]) });
+
+    act(() => lastProps().treeOptions?.onExpandedPathsChange?.(new Set([root])));
+
+    expect(context.fetchFiles).not.toHaveBeenCalled();
+    expect(context.setFilePath).not.toHaveBeenCalled();
+    expect(onPathChange).not.toHaveBeenCalled();
+  });
+
+  test('reports successful expansion loads to the tree including an empty folder', () => {
+    const { context, rerender } = renderFolders();
+    act(() => lastProps().treeOptions?.onExpandedPathsChange?.(new Set([root, folder])));
+    context.fetchedFoldersData = { [root]: [], [folder]: [] };
+    context.expandedFolders = new Set([root, folder]);
+    rerender();
+
+    expect(lastProps().treeOptions?.loadedPaths?.has(folder)).toBe(true);
+    act(() => {
+      lastProps().treeOptions?.onExpandedPathsChange?.(new Set([root]));
+      lastProps().treeOptions?.onExpandedPathsChange?.(new Set([root, folder]));
+    });
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+  });
+
+  test('keeps folder-name activation selecting the folder with only one load across both callbacks', () => {
+    const { context, onPathChange } = renderFolders();
+    const props = lastProps();
+
+    act(() => {
+      props.onPathChange?.(folder);
+      props.treeOptions?.onExpandedPathsChange?.(new Set([root, folder]));
+    });
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+    expect(context.fetchFiles).toHaveBeenCalledWith(folder);
+    expect(context.setFilePath).toHaveBeenCalledWith(folder);
+    expect(context.setExpandedFolders).toHaveBeenCalledWith(new Set([root, folder]));
+    expect(onPathChange).toHaveBeenCalledWith(folder);
   });
 });
 

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FC } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
-import { MENU_ACTION_ICON_PROPS } from '@/src/constants/main-layout';
+import { MAIN_MENU_ID, MENU_ACTION_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIsConfigTransferEnabled } from '@/src/utils/env/get-config-transfer-toggle';
@@ -106,7 +106,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const menuClassName = 'flex flex-col divide-tertiary';
 
   return (
-    <div className={classNames(menuClassName, 'h-full relative divide-y group/menu')}>
+    <div id={MAIN_MENU_ID} className={classNames(menuClassName, 'h-full relative divide-y group/menu')}>
       <div
         className={classNames(
           menuClassName,

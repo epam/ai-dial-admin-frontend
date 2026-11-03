@@ -26,6 +26,7 @@ import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/util
 interface Props {
   column: AnalyticsTableColumn;
   renameDisabled?: boolean;
+  keyedByEnrichment?: string;
   sensitiveDisabled?: boolean;
   // The viewer lacks the sensitive clearance on this table, so the service would refuse the change.
   isSensitiveLocked?: boolean;
@@ -37,6 +38,7 @@ interface Props {
 const EditColumnPopup: FC<Props> = ({
   column,
   renameDisabled,
+  keyedByEnrichment,
   sensitiveDisabled,
   isSensitiveLocked,
   existingNames = [],
@@ -102,6 +104,11 @@ const EditColumnPopup: FC<Props> = ({
           disabled={renameDisabled}
           error={nameError?.text}
           invalid={Boolean(nameError)}
+          caption={
+            keyedByEnrichment
+              ? t(AnalyticsTablesI18nKey.ColumnKeysEnrichment, { enrichment: keyedByEnrichment })
+              : undefined
+          }
           onChange={setValue('name')}
         />
         <Input

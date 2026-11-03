@@ -34,7 +34,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
     };
   }, [gridApi]);
 
-  const resetFilters = () => {
+  const onResetFilters = () => {
     if (gridApi) {
       gridApi.setFilterModel(null);
       setFiltersActive(false);
@@ -46,8 +46,9 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
   return (
     <GhostButton
       label={t(ButtonsI18nKey.ResetFilters)}
-      iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-      onClick={resetFilters}
+      textClassName="whitespace-nowrap mobile:hidden"
+      iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+      onClick={onResetFilters}
     />
   );
 };
