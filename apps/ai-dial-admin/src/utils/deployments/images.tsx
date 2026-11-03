@@ -99,7 +99,7 @@ export function getUniqueLatestImages(images: Image[]): Image[] {
   for (const img of images) {
     const key = `${img.name}|${img.$type}`;
     const existing = map.get(key);
-    if (!existing || existing.version < img.version) {
+    if (!existing || compareVersions(existing.version, img.version) < 0) {
       map.set(key, img);
     }
   }
