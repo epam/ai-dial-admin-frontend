@@ -1209,7 +1209,6 @@ export default {
     CollapseAll: 'Collapse all folders',
     NoPreviewArchive: 'Preview is not available for DIAL Admin Archive file type',
     Units: {
-      UnitBadge: 'Unit',
       UnitsLoadError: "Units can't be loaded right now. Try again.",
       UnitsRetry: 'Try again',
       InsideUnitNote: 'Access in this folder is decided by the roles of the unit:',
@@ -1230,6 +1229,8 @@ export default {
       RemoveUnitDescription:
         'Remove this unit? Its roles are removed with it. A unit that still holds content cannot be removed.',
       RemoveUnitSubunits: 'These units below it are removed too:',
+      RemoveUnitHoldsContent: 'This unit still holds content:',
+      RemoveUnitDeleteOrMove: 'Delete or move it first.',
       UnitRoles: 'Roles',
       UnitRolesLoadError: "Roles can't be loaded right now.",
       NoHolders: 'Nobody holds this role',
@@ -1247,8 +1248,7 @@ export default {
       UnitCreated: 'Unit created',
       UnitRenamed: 'Unit renamed',
       UnitRemoved: 'Unit removed',
-      UnitFolderRestriction:
-        'This folder is an org unit and keeps its path. Use Remove unit in Folders Storage to delete it.',
+      UnitFolderRestriction: 'This folder is an org unit, so its path cannot change. Manage it from Folders Storage.',
       ContainsUnitRestriction: 'This folder contains an org unit, so its path cannot change.',
     },
   },

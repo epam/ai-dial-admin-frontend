@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { isFileRootPath } from '@/src/utils/files/root-folder';
+import { useScrollSelectedFolder } from '@/src/hooks/use-scroll-selected-folder';
 import { isUnitFolder } from '@/src/utils/org-units/units';
 
 interface Props {
@@ -34,25 +35,11 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
   const folderContext = context?.();
   const autoFetchedRootsKeyRef = useRef<string | undefined>(undefined);
   const rootPathsKey = rootPaths.join('|');
+  const scrollToFolder = useScrollSelectedFolder();
 
   const folderData = useMemo(() => {
     return folderContext?.files?.filter((node) => !isFileRootPath(node.path));
   }, [folderContext]);
-
-  const scrollToFolder = useCallback(() => {
-    let attempts = 0;
-    const maxAttempts = 20;
-    const scrollInterval = setInterval(() => {
-      const selectedElement = document.querySelector('[aria-selected="true"]');
-      if (selectedElement) {
-        selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        clearInterval(scrollInterval);
-      } else if (attempts >= maxAttempts) {
-        clearInterval(scrollInterval);
-      }
-      attempts++;
-    }, 500);
-  }, []);
 
   useEffect(() => {
     const context = folderContext as RuleFolderContextType;
