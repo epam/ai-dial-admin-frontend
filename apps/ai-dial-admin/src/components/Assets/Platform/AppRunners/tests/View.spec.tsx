@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AppRunnerAssetView from '../View';
 
@@ -23,9 +25,14 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: ({ onSave, jsonConfiguration }: any) => {
     capturedJsonConfiguration = jsonConfiguration;
     return (
-      <button type="button" onClick={onSave}>
-        save
-      </button>
+      <>
+        <button type="button" onClick={onSave}>
+          save
+        </button>
+        <button type="button" onClick={jsonConfiguration?.onToggleEditor}>
+          toggle JSON editor
+        </button>
+      </>
     );
   },
 }));
@@ -82,6 +89,45 @@ describe('AppRunnerAssetView :: save validation', () => {
     );
 
     expect(updateRunner).toHaveBeenCalled();
+  });
+
+  test('rejects an invalid JSON response and saves it after correction', async () => {
+    const user = userEvent.setup();
+    const entity = runner({
+      'dial:applicationTypeRoutes': {
+        health: { 'dial:paths': ['/health'], 'dial:methods': ['GET'], 'dial:upstreams': [] },
+      },
+    });
+    const route = { 'dial:paths': ['/health'], 'dial:methods': ['GET'], 'dial:upstreams': [] };
+    const invalid = {
+      ...entity,
+      'dial:applicationTypeRoutes': { health: { ...route, 'dial:response': { 'dial:status': 200, 'dial:body': '' } } },
+    };
+    const valid = {
+      ...entity,
+      'dial:applicationTypeRoutes': {
+        health: { ...route, 'dial:response': { 'dial:status': 200, 'dial:body': 'ok' } },
+      },
+    };
+
+    render(
+      <AppRunnerAssetView etag="etag" originalRunner={entity} roles={[]} interceptors={[]} globalInterceptors={[]} />,
+    );
+    await user.click(screen.getByRole('button', { name: 'toggle JSON editor' }));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'JSON editor' }), {
+      target: { value: JSON.stringify(invalid) },
+    });
+    await user.click(screen.getByRole('button', { name: 'save' }));
+    expect(updateRunner).not.toHaveBeenCalled();
+    expect(useNotification().showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: EntitiesI18nKey.InvalidAppRunner }),
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'JSON editor' }), {
+      target: { value: JSON.stringify(valid) },
+    });
+    await user.click(screen.getByRole('button', { name: 'save' }));
+    expect(updateRunner).toHaveBeenCalledWith(expect.objectContaining(valid), 'etag');
   });
 
   test('Should block save when the display name is missing', async () => {

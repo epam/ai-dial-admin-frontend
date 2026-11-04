@@ -91,6 +91,20 @@ describe('InterfaceFeaturesButton', () => {
     expect(screen.getByRole('switch', { name: resourceFeatureLabelMap.tools_supported })).toBeChecked();
   });
 
+  test.each([ApplicationRoute.PlatformModels, ApplicationRoute.AssetsApplications])(
+    'anchors each feature switch to its row for %s',
+    async (view) => {
+      const user = userEvent.setup();
+      render(<InterfaceFeaturesButton fieldId="row-1" features={{}} view={view} onChange={vi.fn()} />);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Features }));
+
+      for (const featureSwitch of screen.getAllByRole('switch')) {
+        expect(featureSwitch.closest('label')?.parentElement).toHaveClass('relative');
+      }
+    },
+  );
+
   test('toggling a switch and applying calls onChange with the updated features', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

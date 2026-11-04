@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { removeProject } from '@/src/app/[lang]/projects/actions';
 import ProjectAssetProperties from '@/src/components/Assets/Artifacts/Projects/View/Properties';
@@ -38,10 +38,16 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
   const router = useRouter();
   const { fetchFiles } = useProjectFolder();
   const { showNotification } = useNotification();
+  const [detailsKey, setDetailsKey] = useState(0);
   const tabs = getTabsForAsset(t, ApplicationRoute.Projects);
 
   const staging = useProjectStaging({ manifestContent, projectName: project.name, files: project.files });
   const { apply, discard } = staging;
+
+  const onDiscard = useCallback(() => {
+    discard();
+    setDetailsKey((key) => key + 1);
+  }, [discard]);
 
   const onSave = useCallback(async () => {
     try {
@@ -57,6 +63,7 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
         return;
       }
 
+      setDetailsKey((key) => key + 1);
       showNotification(
         getSuccessNotification(
           getUpdateNotificationTitle(ApplicationRoute.Projects, t),
@@ -85,7 +92,7 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
         entity={project}
         etag={project.etag}
         isChanged={staging.isChanged}
-        onDiscard={discard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         activeTab={EntityViewTab.Properties}
@@ -94,7 +101,7 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
         getAssetContext={useProjectFolder}
       />
       <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
-        <ProjectAssetProperties project={project} staging={staging} limits={limits} />
+        <ProjectAssetProperties key={detailsKey} project={project} staging={staging} limits={limits} />
       </div>
     </div>
   );

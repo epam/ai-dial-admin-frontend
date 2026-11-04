@@ -74,7 +74,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
   const [bodyError, setBodyError] = useState('');
   const [orderError, setOrderError] = useState('');
 
-  const [isUpstreamsRequired, setIsUpstreamsRequired] = useState(!route.response);
+  const isUpstreamsRequired = !route.response;
 
   useEffect(() => {
     if (skipGlobalValidation) return;
@@ -132,7 +132,6 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
     (output: string) => {
       const newRoute = handleRouteOutputChange(route, output);
       onChange(newRoute);
-      setIsUpstreamsRequired(output !== RouteOutput.RESPONSE);
       setStatusError(output === RouteOutput.RESPONSE ? t(ErrorI18nKey.RequiredField) : '');
       setBodyError(output === RouteOutput.RESPONSE ? t(ErrorI18nKey.RequiredField) : '');
     },

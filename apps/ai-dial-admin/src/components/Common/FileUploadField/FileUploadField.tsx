@@ -2,13 +2,20 @@
 
 import { ChangeEvent, DragEvent, FC, useCallback, useRef, useState } from 'react';
 
-import { EllipsisTooltip, ErrorText, FileDropzone, GhostButton, Label, NeutralButton } from '@epam/ai-dial-ui-kit';
+import {
+  EllipsisTooltip,
+  ErrorText,
+  FileDropzone,
+  GhostButton,
+  GhostIconButton,
+  Label,
+  NeutralButton,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { FileUploadError, FileUploadFieldProps } from '@/src/components/Common/FileUploadField/models';
 import { getAccept, isTotalSizeExceeded, validateFiles } from '@/src/components/Common/FileUploadField/utils';
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -181,8 +188,9 @@ const FileUploadField: FC<FileUploadFieldProps> = ({
                     )}
                   >
                     {iconBeforeInput ?? dynamicIcon?.(file.name)}
-                    <EllipsisTooltip className="flex-1 min-w-0" text={file.name} />
-                    <RemoveButton
+                    <EllipsisTooltip className="flex-1 min-w-0 dial-tiny-text" text={file.name} />
+                    <GhostIconButton
+                      icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                       aria-label={`${t(ButtonsI18nKey.Delete)}: ${file.name}`}
                       onClick={() => onRemoveFile(file.name)}
                     />

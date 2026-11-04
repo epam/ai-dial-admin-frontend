@@ -253,6 +253,10 @@ entity-level Features controls, scoped to overriding that interface's `features`
 - **THEN** a popup opens showing the same typed switches/text controls the entity-level Features tab
   renders, reflecting that interface's current `features` overrides
 
+#### Scenario: Toggling a feature preserves the popup's scroll position
+- **WHEN** an admin toggles a feature after scrolling within the Features popup
+- **THEN** the popup remains at the same scroll position
+
 #### Scenario: Confirming the popup saves the override to draft state
 - **WHEN** an admin toggles a feature in the popup and confirms
 - **THEN** the interface's `features` value in the entity's draft state reflects the change, without
