@@ -1,5 +1,5 @@
 'use client';
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 import { getFolders, getRules } from '@/src/app/[lang]/folders-storage/actions';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
@@ -17,6 +17,8 @@ export interface RuleFolderContextType {
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
   files: DialFolder[] | null;
   expandedFolders: Set<string>;
+  /** Replaces the expanded set without selecting anything; caret expansion goes through it. */
+  setExpandedFolders: Dispatch<SetStateAction<Set<string>>>;
   filePath: string;
   toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
   /** Selects `folder` and keeps it and every ancestor expanded, without toggling anything closed. */
@@ -212,6 +214,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     fetchFolderHierarchy,
     files,
     expandedFolders,
+    setExpandedFolders,
     filePath,
     toggleFolder,
     fetchedFoldersData,

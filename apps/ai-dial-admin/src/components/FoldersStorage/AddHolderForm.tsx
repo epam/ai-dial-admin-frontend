@@ -4,6 +4,7 @@ import { FC, useCallback, useId, useMemo, useState } from 'react';
 
 import { Button, ButtonVariant, Input, RadioGroup, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
+import SubjectKindIcon from '@/src/components/FoldersStorage/SubjectKindIcon';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { OrgUnitSubject, SubjectKind } from '@/src/models/dial/org-unit';
@@ -33,7 +34,16 @@ const AddHolderForm: FC<Props> = ({ roleName, groupClaim, onAdd }) => {
       [SubjectKind.GROUP]: t(FoldersI18nKey.HolderGroup),
       [SubjectKind.EVERYONE]: t(FoldersI18nKey.HolderEveryone),
     };
-    return ADDABLE_KINDS.map((item) => ({ value: item, label: labels[item] }));
+    return ADDABLE_KINDS.map((item) => ({
+      value: item,
+      label: (
+        <span className="inline-flex items-center gap-1">
+          <SubjectKindIcon kind={item} />
+          {labels[item]}
+        </span>
+      ),
+      'aria-label': labels[item],
+    }));
   }, [t]);
 
   const onSubmit = useCallback(() => {

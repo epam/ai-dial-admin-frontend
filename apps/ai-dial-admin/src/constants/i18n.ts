@@ -1197,6 +1197,7 @@ export enum FoldersI18nKey {
   UnitRemoved = 'Folder.Units.UnitRemoved',
   UnitFolderRestriction = 'Folder.Units.UnitFolderRestriction',
   ContainsUnitRestriction = 'Folder.Units.ContainsUnitRestriction',
+  UnitFolderExportRestriction = 'Folder.Units.UnitFolderExportRestriction',
 }
 
 export enum ActivityAuditI18nKey {

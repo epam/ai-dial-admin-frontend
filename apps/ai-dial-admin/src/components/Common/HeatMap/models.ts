@@ -31,3 +31,46 @@ export interface HeatMapValueTier {
   minWidthAbsolute: number;
   minWidthDelta: number;
 }
+
+export enum HeatMapTooltipCellResolutionSource {
+  EventSource = 'eventSource',
+  Pointer = 'pointer',
+  DomQuery = 'domQuery',
+  None = 'none',
+}
+
+export interface HeatMapTooltipCellResolution {
+  element: HTMLElement | null;
+  source: HeatMapTooltipCellResolutionSource;
+}
+
+export enum HeatMapTooltipPlacement {
+  Below = 'below',
+  Above = 'above',
+}
+
+export interface HeatMapTooltipRect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export type HeatMapTooltipAnchor = HeatMapTooltipRect;
+export type HeatMapTooltipFrame = HeatMapTooltipRect;
+
+export interface HeatMapTooltipPosition {
+  left: number;
+  top: number;
+  placement: HeatMapTooltipPlacement;
+  arrowShift: number;
+  isFixed: boolean;
+}
+
+export interface HeatMapTooltipParentFit {
+  maxTop: number;
+  belowTop: number;
+  aboveTop: number;
+  canFitBelow: boolean;
+  canFitAbove: boolean;
+}

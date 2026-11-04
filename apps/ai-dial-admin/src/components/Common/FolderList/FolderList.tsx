@@ -27,7 +27,8 @@ interface Props {
 const DEFAULT_ROOT_PATHS = [`${ROOT_FOLDER}/`];
 
 // Expansion is owned by the folder context (`toggleFolder` runs from `onItemClick`). A handler must
-// still be passed: its presence is what makes the tree controlled, and its own toggle is discarded.
+// still be passed: its presence is what makes the tree controlled, and its own toggle is discarded
+// unless the context is a rule folder context, which applies caret expansion itself.
 const IGNORE_TREE_EXPANSION_CHANGE = () => undefined;
 
 const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPaths = DEFAULT_ROOT_PATHS }) => {
@@ -82,6 +83,25 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
     [folderContext],
   );
 
+  const pendingPathsRef = useRef(new Set<string>());
+  // A caret click or arrow key only expands or collapses: it never selects the folder, so it can't go
+  // through `toggleFolder`. Newly expanded folders that have not been loaded fetch their children.
+  const onRuleExpandedPathsChange = useCallback(
+    (paths: Set<string>) => {
+      const context = folderContext as RuleFolderContextType;
+      const previousPaths = context.expandedFolders;
+      context.setExpandedFolders(paths);
+      paths.forEach((path) => {
+        if (previousPaths.has(path) || context.fetchedFoldersData[path] != null || pendingPathsRef.current.has(path)) {
+          return;
+        }
+        pendingPathsRef.current.add(path);
+        void Promise.resolve(context.fetchFiles(path)).finally(() => pendingPathsRef.current.delete(path));
+      });
+    },
+    [folderContext],
+  );
+
   const loadedPaths = useMemo(() => new Set(Object.keys(folderContext?.fetchedFoldersData ?? {})), [folderContext]);
 
   const ruleContext = folderContext as RuleFolderContextType | undefined;
@@ -118,7 +138,7 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
           ariaLabel={t(FoldersI18nKey.Folders)}
           getItemIcon={hasUnits ? getItemIcon : undefined}
           onItemClick={(node) => onToggleFolder(node as unknown as Asset)}
-          onExpandedPathsChange={IGNORE_TREE_EXPANSION_CHANGE}
+          onExpandedPathsChange={isRuleFolderContext ? onRuleExpandedPathsChange : IGNORE_TREE_EXPANSION_CHANGE}
         />
       )}
     </div>
