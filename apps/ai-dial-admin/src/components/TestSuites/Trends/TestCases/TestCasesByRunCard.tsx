@@ -9,28 +9,22 @@ import RunBar, { BAR_PLOT_HEIGHT_PX } from '@/src/components/TestSuites/Trends/T
 import TestCasesLegendItem from '@/src/components/TestSuites/Trends/TestCases/TestCasesLegendItem';
 import { getTestCasesSegmentLabels } from '@/src/components/TestSuites/Trends/TestCases/utils/test-cases-labels';
 import { TEST_CASE_SEGMENT_BG } from '@/src/components/TestSuites/Trends/constants';
-import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { RunTestCaseSegments, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   segments: RunTestCaseSegments[];
-  hasThreshold?: boolean;
-  overallScoreThreshold?: number | null;
+  runOrder: TrendsRunPoint[];
   isLoading?: boolean;
   hasError?: boolean;
   className?: string;
 }
 
-const TestCasesByRunCard: FC<Props> = ({
-  segments,
-  hasThreshold = true,
-  overallScoreThreshold,
-  isLoading,
-  hasError,
-  className,
-}) => {
+const TestCasesByRunCard: FC<Props> = ({ segments, runOrder, isLoading, hasError, className }) => {
   const t = useI18n();
+  const hasThreshold = runOrder.some((run) => run.overallScoreThreshold != null);
+  const hasNoThreshold = runOrder.some((run) => run.overallScoreThreshold == null);
   const labels = getTestCasesSegmentLabels(t, hasThreshold);
 
   return (
@@ -43,7 +37,10 @@ const TestCasesByRunCard: FC<Props> = ({
     >
       <h3 className="dial-body-semi-text text-primary">{labels.title}</h3>
       <div className="flex flex-wrap items-center gap-2">
-        <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.above} label={labels.successLabel} />
+        {hasThreshold && <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.above} label={labels.aboveLabel} />}
+        {hasNoThreshold && (
+          <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.above} label={labels.completedLabel} />
+        )}
         {labels.belowLabel != null && (
           <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.below} label={labels.belowLabel} />
         )}
@@ -67,9 +64,7 @@ const TestCasesByRunCard: FC<Props> = ({
             <RunBar
               key={run.runId}
               segments={run}
-              hasThreshold={hasThreshold}
-              threshold={overallScoreThreshold}
-              successLabel={labels.successLabel}
+              successLabel={run.overallScoreThreshold != null ? labels.aboveLabel : labels.completedLabel}
               completedLabel={labels.completedLabel}
               belowLabel={labels.belowLabel}
               aboveLabel={labels.aboveLabel}

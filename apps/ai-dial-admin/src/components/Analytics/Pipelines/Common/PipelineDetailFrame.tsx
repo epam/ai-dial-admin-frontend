@@ -11,7 +11,7 @@ import {
   Tabs,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
-import { IconAlertTriangleFilled, IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
+import { IconAlertTriangleFilled } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 import { deletePipeline, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
@@ -32,18 +32,16 @@ import PipelineReadOnlyFacts from '@/src/components/Analytics/Pipelines/Common/P
 import PipelinePauseBanner from '@/src/components/Analytics/Pipelines/Common/PipelinePauseBanner';
 import PipelineRuntimeAlerts from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeAlerts';
 import PipelineRuntimeBadge from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeBadge';
-import PausePipelinePopup from '@/src/components/Analytics/Pipelines/Common/PausePipelinePopup';
 import { isRunnerDriven } from '@/src/components/Analytics/Pipelines/Common/use-paused-pipelines';
 import {
   isGenerationBehind,
-  isPauseOfferedFor,
   pauseOf,
   runtimeStatusOfView,
 } from '@/src/components/Analytics/Pipelines/Common/runtime-view';
 import { usePipelineRuntimeView } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-runtime-view';
 import { hasDeadLetters } from '@/src/components/Analytics/Pipelines/Failures/failures';
 import { usePipelineFailures } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
-import { usePipelinePause } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-pause';
+import { usePipelineResume } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-resume';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
@@ -82,13 +80,6 @@ interface Props {
 // expression.
 const FORBIDDEN = 403;
 
-// Four labels, one control: which verb it offers follows the pause, and whether it is mid-request
-// follows the action. A control that still said "Pause" while pausing invites the second click.
-const pauseLabelKey = (isPaused: boolean, isBusy: boolean): AnalyticsPipelinesI18nKey => {
-  if (isPaused) return isBusy ? AnalyticsPipelinesI18nKey.Resuming : AnalyticsPipelinesI18nKey.Resume;
-  return isBusy ? AnalyticsPipelinesI18nKey.Pausing : AnalyticsPipelinesI18nKey.Pause;
-};
-
 const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = false }) => {
   const t = useI18n();
   const router = useRouter();
@@ -113,7 +104,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
   // reads, because it asks the same question about every row at once.
   const isRunnerRead = isRunnerDriven(pipeline.kind) && !!featureFlags.analyticsEnabled;
   const runtime = usePipelineRuntimeView(pipeline.name, isRunnerRead);
-  const pause = usePipelinePause(pipeline.name, runtime.reload);
+  const resume = usePipelineResume(pipeline.name, runtime.reload);
 
   // Read by the frame rather than by the tab, because the tab label carries the count: a reader on
   // `Properties` has to see that there is something to act on without opening `Runtime` first.
@@ -131,10 +122,6 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
 
   const pausedEntry = pauseOf(runtime.view?.status);
   const runtimeStatus = runtimeStatusOfView(runtime, pipeline.enabled, pipeline.kind);
-  // Not the same question as what the chip states, and deliberately so: a read that did not land
-  // leaves nothing to state while the pipeline is still running, and that is exactly when an operator
-  // reaches for the stop. See `isPauseOfferedFor`.
-  const isPauseOffered = isPauseOfferedFor(runtime, pipeline.enabled, pipeline.kind);
   const isBehind = isGenerationBehind(runtime.view, pipeline.generation);
 
   // A backfill is the runner's, so it is offered where the runtime is: to a full admin, for a pipeline the
@@ -330,8 +317,6 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
     pipeline.enabled ? AnalyticsPipelinesI18nKey.DisablePipeline : AnalyticsPipelinesI18nKey.EnablePipeline,
   );
 
-  const pauseControlLabel = pauseLabelKey(Boolean(pausedEntry), pause.isBusy);
-
   const toggleProps = {
     label: toggleLabel,
     disabled: isChanged || isSaving,
@@ -367,7 +352,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
       <div className="flex flex-row items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           {/* Two axes, not one: `enabled` is the declaration and the runtime chip is what the runner is
-              doing with it, so a paused pipeline still reads as enabled. */}
+              doing with it, so a breaker-paused pipeline still reads as enabled. */}
           {!isEditorEnabled && (
             <div className="flex flex-row items-center gap-2">
               <PipelineEnabledBadge enabled={pipeline.enabled} />
@@ -430,19 +415,12 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
           // From the stored declaration, not the draft: a finished run reads Queued by what the pipeline is, and an
           // unsaved edit does not change what the run did.
           isGroupTrigger={pipeline.trigger?.kind === TriggerKind.Group}
-          // Read live, so resuming the pipeline offers Resume on a paused run without reopening the drawer.
+          // Read live, so resuming or enabling the pipeline offers Resume on a paused run without reopening the drawer.
           isPipelinePaused={Boolean(pausedEntry)}
+          isPipelineEnabled={pipeline.enabled}
           onRunsChange={backfill.onRunsChange}
         />
       </BackfillDrawer>
-
-      {pause.isConfirmOpen && (
-        <PausePipelinePopup
-          name={pipeline.name}
-          onConfirm={() => void pause.confirmPause()}
-          onClose={pause.closeConfirm}
-        />
-      )}
 
       {isTogglePromptOpen && (
         <ConfirmationPopup
@@ -468,8 +446,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
 
       {/* Above the strip, so a held or failing pipeline says so whichever tab is in view — and withdrawn
           with everything else below the identity row while the document is on screen. */}
-      {!isEditorEnabled && pausedEntry && (
-        <PipelinePauseBanner pause={pausedEntry} isResuming={pause.isBusy} onResume={() => void pause.resume()} />
+      {!isEditorEnabled && pipeline.enabled && pausedEntry && (
+        <PipelinePauseBanner pause={pausedEntry} isResuming={resume.isBusy} onResume={() => void resume.resume()} />
       )}
 
       {/* Beside the pause banner, and quiet where that one already explains: a run paused with its pipeline. */}
@@ -525,28 +503,6 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
             isPaused={Boolean(pausedEntry)}
             isNotTracked={runtimeStatus === PipelineRuntimeStatus.NotTracked}
             onReload={onReloadRuntime}
-            actions={
-              isPauseOffered &&
-              // Solid against the outlined Reload beside it, and each verb carries its own glyph: this
-              // is the control that changes what the service is doing, the other only asks again.
-              (pausedEntry ? (
-                <Button
-                  variant={ButtonVariant.Primary}
-                  label={t(pauseControlLabel)}
-                  iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                  disabled={pause.isBusy}
-                  onClick={() => void pause.resume()}
-                />
-              ) : (
-                <Button
-                  variant={ButtonVariant.Neutral}
-                  label={t(pauseControlLabel)}
-                  iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                  disabled={pause.isBusy}
-                  onClick={pause.openConfirm}
-                />
-              ))
-            }
           />
         )}
         {isGroupsShown && (

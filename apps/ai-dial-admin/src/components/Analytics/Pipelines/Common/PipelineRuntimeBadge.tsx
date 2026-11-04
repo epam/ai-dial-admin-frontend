@@ -35,7 +35,7 @@ const TONE: Record<PipelineRuntimeStatus, string> = {
 
 /**
  * What the runner is doing with this pipeline — a different axis from `enabled`, which is the
- * declaration. A paused pipeline is still enabled, so the two badges stand side by side rather than one
+ * declaration. A breaker-paused pipeline is still enabled, so the two badges stand side by side rather than one
  * replacing the other.
  *
  * `Unknown` renders nothing: a disabled pipeline, an unread runner and a caller without the rights to

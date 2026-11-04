@@ -13,7 +13,7 @@ import {
   formatSignificantNumber,
 } from '@/src/utils/formatting/number-formatting';
 
-const exactNumberText = (value: unknown): string => {
+export const exactNumberText = (value: unknown): string => {
   const parsed = strictNumber(value);
   if (parsed !== null && Number.isInteger(parsed)) {
     return formatNumberByDelimiter(value as string | number);
@@ -25,24 +25,36 @@ const exactNumberText = (value: unknown): string => {
 // column's own value instead, which its `valueGetter` resolves.
 const cellValueOf = ({ column, getValue }: ValueGetterParams) => getValue(column.getColId());
 
+const formatNumericValue = (value: unknown, format: (value: number) => string): string => {
+  const parsed = strictNumber(value);
+  // Fall back to today's rendering rather than blanking a value the run returned.
+  return parsed === null ? renderCell(value) : format(parsed);
+};
+
+const NUMERIC_FORMATS: Partial<Record<ResultValueClass, (value: number) => string>> = {
+  [ResultValueClass.Compact]: formatNumberWithExponent,
+  [ResultValueClass.Significant]: formatSignificantNumber,
+};
+
+/** The text a value-class column shows for a value, for a renderer that draws the cell itself. */
+export const formatResultValue = (value: unknown, valueClass?: ResultValueClass): string => {
+  const format = valueClass ? NUMERIC_FORMATS[valueClass] : undefined;
+  return format ? formatNumericValue(value, format) : renderCell(value);
+};
+
 const getNumericColumn = (format: (value: number) => string): Partial<ColDef> => ({
   ...numericColumn,
   ...baseNumberFilter,
   filterValueGetter: (params: ValueGetterParams) => toNumberOrNull(cellValueOf(params)),
-  valueFormatter: ({ value }: ValueFormatterParams) => {
-    const parsed = strictNumber(value);
-    // Fall back to today's rendering rather than blanking a value the run returned.
-    return parsed === null ? renderCell(value) : format(parsed);
-  },
+  valueFormatter: ({ value }: ValueFormatterParams) => formatNumericValue(value, format),
   tooltipValueGetter: ({ value }: ITooltipParams) => exactNumberText(value),
 });
 
 export const getValueClassColumn = (valueClass?: ResultValueClass): Partial<ColDef> => {
   switch (valueClass) {
     case ResultValueClass.Compact:
-      return getNumericColumn(formatNumberWithExponent);
     case ResultValueClass.Significant:
-      return getNumericColumn(formatSignificantNumber);
+      return getNumericColumn(NUMERIC_FORMATS[valueClass] as (value: number) => string);
     // A duration column is left unformatted on purpose. Its header is the catalog's `display_name`, which
     // states the unit ("Duration (ms)"), so a formatted cell would contradict its own header — and the client
     // does not rewrite catalog display text. The recognition's whole job is to keep this column out of

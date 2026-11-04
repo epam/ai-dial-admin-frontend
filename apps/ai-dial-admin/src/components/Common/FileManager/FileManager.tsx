@@ -34,6 +34,7 @@ import UnitFolderIcon from '@/src/components/Common/UnitFolderIcon/UnitFolderIco
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useFileManagerExpansion } from '@/src/hooks/use-file-manager-expansion';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -125,8 +126,22 @@ const FileManager: FC<Props> = ({
   const { showNotification } = useNotification();
   const { units, ensureUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
-  const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
-    getContext();
+  const folderContext = getContext();
+  const {
+    files,
+    fetchFiles,
+    isFetchingFiles,
+    filePath,
+    setFilePath,
+    expandedFolders,
+    setExpandedFolders,
+    fetchedFoldersData,
+  } = folderContext;
+  const { onExpandedPathsChange, onFetchFolder } = useFileManagerExpansion(folderContext);
+  const treeLoadedPaths = useMemo(
+    () => new Set([...loadedPaths, ...Object.keys(fetchedFoldersData ?? {})]),
+    [loadedPaths, fetchedFoldersData],
+  );
   const [gridApi, setGridApi] = useState<GridApi>();
   const [isShowHiddenFiles, onShowHiddenFilesChange] = useShowHiddenFiles(view);
   const isHiddenFilesToggleVisible = isHiddenFilesToggleSupported(view);
@@ -199,10 +214,16 @@ const FileManager: FC<Props> = ({
 
   const getItemActionRestriction = useCallback(
     (file: DialFile, action: DialFileManagerActions) => {
-      if (!hasUnits || file.nodeType !== DialFileNodeType.FOLDER || !UNIT_PROTECTED_ACTIONS.has(action)) {
+      if (!hasUnits || file.nodeType !== DialFileNodeType.FOLDER) {
         return undefined;
       }
       const role = getUnitFolderRole(units, file.path);
+      if (action === DialFileManagerActions.Download) {
+        return role === UnitFolderRole.UNIT ? t(FoldersI18nKey.UnitFolderExportRestriction) : undefined;
+      }
+      if (!UNIT_PROTECTED_ACTIONS.has(action)) {
+        return undefined;
+      }
       if (role === UnitFolderRole.UNIT) {
         return t(FoldersI18nKey.UnitFolderRestriction);
       }
@@ -305,14 +326,14 @@ const FileManager: FC<Props> = ({
         newExpanded.add(nextPath);
       }
       if (!loadedPaths.has(nextPath)) {
-        fetchFiles(nextPath);
+        onFetchFolder(nextPath);
       }
       setFilePath(nextPath);
       setLoadedPaths((prev) => new Set(prev).add(nextPath));
       setExpandedFolders(newExpanded);
       onPathChange?.(nextPath);
     },
-    [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath, onPathChange],
+    [expandedFolders, onFetchFolder, loadedPaths, setExpandedFolders, setFilePath, onPathChange],
   );
 
   const handleFolderPopupPathChange = useCallback(
@@ -474,13 +495,19 @@ const FileManager: FC<Props> = ({
     filePath,
   ]);
 
-  const toolbarOptions = useMemo(
-    () => ({
-      ...getToolbarOptions(view, isReadOnlyAdmin, t, filePath),
+  const isUnitFolderActive = hasUnits && isUnitFolder(units, filePath ?? '');
+
+  const toolbarOptions = useMemo(() => {
+    const base = getToolbarOptions(view, isReadOnlyAdmin, t, filePath);
+    // A unit folder cannot receive imported resources, so its Create menu keeps only the "new item" entry.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { uploadFiles: _import, ...newActions } = base.newActions;
+    return {
+      ...base,
+      newActions: isUnitFolderActive ? newActions : base.newActions,
       additionalButtons: <ResetFiltersButton gridApi={gridApi} />,
-    }),
-    [view, isReadOnlyAdmin, t, filePath, gridApi],
-  );
+    };
+  }, [view, isReadOnlyAdmin, t, filePath, gridApi, isUnitFolderActive]);
 
   return (
     <>
@@ -504,10 +531,10 @@ const FileManager: FC<Props> = ({
           ...getTreeOptions(
             isReadOnlyAdmin,
             isFetchingFiles,
-            loadedPaths,
+            treeLoadedPaths,
             expandedFolders,
             view,
-            setExpandedFolders,
+            onExpandedPathsChange,
             t,
             filePath,
             label,

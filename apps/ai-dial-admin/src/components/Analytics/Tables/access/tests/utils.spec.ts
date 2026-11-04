@@ -114,12 +114,22 @@ describe('buildRoleRows', () => {
     expect(row.filter).toBe(filter);
   });
 
-  test('lists a role that has only a policy, with every mark neutral', () => {
-    const [row] = buildRoleRows(access(), { lonely: { filter: eq('a', 'b') } });
+  test('lists a role that has only a policy, with every mark neutral and the policy kept', () => {
+    const policy = { filter: eq('a', 'b') };
+    const [row] = buildRoleRows(access(), { lonely: policy });
 
     expect(row.role).toBe('lonely');
     expect(Object.values(row.marks).every((mark) => mark === PrivilegeMark.None)).toBe(true);
-    expect(row.rowsKind).toBe(RowsCellKind.Policy);
+    expect(row.rowsKind).toBe(RowsCellKind.None);
+    expect(row.filter).toBe(policy.filter);
+  });
+
+  test('keeps the policy of a role that lost Read, as a role that cannot read rows', () => {
+    const policy = { filter: eq('a', 'b') };
+    const [row] = buildRoleRows(access({ modify: ['analysts'] }), { analysts: policy });
+
+    expect(row.rowsKind).toBe(RowsCellKind.None);
+    expect(row.filter).toBe(policy.filter);
   });
 
   test('returns no rows for an empty table', () => {

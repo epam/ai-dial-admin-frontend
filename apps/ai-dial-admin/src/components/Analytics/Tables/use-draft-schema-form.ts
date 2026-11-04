@@ -32,6 +32,7 @@ interface UseDraftSchemaFormReturn {
   // be left empty on re-submission.
   scanPairRequired: boolean;
   scanPairIncomplete: boolean;
+  isGranularityMissing: boolean;
   canMaterialize: boolean;
   buildDto: () => DraftSchemaDto;
   // The DTO the table's stored definition yields — what the live one is compared against, and what the
@@ -86,8 +87,15 @@ export const useDraftSchemaForm = (
     (Boolean(form.identityColumn) !== Boolean(form.versionColumn) ||
       (scanPairRequired && !(form.identityColumn && form.versionColumn)));
 
+  // Without it the request builder would leave the partition out silently.
+  const isGranularityMissing = isSource && Boolean(form.partitionColumn) && !form.granularity;
+
   const canMaterialize = isSource
-    ? !invalidColumns && validColumns.length > 0 && validOrdering.length > 0 && !scanPairIncomplete
+    ? !invalidColumns &&
+      validColumns.length > 0 &&
+      validOrdering.length > 0 &&
+      !scanPairIncomplete &&
+      !isGranularityMissing
     : !invalidColumns && Boolean(form.grainKey.trim());
 
   const buildDto = (): DraftSchemaDto => buildDraftSchemaDto(form, table.type);
@@ -119,6 +127,7 @@ export const useDraftSchemaForm = (
     columnErrors,
     scanPairRequired,
     scanPairIncomplete,
+    isGranularityMissing,
     canMaterialize,
     buildDto,
     baselineDto,

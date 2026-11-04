@@ -117,6 +117,16 @@ describe('images utils', () => {
       expect(list[0].label).toBe('1.0.0');
       expect(list[0].icon).toBeDefined();
     });
+
+    test('orders versions from newest to oldest', () => {
+      const versions = [
+        { id: 'v1', version: '1.0.2' },
+        { id: 'v2', version: '1000.0.35000' },
+        { id: 'v3', version: '1.0.10' },
+        { id: 'v4', version: '1.0.0' },
+      ] as any;
+      expect(getVersionsList(versions).map(({ label }) => label)).toEqual(['1000.0.35000', '1.0.10', '1.0.2', '1.0.0']);
+    });
   });
 
   describe('getUniqueLatestImages', () => {
@@ -130,6 +140,14 @@ describe('images utils', () => {
       expect(result).toHaveLength(2);
       const img1 = result.find((i) => i.name === 'img1');
       expect(img1?.version).toBe('2.0.0');
+    });
+
+    test('compares versions numerically, not as strings', () => {
+      const images = [
+        { name: 'img1', version: '10.0.0' },
+        { name: 'img1', version: '2.0.0' },
+      ] as any;
+      expect(getUniqueLatestImages(images)[0].version).toBe('10.0.0');
     });
   });
 

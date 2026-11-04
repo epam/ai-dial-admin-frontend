@@ -97,11 +97,13 @@ describe('Trends', () => {
       content: [{ id: 'run-1', testRunName: 'Run#1', status: 'COMPLETED', startedAt: 0, completedAt: 400 }],
     });
 
-    render(<Trends selectedTestSuite={suite} />);
+    render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.6 }} />);
 
     expect(await screen.findByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
     expect(await screen.findByRole('region', { name: TabsI18nKey.TestCases })).toBeInTheDocument();
     expect(await screen.findByRole('region', { name: TestSuitesI18nKey.TrendsLatestRun })).toBeInTheDocument();
+    expect(await screen.findByText(TestSuitesI18nKey.CompletionRateOfLatestRun)).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.TrendsScoreBelowThreshold)).not.toBeInTheDocument();
     expect(await screen.findByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
     expect(await screen.findByRole('region', { name: TestSuitesI18nKey.CostTrend })).toBeInTheDocument();
     expect(await screen.findByRole('region', { name: TestSuitesI18nKey.RuntimeTrend })).toBeInTheDocument();
@@ -216,14 +218,24 @@ describe('Trends', () => {
       },
     );
     (getRunsQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
-      content: [{ id: 'run-1', testRunName: 'Run#1', status: 'COMPLETED', startedAt: 0, completedAt: 100 }],
+      content: [
+        {
+          id: 'run-1',
+          testRunName: 'Run#1',
+          status: 'COMPLETED',
+          suiteSnapshot: { overallScoreThreshold: 0.5 },
+          startedAt: 0,
+          completedAt: 100,
+        },
+      ],
     });
 
-    render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.5 }} />);
+    render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.4 }} />);
 
     expect(await screen.findByText(TestSuitesI18nKey.ThresholdPassRateOfLatestRun)).toBeInTheDocument();
     expect(await screen.findByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(await screen.findByText('0.800')).toBeInTheDocument();
+    expect(await screen.findByText('0.5')).toBeInTheDocument();
     // Pass rate = above / total = 8/10.
     expect(await screen.findByText('80%')).toBeInTheDocument();
   });

@@ -14,6 +14,7 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { OrgUnit, OrgUnitsStatus } from '@/src/models/dial/org-unit';
 import { removeTrailingSlash } from '@/src/utils/files/path';
+import { useScrollSelectedFolder } from '@/src/hooks/use-scroll-selected-folder';
 import { getSuccessNotification } from '@/src/utils/notification';
 import { NewUnitBlock, getNewUnitBlock, normalizeFolder } from '@/src/utils/org-units/units';
 
@@ -21,24 +22,27 @@ import { NewUnitBlock, getNewUnitBlock, normalizeFolder } from '@/src/utils/org-
 const NewUnitButton: FC = () => {
   const t = useI18n();
   const { showNotification } = useNotification();
-  const { filePath, fetchFiles, toggleFolder } = useRuleFolder();
+  const { filePath, fetchFiles, revealFolder } = useRuleFolder();
   const { units, unitsStatus, refreshUnits } = useOrgUnits();
   const [isOpen, setIsOpen] = useState(false);
 
+  const scrollToFolder = useScrollSelectedFolder();
   const parentFolder = normalizeFolder(filePath);
 
   const onCreated = useCallback(
     async (unit: OrgUnit) => {
       setIsOpen(false);
       await refreshUnits();
-      fetchFiles(parentFolder);
-      toggleFolder(
-        { path: normalizeFolder(unit.folder), name: unit.name, nodeType: DialFileNodeType.FOLDER } as DialFolder,
-        true,
-      );
+      await fetchFiles(parentFolder);
+      revealFolder({
+        path: normalizeFolder(unit.folder),
+        name: unit.name,
+        nodeType: DialFileNodeType.FOLDER,
+      } as DialFolder);
+      scrollToFolder();
       showNotification(getSuccessNotification(t(FoldersI18nKey.UnitCreated)));
     },
-    [refreshUnits, fetchFiles, parentFolder, toggleFolder, showNotification, t],
+    [refreshUnits, fetchFiles, parentFolder, revealFolder, scrollToFolder, showNotification, t],
   );
 
   if (unitsStatus !== OrgUnitsStatus.READY) {

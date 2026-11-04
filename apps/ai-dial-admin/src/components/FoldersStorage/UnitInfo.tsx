@@ -2,24 +2,18 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  Button,
-  ButtonVariant,
-  EllipsisTooltip,
-  NoDataContent,
-  Spinner,
-  Tag,
-  TagAppearance,
-} from '@epam/ai-dial-ui-kit';
+import { Button, ButtonVariant, EllipsisTooltip, NoDataContent, Spinner } from '@epam/ai-dial-ui-kit';
+import { IconSitemap } from '@tabler/icons-react';
 
 import RemoveUnitModal from '@/src/components/FoldersStorage/Modals/RemoveUnitModal';
 import RenameUnitModal from '@/src/components/FoldersStorage/Modals/RenameUnitModal';
 import NewUnitButton from '@/src/components/FoldersStorage/NewUnitButton';
+import { LARGE_ICON_SIZE } from '@/src/components/FoldersStorage/constants';
 import { RolesCardStatus } from '@/src/components/FoldersStorage/models';
 import UnitRolesCard from '@/src/components/FoldersStorage/UnitRolesCard';
 import { useUnitRolesDraft } from '@/src/components/FoldersStorage/use-unit-roles-draft';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import { ActionMenuOperationI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
@@ -55,7 +49,10 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
     showNotification(
       result.isSuccess
         ? getSuccessNotification(t(FoldersI18nKey.RolesSaved))
-        : getErrorNotification(t(FoldersI18nKey.RolesSaveFailed), result.errorMessage),
+        : getErrorNotification(
+            t(ErrorI18nKey.Error),
+            [t(FoldersI18nKey.RolesSaveFailed), result.errorMessage].filter(Boolean).join(' '),
+          ),
     );
   }, [draft, showNotification, t]);
 
@@ -79,10 +76,17 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
     <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-wrap justify-between items-center w-full gap-3">
         <div className="flex flex-1 min-w-0 items-center gap-3">
-          <h2 className="min-w-0">
-            <EllipsisTooltip contentClassName="truncate" text={unit.displayName || unit.name} />
-          </h2>
-          <Tag label={t(FoldersI18nKey.UnitBadge)} appearance={TagAppearance.Bordered} />
+          <IconSitemap size={LARGE_ICON_SIZE} className="shrink-0 text-secondary" aria-hidden />
+          <div className="flex min-w-0 flex-col">
+            <h2 className="min-w-0">
+              <EllipsisTooltip contentClassName="truncate" text={unit.name} />
+            </h2>
+            {unit.displayName && (
+              <span className="dial-small-text text-secondary min-w-0">
+                <EllipsisTooltip contentClassName="truncate" text={unit.displayName} />
+              </span>
+            )}
+          </div>
         </div>
         {!isReadonly &&
           (draft.isChanged ? (
@@ -96,7 +100,7 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
                 onClick={() => setIsRenaming(true)}
               />
               <Button
-                variant={ButtonVariant.Neutral}
+                variant={ButtonVariant.Danger}
                 label={t(FoldersI18nKey.RemoveUnit)}
                 onClick={() => setIsRemoving(true)}
               />

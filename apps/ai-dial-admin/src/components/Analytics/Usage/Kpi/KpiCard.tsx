@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, FC } from 'react';
+import { CSSProperties, FC, ReactNode } from 'react';
 
 import classNames from 'classnames';
 
@@ -8,6 +8,7 @@ import { Badge, Spinner } from '@epam/ai-dial-ui-kit';
 
 import DeltaBadge from '@/src/components/Analytics/Usage/Delta/DeltaBadge';
 import Sparkline from '@/src/components/Analytics/Usage/Kpi/Sparkline';
+import FieldCaveat from '@/src/components/Common/FieldCaveat/FieldCaveat';
 import { KpiCardModel } from '@/src/components/Analytics/Usage/models';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -19,9 +20,11 @@ interface Props {
   isLoading: boolean;
   /** A failed window reads as an absent figure; the notification carries what went wrong. */
   hasFailed: boolean;
+  // Rendered last in the title row: a custom dashboard widget's menu.
+  headerAction?: ReactNode;
 }
 
-const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed }) => {
+const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed, headerAction }) => {
   const t = useI18n();
 
   const renderFigure = () => {
@@ -63,9 +66,17 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed }) =>
       style={style}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="dial-tiny-text text-secondary">{t(card.titleKey)}</span>
-        {card.deltaRatio == null && card.isNew && <Badge label={t(AnalyticsUsageI18nKey.RowIsNew)} />}
-        {card.deltaRatio != null && <DeltaBadge ratio={card.deltaRatio} metric={card.metric} />}
+        <span className="flex min-w-0 items-center gap-1">
+          <span className="dial-tiny-text text-secondary">{card.title ?? t(card.titleKey)}</span>
+          {card.hint && <FieldCaveat hint={card.hint} />}
+        </span>
+        <div className="flex items-center gap-1">
+          {card.deltaRatio == null && card.isNew && <Badge label={t(AnalyticsUsageI18nKey.RowIsNew)} />}
+          {card.deltaRatio != null && (
+            <DeltaBadge ratio={card.deltaRatio} metric={card.metric} isRiseGood={card.isRiseGood} />
+          )}
+          {headerAction}
+        </div>
       </div>
 
       {renderFigure()}

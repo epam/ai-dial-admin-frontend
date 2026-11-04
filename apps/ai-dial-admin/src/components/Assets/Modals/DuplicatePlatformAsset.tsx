@@ -26,9 +26,9 @@ import {
   PlatformAsset,
   ToolsetAuthType,
 } from '@/src/models/dial/resource';
-import { UpstreamAuthType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
+import { isUpstreamAuthKeyRequired } from '@/src/utils/models/upstream-auth';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { DUAL_BUCKET_VIEWS } from '@/src/utils/files/root-folder';
 
@@ -93,17 +93,17 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     return clone;
   });
   const [idExistsError, setIdExistsError] = useState<string>();
-  const [bearerKeys, setBearerKeys] = useState<Record<number, string>>({});
-  const bearerUpstreamIndexes = useMemo(() => {
+  const [authKeys, setAuthKeys] = useState<Record<number, string>>({});
+  const authKeyUpstreamIndexes = useMemo(() => {
     if (view !== ApplicationRoute.PlatformRoutes) {
       return [];
     }
 
     return ((clonedAsset as DialRouteResource).upstreams ?? []).flatMap((upstream, index) =>
-      upstream.authType === UpstreamAuthType.BEARER ? [index] : [],
+      isUpstreamAuthKeyRequired(upstream.authType) ? [index] : [],
     );
   }, [clonedAsset, view]);
-  const hasMissingBearerKey = bearerUpstreamIndexes.some((index) => !bearerKeys[index]);
+  const hasMissingAuthKey = authKeyUpstreamIndexes.some((index) => !authKeys[index]);
 
   const onChangeId = useCallback(
     ({ name }: { name?: string }) => {
@@ -149,8 +149,8 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     return (clonedAsset as DialModelResource).displayName;
   })();
 
-  const onChangeBearerKey = useCallback((index: number, key?: string) => {
-    setBearerKeys((keys) => ({ ...keys, [index]: key ?? '' }));
+  const onChangeAuthKey = useCallback((index: number, key?: string) => {
+    setAuthKeys((keys) => ({ ...keys, [index]: key ?? '' }));
   }, []);
 
   const onDuplicateClick = useCallback(async () => {
@@ -159,7 +159,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
         ? {
             ...clonedAsset,
             upstreams: (clonedAsset as DialRouteResource).upstreams?.map((upstream, index) =>
-              upstream.authType === UpstreamAuthType.BEARER ? { ...upstream, key: bearerKeys[index] } : upstream,
+              isUpstreamAuthKeyRequired(upstream.authType) ? { ...upstream, key: authKeys[index] } : upstream,
             ),
           }
         : clonedAsset;
@@ -183,7 +183,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     }
 
     onDuplicate(clonedAsset);
-  }, [bearerKeys, clonedAsset, isRunner, isSchemaResource, onDuplicate, t, view]);
+  }, [authKeys, clonedAsset, isRunner, isSchemaResource, onDuplicate, t, view]);
 
   return (
     <Popup
@@ -194,7 +194,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Duplicate),
-        isSubmitDisabled: !isValid || hasMissingBearerKey,
+        isSubmitDisabled: !isValid || hasMissingAuthKey,
         onCancel: onClose,
         onSubmit: onDuplicateClick,
       })}
@@ -220,14 +220,14 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
           onChangeEntity={onChangeId}
         />
         {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}
-        {bearerUpstreamIndexes.map((index) => (
+        {authKeyUpstreamIndexes.map((index) => (
           <PasswordInput
             key={index}
-            id={`bearer-key-${index}`}
-            value={bearerKeys[index]}
+            id={`auth-key-${index}`}
+            value={authKeys[index]}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-            labelProps={{ label: t(UpstreamEndpointsI18nKey.BearerKey, { index: index + 1 }), required: true }}
-            onChange={(key?: string) => onChangeBearerKey(index, key)}
+            labelProps={{ label: t(UpstreamEndpointsI18nKey.AuthKey, { index: index + 1 }), required: true }}
+            onChange={(key?: string) => onChangeAuthKey(index, key)}
           />
         ))}
       </div>

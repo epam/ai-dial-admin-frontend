@@ -253,6 +253,7 @@ describe('shouldShowPipelineBackfillBanner', () => {
     PipelineBackfillPauseReason.CursorStalled,
     PipelineBackfillPauseReason.PipelineAbsent,
     PipelineBackfillPauseReason.PipelineChanged,
+    PipelineBackfillPauseReason.PipelineStopped,
   ])('shows a run paused for its own reason: %s', (reason) => {
     expect(shouldShowPipelineBackfillBanner({ state: PipelineBackfillState.Paused, paused_reason: reason })).toBe(true);
   });

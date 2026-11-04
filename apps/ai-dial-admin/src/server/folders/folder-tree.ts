@@ -87,6 +87,13 @@ export const toFolderTree = (node: MetadataNodeWithBucket, prefix: string): Fold
 };
 
 /**
+ * Re-roots `tree` onto `root`, keeping only its children. Skill and Project listings come from
+ * Core's v2 endpoints, whose root node must never be able to trip `mergeFolderTrees`' consistency
+ * check and fail the whole listing; only their folder children are taken from them.
+ */
+export const withRootOf = (root: FolderNode, tree: FolderNode): FolderNode => ({ ...root, items: tree.items });
+
+/**
  * Merges the same folder's tree as seen by multiple resource types into one, ported from the
  * backend's `FolderService.merge`/`validateFolderInfoConsistency`. Throws if two types disagree
  * on name/parentPath/bucket/path for what should be the same folder (design D4) — a real

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import TestCasesByRunCard from '@/src/components/TestSuites/Trends/TestCases/TestCasesByRunCard';
-import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
+import { RunTestCaseSegments, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
@@ -25,13 +25,25 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 }));
 
 const segments: RunTestCaseSegments[] = [
-  { runId: 'run-1', runName: 'Run#1', above: 8, below: 2, errorOrNa: 1, total: 11 },
-  { runId: 'run-2', runName: 'Run#2', above: 5, below: 0, errorOrNa: 0, total: 5 },
+  { runId: 'run-1', runName: 'Run#1', overallScoreThreshold: 0.6, above: 8, below: 2, errorOrNa: 1, total: 11 },
+  { runId: 'run-2', runName: 'Run#2', overallScoreThreshold: 0.6, above: 5, below: 0, errorOrNa: 0, total: 5 },
+];
+
+const thresholdRunOrder: TrendsRunPoint[] = segments.map((segment, computedAtMs) => ({
+  ...segment,
+  computedAtMs,
+  overallScore: null,
+  durationMs: null,
+  isFailed: false,
+}));
+
+const unthresholdedRunOrder: TrendsRunPoint[] = [
+  { runId: 'run-1', runName: 'Run#1', computedAtMs: 1, overallScore: null, durationMs: null, isFailed: false },
 ];
 
 describe('TestCasesByRunCard', () => {
   test('renders title, legend, and run bars with segment order error/below/above', () => {
-    render(<TestCasesByRunCard segments={segments} hasThreshold overallScoreThreshold={0.6} />);
+    render(<TestCasesByRunCard segments={segments} runOrder={thresholdRunOrder} />);
 
     expect(screen.getByRole('region', { name: TabsI18nKey.TestCases })).toBeInTheDocument();
     expect(screen.getAllByText(TestSuitesI18nKey.TrendsScoreAboveThreshold).length).toBeGreaterThan(0);
@@ -53,8 +65,18 @@ describe('TestCasesByRunCard', () => {
   test('shows Completed / Error legend without Below when threshold is unset', () => {
     render(
       <TestCasesByRunCard
-        segments={[{ runId: 'run-1', runName: 'Run#1', above: 8, below: 2, errorOrNa: 1, total: 11 }]}
-        hasThreshold={false}
+        segments={[
+          {
+            runId: 'run-1',
+            runName: 'Run#1',
+            overallScoreThreshold: null,
+            above: 8,
+            below: 2,
+            errorOrNa: 1,
+            total: 11,
+          },
+        ]}
+        runOrder={unthresholdedRunOrder}
       />,
     );
 
@@ -72,9 +94,28 @@ describe('TestCasesByRunCard', () => {
   test('bar tooltip includes nested above/below with threshold value when threshold is set', () => {
     render(
       <TestCasesByRunCard
-        segments={[{ runId: 'run-1', runName: 'Run#19', above: 120, below: 20, errorOrNa: 10, total: 150 }]}
-        hasThreshold
-        overallScoreThreshold={0.6}
+        segments={[
+          {
+            runId: 'run-1',
+            runName: 'Run#19',
+            overallScoreThreshold: 0.6,
+            above: 120,
+            below: 20,
+            errorOrNa: 10,
+            total: 150,
+          },
+        ]}
+        runOrder={[
+          {
+            runId: 'run-1',
+            runName: 'Run#19',
+            computedAtMs: 1,
+            overallScore: null,
+            overallScoreThreshold: 0.6,
+            durationMs: null,
+            isFailed: false,
+          },
+        ]}
       />,
     );
 
@@ -96,8 +137,18 @@ describe('TestCasesByRunCard', () => {
   test('bar tooltip shows Completed and Error only when threshold is unset', () => {
     render(
       <TestCasesByRunCard
-        segments={[{ runId: 'run-1', runName: 'Run#19', above: 140, below: 0, errorOrNa: 10, total: 150 }]}
-        hasThreshold={false}
+        segments={[
+          {
+            runId: 'run-1',
+            runName: 'Run#19',
+            overallScoreThreshold: null,
+            above: 140,
+            below: 0,
+            errorOrNa: 10,
+            total: 150,
+          },
+        ]}
+        runOrder={[{ ...unthresholdedRunOrder[0], runName: 'Run#19' }]}
       />,
     );
 
@@ -115,7 +166,7 @@ describe('TestCasesByRunCard', () => {
   });
 
   test('shows loader when loading with no segments yet', () => {
-    render(<TestCasesByRunCard segments={[]} isLoading />);
+    render(<TestCasesByRunCard segments={[]} runOrder={unthresholdedRunOrder} isLoading />);
 
     expect(screen.getByText('loader')).toBeInTheDocument();
   });
@@ -125,6 +176,9 @@ describe('TestCasesByRunCard', () => {
     render(
       <TestCasesByRunCard
         segments={[{ runId: 'run-x', runName: longName, above: 1, below: 0, errorOrNa: 0, total: 1 }]}
+        runOrder={[
+          { runId: 'run-x', runName: longName, computedAtMs: 1, overallScore: null, durationMs: null, isFailed: false },
+        ]}
       />,
     );
 
@@ -137,10 +191,32 @@ describe('TestCasesByRunCard', () => {
     render(
       <TestCasesByRunCard
         segments={[{ runId: 'run-1', runName: 'Run #19', above: 1, below: 0, errorOrNa: 0, total: 1 }]}
+        runOrder={[{ ...unthresholdedRunOrder[0], runName: 'Run #19' }]}
       />,
     );
 
     expect(screen.getByTestId('label-tooltip')).toHaveAttribute('data-tooltip', 'Run #19');
     expect(screen.getByTestId('label-tooltip').querySelector('.line-clamp-2')).toHaveTextContent('#19');
+  });
+
+  test('shows both completion and threshold legend entries for mixed run snapshots', () => {
+    render(
+      <TestCasesByRunCard
+        segments={[
+          { ...segments[0], overallScoreThreshold: 0.6 },
+          { ...segments[1], overallScoreThreshold: null, above: 5, below: 0 },
+        ]}
+        runOrder={[thresholdRunOrder[0], { ...unthresholdedRunOrder[0], runId: 'run-2', runName: 'Run#2' }]}
+      />,
+    );
+
+    expect(screen.getAllByText(TestSuitesI18nKey.TrendsTestCasesCompleted)).toHaveLength(3);
+    expect(screen.getByText(TestSuitesI18nKey.TrendsScoreAboveThreshold)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.TrendsScoreBelowThreshold)).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', {
+        name: `Run#2: 5 ${TestSuitesI18nKey.TrendsTestCasesCompleted}, 0 ${TestSuitesI18nKey.TrendsTestCasesErrorOrNa}`,
+      }),
+    ).toBeInTheDocument();
   });
 });

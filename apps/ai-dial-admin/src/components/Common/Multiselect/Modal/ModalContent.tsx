@@ -32,11 +32,14 @@ const MultiselectContentModal: FC<Props> = ({
     setFilter(pattern);
   }, []);
 
+  // The search only mounts when there is more then 10 items or if some filter applied.
+  const isSearchVisible = items.length > 10 || filter;
+
   // The one scroll container of the popup body — the list inside has none, so a row's focus ring is not
   // clipped by a second one. The padding keeps that ring off this clip edge too.
   return (
     <div className="flex max-h-[464px] flex-col gap-y-2 overflow-auto p-0.5">
-      {items.length > 10 && <Search onChange={onFilterItems} />}
+      {isSearchVisible && <Search onChange={onFilterItems} value={filter} />}
       {draggable ? (
         <DraggableList
           items={items}

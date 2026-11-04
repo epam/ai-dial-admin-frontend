@@ -35,6 +35,7 @@ const TestCaseStability: FC<Props> = ({ runOrder, selectedTestSuite }) => {
     () => ({
       testCase: t(TestSuitesI18nKey.TrendsStabilityTooltipTestCase),
       run: t(TestSuitesI18nKey.TrendsTooltipRun),
+      threshold: t(TestSuitesI18nKey.TrendsThresholdLabel),
       score: t(TestSuitesI18nKey.TrendsTooltipScore),
       passed: t(TestSuitesI18nKey.TrendsStabilityTooltipPassed),
       notApplicable: t(TestSuitesI18nKey.TrendsStabilityNotApplicable),
@@ -52,6 +53,7 @@ const TestCaseStability: FC<Props> = ({ runOrder, selectedTestSuite }) => {
       testCaseColIds: matrix.testCaseColIds,
       headerLabels: matrix.headerLabels,
       cellMeta: matrix.cellMeta,
+      thresholdByRowId: matrix.thresholdByRowId,
       labels,
     });
   }, [matrix, labels]);

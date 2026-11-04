@@ -11,13 +11,10 @@ import { ComboTrendPoint, RunTestCaseSegments, TrendsRunPoint } from '@/src/comp
 import { formatSuiteRunTime } from '@/src/components/TestSuites/Trends/utils/format';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   runOrder: TrendsRunPoint[];
-  selectedTestSuite: TestSuite;
   segments: RunTestCaseSegments[];
-  metricCount: number;
   costPoints: ComboTrendPoint[];
   runtimePoints: ComboTrendPoint[];
   sourceKind: string;
@@ -34,9 +31,7 @@ const formatRuntimeValue = (value: number | null): string =>
 
 const KpiStrip: FC<Props> = ({
   runOrder,
-  selectedTestSuite,
   segments,
-  metricCount,
   costPoints,
   runtimePoints,
   sourceKind,
@@ -46,24 +41,20 @@ const KpiStrip: FC<Props> = ({
   hasEvalError,
 }) => {
   const t = useI18n();
+  const latestThreshold = runOrder[runOrder.length - 1]?.overallScoreThreshold;
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:flex xl:flex-row xl:gap-4">
       <PassRateCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         segments={segments}
-        overallScoreThreshold={selectedTestSuite.overallScoreThreshold}
+        threshold={latestThreshold}
         isLoading={isEvalLoading}
         hasError={hasEvalError}
       />
-      <OverallScoreOfLatestRunCard
-        className="flex-1 sm:min-w-[180px]"
-        runOrder={runOrder}
-        selectedTestSuite={selectedTestSuite}
-        metricCount={metricCount}
-      />
+      <OverallScoreOfLatestRunCard className="w-full xl:flex-1 xl:min-w-[180px]" runOrder={runOrder} />
       <LatestComboTotalCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         points={runtimePoints}
         sourceLabel={sourceKind}
         isLoading={isRuntimeLoading}
@@ -72,7 +63,7 @@ const KpiStrip: FC<Props> = ({
         formatDelta={formatRuntimeDelta}
       />
       <LatestComboTotalCard
-        className="flex-1 sm:min-w-[180px]"
+        className="w-full xl:flex-1 xl:min-w-[180px]"
         points={costPoints}
         sourceLabel={sourceKind}
         isLoading={isCostLoading}

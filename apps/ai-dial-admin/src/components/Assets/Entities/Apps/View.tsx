@@ -27,6 +27,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -91,7 +92,10 @@ const AppView: FC<Props> = ({
         const scheme = getAppRunner(selectedApp, schemes);
 
         return (
-          activeTab === EntityViewTab.Parameters && (scheme?.['dial:applicationTypeEditorUrl'] || selectedApp.editorUrl)
+          activeTab === EntityViewTab.Parameters &&
+          (scheme?.['dial:applicationTypeEditorUrl'] ||
+            selectedApp.editorUrl ||
+            (selectedApp as unknown as DialApplicationResource).editor_url)
         );
       },
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),

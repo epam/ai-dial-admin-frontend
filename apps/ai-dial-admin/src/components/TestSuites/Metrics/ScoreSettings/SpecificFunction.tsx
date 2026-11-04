@@ -95,7 +95,7 @@ const SpecificFunction: FC<Props> = ({
         </span>
 
         <FunctionParameterRow
-          labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
+          labelKey={TestSuitesI18nKey.OverallScoreGroundTruth}
           source={parameterSources[0]}
           testCaseSchema={testCaseSchema}
           responseColumns={responseColumns}
@@ -103,7 +103,7 @@ const SpecificFunction: FC<Props> = ({
           onChange={(source) => onParameterChange(0, source)}
         />
         <FunctionParameterRow
-          labelKey={TestSuitesI18nKey.OverallScoreParameterP}
+          labelKey={TestSuitesI18nKey.OverallScorePrediction}
           source={parameterSources[1]}
           testCaseSchema={testCaseSchema}
           responseColumns={responseColumns}

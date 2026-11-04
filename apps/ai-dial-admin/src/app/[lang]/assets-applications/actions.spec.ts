@@ -334,6 +334,35 @@ describe('Assets application :: server actions', () => {
     );
   });
 
+  test('updateApp forwards resource of external services as is, including a blank one that clears it', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+        external_services: {
+          kept: { auth_settings: { client_id: 'id', resource: 'https://a.io/mcp' } },
+          cleared: { auth_settings: { client_id: 'id', resource: '' } },
+        },
+      }),
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public/my-app__1.0',
+      expect.objectContaining({
+        external_services: {
+          kept: { auth_settings: { client_id: 'id', resource: 'https://a.io/mcp' } },
+          cleared: { auth_settings: { client_id: 'id', resource: '' } },
+        },
+      }),
+      { etag: 'etag' },
+    );
+  });
+
   test('updateApp passes interfaces through unchanged before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 

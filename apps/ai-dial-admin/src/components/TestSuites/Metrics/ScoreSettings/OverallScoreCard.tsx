@@ -27,7 +27,8 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
   const t = useI18n();
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const hasThreshold = selectedTestSuite.overallScoreThreshold !== undefined;
+  const threshold = selectedTestSuite.overallScoreThreshold;
+  const hasNumericThreshold = typeof threshold === 'number';
   const methodLabel = t(getOverallScoreCardMethodLabelKey(selectedTestSuite));
   const formulaKey = getOverallScoreFormulaLabelKey(selectedTestSuite);
   const formulaLabel = formulaKey ? t(formulaKey) : null;
@@ -98,22 +99,33 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
 
           <div className="flex flex-col gap-1">
             <span className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.OverallScoreThresholdLabel)}</span>
-            {hasThreshold ? (
-              <div className="flex flex-row flex-wrap items-center gap-2 dial-small-text text-primary">
-                <span>
-                  <span className="text-success">{t(TestSuitesI18nKey.ScoreThresholdPass)}</span>
-                  {` ${t(TestSuitesI18nKey.ScoreThresholdConditionGe)}`}
-                </span>
-                <span className="rounded-xs border border-accent-primary bg-accent-primary-alpha px-1.5 py-1 dial-tiny-text text-primary">
-                  {selectedTestSuite.overallScoreThreshold}
-                </span>
-                <span>
-                  {`${t(TestSuitesI18nKey.ScoreThresholdOtherwise)} `}
-                  <span className="text-error">{t(TestSuitesI18nKey.ScoreThresholdFail)}</span>
-                </span>
-              </div>
-            ) : (
+            {threshold === undefined ? (
               <span className="dial-small-text text-secondary">{t(TestSuitesI18nKey.ScoreThresholdNotDefined)}</span>
+            ) : (
+              <>
+                <div className="flex flex-row flex-wrap items-center gap-2 dial-small-text text-primary">
+                  <span>
+                    <span className="text-success">{t(TestSuitesI18nKey.ScoreThresholdPass)}</span>
+                    {` ${t(TestSuitesI18nKey.ScoreThresholdConditionGe)}`}
+                  </span>
+                  {hasNumericThreshold ? (
+                    <span className="rounded-xs border border-accent-primary bg-accent-primary-alpha px-1.5 py-1 dial-tiny-text text-primary">
+                      {threshold}
+                    </span>
+                  ) : (
+                    <span className="rounded-xs bg-error p-1 dial-tiny-text text-primary">
+                      {t(TestSuitesI18nKey.ScoreThresholdEmpty)}
+                    </span>
+                  )}
+                  <span>
+                    {`${t(TestSuitesI18nKey.ScoreThresholdOtherwise)} `}
+                    <span className="text-error">{t(TestSuitesI18nKey.ScoreThresholdFail)}</span>
+                  </span>
+                </div>
+                {threshold === null && (
+                  <p className="dial-tiny-text text-error">{t(TestSuitesI18nKey.ScoreThresholdEmptyHint)}</p>
+                )}
+              </>
             )}
           </div>
         </div>

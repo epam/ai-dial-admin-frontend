@@ -137,15 +137,16 @@ describe('AddMetricModal', () => {
     expect(screen.getByRole('region', { name: 'metric-selection' })).toBeInTheDocument();
   });
 
-  test('sets a desktop-prefixed height so the ui-kit md:h-auto does not size the modal to its content', () => {
+  test('sets responsive desktop heights for the modal', () => {
     render(
       <AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} metricDeclarations={metricDeclarations} />,
     );
 
     const dialog = screen.getByRole('dialog', { name: TestSuitesI18nKey.AddMetric });
 
-    expect(dialog).toHaveClass('md:h-[800px]');
-    expect(dialog).not.toHaveClass('h-[800px]');
+    expect(dialog).toHaveClass('sm:h-[90vh]');
+    expect(dialog).toHaveClass('lg:h-[80vh]');
+    expect(dialog).toHaveClass('2xl:h-[70vh]');
   });
 
   test('loads metric latest version after selection in add mode', async () => {

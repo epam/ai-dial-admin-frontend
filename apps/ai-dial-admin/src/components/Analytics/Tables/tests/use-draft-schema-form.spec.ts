@@ -319,6 +319,52 @@ describe('useDraftSchemaForm source', () => {
   });
 });
 
+describe('useDraftSchemaForm — granularity of a chosen partition column', () => {
+  const withTimestamp = () => {
+    const hook = renderHook(() => useDraftSchemaForm(source, null, t));
+    act(() =>
+      hook.result.current.update('columns', [
+        { ...hook.result.current.form.columns[0], source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
+      ]),
+    );
+    act(() => hook.result.current.update('orderingKey', ['ts']));
+    return hook.result;
+  };
+
+  test('a chosen partition column without a granularity blocks Materialize', () => {
+    const result = withTimestamp();
+    expect(result.current.canMaterialize).toBe(true);
+
+    act(() => result.current.update('partitionColumn', 'ts'));
+
+    expect(result.current.isGranularityMissing).toBe(true);
+    expect(result.current.canMaterialize).toBe(false);
+  });
+
+  test('choosing a granularity clears the block and puts the partition in the request', () => {
+    const result = withTimestamp();
+    act(() => result.current.update('partitionColumn', 'ts'));
+
+    act(() => result.current.update('granularity', PartitionGranularity.Month));
+
+    expect(result.current.isGranularityMissing).toBe(false);
+    expect(result.current.canMaterialize).toBe(true);
+    expect(result.current.buildDto()).toMatchObject({ partition_by: { column: 'ts', granularity: 'month' } });
+  });
+
+  test('no granularity is asked for while no partition column is chosen', () => {
+    const result = withTimestamp();
+
+    expect(result.current.isGranularityMissing).toBe(false);
+  });
+
+  test('an enrichment never asks for a granularity', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(enrichment, null, t));
+
+    expect(result.current.isGranularityMissing).toBe(false);
+  });
+});
+
 describe('useDraftSchemaForm enrichment', () => {
   test('never emits either scan-metadata member, even with both chosen in the form', () => {
     const { result } = renderHook(() => useDraftSchemaForm(enrichment, null, t));

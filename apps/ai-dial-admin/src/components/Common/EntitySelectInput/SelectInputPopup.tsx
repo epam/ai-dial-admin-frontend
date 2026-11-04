@@ -20,6 +20,7 @@ interface Props {
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
+  wrapperClassName?: string;
   isEditable?: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -39,6 +40,7 @@ const SelectInputPopup: FC<Props> = ({
   elementId,
   disabled,
   inputClassName,
+  wrapperClassName,
   isEditable = true,
   onOpen,
   onClose,
@@ -62,6 +64,7 @@ const SelectInputPopup: FC<Props> = ({
           inputClassName={inputClassName}
           editable={isEditable}
           onValueChange={onChangeValue}
+          wrapperClassName={wrapperClassName}
         >
           <Popup
             header={header}

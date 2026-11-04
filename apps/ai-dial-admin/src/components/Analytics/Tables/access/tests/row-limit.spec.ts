@@ -122,6 +122,37 @@ describe('hasUnfinishedCondition', () => {
     expect(hasUnfinishedCondition(root)).toBe(false);
   });
 
+  test.each([
+    ['an empty value', ''],
+    ['a blank value', '   '],
+  ])('is true for a condition with %s', (_name, value) => {
+    const root = createGroup();
+    root.children.push({ ...filled(), value });
+
+    expect(hasUnfinishedCondition(root)).toBe(true);
+  });
+
+  test('is true for an is-one-of condition with no non-blank item', () => {
+    const root = createGroup();
+    root.children.push({ ...filled(), op: QueryOperator.In, value: ' , ,' });
+
+    expect(hasUnfinishedCondition(root)).toBe(true);
+  });
+
+  test('is false for an is-one-of condition with an item', () => {
+    const root = createGroup();
+    root.children.push({ ...filled(), op: QueryOperator.In, value: 'a, b' });
+
+    expect(hasUnfinishedCondition(root)).toBe(false);
+  });
+
+  test('is false for an explicit null comparison, which carries no typed value', () => {
+    const root = createGroup();
+    root.children.push({ ...filled(), value: '', isNull: true });
+
+    expect(hasUnfinishedCondition(root)).toBe(false);
+  });
+
   test('is true for a condition with no column', () => {
     const root = createGroup();
     root.children.push(filled(), createPredicate());

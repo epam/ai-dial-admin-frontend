@@ -1,6 +1,35 @@
 import { describe, expect, test } from 'vitest';
 
-import { mergeFolderTrees, toFolderTree } from '../folder-tree';
+import { mergeFolderTrees, toFolderTree, withRootOf } from '../folder-tree';
+
+describe('Server :: Folders :: folder-tree :: withRootOf', () => {
+  test('keeps the target root and takes only the children of the other tree', () => {
+    const root = toFolderTree(
+      { url: 'prompts/public/', parentPath: null as unknown as string, bucket: 'b-1', nodeType: 'FOLDER', items: [] },
+      'prompts/',
+    );
+    const skills = toFolderTree(
+      {
+        url: 'skills/public/',
+        parentPath: 'other',
+        bucket: 'b-2',
+        nodeType: 'FOLDER',
+        items: [
+          { nodeType: 'FOLDER', url: 'skills/public/team/' },
+          { nodeType: 'ITEM', url: 'skills/public/skill-a' },
+        ],
+      },
+      'skills/',
+    );
+
+    const result = withRootOf(root, skills);
+
+    expect(result).toMatchObject({ name: 'public', path: 'public/', bucket: 'b-1', parentPath: null });
+    expect(result.items).toHaveLength(1);
+    expect(result.items?.[0]).toMatchObject({ name: 'team', path: 'public/team/' });
+    expect(() => mergeFolderTrees([root, result])).not.toThrow();
+  });
+});
 
 describe('Server :: Folders :: folder-tree :: toFolderTree', () => {
   test('builds a folder-only tree, dropping ITEM children', () => {

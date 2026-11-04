@@ -41,10 +41,10 @@ export const ANALYTICS_DISPLAY_NAME_MAX_LENGTH = 128;
 export const ANALYTICS_DESCRIPTION_MAX_LENGTH = 1024;
 
 export const PARTITION_NONE = '';
-export const PARTITION_GRANULARITY_OPTIONS: SelectOption[] = [
-  { value: PARTITION_NONE, label: 'None' },
-  ...Object.values(PartitionGranularity).map((value) => ({ value, label: capitalize(value) })),
-];
+export const PARTITION_GRANULARITY_OPTIONS: SelectOption[] = Object.values(PartitionGranularity).map((value) => ({
+  value,
+  label: capitalize(value),
+}));
 
 // A source table's write discipline. The label names the mode and the description says what it does to
 // a write against a key the table already holds — the two are split so the dropdown panel stays inside a

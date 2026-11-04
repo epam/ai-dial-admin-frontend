@@ -4,15 +4,12 @@ import { FC, useMemo } from 'react';
 
 import { Notification, NotificationType, NotificationVariant, Spinner } from '@epam/ai-dial-ui-kit';
 
+import PassRateBar from '@/src/components/Common/PassRateBar/PassRateBar';
+import { formatPassRatePercent } from '@/src/components/Common/PassRateBar/utils';
 import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import KpiDeltaBadge from '@/src/components/TestSuites/Trends/Kpi/KpiDeltaBadge';
-import {
-  formatPassRateDelta,
-  formatPassRatePercent,
-  passRateBarColor,
-  segmentPassRate,
-} from '@/src/components/TestSuites/Trends/Kpi/utils/pass-rate';
+import { formatPassRateDelta, segmentPassRate } from '@/src/components/TestSuites/Trends/Kpi/utils/pass-rate';
 import { RunTestCaseSegments } from '@/src/components/TestSuites/Trends/models';
 import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -20,15 +17,15 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   segments: RunTestCaseSegments[];
-  overallScoreThreshold?: number | null;
+  threshold?: number | null;
   isLoading?: boolean;
   hasError?: boolean;
   className?: string;
 }
 
-const PassRateCard: FC<Props> = ({ segments, overallScoreThreshold, isLoading, hasError, className }) => {
+const PassRateCard: FC<Props> = ({ segments, threshold, isLoading, hasError, className }) => {
   const t = useI18n();
-  const hasThreshold = hasOverallScoreThreshold(overallScoreThreshold);
+  const hasThreshold = hasOverallScoreThreshold(threshold);
 
   const latest = segments.length > 0 ? segments[segments.length - 1] : null;
   const previous = segments.length > 1 ? segments[segments.length - 2] : null;
@@ -64,23 +61,13 @@ const PassRateCard: FC<Props> = ({ segments, overallScoreThreshold, isLoading, h
               </>
             )}
           </div>
-          {latestRate != null && (
-            <div className="h-1 w-full overflow-hidden rounded-sm bg-layer-1" aria-hidden>
-              <div
-                className="h-full rounded-sm"
-                style={{
-                  width: `${Math.min(100, latestRate * 100)}%`,
-                  backgroundColor: passRateBarColor(latestRate),
-                }}
-              />
-            </div>
-          )}
+          {latestRate != null && <PassRateBar rate={latestRate} label={title} />}
         </div>
       )}
-      {hasThreshold && overallScoreThreshold != null && !hasError && (
+      {hasThreshold && threshold != null && !hasError && (
         <div className="flex gap-1 dial-tiny-text">
           <span className="text-secondary">{t(TestSuitesI18nKey.TrendsThresholdLabel)}</span>
-          <span className="text-primary">{formatScore(overallScoreThreshold)}</span>
+          <span className="text-primary">{formatScore(threshold)}</span>
         </div>
       )}
     </KpiCardFrame>

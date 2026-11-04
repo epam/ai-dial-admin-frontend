@@ -31,7 +31,7 @@ const COLUMNS: ColDef<BreakdownRowModel>[] = [
 
 const DATASOURCE: IDatasource = { getRows: vi.fn() };
 
-type Props = Parameters<typeof BreakdownGrid>[0];
+type Props = Parameters<typeof BreakdownGrid<BreakdownRowModel>>[0];
 
 const renderGrid = (props: Partial<Props> = {}) =>
   render(<BreakdownGrid rows={[]} columnDefs={COLUMNS} isLoading={false} hasFailed={false} {...props} />);
@@ -65,6 +65,24 @@ describe('BreakdownGrid', () => {
     updateModel([row('a', 7), row('b', 51482)]);
 
     expect(ruler('calls')).toBe('"51,482"');
+  });
+
+  test('publishes the widest change of each column, so its badges share one width', () => {
+    renderGrid({
+      columnDefs: [
+        {
+          colId: 'calls',
+          cellRendererParams: {
+            format: (r: BreakdownRowModel) => String(r.calls),
+            getDelta: (r: BreakdownRowModel) => (r.id === 'a' ? 0.5 : -24.863),
+          },
+        },
+      ],
+    });
+
+    updateModel([row('a', 7), row('b', 9)]);
+
+    expect(ruler('calls-delta')).toBe('"2,486.3%"');
   });
 
   test('publishes nothing for a column that states no figure', () => {

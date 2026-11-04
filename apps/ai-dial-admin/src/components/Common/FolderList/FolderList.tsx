@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { isFileRootPath } from '@/src/utils/files/root-folder';
+import { useScrollSelectedFolder } from '@/src/hooks/use-scroll-selected-folder';
 import { isUnitFolder } from '@/src/utils/org-units/units';
 
 interface Props {
@@ -26,7 +27,8 @@ interface Props {
 const DEFAULT_ROOT_PATHS = [`${ROOT_FOLDER}/`];
 
 // Expansion is owned by the folder context (`toggleFolder` runs from `onItemClick`). A handler must
-// still be passed: its presence is what makes the tree controlled, and its own toggle is discarded.
+// still be passed: its presence is what makes the tree controlled, and its own toggle is discarded
+// unless the context is a rule folder context, which applies caret expansion itself.
 const IGNORE_TREE_EXPANSION_CHANGE = () => undefined;
 
 const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPaths = DEFAULT_ROOT_PATHS }) => {
@@ -34,25 +36,11 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
   const folderContext = context?.();
   const autoFetchedRootsKeyRef = useRef<string | undefined>(undefined);
   const rootPathsKey = rootPaths.join('|');
+  const scrollToFolder = useScrollSelectedFolder();
 
   const folderData = useMemo(() => {
     return folderContext?.files?.filter((node) => !isFileRootPath(node.path));
   }, [folderContext]);
-
-  const scrollToFolder = useCallback(() => {
-    let attempts = 0;
-    const maxAttempts = 20;
-    const scrollInterval = setInterval(() => {
-      const selectedElement = document.querySelector('[aria-selected="true"]');
-      if (selectedElement) {
-        selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        clearInterval(scrollInterval);
-      } else if (attempts >= maxAttempts) {
-        clearInterval(scrollInterval);
-      }
-      attempts++;
-    }, 500);
-  }, []);
 
   useEffect(() => {
     const context = folderContext as RuleFolderContextType;
@@ -95,6 +83,25 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
     [folderContext],
   );
 
+  const pendingPathsRef = useRef(new Set<string>());
+  // A caret click or arrow key only expands or collapses: it never selects the folder, so it can't go
+  // through `toggleFolder`. Newly expanded folders that have not been loaded fetch their children.
+  const onRuleExpandedPathsChange = useCallback(
+    (paths: Set<string>) => {
+      const context = folderContext as RuleFolderContextType;
+      const previousPaths = context.expandedFolders;
+      context.setExpandedFolders(paths);
+      paths.forEach((path) => {
+        if (previousPaths.has(path) || context.fetchedFoldersData[path] != null || pendingPathsRef.current.has(path)) {
+          return;
+        }
+        pendingPathsRef.current.add(path);
+        void Promise.resolve(context.fetchFiles(path)).finally(() => pendingPathsRef.current.delete(path));
+      });
+    },
+    [folderContext],
+  );
+
   const loadedPaths = useMemo(() => new Set(Object.keys(folderContext?.fetchedFoldersData ?? {})), [folderContext]);
 
   const ruleContext = folderContext as RuleFolderContextType | undefined;
@@ -131,7 +138,7 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
           ariaLabel={t(FoldersI18nKey.Folders)}
           getItemIcon={hasUnits ? getItemIcon : undefined}
           onItemClick={(node) => onToggleFolder(node as unknown as Asset)}
-          onExpandedPathsChange={IGNORE_TREE_EXPANSION_CHANGE}
+          onExpandedPathsChange={isRuleFolderContext ? onRuleExpandedPathsChange : IGNORE_TREE_EXPANSION_CHANGE}
         />
       )}
     </div>

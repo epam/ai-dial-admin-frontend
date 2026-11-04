@@ -221,7 +221,11 @@ vi.mock('echarts-for-react', () => ({
 vi.mock('@monaco-editor/react', () => {
   const Editor = ({ value, language, onChange, options }: EditorMockProps) =>
     onChange && !options?.readOnly ? (
-      <textarea aria-label="JSON editor" value={value || ''} onChange={(event) => onChange(event.target.value)} />
+      <textarea
+        aria-label={options?.ariaLabel ?? 'JSON editor'}
+        value={value || ''}
+        onChange={(event) => onChange(event.target.value)}
+      />
     ) : (
       <pre data-language={language}>{value}</pre>
     );

@@ -187,6 +187,7 @@ export const mapRunRow = (row: Record<string, unknown>): Run => {
   const routesRef = asRoutesRef(row);
   const suiteType = asString(row.suite_type) as SuiteType | undefined;
   const numberOfRuns = asNumber(row.number_of_runs);
+  const overallScoreThreshold = asNumber(row.overall_score_threshold);
 
   return {
     id: asString(row.id),
@@ -202,8 +203,14 @@ export const mapRunRow = (row: Record<string, unknown>): Run => {
     metricNames: asStringArray(row.metric_names),
     overallScoreValue: asNumber(row.overall_score_value),
     totalCost: asNumber(row.total_cost),
-    ...((suiteType || deploymentRef || mcpDeploymentRef || routesRef) && {
-      suiteSnapshot: { suiteType, deploymentRef, mcpDeploymentRef, routesRef },
+    ...((suiteType || deploymentRef || mcpDeploymentRef || routesRef || overallScoreThreshold != null) && {
+      suiteSnapshot: {
+        suiteType,
+        deploymentRef,
+        mcpDeploymentRef,
+        routesRef,
+        ...(overallScoreThreshold != null && { overallScoreThreshold }),
+      },
     }),
     ...(numberOfRuns != null && {
       runConfig: { numberOfRuns },

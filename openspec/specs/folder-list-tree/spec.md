@@ -53,6 +53,12 @@ folder, and the tree SHALL NOT keep expansion state of its own.
 - **THEN** `toggleFolder` is called once with that folder and the row's expansion follows the
   context's `expandedFolders`
 
+#### Scenario: Caret expansion in a rule folder context does not select
+- **GIVEN** the context is a rule folder context (it exposes `setExpandedFolders`)
+- **WHEN** the user expands a folder through its caret or the keyboard
+- **THEN** the folder is added to `expandedFolders` without calling `toggleFolder`, selection and
+  `filePath` stay unchanged, and its children are requested once unless already loaded or pending
+
 #### Scenario: Programmatic expansion is reflected
 - **WHEN** the context expands folders (for example loading the hierarchy for `initialPath`)
 - **THEN** those folders render expanded and the folder at `filePath` is marked selected

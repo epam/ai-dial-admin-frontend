@@ -53,6 +53,9 @@ export const strictNumber = (value: unknown): number | null => {
 export const getStrictNumericColumns = (rows: ResultRows, columns: string[]): string[] =>
   rows.length ? columns.filter((column) => rows.every((row) => strictNumber(row[column]) !== null)) : [];
 
+// A blank category would draw an unlabeled bar or slice, so it reads as `emptyLabel` instead.
+const renderCategory = (value: unknown, emptyLabel: string): string => renderCell(value) || emptyLabel;
+
 // Top-N pie slices by value; the remaining categories merge into one localized "Other" slice.
 export const bucketTopSlices = (
   rows: ResultRows,
@@ -60,9 +63,10 @@ export const bucketTopSlices = (
   valueField: string,
   otherLabel: string,
   maxSlices: number = PIE_MAX_SLICES,
+  emptyLabel = '',
 ): PieSlice[] => {
   const slices = rows
-    .map((row) => ({ name: renderCell(row[categoryField]), value: toNumber(row[valueField]) ?? 0 }))
+    .map((row) => ({ name: renderCategory(row[categoryField], emptyLabel), value: toNumber(row[valueField]) ?? 0 }))
     .sort((a, b) => b.value - a.value);
   if (slices.length <= maxSlices) return slices;
   const other = slices.slice(maxSlices).reduce((sum, s) => sum + s.value, 0);
@@ -100,9 +104,10 @@ const buildCartesianOptions = (
   xField: string,
   yField: string,
   yLabel: string = yField,
+  emptyLabel = '',
 ): EChartsOption => {
   const ordered = sortRowsByX(rows, xField);
-  const xData = ordered.map((row) => renderCell(row[xField]));
+  const xData = ordered.map((row) => renderCategory(row[xField], emptyLabel));
   const yData = ordered.map((row) => toNumber(row[yField]));
   const options = baseOptions(colors, xData, yLabel);
 
@@ -135,6 +140,7 @@ export const buildPieChartOptions = (
   categoryField: string,
   valueField: string,
   otherLabel: string,
+  emptyLabel = '',
 ): EChartsOption => ({
   title: { show: false },
   tooltip: { trigger: 'item', ...CHART_TOOLTIP_STYLE },
@@ -142,7 +148,7 @@ export const buildPieChartOptions = (
     {
       type: 'pie',
       radius: '70%',
-      data: bucketTopSlices(rows, categoryField, valueField, otherLabel),
+      data: bucketTopSlices(rows, categoryField, valueField, otherLabel, PIE_MAX_SLICES, emptyLabel),
       label: { color: colors.neutral },
     },
   ],
@@ -211,7 +217,9 @@ export const buildChartOptions = (
   context: ChartBuildContext,
 ): EChartsOption => {
   const label = (column: string): string => context.columnLabels[column] ?? column;
-  if (type === ChartType.Pie) return buildPieChartOptions(context.colors, rows, xField, yField, context.otherLabel);
+  if (type === ChartType.Pie) {
+    return buildPieChartOptions(context.colors, rows, xField, yField, context.otherLabel, context.emptyLabel);
+  }
   if (type === ChartType.Scatter) {
     return buildScatterChartOptions(
       context.colors,
@@ -223,5 +231,5 @@ export const buildChartOptions = (
       label(yField),
     );
   }
-  return buildCartesianOptions(context.colors, type, rows, xField, yField, label(yField));
+  return buildCartesianOptions(context.colors, type, rows, xField, yField, label(yField), context.emptyLabel);
 };

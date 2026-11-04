@@ -96,7 +96,7 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, overallScoreThreshold, isLoadi
           <NoDataContent title={t(BasicI18nKey.NoData)} />
         </div>
       ) : (
-        <div className="flex h-full min-h-[220px] w-full flex-col gap-2">
+        <div className="flex h-full min-h-[220px] w-full flex-col gap-2 overflow-hidden">
           <div className="flex min-h-0 w-full flex-1 gap-2">
             <TrendScoreAxis />
             <div

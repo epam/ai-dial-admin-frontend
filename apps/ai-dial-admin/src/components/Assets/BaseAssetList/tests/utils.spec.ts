@@ -5,6 +5,7 @@ import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/Form
 import { getGridColumns, getPlatformAssetDuplicate } from '@/src/components/Assets/BaseAssetList/utils';
 import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 /**
  * `getGridColumns` returns ui-kit's curried column factories alongside plain `ColDef`s —
@@ -64,6 +65,21 @@ describe('BaseAssetList', () => {
       expect(duplicate).not.toHaveProperty('status');
       expect(duplicate).not.toHaveProperty('validationWarnings');
       expect(duplicate).not.toHaveProperty('reference');
+    });
+
+    test('should drop the source row identity so the redirect targets the duplicate, not the original', () => {
+      const source = {
+        name: 'schema-copy',
+        $id: 'schema-copy',
+        _metadata: { name: 'schema', path: 'platform/schema', folderId: 'platform/' },
+      } as unknown as PlatformAsset;
+
+      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.PlatformCatalogSchemas, source);
+
+      expect(duplicate).not.toHaveProperty('_metadata');
+      expect(getUrnForEntity(ApplicationRoute.PlatformCatalogSchemas, { ...duplicate, folderId: 'platform/' })).toBe(
+        '/platform-catalog-schemas/schema-copy',
+      );
     });
 
     test('should not drop the runner name', () => {

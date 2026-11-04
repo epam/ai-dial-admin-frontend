@@ -47,7 +47,7 @@ describe('OverallScoreCard', () => {
     expect(onChange).toHaveBeenCalledWith({ id: 'suite-1', overallScore: { type: OverallScoreType.Mean } });
   });
 
-  test('renders calculation method and Not defined when threshold is unset', () => {
+  test('renders Not defined when the threshold is off', () => {
     const selectedTestSuite: TestSuite = {
       id: 'suite-1',
       overallScore: { type: OverallScoreType.Mean },
@@ -58,6 +58,23 @@ describe('OverallScoreCard', () => {
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreCalculationMethod)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdNotDefined)).toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdPass)).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdEmptyHint)).not.toBeInTheDocument();
+  });
+
+  test('renders the empty value and hint when the threshold is enabled without a number', () => {
+    const selectedTestSuite: TestSuite = {
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
+      overallScoreThreshold: null,
+    };
+
+    render(<OverallScoreCard selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdPass)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdEmpty)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdFail)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ScoreThresholdEmptyHint)).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.ScoreThresholdNotDefined)).not.toBeInTheDocument();
   });
 
   test('renders specific-function card with suite badge and test-case score summary', () => {

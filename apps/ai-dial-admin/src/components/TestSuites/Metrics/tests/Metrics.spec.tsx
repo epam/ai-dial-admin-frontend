@@ -14,6 +14,7 @@ const mockGetDetailedMetricDeclarations = vi.fn();
 const mockCreateTestSuiteMetric = vi.fn();
 const mockDeleteTestSuiteMetric = vi.fn();
 const mockUpdateTestSuiteMetric = vi.fn();
+const mockGetTestSuite = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuiteMetricsAggregated: (...args: unknown[]) => mockGetTestSuiteMetricsAggregated(...args),
@@ -22,6 +23,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   createTestSuiteMetric: (...args: unknown[]) => mockCreateTestSuiteMetric(...args),
   deleteTestSuiteMetric: (...args: unknown[]) => mockDeleteTestSuiteMetric(...args),
   updateTestSuiteMetric: (...args: unknown[]) => mockUpdateTestSuiteMetric(...args),
+  getTestSuite: (...args: unknown[]) => mockGetTestSuite(...args),
 }));
 
 vi.mock('../AddMetric/AddMetricModal', () => ({
@@ -126,6 +128,7 @@ describe('Metrics', () => {
     mockCreateTestSuiteMetric.mockResolvedValue({ success: true, response: { id: 'created-metric' } });
     mockDeleteTestSuiteMetric.mockResolvedValue({ success: true });
     mockUpdateTestSuiteMetric.mockResolvedValue({ success: true });
+    mockGetTestSuite.mockResolvedValue({ success: true, response: { id: 'suite-1', valid: true } });
   });
 
   test('loads metrics with the aggregated and plain-list requests and shows empty state when list is empty', async () => {
@@ -148,12 +151,12 @@ describe('Metrics', () => {
     expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
   });
 
-  test('hides Overall Score card when there are no metrics', async () => {
+  test('shows Overall Score card when there are no metrics', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics });
 
-    expect(screen.queryByRole('region', { name: 'score-settings' })).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'score-settings' })).toBeInTheDocument();
   });
 
   test('shows Overall Score card when metrics exist', async () => {
@@ -276,23 +279,21 @@ describe('Metrics', () => {
     expect(mockGetTestSuiteMetricsAggregated).toHaveBeenLastCalledWith('suite-1');
   });
 
-  test('deleting the final metric does not create an unsaved suite change', async () => {
+  test('deleting the final metric does not sanitize overallScore into an unsaved suite change', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
+    const suiteWithWeights: TestSuite = {
+      ...selectedTestSuite,
+      valid: true,
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'Metric One', outputField: 'score', weight: 1 }],
+      },
+    };
     mockGetTestSuiteMetricsAggregated.mockResolvedValueOnce([metric]).mockResolvedValueOnce([]);
+    mockGetTestSuite.mockResolvedValue({ success: true, response: { ...suiteWithWeights, valid: true } });
 
-    render(
-      <Metrics
-        selectedTestSuite={{
-          ...selectedTestSuite,
-          overallScore: {
-            type: OverallScoreType.WeightedMean,
-            weights: [{ metricName: 'Metric One', outputField: 'score', weight: 1 }],
-          },
-        }}
-        onChange={onChange}
-      />,
-    );
+    render(<Metrics selectedTestSuite={suiteWithWeights} onChange={onChange} />);
 
     await screen.findByText('Metric One');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
@@ -303,7 +304,75 @@ describe('Metrics', () => {
     );
 
     expect(await screen.findByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
-    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('region', { name: 'score-settings' })).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(mockGetTestSuite).toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  test('deleting a weighted-mean metric refreshes suite validity without stripping weights', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const secondMetric: Metric = { id: 'metric-2', name: 'Metric Two', displayName: 'Metric Two' };
+    const suiteWithWeights: TestSuite = {
+      ...selectedTestSuite,
+      valid: true,
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [
+          { metricName: 'Metric One', outputField: 'score', weight: 1 },
+          { metricName: 'Metric Two', outputField: 'score', weight: 2 },
+        ],
+      },
+    };
+    mockGetTestSuiteMetricsAggregated
+      .mockResolvedValueOnce([metric, secondMetric])
+      .mockResolvedValueOnce([secondMetric]);
+    mockGetTestSuite.mockResolvedValue({
+      success: true,
+      response: {
+        ...suiteWithWeights,
+        valid: false,
+        validationWarnings: [
+          {
+            code: 'MISSING_OVERALL_SCORE_METRIC',
+            message: 'Metric One no longer exists in Overall score weights',
+            path: '',
+            fieldName: '',
+          },
+        ],
+      },
+    });
+
+    render(<Metrics selectedTestSuite={suiteWithWeights} onChange={onChange} />);
+
+    await screen.findByText('Metric One');
+    await user.click(
+      within(screen.getByRole('article', { name: 'Metric One' })).getByRole('button', { name: ButtonsI18nKey.Delete }),
+    );
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'delete-metric-confirmation' })).getByRole('button', {
+        name: ButtonsI18nKey.Delete,
+      }),
+    );
+
+    await vi.waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          valid: false,
+          overallScore: suiteWithWeights.overallScore,
+          validationWarnings: [
+            {
+              code: 'MISSING_OVERALL_SCORE_METRIC',
+              message: 'Metric One no longer exists in Overall score weights',
+              path: '',
+              fieldName: '',
+            },
+          ],
+        }),
+      ),
+    );
   });
 
   test('opens edit modal and updates metric on confirmation', async () => {
