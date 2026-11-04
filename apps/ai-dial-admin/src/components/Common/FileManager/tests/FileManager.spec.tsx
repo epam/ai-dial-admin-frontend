@@ -38,7 +38,10 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({ featureFlags: mockFeatureFlags, isReadOnlyAdmin: false }),
 }));
 
-const renderFileManager = (view: ApplicationRoute = ApplicationRoute.AssetsApplications) => {
+const renderFileManager = (
+  view: ApplicationRoute = ApplicationRoute.AssetsApplications,
+  onExport?: (files: unknown[]) => Promise<void>,
+) => {
   const fetchFiles = vi.fn();
   // A stable context object: `files` is what the root-fetch effect keys on, so a fresh literal
   // per render would re-trigger the effect every render and repeat the fetch.
@@ -464,9 +467,13 @@ describe('FileManager — org units', () => {
       expect(restriction(folder('public/Acme/'), action)).toBe(FoldersI18nKey.ContainsUnitRestriction);
     });
 
+    test('blocks export of a unit folder with its own reason', () => {
+      expect(restriction(folder('public/Acme/Risk/'), 'download')).toBe(FoldersI18nKey.UnitFolderExportRestriction);
+    });
+
     test('leaves other actions available', () => {
       expect(restriction(folder('public/Acme/Risk/'), 'copy')).toBeUndefined();
-      expect(restriction(folder('public/Acme/Risk/'), 'download')).toBeUndefined();
+      expect(restriction(folder('public/Acme/'), 'download')).toBeUndefined();
     });
 
     test('leaves a folder inside a unit that contains no unit available', () => {

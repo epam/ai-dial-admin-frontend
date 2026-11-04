@@ -1253,6 +1253,7 @@ export default {
       UnitRemoved: 'Unit removed',
       UnitFolderRestriction: 'This folder is an org unit, so its path cannot change. Manage it from Folders Storage.',
       ContainsUnitRestriction: 'This folder contains an org unit, so its path cannot change.',
+      UnitFolderExportRestriction: 'This folder is an org unit and cannot be exported.',
     },
   },
   ActivityAudit: {
