@@ -1,7 +1,7 @@
 # user-org-units-access Specification
 
 ## Purpose
-The caller's access as DIAL Core reports it (`GET /v1/user/org-units`: `adminAccess` plus the units the caller
+The caller's access as DIAL Core reports it (`GET /v1/user/role-assignments`: `adminAccess` plus the units the caller
 works in, with roles and permissions): the start-mode gate (full, unit or denied, with 404 and auth-off as
 full), how `AppContext` exposes it, and the unit-mode rules for menu sections, folder write actions, approve
 and reject, and the role-assignments tab. Replaces the admin backend's security-info as the source of roles —
@@ -10,7 +10,7 @@ created by archiving change `use-core-user-org-units-for-access`.
 ## Requirements
 
 ### Requirement: The caller's access is read from Core
-The system SHALL read the caller's access with one `GET /v1/user/org-units` call to DIAL Core per request,
+The system SHALL read the caller's access with one `GET /v1/user/role-assignments` call to DIAL Core per request,
 authenticated with the caller's token, and expose it as `adminAccess` (`FULL`, `NONE`) and `units` (each with
 `id`, `name`, `displayName`, `path`, `folder`, `roles`, and `permissions` as actions by namespace). The admin
 backend SHALL NOT be asked about roles. The layouts and server-side checks SHALL share that one call within a
@@ -19,7 +19,7 @@ request.
 #### Scenario: One Core call serves the whole request
 - **WHEN** the root layout, the `[lang]` layout and a server-side admin check all need the caller's access in
   the same request
-- **THEN** `GET /v1/user/org-units` is issued once
+- **THEN** `GET /v1/user/role-assignments` is issued once
 
 #### Scenario: Roles never come from the admin backend
 - **WHEN** `DIAL_ADMIN_API_URL` is set and the access is read

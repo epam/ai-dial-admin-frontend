@@ -13,7 +13,7 @@ vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
 
 const answer = (adminAccess: AdminAccess) =>
-  vi.mocked(coreUtilityApi.getUserOrgUnits).mockResolvedValue({ success: true, response: { adminAccess, items: [] } });
+  vi.mocked(coreUtilityApi.getUserRoleAssignments).mockResolvedValue({ success: true, response: { adminAccess, items: [] } });
 
 describe('getUserAccess', () => {
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('getUserAccess', () => {
 
     const access = await getUserAccess();
 
-    expect(coreUtilityApi.getUserOrgUnits).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(coreUtilityApi.getUserRoleAssignments).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(access.mode).toBe(AccessMode.FULL);
   });
 
@@ -37,17 +37,17 @@ describe('getUserAccess', () => {
     const access = await getUserAccess();
 
     expect(access.mode).toBe(AccessMode.FULL);
-    expect(coreUtilityApi.getUserOrgUnits).not.toHaveBeenCalled();
+    expect(coreUtilityApi.getUserRoleAssignments).not.toHaveBeenCalled();
   });
 
   test('resolves to full when Core answers 404 (org units off)', async () => {
-    vi.mocked(coreUtilityApi.getUserOrgUnits).mockResolvedValue({ success: false, status: 404 });
+    vi.mocked(coreUtilityApi.getUserRoleAssignments).mockResolvedValue({ success: false, status: 404 });
 
     expect((await getUserAccess()).mode).toBe(AccessMode.FULL);
   });
 
   test('resolves to denied when the read throws', async () => {
-    vi.mocked(coreUtilityApi.getUserOrgUnits).mockRejectedValue(new Error('down'));
+    vi.mocked(coreUtilityApi.getUserRoleAssignments).mockRejectedValue(new Error('down'));
 
     expect(await getUserAccess()).toEqual({ mode: AccessMode.DENIED, adminAccess: AdminAccess.NONE, units: [] });
   });
@@ -73,7 +73,7 @@ describe('isFullAdminCaller', () => {
   });
 
   test('refuses when the read throws', async () => {
-    vi.mocked(coreUtilityApi.getUserOrgUnits).mockRejectedValue(new Error('down'));
+    vi.mocked(coreUtilityApi.getUserRoleAssignments).mockRejectedValue(new Error('down'));
 
     expect(await isFullAdminCaller()).toBe(false);
   });

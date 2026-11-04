@@ -111,14 +111,14 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
   });
-  test('getUserOrgUnits calls the Core user org-units route and returns the access', async () => {
+  test('getUserRoleAssignments calls the Core user role-assignments route and returns the access', async () => {
     const body = { adminAccess: 'NONE', items: [{ id: '1', name: 'Acme', folder: 'public/Acme/', roles: [] }] };
     fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
 
-    const result = await instance.getUserOrgUnits(TOKEN_MOCK);
+    const result = await instance.getUserRoleAssignments(TOKEN_MOCK);
 
     const [calledUrl] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('/v1/user/org-units');
+    expect(calledUrl).toContain('/v1/user/role-assignments');
     expect(calledUrl).not.toContain('/api/');
     expect(result.response).toEqual(body);
   });
@@ -148,10 +148,10 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     },
   );
 
-  test('getUserOrgUnits keeps the 404 status when org units are off', async () => {
+  test('getUserRoleAssignments keeps the 404 status when org units are off', async () => {
     fetch.mockResponseOnce('Not Found', { status: 404 });
 
-    const result = await instance.getUserOrgUnits(TOKEN_MOCK);
+    const result = await instance.getUserRoleAssignments(TOKEN_MOCK);
 
     expect(result.success).toBe(false);
     expect(result.status).toBe(404);

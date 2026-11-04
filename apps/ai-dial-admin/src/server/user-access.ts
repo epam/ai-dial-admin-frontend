@@ -9,7 +9,7 @@ import { resolveUserAccess } from '@/src/utils/auth/user-access';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 /**
- * What the caller may do, from Core's `GET /v1/user/org-units`. Takes no argument so `cache` can dedupe on
+ * What the caller may do, from Core's `GET /v1/user/role-assignments`. Takes no argument so `cache` can dedupe on
  * the request: the layouts and `isFullAdminCaller` all ask, and Core is called once. A failed read counts as
  * denied — the cost is an affordance withheld, never a request the caller cannot make.
  */
@@ -22,7 +22,7 @@ export const getUserAccess = cache(async (): Promise<UserAccess> => {
   try {
     const token = await getUserToken(isEnableAuth, headers(), cookies());
 
-    return resolveUserAccess(isEnableAuth, await coreUtilityApi.getUserOrgUnits(token));
+    return resolveUserAccess(isEnableAuth, await coreUtilityApi.getUserRoleAssignments(token));
   } catch (e) {
     errorObjLog(e, 'Failed to read the caller access');
     return { mode: AccessMode.DENIED, adminAccess: AdminAccess.NONE, units: [] };

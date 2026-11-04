@@ -10,7 +10,7 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 export const DEPLOYMENTS_URL = 'v1/deployments';
 export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const USER_INFO_URL = 'v1/user/info';
-export const USER_ORG_UNITS_URL = 'v1/user/org-units';
+export const USER_ROLE_ASSIGNMENTS_URL = 'v1/user/role-assignments';
 export const VERSION_URL = 'version';
 export const APPLICATION_TYPE_SCHEMAS_URL = 'v1/application_type_schemas/schemas';
 
@@ -58,8 +58,8 @@ export class CoreUtilityApi extends CoreApi {
   }
 
   /** The caller's admin access and units. Answers 404 while org units are off, so callers keep the `status`. */
-  getUserOrgUnits(token: Token): Promise<ServerActionResponse<CoreUserOrgUnitsResponse>> {
-    return this.getAction(USER_ORG_UNITS_URL, token);
+  getUserRoleAssignments(token: Token): Promise<ServerActionResponse<CoreUserOrgUnitsResponse>> {
+    return this.getAction(USER_ROLE_ASSIGNMENTS_URL, token);
   }
 
   /** Every runner schema, config-file and platform folder alike. Readable by any caller, unlike the config-file read. */

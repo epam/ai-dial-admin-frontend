@@ -8,7 +8,7 @@ const FULL_ACCESS: UserAccess = { mode: AccessMode.FULL, adminAccess: AdminAcces
 const DENIED_ACCESS: UserAccess = { mode: AccessMode.DENIED, adminAccess: AdminAccess.NONE, units: [] };
 
 /**
- * Turns Core's answer to `GET /v1/user/org-units` into what the panel acts on. Shared by the client context
+ * Turns Core's answer to `GET /v1/user/role-assignments` into what the panel acts on. Shared by the client context
  * and the server, so the two never disagree about who a full admin is.
  *
  * With auth off nothing is enforced and Core is not asked (`result` is undefined). A 404 means org units are

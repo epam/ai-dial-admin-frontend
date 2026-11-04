@@ -28,7 +28,7 @@ export interface AppContextType {
   // user info
   /** Who the caller is (`id`, `email`); informational — access decisions come from `userAccess`. */
   userInfo?: UserInfo;
-  /** What the caller may do, resolved from Core's `GET /v1/user/org-units`. */
+  /** What the caller may do, resolved from Core's `GET /v1/user/role-assignments`. */
   userAccess: UserAccess;
   /** True when Core reports a read-only admin level, which it does not yet — so false for now. */
   isReadOnlyAdmin: boolean;

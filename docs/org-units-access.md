@@ -1,6 +1,6 @@
 # Org-units access
 
-What a signed-in user sees and can do, driven by DIAL Core's `GET /v1/user/org-units`. The spec is
+What a signed-in user sees and can do, driven by DIAL Core's `GET /v1/user/role-assignments`. The spec is
 `openspec/specs/user-org-units-access/spec.md`.
 
 ## Modes
