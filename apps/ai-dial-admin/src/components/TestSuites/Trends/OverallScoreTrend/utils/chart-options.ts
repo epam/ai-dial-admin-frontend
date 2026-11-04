@@ -191,45 +191,51 @@ const buildSegmentThresholdMarkLine = (
   thresholdLabel: string,
   palette: ThemePalette,
   thresholdColor: string,
-) => ({
-  silent: true,
-  symbol: 'none' as const,
-  label: { show: false },
-  lineStyle: {
-    color: thresholdColor,
-    width: 1,
-    type: 'dashed' as const,
-  },
-  data: segments.map((segment) => {
-    if (segment.kind === 'horizontal') {
+) => {
+  const labeledValues = new Set<number>();
+
+  return {
+    silent: true,
+    symbol: 'none' as const,
+    label: { show: false },
+    lineStyle: {
+      color: thresholdColor,
+      width: 1,
+      type: 'dashed' as const,
+    },
+    data: segments.map((segment) => {
+      if (segment.kind === 'horizontal') {
+        const shouldShowLabel = !labeledValues.has(segment.y);
+        labeledValues.add(segment.y);
+        return [
+          {
+            coord: [segment.x0, segment.y],
+            label: {
+              show: shouldShowLabel,
+              position: thresholdLabelPosition(segment.y),
+              formatter: `${thresholdLabel} (${segment.y})`,
+              color: palette['text-primary'],
+              fontSize: 10,
+            },
+          },
+          { coord: [segment.x1, segment.y] },
+        ];
+      }
       return [
         {
-          coord: [segment.x0, segment.y],
-          label: {
-            show: true,
-            position: thresholdLabelPosition(segment.y),
-            formatter: `${thresholdLabel} (${segment.y})`,
-            color: palette['text-primary'],
-            fontSize: 10,
+          coord: [segment.x, segment.y0],
+          label: { show: false },
+          lineStyle: {
+            color: thresholdColor,
+            width: 1,
+            type: THRESHOLD_VERTICAL_DASH,
           },
         },
-        { coord: [segment.x1, segment.y] },
+        { coord: [segment.x, segment.y1] },
       ];
-    }
-    return [
-      {
-        coord: [segment.x, segment.y0],
-        label: { show: false },
-        lineStyle: {
-          color: thresholdColor,
-          width: 1,
-          type: THRESHOLD_VERTICAL_DASH,
-        },
-      },
-      { coord: [segment.x, segment.y1] },
-    ];
-  }),
-});
+    }),
+  };
+};
 
 export const buildOverallScoreChartOptions = (
   palette: ThemePalette,
@@ -294,6 +300,7 @@ export const buildOverallScoreChartOptions = (
       {
         type: 'value',
         min: 0,
+        // Segment plans require at least two runs; single-run thresholds use a full-width markLine.
         max: runCount - 1,
         show: false,
         axisLabel: { show: false },

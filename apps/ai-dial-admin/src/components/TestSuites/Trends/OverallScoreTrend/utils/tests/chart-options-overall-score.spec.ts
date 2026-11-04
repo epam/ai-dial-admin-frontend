@@ -91,6 +91,8 @@ describe('buildOverallScoreChartOptions', () => {
     const options = buildOverallScoreChartOptions(palette, runOrder, labels);
     const markLine = (options.series as { markLine: Record<string, unknown> }[])[0].markLine;
 
+    expect(options.xAxis).toMatchObject({ type: 'category', data: ['a'] });
+    expect(options.series).toHaveLength(1);
     expect(markLine).toMatchObject({
       silent: true,
       symbol: 'none',
@@ -215,7 +217,7 @@ describe('buildOverallScoreChartOptions', () => {
         {
           coord: [3.5, 0.6],
           label: {
-            show: true,
+            show: false,
             position: 'insideStartTop',
             formatter: 'Threshold (0.6)',
             color: palette['text-primary'],
@@ -225,6 +227,30 @@ describe('buildOverallScoreChartOptions', () => {
         { coord: [4, 0.6] },
       ],
     ]);
+  });
+
+  test('labels each threshold value once when it returns after another value', () => {
+    const runOrder = [0, 1, 0].map((overallScoreThreshold, index) =>
+      run({ runId: `run-${index}`, computedAtMs: index, overallScoreThreshold }),
+    );
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
+    expect(options.series).toMatchObject([
+      {},
+      {
+        markLine: {
+          data: [
+            [{ label: { show: true, formatter: 'Threshold (0)' } }, {}],
+            [{ label: { show: false } }, {}],
+            [{ label: { show: true, formatter: 'Threshold (1)' } }, {}],
+            [{ label: { show: false } }, {}],
+            [{ label: { show: false, formatter: 'Threshold (0)' } }, {}],
+          ],
+        },
+      },
+    ]);
+
+    const nextOptions = buildOverallScoreChartOptions(palette, runOrder, labels);
+    expect(nextOptions.series).toEqual(options.series);
   });
 
   test('tooltip shows run link, month-year time, and score row', () => {

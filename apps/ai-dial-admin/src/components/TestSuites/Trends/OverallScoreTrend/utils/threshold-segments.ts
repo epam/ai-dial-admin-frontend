@@ -98,10 +98,9 @@ export const buildThresholdMarkPlan = (thresholds: (number | null | undefined)[]
 
     const next = groups[g + 1];
     if (next != null && next.startIndex === group.endIndex + 1) {
-      const x = runThresholdSpan(group.endIndex, runCount).right;
       segments.push({
         kind: 'vertical',
-        x,
+        x: right,
         y0: group.value,
         y1: next.value,
       });
