@@ -59,8 +59,6 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.ModelServings]: EntitiesI18nKey.NoModelServings,
 };
 
-export const mainListEntitiesViewClassName = 'py-4 px-6';
-
 /**
  * Column state is stored per view, and the reworked runs columns cannot be reconciled with what earlier
  * versions stored (a separate id column, a hidden Test Suite ID, widths for columns that no longer

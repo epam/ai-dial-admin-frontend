@@ -60,7 +60,7 @@ const HopResponsePanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, req
             {envelope.reasoningText !== null && (
               <div className="flex min-w-0 flex-col gap-1">
                 <span className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.InspectorReasoning)}</span>
-                <p className="whitespace-pre-wrap break-words rounded border border-primary bg-layer-1 p-2 text-secondary dial-tiny-text">
+                <p className="whitespace-pre-wrap break-words rounded border border-secondary bg-layer-1 p-2 text-secondary dial-tiny-text">
                   {envelope.reasoningText}
                 </p>
               </div>

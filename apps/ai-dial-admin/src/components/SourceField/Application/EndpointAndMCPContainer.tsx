@@ -144,7 +144,7 @@ const EndpointAndMCPContainer: FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
+    <div className="flex flex-col w-full gap-8 border border-secondary rounded p-4">
       <div className="flex flex-col w-full gap-4">
         <Checkbox
           isSelected={checkboxStates[SourceType.CHAT_ENDPOINT]}

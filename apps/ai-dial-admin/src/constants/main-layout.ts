@@ -14,6 +14,7 @@ export const MENU_ACTION_ICON_PROPS = { size: 16, stroke: 1.5 };
 // controls
 export const CONTROL_WIDTH = 'large_tablet:w-[640px] desktop:w-[640px] large_desktop:w-[40%] max-w-full';
 export const STANDARD_CONTROL_WIDTH = `w-full ${CONTROL_WIDTH}`;
+export const LABELLED_FIELD_TOP_OFFSET = 'mt-6';
 export const CONTROL_WITH_BUTTON_WIDTH = `flex-1 ${CONTROL_WIDTH}`;
 
 export const SELECT_ENTITY_HEADER_CLASS = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';

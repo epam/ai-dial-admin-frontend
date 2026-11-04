@@ -116,7 +116,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   }, [selectedFormat, selectedRoute, originalRoute.name, etag, dispatch, showNotification, t, router]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
       <SimpleEntityHeader
         view={ApplicationRoute.Routes}
         entity={selectedRoute}
@@ -129,7 +129,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
         onChangeActiveTab={setActiveTab}
         onRemove={removeRoute}
       />
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

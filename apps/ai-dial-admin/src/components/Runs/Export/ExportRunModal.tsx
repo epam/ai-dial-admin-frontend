@@ -166,7 +166,7 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
             <Preview previewData={previewData} checkedColumns={checkedColumns} isLoading={isPreviewLoading} />
           </Accordion>
         </div>
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary shrink-0">
+        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-tertiary shrink-0">
           <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
           <PrimaryButton
             label={t(ButtonsI18nKey.ExportCsv)}

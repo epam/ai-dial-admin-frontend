@@ -71,7 +71,7 @@ const SplitPane: FC<Props> = ({ top, bottom, ariaLabel, minPercent = MIN_SPLIT_P
       </Resizable>
       {/* The handle is absolutely positioned over this boundary and takes no layout space, so the border is
           what makes the split visible when the separator is neither hovered nor focused. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-primary">{bottom}</div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-tertiary">{bottom}</div>
     </div>
   );
 };

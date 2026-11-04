@@ -248,7 +248,6 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   return (
     <>
       <ListEntities<AnalyticsTable>
-        isMainListView
         listLabel={t(MenuI18nKey.Tables)}
         description={
           isFullAdmin && runningBackfill && <TableBackfillBanner run={runningBackfill} onOpen={onOpenBackfill} />

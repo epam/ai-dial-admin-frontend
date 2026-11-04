@@ -27,4 +27,12 @@ describe('ListEntities', () => {
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Columns })).toHaveAttribute('aria-pressed', 'true');
   });
+
+  test('renders the list without a card surface of its own', () => {
+    renderList();
+
+    const root = screen.getByRole('heading', { level: 1, name: 'Models' }).closest('.size-full');
+    expect(root).not.toHaveClass('bg-layer-2');
+    expect(root).not.toHaveClass('rounded');
+  });
 });

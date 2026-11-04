@@ -51,6 +51,23 @@ describe('Content', () => {
     expect(document.querySelector('.overflow-hidden')).toBeNull();
   });
 
+  test('pads the page slot with a single gutter: 16px on mobile, 24px from tablet up', () => {
+    render(
+      <Content>
+        <div>Test Content</div>
+      </Content>,
+    );
+
+    expect(screen.getByText('Test Content').parentElement).toHaveClass(
+      'px-4',
+      'pt-4',
+      'pb-4',
+      'md:px-6',
+      'md:pt-6',
+      'md:pb-6',
+    );
+  });
+
   test('renders the Footer and polls status/core-version/BE-version when the admin API is enabled', async () => {
     render(
       <Content>

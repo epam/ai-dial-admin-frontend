@@ -14,9 +14,9 @@ import { MessageRole } from '@/src/models/analytics/sessions-trace';
 const BUBBLE_CLASS: Record<MessageRole, string> = {
   [MessageRole.User]: 'max-w-[85%] rounded-2xl rounded-br-none bg-layer-4',
   [MessageRole.Assistant]: 'max-w-[85%] rounded-2xl rounded-bl-none bg-layer-3',
-  [MessageRole.System]: 'w-full rounded border border-primary bg-layer-1',
-  [MessageRole.Tool]: 'w-full rounded border border-primary bg-layer-1',
-  [MessageRole.Other]: 'w-full rounded border border-primary bg-layer-1',
+  [MessageRole.System]: 'w-full rounded border border-secondary bg-layer-1',
+  [MessageRole.Tool]: 'w-full rounded border border-secondary bg-layer-1',
+  [MessageRole.Other]: 'w-full rounded border border-secondary bg-layer-1',
 };
 
 const ROLE_TEXT_CLASS: Record<MessageRole, string> = {

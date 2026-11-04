@@ -49,7 +49,7 @@ const ReadinessSummary: FC<Props> = ({ readyWhen }) => {
       </div>
 
       {limits.length > 0 && (
-        <div className="flex flex-col gap-2 border-t border-secondary pt-4">
+        <div className="flex flex-col gap-2 border-t border-tertiary pt-4">
           <h3 className="dial-small-semi-text uppercase tracking-wide text-secondary">
             {t(AnalyticsPipelinesI18nKey.GroupsLimitsTitle)}
           </h3>

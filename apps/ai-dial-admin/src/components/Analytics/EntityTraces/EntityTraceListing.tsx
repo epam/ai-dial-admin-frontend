@@ -194,7 +194,7 @@ const EntityTraceListing: FC<Props> = ({ route, entity, defaultTimeFilter, onTim
             />
           )}
           {!isEmpty && hasLoadError && (
-            <div className="flex items-center justify-center gap-3 border-t border-primary p-2">
+            <div className="flex items-center justify-center gap-3 border-t border-tertiary p-2">
               <span className="text-error dial-small-text">{t(EntityTracesI18nKey.PageLoadFailed)}</span>
               <LinkButton label={t(EntityTracesI18nKey.Retry)} onClick={onRetry} />
             </div>

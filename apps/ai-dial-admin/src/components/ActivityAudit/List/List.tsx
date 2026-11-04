@@ -709,7 +709,6 @@ const ActivityAuditList: FC<Props> = ({
         onGridReady={onGridReady}
         storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${effectiveViewType.toLowerCase()}` : void 0}
         toolbar={entity ? embeddedToolbar : pageToolbar}
-        isMainListView
       >
         {refreshButton}
       </ListEntities>

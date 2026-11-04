@@ -21,7 +21,7 @@ const CollapsedRail: FC<Props> = ({ onExpand }) => {
       type="button"
       aria-label={t(QueryBuilderI18nKey.OpenPanel)}
       aria-expanded="false"
-      className="flex h-full w-9 shrink-0 flex-col items-center gap-2 border-l border-primary bg-layer-2 py-3 text-secondary hover:bg-layer-3 hover:text-primary"
+      className="flex h-full w-9 shrink-0 flex-col items-center gap-2 border-l border-tertiary bg-layer-2 py-3 text-secondary hover:bg-layer-3 hover:text-primary"
       onClick={onExpand}
     >
       <IconLayoutSidebarRightExpand size={18} className="shrink-0" />

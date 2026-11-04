@@ -31,7 +31,7 @@ const DashboardCard: FC<Props> = ({
   >
     <header
       className={classNames(
-        'flex flex-wrap items-center justify-between gap-4 border-b border-secondary px-[18px] py-4',
+        'flex flex-wrap items-center justify-between gap-4 border-b border-tertiary px-[18px] py-4',
         headerClassName,
       )}
     >

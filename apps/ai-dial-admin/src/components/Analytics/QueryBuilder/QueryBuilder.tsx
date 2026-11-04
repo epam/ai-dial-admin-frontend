@@ -613,8 +613,8 @@ const QueryBuilder: FC<Props> = ({
 
   return (
     <QueryBuilderContext.Provider value={contextValue}>
-      <div className="relative flex min-h-0 w-full flex-1 flex-col rounded bg-layer-2">
-        <div className="flex flex-col gap-4 p-4 pb-3">
+      <div className="relative flex min-h-0 w-full flex-1 flex-col">
+        <div className="flex flex-col gap-4 pb-3">
           <h1 className="dial-h1-text">{name ?? t(QueriesI18nKey.Title)}</h1>
           {entities.length > 0 && (
             <QueryBuilderToolbar
@@ -668,7 +668,7 @@ const QueryBuilder: FC<Props> = ({
         {!entities.length ? (
           <NoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
         ) : (
-          <div className="flex min-h-0 flex-1 border-t border-primary">
+          <div className="flex min-h-0 flex-1 border-t border-tertiary">
             <ResultArea
               result={result}
               meta={resultMeta}

@@ -348,7 +348,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative gap-4">
+    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative gap-4">
       <div className="flex flex-row items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           {/* Two axes, not one: `enabled` is the declaration and the runtime chip is what the runner is

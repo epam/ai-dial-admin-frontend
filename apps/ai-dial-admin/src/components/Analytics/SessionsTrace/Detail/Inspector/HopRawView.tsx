@@ -36,7 +36,7 @@ const HopRawView: FC<Props> = ({ traceId, coreSpanId, requestTime, side }) => {
 
   if (isLoading || body === null) {
     return (
-      <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
+      <div className="flex items-center justify-center rounded border border-secondary bg-layer-3 p-3">
         <Spinner size={LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} fullWidth />
       </div>
     );

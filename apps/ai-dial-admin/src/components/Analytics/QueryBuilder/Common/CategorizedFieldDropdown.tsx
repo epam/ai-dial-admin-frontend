@@ -163,7 +163,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
       placement="bottom-start"
       renderOverlay={() => (
         <div className="flex max-h-[70vh] w-[400px] max-w-[90vw] flex-col rounded border border-secondary bg-layer-0 shadow-lg">
-          <div className="border-b border-primary p-1.5">
+          <div className="border-b border-tertiary p-1.5">
             <CompactInput
               ariaLabel={t(QueryBuilderI18nKey.SearchFields)}
               className="w-full"
@@ -180,7 +180,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
             aria-multiselectable={isMulti || undefined}
           >
             {!!visibleFunctions.length && (
-              <div className="border-b border-primary pb-1">
+              <div className="border-b border-tertiary pb-1">
                 <GroupHeader
                   expanded={isExpanded(FUNCTIONS_GROUP_KEY)}
                   count={visibleFunctions.length}

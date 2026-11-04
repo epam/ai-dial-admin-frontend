@@ -58,7 +58,7 @@ const HopStateNote: FC<Props> = ({ state, suppression = null, messageKey, messag
   }
 
   return (
-    <p role="status" aria-live="polite" className={classNames(NOTE_CLASS, 'border-primary text-secondary')}>
+    <p role="status" aria-live="polite" className={classNames(NOTE_CLASS, 'border-secondary text-secondary')}>
       {text}
     </p>
   );

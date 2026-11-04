@@ -38,7 +38,7 @@ const UsageDashboard: FC<Props> = ({ callerSource, switcher }) => {
   return (
     // The widgets scroll inside this panel, so the cards keep a gutter the scrollbar can sit in
     // instead of being drawn over their right edge.
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto px-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto">
       <h1 className="dial-h1-text">{t(MenuI18nKey.Dashboard)}</h1>
 
       <UsageControls

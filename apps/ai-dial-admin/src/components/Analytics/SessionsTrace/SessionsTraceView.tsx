@@ -56,7 +56,7 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
   const isEmptyStateVisible = !isFirstPageLoading && (isEmptyResult || hasLoadError);
 
   return (
-    <div className="flex flex-col size-full bg-layer-2 rounded py-5 px-6 gap-5">
+    <div className="flex flex-col size-full gap-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="dial-h1-text text-primary">{t(SessionsTraceI18nKey.Title)}</h1>
@@ -76,7 +76,7 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
         isFeedbackCapped={isFeedbackCapped}
         onToggleColumnsPanel={onToggleColumnsPanel}
       />
-      <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
+      <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-secondary">
         <SessionsList
           datasource={datasource}
           gridContext={gridContext}

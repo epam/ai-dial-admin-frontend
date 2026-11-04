@@ -78,7 +78,6 @@ const List: FC<Props> = ({
       getIsEmptyData={KEEP_GRID_MOUNTED}
       getRowId={getRowId}
       isEnableColumnPanel
-      isMainListView
       isLiveData
     />
   );

@@ -109,7 +109,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
           />
         </div>
       </div>
-      <div className="flex flex-1 rounded overflow-auto min-h-0 border border-primary">
+      <div className="flex flex-1 overflow-auto min-h-0">
         {activeTab === EntityViewTab.Traces && (
           <List
             route={route}

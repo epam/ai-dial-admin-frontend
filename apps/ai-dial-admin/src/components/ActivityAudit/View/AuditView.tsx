@@ -201,8 +201,8 @@ const AuditView: FC<Props> = ({
     <>
       <div
         className={classNames(
-          'flex flex-col flex-1 min-h-0 w-full rounded p-4 pb-14 lg:pb-4',
-          isModalView ? 'h-full bg-layer-3' : 'bg-layer-2',
+          'flex flex-col flex-1 min-h-0 w-full',
+          isModalView ? 'h-full bg-layer-3 rounded p-4 pb-14 lg:pb-4' : 'pb-14 lg:pb-0',
         )}
       >
         {!isModalView && (
@@ -234,7 +234,7 @@ const AuditView: FC<Props> = ({
           </div>
         )}
         <div className="flex-1 flex flex-col relative min-h-0">
-          <div className="flex flex-col gap-4 pb-8 border-b border-primary">
+          <div className="flex flex-col gap-4 pb-8 border-b border-tertiary">
             <div className="flex flex-row items-center justify-between">
               {isModalView && (
                 <>

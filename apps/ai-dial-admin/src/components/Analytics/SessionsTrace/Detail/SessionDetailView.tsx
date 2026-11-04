@@ -49,7 +49,7 @@ const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups,
   const isTraceOpen = trace !== null;
 
   return (
-    <div className="relative flex size-full flex-col gap-5 rounded bg-layer-2 py-5 px-6">
+    <div className="relative flex size-full flex-col gap-5">
       {trace && (
         <SessionTraceView
           readKey={scope.id}

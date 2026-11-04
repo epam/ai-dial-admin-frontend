@@ -169,7 +169,7 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
 
   if (isReadOnlyAdmin) {
     return (
-      <div className="flex flex-col size-full rounded p-4 bg-layer-2 gap-4">
+      <div className="flex flex-col size-full gap-4">
         <h1>{t(MenuI18nKey.ImportConfig)}</h1>
         <Notification
           type={NotificationType.SectionMessage}
@@ -181,7 +181,7 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
   }
 
   return (
-    <div className="flex flex-col size-full rounded p-4 bg-layer-2">
+    <div className="flex flex-col size-full">
       <Steps
         steps={steps}
         currentStep={currentStepId}

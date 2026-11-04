@@ -314,7 +314,6 @@ const EvaluationListView = <T extends object>({
         listLabel={t(listViewTitleMap[route])}
         emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
         isEnableColumnPanel
-        isMainListView
         storageKey={isRunsList ? RUNS_LIST_STORAGE_KEY : route}
         onGridReady={onGridReady}
         getHref={(data) => getUrnForEntity(route, data)}
