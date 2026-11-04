@@ -25,7 +25,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
-import { validateAppRunner } from '@/src/utils/app-runners/validation';
+import { hasInvalidAppRunnerResponses, validateAppRunner } from '@/src/utils/app-runners/validation';
 import { createSchemaSource } from '@/src/utils/entities/application-source';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -61,7 +61,7 @@ const AppRunnerAssetView: FC<Props> = ({
   const router = useRouter();
   const { fetchFiles } = useAppRunnersFolder();
   const { showNotification } = useNotification();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
   const { setEntityReadOnly } = useAppContext();
 
@@ -80,6 +80,16 @@ const AppRunnerAssetView: FC<Props> = ({
   const [discardKey, setDiscardKey] = useState(0);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
   const [applicationProperties, setApplicationProperties] = useState<Record<string, unknown>>();
+
+  const isRouteResponseValid = !hasInvalidAppRunnerResponses(selectedRunner);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'appRunnerRouteResponses', isValid: isRouteResponseValid });
+  }, [dispatch, isRouteResponseValid, resetCounter]);
+
+  useEffect(() => {
+    return () => dispatch({ type: ValidationActionType.RemoveField, field: 'appRunnerRouteResponses' });
+  }, [dispatch]);
 
   const createItems: DropdownItem[] = [
     {

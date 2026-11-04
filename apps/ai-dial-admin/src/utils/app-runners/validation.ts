@@ -17,6 +17,32 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');
 
+const isValidRouteResponse = (response: unknown): boolean => {
+  if (!isRecord(response)) {
+    return false;
+  }
+  const status = response['dial:status'];
+  const body = response['dial:body'];
+  return (
+    (typeof status === 'number' || typeof status === 'string') &&
+    !!status &&
+    Number(status) >= 100 &&
+    Number(status) <= 999 &&
+    typeof body === 'string' &&
+    !!body
+  );
+};
+
+export const hasInvalidAppRunnerResponses = (runner: DialAppRunnerResource): boolean => {
+  const routes: unknown = runner[DIAL_APP_RUNNER_ROUTES_KEY];
+  if (!isRecord(routes)) {
+    return false;
+  }
+  return Object.values(routes).some(
+    (route) => isRecord(route) && 'dial:response' in route && !isValidRouteResponse(route['dial:response']),
+  );
+};
+
 const validateParameters = (runner: DialAppRunnerResource): AppRunnerValidationError[] => {
   const properties: unknown = runner.properties;
   if (properties == null) {
@@ -70,8 +96,8 @@ const validateCoreRoute = (name: string, route: unknown): AppRunnerValidationErr
   if (Array.isArray(upstreams) && upstreams.some((upstream) => !isRecord(upstream) || !upstream['dial:endpoint'])) {
     errors.push({ field, message: 'Every dial:upstreams entry requires dial:endpoint' });
   }
-  if (response != null && (!isRecord(response) || response['dial:status'] == null || response['dial:body'] == null)) {
-    errors.push({ field, message: 'A dial:response requires both dial:status and dial:body' });
+  if ('dial:response' in route && !isValidRouteResponse(response)) {
+    errors.push({ field, message: 'A dial:response requires a valid dial:status and non-empty dial:body' });
   }
 
   return errors;

@@ -247,7 +247,7 @@ describe('ProjectView', () => {
     await user.upload(addInput(), new File(['x'], 'a.csv'));
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    expect(showNotification).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
     expect(screen.getAllByText(ProjectI18nKey.RejectedDuplicate).length).toBeGreaterThan(0);
   });
 
