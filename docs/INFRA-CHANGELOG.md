@@ -2,6 +2,14 @@
 
 All notable infrastructure-relevant changes to this project will be documented in this file.
 
+## 0.23.0
+
+### Added
+
+#### Analytics
+
+- `ANALYTICS_CUSTOM_DASHBOARDS_ENABLED` [Preview] — custom dashboards on the analytics Dashboards page, at `/dashboards/<id>`, stored by the Analytics service under `/v1/dashboards`. Requires an Analytics service that serves that endpoint, widget `settings` included. Takes effect only when `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` are both `true` (default: `false`)
+
 ## 0.22.0
 
 ### Added

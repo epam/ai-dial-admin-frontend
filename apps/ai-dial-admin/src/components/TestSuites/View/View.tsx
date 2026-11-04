@@ -15,6 +15,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import TrendsPreviewRunsBadge from '@/src/components/TestSuites/Trends/TrendsPreviewRunsBadge';
+import { omitSuiteValidity } from '@/src/components/TestSuites/utils/suite-validity';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -80,7 +81,12 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   }, [originalTestSuite.datasetId]);
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalTestSuite, selectedTestSuite) || hasTestCaseChanges);
+    // Metric mutations refresh valid/validationWarnings from the API without editing score config;
+    // ignore those projections so Save/Discard stay tied to real suite edits.
+    setIsChanged(
+      !isEqualSkippingUndefined(omitSuiteValidity(originalTestSuite), omitSuiteValidity(selectedTestSuite)) ||
+        hasTestCaseChanges,
+    );
   }, [originalTestSuite, selectedTestSuite, hasTestCaseChanges]);
 
   useEffect(() => {

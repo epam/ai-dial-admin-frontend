@@ -18,6 +18,7 @@ import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/Sectio
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import FilterGroup from '@/src/components/Analytics/QueryBuilder/Filter/FilterGroup';
 import ModeSwitcher from '@/src/components/Analytics/QueryBuilder/Mode/ModeSwitcher';
+import AddToDashboardButton from '@/src/components/Analytics/CustomDashboards/AddToDashboard/AddToDashboardButton';
 import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
 import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
 import BuilderRail from '@/src/components/Analytics/QueryBuilder/Rail/BuilderRail';
@@ -635,6 +636,9 @@ const QueryBuilder: FC<Props> = ({
                   onClick={savedQueryPage.onOpenEdit}
                 />
               )}
+              {featureFlags.analyticsCustomDashboardsEnabled &&
+                savedQueryPage.savedQuery &&
+                !savedQueryPage.isDirty && <AddToDashboardButton savedQuery={savedQueryPage.savedQuery} />}
               {savedQueryPage.isDirty && (
                 <ChangedEntityButtons
                   isSaveAllowed={savedQueryPage.isWritable}

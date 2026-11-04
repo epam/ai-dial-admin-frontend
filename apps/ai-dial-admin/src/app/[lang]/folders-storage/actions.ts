@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { coreOrgUnitsApi, filesCoreApi } from '@/src/app/api/api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DialFolder } from '@/src/models/dial/folder';
 import { NewOrgUnit, NewOrgUnitRoleAssignment } from '@/src/models/dial/org-unit';
 import { DialRule } from '@/src/models/dial/rule';
@@ -87,6 +88,17 @@ export async function createOrgUnit(parentPath: string, unit: NewOrgUnit) {
 export async function renameOrgUnit(unitPath: string, displayName: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return coreOrgUnitsApi.renameUnit(token, unitPath, displayName);
+}
+
+export async function removeFolderMarkers(filePaths: string[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  for (const path of filePaths) {
+    const result = await filesCoreApi.deleteFile(token, path, DEFAULT_ETAG);
+    if (!result.success) {
+      return result;
+    }
+  }
+  return { success: true };
 }
 
 export async function deleteOrgUnit(unitPath: string, recursive = false) {

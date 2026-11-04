@@ -35,9 +35,9 @@
     ]
   },
   "dependencies": {
-    "@epam/ai-dial-react-file-manager": "^0.4.0-dev.22",
+    "@epam/ai-dial-react-file-manager": "^0.4.0-dev.27",
     "@epam/ai-dial-shared": "^0.44.8",
-    "@epam/ai-dial-ui-kit": "^0.16.0-dev.61",
+    "@epam/ai-dial-ui-kit": "^0.16.0-dev.68",
     "@epam/ai-dial-visualizer-connector": "^0.48.0",
     "@floating-ui/react": "^0.27.19",
     "@modelcontextprotocol/sdk": "^1.32.1",
@@ -74,6 +74,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.2.5",
+    "react-grid-layout": "2.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "sql-formatter": "^15.8.2",

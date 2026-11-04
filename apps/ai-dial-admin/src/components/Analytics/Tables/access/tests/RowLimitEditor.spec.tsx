@@ -38,6 +38,16 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Filter/FilterGroup', () => ({
         >
           fill-condition
         </button>
+        <button
+          onClick={() => {
+            const condition = node.children[0] as { field: string; value: string };
+            condition.field = 'project_id';
+            condition.value = '';
+            refresh();
+          }}
+        >
+          fill-column-only
+        </button>
       </div>
     );
   },
@@ -139,6 +149,17 @@ describe('RowLimitEditor — visual view', () => {
     await user.click(screen.getByRole('button', { name: `+ ${AnalyticsTableAccessI18nKey.AddCondition}` }));
 
     expect(lastValue(onChange)).toEqual({ filter: null, isComplete: false });
+    expect(screen.getByRole('status')).toHaveTextContent(AnalyticsTableAccessI18nKey.IncompleteConditions);
+  });
+
+  test('reports a condition with a column and no value as incomplete, and says so', async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderEditor();
+
+    await user.click(screen.getByRole('button', { name: `+ ${AnalyticsTableAccessI18nKey.AddCondition}` }));
+    await user.click(screen.getByRole('button', { name: 'fill-column-only' }));
+
+    expect(lastValue(onChange)).toMatchObject({ isComplete: false });
     expect(screen.getByRole('status')).toHaveTextContent(AnalyticsTableAccessI18nKey.IncompleteConditions);
   });
 

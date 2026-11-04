@@ -56,7 +56,7 @@ const ColumnsPanel: FC<Props> = ({
           {toggleColumnsPanel && <CloseButton ariaLabel={t(ButtonsI18nKey.Close)} onClose={toggleColumnsPanel} />}
         </div>
       </div>
-      <div ref={ref} className="flex-1 flex flex-col p-6 overflow-y-auto">
+      <div ref={ref} className="relative flex-1 flex flex-col p-6 overflow-y-auto">
         <ul className="flex flex-col gap-4">
           {columns
             .filter((col) => !col.suppressColumnsToolPanel && col.field && col.headerName)

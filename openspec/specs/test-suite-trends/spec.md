@@ -27,12 +27,24 @@ When the Trends tab has at least one run, the KPI strip SHALL include four cards
    **Completion Rate of Latest Run** (rate from the latest `test_case_eval_scores` segments;
    loading indicator while the combined eval aggregate is pending)
 2. **Overall Score of Latest Run** (latest `runOrder` overall score, threshold glyph/tooltip when
-   set, delta vs previous run, calculation-method info)
+   set, delta vs previous run, and the static "Based on completed test cases" subtitle; no
+   calculation-method info)
 3. **Total Runtime of Latest Run** (latest combo total + source/Metrics breakdown)
 4. **Total Cost of Latest Run** (latest combo total + source/Metrics breakdown)
 
+KPI delta badges SHALL show a tooltip with the full label only when the label is clipped by the badge
+width.
+
 Overall Score Trend, Metric Trends, and Test Case Stability section headers SHALL NOT append a
 runs-count fragment (the Preview runs tab-line badge covers the window size).
+
+#### Scenario: KPI delta label fits its badge
+- **WHEN** a KPI delta label fits within its badge
+- **THEN** hovering the badge does not show a tooltip
+
+#### Scenario: KPI delta label is clipped
+- **WHEN** a KPI delta label is clipped by its badge width
+- **THEN** hovering the badge shows the full label in a tooltip
 
 #### Scenario: Chart section titles omit runs count
 - **WHEN** the Trends window has one or more runs
@@ -75,8 +87,7 @@ Overall Score Trend plots), formatted to three decimals. The card SHALL:
   threshold (exact threshold counts as above)
 - show a signed delta vs the previous run’s overall score (`+0.12 vs prev.`); hide it when either
   score is missing or the delta is zero (higher is better → green)
-- expose a static “Based on completed test cases” footer and an info control whose tooltip
-  describes the suite’s overall-score calculation method
+- show the static “Based on completed test cases” subtitle and omit the calculation-method tooltip
 
 #### Scenario: Latest overall score value
 - **WHEN** the Trends window’s latest run has overall score `0.58` and the previous run has `0.46`
@@ -492,4 +503,3 @@ existing left alignment.
 
 - **WHEN** a Test Case Stability cell shows a score
 - **THEN** the value is right-aligned within the cell
-

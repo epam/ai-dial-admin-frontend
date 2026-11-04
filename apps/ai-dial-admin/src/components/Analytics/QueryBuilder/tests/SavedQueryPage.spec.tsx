@@ -699,3 +699,52 @@ describe('QueryBuilder — a stored saved query', () => {
     });
   });
 });
+
+describe('QueryBuilder — Add to dashboard', () => {
+  const addToDashboardButton = () => screen.queryByRole('button', { name: 'CustomDashboards.AddToDashboard' });
+
+  const setCustomDashboards = (isEnabled: boolean) =>
+    vi.mocked(useAppContext).mockReturnValue({
+      featureFlags: { analyticsCustomDashboardsEnabled: isEnabled },
+      isFullAdmin: true,
+    } as never);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    setCustomDashboards(true);
+  });
+
+  test('is offered on a saved query without edits', () => {
+    renderPage();
+
+    expect(addToDashboardButton()).toBeInTheDocument();
+  });
+
+  test('is offered on a SQL saved query', async () => {
+    renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
+
+    await screen.findByLabelText('sql-editor');
+
+    expect(addToDashboardButton()).toBeInTheDocument();
+  });
+
+  test('gives way to Save and Discard once the query is edited', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await addProjectionField(user);
+
+    expect(saveButton()).toBeInTheDocument();
+    expect(discardButton()).toBeInTheDocument();
+    expect(addToDashboardButton()).toBeNull();
+  });
+
+  test('is absent while custom dashboards are off', () => {
+    setCustomDashboards(false);
+    renderPage();
+
+    expect(screen.getByRole('button', { name: 'Buttons.Edit' })).toBeInTheDocument();
+    expect(addToDashboardButton()).toBeNull();
+  });
+});

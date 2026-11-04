@@ -220,10 +220,16 @@ const FileManager: FC<Props> = ({
 
   const getItemActionRestriction = useCallback(
     (file: DialFile, action: DialFileManagerActions) => {
-      if (!hasUnits || file.nodeType !== DialFileNodeType.FOLDER || !UNIT_PROTECTED_ACTIONS.has(action)) {
+      if (!hasUnits || file.nodeType !== DialFileNodeType.FOLDER) {
         return undefined;
       }
       const role = getUnitFolderRole(units, file.path);
+      if (action === DialFileManagerActions.Download) {
+        return role === UnitFolderRole.UNIT ? t(FoldersI18nKey.UnitFolderExportRestriction) : undefined;
+      }
+      if (!UNIT_PROTECTED_ACTIONS.has(action)) {
+        return undefined;
+      }
       if (role === UnitFolderRole.UNIT) {
         return t(FoldersI18nKey.UnitFolderRestriction);
       }
@@ -495,13 +501,19 @@ const FileManager: FC<Props> = ({
     filePath,
   ]);
 
-  const toolbarOptions = useMemo(
-    () => ({
-      ...getToolbarOptions(view, isReadOnly, t, filePath),
+  const isUnitFolderActive = hasUnits && isUnitFolder(units, filePath ?? '');
+
+  const toolbarOptions = useMemo(() => {
+    const base = getToolbarOptions(view, isReadOnlyAdmin, t, filePath);
+    // A unit folder cannot receive imported resources, so its Create menu keeps only the "new item" entry.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { uploadFiles: _import, ...newActions } = base.newActions;
+    return {
+      ...base,
+      newActions: isUnitFolderActive ? newActions : base.newActions,
       additionalButtons: <ResetFiltersButton gridApi={gridApi} />,
-    }),
-    [view, isReadOnly, t, filePath, gridApi],
-  );
+    };
+  }, [view, isReadOnlyAdmin, t, filePath, gridApi, isUnitFolderActive]);
 
   return (
     <>

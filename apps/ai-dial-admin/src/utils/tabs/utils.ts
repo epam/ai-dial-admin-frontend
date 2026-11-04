@@ -16,6 +16,7 @@ export enum EntityViewTab {
   Interceptors = 'Interceptors',
   GlobalInterceptors = 'GlobalInterceptors',
   RateLimitSchedule = 'RateLimitSchedule',
+  SpendingLimits = 'SpendingLimits',
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
@@ -117,6 +118,11 @@ export const globalInterceptorsTab = (t: (key: string) => string) => ({
 export const rateLimitScheduleTab = (t: (key: string) => string) => ({
   id: EntityViewTab.RateLimitSchedule,
   label: t(TabsI18nKey.RateLimitSchedule),
+});
+
+export const spendingLimitsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.SpendingLimits,
+  label: t(TabsI18nKey.SpendingLimits),
 });
 
 export const parametersTab = (t: (key: string) => string) => ({
@@ -601,7 +607,7 @@ export const getDeploymentsViewTabs = (
 };
 
 export const getSystemPropertiesTabs = (t: (key: string) => string): TabItem[] => {
-  return [globalInterceptorsTab(t), rateLimitScheduleTab(t)];
+  return [globalInterceptorsTab(t), rateLimitScheduleTab(t), spendingLimitsTab(t)];
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabItem[] => {

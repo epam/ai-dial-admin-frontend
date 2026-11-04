@@ -6,15 +6,20 @@ import UsageRedirect from '@/src/app/[lang]/usage/page';
 import UsageDashboard from '@/src/components/Analytics/Usage/UsageDashboard';
 import Page403 from '@/src/components/Page403/Page403';
 import DashboardView from '@/src/components/Telemetry/DashboardView';
+import { listDashboards } from '@/src/app/[lang]/dashboards/custom-actions';
+import DashboardSwitcher from '@/src/components/Analytics/CustomDashboards/Switcher/DashboardSwitcher';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { getCallerSource } from '@/src/server/analytics/usage-caller-source';
 import { CallerSource } from '@/src/components/Analytics/Usage/models';
+import { DashboardVisibility } from '@/src/models/analytics/dashboard';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/components/Analytics/Usage/UsageDashboard', () => ({ default: vi.fn() }));
 vi.mock('@/src/components/Page403/Page403', () => ({ default: vi.fn() }));
 vi.mock('@/src/components/Telemetry/DashboardView', () => ({ default: vi.fn() }));
 vi.mock('@/src/server/analytics/analytics-access');
+vi.mock('@/src/app/[lang]/dashboards/custom-actions');
+vi.mock('@/src/components/Analytics/CustomDashboards/Switcher/DashboardSwitcher', () => ({ default: vi.fn() }));
 vi.mock('@/src/server/analytics/usage-caller-source');
 
 const notFound = vi.fn(() => {
@@ -33,11 +38,14 @@ const ENV_KEYS = [
   'DIAL_ADMIN_API_URL',
   'GRAFANA_LINK',
   'DISABLE_MENU_ITEMS',
+  'ANALYTICS_CUSTOM_DASHBOARDS_ENABLED',
 ] as const;
 
 beforeEach(() => {
   vi.clearAllMocks();
   forbidden().mockResolvedValue(false);
+  // The full run inherits the developer's environment, so a flag the case does not set must start unset.
+  ENV_KEYS.forEach((key) => delete process.env[key]);
 });
 
 afterEach(() => {
@@ -50,6 +58,41 @@ const enableAnalytics = () => {
 };
 
 describe('dashboards page', () => {
+  test('offers no dashboard switcher while custom dashboards are off', async () => {
+    enableAnalytics();
+
+    expect((await renderPage()).props.switcher).toBeUndefined();
+    expect(listDashboards).not.toHaveBeenCalled();
+  });
+
+  test('hands the analytics page a switcher over the custom dashboards while they are on', async () => {
+    enableAnalytics();
+    process.env.ANALYTICS_CUSTOM_DASHBOARDS_ENABLED = 'true';
+    const dashboards = [
+      {
+        id: 'd1',
+        name: 'Ops',
+        visibility: DashboardVisibility.Private,
+        updated_at: '',
+        permissions: { write: true, publish: true },
+      },
+    ];
+    vi.mocked(listDashboards).mockResolvedValue({
+      success: true,
+      response: { dashboards, permissions: { create_private: true, create_public: true } },
+    });
+
+    const switcher = (await renderPage()).props.switcher as {
+      type: unknown;
+      props: { dashboards: unknown; createPermissions: unknown };
+    };
+    expect(switcher.type).toBe(DashboardSwitcher);
+    expect(switcher.props).toMatchObject({
+      dashboards,
+      createPermissions: { create_private: true, create_public: true },
+    });
+  });
+
   test('renders the analytics page when both analytics flags are on', async () => {
     enableAnalytics();
     process.env.DIAL_ADMIN_API_URL = 'http://admin';

@@ -48,7 +48,7 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         (row) =>
           row.role.toLowerCase().includes(search.trim().toLowerCase()) &&
           (!isCanReadOnly || row.marks.read !== PrivilegeMark.None) &&
-          (!isRowsLimitedOnly || row.rowsKind === RowsCellKind.Policy),
+          (!isRowsLimitedOnly || row.filter != null),
       ),
     [access.rows, search, isCanReadOnly, isRowsLimitedOnly],
   );
@@ -98,6 +98,15 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
           if (!data) return null;
           if (data.rowsKind === RowsCellKind.Policy && data.filter) {
             return <EllipsisTooltip className="font-mono" text={summarizeFilter(data.filter)} />;
+          }
+
+          if (data.rowsKind === RowsCellKind.None && data.filter) {
+            return (
+              <EllipsisTooltip
+                className="text-secondary"
+                text={t(AnalyticsTableAccessI18nKey.CannotReadRowsFilterKept, { filter: summarizeFilter(data.filter) })}
+              />
+            );
           }
 
           return (

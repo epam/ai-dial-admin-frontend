@@ -13,13 +13,18 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { GlobalSettings, RateLimitSchedule as RateLimitScheduleModel } from '@/src/models/system-properties';
+import {
+  GlobalSettings,
+  RateLimitSchedule as RateLimitScheduleModel,
+  SpendingLimits as SpendingLimitsModel,
+} from '@/src/models/system-properties';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import Header from './Header';
 import RateLimitSchedule from './RateLimitSchedule';
+import SpendingLimits from './SpendingLimits';
 
 interface Props {
   interceptors: DialInterceptor[];
@@ -61,6 +66,12 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   const changeRateLimitSchedule = useCallback((rateLimitSchedule: RateLimitScheduleModel) => {
     setCurrentSettings((prev) =>
       prev == null ? { globalInterceptors: [], rateLimitSchedule } : { ...prev, rateLimitSchedule },
+    );
+  }, []);
+
+  const changeSpendingLimits = useCallback((spendingLimits: SpendingLimitsModel) => {
+    setCurrentSettings((prev) =>
+      prev == null ? { globalInterceptors: [], spendingLimits } : { ...prev, spendingLimits },
     );
   }, []);
 
@@ -115,6 +126,12 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
           <RateLimitSchedule
             schedule={currentSettings?.rateLimitSchedule}
             onChangeRateLimitSchedule={changeRateLimitSchedule}
+          />
+        )}
+        {activeTab === EntityViewTab.SpendingLimits && (
+          <SpendingLimits
+            spendingLimits={currentSettings?.spendingLimits}
+            onChangeSpendingLimits={changeSpendingLimits}
           />
         )}
       </div>

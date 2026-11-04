@@ -31,3 +31,33 @@ export const mapOrgUnitError = (response: ServerActionResponse): OrgUnitError =>
       return { kind: OrgUnitErrorKind.UNAVAILABLE, status, message };
   }
 };
+
+const CONTENT_BLOCK = /^.+? content: (.+)\. Delete or move it first\.$/s;
+const CONTENT_ITEMS_SEPARATOR = ', ';
+const FOLDER_MARKER = '.dial_folder';
+const FILES_URL_PREFIX = 'files/';
+
+const getLastSegment = (url: string): string => url.split('/').filter(Boolean).pop() ?? url;
+
+/** Last segment of a core item url, decoded: `applications/public/A/app__1.0.0` -> `app__1.0.0`. */
+export const getContentItemName = (url: string): string => {
+  const name = getLastSegment(url);
+  try {
+    return decodeURIComponent(name);
+  } catch {
+    return name;
+  }
+};
+
+/** The technical empty-folder marker core keeps in a unit's folders; it is never content, whatever the url looks like. */
+export const isFolderMarkerUrl = (url: string): boolean => getContentItemName(url) === FOLDER_MARKER;
+
+/** A marker in the files tree, the only one the files API can delete. */
+export const isFilesMarkerUrl = (url: string): boolean => url.startsWith(FILES_URL_PREFIX) && isFolderMarkerUrl(url);
+
+/** Path of a core files url as the files API takes it: `files/public/A/x` -> `public/A/x`. */
+export const toFilePath = (url: string): string => url.slice(FILES_URL_PREFIX.length);
+
+/** Urls core lists when it refuses to remove a unit that still holds content; `undefined` for any other message. */
+export const parseUnitContentBlock = (message?: string): string[] | undefined =>
+  message?.match(CONTENT_BLOCK)?.[1]?.split(CONTENT_ITEMS_SEPARATOR);

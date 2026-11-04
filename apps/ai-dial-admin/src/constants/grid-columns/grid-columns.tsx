@@ -347,7 +347,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (
     ),
     cellRenderer: ChildrenActivityTypeCellRenderer,
     cellRendererParams: {
-      showIcon: !isSingleEntity,
+      shouldIndent: !isSingleEntity,
     },
   },
   ...(!isSingleEntity

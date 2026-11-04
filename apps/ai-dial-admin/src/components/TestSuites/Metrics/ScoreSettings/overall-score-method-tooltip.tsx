@@ -1,16 +1,10 @@
 import { ReactNode } from 'react';
 
-import {
-  FunctionParameterSource,
-  FunctionParameterSourceType,
-} from '@/src/components/TestSuites/Metrics/ScoreSettings/models';
-import {
-  getFunctionName,
-  getFunctionParameterSources,
-  getOverallScoreFormulaLabelKey,
-} from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+
+import { FunctionParameterSource, FunctionParameterSourceType } from './models';
+import { getFunctionName, getFunctionParameterSources, getOverallScoreFormulaLabelKey } from './utils';
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
@@ -40,6 +34,7 @@ const MethodHeader = ({ title, subtitle }: { title: string; subtitle: string }) 
   </div>
 );
 
+/** Tooltip body describing how the suite's overall score is calculated. */
 export const buildOverallScoreMethodTooltip = (suite: TestSuite, t: Translate, metricCount: number): ReactNode => {
   const methodLabel = t(TestSuitesI18nKey.OverallScoreCalculationMethod);
   const type = suite.overallScore?.type ?? OverallScoreType.Mean;
