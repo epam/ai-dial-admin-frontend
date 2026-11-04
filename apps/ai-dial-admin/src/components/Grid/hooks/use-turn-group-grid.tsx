@@ -6,6 +6,7 @@ import { TurnActionHandlers } from '@/src/components/Grid/columns/turn-columns';
 import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { fillEmptyStringFieldsInRows } from '@/src/utils/evaluation/schema-fields';
 import {
   demoteToSingle,
   getPerTurnFieldNames,
@@ -238,9 +239,9 @@ export const useTurnGroupGrid = <T,>({
     (extraRows?: Record<string, unknown>[]): T[] => {
       const dirtyIds = new Set([...dirtyIdsRef.current, ...(extraRows ?? []).map((row) => String(row.id))]);
       const rows = [...flatRowsRef.current, ...(extraRows ?? [])].filter((row) => dirtyIds.has(String(row.id)));
-      return collapseRows(rows, perTurnFields);
+      return collapseRows(fillEmptyStringFieldsInRows(rows, schema), perTurnFields);
     },
-    [collapseRows, perTurnFields],
+    [collapseRows, perTurnFields, schema],
   );
 
   const turnGridOptions = useMemo(
