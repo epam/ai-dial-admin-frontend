@@ -227,7 +227,7 @@ const Endpoint: FC<Props> = ({
         <div className="shrink-0 self-start">
           <button
             type="button"
-            className={'cursor-pointer block h-[40px] mt-7'}
+            className={classNames('cursor-pointer block h-[40px]', LABELLED_FIELD_TOP_OFFSET)}
             onClick={toggleExpand}
             aria-label="toggle expanded fields"
           >

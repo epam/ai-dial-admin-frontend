@@ -3,7 +3,7 @@ export const ROW_DETAIL_SIDEBAR_CLASS = 'w-1/2 p-0';
 export const ROW_DETAIL_BOTTOM_CLASS = 'p-0';
 
 export const ROW_DETAIL_DISPLAY_PANEL_CLASS =
-  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
+  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-tertiary shadow-lg z-20';
 
 export const ROW_DETAIL_PIVOT_LEFT_COL_WIDTH = 212;
 export const ROW_DETAIL_PIVOT_STATUS_COL_WIDTH = 135;
@@ -20,10 +20,10 @@ export const ROW_DETAIL_HEADER_HEIGHT = 40;
 export const ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP = 48;
 
 export const ROW_DETAIL_HEADER_CELL_BASE =
-  'sticky top-0 z-10 bg-layer-1 h-10 px-3 border-b border-r border-secondary flex items-center';
+  'sticky top-0 z-10 bg-layer-1 h-10 px-3 border-b border-r border-tertiary flex items-center';
 /** Height defaults to the compact 28px filter row; callers override it with a later `h-*` class. */
 export const ROW_DETAIL_FILTER_CELL_BASE =
-  'sticky z-10 bg-layer-2 h-7 border-b border-r border-secondary flex items-center';
+  'sticky z-10 bg-layer-2 h-7 border-b border-r border-tertiary flex items-center';
 export const ROW_DETAIL_FIELD_INDENT = 'pl-16';
 
 export const ROW_DETAIL_EXECUTION_SECTION_KEY = 'execution';

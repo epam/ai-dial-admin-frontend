@@ -15,9 +15,9 @@
 
 - [x] 2.6 Switch the border of `Common/Accordion/Accordion.tsx` from `border-primary` to `border-secondary`, the stroke ui-kit inputs use, and the same for the section frames inside entity view tabs listed in Decision 5
 
-- [x] 2.7 Align the remove buttons next to labelled kit inputs (`Routes/Paths/Path.tsx`, `InterfacesField/InterfaceEndpointRow.tsx`, `UpstreamEndpoints/Endpoint/Endpoint.tsx`) with the input through one `LABELLED_FIELD_TOP_OFFSET` (`mt-6`) in `src/constants/main-layout.ts`, replacing the `mt-7` copies (Decision 6)
+- [x] 2.7 Align the remove buttons next to labelled kit inputs (`Routes/Paths/Path.tsx`, `InterfacesField/InterfaceEndpointRow.tsx`, `UpstreamEndpoints/Endpoint/Endpoint.tsx` remove and expand buttons, `TestSuites/Metrics/ScoreSettings/WeightRow.tsx`, `Keys/View/Properties/RangeItems.tsx`) with the input through one `LABELLED_FIELD_TOP_OFFSET` (`mt-6`) in `src/constants/main-layout.ts`, replacing the `mt-7` copies (Decision 6)
 
-- [x] 2.8 Switch every one-sided separator line in `src/components` from `border-primary` / `border-secondary` to `border-tertiary`, except the `DiffMiniMap` viewport frame (Decision 7)
+- [x] 2.8 Switch every one-sided separator line in `src/components`, including class constants in `.ts` files (`Runs/Details/RowDetails/constants.ts`, `Runs/View/RowDetails/constants.ts`), from `border-primary` / `border-secondary` to `border-tertiary`, except the `DiffMiniMap` viewport frame (Decision 7)
 
 - [x] 2.9 Move the in-page collapsible side panels (App Routes in `EntityView/AppRoute` and `Assets/ObjectAppRoutes`, entity Audit, Conversations, test-suite Requests, container Execution log, Folders Storage) from `bg-layer-3` to `bg-layer-2`, the surface the dashboard widgets use; give the upstream endpoint row `bg-layer-2` with the kit input border (`border-secondary`)
 - [x] 2.10 Make the 34 entity view scroll containers vertical-only (`overflow-y-auto overflow-x-hidden`): hidden `sr-only` switch inputs overflowed them by 2px once the card padding was gone; wrap long unbroken message text in `Assets/Artifacts/Conversations/View/Conversations.tsx` (`min-w-0 break-words`)

@@ -12,9 +12,10 @@ vi.mock('@/src/app/actions', () => ({
 }));
 
 const adminApiEnabled = { value: true };
+const sidebarState = { value: { show: false, position: 'right' } };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
-    sidebar: { show: false, position: 'right' },
+    sidebar: sidebarState.value,
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
   }),
 }));
@@ -22,6 +23,7 @@ vi.mock('@/src/context/AppContext', () => ({
 describe('Content', () => {
   beforeEach(() => {
     adminApiEnabled.value = true;
+    sidebarState.value = { show: false, position: 'right' };
     vi.clearAllMocks();
   });
 
@@ -66,6 +68,19 @@ describe('Content', () => {
       'md:pt-6',
       'md:pb-6',
     );
+  });
+
+  test('drops the bottom gutter while the bottom sidebar is open', () => {
+    sidebarState.value = { show: true, position: 'bottom' };
+    render(
+      <Content>
+        <div>Test Content</div>
+      </Content>,
+    );
+
+    const slot = screen.getByText('Test Content').parentElement;
+    expect(slot).toHaveClass('pb-0');
+    expect(slot).not.toHaveClass('pb-4');
   });
 
   test('renders the Footer and polls status/core-version/BE-version when the admin API is enabled', async () => {
