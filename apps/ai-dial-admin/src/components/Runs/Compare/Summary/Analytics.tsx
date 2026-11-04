@@ -38,7 +38,9 @@ interface Props {
   comparedMetricCount?: number;
 }
 
-const CARD_CLASS = 'min-w-0 flex-1';
+const KPI_GRID_CLASS = 'grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(24rem,100%),1fr))] gap-4';
+
+const CARD_CLASS = 'min-w-0';
 
 const toDeltaValue = (delta: ReturnType<typeof getMetricDelta>): number | undefined =>
   delta.kind === MetricDeltaKind.Changed ? delta.value : undefined;
@@ -85,7 +87,7 @@ const Analytics: FC<Props> = ({
   const metricCounts = toSlotRecord(primaryMetricCount, comparedMetricCount);
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+    <div className={KPI_GRID_CLASS}>
       <AnalyticsCard
         className={CARD_CLASS}
         title={t(RunsI18nKey.TestCasesCompleted)}
