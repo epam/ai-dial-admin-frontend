@@ -1,45 +1,16 @@
 import { PostProcessPopupParams } from 'ag-grid-community';
 
-export enum HeatMapTooltipCellResolutionSource {
-  EventSource = 'eventSource',
-  Pointer = 'pointer',
-  DomQuery = 'domQuery',
-  None = 'none',
-}
-
-export interface HeatMapTooltipCellResolution {
-  element: HTMLElement | null;
-  source: HeatMapTooltipCellResolutionSource;
-}
+import {
+  HeatMapTooltipAnchor,
+  HeatMapTooltipCellResolution,
+  HeatMapTooltipCellResolutionSource,
+  HeatMapTooltipFrame,
+  HeatMapTooltipParentFit,
+  HeatMapTooltipPlacement,
+  HeatMapTooltipPosition,
+} from '@/src/components/Common/HeatMap/models';
 
 export const HEAT_MAP_TOOLTIP_ABOVE_CLASS = 'heat-map-tooltip--above';
-
-export enum HeatMapTooltipPlacement {
-  Below = 'below',
-  Above = 'above',
-}
-
-export interface HeatMapTooltipAnchor {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-export interface HeatMapTooltipFrame {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-export interface HeatMapTooltipPosition {
-  left: number;
-  top: number;
-  placement: HeatMapTooltipPlacement;
-  arrowShift: number;
-  isFixed: boolean;
-}
 
 export const resolveCenteredPopupLeft = (
   anchorCenterX: number,
@@ -50,6 +21,25 @@ export const resolveCenteredPopupLeft = (
   const left = anchorCenterX - parentLeft - popupWidth / 2;
   const maxLeft = parentWidth - popupWidth;
   return Math.max(0, Math.min(left, maxLeft));
+};
+
+const resolveHeatMapTooltipParentFit = (
+  cellTop: number,
+  cellBottom: number,
+  parentTop: number,
+  parentHeight: number,
+  popupHeight: number,
+): HeatMapTooltipParentFit => {
+  const maxTop = Math.max(0, parentHeight - popupHeight);
+  const belowTop = cellBottom - parentTop;
+  const aboveTop = cellTop - parentTop - popupHeight;
+  return {
+    maxTop,
+    belowTop,
+    aboveTop,
+    canFitBelow: belowTop <= maxTop && belowTop >= 0,
+    canFitAbove: aboveTop >= 0,
+  };
 };
 
 /**
@@ -63,16 +53,18 @@ export const resolveCenteredPopupTop = (
   parentHeight: number,
   popupHeight: number,
 ): { top: number; placedAbove: boolean } => {
-  const maxTop = Math.max(0, parentHeight - popupHeight);
-  const belowTop = cellBottom - parentTop;
-  const aboveTop = cellTop - parentTop - popupHeight;
-  const fitsBelow = belowTop <= maxTop && belowTop >= 0;
-  const fitsAbove = aboveTop >= 0;
+  const { maxTop, belowTop, aboveTop, canFitBelow, canFitAbove } = resolveHeatMapTooltipParentFit(
+    cellTop,
+    cellBottom,
+    parentTop,
+    parentHeight,
+    popupHeight,
+  );
 
-  if (fitsBelow) {
+  if (canFitBelow) {
     return { top: belowTop, placedAbove: false };
   }
-  if (fitsAbove) {
+  if (canFitAbove) {
     return { top: Math.min(aboveTop, maxTop), placedAbove: true };
   }
 
@@ -83,22 +75,6 @@ export const resolveCenteredPopupTop = (
     return { top: Math.min(belowTop, maxTop), placedAbove: false };
   }
   return { top: Math.max(0, aboveTop), placedAbove: true };
-};
-
-const fitsInParent = (
-  cellTop: number,
-  cellBottom: number,
-  parentTop: number,
-  parentHeight: number,
-  popupHeight: number,
-): { fitsBelow: boolean; fitsAbove: boolean } => {
-  const maxTop = Math.max(0, parentHeight - popupHeight);
-  const belowTop = cellBottom - parentTop;
-  const aboveTop = cellTop - parentTop - popupHeight;
-  return {
-    fitsBelow: belowTop <= maxTop && belowTop >= 0,
-    fitsAbove: aboveTop >= 0,
-  };
 };
 
 const clampToRange = (value: number, min: number, max: number): number => Math.max(min, Math.min(value, max));
@@ -148,9 +124,15 @@ export const resolveHeatMapTooltipPosition = (
   viewportHeight: number,
 ): HeatMapTooltipPosition => {
   const cellBottom = cell.top + cell.height;
-  const { fitsBelow, fitsAbove } = fitsInParent(cell.top, cellBottom, parent.top, parent.height, popupHeight);
+  const { canFitBelow, canFitAbove } = resolveHeatMapTooltipParentFit(
+    cell.top,
+    cellBottom,
+    parent.top,
+    parent.height,
+    popupHeight,
+  );
 
-  if (fitsBelow || fitsAbove) {
+  if (canFitBelow || canFitAbove) {
     const vertical = resolveCenteredPopupTop(cell.top, cellBottom, parent.top, parent.height, popupHeight);
     return {
       left: resolveCenteredPopupLeft(cell.left + cell.width / 2, parent.left, parent.width, popupWidth),

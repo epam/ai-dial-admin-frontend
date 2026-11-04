@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
+import { HeatMapTooltipPlacement } from '@/src/components/Common/HeatMap/models';
 import {
-  HeatMapTooltipPlacement,
   resolveCenteredPopupLeft,
   resolveCenteredPopupTop,
   resolveHeatMapTooltipPosition,
@@ -32,6 +32,14 @@ describe('resolveCenteredPopupTop', () => {
     expect(resolveCenteredPopupTop(350, 390, 0, 400, 80)).toEqual({ top: 270, placedAbove: true });
   });
 
+  test('places popup below when it exactly fits the remaining parent space', () => {
+    expect(resolveCenteredPopupTop(240, 280, 100, 260, 80)).toEqual({ top: 180, placedAbove: false });
+  });
+
+  test('clamps above when neither side fits and there is more space above', () => {
+    expect(resolveCenteredPopupTop(160, 180, 100, 100, 90)).toEqual({ top: 0, placedAbove: true });
+  });
+
   test('clamps in-bounds when popup is taller than either side', () => {
     // parent height 100; cell 40-60; popup 90 → neither side fits; equal space → below path clamped
     expect(resolveCenteredPopupTop(40, 60, 0, 100, 90)).toEqual({ top: 10, placedAbove: false });
@@ -55,6 +63,25 @@ describe('resolveHeatMapTooltipPosition', () => {
     expect(position.placement).toBe(HeatMapTooltipPlacement.Below);
     expect(position.isFixed).toBe(false);
     expect(position.top).toBe(140);
+  });
+
+  test('keeps the tooltip above the cell when only that side fits in the grid', () => {
+    expect(
+      resolveHeatMapTooltipPosition(
+        { left: 200, top: 450, width: 80, height: 40 },
+        { left: 100, top: 100, width: 400, height: 400 },
+        120,
+        80,
+        800,
+        600,
+      ),
+    ).toEqual({
+      left: 80,
+      top: 270,
+      placement: HeatMapTooltipPlacement.Above,
+      arrowShift: 0,
+      isFixed: false,
+    });
   });
 
   test('places a two-row tooltip below the cell, the same way as one row', () => {
