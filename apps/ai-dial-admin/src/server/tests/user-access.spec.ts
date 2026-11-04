@@ -13,7 +13,9 @@ vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
 
 const answer = (adminAccess: AdminAccess) =>
-  vi.mocked(coreUtilityApi.getUserRoleAssignments).mockResolvedValue({ success: true, response: { adminAccess, items: [] } });
+  vi
+    .mocked(coreUtilityApi.getUserRoleAssignments)
+    .mockResolvedValue({ success: true, response: { adminAccess, items: [] } });
 
 describe('getUserAccess', () => {
   beforeEach(() => {
