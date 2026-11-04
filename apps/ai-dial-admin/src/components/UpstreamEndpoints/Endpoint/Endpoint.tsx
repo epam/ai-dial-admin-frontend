@@ -17,7 +17,7 @@ import {
   UpstreamEndpointsI18nKey,
 } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, LABELLED_FIELD_TOP_OFFSET } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { InterfaceFieldVariant } from '@/src/models/dial/interfaces';
@@ -221,13 +221,13 @@ const Endpoint: FC<Props> = ({
   }, []);
 
   return (
-    <div className="flex gap-4 items-center w-full lg:gap-2 lg:bg-layer-3 lg:rounded lg:p-4">
+    <div className="flex gap-4 items-center w-full lg:gap-2 lg:rounded lg:border lg:border-secondary lg:bg-layer-2 lg:p-4">
       {/* Desktop toggle — left of content, mirrors delete button positioning */}
       {!isTablet && (
         <div className="shrink-0 self-start">
           <button
             type="button"
-            className={'cursor-pointer block h-[40px] mt-7'}
+            className={classNames('cursor-pointer block h-[40px]', LABELLED_FIELD_TOP_OFFSET)}
             onClick={toggleExpand}
             aria-label="toggle expanded fields"
           >
@@ -240,7 +240,7 @@ const Endpoint: FC<Props> = ({
         </div>
       )}
 
-      <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-primary p-3 lg:border-none lg:p-0">
+      <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-secondary p-3 lg:border-none lg:p-0">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
             <h3 className="dial-small-text flex items-center">
@@ -506,7 +506,11 @@ const Endpoint: FC<Props> = ({
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 self-start">
-          <RemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
+          <RemoveButton
+            onClick={onRemove}
+            className={!isTablet ? LABELLED_FIELD_TOP_OFFSET : 'mt-0'}
+            aria-label="remove"
+          />
         </div>
       )}
     </div>

@@ -27,7 +27,7 @@ const SessionDetailPanel: FC<Props> = ({ icon, iconClassName, title, source, act
         {action}
       </span>
     </div>
-    {isFramed ? <div className="rounded border border-primary bg-layer-3 p-3">{children}</div> : children}
+    {isFramed ? <div className="rounded border border-secondary bg-layer-3 p-3">{children}</div> : children}
   </section>
 );
 

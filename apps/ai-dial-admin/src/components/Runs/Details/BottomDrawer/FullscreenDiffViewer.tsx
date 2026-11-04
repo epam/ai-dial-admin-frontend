@@ -60,7 +60,7 @@ const FullscreenDiffViewer: FC<Props> = ({
       className="md:h-[80vh]"
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center px-4 py-2 shrink-0 dial-tiny-text border-b border-secondary">
+        <div className="flex items-center px-4 py-2 shrink-0 dial-tiny-text border-b border-tertiary">
           <span className="flex-1 text-secondary">{originalLabel}</span>
           <span className="flex-1 text-secondary">{modifiedLabel}</span>
         </div>

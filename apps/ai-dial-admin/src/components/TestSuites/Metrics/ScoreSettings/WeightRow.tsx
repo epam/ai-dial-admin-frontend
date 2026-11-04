@@ -11,6 +11,7 @@ import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
 import { MetricOutputOption } from './models';
 import { formatWeightedMeanWeightInputValue, getMetricSelectionError, getWeightError } from './utils';
 import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
+import { LABELLED_FIELD_TOP_OFFSET } from '@/src/constants/main-layout';
 
 export interface Props {
   index: number;
@@ -144,7 +145,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, disableRemove = fa
       <RemoveButton
         onClick={onRemoveRow}
         aria-label={t(ButtonsI18nKey.Remove)}
-        className={index === 0 ? 'mt-7' : ''}
+        className={index === 0 ? LABELLED_FIELD_TOP_OFFSET : ''}
         disabled={disableRemove}
       />
     </div>

@@ -244,7 +244,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
               )}
             </div>
             {!response ? (
-              <div className="flex justify-end gap-x-4 pt-4 border-t border-secondary">
+              <div className="flex justify-end gap-x-4 pt-4 border-t border-tertiary">
                 <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
                 <PrimaryButton
                   label={t(ButtonsI18nKey.SendRequest)}

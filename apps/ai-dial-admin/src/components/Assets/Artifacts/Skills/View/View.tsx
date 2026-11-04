@@ -29,6 +29,7 @@ import { buildSkillManifest, parseSkillManifest, SkillManifest } from '@/src/uti
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   skill: DialSkillResource;
@@ -260,7 +261,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SkillHeader
         view={ApplicationRoute.Skills}
         entity={selectedSkill}
@@ -274,7 +275,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
         onRemove={onRemoveSkill}
         getAssetContext={useSkillFolder}
       />
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {activeTab === EntityViewTab.Properties && (
           <SkillAssetProperties
             skill={selectedSkill}

@@ -39,7 +39,6 @@ const PublicationsList = <T extends Publication>({ data }: Props<T>) => {
       columnDefs={gridColumns}
       listLabel={t(listViewTitleMap[ROUTE])}
       emptyDataProps={{ title: t(emptyDataTitleMap[ROUTE]) }}
-      isMainListView
       getHref={(row) => getUrnForEntity(ROUTE, row)}
       storageKey={ApplicationRoute.Publications}
     />

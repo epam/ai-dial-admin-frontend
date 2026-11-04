@@ -9,4 +9,4 @@ export const EXECUTION_ROW_DETAIL_SCROLL_PADDING_TOP = ROW_DETAIL_HEADER_HEIGHT 
 
 /** Matches the Figma 48px minimum row; a clamped three-line value makes the row taller, not scrollable. */
 export const EXECUTION_ROW_DETAIL_CELL_BASE =
-  'relative min-w-0 min-h-12 p-3 flex items-center overflow-hidden border-b border-secondary bg-layer-3';
+  'relative min-w-0 min-h-12 p-3 flex items-center overflow-hidden border-b border-tertiary bg-layer-3';

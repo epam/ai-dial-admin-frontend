@@ -154,7 +154,6 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         emptyDataProps={{ title: t(EntitiesI18nKey.NoImages) }}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.images}`}
         getHref={(data) => getUrnForEntity(route, data)}
-        isMainListView
         isEnableColumnPanel
       >
         <HeaderButtons route={route} isReadOnlyAdmin={isReadOnlyAdmin} />

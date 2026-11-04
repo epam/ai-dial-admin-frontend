@@ -8,5 +8,5 @@ export default async function Page() {
     redirect(ApplicationRoute.Home);
   }
 
-  return <UsageLog className="bg-layer-2 rounded py-4 px-6" route={ApplicationRoute.UsageLog} />;
+  return <UsageLog route={ApplicationRoute.UsageLog} />;
 }

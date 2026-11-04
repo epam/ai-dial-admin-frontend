@@ -245,7 +245,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
           className="bg-layer-3 mr-2 h-full border border-primary"
         >
           <Search onChange={setPattern} value={pattern} />
-          <div className="border-b border-primary pb-1">
+          <div className="border-b border-tertiary pb-1">
             <span className="dial-tiny text-secondary mt-4 block">{t(ToolsetI18nKey.AvailableForYou)}</span>
             {filteredTools.length ? (
               <>

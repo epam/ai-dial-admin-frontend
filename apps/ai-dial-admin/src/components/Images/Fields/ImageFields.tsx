@@ -91,7 +91,7 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
         />
         {!isModal && <ImageBuildPrivileges image={image} setImage={setImage} />}
       </div>
-      <div className={classNames('flex flex-col gap-y-8', !isModal && 'pt-8 border-t border-primary')}>
+      <div className={classNames('flex flex-col gap-y-8', !isModal && 'pt-8 border-t border-tertiary')}>
         <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
         {!isModal && <ImageTransport image={image} setImage={setImage} />}
       </div>

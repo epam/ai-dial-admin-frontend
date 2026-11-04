@@ -11,7 +11,7 @@ import {
   EntityPlaceholdersI18nKey,
   UpstreamEndpointsI18nKey,
 } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { LABELLED_FIELD_TOP_OFFSET, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialUpstreamInterface } from '@/src/models/dial/model';
@@ -126,7 +126,13 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, upstreamBas
             />
           </div>
         </div>
-        {!disabled && <RemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} className="mt-7" />}
+        {!disabled && (
+          <RemoveButton
+            aria-label={t(ButtonsI18nKey.Delete)}
+            onClick={onDelete}
+            className={LABELLED_FIELD_TOP_OFFSET}
+          />
+        )}
       </div>
     </div>
   );

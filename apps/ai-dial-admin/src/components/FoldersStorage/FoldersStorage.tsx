@@ -29,7 +29,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
     folderContext?.toggleFolder({ path: `${ROOT_FOLDER}/` } as DialFile, true, true);
   };
   return (
-    <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         <h1 className="dial-h1-text">{t(MenuI18nKey.FoldersStorage)}</h1>
         {!isReadOnlyAdmin && <NewUnitButton />}
@@ -38,7 +38,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
         <CollapsibleSidebar
           width={480}
           title={t(MenuI18nKey.FoldersStorage)}
-          className="bg-layer-3 border-transparent mr-0"
+          className="bg-layer-2 border-transparent mr-0"
           additionalButtons={
             <Tooltip
               triggerClassName="flex items-center"

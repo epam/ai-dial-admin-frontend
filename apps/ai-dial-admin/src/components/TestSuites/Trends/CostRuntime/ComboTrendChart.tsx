@@ -133,7 +133,7 @@ const ComboTrendChart: FC<Props> = ({
                 {ticks.map((tick, index) => (
                   <div
                     key={`${tick}-${index}`}
-                    className="absolute inset-x-0 border-t border-secondary"
+                    className="absolute inset-x-0 border-t border-tertiary"
                     style={{ top: `${(index / (ticks.length - 1)) * 100}%` }}
                   />
                 ))}

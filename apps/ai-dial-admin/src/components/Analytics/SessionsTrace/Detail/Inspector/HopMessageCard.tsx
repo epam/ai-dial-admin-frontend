@@ -49,7 +49,7 @@ const HopMessageCard: FC<Props> = ({ role, position, bytes, bodyId, aside, child
     <Wrapper
       role="group"
       aria-label={label}
-      className="flex min-w-0 flex-col gap-2 rounded border border-primary bg-layer-3 p-3"
+      className="flex min-w-0 flex-col gap-2 rounded border border-secondary bg-layer-3 p-3"
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className={classNames('font-mono uppercase dial-tiny-semi-text', ROLE_CLASS[role])}>

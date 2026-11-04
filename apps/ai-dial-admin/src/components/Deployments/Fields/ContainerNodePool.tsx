@@ -76,7 +76,7 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
       {isLoading ? (
         <Spinner size={32} fullWidth />
       ) : (
-        <div className="flex items-center gap-3 rounded border border-primary px-4 py-3">
+        <div className="flex items-center gap-3 rounded border border-secondary px-4 py-3">
           <SelectedPoolDisplay pool={selectedPool} poolId={selectedId} poolName={selectedName} />
           <PrimaryButton
             appearance={ButtonAppearance.Ghost}

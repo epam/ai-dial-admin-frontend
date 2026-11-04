@@ -22,6 +22,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import Header from './Header';
 import RateLimitSchedule from './RateLimitSchedule';
 import SpendingLimits from './SpendingLimits';
@@ -105,7 +106,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   }, []);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <Header
         isChanged={isChanged}
         onSave={onSave}
@@ -114,7 +115,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
         onChangeTab={changeTab}
       />
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {activeTab === EntityViewTab.GlobalInterceptors && (
           <GlobalInterceptors
             interceptors={interceptors}

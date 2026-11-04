@@ -252,7 +252,6 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         rowData={containersList}
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
-        isMainListView
         listLabel={
           isUnified
             ? t(MenuI18nKey.Containers)

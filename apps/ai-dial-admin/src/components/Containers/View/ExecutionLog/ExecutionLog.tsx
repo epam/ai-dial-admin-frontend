@@ -58,7 +58,7 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
             <CollapsibleSidebar
               width={320}
               title={t(ContainersI18nKey.Pods)}
-              className="bg-layer-3 border-transparent mr-0"
+              className="bg-layer-2 border-transparent mr-0"
             >
               <Tabs
                 tabs={tabs}

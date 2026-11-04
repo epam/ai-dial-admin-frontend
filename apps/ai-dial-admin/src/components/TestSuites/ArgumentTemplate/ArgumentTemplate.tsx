@@ -82,7 +82,7 @@ const ArgumentTemplate: FC<Props> = ({ toolRef, argumentTemplate, onChange, isSk
 
   if (rows.length === 0) {
     return (
-      <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
+      <div className="flex flex-col size-full gap-2 border border-secondary rounded p-4">
         <h3>{t(TestSuitesI18nKey.ToolArguments)}</h3>
         <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.NoArgumentsDefined)}</p>
       </div>
@@ -90,7 +90,7 @@ const ArgumentTemplate: FC<Props> = ({ toolRef, argumentTemplate, onChange, isSk
   }
 
   return (
-    <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
+    <div className="flex flex-col size-full gap-2 border border-secondary rounded p-4">
       <h3>{t(TestSuitesI18nKey.ToolArguments)}</h3>
       <div className="min-h-0 overflow-auto" style={{ maxHeight: '300px' }}>
         <GridView<ArgumentRow>

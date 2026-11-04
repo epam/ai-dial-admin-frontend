@@ -34,7 +34,7 @@ const Tool: FC<Props> = ({
   return (
     <>
       {isAddedManual ? (
-        <div className="flex flex-col rounded border border-primary p-4 pl-[36px]">
+        <div className="flex flex-col rounded border border-secondary p-4 pl-[36px]">
           <ToolHeader
             tool={tool}
             disabled={disabled}
