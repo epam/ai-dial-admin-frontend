@@ -2,24 +2,45 @@
 
 import { FC } from 'react';
 
-import { Tabs } from '@epam/ai-dial-ui-kit';
+import { Tabs, TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { EntityViewTab, getSystemPropertiesTabs } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getSystemPropertiesTabs, getTabStatusProps } from '@/src/utils/tabs/utils';
 import ChangedEntityButtons from '../EntityHeaderControls/Buttons/ChangedEntityButtons';
 
 interface Props {
   isChanged: boolean;
+  isScheduleValid: boolean;
+  isCostObjectInvalid: boolean;
   onSave?: () => void;
   onDiscard?: () => void;
   activeTab: EntityViewTab;
   onChangeTab: (tab: string) => void;
 }
 
-const Header: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, onChangeTab }) => {
+const Header: FC<Props> = ({
+  isChanged,
+  isScheduleValid,
+  isCostObjectInvalid,
+  onSave,
+  onDiscard,
+  activeTab,
+  onChangeTab,
+}) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = getSystemPropertiesTabs(t);
+  const tabs = getSystemPropertiesTabs(t).map((tab) => {
+    const isInvalid =
+      (tab.id === EntityViewTab.RateLimitSchedule && !isScheduleValid) ||
+      (tab.id === EntityViewTab.SpendingLimits && isCostObjectInvalid);
+    const statusProps = getTabStatusProps(t, isInvalid ? TabStatus.Error : undefined);
+    // Tabs appends the status label directly to the tab name for assistive technology.
+    return {
+      ...tab,
+      ...statusProps,
+      statusLabel: statusProps.statusLabel ? `: ${statusProps.statusLabel}` : undefined,
+    };
+  });
 
   return (
     <div className="flex flex-row justify-between min-h-[34px]">

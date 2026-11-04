@@ -178,6 +178,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 vi.mock('@/src/context/SaveValidationContext', () => {
   const dispatch = vi.fn();
+  const errorFields = new Map<string, boolean>();
   return {
     SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
     useSaveValidationContext: () => ({
@@ -185,6 +186,8 @@ vi.mock('@/src/context/SaveValidationContext', () => {
       dispatch,
       jsonErrors: [],
       jsonErrorNotifications: [],
+      resetCounter: 0,
+      errorFields,
     }),
     useJsonEditorValidation: () => {
       const editorId = useId();
