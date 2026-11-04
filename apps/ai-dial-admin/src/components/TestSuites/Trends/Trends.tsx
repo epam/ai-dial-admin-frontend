@@ -130,11 +130,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
           hasError={hasEvalError}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <OverallScoreTrend
-            runOrder={data.runOrder}
-            overallScoreThreshold={selectedTestSuite.overallScoreThreshold}
-            isLoading={isLoading}
-          />
+          <OverallScoreTrend runOrder={data.runOrder} isLoading={isLoading} />
         </div>
       </div>
       <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-stretch">
