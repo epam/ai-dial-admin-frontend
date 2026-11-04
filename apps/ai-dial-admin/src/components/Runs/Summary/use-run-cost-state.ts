@@ -40,10 +40,12 @@ export interface RunCostState {
  */
 export const useRunCostState = ({ run, hasNoResults, metricSnapshotCount }: Params): RunCostState => {
   const isRunInProgress = isTransitionalRunStatus(run?.status);
-  // Cost aggregation doesn't support MCP-tool or Route suites at all yet — confirmed by QA reproduction
-  // (the card stays in Calculating indefinitely regardless of whether the run computed metrics).
-  // Skip the fetch unconditionally rather than polling toward a result the backend can never produce.
-  const isCostUnsupported = isCostUnsupportedRun(run);
+  // MCP-tool and Route suites have no source cost of their own, so the only figure they can produce is
+  // the metrics cost. With no metrics there is nothing to wait for; with metrics the fetch still runs,
+  // since a paid metric (e.g. an LLM judge) does have a cost. A free-only metric set cannot be told apart
+  // from one still aggregating, so it settles on a dash when the wait window ends.
+  const hasNoMetrics = metricSnapshotCount === 0;
+  const isCostUnsupported = isCostUnsupportedRun(run) && hasNoMetrics;
   // A model with no Prompt/Completion rate configured can never produce a cost figure either — the
   // backend has nothing to multiply usage by. Resolved from the deployed model's own config, not from
   // the costs endpoint, so such a run shows a dash immediately instead of polling toward a result that
@@ -64,8 +66,6 @@ export const useRunCostState = ({ run, hasNoResults, metricSnapshotCount }: Para
   // A run that computed zero metrics can never have a metrics cost, which the metric snapshots already
   // fetched for the rest of the Summary tab say. Its Metrics value settles immediately instead of
   // sharing the card's Calculating wait for a field that will always come back null.
-  const hasNoMetrics = metricSnapshotCount === 0;
-
   return {
     totalCost: sumRunCostParts(costs),
     sourceCost: costs?.sourceCost ?? null,
