@@ -86,11 +86,13 @@ describe('buildOverallScoreChartOptions', () => {
     ]);
   });
 
-  test('adds a dashed threshold markLine with label when threshold is set', () => {
-    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime() })];
-    const options = buildOverallScoreChartOptions(palette, runOrder, labels, 0.6);
+  test('adds a full-width dashed threshold markLine for a single run with a snapshot threshold', () => {
+    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime(), overallScoreThreshold: 0.6 })];
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
     const markLine = (options.series as { markLine: Record<string, unknown> }[])[0].markLine;
 
+    expect(options.xAxis).toMatchObject({ type: 'category', data: ['a'] });
+    expect(options.series).toHaveLength(1);
     expect(markLine).toMatchObject({
       silent: true,
       symbol: 'none',
@@ -109,28 +111,146 @@ describe('buildOverallScoreChartOptions', () => {
     });
   });
 
-  test('omits markLine when threshold is unset', () => {
-    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime() })];
-    const options = buildOverallScoreChartOptions(palette, runOrder, labels, null);
-    const series = (options.series as { markLine?: unknown }[])[0];
+  test('omits markLine when no run has a snapshot threshold', () => {
+    const runOrder = [
+      run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime(), overallScoreThreshold: null }),
+      run({ runId: 'b', computedAtMs: new Date(2026, 7, 18).getTime() }),
+    ];
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
+    const series = options.series as { markLine?: unknown }[];
 
-    expect(series.markLine).toBeUndefined();
+    expect(series).toHaveLength(1);
+    expect(series[0].markLine).toBeUndefined();
   });
 
   test('places the threshold label below the line when threshold is the axis max', () => {
-    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime() })];
-    const options = buildOverallScoreChartOptions(palette, runOrder, labels, 1);
+    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime(), overallScoreThreshold: 1 })];
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
     const markLine = (options.series as { markLine: { label: { position: string } } }[])[0].markLine;
 
     expect(markLine.label.position).toBe('insideStartBottom');
   });
 
-  test('includes markLine when threshold is 0', () => {
-    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime() })];
-    const options = buildOverallScoreChartOptions(palette, runOrder, labels, 0);
+  test('includes markLine when the run snapshot threshold is 0', () => {
+    const runOrder = [run({ runId: 'a', computedAtMs: new Date(2026, 7, 17).getTime(), overallScoreThreshold: 0 })];
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
     const markLine = (options.series as { markLine: { data: { yAxis: number }[] } }[])[0].markLine;
 
     expect(markLine.data[0].yAxis).toBe(0);
+  });
+
+  test('draws per-run threshold segments on a hidden value x-axis', () => {
+    const runOrder = [
+      run({ runId: 'a', computedAtMs: 1, overallScoreThreshold: 0.6 }),
+      run({ runId: 'b', computedAtMs: 2, overallScoreThreshold: 0.6 }),
+      run({ runId: 'c', computedAtMs: 3, overallScoreThreshold: 0.8 }),
+      run({ runId: 'd', computedAtMs: 4, overallScoreThreshold: null }),
+      run({ runId: 'e', computedAtMs: 5, overallScoreThreshold: 0.6 }),
+    ];
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
+    const xAxes = options.xAxis as { type: string; max?: number }[];
+    const series = options.series as {
+      markLine?: { data: unknown[]; lineStyle: { color: string } };
+      xAxisIndex?: number;
+      silent?: boolean;
+    }[];
+
+    expect(xAxes).toHaveLength(2);
+    expect(xAxes[0]).toMatchObject({ type: 'category', data: ['a', 'b', 'c', 'd', 'e'] });
+    expect(xAxes[1]).toMatchObject({ type: 'value', min: 0, max: 4, show: false });
+
+    expect(series).toHaveLength(2);
+    expect(series[0].markLine).toBeUndefined();
+    expect(series[1]).toMatchObject({
+      xAxisIndex: 1,
+      silent: true,
+      markLine: {
+        silent: true,
+        symbol: 'none',
+        lineStyle: {
+          color: palette['stroke-accent-secondary'],
+          width: 1,
+          type: 'dashed',
+        },
+      },
+    });
+    expect(series[1].markLine?.data).toEqual([
+      [
+        {
+          coord: [0, 0.6],
+          label: {
+            show: true,
+            position: 'insideStartTop',
+            formatter: 'Threshold (0.6)',
+            color: palette['text-primary'],
+            fontSize: 10,
+          },
+        },
+        { coord: [1.5, 0.6] },
+      ],
+      [
+        {
+          coord: [1.5, 0.6],
+          label: { show: false },
+          lineStyle: {
+            color: palette['stroke-accent-secondary'],
+            width: 1,
+            type: [2, 8],
+          },
+        },
+        { coord: [1.5, 0.8] },
+      ],
+      [
+        {
+          coord: [1.5, 0.8],
+          label: {
+            show: true,
+            position: 'insideStartTop',
+            formatter: 'Threshold (0.8)',
+            color: palette['text-primary'],
+            fontSize: 10,
+          },
+        },
+        { coord: [2.5, 0.8] },
+      ],
+      [
+        {
+          coord: [3.5, 0.6],
+          label: {
+            show: false,
+            position: 'insideStartTop',
+            formatter: 'Threshold (0.6)',
+            color: palette['text-primary'],
+            fontSize: 10,
+          },
+        },
+        { coord: [4, 0.6] },
+      ],
+    ]);
+  });
+
+  test('labels each threshold value once when it returns after another value', () => {
+    const runOrder = [0, 1, 0].map((overallScoreThreshold, index) =>
+      run({ runId: `run-${index}`, computedAtMs: index, overallScoreThreshold }),
+    );
+    const options = buildOverallScoreChartOptions(palette, runOrder, labels);
+    expect(options.series).toMatchObject([
+      {},
+      {
+        markLine: {
+          data: [
+            [{ label: { show: true, formatter: 'Threshold (0)' } }, {}],
+            [{ label: { show: false } }, {}],
+            [{ label: { show: true, formatter: 'Threshold (1)' } }, {}],
+            [{ label: { show: false } }, {}],
+            [{ label: { show: false, formatter: 'Threshold (0)' } }, {}],
+          ],
+        },
+      },
+    ]);
+
+    const nextOptions = buildOverallScoreChartOptions(palette, runOrder, labels);
+    expect(nextOptions.series).toEqual(options.series);
   });
 
   test('tooltip shows run link, month-year time, and score row', () => {
