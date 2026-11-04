@@ -143,27 +143,31 @@ describe('PivotValueCell', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  describe('truncation', () => {
-    test('scrolls inside the cell by default, as the Compare pivot does', () => {
+  describe('long content', () => {
+    test('scrolls inside the cell when it does not fit', () => {
       const { container } = render(<PivotValueCell field={field('answer', { primaryRaw: 'a long value' })} />);
 
       expect(container.querySelector('.overflow-y-auto')).toBeTruthy();
     });
 
-    test('truncates to the cell instead of scrolling when isTruncated is set', () => {
-      const { container } = render(
-        <PivotValueCell field={field('answer', { primaryRaw: 'a long value' })} isTruncated />,
-      );
+    test('keeps the cell at its own height instead of growing with the content', () => {
+      render(<PivotValueCell field={field('answer', { primaryRaw: 'x '.repeat(2000) })} />);
 
-      expect(container.querySelector('.overflow-y-auto')).toBeNull();
-      expect(screen.getByText('a long value')).toBeInTheDocument();
+      expect(screen.getByRole('button')).toHaveClass('h-full', 'overflow-hidden');
     });
 
-    test('keeps the heat-map fill of a score cell when isTruncated is set', () => {
+    test('keeps the whole value in the cell instead of ending it with an ellipsis', () => {
+      render(<PivotValueCell field={field('answer', { primaryRaw: 'a long value' })} />);
+
+      const text = screen.getByText('a long value');
+      expect(text.className).not.toMatch(/line-clamp/);
+      expect(text.style.getPropertyValue('-webkit-line-clamp')).toBe('');
+    });
+
+    test('keeps the heat-map fill of a score cell', () => {
       render(
         <PivotValueCell
           field={field('Accuracy_precision', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' })}
-          isTruncated
         />,
       );
 
@@ -175,12 +179,9 @@ describe('PivotValueCell', () => {
     test('is one button announcing a dialog, whether the cell holds text, a score or the status', () => {
       render(
         <>
-          <PivotValueCell field={field('answer', { primaryRaw: 'text' })} isTruncated />
-          <PivotValueCell
-            field={field('score', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' })}
-            isTruncated
-          />
-          <PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} isTruncated />
+          <PivotValueCell field={field('answer', { primaryRaw: 'text' })} />
+          <PivotValueCell field={field('score', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' })} />
+          <PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} />
         </>,
       );
 
@@ -190,7 +191,7 @@ describe('PivotValueCell', () => {
     });
 
     test('shows the open icon on keyboard focus as well as on hover, hidden from assistive technology', () => {
-      render(<PivotValueCell field={field('answer', { primaryRaw: 'text' })} isTruncated />);
+      render(<PivotValueCell field={field('answer', { primaryRaw: 'text' })} />);
 
       const icon = screen.getByRole('button').querySelector('[aria-hidden="true"]');
       expect(icon).toHaveClass('group-hover:opacity-100', 'group-focus-visible:opacity-100');
@@ -198,7 +199,7 @@ describe('PivotValueCell', () => {
 
     test('opens from the keyboard with Enter and Space', async () => {
       const user = userEvent.setup();
-      render(<PivotValueCell field={field('responseBody', { primaryRaw: 'body' })} isTruncated />);
+      render(<PivotValueCell field={field('responseBody', { primaryRaw: 'body' })} />);
 
       await user.tab();
       await user.keyboard('{Enter}');
@@ -207,7 +208,7 @@ describe('PivotValueCell', () => {
     });
 
     test('opens the text popup for a short value and the status as well', async () => {
-      render(<PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} isTruncated />);
+      render(<PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} />);
 
       await userEvent.click(screen.getByRole('button'));
 
