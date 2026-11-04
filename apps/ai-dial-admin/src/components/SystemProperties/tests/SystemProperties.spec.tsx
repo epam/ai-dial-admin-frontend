@@ -7,6 +7,7 @@ import SystemProperties from '@/src/components/SystemProperties/SystemProperties
 import {
   ButtonsI18nKey,
   EntitiesI18nKey,
+  ErrorI18nKey,
   SystemPropertiesI18nKey,
   TabsI18nKey,
   UpdateI18nKey,
@@ -39,6 +40,8 @@ const validationContext = vi.hoisted(() => ({
   dispatch: vi.fn(),
   jsonErrors: [] as unknown[],
   jsonErrorNotifications: [] as unknown[],
+  resetCounter: 0,
+  errorFields: new Map<string, boolean>(),
 }));
 vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/src/context/SaveValidationContext')>();
@@ -207,6 +210,22 @@ describe('SystemProperties', () => {
     expect(routerRefresh).not.toHaveBeenCalled();
   });
 
+  test('shows a generic error and keeps edits when the update rejects', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateProperties).mockRejectedValueOnce(new Error('Network failure'));
+    renderSystemProperties({ globalSettings: { globalInterceptors: [] } });
+
+    await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: ErrorI18nKey.Error, description: ErrorI18nKey.TryAgainLater }),
+    );
+    expect(routerRefresh).not.toHaveBeenCalled();
+    expect(validationContext.dispatch).not.toHaveBeenCalledWith({ type: ValidationActionType.Reset });
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+
   test('shows a warning notification for each option-read warning passed in', () => {
     renderSystemProperties({ optionWarnings: [EntitiesI18nKey.SystemPropertiesReadFailed] });
 
@@ -367,6 +386,74 @@ describe('SystemProperties', () => {
     expect(showNotification).not.toHaveBeenCalled();
   });
 
+  test.each([
+    { ...VALID_SCHEDULE, timezone: 'Invalid/Timezone' },
+    { ...VALID_SCHEDULE, weekStartDay: 'Invalid' as WeekDay },
+    { ...VALID_SCHEDULE, resetTime: '25:00' },
+  ])('blocks Save for an invalid stored schedule before opening its tab: %j', async (schedule) => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: schedule } });
+
+    await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    expect(updateProperties).not.toHaveBeenCalled();
+  });
+
+  test('keeps an invalid schedule registered across tabs and clears it on discard', async () => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
+
+    await openRateLimitScheduleTab(user);
+    await user.clear(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel }));
+    await user.click(screen.getByText(TabsI18nKey.GlobalInterceptors));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    const scheduleTab = screen.getByRole('tab', { name: new RegExp(TabsI18nKey.RateLimitSchedule) });
+    expect(scheduleTab).toHaveAccessibleName(`${TabsI18nKey.RateLimitSchedule}: ${TabsI18nKey.StatusError}`);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+    expect(scheduleTab).toHaveAccessibleName(TabsI18nKey.RateLimitSchedule);
+    await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+    expect(updateProperties).not.toHaveBeenCalled();
+  });
+
+  test('re-enables Save after correcting an invalid schedule on its tab', async () => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    renderSystemProperties({
+      globalSettings: { globalInterceptors: [], rateLimitSchedule: { ...VALID_SCHEDULE, resetTime: '25:00' } },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    await openRateLimitScheduleTab(user);
+    const resetTime = screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel });
+    await user.clear(resetTime);
+    await user.type(resetTime, '0930');
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+    expect(screen.getByRole('tab', { name: TabsI18nKey.RateLimitSchedule })).toBeTruthy();
+  });
+
+  test('keeps an invalid schedule registered after an earlier save resets validation', async () => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSchedule = true;
+    let resolveSave!: (result: Awaited<ReturnType<typeof updateProperties>>) => void;
+    vi.mocked(updateProperties).mockReturnValueOnce(new Promise((resolve) => (resolveSave = resolve)));
+    renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
+
+    await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
+    await openRateLimitScheduleTab(user);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+    await user.clear(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.ResetTimeLabel }));
+    await user.click(screen.getByText(TabsI18nKey.GlobalInterceptors));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    await act(async () => resolveSave({ success: true }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+    expect(updateProperties).toHaveBeenCalledOnce();
+  });
+
   test('shows no unsaved-changes state for absent spending limits on the Spending Limits tab', async () => {
     const user = userEvent.setup();
     renderSystemProperties({ globalSettings: { globalInterceptors: [] } });
@@ -506,6 +593,23 @@ describe('SystemProperties', () => {
     await user.click(save);
     expect(updateProperties).not.toHaveBeenCalled();
     expect(showNotification).not.toHaveBeenCalled();
+  });
+
+  test('marks a hidden invalid spending tab and clears its status after correction', async () => {
+    const user = userEvent.setup();
+    validationContext.isUsingRealSpendingLimits = true;
+    renderSystemProperties({
+      globalSettings: {
+        globalInterceptors: [],
+        spendingLimits: { ...VALID_SPENDING_LIMITS, defaultCostObject: '' },
+      },
+    });
+
+    const tab = screen.getByRole('tab', { name: new RegExp(TabsI18nKey.SpendingLimits) });
+    expect(tab).toHaveAccessibleName(`${TabsI18nKey.SpendingLimits}: ${TabsI18nKey.StatusError}`);
+    await user.click(tab);
+    await user.type(screen.getByRole('textbox', { name: SystemPropertiesI18nKey.DefaultCostObjectLabel }), 'TEAM');
+    expect(tab).toHaveAccessibleName(TabsI18nKey.SpendingLimits);
   });
 
   test('restores Save availability after discarding an invalid cost object on another tab', async () => {

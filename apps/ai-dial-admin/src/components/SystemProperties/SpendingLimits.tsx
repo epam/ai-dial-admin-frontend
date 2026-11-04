@@ -9,6 +9,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { SpendingLimitMode, SpendingLimits as SpendingLimitsModel } from '@/src/models/system-properties';
 import { DEFAULT_SPENDING_LIMITS, SPENDING_LIMIT_MODE_I18N_KEYS } from './constants';
+import { isDefaultCostObjectValid } from './utils/spending-limits';
 
 interface Props {
   spendingLimits?: SpendingLimitsModel;
@@ -33,7 +34,7 @@ const SpendingLimits: FC<Props> = ({ spendingLimits, onChangeSpendingLimits }) =
     [t],
   );
 
-  const isCostObjectInvalid = defaultCostObject.trim() === '';
+  const isCostObjectInvalid = !isDefaultCostObjectValid(defaultCostObject);
 
   const onModeChange = useCallback(
     (value: string | string[]) => {
