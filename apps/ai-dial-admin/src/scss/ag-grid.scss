@@ -316,6 +316,16 @@ div.ag-tooltip {
   line-height: 20px;
 }
 
+// The heat-map tooltip draws its own bubble and caret. The grid bubble's padding would
+// inset that caret, so the arrow would miss the cell.
+div.ag-tooltip:has(.heat-map-cell-tooltip) {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: none;
+}
+
 // Heat-map tooltips render in AG Grid's popup parent (often outside `.heat-map-grid`).
 // When anchored above a cell, move the caret under the body (via order — Tailwind's
 // `flex-col` would otherwise win over `flex-direction: column-reverse`) and flip it.
