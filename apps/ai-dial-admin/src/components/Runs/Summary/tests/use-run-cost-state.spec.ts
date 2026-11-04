@@ -97,12 +97,28 @@ describe('useRunCostState', () => {
     expect(result.current.hasError).toBe(false);
   });
 
-  test.each([SuiteType.McpTool, SuiteType.Route])('does not fetch for a %s suite', (suiteType) => {
-    const { result } = renderState({ ...COMPLETED_RUN, suiteSnapshot: { suiteType } });
+  test.each([SuiteType.McpTool, SuiteType.Route])('does not fetch for a %s suite with no metrics', (suiteType) => {
+    const { result } = renderState({ ...COMPLETED_RUN, suiteSnapshot: { suiteType } }, { metricSnapshotCount: 0 });
 
     expect(getRunsTotalCostsMock).not.toHaveBeenCalled();
     expect(result.current.isPending).toBe(false);
   });
+
+  test.each([SuiteType.McpTool, SuiteType.Route])(
+    'counts the metrics cost alone for a %s suite with no source cost',
+    async (suiteType) => {
+      getRunsTotalCostsMock.mockResolvedValue(totals(null, 0.0013));
+
+      const { result } = renderState({ ...COMPLETED_RUN, suiteSnapshot: { suiteType } }, { metricSnapshotCount: 2 });
+
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      expect(getRunsTotalCostsMock).toHaveBeenCalledOnce();
+      expect(result.current.sourceCost).toBeNull();
+      expect(result.current.metricsCost).toBe(0.0013);
+      expect(result.current.totalCost).toBe(0.0013);
+      expect(result.current.hasError).toBe(false);
+    },
+  );
 
   test('does not keep waiting once the model is confirmed to have no pricing', async () => {
     getRunsTotalCostsMock.mockReturnValue(new Promise(() => undefined));
