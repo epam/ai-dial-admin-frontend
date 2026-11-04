@@ -18,8 +18,9 @@ row can exist:
 
 - the run is in a transitional status (still running, or cancelling) — nothing is aggregated yet, and the
   sibling KPI cards already show a dash rather than a value;
-- the suite is an MCP-tool or Route suite — cost aggregation does not support those suite types at all, so
-  no usage row is ever produced regardless of whether the run computed metrics;
+- the suite is an MCP-tool or Route suite that computed no metrics — those suite types have no source cost
+  of their own, so with no metrics no usage row can exist. An MCP-tool or Route run that did compute metrics
+  is still fetched, because a paid metric produces a metrics cost;
 - the run's deployed model is confirmed to have no pricing configured (no Prompt and no Completion rate) —
   there is nothing for the backend to ever multiply usage by. This is resolved from the model's own config
   (the same Catalog-then-Entities lookup the Summary tab already makes to link to the deployment), not from
@@ -46,10 +47,16 @@ Run Comparison Summary.
 - **THEN** the run totals request is not made
 - **AND** the Total Run Cost card shows an em dash rather than the Calculating label
 
-#### Scenario: An MCP-tool or Route run is never polled
-- **WHEN** the run's suite snapshot is an MCP-tool or Route suite
-- **THEN** the run totals request is not made, regardless of how many metrics the run computed
+#### Scenario: An MCP-tool or Route run with no metrics is never polled
+- **WHEN** the run's suite snapshot is an MCP-tool or Route suite and the run computed no metrics
+- **THEN** the run totals request is not made
 - **AND** the card shows an em dash
+
+#### Scenario: An MCP-tool or Route run with metrics shows the metrics cost
+- **WHEN** the run's suite snapshot is an MCP-tool or Route suite, the run computed metrics, and the totals
+  payload has no source cost and a metrics cost of $0.0013
+- **THEN** the run totals request is made
+- **AND** the total shows `$0.0013`, the source value shows an em dash and the Metrics value shows `$0.0013`
 
 #### Scenario: A run completed over 12 hours ago is read once, not polled
 - **WHEN** the Summary tab renders a run that completed more than 12 hours ago and the endpoint returns no
