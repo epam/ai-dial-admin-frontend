@@ -22,6 +22,7 @@ import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 import ImagesHeader from '@/src/components/EntityHeaderControls/ImagesHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -124,7 +125,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   }, [selectedImage, t, router]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <ImagesHeader
         tabs={tabs}
         originalImage={image}
@@ -139,7 +140,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
         versions={imageVersions}
       />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

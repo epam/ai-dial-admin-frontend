@@ -19,6 +19,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -95,7 +96,7 @@ const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, catalogSch
   }, [selectedInterceptor, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.PlatformInterceptors}
         entity={selectedInterceptor}
@@ -111,7 +112,7 @@ const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, catalogSch
         getAssetContext={useInterceptorsFolder}
       />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

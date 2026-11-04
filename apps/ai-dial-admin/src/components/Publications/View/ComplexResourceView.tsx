@@ -37,6 +37,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getPublicationViewTabs, getTabStatusProps } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import ComplexResourceTabsContent from './ComplexResourceTabsContent';
 import { useSkillPublicationStaging } from './use-skill-publication-staging';
 import { getFormDataForPublication } from './utils';
@@ -278,7 +279,7 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
   }, [publication.resourceIssues, t]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <PublicationsHeader
         view={view}
         entity={selectedPublication}
@@ -292,7 +293,7 @@ const ComplexResourcePublicationView = <T extends Publication>({ view, publicati
         onChangeActiveTab={setActiveTab}
         getAssetContext={() => folderContext}
       />
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

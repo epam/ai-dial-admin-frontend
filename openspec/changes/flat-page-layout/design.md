@@ -70,6 +70,10 @@ Pages that framed content without the shared wrapper get the same treatment: the
 drops `bg-layer-2 pb-4 pl-2 pr-6` for `bg-transparent`, the Query Builder header loses its `p-4` and its result
 area keeps only `py-4 pr-4`, and the Usage and custom dashboards drop their `px-3`.
 
+The 34 entity views that share the same root and scroll container now take them from two constants in
+`src/constants/main-layout.ts` — `ENTITY_VIEW_CLASS_NAME` and `ENTITY_VIEW_SCROLL_CLASS_NAME` — so the next
+layout change to every entity view is one edit (raised in review).
+
 Alternative: extract a `PageContainer` component and route the ~60 roots through it. That is the better end
 state, but it turns a class-string diff into a structural one across every page, and the roots differ in gaps
 and overflow needs. It can follow as a refactor.

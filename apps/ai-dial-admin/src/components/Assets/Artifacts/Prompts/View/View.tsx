@@ -22,6 +22,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -103,7 +104,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
   }, [selectedPrompt, originalPrompt, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <AssetHeader
         etag={etag}
         view={ApplicationRoute.Prompts}
@@ -119,7 +120,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
         getAssetContext={usePromptFolder}
       />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

@@ -36,6 +36,7 @@ import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 import { getCorrectPublication, getFormDataForPublication } from './utils';
 import { signInToolset, signOutToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -215,7 +216,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [publication.resourceIssues, t]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <PublicationsHeader
         view={view}
         entity={selectedPublication}
@@ -246,7 +247,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
             />
           )}
       </PublicationsHeader>
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

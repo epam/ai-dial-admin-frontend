@@ -24,6 +24,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -135,7 +136,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   }, [selectedFormat, selectedRole, originalRole.name, etag, dispatch, showNotification, t, router]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.Roles}
         entity={selectedRole}
@@ -148,7 +149,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
         onChangeActiveTab={setActiveTab}
         onRemove={removeRole}
       />
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

@@ -12,7 +12,11 @@ import { getCoreKey, removeKey, updateCoreKey, updateKey } from '@/src/app/[lang
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  ENTITY_VIEW_CLASS_NAME,
+  ENTITY_VIEW_SCROLL_CLASS_NAME,
+} from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -151,7 +155,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+      <div className={ENTITY_VIEW_CLASS_NAME}>
         <SimpleEntityHeader
           view={ApplicationRoute.Keys}
           entity={selectedKey}
@@ -172,7 +176,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
             />
           )}
         </SimpleEntityHeader>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+        <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
           {isEditorEnabled ? (
             <EntityJsonEditor
               key={discardKey}

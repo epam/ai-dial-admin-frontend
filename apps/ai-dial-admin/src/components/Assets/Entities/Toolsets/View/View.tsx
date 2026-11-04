@@ -33,6 +33,7 @@ import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 import { DialToolsetResource } from '@/src/models/dial/resource';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -143,7 +144,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag: initialEtag, originalToolset,
   }, [selectedToolset, originalToolset, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <AssetHeader
         etag={etag}
         view={ApplicationRoute.AssetsToolsets}
@@ -174,7 +175,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag: initialEtag, originalToolset,
         />
       </AssetHeader>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

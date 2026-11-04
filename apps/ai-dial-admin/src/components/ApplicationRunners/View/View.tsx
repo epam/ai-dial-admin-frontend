@@ -39,6 +39,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -168,7 +169,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full pb-14 lg:pb-0 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.ApplicationRunners}
         entity={selectedRunner}
@@ -189,7 +190,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
         />
       </SimpleEntityHeader>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}
