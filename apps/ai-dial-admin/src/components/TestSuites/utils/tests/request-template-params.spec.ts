@@ -296,9 +296,23 @@ describe('getTemplateParameterVariables', () => {
     ]);
   });
 
-  test('should fall back to string for an unknown or differently cased type hint', () => {
+  test('should read type hints case-insensitively', () => {
     const template: TestSuiteRequestTemplate = {
-      urlTemplate: '/api/${{first|timestamp}}/${{second|FILE}}/${{third|}}',
+      urlTemplate: '/api/${{first|SKILL}}/${{second|FILE}}/${{third|Number}}',
+    };
+
+    expect(getTemplateParameterVariables(template).map(({ name, effectiveType }) => ({ name, effectiveType }))).toEqual(
+      [
+        { name: 'first', effectiveType: TestCaseItemType.SKILL },
+        { name: 'second', effectiveType: TestCaseItemType.FILE },
+        { name: 'third', effectiveType: TestCaseItemType.NUMBER },
+      ],
+    );
+  });
+
+  test('should fall back to string for an unknown or empty type hint', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{first|timestamp}}/${{second|}}/${{third}}',
     };
 
     expect(getTemplateParameterVariables(template).map(({ name, effectiveType }) => ({ name, effectiveType }))).toEqual(

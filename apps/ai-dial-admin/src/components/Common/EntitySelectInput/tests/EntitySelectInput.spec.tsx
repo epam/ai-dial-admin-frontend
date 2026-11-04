@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -21,9 +21,9 @@ vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  Popup: ({ open, header, mainButtons, children }: any) =>
+  Popup: ({ open, header, portalId, mainButtons, children }: any) =>
     open ? (
-      <section aria-label={header}>
+      <section aria-label={header} data-portal-id={portalId}>
         {children}
         {mainButtons.map((button: any) => (
           <button key={button.label} disabled={button.disabled} onClick={button.onClick}>
@@ -119,5 +119,26 @@ describe('EntitySelectInput', () => {
     renderInput({ disabled: true });
 
     expect(screen.getByRole('button', { name: 'open' })).toBeDisabled();
+  });
+
+  test('gives each picker its own portal container, so it cannot land behind a modal opened after the first one', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <EntitySelectInput entityType={EntitySelectType.Skill} value="" onChangeValue={onChangeValue} />
+        <EntitySelectInput entityType={EntitySelectType.Skill} value="" onChangeValue={onChangeValue} />
+      </>,
+    );
+
+    const [first, second] = screen.getAllByRole('button', { name: 'open' });
+    await user.click(first);
+    const firstId = screen.getByRole('region').getAttribute('data-portal-id');
+    await user.click(within(screen.getByRole('region')).getByRole('button', { name: 'Buttons.Cancel' }));
+    await user.click(second);
+    const secondId = screen.getByRole('region').getAttribute('data-portal-id');
+
+    expect(firstId).toContain('skillSelect');
+    expect(secondId).toContain('skillSelect');
+    expect(firstId).not.toBe(secondId);
   });
 });

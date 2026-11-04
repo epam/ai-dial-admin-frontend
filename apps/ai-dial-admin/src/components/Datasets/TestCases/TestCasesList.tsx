@@ -35,7 +35,7 @@ import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
-import { remapRenamedFields } from '@/src/utils/evaluation/schema-fields';
+import { fillEmptyStringFieldsInRows, remapRenamedFields } from '@/src/utils/evaluation/schema-fields';
 import { expandTestCasesToRows, getPerTurnFieldNames } from '@/src/utils/evaluation/test-case-grouping';
 import { getUniqueTestCaseCopyName } from '@/src/utils/evaluation/test-case-name';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -253,7 +253,10 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
       if (!dataset.id) return;
 
       const sourceRows = row.rowType === GridRowType.GROUP ? (row.turns ?? []) : [row];
-      const [sourceCase] = collapseRowsToDatasetTestCases(sourceRows, getPerTurnFieldNames(dataset.testCaseSchema));
+      const [sourceCase] = collapseRowsToDatasetTestCases(
+        fillEmptyStringFieldsInRows(sourceRows, dataset.testCaseSchema),
+        getPerTurnFieldNames(dataset.testCaseSchema),
+      );
       if (!sourceCase) return;
       const existingNames = turnGrid.groups.flatMap((group) =>
         group.turns.map((turn) => String(turn.testCaseName ?? '')),
@@ -314,16 +317,17 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
 
   const onAddTestCase = useCallback(() => {
     if (!dataset.id) return;
-    createTestCase(dataset.id, createNewDatasetTestCaseRow() as Pick<DatasetTestCase, 'testCaseName' | 'data'>).then(
-      (res) => {
-        if (res?.success) {
-          refreshGrid();
-        } else {
-          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
-        }
-      },
-    );
-  }, [dataset.id, refreshGrid, showNotification]);
+    createTestCase(
+      dataset.id,
+      createNewDatasetTestCaseRow(dataset.testCaseSchema) as Pick<DatasetTestCase, 'testCaseName' | 'data'>,
+    ).then((res) => {
+      if (res?.success) {
+        refreshGrid();
+      } else {
+        showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
+      }
+    });
+  }, [dataset.id, dataset.testCaseSchema, refreshGrid, showNotification]);
 
   const onRemoveTestCase = useCallback(
     async (testCaseId: string) => {

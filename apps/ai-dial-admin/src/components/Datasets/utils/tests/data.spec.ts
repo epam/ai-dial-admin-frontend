@@ -1,3 +1,4 @@
+import { TestCaseItemType } from '@/src/types/evaluation';
 import { describe, expect, test } from 'vitest';
 
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
@@ -98,6 +99,15 @@ describe('createNewDatasetTestCaseRow', () => {
     const result = createNewDatasetTestCaseRow();
 
     expect(result).not.toHaveProperty('enabled');
+  });
+
+  test('should seed STRING schema fields with an empty string', () => {
+    const result = createNewDatasetTestCaseRow([
+      { name: 'Tool retries', type: TestCaseItemType.STRING, required: false, description: '' },
+      { name: 'count', type: TestCaseItemType.NUMBER, required: false, description: '' },
+    ]);
+
+    expect(result.data).toEqual({ 'Tool retries': '' });
   });
 
   test('each call should produce a unique id', () => {
