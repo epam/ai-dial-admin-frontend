@@ -60,7 +60,7 @@ describe('Content', () => {
       </Content>,
     );
 
-    expect(screen.getByText('Test Content').parentElement).toHaveClass(
+    expect(screen.getByText('Test Content').closest('.pt-4')).toHaveClass(
       'px-4',
       'pt-4',
       'pb-4',
@@ -78,7 +78,7 @@ describe('Content', () => {
       </Content>,
     );
 
-    const slot = screen.getByText('Test Content').parentElement;
+    const slot = screen.getByText('Test Content').closest('.pt-4');
     expect(slot).toHaveClass('pb-0');
     expect(slot).not.toHaveClass('pb-4');
   });

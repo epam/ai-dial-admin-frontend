@@ -32,7 +32,13 @@ const HeaderTabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onCha
   return (
     showTabs && (
       <div className="flex-1 min-w-0 mr-3">
-        <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={onChange} ariaLabel={t(TabsI18nKey.ListLabel)} />
+        <Tabs
+          tabs={tabs}
+          activeTabId={activeTab}
+          onTabChange={onChange}
+          ariaLabel={t(TabsI18nKey.ListLabel)}
+          tabListClassName="overflow-x-auto"
+        />
       </div>
     )
   );

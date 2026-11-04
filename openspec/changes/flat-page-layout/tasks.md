@@ -26,6 +26,8 @@
 
 - [x] 2.12 Remove the card the Usage Log page passes through `className` (`app/[lang]/usage-log/page.tsx`) and the global error page's `bg-layer-2` (`app/error.tsx`), and drop the extra frame around the Usage Log grid in `UsageLog/UsageLog.tsx`
 
+- [x] 2.13 Keep small screens inside the margin: the entity header tab list scrolls horizontally (`tabListClassName="overflow-x-auto"` in `EntityHeaderControls/Tabs/HeaderTabs.tsx`), and `Content.tsx` puts the page in a `flex-1 min-h-0` box under the mobile breadcrumbs so a `size-full` page no longer overflows by the breadcrumbs' height
+
 ## 3. Verification
 
 - [ ] 3.1 Run the `spec-browser-verify` skill for this change against the local app in both the dark and the light theme and resolve every `fail` verdict; in the same run, compare the ui-kit grid colors on a list page with the mockup and file an upstream ui-kit issue for any mismatch instead of overriding the kit theme

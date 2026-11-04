@@ -102,7 +102,7 @@ const Content: FC<Props> = ({ children }) => {
           )}
         >
           {isTabletScreen && <Breadcrumbs mobile={true} />}
-          {children}
+          <div className="flex-1 min-h-0 flex flex-col">{children}</div>
         </div>
         <Sidebar />
       </div>
