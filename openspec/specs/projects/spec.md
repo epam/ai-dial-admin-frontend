@@ -213,6 +213,10 @@ shown regardless of extension.
 - **WHEN** a user adds a file whose name matches an existing or staged context file
 - **THEN** the file is not staged and a message names it with the duplicate reason
 
+#### Scenario: Rejection messages clear after Save or Discard
+- **WHEN** a user successfully saves staged changes or confirms Discard after a context file is rejected
+- **THEN** the rejection messages disappear
+
 #### Scenario: Stored files count toward the capacity after a reload
 - **WHEN** a project holding context files is opened
 - **THEN** the capacity meter counts the stored files' sizes, read from the project's archive because Core's file

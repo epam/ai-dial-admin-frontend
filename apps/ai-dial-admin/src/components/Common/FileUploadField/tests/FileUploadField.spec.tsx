@@ -138,6 +138,13 @@ describe('FileUploadField filled state', () => {
     expect(screen.queryByText('Drop files')).not.toBeInTheDocument();
   });
 
+  test('renders a borderless remove button for each file', () => {
+    renderField({ files });
+
+    expect(screen.getByRole('button', { name: `${ButtonsI18nKey.Delete}: a.json` }).className).toMatch(/ghost/);
+    expect(screen.getByRole('button', { name: `${ButtonsI18nKey.Delete}: b.json` }).className).toMatch(/ghost/);
+  });
+
   test('Should remove one file', async () => {
     const { onChange } = renderField({ files });
 
