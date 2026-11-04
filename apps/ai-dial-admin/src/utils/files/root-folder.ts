@@ -99,6 +99,9 @@ export const getRootFolders = (view: ApplicationRoute, isPlatformBucketEnabled =
 export const isPlatformBucketPath = (path?: string | null): boolean =>
   !!path && path.startsWith(`${PLATFORM_ROOT_FOLDER}/`);
 
+/** True for the public bucket's root and every folder below it. */
+export const isPublicPath = (path?: string | null): boolean => !!path && path.startsWith(`${ROOT_FOLDER}/`);
+
 /** True when a row belongs to the physical platform bucket. */
 export const isPlatformBucketRow = (bucket?: string, fallbackPath?: string | null): boolean =>
   bucket ? bucket === BucketType.Platform : isPlatformBucketPath(fallbackPath);
