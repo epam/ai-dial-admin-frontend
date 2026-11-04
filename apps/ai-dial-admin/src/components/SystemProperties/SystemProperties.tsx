@@ -23,6 +23,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
+import { DEFAULT_SPENDING_LIMITS } from './constants';
 import Header from './Header';
 import RateLimitSchedule from './RateLimitSchedule';
 import SpendingLimits from './SpendingLimits';
@@ -40,7 +41,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
@@ -52,6 +53,19 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.GlobalInterceptors);
   const [currentSettings, setCurrentSettings] = useState(cloneDeep(globalSettings));
+  const isCostObjectInvalid =
+    (currentSettings?.spendingLimits ?? DEFAULT_SPENDING_LIMITS).defaultCostObject.trim() === '';
+
+  // Reset clears registered fields, so re-register even if the value did not change.
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'spendingLimits', isValid: !isCostObjectInvalid });
+  }, [dispatch, isCostObjectInvalid, resetCounter]);
+
+  useEffect(() => {
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: 'spendingLimits' });
+    };
+  }, [dispatch]);
 
   const isChanged = useMemo(() => {
     return !isEqual(currentSettings, globalSettings);
