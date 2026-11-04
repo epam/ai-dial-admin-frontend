@@ -49,7 +49,7 @@ const IconGallery: FC<Props> = ({ selectedIcon, setSelectedIcon }) => {
 
   return (
     <>
-      <div className="flex flex-row flex-wrap gap-10 pb-8 border-b border-primary mb-8">
+      <div className="flex flex-row flex-wrap gap-10 pb-8 border-b border-tertiary mb-8">
         <Icon url="" name="None" onClick={() => setSelectedIcon('')} selected={!selectedIcon} />
       </div>
       <div className="flex flex-row flex-wrap gap-8">

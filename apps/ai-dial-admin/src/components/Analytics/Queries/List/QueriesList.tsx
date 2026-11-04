@@ -85,7 +85,6 @@ const QueriesList = ({ data, entities }: Props) => {
   return (
     <>
       <ListEntities<SavedQuery>
-        isMainListView
         isEnableColumnPanel
         listLabel={t(listViewTitleMap[VIEW])}
         rowData={data}

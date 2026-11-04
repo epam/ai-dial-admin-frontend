@@ -91,7 +91,7 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
   return (
     <div
       className={classNames(
-        'flex flex-col gap-y-4 justify-center rounded border border-primary p-3 mb-4',
+        'flex flex-col gap-y-4 justify-center rounded border border-secondary p-3 mb-4',
         'lg:justify-start lg:border-none lg:p-0 lg:mb-0',
       )}
     >

@@ -38,6 +38,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset, toolsTab } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -275,7 +276,7 @@ const AppView: FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <AssetHeader
         etag={etag}
         view={ApplicationRoute.AssetsApplications}
@@ -300,7 +301,7 @@ const AppView: FC<Props> = ({
         getAssetContext={useAppsFolder}
       />
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor
             key={discardKey}

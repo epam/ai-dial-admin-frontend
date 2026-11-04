@@ -12,7 +12,7 @@ const HopPanelLoader: FC = () => {
   const t = useI18n();
 
   return (
-    <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
+    <div className="flex items-center justify-center rounded border border-secondary bg-layer-3 p-3">
       <Spinner size={INSPECTOR_LOADER_SIZE} ariaLabel={t(SessionsTraceI18nKey.InspectorLoading)} fullWidth />
     </div>
   );

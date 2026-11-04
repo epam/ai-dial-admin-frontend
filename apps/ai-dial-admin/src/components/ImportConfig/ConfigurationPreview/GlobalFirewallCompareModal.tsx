@@ -70,7 +70,7 @@ const GlobalFirewallCompareModal: FC<Props> = ({ action, prevDomains, nextDomain
           <LabelledText label={t(ActivityAuditI18nKey.ResourceType)} text={t(DeploymentsI18nKey.GlobalFirewall)} />
         </div>
 
-        <div className="flex-1 min-h-0 mt-8 pt-8 border-t border-primary overflow-auto">
+        <div className="flex-1 min-h-0 mt-8 pt-8 border-t border-tertiary overflow-auto">
           <div className="flex flex-row justify-between items-center mb-4">
             <h3>{t(DeploymentsI18nKey.GlobalWhitelist)}</h3>
             <DiffLegend added={addedCount} />

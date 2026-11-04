@@ -69,7 +69,7 @@ const SessionDetailBody: FC<Props> = ({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 rounded border border-primary">
+    <div className="flex min-h-0 flex-1 rounded border border-secondary">
       <SessionTraceList
         groups={groups}
         traceRatings={listingRatings}

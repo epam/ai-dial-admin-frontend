@@ -157,7 +157,7 @@ const HopInspector: FC<Props> = ({ readKey, traceId, span, kind, bodyGrants, mcp
           with no tab stop puts everything below the fold out of reach for a reader with no pointer. */}
       <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto bg-layer-1">
         {activeTab === SpanBodyTab.Request && (
-          <div className={classNames(FACTS_BAR_CLASS, 'border-primary')}>
+          <div className={classNames(FACTS_BAR_CLASS, 'border-secondary')}>
             <HopTransportLine transport={transport} side={HopInspectorSide.Request} />
             {request.value && (
               <HopParamsLine
@@ -189,7 +189,7 @@ const HopInspector: FC<Props> = ({ readKey, traceId, span, kind, bodyGrants, mcp
           />
         )}
         {activeTab === SpanBodyTab.Response && (
-          <div className={classNames(FACTS_BAR_CLASS, transport.hasFailed ? 'border-error' : 'border-primary')}>
+          <div className={classNames(FACTS_BAR_CLASS, transport.hasFailed ? 'border-error' : 'border-secondary')}>
             <HopTransportLine transport={transport} side={HopInspectorSide.Response} />
             {/* What answered, stated here rather than inside the panel: it describes the response whichever
                 form of it the panel is showing, so it survives the raw switch without the panel deciding. */}

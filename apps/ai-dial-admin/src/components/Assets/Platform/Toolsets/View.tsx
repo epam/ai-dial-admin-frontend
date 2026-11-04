@@ -32,6 +32,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset, rolesTab } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -158,7 +159,7 @@ const PlatformToolsetView: FC<Props> = ({
   }, [selectedToolset, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.AssetsToolsets}
         entity={selectedToolset}
@@ -182,7 +183,7 @@ const PlatformToolsetView: FC<Props> = ({
         />
       </SimpleEntityHeader>
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

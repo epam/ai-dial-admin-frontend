@@ -104,7 +104,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
       <div
         className={classNames(
           menuClassName,
-          'absolute left-0 top-0 bottom-0 w-72 bg-layer-3 divide-y z-[51]',
+          'absolute left-0 top-0 bottom-0 w-72 border-r border-tertiary bg-layer-base divide-y z-[51]',
           'opacity-0 invisible',
           !isSidebarOpen && 'group-hover/menu:opacity-100 group-hover/menu:visible hover:opacity-100 hover:visible',
         )}

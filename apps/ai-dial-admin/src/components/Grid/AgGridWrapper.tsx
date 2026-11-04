@@ -14,7 +14,7 @@ import {
   GridSizeChangedEvent,
   SuppressKeyboardEventParams,
 } from 'ag-grid-community';
-import { useCallback, useMemo, useState } from 'react';
+import { MutableRefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useTheme } from '@/src/context/ThemeContext';
 import { EDITOR_THEMES } from '@/src/types/editor';
@@ -90,6 +90,20 @@ const hasIconNameColumn = (columnDefs: ColDef[] | undefined): boolean =>
     return Array.isArray(children) ? (children as ColDef[]).some(hasIconNameRenderer) : hasIconNameRenderer(col);
   });
 
+const syncIconRowHeight = (api: GridApi, kitRowHeightRef: MutableRefObject<number | undefined>): void => {
+  const hasIconRows = hasIconNameColumn(api.getColumnDefs());
+  const rowHeight = api.getGridOption('rowHeight');
+  if (hasIconRows && rowHeight !== ICON_ROW_HEIGHT) {
+    kitRowHeightRef.current = rowHeight;
+    api.setGridOption('rowHeight', ICON_ROW_HEIGHT);
+    api.resetRowHeights();
+  } else if (!hasIconRows && rowHeight === ICON_ROW_HEIGHT && kitRowHeightRef.current !== undefined) {
+    api.setGridOption('rowHeight', kitRowHeightRef.current);
+    kitRowHeightRef.current = undefined;
+    api.resetRowHeights();
+  }
+};
+
 const AgGridWrapper = <T extends object>({
   columnDefs,
   rowData,
@@ -161,6 +175,7 @@ const AgGridWrapper = <T extends object>({
     : {};
 
   const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
+  const kitRowHeightRef = useRef<number | undefined>(undefined);
   const { defaultColDef: additionalDefaultColDef, ...gridOptionOverrides } = additionalGridOptions ?? {};
   // A new object on every render is a defaultColDef change, and ag-Grid rebuilds the
   // columns from the definitions, which puts a drag back where it started.
@@ -178,6 +193,9 @@ const AgGridWrapper = <T extends object>({
     preventDefaultOnContextMenu: true,
     ...(isLiveData ? { animateRows: false } : {}),
     onGridColumnsChanged: (event: GridColumnsChangedEvent) => {
+      if (!hasIconName && gridOptionOverrides.rowHeight == null) {
+        syncIconRowHeight(event.api, kitRowHeightRef);
+      }
       event.api.sizeColumnsToFit();
     },
     onDisplayedColumnsChanged: (event: DisplayedColumnsChangedEvent) => {

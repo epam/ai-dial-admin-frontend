@@ -181,7 +181,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} disabled={isReadOnlyAdmin} />
         )}
 
-        <div className={classNames('flex-1 min-h-0 mb-4', isRolesWithDefaults && 'pt-8 border-t border-primary')}>
+        <div className={classNames('flex-1 min-h-0 mb-4', isRolesWithDefaults && 'pt-8 border-t border-tertiary')}>
           <RolesGrid
             view={view}
             entity={entity}

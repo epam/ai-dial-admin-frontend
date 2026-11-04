@@ -512,7 +512,7 @@ const FileManager: FC<Props> = ({
   return (
     <>
       <DialFileManager
-        className="bg-layer-2 pb-4 pl-2 pr-6"
+        className="bg-transparent"
         path={filePath}
         defaultPath={`${getRootFolder(view)}/`}
         items={filteredFiles as []}

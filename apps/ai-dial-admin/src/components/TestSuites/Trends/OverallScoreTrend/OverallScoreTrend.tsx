@@ -28,11 +28,10 @@ const OVERALL_SCORE_PLOT_MIN_HEIGHT_PX = 220;
 
 interface Props {
   runOrder: TrendsRunPoint[];
-  overallScoreThreshold?: number | null;
   isLoading?: boolean;
 }
 
-const OverallScoreTrend: FC<Props> = ({ runOrder, overallScoreThreshold, isLoading }) => {
+const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
   const t = useI18n();
   const palette = useThemePalette();
   const hasData = runOrder.some((point) => point.overallScore != null);
@@ -73,16 +72,11 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, overallScoreThreshold, isLoadi
 
   const options = useMemo(
     () =>
-      buildOverallScoreChartOptions(
-        palette,
-        runOrder,
-        {
-          score: t(TestSuitesI18nKey.TrendsOverallScoreTooltipScore),
-          threshold: t(TestSuitesI18nKey.OverallScoreThresholdLabel),
-        },
-        overallScoreThreshold,
-      ),
-    [runOrder, t, palette, overallScoreThreshold],
+      buildOverallScoreChartOptions(palette, runOrder, {
+        score: t(TestSuitesI18nKey.TrendsOverallScoreTooltipScore),
+        threshold: t(TestSuitesI18nKey.OverallScoreThresholdLabel),
+      }),
+    [runOrder, t, palette],
   );
 
   return (

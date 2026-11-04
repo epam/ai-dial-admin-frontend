@@ -25,8 +25,6 @@ interface Props {
   'data-compare-diff'?: string;
   /** When set, opens this instead of the single-run popup (e.g. compare dual-run popup). */
   onOpenFullscreen?: () => void;
-  /** Truncate long content with an ellipsis that fits the cell height; by default it scrolls inside the cell. */
-  isTruncated?: boolean;
 }
 
 const VALUE_CELL_BASE =
@@ -39,7 +37,6 @@ const PivotValueCell: FC<Props> = ({
   className,
   'data-compare-diff': dataCompareDiff,
   onOpenFullscreen,
-  isTruncated,
 }) => {
   const t = useI18n();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -88,8 +85,7 @@ const PivotValueCell: FC<Props> = ({
             isFailed={isFailed}
             isScoreIndicator={field.isScoreIndicator}
             failedLabel={failedLabel}
-            fill={!isTruncated}
-            isFitted={isTruncated}
+            fill
           />
         )}
         <span

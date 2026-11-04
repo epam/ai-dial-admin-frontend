@@ -12,7 +12,7 @@ interface Props {
 const HopFactBlock: FC<Props> = ({ label, text }) => (
   <div className="flex min-w-0 flex-col gap-1">
     <span className="text-secondary dial-tiny-text">{label}</span>
-    <pre className="whitespace-pre-wrap break-words rounded border border-primary bg-layer-1 p-2 font-mono text-primary dial-caption-text">
+    <pre className="whitespace-pre-wrap break-words rounded border border-secondary bg-layer-1 p-2 font-mono text-primary dial-caption-text">
       {text}
     </pre>
   </div>

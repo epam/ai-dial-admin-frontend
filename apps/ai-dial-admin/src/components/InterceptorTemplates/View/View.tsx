@@ -16,7 +16,11 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  ENTITY_VIEW_CLASS_NAME,
+  ENTITY_VIEW_SCROLL_CLASS_NAME,
+} from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -99,7 +103,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   }, [template, selectedTemplate]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.InterceptorTemplates}
         entity={selectedTemplate}
@@ -119,7 +123,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         />
       </SimpleEntityHeader>
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

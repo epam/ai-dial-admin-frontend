@@ -122,7 +122,6 @@ const BaseEntityList = <T extends object>({
         additionalGridOptions={gridOptions}
         storageKey={route}
         getHref={(data) => getUrnForEntity(route, data)}
-        isMainListView
         isEnableColumnPanel={showColumnsButton}
       >
         <EntityListHeaderButtons

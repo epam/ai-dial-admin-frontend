@@ -294,7 +294,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
   const isEditedQueryTable = isComparingView(WidgetView.Query, getWidgetQuerySource(editedQuery));
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto px-3 pb-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto pb-3">
       <h1 className="dial-h1-text">{t(MenuI18nKey.Dashboard)}</h1>
 
       <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-2">

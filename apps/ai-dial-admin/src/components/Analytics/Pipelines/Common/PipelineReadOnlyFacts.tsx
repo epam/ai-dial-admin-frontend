@@ -71,7 +71,7 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, grainKey }) => {
   return (
     <section
       aria-label={t(AnalyticsPipelinesI18nKey.ReadOnlyFacts)}
-      className="flex flex-col gap-3 border-b border-primary pb-8"
+      className="flex flex-col gap-3 border-b border-tertiary pb-8"
     >
       <div className="flex flex-row flex-wrap gap-8">
         {isEnrich && (

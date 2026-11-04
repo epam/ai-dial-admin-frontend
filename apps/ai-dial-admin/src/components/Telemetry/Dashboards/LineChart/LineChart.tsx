@@ -58,7 +58,7 @@ const LineChart: FC<Props> = ({ getData, prepareData, query, title, refreshTime 
   }, [getData, t, refreshTime, prepareData, query]);
 
   return (
-    <div className="flex flex-col flex-1 rounded-lg border border-primary p-4 min-h-[280px] min-w-[200px]">
+    <div className="flex flex-col flex-1 rounded-lg border border-secondary p-4 min-h-[280px] min-w-[200px]">
       <h3 className="text-primary mb-4">{title}</h3>
 
       {loading && !data ? (

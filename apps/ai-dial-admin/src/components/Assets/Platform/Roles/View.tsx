@@ -19,6 +19,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import { PlatformRoleModelOption } from './models';
 import TabsContent from './TabsContent';
 
@@ -110,7 +111,7 @@ const RoleAssetView: FC<Props> = ({ etag, originalRole, models, optionWarnings, 
   }, [selectedRole, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.PlatformRoles}
         entity={selectedRole}
@@ -126,7 +127,7 @@ const RoleAssetView: FC<Props> = ({ etag, originalRole, models, optionWarnings, 
         getAssetContext={useRolesFolder}
       />
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

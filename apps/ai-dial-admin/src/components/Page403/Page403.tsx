@@ -10,7 +10,7 @@ const Page403: FC = () => {
   const t = useI18n();
 
   return (
-    <div className="size-full flex flex-col items-center justify-center bg-layer-2 p-4">
+    <div className="size-full flex flex-col items-center justify-center p-4">
       <div className="flex flex-col items-center gap-6 px-4 py-10 bg-layer-3 border border-secondary rounded-xl shadow animate-fadeIn w-full max-w-md text-center">
         <Icon />
         <div className="flex flex-col items-center gap-2">

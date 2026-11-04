@@ -7,6 +7,7 @@ import { MetricDelta } from '@/src/components/Runs/Compare/ExecutionResults/util
 import { RunKpiFigures } from '@/src/components/Runs/Summary/models';
 import { RunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
 import { RunsI18nKey } from '@/src/constants/i18n';
+import { OverallScoreConfig } from '@/src/models/evaluation/test-suite';
 
 /** Dual-run statistic card for the Distribution section. */
 export interface CompareMetricStatCard {
@@ -40,6 +41,8 @@ export interface CompareKpiCards {
   figures: Record<CompareRunSlot, RunKpiFigures>;
   sourceLabels: Record<CompareRunSlot, string>;
   costs: Record<CompareRunSlot, RunCostState>;
+  /** Each run's own overall-score method; null where the run records none. */
+  scoreMethods: Record<CompareRunSlot, OverallScoreConfig | null>;
   /** Pass rate per run; null for a run that cannot be rated against the other (mixed thresholds). */
   rates: Record<CompareRunSlot, number | null>;
   rateTitleKey: RunsI18nKey;
