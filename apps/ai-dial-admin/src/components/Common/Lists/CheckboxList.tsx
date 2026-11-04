@@ -94,8 +94,9 @@ const CheckboxList: FC<Props> = ({
 
   return (
     <>
-      {/* relative: the checkbox input is sr-only (absolute); without a positioned scroller it escapes the clip and stretches the popup overlay to the full list height. */}
-      <ul className="relative flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
+      {/* relative: the checkbox input is sr-only (absolute); without a positioned scroller it escapes the clip and stretches the popup overlay to the full list height.
+          p-0.5: a row's focus ring paints 2px outside its box; without room inside this scroller it is clipped and draws scrollbars. */}
+      <ul className="relative flex flex-col gap-y-2 overflow-auto flex-1 min-h-0 p-0.5" ref={newItemsContainer}>
         {list.map((item, index) => (
           <li key={`item_${index}`}>
             <Checkbox

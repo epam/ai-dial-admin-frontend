@@ -17,6 +17,6 @@ describe('Multiselect', () => {
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
 
-    expect(screen.getByRole('list')).toHaveClass('relative', 'overflow-auto');
+    expect(screen.getByRole('list')).toHaveClass('relative', 'overflow-auto', 'p-0.5');
   });
 });
