@@ -1,5 +1,7 @@
 import { CollapsibleTestCase } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
+import { TestCaseRow } from '@/src/types/test-case-row';
 
 /** Lower-cased names held by more than one field; the backend rejects names that differ only in case. */
 export const getDuplicateFieldNames = (schema?: TestCaseSchema[] | null): Set<string> => {
@@ -77,3 +79,25 @@ export const remapRenamedFields = <T extends CollapsibleTestCase>(
     multiTurnData: testCase.multiTurnData?.map((turn) => renameKeys(turn, renames) ?? turn),
   }));
 };
+
+/**
+ * Gives every STRING field with no value (absent or `null`) an empty string, so an untouched field is stored
+ * the same way as one that was typed into and cleared. The backend rejects a metric binding to an absent key.
+ */
+export const fillEmptyStringFields = (
+  data: Record<string, unknown> | undefined,
+  schema?: TestCaseSchema[] | null,
+): Record<string, unknown> => {
+  const result = { ...data };
+
+  (schema ?? []).forEach(({ name, type }) => {
+    if (type === TestCaseItemType.STRING && name && result[name] == null) {
+      result[name] = '';
+    }
+  });
+
+  return result;
+};
+
+export const fillEmptyStringFieldsInRows = (rows: TestCaseRow[], schema?: TestCaseSchema[] | null): TestCaseRow[] =>
+  rows.map((row) => ({ ...row, data: fillEmptyStringFields(row.data as Record<string, unknown> | undefined, schema) }));

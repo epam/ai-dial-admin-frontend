@@ -1,12 +1,14 @@
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { fillEmptyStringFields } from '@/src/utils/evaluation/schema-fields';
 import { collapseRowsToCases } from '@/src/utils/evaluation/test-case-grouping';
 import { v4 as uuidv4 } from 'uuid';
 
-export const createNewDatasetTestCaseRow = (): Record<string, unknown> => {
+export const createNewDatasetTestCaseRow = (schema?: TestCaseSchema[] | null): Record<string, unknown> => {
   return {
     id: uuidv4(),
     testCaseName: `new-test-case-${uuidv4().slice(0, 5)}`,
-    data: {},
+    data: fillEmptyStringFields({}, schema),
     createdAt: 0,
     updatedAt: 0,
   };

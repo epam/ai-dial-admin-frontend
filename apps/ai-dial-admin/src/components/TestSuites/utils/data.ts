@@ -1,13 +1,14 @@
-import { TestCase } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { fillEmptyStringFields } from '@/src/utils/evaluation/schema-fields';
 import { collapseRowsToCases } from '@/src/utils/evaluation/test-case-grouping';
 import { v4 as uuidv4 } from 'uuid';
 
-export const createNewTestCaseRow = (): Record<string, unknown> => {
+export const createNewTestCaseRow = (schema?: TestCaseSchema[] | null): Record<string, unknown> => {
   return {
     id: uuidv4(),
     enabled: true,
     testCaseName: `new-test-case-${uuidv4().slice(0, 5)}`,
-    data: {},
+    data: fillEmptyStringFields({}, schema),
     createdAt: 0,
     updatedAt: 0,
   };

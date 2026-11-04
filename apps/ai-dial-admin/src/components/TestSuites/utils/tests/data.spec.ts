@@ -1,3 +1,4 @@
+import { TestCaseItemType } from '@/src/types/evaluation';
 import { describe, expect, test } from 'vitest';
 import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '../data';
 import { TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
@@ -380,6 +381,15 @@ describe('createNewTestCaseRow', () => {
     expect(result.updatedAt).toBe(0);
     expect(result.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(result.testCaseName).toMatch(/^new-test-case-[0-9a-f]{5}$/i);
+  });
+
+  test('should seed STRING schema fields with an empty string', () => {
+    const result = createNewTestCaseRow([
+      { name: 'Tool retries', type: TestCaseItemType.STRING, required: false, description: '' },
+      { name: 'count', type: TestCaseItemType.NUMBER, required: false, description: '' },
+    ]);
+
+    expect(result.data).toEqual({ 'Tool retries': '' });
   });
 });
 

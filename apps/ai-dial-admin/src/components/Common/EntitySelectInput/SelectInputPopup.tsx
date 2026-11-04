@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useId } from 'react';
 
 import { Label, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
@@ -50,6 +50,9 @@ const SelectInputPopup: FC<Props> = ({
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  // The popup's portal container is created once per id and never removed, so a shared id keeps its first DOM
+  // position — before a host modal opened later — and the picker would then render behind that modal.
+  const instanceId = useId();
 
   return (
     <div className="flex flex-col gap-y-1">
@@ -68,7 +71,7 @@ const SelectInputPopup: FC<Props> = ({
         >
           <Popup
             header={header}
-            portalId={portalId}
+            portalId={`${portalId}-${instanceId}`}
             open={isOpen}
             onClose={onClose}
             className="md:h-[800px]"
