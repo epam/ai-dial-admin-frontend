@@ -26,17 +26,16 @@ import {
 import {
   attachMetricInfo,
   buildMetricScoresQuery,
-  buildTestCasesStatusQuery,
   buildTotalMetricEvalDurationQuery,
   buildTotalRunTimeQuery,
   fillUnscoredMetricBars,
   parseComparisonMetricScores,
   parseDurationMs,
   parseMetricScores,
-  parseTestCaseStatusCounts,
   toMetricInfoByName,
   toMetricOptions,
 } from '@/src/components/Runs/Summary/utils';
+import { loadTestCaseStatusCounts } from '@/src/components/Runs/Summary/load-test-case-status-counts';
 import { RUN_FILTER } from '@/src/components/Runs/View/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -62,16 +61,19 @@ const EMPTY_METRIC_SCORES: MetricScoresData = { overallScore: null, statistics: 
 
 const EMPTY_MATCHED_ANALYTICS: RunAnalyticsSlice = {
   statusCounts: EMPTY_STATUS_COUNTS,
+  hasScoreRows: false,
   totalRunTimeMs: null,
   totalMetricEvalDurationMs: null,
 };
 
 const toMatchedAnalyticsSlice = (
   statusCounts: TestCaseStatusCounts,
+  hasScoreRows: boolean,
   totalRunTimeMs: number | null = null,
   totalMetricEvalDurationMs: number | null = null,
 ): RunAnalyticsSlice => ({
   statusCounts,
+  hasScoreRows,
   totalRunTimeMs,
   totalMetricEvalDurationMs,
 });
@@ -276,13 +278,18 @@ export const useSummaryOverviewData = ({
           runId: string,
           derived: ComparisonRunDerived,
         ): Promise<RunAnalyticsSlice> => {
-          const [statusResult, runTimeResult, metricEvalResult] = await Promise.all([
-            executeStructuredQuery(buildTestCasesStatusQuery(runId, derived.unmatchedTestCaseIds)),
+          const [status, runTimeResult, metricEvalResult] = await Promise.all([
+            loadTestCaseStatusCounts({
+              runId,
+              excludeTestCaseIds: derived.unmatchedTestCaseIds,
+              excludeEvalSummaryIds: derived.unmatchedIds,
+            }),
             executeStructuredQuery(buildTotalRunTimeQuery(runId, derived.unmatchedIds)),
             executeStructuredQuery(buildTotalMetricEvalDurationQuery(runId, derived.unmatchedIds)),
           ]);
           return toMatchedAnalyticsSlice(
-            parseTestCaseStatusCounts(statusResult),
+            status.counts,
+            status.hasScoreRows,
             parseDurationMs(runTimeResult, TOTAL_DURATION_ALIAS),
             parseDurationMs(metricEvalResult, TOTAL_METRIC_EVAL_DURATION_ALIAS),
           );
