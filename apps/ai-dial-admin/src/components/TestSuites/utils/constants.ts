@@ -1,9 +1,9 @@
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 /**
- * Type hints a `${{name|type}}` placeholder may carry, keyed by the spelling the backend accepts and
- * ordered the way the docs panel lists them. Anything else — an unknown hint, a different casing, no
- * hint at all — is treated as a plain string, the same fallback the backend applies.
+ * Type hints a `${{name|type}}` placeholder may carry, keyed by the lowercase spelling and ordered the
+ * way the docs panel lists them. Hints are case-insensitive — look them up lowercased. Anything else —
+ * an unknown hint, no hint at all — is treated as a plain string, the same fallback the backend applies.
  */
 export const TEMPLATE_VARIABLE_TYPE_BY_HINT: Record<string, TestCaseItemType | undefined> = {
   string: TestCaseItemType.STRING,
