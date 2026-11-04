@@ -11,15 +11,12 @@ describe('Multiselect', () => {
     expect(screen.getByText('Error!')).toBeInTheDocument();
   });
 
-  test('keeps the modal inside the backdrop so the backdrop does not scroll', async () => {
+  test('makes the list scroller the containing block of the sr-only checkbox inputs so the backdrop is not stretched', async () => {
     const user = userEvent.setup();
     render(<Multiselect elementId="id" label="Title" heading="Topics" selectedItems={['a']} allItems={['a']} />);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
 
-    const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveClass('max-h-full');
-    expect(dialog).not.toHaveClass('max-h-screen');
-    expect(dialog.parentElement).toHaveStyle({ overflow: 'hidden' });
+    expect(screen.getByRole('list')).toHaveClass('relative', 'overflow-auto');
   });
 });
