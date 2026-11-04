@@ -2,6 +2,7 @@ import { DEFAULT_ROOT_FOLDER_PERMISSIONS } from '@/src/constants/file';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
+import { normalizeFolder } from '@/src/utils/org-units/units';
 
 /**
  * Get foldername from path string
@@ -92,6 +93,29 @@ export const mergeFiles = <T extends DialFile>(
     }
     return file as T;
   });
+};
+
+/**
+ * Add the folders another source knows about to a listing, keeping the listing's own rows first and
+ * unchanged. Folders are compared by their decoded, trailing-slash path so two sources that disagree
+ * on encoding still count as the same folder.
+ *
+ * @template T - any listing row
+ * @param {T[]} own - rows of the resource type being listed
+ * @param {T[]} extraFolders - folder rows from another source
+ * @returns {T[]} - own rows followed by the extra folders not already present
+ */
+export const mergeFolderRows = <T extends { path: string }>(own: T[], extraFolders: T[]): T[] => {
+  const knownPaths = new Set(own.map((row) => normalizeFolder(row.path)));
+  const added = extraFolders.filter((folder) => {
+    const key = normalizeFolder(folder.path);
+    if (knownPaths.has(key)) {
+      return false;
+    }
+    knownPaths.add(key);
+    return true;
+  });
+  return added.length ? [...own, ...added] : own;
 };
 
 /**
