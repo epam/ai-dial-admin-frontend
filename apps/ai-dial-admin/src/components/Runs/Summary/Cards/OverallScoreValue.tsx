@@ -8,7 +8,7 @@ import { ChevronBadge } from '@/src/components/Common/ChevronBadge/ChevronBadge'
 import OverallScoreInfo from '@/src/components/Runs/Summary/Cards/OverallScoreInfo';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreConfig } from '@/src/models/evaluation/test-suite';
 import { NO_DATA_VALUE } from './constants';
 import { formatOverallScore, formatThreshold } from './utils';
 
@@ -18,12 +18,12 @@ interface Props {
   threshold?: number | null;
   /** Renders the info control right after the score (compare); otherwise the card places it itself. */
   isInfoInline?: boolean;
-  /** The suite the info tooltip describes; the control is omitted until it has loaded. */
-  testSuite?: TestSuite | null;
+  /** The method the info tooltip describes; the control is omitted when the run records none. */
+  scoreMethod?: OverallScoreConfig | null;
   metricCount?: number;
 }
 
-const OverallScoreValue: FC<Props> = ({ score, threshold, isInfoInline, testSuite, metricCount = 0 }) => {
+const OverallScoreValue: FC<Props> = ({ score, threshold, isInfoInline, scoreMethod, metricCount = 0 }) => {
   const t = useI18n();
 
   if (score == null) {
@@ -46,7 +46,7 @@ const OverallScoreValue: FC<Props> = ({ score, threshold, isInfoInline, testSuit
           {thresholdMessage && <span className="sr-only">{thresholdMessage}</span>}
         </button>
       </Tooltip>
-      {isInfoInline && testSuite && <OverallScoreInfo testSuite={testSuite} metricCount={metricCount} />}
+      {isInfoInline && scoreMethod && <OverallScoreInfo scoreMethod={scoreMethod} metricCount={metricCount} />}
     </div>
   );
 };

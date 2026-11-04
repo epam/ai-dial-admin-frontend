@@ -5,15 +5,21 @@ import { useEffect, useState } from 'react';
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { TOTAL_DURATION_ALIAS, TOTAL_METRIC_EVAL_DURATION_ALIAS } from '@/src/components/Runs/Summary/constants';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import { loadTestCaseStatusCounts } from '@/src/components/Runs/Summary/load-test-case-status-counts';
 import {
-  buildTestCasesStatusQuery,
   buildTotalMetricEvalDurationQuery,
   buildTotalRunTimeQuery,
   parseDurationMs,
-  parseTestCaseStatusCounts,
 } from '@/src/components/Runs/Summary/utils';
 
-export const useRunAnalyticsSlice = (runId: string | undefined): { data: RunAnalyticsSlice | null } => {
+/**
+ * A run's analytics slice. `testCaseCount` is the run's reported number of test cases; pass it only for a
+ * finished run (see `loadTestCaseStatusCounts`).
+ */
+export const useRunAnalyticsSlice = (
+  runId: string | undefined,
+  testCaseCount?: number,
+): { data: RunAnalyticsSlice | null } => {
   const [data, setData] = useState<RunAnalyticsSlice | null>(null);
 
   useEffect(() => {
@@ -26,15 +32,16 @@ export const useRunAnalyticsSlice = (runId: string | undefined): { data: RunAnal
     setData(null);
 
     Promise.all([
-      executeStructuredQuery(buildTestCasesStatusQuery(runId)),
+      loadTestCaseStatusCounts({ runId, testCaseCount }),
       executeStructuredQuery(buildTotalRunTimeQuery(runId)),
       executeStructuredQuery(buildTotalMetricEvalDurationQuery(runId)),
-    ]).then(([statusResult, runTimeResult, metricEvalResult]) => {
+    ]).then(([status, runTimeResult, metricEvalResult]) => {
       if (cancelled) {
         return;
       }
       setData({
-        statusCounts: parseTestCaseStatusCounts(statusResult),
+        statusCounts: status.counts,
+        hasScoreRows: status.hasScoreRows,
         totalRunTimeMs: parseDurationMs(runTimeResult, TOTAL_DURATION_ALIAS),
         totalMetricEvalDurationMs: parseDurationMs(metricEvalResult, TOTAL_METRIC_EVAL_DURATION_ALIAS),
       });
@@ -43,7 +50,7 @@ export const useRunAnalyticsSlice = (runId: string | undefined): { data: RunAnal
     return () => {
       cancelled = true;
     };
-  }, [runId]);
+  }, [runId, testCaseCount]);
 
   return { data };
 };

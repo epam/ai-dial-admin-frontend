@@ -8,6 +8,7 @@ import { RunsI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
+import { OverallScoreType } from '@/src/models/evaluation/test-suite';
 import { useCompareKpiCards } from '../use-compare-kpi-cards';
 
 const executeStructuredQueryMock = vi.fn();
@@ -193,6 +194,7 @@ describe('useCompareKpiCards', () => {
   test('uses the supplied matched-only slices without querying, and still fetches whole-run cost', async () => {
     const matched = (passed: number, runTime: number): RunAnalyticsSlice => ({
       statusCounts: { passed, failed: 0, error: 0, unscored: 0, total: passed },
+      hasScoreRows: true,
       totalRunTimeMs: runTime,
       totalMetricEvalDurationMs: null,
     });
@@ -208,5 +210,134 @@ describe('useCompareKpiCards', () => {
     expect(result.current?.deltas.completed).toEqual({ kind: MetricDeltaKind.Changed, value: -5 });
     expect(result.current?.deltas.runtime).toEqual({ kind: MetricDeltaKind.Changed, value: -20 });
     await waitFor(() => expect(result.current?.costs[Primary].totalCost).toBe(120));
+  });
+
+  describe('for runs without score rows', () => {
+    const execution = (testCaseId: string, status: string) => ({
+      test_case_id: testCaseId,
+      execution_status: status,
+      count: 1,
+    });
+
+    const mockNoMetricsQueries = (executionsByRun: Record<string, unknown[]>) => {
+      executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
+        const runId = runIdOf(query);
+        if (query.entity === 'test_case_eval_scores') {
+          return Promise.resolve({ rows: [] });
+        }
+        if (query.group_by) {
+          return Promise.resolve({ rows: executionsByRun[runId] ?? [] });
+        }
+        return Promise.resolve({ rows: [{ total_duration_ms: RUN_TIME_BY_RUN[runId] }] });
+      });
+    };
+
+    test("uses each finished run's reported total and counts completion from its executions", async () => {
+      mockNoMetricsQueries({
+        'run-1': [execution('a', 'SUCCESS'), execution('b', 'SUCCESS')],
+        'run-2': [execution('a', 'SUCCESS')],
+      });
+
+      const { result } = renderKpis({
+        primaryRun: buildRun('run-1', { numberOfTestCases: 2 }),
+        comparedRun: buildRun('run-2', { numberOfTestCases: 2 }),
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.figures[Primary].breakdown).toEqual({
+        total: 2,
+        completed: 2,
+        above: 0,
+        below: 0,
+        errorOrNa: 0,
+      });
+      expect(result.current?.figures[Secondary].breakdown).toEqual({
+        total: 2,
+        completed: 1,
+        above: 0,
+        below: 0,
+        errorOrNa: 1,
+      });
+      expect(result.current?.deltas.completed).toEqual({ kind: MetricDeltaKind.Changed, value: -1 });
+    });
+
+    test('titles the rate card Completion Rate when neither run has scores to apply a threshold to', async () => {
+      mockNoMetricsQueries({ 'run-1': [execution('a', 'SUCCESS')], 'run-2': [execution('a', 'SUCCESS')] });
+
+      const { result } = renderKpis({
+        primaryRun: buildRun('run-1', { numberOfTestCases: 1 }),
+        comparedRun: buildRun('run-2', { numberOfTestCases: 1 }),
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.rateTitleKey).toBe(RunsI18nKey.CompletionRate);
+      expect(result.current?.figures[Primary].hasThreshold).toBe(false);
+    });
+
+    test('does not apply the threshold to a matched-only slice derived from executions', async () => {
+      const derived: RunAnalyticsSlice = {
+        statusCounts: { passed: 0, failed: 0, error: 1, unscored: 3, total: 4 },
+        hasScoreRows: false,
+        totalRunTimeMs: 1000,
+        totalMetricEvalDurationMs: null,
+      };
+
+      const { result } = renderKpis({
+        onlyMatchingTestCases: true,
+        primaryMatchedAnalytics: derived,
+        comparedMatchedAnalytics: derived,
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.figures[Primary].hasThreshold).toBe(false);
+      expect(result.current?.rateTitleKey).toBe(RunsI18nKey.CompletionRate);
+    });
+  });
+
+  describe('the overall-score methods', () => {
+    const withMethod = (id: string, overallScore?: object) =>
+      buildRun(id, {
+        suiteSnapshot: {
+          overallScoreThreshold: 0.6,
+          deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+          ...(overallScore ? { overallScore } : {}),
+        } as Run['suiteSnapshot'],
+      });
+
+    test("are each run's own stored method", async () => {
+      const weighted = {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 }],
+      };
+
+      const { result } = renderKpis({
+        primaryRun: withMethod('run-1', { type: OverallScoreType.Mean }),
+        comparedRun: withMethod('run-2', weighted),
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethods).toEqual({
+        [Primary]: { type: OverallScoreType.Mean },
+        [Secondary]: weighted,
+      });
+    });
+
+    test('default to the mean for a run whose snapshot stores no method', async () => {
+      const { result } = renderKpis({ primaryRun: withMethod('run-1'), comparedRun: withMethod('run-2') });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethods[Secondary]).toEqual({ type: OverallScoreType.Mean });
+    });
+
+    test('are null for a run without a snapshot, without affecting the other run', async () => {
+      const { result } = renderKpis({
+        primaryRun: withMethod('run-1', { type: OverallScoreType.Mean }),
+        comparedRun: buildRun('run-2', { suiteSnapshot: undefined }),
+      });
+
+      await waitFor(() => expect(result.current).not.toBeNull());
+      expect(result.current?.scoreMethods[Primary]).toEqual({ type: OverallScoreType.Mean });
+      expect(result.current?.scoreMethods[Secondary]).toBeNull();
+    });
   });
 });

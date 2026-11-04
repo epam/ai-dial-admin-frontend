@@ -102,6 +102,13 @@ export interface SuiteSnapshot {
   overallScoreThreshold?: number;
   /** Per-test-case score definition captured at run start (Mean / WeightedMean only). */
   testCaseOverallScore?: TestCaseOverallScoreConfig;
+  /**
+   * Suite-level overall score method captured at run start. Absent when the suite had no method set — runs
+   * created before the method was configurable, and suites that never configured one — i.e. the default mean.
+   */
+  overallScore?: OverallScoreConfig;
+  /** How per-metric statistics were aggregated, captured at run start (e.g. `AVG`). */
+  metricScoreAggregation?: string;
 }
 
 export interface McpDeploymentRef {

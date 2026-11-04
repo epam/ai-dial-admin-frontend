@@ -2,14 +2,15 @@
 
 import { useMemo } from 'react';
 
-import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
+import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components/Common/RunStatus/utils';
 import { RunKpiFigures } from '@/src/components/Runs/Summary/models';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { RunCostState, useRunCostState } from '@/src/components/Runs/Summary/use-run-cost-state';
-import { toRunKpiFigures } from '@/src/components/Runs/Summary/utils';
+import { resolveRunScoreMethod, toRunKpiFigures } from '@/src/components/Runs/Summary/utils';
 import { useSourceKindLabel } from '@/src/components/TestSuites/Trends/CostRuntime/use-source-kind-label';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { Run } from '@/src/models/evaluation/run';
+import { OverallScoreConfig } from '@/src/models/evaluation/test-suite';
 
 interface Params {
   run: Run;
@@ -21,6 +22,8 @@ export interface RunKpiCards {
   figures: RunKpiFigures;
   sourceLabel: string;
   cost: RunCostState;
+  /** The overall-score method the run was evaluated with; null when the run records none. */
+  scoreMethod: OverallScoreConfig | null;
   rateTitleKey: RunsI18nKey;
   hasNoTestCases: boolean;
   hasRuntimeError: boolean;
@@ -31,7 +34,9 @@ export interface RunKpiCards {
  * Error flags — or null while the run's analytics slice is still loading.
  */
 export const useRunKpiCards = ({ run, metricSnapshotCount }: Params): RunKpiCards | null => {
-  const { data } = useRunAnalyticsSlice(run?.id);
+  // The reported total only holds for a finished run; an in-flight one counts the test cases seen so far.
+  const testCaseCount = isTransitionalRunStatus(run?.status) ? undefined : run?.numberOfTestCases;
+  const { data } = useRunAnalyticsSlice(run?.id, testCaseCount);
   const sourceLabel = useSourceKindLabel(run?.suiteSnapshot ?? {});
   const cost = useRunCostState({
     run,
@@ -51,6 +56,7 @@ export const useRunKpiCards = ({ run, metricSnapshotCount }: Params): RunKpiCard
     figures,
     sourceLabel,
     cost,
+    scoreMethod: resolveRunScoreMethod(run),
     rateTitleKey: figures.hasThreshold ? RunsI18nKey.ThresholdPassRate : RunsI18nKey.CompletionRate,
     hasNoTestCases: figures.breakdown.total === 0 && !isRunIncomplete,
     hasRuntimeError: figures.totalMs == null && !isRunIncomplete,
