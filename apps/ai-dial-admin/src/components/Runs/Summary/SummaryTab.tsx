@@ -144,7 +144,6 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
           run={run}
           overallScore={enrichedMetricScores?.overallScore}
           metricSnapshotCount={metricSnapshotCount}
-          testSuite={testSuite}
         />
       </div>
       <div className={SUMMARY_PANELS_GRID_CLASS}>

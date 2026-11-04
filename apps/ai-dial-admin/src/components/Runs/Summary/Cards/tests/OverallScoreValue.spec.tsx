@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreConfig, OverallScoreType } from '@/src/models/evaluation/test-suite';
 import OverallScoreValue from '../OverallScoreValue';
 
-const MEAN_SUITE: TestSuite = { id: 'suite-1', overallScore: { type: OverallScoreType.Mean } };
+const MEAN_METHOD: OverallScoreConfig = { type: OverallScoreType.Mean };
 
 describe('OverallScoreValue', () => {
   test('formats the score with three decimals', () => {
@@ -77,7 +77,7 @@ describe('OverallScoreValue', () => {
 
   test('renders the info control after the score when inline and the suite has loaded', async () => {
     const user = userEvent.setup();
-    render(<OverallScoreValue score={0.58} isInfoInline testSuite={MEAN_SUITE} metricCount={4} />);
+    render(<OverallScoreValue score={0.58} isInfoInline scoreMethod={MEAN_METHOD} metricCount={4} />);
 
     await user.hover(screen.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }));
 
@@ -86,14 +86,14 @@ describe('OverallScoreValue', () => {
     expect(tooltip.textContent).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
   });
 
-  test('omits the inline info control until the suite has loaded', () => {
-    render(<OverallScoreValue score={0.58} isInfoInline testSuite={null} />);
+  test('omits the inline info control when the run records no method', () => {
+    render(<OverallScoreValue score={0.58} isInfoInline scoreMethod={null} />);
 
     expect(screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeNull();
   });
 
   test('leaves the info control to the card when not inline', () => {
-    render(<OverallScoreValue score={0.58} testSuite={MEAN_SUITE} />);
+    render(<OverallScoreValue score={0.58} scoreMethod={MEAN_METHOD} />);
 
     expect(screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeNull();
   });
