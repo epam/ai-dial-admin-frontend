@@ -29,6 +29,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 const RUN: Run = { id: 'run-1' } as Run;
 const EMPTY_ANALYTICS: RunAnalyticsSlice = {
   statusCounts: { passed: 0, failed: 0, error: 0, unscored: 0, total: 0 },
+  hasScoreRows: false,
   totalRunTimeMs: null,
   totalMetricEvalDurationMs: null,
 };

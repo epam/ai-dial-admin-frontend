@@ -19,7 +19,6 @@ import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
 import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   primaryRun: Run;
@@ -30,9 +29,6 @@ interface Props {
   comparedMatchedAnalytics: RunAnalyticsSlice | null;
   primaryOverallScore?: number | null;
   comparedOverallScore?: number | null;
-  /** Each run's suite, for the overall-score calculation method; omitted until it has loaded. */
-  primaryTestSuite?: TestSuite | null;
-  comparedTestSuite?: TestSuite | null;
   /** How many metrics each run computed; omitted while the snapshots are still loading. */
   primaryMetricCount?: number;
   comparedMetricCount?: number;
@@ -54,8 +50,6 @@ const Analytics: FC<Props> = ({
   comparedMatchedAnalytics,
   primaryOverallScore,
   comparedOverallScore,
-  primaryTestSuite,
-  comparedTestSuite,
   primaryMetricCount,
   comparedMetricCount,
 }) => {
@@ -83,7 +77,6 @@ const Analytics: FC<Props> = ({
   const { figures, sourceLabels, costs, rates, deltas } = kpis;
   const rateTitle = t(kpis.rateTitleKey);
   const scores = toSlotRecord(primaryOverallScore ?? null, comparedOverallScore ?? null);
-  const suites = toSlotRecord(primaryTestSuite, comparedTestSuite);
   const metricCounts = toSlotRecord(primaryMetricCount, comparedMetricCount);
 
   return (
@@ -126,7 +119,7 @@ const Analytics: FC<Props> = ({
               score={scores[run.slot]}
               threshold={figures[run.slot].threshold}
               isInfoInline
-              testSuite={suites[run.slot]}
+              scoreMethod={kpis.scoreMethods[run.slot]}
               metricCount={metricCounts[run.slot]}
             />
           ))}

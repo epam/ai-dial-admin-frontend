@@ -93,8 +93,6 @@ const SummaryOverviewTab: FC<Props> = ({
             comparedMatchedAnalytics={comparedMatchedAnalytics}
             primaryOverallScore={enrichedPrimaryScores?.overallScore}
             comparedOverallScore={enrichedComparedScores?.overallScore}
-            primaryTestSuite={primaryTestSuite}
-            comparedTestSuite={comparedTestSuite}
             primaryMetricCount={primaryMetricCount}
             comparedMetricCount={comparedMetricCount}
           />

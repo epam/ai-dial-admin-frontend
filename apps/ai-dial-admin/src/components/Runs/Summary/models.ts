@@ -72,7 +72,9 @@ export interface MetricOption {
 
 /** One run's figures behind the Summary KPI cards, from its snapshotted threshold and analytics slice. */
 export interface RunKpiFigures {
+  /** The snapshotted threshold, only when it applies to these counts (see `hasThreshold`). */
   threshold: number | null;
+  /** The run's snapshot has a threshold and the run has score rows to apply it to. */
   hasThreshold: boolean;
   breakdown: CompletionBreakdown;
   /** 0–1 fraction, null when the run has no test cases. */
@@ -85,6 +87,11 @@ export interface RunKpiFigures {
 /** Status counts + total runtime parts for a single run's analytics KPI cards. */
 export interface RunAnalyticsSlice {
   statusCounts: TestCaseStatusCounts;
+  /**
+   * False when the counts were derived from executions because the run has no per-test-case score rows
+   * (a suite without metrics). The threshold treatment needs scores, so it does not apply then.
+   */
+  hasScoreRows: boolean;
   totalRunTimeMs: number | null;
   totalMetricEvalDurationMs: number | null;
 }

@@ -42,11 +42,14 @@ The Test Cases Completed card SHALL show `<completed> /<total>` as its value, wh
 case of the run and *completed* is the number of test cases that finished successfully: when the suite
 snapshot has a threshold, SUCCESS cases whose `passed` is true or false; when it has none, every SUCCESS
 case. Everything else (non-SUCCESS execution, or SUCCESS with no threshold outcome while a threshold is set)
-is **Error or N/A**. Below the value the card SHALL show the Error-or-N/A count with the error glyph and an
-"Error" label, and SHALL show nothing there when that count is zero. Hovering or focusing the value SHALL open a tooltip listing **Total test cases**, **Completed**,
-and — only when a threshold is set — indented **Above threshold** and **Below threshold** rows, then
-**Error or N/A**, each with its count. When the run has no test cases the value SHALL be an em dash; the
-card SHALL show the Error badge when the run is not in an incomplete status and an em dash otherwise.
+is **Error or N/A**. How the counts are obtained for a run without metrics is specified in "Test case counts do
+not depend on metrics". Below the value the card SHALL show the Error-or-N/A count with the error glyph and an
+"Error" label, and SHALL show nothing there when that count is zero. Hovering or focusing the value SHALL open a
+tooltip listing **Total test cases**, **Completed**, and — only when a threshold is set and score rows exist —
+indented **Above threshold** and **Below threshold** rows, then **Error or N/A**, each with its count. When the
+run reports no test cases the value SHALL be an em dash; the card SHALL show the Error badge when the run is not
+in an incomplete status and an em dash otherwise. The absence of score rows alone SHALL NOT produce the Error
+badge.
 
 #### Scenario: Value and error line
 - **WHEN** a run has 55 test cases, 45 completed and 10 Error or N/A
@@ -73,7 +76,7 @@ card SHALL show the Error badge when the run is not in an incomplete status and 
 - **THEN** the same tooltip opens
 
 #### Scenario: No test cases
-- **WHEN** a COMPLETED run has no test-case results
+- **WHEN** a COMPLETED run reports no test cases at all
 - **THEN** the card shows the Error badge in place of the value
 - **AND** the same run in an incomplete status shows an em dash
 
@@ -114,17 +117,20 @@ focusing the value SHALL show a tooltip stating `Overall score is above the thre
 `Overall score is below the threshold (<threshold>).`. The above/below state SHALL also be available to
 assistive technology as text, since the glyph is decorative. Without a threshold the card SHALL show neither
 glyph nor tooltip on the value. The card SHALL show a static "Based on completed test cases" label and an info
-control; hovering or focusing the control SHALL show the suite's calculation method:
+control; hovering or focusing the control SHALL show the calculation method the run was evaluated with:
 - Mean: "Calculation method:", "Mean of <N> metrics" and the formula `score = mean(m₁, m₂, … mₙ)`;
 - Weighted mean: "Calculation method:", "Weighted mean of <N> metrics" and one `<metric>.<field> × <weight>`
   line per weight;
 - Specific function: a table of Calculation method (Specific function), Function, Dataset column, Dataset
   value, P column and P column value.
 
-The calculation method SHALL come from the run's test suite as currently configured, because the run's
-suite snapshot does not carry the suite-level overall score definition. While the test suite has not
-loaded, or failed to load, the info control SHALL be omitted rather than describing a method that may be
-wrong.
+The calculation method SHALL come from the overall-score method stored in the run's own suite snapshot, never
+from the test suite as it is configured now, so editing the suite afterwards does not change what the tooltip
+says about a finished run. A run whose snapshot exists but stores no method — a run created
+before the method was configurable, or of a suite that never had one set — SHALL be described as the default
+Mean. A run with no suite snapshot at all SHALL show no
+info control, because nothing records how it was scored. The info control SHALL NOT depend on the live test
+suite request.
 
 #### Scenario: Above threshold
 - **WHEN** the score is 0.812 and the threshold is 0.6
@@ -145,22 +151,34 @@ wrong.
 - **THEN** the card shows `0.580` with no glyph and no tooltip on the value
 
 #### Scenario: Mean method tooltip
-- **WHEN** the suite uses the mean method over 4 metrics and the user hovers the info control
+- **WHEN** the run's stored method is the mean over 4 metrics and the user hovers the info control
 - **THEN** the tooltip shows `Calculation method:`, `Mean of 4 metrics` and `score = mean(m₁, m₂, … mₙ)`
 
 #### Scenario: Weighted mean method tooltip
-- **WHEN** the suite uses a weighted mean of `aidial_rag_eval.retrieval.f1` × 0.7 and
+- **WHEN** the run's stored method is a weighted mean of `aidial_rag_eval.retrieval.f1` × 0.7 and
   `deepeval.context_prec.score` × 0.3
 - **THEN** the tooltip shows `Weighted mean of 2 metrics` and both `<metric> × <weight>` lines
 
 #### Scenario: Specific function tooltip
-- **WHEN** the suite uses the ROC AUC function
+- **WHEN** the run's stored method is the ROC AUC function
 - **THEN** the tooltip shows Calculation method Specific function, Function roc auc and the dataset and P
   column rows
 
 #### Scenario: Suite not loaded
-- **WHEN** the test suite request has not resolved
-- **THEN** the card shows the score without an info control
+- **WHEN** the live test suite request has not resolved, or failed
+- **THEN** the info control is still shown and describes the run's stored method
+
+#### Scenario: The method comes from the run, not the current suite
+- **WHEN** a run was evaluated with the mean method and its test suite has since been changed to a weighted mean
+- **THEN** the info tooltip still shows the mean method
+
+#### Scenario: A snapshot without a stored method shows Mean
+- **WHEN** a run's suite snapshot stores no overall-score method
+- **THEN** the info tooltip shows `Mean of <N> metrics`, whatever the live suite is configured with
+
+#### Scenario: A run without a snapshot has no info control
+- **WHEN** a run has no suite snapshot
+- **THEN** the Overall Score card shows no info control
 
 ### Requirement: Total Runtime card
 
@@ -201,8 +219,9 @@ headed by its run name, separated by a divider, with the card title followed by 
 exists. Per-run content SHALL match the single-run card (Test Cases Completed value, error line and hover
 tooltip, headed by the run name; per-run rate with bar and threshold line; per-run overall score; per-run
 runtime and cost breakdown). On the Overall Score card each run's value SHALL be followed by its own info
-control with that run's calculation-method tooltip, and the "Based on completed test cases" label SHALL stay
-below both runs. Each run's glyph, threshold tooltip and `Threshold:` line SHALL use that run's own threshold.
+control with that run's calculation-method tooltip, taken from that run's own stored method as the single-run
+card does, and the "Based on completed test cases" label SHALL stay below both runs. Each run's glyph,
+threshold tooltip and `Threshold:` line SHALL use that run's own threshold.
 The rate card SHALL be titled Threshold Pass Rate when either run has a threshold and Completion Rate when
 neither does. In a pair where only one run has a threshold, the run without a threshold SHALL show an em dash
 on the rate card and the rate diff badge SHALL be hidden. The strip SHALL show a spinner until both runs'
@@ -225,7 +244,8 @@ aggregates have loaded.
 
 #### Scenario: Per-run calculation method
 - **WHEN** the user hovers the info control of the second run
-- **THEN** the tooltip describes the calculation method of the second run's test suite
+- **THEN** the tooltip describes the calculation method stored on the second run, even when the baseline run
+  was evaluated with a different one
 
 #### Scenario: Mixed thresholds
 - **WHEN** only the baseline run's suite snapshot has a threshold
@@ -294,3 +314,62 @@ evaluated per run. A run with a missing figure SHALL NOT blank the other run's s
 #### Scenario: One run has no metrics cost
 - **WHEN** the second run has no metrics cost
 - **THEN** its Metrics value shows an em dash and its other values are unaffected
+
+### Requirement: Test case counts do not depend on metrics
+
+The Test Cases Completed and rate cards SHALL show correct counts for a run whose suite has no metrics, where
+the per-test-case score table has no rows. The *total* SHALL be the run's reported number of test cases once
+the run has finished (any status other than PENDING, RUNNING or CANCELLING); for a run still in flight it
+SHALL be the number of test cases seen so far. When the run has score rows the counts SHALL come from them
+exactly as for any run with metrics. When it has none, the counts SHALL be derived from the run's executions:
+each test case is **completed** only when every one of its executions succeeded; every other executed test
+case, and every test case of the run with no execution, is **Error or N/A**. Repeat executions of one test case
+SHALL count as one test case. The threshold treatment — the Threshold Pass Rate title, the Threshold line and the
+Above threshold and Below threshold rows — SHALL apply only when score rows exist; without them the counts are
+rated by completion. In the Run Comparison with matching-only enabled, the executions considered SHALL be limited to the
+matched ones and the total SHALL be the number of matched test cases seen.
+
+#### Scenario: A run without metrics completes normally
+- **WHEN** a COMPLETED run reports 4 test cases, has no score rows, and all 4 test cases have only successful
+  executions
+- **THEN** Test Cases Completed shows `4` with `/4` and no error line
+- **AND** the rate card is titled Completion Rate and shows `100%`
+- **AND** neither card shows the Error badge
+
+#### Scenario: Repeat executions count as one test case
+- **WHEN** a run without metrics reports 2 test cases and each was executed 3 times, all successfully
+- **THEN** Test Cases Completed shows `2` with `/2`, not `/6`
+
+#### Scenario: A test case with a failed execution is not completed
+- **WHEN** a run without metrics reports 3 test cases, one with executions SUCCESS and FAILED, one with only
+  SUCCESS, and one with only SUCCESS
+- **THEN** Test Cases Completed shows `2` with `/3` and an error line reading `1 Error`
+
+#### Scenario: A test case that never executed is N/A
+- **WHEN** a finished run without metrics reports 3 test cases but only 1 has any execution, and it succeeded
+- **THEN** Test Cases Completed shows `1` with `/3` and an error line reading `2 Error`
+- **AND** the tooltip lists Total test cases 3, Completed 1 and Error or N/A 2
+
+#### Scenario: A threshold without score rows is rated by completion
+- **WHEN** the run's suite snapshot has a threshold but the run has no score rows yet
+- **THEN** the rate card is titled Completion Rate and shows no Threshold line
+- **AND** the Test Cases Completed tooltip shows no Above threshold or Below threshold rows
+
+#### Scenario: A run with metrics is unchanged
+- **WHEN** a run has score rows
+- **THEN** its counts and its Above threshold and Below threshold rows come from those rows
+- **AND** no execution query is made for it
+
+#### Scenario: No threshold rows without scores
+- **WHEN** the counts were derived from executions
+- **AND** the user hovers the value
+- **THEN** the tooltip shows no Above threshold or Below threshold rows
+
+#### Scenario: An in-flight run reports what has been seen
+- **WHEN** a RUNNING run without metrics reports 10 test cases and 3 have finished successfully
+- **THEN** the total reflects the 3 seen so far, not 10, and the card does not count the unstarted ones as errors
+
+#### Scenario: Matching-only limits the fallback to matched executions
+- **WHEN** the comparison is limited to matching test cases and a run without metrics has executions outside the
+  matched set
+- **THEN** only the matched executions are counted for that run

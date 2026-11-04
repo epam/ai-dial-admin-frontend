@@ -36,6 +36,13 @@ export const OVERALL_METRIC_SCORE_NAME = 'overall';
 export const DISTRIBUTION_VALUE_ALIAS = 'value';
 export const DISTRIBUTION_ROW_LIMIT = 10000;
 
+/**
+ * Cap on the `(test_case_id, execution_status)` groups fetched to count a run's test cases from its executions
+ * (see `buildTestCaseExecutionsQuery`). A test case yields one group per distinct status, so the cap holds a few
+ * thousand test cases; beyond it the count degrades by undercounting rather than failing.
+ */
+export const TEST_CASE_EXECUTIONS_ROW_LIMIT = 10000;
+
 /** Flattened metric field family: `metric::<metricName>::<outputField>` (backend column naming). */
 export const METRIC_FIELD_PREFIX = 'metric';
 export const METRIC_FIELD_SEPARATOR = '::';
