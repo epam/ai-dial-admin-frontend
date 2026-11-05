@@ -39,7 +39,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const actualConfig = isUnitMode ? filterMenuForUnitMode(enabledConfig, canReadNamespace) : enabledConfig;
 
   // Config transfer and system properties are admin pages, which a unit user cannot open.
-  const showImportExport = isConfigTransferEnabled && !isUnitMode && !(!isSidebarOpen && isReadOnlyAdmin);
+  const showImportExport = isConfigTransferEnabled && !isUnitMode && (isSidebarOpen || !isReadOnlyAdmin);
 
   return (
     <div id={MAIN_MENU_ID} className="flex flex-col h-full divide-y divide-tertiary">
