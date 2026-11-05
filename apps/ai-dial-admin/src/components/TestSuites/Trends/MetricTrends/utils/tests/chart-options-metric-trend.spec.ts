@@ -181,7 +181,7 @@ describe('buildMetricTrendChartOptions', () => {
 
     expect(html).toContain('Run #19');
     expect(html).toContain('<a href=');
-    expect(html).toContain('#2656D9');
+    expect(html).toContain('color:var(--text-control-inverted');
     expect(html).toContain(formatMetricTrendTooltipDate(runAt));
     expect(html).toContain('faithfulness:');
     expect(html).toContain('0.665');

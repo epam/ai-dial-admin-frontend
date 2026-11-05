@@ -59,7 +59,13 @@ const RunBar: FC<Props> = ({
 
   return (
     <div className="flex h-full min-w-px max-w-[52px] flex-1 flex-col items-center gap-4">
-      <InteractiveTooltip content={barTooltip} asChild triggerClassName="flex min-h-0 w-full flex-1 flex-col">
+      {/* TODO: remove the background and text color classes once ui-kit InteractiveTooltip implements the inverted style */}
+      <InteractiveTooltip
+        content={barTooltip}
+        asChild
+        triggerClassName="flex min-h-0 w-full flex-1 flex-col"
+        contentClassName="bg-control-inverted text-control-inverted"
+      >
         <div
           className="flex w-full min-h-0 flex-1 cursor-pointer flex-col overflow-hidden rounded"
           style={{ maxHeight: BAR_PLOT_HEIGHT_PX - BAR_LABEL_HEIGHT_PX }}
