@@ -57,6 +57,7 @@ import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { GridColumnType } from '@/src/types/grid-column';
 
 const BREAKDOWN_COLUMN_BASE: ColDef<BreakdownRowModel> = {
   sortable: false,
@@ -72,8 +73,9 @@ const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
   ...BREAKDOWN_COLUMN_BASE,
   flex: 1,
   minWidth: 170,
-  cellClass: ['align-right', 'column-divider'],
+  cellClass: 'column-divider',
   headerClass: 'align-right',
+  type: GridColumnType.RightAligned,
 };
 
 interface Props {
@@ -227,6 +229,7 @@ const BreakdownTable: FC<Props> = ({
         headerName: t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]),
         cellClass: BREAKDOWN_COLUMN_BASE.cellClass,
         headerClass: void 0,
+        type: void 0,
         cellRenderer: DimensionCell,
         tooltipValueGetter: () => null,
       },
