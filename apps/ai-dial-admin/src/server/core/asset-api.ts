@@ -14,6 +14,7 @@ import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
 import {
   encodeCorePath,
+  parseOptionalFolderPath,
   parsePath,
   parseVersionedPath,
   stripPrefix,
@@ -26,6 +27,7 @@ import { createHeadersForCreate, createIfMatchHeaders, createIfNoneMatchHeaders 
 import {
   ASSET_MERGERS,
   CoreResourceMetadataNode,
+  isOptionalFolderType,
   isVersioned,
   ResourceInfo,
   toResourceInfoList,
@@ -188,7 +190,11 @@ export class AssetApi extends CoreApi {
   private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> | null {
     if (FOLDER_NESTED_VERSIONLESS_TYPES.has(type)) {
       try {
-        const { path: parsedPath, folderId, name } = parsePath(path);
+        const {
+          path: parsedPath,
+          folderId,
+          name,
+        } = isOptionalFolderType(type) ? parseOptionalFolderPath(path) : parsePath(path);
         return { path: parsedPath, folderId, name };
       } catch {
         return null;

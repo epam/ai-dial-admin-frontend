@@ -24,6 +24,18 @@ import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/ap
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
+import {
+  bulkDeletePolicies,
+  createPolicy,
+  getPolicy,
+  removePolicyFolder,
+} from '@/src/app/[lang]/platform-policies/actions';
+import {
+  bulkDeletePolicyAssignments,
+  createPolicyAssignment,
+  getPolicyAssignment,
+  removePolicyAssignmentFolder,
+} from '@/src/app/[lang]/platform-policy-assignments/actions';
 import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { bulkDeleteProjects, getProject } from '@/src/app/[lang]/projects/actions';
 import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/skills/actions';
@@ -57,6 +69,8 @@ import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderCo
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
+import { usePoliciesFolder } from '@/src/context/assets/PoliciesFolderContext';
+import { usePolicyAssignmentsFolder } from '@/src/context/assets/PolicyAssignmentsFolderContext';
 import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
@@ -77,7 +91,14 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { isFileRootPath, isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import {
+  isFileRootPath,
+  isNestedPlatformView,
+  isPlatformBucketView,
+  isPlatformDualBucketView,
+  PLATFORM_ROOT_FOLDER,
+} from '@/src/utils/files/root-folder';
+import { getCostObjectFromFolder } from '@/src/utils/policies/path';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -178,7 +199,7 @@ export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => 
   // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
   // resource's storage name; schema body `$id` values are available after opening the resource.
   if (
-    isFlatPlatformView(view) ||
+    isPlatformBucketView(view) ||
     view === ApplicationRoute.Skills ||
     view === ApplicationRoute.Projects ||
     isPlatformDualBucketView(view, currentPath)
@@ -252,6 +273,10 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Roles;
     case ApplicationRoute.PlatformKeys:
       return FileManagerI18nKey.Keys;
+    case ApplicationRoute.PlatformPolicies:
+      return FileManagerI18nKey.Policies;
+    case ApplicationRoute.PlatformPolicyAssignments:
+      return FileManagerI18nKey.PolicyAssignments;
     case ApplicationRoute.Skills:
       return FileManagerI18nKey.Skills;
     case ApplicationRoute.Projects:
@@ -326,6 +351,16 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.KeysEmptyStateTitle),
         description: t(FileManagerI18nKey.KeysEmptyStateDescription),
       };
+    case ApplicationRoute.PlatformPolicies:
+      return {
+        title: t(FileManagerI18nKey.PoliciesEmptyStateTitle),
+        description: t(FileManagerI18nKey.PoliciesEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformPolicyAssignments:
+      return {
+        title: t(FileManagerI18nKey.PolicyAssignmentsEmptyStateTitle),
+        description: t(FileManagerI18nKey.PolicyAssignmentsEmptyStateDescription),
+      };
     case ApplicationRoute.Skills:
       return {
         title: t(FileManagerI18nKey.SkillsEmptyStateTitle),
@@ -339,6 +374,28 @@ export const getEmptyStateContent = (
     default:
       return { title: '', description: '' };
   }
+};
+
+/**
+ * Where a duplicate of a platform-bucket row is written. A dual-bucket row pins `platform/`; a nested
+ * platform row (a policy record) stays in the cost-object folder it came from — read off the row before
+ * `getPlatformAssetDuplicate` strips its identity. `undefined` leaves the view's own root as the fallback.
+ */
+export const getFlatDuplicateDestination = (
+  view: ApplicationRoute,
+  asset: PlatformAsset,
+  isPlatformDualBucketDuplicate: boolean,
+): string | undefined => {
+  if (isPlatformDualBucketDuplicate) {
+    return `${PLATFORM_ROOT_FOLDER}/`;
+  }
+  if (!isNestedPlatformView(view)) {
+    return void 0;
+  }
+
+  const row = asset as { folderId?: string; _metadata?: { folderId?: string } };
+  const costObject = getCostObjectFromFolder(row._metadata?.folderId ?? row.folderId);
+  return costObject ? `${PLATFORM_ROOT_FOLDER}/${costObject}/` : `${PLATFORM_ROOT_FOLDER}/`;
 };
 
 export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: PlatformAsset): PlatformAsset => {
@@ -397,6 +454,8 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
   [ApplicationRoute.PlatformRoles]: useRolesFolder,
   [ApplicationRoute.PlatformKeys]: useKeysFolder,
+  [ApplicationRoute.PlatformPolicies]: usePoliciesFolder,
+  [ApplicationRoute.PlatformPolicyAssignments]: usePolicyAssignmentsFolder,
   [ApplicationRoute.Skills]: useSkillFolder,
   [ApplicationRoute.Projects]: useProjectFolder,
 };
@@ -414,6 +473,8 @@ export const GetAssetActionMap = {
   [ApplicationRoute.PlatformRoutes]: getRoute,
   [ApplicationRoute.PlatformRoles]: getRole,
   [ApplicationRoute.PlatformKeys]: getKey,
+  [ApplicationRoute.PlatformPolicies]: getPolicy,
+  [ApplicationRoute.PlatformPolicyAssignments]: getPolicyAssignment,
   [ApplicationRoute.Skills]: getSkill,
   [ApplicationRoute.Projects]: getProject,
 };
@@ -487,6 +548,10 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   [ApplicationRoute.PlatformKeys]: sanitizePlatformCreateAsset(
     createKey as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
+  // Not sanitized: `folderId` carries the cost object the record is stored under, and the action
+  // builds the path from it (see `getPolicyRecordPath`) before dropping it from the body.
+  [ApplicationRoute.PlatformPolicies]: createPolicy as unknown as CreateAssetAction,
+  [ApplicationRoute.PlatformPolicyAssignments]: createPolicyAssignment as unknown as CreateAssetAction,
 };
 
 export const PlatformCreateAssetActionMap: Partial<
@@ -545,8 +610,21 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
   [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,
+  [ApplicationRoute.PlatformPolicies]: bulkDeletePolicies,
+  [ApplicationRoute.PlatformPolicyAssignments]: bulkDeletePolicyAssignments,
   [ApplicationRoute.Skills]: bulkDeleteSkills,
   [ApplicationRoute.Projects]: bulkDeleteProjects,
+};
+
+/**
+ * A nested platform view's folder is a cost object, which Core keeps no marker for: deleting it deletes
+ * the records under it, and it goes with the last one.
+ */
+export const RemoveCostObjectFolderActionMap: Partial<
+  Record<ApplicationRoute, (path: string) => Promise<ServerActionResponse<Record<string, unknown>>>>
+> = {
+  [ApplicationRoute.PlatformPolicies]: removePolicyFolder,
+  [ApplicationRoute.PlatformPolicyAssignments]: removePolicyAssignmentFolder,
 };
 
 export const PlatformBulkDeleteAssetActionMap: Partial<

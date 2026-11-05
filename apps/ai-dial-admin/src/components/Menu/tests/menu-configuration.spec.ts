@@ -11,7 +11,6 @@ const ICON_SIZE = 16;
 
 const baseFlags: FeatureFlags = {
   adminApiEnabled: true,
-  catalogEnabled: true,
   dashboardEnabled: true,
   deploymentsEnabled: true,
   evaluationEnabled: true,
@@ -21,6 +20,7 @@ const baseFlags: FeatureFlags = {
   analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
+  policiesEnabled: false,
   analyticsCustomDashboardsEnabled: false,
 };
 
@@ -261,7 +261,7 @@ describe('MENU_CONFIGURATION — Governance group', () => {
   });
 });
 
-describe('MENU_CONFIGURATION — catalog token', () => {
+describe('MENU_CONFIGURATION — Core-direct items', () => {
   const coreDirectKeys = [
     MenuI18nKey.PlatformModels,
     MenuI18nKey.PlatformTranslators,
@@ -275,24 +275,12 @@ describe('MENU_CONFIGURATION — catalog token', () => {
   const allKeys = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).flatMap((group) => group.items.map((item) => item.key));
 
-  test('keeps every Core-direct item while catalog is enabled', () => {
-    const keys = allKeys({ ...baseFlags, catalogEnabled: true });
+  test('always lists every Core-direct item, in any group', () => {
+    const keys = allKeys(baseFlags);
 
     for (const key of coreDirectKeys) {
       expect(keys).toContain(key);
     }
-  });
-
-  test('drops every Core-direct item, in any group, when catalog is disabled', () => {
-    const keys = allKeys({ ...baseFlags, catalogEnabled: false });
-
-    for (const key of coreDirectKeys) {
-      expect(keys).not.toContain(key);
-    }
-    expect(keys).toContain(MenuI18nKey.Skills);
-    expect(keys).toContain(MenuI18nKey.Projects);
-    expect(keys).toContain(MenuI18nKey.FoldersStorage);
-    expect(keys).toContain(MenuI18nKey.Approvals);
   });
 });
 
@@ -413,5 +401,57 @@ describe('MENU_CONFIGURATION — Dashboards item', () => {
   test('is hidden by the dashboard token in either group', () => {
     expect(dashboardsGroups(analyticsOn, ['dashboard'])).toEqual([]);
     expect(dashboardsGroups(baseFlags, ['dashboard'])).toEqual([]);
+  });
+});
+
+describe('MENU_CONFIGURATION — Policies entries', () => {
+  const findGovernanceKeys = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags)
+      .find((group) => group.key === MenuI18nKey.Governance)
+      ?.items.map((item) => item.key);
+
+  test('places Policies and Policy Assignments between Interceptors and Approvals when the flag is on', () => {
+    const keys = findGovernanceKeys({ ...baseFlags, policiesEnabled: true });
+    const interceptors = keys?.indexOf(MenuI18nKey.PlatformInterceptors) ?? -1;
+
+    expect(keys?.slice(interceptors, interceptors + 4)).toEqual([
+      MenuI18nKey.PlatformInterceptors,
+      MenuI18nKey.PlatformPolicies,
+      MenuI18nKey.PlatformPolicyAssignments,
+      MenuI18nKey.Approvals,
+    ]);
+  });
+
+  test('links the entries to their routes with the Preview badge', () => {
+    const items = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, policiesEnabled: true })
+      .find((group) => group.key === MenuI18nKey.Governance)
+      ?.items.filter((item) =>
+        [MenuI18nKey.PlatformPolicies, MenuI18nKey.PlatformPolicyAssignments].includes(item.key),
+      );
+
+    expect(items).toEqual([
+      { key: MenuI18nKey.PlatformPolicies, href: ApplicationRoute.PlatformPolicies, badge: MenuBadge.Preview },
+      {
+        key: MenuI18nKey.PlatformPolicyAssignments,
+        href: ApplicationRoute.PlatformPolicyAssignments,
+        badge: MenuBadge.Preview,
+      },
+    ]);
+  });
+
+  test('hides both entries when the flag is off and leaves the other Governance items', () => {
+    const keys = findGovernanceKeys({ ...baseFlags, policiesEnabled: false });
+
+    expect(keys).not.toContain(MenuI18nKey.PlatformPolicies);
+    expect(keys).not.toContain(MenuI18nKey.PlatformPolicyAssignments);
+    expect(keys).toEqual(expect.arrayContaining([MenuI18nKey.PlatformRoles, MenuI18nKey.Approvals]));
+  });
+
+  test('does not badge the Governance group itself', () => {
+    const group = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, policiesEnabled: true }).find(
+      (item) => item.key === MenuI18nKey.Governance,
+    );
+
+    expect(group?.badge).toBeUndefined();
   });
 });
