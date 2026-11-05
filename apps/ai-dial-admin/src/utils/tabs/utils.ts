@@ -20,6 +20,7 @@ export enum EntityViewTab {
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
+  Subjects = 'Subjects',
   Applications = 'Applications',
   Models = 'Models',
   Preview = 'Preview',
@@ -223,6 +224,11 @@ export const catalogTab = (t: (key: string) => string) => ({
 export const entitiesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Entities,
   label: t(TabsI18nKey.Entities),
+});
+
+export const subjectsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Subjects,
+  label: t(TabsI18nKey.Subjects),
 });
 
 export const keysTab = (t: (key: string) => string) => ({
@@ -526,6 +532,9 @@ export const getTabsForAsset = (
   }
   if (view === ApplicationRoute.PlatformRoles) {
     return [propertiesTab(t), entitiesTab(t)];
+  }
+  if (view === ApplicationRoute.PlatformPolicies || view === ApplicationRoute.PlatformPolicyAssignments) {
+    return [propertiesTab(t), subjectsTab(t)];
   }
   if (view === ApplicationRoute.Skills) {
     return [propertiesTab(t), skillTab(t)];

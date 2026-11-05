@@ -45,6 +45,12 @@ import {
   TableBackfillStart,
   TableBackfillState,
 } from '@/src/models/analytics/table-backfill';
+import {
+  IngestFailureFilters,
+  IngestFailureList,
+  IngestFailureRetryRequest,
+  IngestFailureRetryResult,
+} from '@/src/models/analytics/ingest-failure';
 import { DownloadedFile } from '@/src/models/download';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
@@ -130,6 +136,26 @@ export const TABLE_ROW_POLICY_URL = (name: string, role: string): string =>
 export const TABLE_BACKFILL_URL = 'v1/data-sync/backfill';
 export const TABLE_BACKFILL_LIST_URL = (state?: TableBackfillState): string =>
   state ? `${TABLE_BACKFILL_URL}?state=${encodeURIComponent(state)}` : TABLE_BACKFILL_URL;
+
+export const INGEST_FAILURES_URL = 'v1/data-sync/failures';
+export const INGEST_FAILURES_RETRY_URL = `${INGEST_FAILURES_URL}/retry`;
+export const INGEST_FAILURES_LIST_URL = ({
+  state,
+  kind,
+  reason,
+  backfill_run_id,
+  limit,
+}: IngestFailureFilters): string => {
+  const query = new URLSearchParams();
+  if (state) query.set('state', state);
+  if (kind) query.set('kind', kind);
+  if (reason) query.set('reason', reason);
+  if (backfill_run_id) query.set('backfill_run_id', backfill_run_id);
+  if (limit != null) query.set('limit', String(limit));
+
+  const text = query.toString();
+  return text ? `${INGEST_FAILURES_URL}?${text}` : INGEST_FAILURES_URL;
+};
 
 export const CATALOG_URL = 'v1/catalog';
 export const CATALOG_EXPORT_URL = `${CATALOG_URL}/export`;
@@ -437,5 +463,24 @@ export class AnalyticsDataApi extends BaseApi {
 
     const runs = (res.response as TableBackfillRunsResponse | undefined)?.runs;
     return Array.isArray(runs) ? { ...res, response: runs } : unreadableBody(res);
+  }
+
+  async listIngestFailures(
+    filters: IngestFailureFilters,
+    token: Token,
+  ): Promise<ServerActionResponse<IngestFailureList>> {
+    const res = await this.getAction(INGEST_FAILURES_LIST_URL(filters), token);
+
+    if (!res.success) return res;
+
+    const list = res.response as IngestFailureList | undefined;
+    return Array.isArray(list?.failures) ? { ...res, response: list } : unreadableBody(res);
+  }
+
+  retryIngestFailures(
+    body: IngestFailureRetryRequest,
+    token: Token,
+  ): Promise<ServerActionResponse<IngestFailureRetryResult>> {
+    return this.postAction<IngestFailureRetryRequest>(INGEST_FAILURES_RETRY_URL, body, token);
   }
 }

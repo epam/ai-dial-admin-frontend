@@ -2,9 +2,8 @@
 
 import { FC } from 'react';
 
-import { ConfirmationPopup, ConfirmationPopupVariant } from '@epam/ai-dial-ui-kit';
-
-import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import RetryConfirmPopup from '@/src/components/Analytics/Common/Failures/RetryConfirmPopup';
+import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -40,27 +39,21 @@ const RequeueFailuresPopup: FC<Props> = ({ count, runId, activeFilters, isPaused
     ? t(AnalyticsPipelinesI18nKey.FailuresRetryRunBody)
     : t(AnalyticsPipelinesI18nKey.FailuresRetryAllBody);
 
+  const caveats = [
+    activeFilters.length > 0
+      ? t(AnalyticsPipelinesI18nKey.FailuresRetryIgnoresFilters, { filters: activeFilters.join(', ') })
+      : null,
+    isPaused ? t(AnalyticsPipelinesI18nKey.FailuresRetryWhilePaused) : null,
+  ].filter(Boolean) as string[];
+
   return (
-    <ConfirmationPopup
-      open
-      variant={ConfirmationPopupVariant.Info}
-      header={title}
-      description={
-        <div className="flex flex-col gap-y-2">
-          <span>{body}</span>
-          {activeFilters.length > 0 && (
-            <span className="text-secondary">
-              {t(AnalyticsPipelinesI18nKey.FailuresRetryIgnoresFilters, { filters: activeFilters.join(', ') })}
-            </span>
-          )}
-          {isPaused && <span className="text-secondary">{t(AnalyticsPipelinesI18nKey.FailuresRetryWhilePaused)}</span>}
-        </div>
-      }
+    <RetryConfirmPopup
+      title={title}
+      body={body}
+      caveats={caveats}
       confirmLabel={t(AnalyticsPipelinesI18nKey.FailuresRetry)}
-      cancelLabel={t(ButtonsI18nKey.Cancel)}
       onConfirm={onConfirm}
       onClose={onClose}
-      onCancel={onClose}
     />
   );
 };

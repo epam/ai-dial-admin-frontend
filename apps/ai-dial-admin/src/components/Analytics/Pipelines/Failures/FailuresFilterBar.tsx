@@ -2,8 +2,9 @@
 
 import { FC } from 'react';
 
-import { ElementSize, Search, Select, Tag } from '@epam/ai-dial-ui-kit';
+import { ElementSize, Search, Select } from '@epam/ai-dial-ui-kit';
 
+import FailuresRunFilter from '@/src/components/Analytics/Common/Failures/FailuresRunFilter';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -45,12 +46,11 @@ const FailuresFilterBar: FC<Props> = ({ filters, search, isDisabled, onLaneChang
   return (
     <div className="flex flex-row flex-wrap items-center gap-3">
       {filters.runId ? (
-        <Tag
+        <FailuresRunFilter
           label={t(AnalyticsPipelinesI18nKey.FailuresRunFilter, { id: filters.runId })}
-          closable
-          disabled={isDisabled}
           removeLabel={t(AnalyticsPipelinesI18nKey.FailuresClearRun)}
-          onRemove={() => onRunChange(undefined)}
+          isDisabled={isDisabled}
+          onClear={() => onRunChange(undefined)}
         />
       ) : (
         <Select

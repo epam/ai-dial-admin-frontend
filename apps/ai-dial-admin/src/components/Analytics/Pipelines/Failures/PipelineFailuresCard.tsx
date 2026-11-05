@@ -2,9 +2,13 @@
 
 import { FC, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
-import { Button, ButtonAppearance, ButtonVariant, ElementSize } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronUp, IconRefresh } from '@tabler/icons-react';
+import { Button, ButtonVariant, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
+import FailuresOutcomeStatus from '@/src/components/Analytics/Common/Failures/FailuresOutcomeStatus';
+import FailuresReadFailed from '@/src/components/Analytics/Common/Failures/FailuresReadFailed';
+import FailuresSummaryHeader from '@/src/components/Analytics/Common/Failures/FailuresSummaryHeader';
+import FailuresTiles from '@/src/components/Analytics/Common/Failures/FailuresTiles';
 import FailuresGrid from '@/src/components/Analytics/Pipelines/Failures/FailuresGrid';
 import RequeueFailuresPopup from '@/src/components/Analytics/Pipelines/Failures/RequeueFailuresPopup';
 import { PipelineFailuresRead } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
@@ -138,20 +142,12 @@ const PipelineFailuresCard: FC<Props> = ({ pipeline, failures, isPaused }) => {
         )}
       </div>
 
-      {/* The read failed. Never the empty state: on a failure listing the two are opposite conclusions
-          and the quiet one is the dangerous one. */}
       {failures.hasFailed && (
-        <div className="flex flex-row flex-wrap items-center gap-3" role="status">
-          <span className="dial-small-text text-error">{t(AnalyticsPipelinesI18nKey.FailuresReadFailed)}</span>
-          <Button
-            variant={ButtonVariant.Neutral}
-            appearance={ButtonAppearance.Outlined}
-            size={ElementSize.Small}
-            label={t(AnalyticsPipelinesI18nKey.FailuresReadAgain)}
-            iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-            onClick={() => void failures.reload()}
-          />
-        </div>
+        <FailuresReadFailed
+          message={t(AnalyticsPipelinesI18nKey.FailuresReadFailed)}
+          retryLabel={t(AnalyticsPipelinesI18nKey.FailuresReadAgain)}
+          onRetry={() => void failures.reload()}
+        />
       )}
 
       {/* Nothing has failed, or a re-run drained what had. */}
@@ -161,59 +157,37 @@ const PipelineFailuresCard: FC<Props> = ({ pipeline, failures, isPaused }) => {
 
       {counts.total > 0 && (
         <>
-          <div className="flex flex-row flex-wrap items-baseline gap-x-2">
-            <span className="dial-display3-text text-error">{counts.total}</span>
-            <span className="dial-small-text text-secondary">
-              {t(AnalyticsPipelinesI18nKey.FailuresUnit, { count: counts.total })}
-            </span>
-            {newestAt && (
-              <span className="dial-small-text text-secondary">
-                {t(AnalyticsPipelinesI18nKey.FailuresLast, { age: formatRelativeTime(newestAt, now) })}
-              </span>
-            )}
-          </div>
+          <FailuresSummaryHeader
+            total={counts.total}
+            unitLabel={t(AnalyticsPipelinesI18nKey.FailuresUnit, { count: counts.total })}
+            lastFailureLabel={
+              newestAt
+                ? t(AnalyticsPipelinesI18nKey.FailuresLast, { age: formatRelativeTime(newestAt, now) })
+                : undefined
+            }
+          />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="flex flex-row flex-wrap items-center justify-between gap-3 rounded border border-secondary p-3">
-              <div className="flex flex-col gap-1">
-                <span className="dial-small-semi-text text-primary">
-                  {t(AnalyticsPipelinesI18nKey.FailuresRetryable, { count: counts.retryable })}
-                </span>
-                <span className="dial-tiny-text text-secondary">
-                  {t(AnalyticsPipelinesI18nKey.FailuresRetryableHint)}
-                </span>
-              </div>
-              {counts.retryable > 0 && (
-                <Button
-                  variant={ButtonVariant.Neutral}
-                  appearance={ButtonAppearance.Outlined}
-                  size={ElementSize.Small}
-                  label={t(AnalyticsPipelinesI18nKey.FailuresRetryAll)}
-                  iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                  disabled={requeue.isBusy}
-                  onClick={onRetryAll}
-                />
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1 rounded border border-secondary p-3">
-              <span className="dial-small-semi-text text-primary">
-                {t(AnalyticsPipelinesI18nKey.FailuresNotRetryable, { count: counts.notRetryable })}
-              </span>
-              <span className="dial-tiny-text text-secondary">
-                {t(AnalyticsPipelinesI18nKey.FailuresNotRetryableHint)}
-              </span>
-            </div>
-          </div>
+          <FailuresTiles
+            action={{
+              label: t(AnalyticsPipelinesI18nKey.FailuresRetryable, { count: counts.retryable }),
+              hint: t(AnalyticsPipelinesI18nKey.FailuresRetryableHint),
+              retryAllLabel: t(AnalyticsPipelinesI18nKey.FailuresRetryAll),
+              canRetryAll: counts.retryable > 0,
+              isBusy: requeue.isBusy,
+              onRetryAll,
+            }}
+            passive={{
+              label: t(AnalyticsPipelinesI18nKey.FailuresNotRetryable, { count: counts.notRetryable }),
+              hint: t(AnalyticsPipelinesI18nKey.FailuresNotRetryableHint),
+            }}
+          />
         </>
       )}
 
       {/* What the last re-run did. On the card rather than only in a toast: the service re-runs fewer
           items than it was asked for whenever it refuses one, and that difference is worth leaving on
           screen. */}
-      <span role="status" aria-live="polite" className={requeue.outcome ? 'dial-small-text text-secondary' : 'sr-only'}>
-        {requeue.outcome}
-      </span>
+      <FailuresOutcomeStatus message={requeue.outcome} />
 
       <div id={gridId}>
         {isExpanded && (
