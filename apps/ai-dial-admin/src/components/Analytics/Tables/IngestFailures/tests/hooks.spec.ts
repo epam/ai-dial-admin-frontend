@@ -111,6 +111,18 @@ describe('useRetryIngestFailures', () => {
   const renderRetry = (backfillRunId?: string) =>
     renderHook(() => useRetryIngestFailures({ backfillRunId, onRetried }));
 
+  test('sends one request for two retries started in the same render', async () => {
+    vi.mocked(retryIngestFailures).mockResolvedValue({ success: true, response: { requeued: 1, retry_sweep: SWEEP } });
+    const { result } = renderRetry();
+    const target = { kind: IngestFailureKind.Blob, subject: 'logs/a.gz' };
+
+    await act(async () => {
+      await Promise.all([result.current.retryTargets([target]), result.current.retryTargets([target])]);
+    });
+
+    expect(retryIngestFailures).toHaveBeenCalledOnce();
+  });
+
   test('sends targets that mix kinds on one key and states the next pass', async () => {
     vi.mocked(retryIngestFailures).mockResolvedValue({ success: true, response: { requeued: 2, retry_sweep: SWEEP } });
     const { result } = renderRetry();
