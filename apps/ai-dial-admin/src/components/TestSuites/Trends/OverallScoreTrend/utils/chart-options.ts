@@ -366,7 +366,7 @@ export const buildOverallScoreChartOptions = (
           <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;min-width:140px;line-height:16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap;">
               <a href="${href}" target="_blank" rel="noopener noreferrer"
-                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_ACCENT};font-weight:600;text-decoration:none;cursor:pointer;">
+                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_ACCENT};font-weight:600;text-decoration:underline;cursor:pointer;">
                 <span>${point.runName}</span>
                 ${TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG}
               </a>

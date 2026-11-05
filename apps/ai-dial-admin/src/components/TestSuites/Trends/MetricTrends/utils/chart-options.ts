@@ -3,18 +3,14 @@ import { EChartsOption } from 'echarts-for-react';
 import { METRIC_TREND_TOOLTIP_CLASS, TREND_METRIC_SYMBOL_SIZE } from '@/src/components/TestSuites/Trends/constants';
 import { MetricTrendSeries, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import {
-  TREND_TOOLTIP_BACKGROUND,
-  TREND_TOOLTIP_BORDER_COLOR,
-  TREND_TOOLTIP_BORDER_RADIUS,
-  TREND_TOOLTIP_BORDER_WIDTH,
   TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG,
-  TREND_TOOLTIP_PADDING,
   TREND_TOOLTIP_TEXT_ACCENT,
   TREND_TOOLTIP_TEXT_PRIMARY,
   TREND_TOOLTIP_TEXT_SECONDARY,
 } from '@/src/components/TestSuites/Trends/utils/chart-tooltip-styles';
 import { formatMetricTrendTooltipDate, formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TREND_SCORE_CHART_GRID } from '@/src/components/TestSuites/Trends/utils/score-axis';
+import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 import { ThemePalette } from '@/src/models/theme';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -105,12 +101,7 @@ export const buildMetricTrendChartOptions = (
       className: METRIC_TREND_TOOLTIP_CLASS,
       appendTo: typeof document !== 'undefined' ? document.body : undefined,
       confine: false,
-      backgroundColor: TREND_TOOLTIP_BACKGROUND,
-      borderColor: TREND_TOOLTIP_BORDER_COLOR,
-      borderWidth: TREND_TOOLTIP_BORDER_WIDTH,
-      borderRadius: TREND_TOOLTIP_BORDER_RADIUS,
-      padding: TREND_TOOLTIP_PADDING,
-      textStyle: { color: TREND_TOOLTIP_TEXT_PRIMARY, fontSize: 12 },
+      ...CHART_TOOLTIP_STYLE,
       axisPointer: {
         type: 'line',
         lineStyle: { color: axisColor, width: 1 },
@@ -154,7 +145,7 @@ export const buildMetricTrendChartOptions = (
           <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;min-width:140px;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;line-height:16px;color:${TREND_TOOLTIP_TEXT_PRIMARY};white-space:nowrap;">
               <a href="${href}" target="_blank" rel="noopener noreferrer"
-                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_ACCENT};font-weight:600;text-decoration:none;cursor:pointer;">
+                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_ACCENT};font-weight:600;text-decoration:underline;cursor:pointer;">
                 <span>${point.runName}</span>
                 ${TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG}
               </a>

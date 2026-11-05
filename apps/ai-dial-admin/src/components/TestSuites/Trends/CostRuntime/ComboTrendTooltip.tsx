@@ -6,7 +6,6 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import { ComboTrendPoint } from '@/src/components/TestSuites/Trends/models';
 import { comboTrendTotal } from '@/src/components/TestSuites/Trends/CostRuntime/utils/fold-combo-points';
-import { TREND_TOOLTIP_TEXT_ACCENT } from '@/src/components/TestSuites/Trends/utils/chart-tooltip-styles';
 import { formatMetricTrendTooltipDate } from '@/src/components/TestSuites/Trends/utils/format';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -62,8 +61,7 @@ const ComboTrendTooltip: FC<Props> = ({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="dial-tiny-semi-text flex items-center gap-1 no-underline"
-          style={{ color: TREND_TOOLTIP_TEXT_ACCENT }}
+          className="dial-tiny-semi-text flex items-center gap-1 text-control-inverted underline"
           onClick={(event) => event.stopPropagation()}
         >
           <span className="whitespace-nowrap">{point.runName}</span>
