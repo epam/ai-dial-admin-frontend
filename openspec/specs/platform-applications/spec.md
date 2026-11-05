@@ -372,3 +372,15 @@ SHALL be labelled to cover tools, functions and skills. The value SHALL be store
 #### Scenario: Toggling persists the flag
 - **WHEN** a user turns `skills_supported` on and saves
 - **THEN** the payload carries `features.skills_supported: true`
+
+### Requirement: Application pickers for a caller without admin access
+When the caller's `adminAccess` is not `FULL`, the Assets Applications editor, list and publication detail SHALL NOT read the config-file endpoints, platform App Runners or translators, roles, interceptors or the global interceptor chain. Runner options SHALL come from `GET /v1/application_type_schemas/schemas`, and model and application options from `GET /openai/models` and `GET /openai/applications`. A runner's routes, interceptors and features SHALL be resolved through `GET /v1/application_type_schemas/schema?id=`. The Interceptors and user-roles controls SHALL be read-only. A failed list read SHALL leave that picker empty and show the option-list-unavailable warning. A full admin SHALL keep today's sources.
+
+#### Scenario: Non-admin opens an application
+- **WHEN** a caller without full admin access opens an application
+- **THEN** no config-file, platform runner, translator, roles or interceptor read is made
+- **AND** the model, application and runner pickers list the caller's own deployments and schemas
+
+#### Scenario: Non-admin selects a runner
+- **WHEN** a caller without full admin access selects a runner
+- **THEN** its routes, interceptors and features come from the resolved schema read, not the config-file read

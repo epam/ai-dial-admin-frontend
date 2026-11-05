@@ -29,6 +29,7 @@ import { DialPlatformApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -100,14 +101,12 @@ const PlatformApplicationView: FC<Props> = ({
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { visualizerConnector, setEntityReadOnly } = useAppContext();
+  const { visualizerConnector } = useAppContext();
 
   // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
-  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`. In unit mode the
+  // owning unit's `write` decides too.
+  useEntityReadOnlyAt(ApplicationRoute.AssetsApplications, originalApp.folderId, !!isConfigFileSource);
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);

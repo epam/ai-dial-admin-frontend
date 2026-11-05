@@ -5,13 +5,11 @@ import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { CoreConfigVersion, CoreVersions } from '@/src/models/core-version';
 import { ExportRequest } from '@/src/models/export';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { UserInfo } from '@/src/models/user-info';
 import { getFileName } from '@/src/utils/api/get-file-name';
 import { API } from './api';
 import { BaseApi } from './base-api';
 
 export const SYSTEM_PROPERTIES_URL = `${API}/global-settings`;
-export const SECURITY_INFO_URL = `${API}/security-info`;
 
 export const ADMIN_SETTINGS_URL = `${API}/admin-settings`;
 export const VERSION_URL = `${API}/version`;
@@ -61,8 +59,5 @@ export class UtilityApi extends BaseApi {
   }
   getEntitySyncStatus(url: string, token: Token, etag: string): Promise<ServerActionResponse<CoreSyncStatus>> {
     return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
-  }
-  getUserInfo(token: Token): Promise<ServerActionResponse<{ userInfo: UserInfo }>> {
-    return this.getAction(SECURITY_INFO_URL, token);
   }
 }

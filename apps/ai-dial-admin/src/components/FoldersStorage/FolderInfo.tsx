@@ -8,6 +8,7 @@ import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
 import RulesList from '@/src/components/Rules/RulesList';
 import UnitInfo from '@/src/components/FoldersStorage/UnitInfo';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -26,6 +27,7 @@ interface Props {
 
 const FolderInfo: FC<Props> = ({ isReadonly }) => {
   const t = useI18n();
+  const { isUnitMode } = useAppContext();
   const { currentFolder, fetchedFoldersRule, filePath, fetchRules, isLoading, files, toggleFolder } = useRuleFolder();
   const { units, unitsStatus, getOwningUnit, refreshUnits } = useOrgUnits();
   const [originalRules, setOriginalRules] = useState(fetchedFoldersRule?.[filePath]);
@@ -155,7 +157,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
         onDiscard={onDiscard}
         isSaveDisable={isSaveDisable}
       />
-      <RulesList rulesMap={editableRules} onChange={onChangeRules} isReadonly={isReadonly} />
+      <RulesList rulesMap={editableRules} onChange={onChangeRules} isReadonly={isReadonly || isUnitMode} />
     </div>
   );
 };

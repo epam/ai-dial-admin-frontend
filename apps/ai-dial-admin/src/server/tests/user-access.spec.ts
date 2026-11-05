@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getUserInfo } from '@/src/app/api/api';
-import { UserRole } from '@/src/models/user-info';
-import { isFullAdminCaller } from '@/src/server/user-access';
+import { coreUtilityApi } from '@/src/app/api/api';
+import { AccessMode, AdminAccess } from '@/src/models/user-access';
+import { getUserAccess, isFullAdminCaller } from '@/src/server/user-access';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -12,46 +12,77 @@ vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
 
-const withRoles = (roles: UserRole[]) =>
+const answer = (adminAccess: AdminAccess) =>
   vi
-    .mocked(getUserInfo)
-    .mockResolvedValue({ success: true, response: { userInfo: { id: 'u1', email: 'admin@example.com', roles } } });
+    .mocked(coreUtilityApi.getUserRoleAssignments)
+    .mockResolvedValue({ success: true, response: { adminAccess, items: [] } });
 
-describe('isFullAdminCaller', () => {
+describe('getUserAccess', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin');
     vi.mocked(getIsEnableAuthToggle).mockReturnValue(true);
     vi.mocked(getUserToken).mockResolvedValue(TOKEN_MOCK);
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
+  test('asks Core with the caller token', async () => {
+    answer(AdminAccess.FULL);
+
+    const access = await getUserAccess();
+
+    expect(coreUtilityApi.getUserRoleAssignments).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(access.mode).toBe(AccessMode.FULL);
   });
 
-  test('reads the roles and admits a FULL_ADMIN', async () => {
-    withRoles([UserRole.FULL_ADMIN]);
+  test('resolves to full without asking Core when auth is off', async () => {
+    vi.mocked(getIsEnableAuthToggle).mockReturnValue(false);
+
+    const access = await getUserAccess();
+
+    expect(access.mode).toBe(AccessMode.FULL);
+    expect(coreUtilityApi.getUserRoleAssignments).not.toHaveBeenCalled();
+  });
+
+  test('resolves to full when Core answers 404 (org units off)', async () => {
+    vi.mocked(coreUtilityApi.getUserRoleAssignments).mockResolvedValue({ success: false, status: 404 });
+
+    expect((await getUserAccess()).mode).toBe(AccessMode.FULL);
+  });
+
+  test('resolves to denied when the read throws', async () => {
+    vi.mocked(coreUtilityApi.getUserRoleAssignments).mockRejectedValue(new Error('down'));
+
+    expect(await getUserAccess()).toEqual({ mode: AccessMode.DENIED, adminAccess: AdminAccess.NONE, units: [] });
+  });
+});
+
+describe('isFullAdminCaller', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getIsEnableAuthToggle).mockReturnValue(true);
+    vi.mocked(getUserToken).mockResolvedValue(TOKEN_MOCK);
+  });
+
+  test('admits adminAccess FULL', async () => {
+    answer(AdminAccess.FULL);
 
     expect(await isFullAdminCaller()).toBe(true);
-    expect(getUserInfo).toHaveBeenCalledWith(TOKEN_MOCK);
   });
 
-  test('refuses a READ_ONLY_ADMIN', async () => {
-    withRoles([UserRole.READ_ONLY_ADMIN]);
+  test('refuses adminAccess NONE', async () => {
+    answer(AdminAccess.NONE);
 
     expect(await isFullAdminCaller()).toBe(false);
   });
 
-  test('admits everyone without reading roles when auth is off', async () => {
+  test('refuses when the read throws', async () => {
+    vi.mocked(coreUtilityApi.getUserRoleAssignments).mockRejectedValue(new Error('down'));
+
+    expect(await isFullAdminCaller()).toBe(false);
+  });
+
+  test('admits everyone when auth is off', async () => {
     vi.mocked(getIsEnableAuthToggle).mockReturnValue(false);
 
     expect(await isFullAdminCaller()).toBe(true);
-    expect(getUserInfo).not.toHaveBeenCalled();
-  });
-
-  test('refuses when the identity read throws', async () => {
-    vi.mocked(getUserInfo).mockRejectedValue(new Error('down'));
-
-    expect(await isFullAdminCaller()).toBe(false);
   });
 });

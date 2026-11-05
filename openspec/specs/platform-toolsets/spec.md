@@ -378,3 +378,9 @@ missing-`CLIENT_SECRET` error. A toolset whose `authentication_type` is `API_KEY
   `NONE`, `DIAL_NATIVE`, or a value the frontend does not recognise
 - **THEN** `auth_settings` is carried over to the duplicate unchanged
 
+### Requirement: Toolset roles picker for a caller without admin access
+When the caller's `adminAccess` is not `FULL`, the Assets Toolsets editor SHALL NOT read the config-file or platform roles lists, and the user-roles control SHALL be read-only. A full admin SHALL keep today's roles source.
+
+#### Scenario: Non-admin opens a toolset
+- **WHEN** a caller without full admin access opens a toolset
+- **THEN** no roles read is made and the user-roles control cannot be edited

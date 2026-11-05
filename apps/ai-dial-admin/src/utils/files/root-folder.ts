@@ -76,10 +76,15 @@ export const isFileSource = (entitySource?: string, path?: string | null): boole
 
 /**
  * Ordered FileManager roots. `file` is synthetic and must never be sent to Core's resource metadata
- * endpoint. It remains visible when Catalog disables the physical platform bucket.
+ * endpoint. It remains visible when Catalog disables the physical platform bucket, and goes only when
+ * the caller cannot read Core's config-file endpoints (`isFileRootEnabled` off).
  */
-export const getRootDescriptors = (view: ApplicationRoute, isPlatformBucketEnabled = true): RootDescriptor[] => {
-  const hasFileRoot = getConfigFileEntityType(view) != null;
+export const getRootDescriptors = (
+  view: ApplicationRoute,
+  isPlatformBucketEnabled = true,
+  isFileRootEnabled = true,
+): RootDescriptor[] => {
+  const hasFileRoot = isFileRootEnabled && getConfigFileEntityType(view) != null;
 
   if (DUAL_BUCKET_VIEWS.includes(view)) {
     const roots = isPlatformBucketEnabled
@@ -92,8 +97,11 @@ export const getRootDescriptors = (view: ApplicationRoute, isPlatformBucketEnabl
   return hasFileRoot ? [fileRoot(), ...roots] : roots;
 };
 
-export const getRootFolders = (view: ApplicationRoute, isPlatformBucketEnabled = true): string[] =>
-  getRootDescriptors(view, isPlatformBucketEnabled).map((root) => root.name);
+export const getRootFolders = (
+  view: ApplicationRoute,
+  isPlatformBucketEnabled = true,
+  isFileRootEnabled = true,
+): string[] => getRootDescriptors(view, isPlatformBucketEnabled, isFileRootEnabled).map((root) => root.name);
 
 /** The bucket segment a path/folderId begins with, for views whose resources can live in either. */
 export const isPlatformBucketPath = (path?: string | null): boolean =>
