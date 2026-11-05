@@ -23,21 +23,33 @@ const CONFIG: MenuGroupConfiguration[] = [
   },
 ];
 
-const readOnly =
+const FOLDERS_CONFIG: MenuGroupConfiguration[] = [
+  {
+    key: MenuI18nKey.Governance,
+    descriptionKey: MenuI18nKey.GovernanceDescription,
+    items: [{ key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage }],
+  },
+];
+
+const allowed =
   (...namespaces: UnitNamespace[]) =>
   (namespace: UnitNamespace) =>
     namespaces.includes(namespace);
 
 describe('filterMenuForUnitMode', () => {
   test('keeps only items whose namespace can be read', () => {
-    const result = filterMenuForUnitMode(CONFIG, readOnly(UnitNamespace.PROMPTS));
+    const result = filterMenuForUnitMode(CONFIG, allowed(UnitNamespace.PROMPTS), allowed());
 
     expect(result).toHaveLength(1);
     expect(result[0].items.map((item) => item.href)).toEqual([ApplicationRoute.Prompts]);
   });
 
   test('drops items with no namespace, such as platform pages and Projects', () => {
-    const result = filterMenuForUnitMode(CONFIG, () => true);
+    const result = filterMenuForUnitMode(
+      CONFIG,
+      () => true,
+      () => true,
+    );
 
     expect(result.flatMap((group) => group.items.map((item) => item.href))).toEqual([
       ApplicationRoute.Prompts,
@@ -46,6 +58,22 @@ describe('filterMenuForUnitMode', () => {
   });
 
   test('drops a group left with no items', () => {
-    expect(filterMenuForUnitMode(CONFIG, () => false)).toEqual([]);
+    expect(
+      filterMenuForUnitMode(
+        CONFIG,
+        () => false,
+        () => false,
+      ),
+    ).toEqual([]);
+  });
+
+  test('hides Folders when org units are only readable', () => {
+    expect(filterMenuForUnitMode(FOLDERS_CONFIG, allowed(UnitNamespace.ORG_UNITS), allowed())).toEqual([]);
+  });
+
+  test('shows Folders when org units are writable', () => {
+    const result = filterMenuForUnitMode(FOLDERS_CONFIG, allowed(), allowed(UnitNamespace.ORG_UNITS));
+
+    expect(result[0].items.map((item) => item.href)).toEqual([ApplicationRoute.FoldersStorage]);
   });
 });

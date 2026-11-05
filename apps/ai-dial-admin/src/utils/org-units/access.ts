@@ -8,6 +8,10 @@ const grants = (unit: UserOrgUnit | undefined, namespace: UnitNamespace, action:
 export const canReadNamespace = (units: UserOrgUnit[], namespace: UnitNamespace): boolean =>
   units.some((unit) => grants(unit, namespace, UnitAction.READ));
 
+/** Whether any unit grants `write` on the namespace. */
+export const canWriteNamespace = (units: UserOrgUnit[], namespace: UnitNamespace): boolean =>
+  units.some((unit) => grants(unit, namespace, UnitAction.WRITE));
+
 /** Whether the unit owning `path` grants `action`; a path no unit owns grants nothing. */
 export const hasActionAt = (
   units: UserOrgUnit[],

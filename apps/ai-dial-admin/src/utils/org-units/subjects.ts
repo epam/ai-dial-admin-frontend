@@ -64,6 +64,13 @@ export const isValidHolderValue = (value: string): boolean => {
   return trimmed.length > 0 && trimmed.length <= MAX_HOLDER_LENGTH && !CONTROL_CHARS.test(trimmed);
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const isValidEmail = (value: string): boolean => {
+  const trimmed = value.trim();
+  return trimmed.length <= MAX_HOLDER_LENGTH && EMAIL_PATTERN.test(trimmed) && !CONTROL_CHARS.test(trimmed);
+};
+
 export const isValidDisplayName = (value: string): boolean =>
   value.length <= MAX_DISPLAY_NAME_LENGTH && !CONTROL_CHARS.test(value);
 

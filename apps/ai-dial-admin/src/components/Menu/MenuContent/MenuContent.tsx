@@ -7,17 +7,17 @@ import { FC } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { MAIN_MENU_ID } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIsConfigTransferEnabled } from '@/src/utils/env/get-config-transfer-toggle';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
+import { filterMenuForUnitMode } from '@/src/utils/org-units/menu';
 import { MENU_CONFIGURATION } from '../menu-configuration';
 import MenuIconGradient from '../MenuIconGradient';
 import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
-import { useAppContext } from '@/src/context/AppContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { filterMenuForUnitMode } from '@/src/utils/org-units/menu';
 
 interface Props {
   disableMenuItems: string[];
@@ -25,7 +25,7 @@ interface Props {
 }
 const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
-  const { featureFlags, isUnitMode, canReadNamespace } = useAppContext();
+  const { featureFlags, isUnitMode, canReadNamespace, canWriteNamespace } = useAppContext();
   const isConfigTransferEnabled = getIsConfigTransferEnabled(featureFlags);
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -36,7 +36,9 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const splittedPathname = usePathname().split('/');
   const pathname = `/${splittedPathname[2]}`;
   const enabledConfig = getActualMenuItems(MENU_CONFIGURATION(16, featureFlags), disableMenuItems);
-  const actualConfig = isUnitMode ? filterMenuForUnitMode(enabledConfig, canReadNamespace) : enabledConfig;
+  const actualConfig = isUnitMode
+    ? filterMenuForUnitMode(enabledConfig, canReadNamespace, canWriteNamespace)
+    : enabledConfig;
 
   // Config transfer and system properties are admin pages, which a unit user cannot open.
   const showImportExport = isConfigTransferEnabled && !isUnitMode && (isSidebarOpen || !isReadOnlyAdmin);

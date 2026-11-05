@@ -1,16 +1,20 @@
 'use client';
-import { createContext, useContext, useEffect, useState, ReactNode, MouseEvent, SetStateAction, Dispatch } from 'react';
+import { createContext, Dispatch, MouseEvent, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
 
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
-import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
-import { UserInfo } from '@/src/models/user-info';
-import { AccessMode, AdminAccess, UnitNamespace, UserAccess } from '@/src/models/user-access';
 import { FeatureFlags } from '@/src/models/feature-flags';
-import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
-import { canReadNamespace as canReadNamespaceIn, canWriteAt as canWriteAtIn } from '@/src/utils/org-units/access';
+import { AccessMode, AdminAccess, UnitNamespace, UserAccess } from '@/src/models/user-access';
+import { UserInfo } from '@/src/models/user-info';
+import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
+import {
+  canReadNamespace as canReadNamespaceIn,
+  canWriteAt as canWriteAtIn,
+  canWriteNamespace as canWriteNamespaceIn,
+} from '@/src/utils/org-units/access';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -41,6 +45,8 @@ export interface AppContextType {
   isUnitMode: boolean;
   /** Whether any unit grants `read` on the namespace; always true for an admin. */
   canReadNamespace: (namespace: UnitNamespace) => boolean;
+  /** Whether any unit grants `write` on the namespace; an admin follows `isFullAdmin`. */
+  canWriteNamespace: (namespace: UnitNamespace) => boolean;
   /** Whether the unit owning `path` grants `write` on the namespace; an admin follows `isFullAdmin`. */
   canWriteAt: (namespace: UnitNamespace, path: string) => boolean;
   /** Whether authentication is enabled (NEXTAUTH_URL set). Needed to tell "auth off" from "no role". */
@@ -138,6 +144,8 @@ export const AppContextProvider = ({
   const isUnitMode = userAccess.mode === AccessMode.UNIT;
 
   const canReadNamespace = (namespace: UnitNamespace) => !isUnitMode || canReadNamespaceIn(userAccess.units, namespace);
+  const canWriteNamespace = (namespace: UnitNamespace) =>
+    isUnitMode ? canWriteNamespaceIn(userAccess.units, namespace) : isFullAdmin;
   const canWriteAt = (namespace: UnitNamespace, path: string) =>
     isUnitMode ? canWriteAtIn(userAccess.units, namespace, path) : isFullAdmin;
 
@@ -168,6 +176,7 @@ export const AppContextProvider = ({
     isFullAdmin,
     isUnitMode,
     canReadNamespace,
+    canWriteNamespace,
     canWriteAt,
     isEnableAuth,
     setEntityReadOnly,
