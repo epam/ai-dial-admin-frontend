@@ -74,7 +74,7 @@ const LatestRunCard: FC<Props> = ({ segments, threshold, isLoading, hasError, cl
       <div className="flex w-full items-center justify-between gap-2 overflow-hidden">
         <h3 className="dial-body-semi-text shrink-0 text-primary">{title}</h3>
         {runName ? (
-          <EllipsisTooltip text={runName} className="min-w-0 max-w-[50%] dial-tiny-text text-secondary" />
+          <EllipsisTooltip text={runName} className="min-w-0 max-w-[50%] dial-tiny-text text-secondary text-right" />
         ) : null}
       </div>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-between gap-4">
