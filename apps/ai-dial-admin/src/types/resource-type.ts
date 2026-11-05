@@ -18,4 +18,6 @@ export enum ResourceType {
   ROLE = 'ROLE',
   ROUTE = 'ROUTE',
   PROJECT_KEY = 'PROJECT_KEY',
+  POLICY = 'POLICY',
+  POLICY_ASSIGNMENT = 'POLICY_ASSIGNMENT',
 }

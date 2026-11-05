@@ -101,6 +101,16 @@ vi.mock('@/src/context/assets/RoutesFolderContext', () => ({
   RoutesFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/PoliciesFolderContext', () => ({
+  usePoliciesFolder: () => ({ fetchFiles: vi.fn() }),
+  PoliciesFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/PolicyAssignmentsFolderContext', () => ({
+  usePolicyAssignmentsFolder: () => ({ fetchFiles: vi.fn() }),
+  PolicyAssignmentsFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/assets/RolesFolderContext', () => ({
   useRolesFolder: () => ({ fetchFiles: vi.fn() }),
   RolesFolderProvider: ({ children }: any) => <div>{children}</div>,
@@ -164,7 +174,7 @@ const appContextValue = {
     closeSidebar: vi.fn(),
     position: SidebarPosition.Right,
   },
-  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true, catalogEnabled: true },
+  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
   userAccess: { mode: AccessMode.FULL, adminAccess: AdminAccess.FULL, units: [] },
   isReadOnlyAdmin: false,
   isFullAdmin: true,

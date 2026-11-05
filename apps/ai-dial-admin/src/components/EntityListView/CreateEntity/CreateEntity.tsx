@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
+import { NEW_POLICY_DEFAULTS } from '@/src/components/Assets/Platform/Policies/constants';
 import { ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -30,7 +31,12 @@ import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
-import { DUAL_BUCKET_VIEWS, isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import {
+  DUAL_BUCKET_VIEWS,
+  getRootFolder,
+  isNestedPlatformView,
+  isPlatformBucketPath,
+} from '@/src/utils/files/root-folder';
 import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreateEntityBase extends BaseEntity {
@@ -108,6 +114,15 @@ const CreateEntity = <T extends CreateEntityBase>({
       return { name: '', description: '', userRoles: [], ...initialValues } as T;
     }
 
+    // The cost object is the folder: start in the one the list is showing, which the modal's field can change.
+    if (route === ApplicationRoute.PlatformPolicies) {
+      return { name: '', ...NEW_POLICY_DEFAULTS, folderId: folderContext?.filePath, ...initialValues } as unknown as T;
+    }
+
+    if (route === ApplicationRoute.PlatformPolicyAssignments) {
+      return { name: '', folderId: folderContext?.filePath, ...initialValues } as T;
+    }
+
     if (
       isPlatformDualBucketCreate &&
       (route === ApplicationRoute.AssetsApplications || route === ApplicationRoute.AssetsToolsets)
@@ -160,7 +175,8 @@ const CreateEntity = <T extends CreateEntityBase>({
         }
       }
 
-      if (isAssetView(route)) {
+      // A nested platform view's modal asks for the cost object, so the folder it chose is kept.
+      if (isAssetView(route) && !isNestedPlatformView(route)) {
         entity.folderId = folderContext?.filePath;
       }
       // An app runner is identified by `$id`, not `name`, so both the toast and the navigation target
@@ -171,6 +187,11 @@ const CreateEntity = <T extends CreateEntityBase>({
         if (res.success) {
           if (isAssetView(route)) {
             folderContext?.fetchFiles(folderContext?.filePath);
+          }
+          if (isNestedPlatformView(route)) {
+            // The record may sit in a cost object the list is not showing, which also adds that folder to the root.
+            folderContext?.fetchFiles(entity.folderId || `${getRootFolder(route)}/`);
+            folderContext?.fetchFiles(`${getRootFolder(route)}/`);
           }
           showNotification(
             getSuccessNotification(

@@ -13,6 +13,8 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformTranslators ||
     view === ApplicationRoute.PlatformKeys ||
+    view === ApplicationRoute.PlatformPolicies ||
+    view === ApplicationRoute.PlatformPolicyAssignments ||
     view === ApplicationRoute.Skills ||
     view === ApplicationRoute.Projects ||
     isDeploymentAsset(view)
@@ -118,6 +120,8 @@ const CATALOG_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformRoles,
   ApplicationRoute.PlatformKeys,
+  ApplicationRoute.PlatformPolicies,
+  ApplicationRoute.PlatformPolicyAssignments,
 ];
 
 export const isCatalogView = (view?: ApplicationRoute): boolean => !!view && CATALOG_VIEWS.includes(view);

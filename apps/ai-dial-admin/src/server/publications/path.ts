@@ -107,6 +107,23 @@ export const parseEncodedFolderPath = (path: string, prefix: string): PathParts 
   return parsePath(decodeCorePath(stripPrefix(path, prefix)));
 };
 
+/**
+ * Like `parsePath`, but a path with no `/` is a valid root entry (`folderId` is `''`) instead of an error.
+ * For the policy records, whose one folder level — the cost object — is absent on a global policy.
+ */
+export const parseOptionalFolderPath = (path: string): PathParts => {
+  const trimmed = stripTrailingSlash(path);
+  const lastSlashIndex = trimmed.lastIndexOf('/');
+  return {
+    path: trimmed,
+    folderId: trimmed.slice(0, lastSlashIndex + 1),
+    name: trimmed.slice(lastSlashIndex + 1),
+  };
+};
+
+export const parseEncodedOptionalFolderPath = (path: string, prefix: string): PathParts =>
+  parseOptionalFolderPath(decodeCorePath(stripPrefix(path, prefix)));
+
 export const getVersionedName = (name: string, version?: string): string => {
   if (name == null) {
     throw new Error('Name must not be null');

@@ -29,16 +29,10 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
   };
 });
 
-const { mockFeatureFlags } = vi.hoisted(() => ({
-  mockFeatureFlags: {
-    catalogEnabled: true,
-  },
-}));
-
 const { unitContext } = vi.hoisted(() => ({ unitContext: { isUnitMode: false, canWriteAt: vi.fn(() => true) } }));
 
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: mockFeatureFlags, isReadOnlyAdmin: false, ...unitContext }),
+  useAppContext: () => ({ isReadOnlyAdmin: false, ...unitContext }),
 }));
 
 const renderFileManager = (
@@ -61,22 +55,11 @@ describe('FileManager', () => {
     dialFileManagerPropsSpy.mockClear();
   });
 
-  test('fetches file, platform, and public roots on mount for a dual-bucket view when Catalog is enabled', () => {
-    mockFeatureFlags.catalogEnabled = true;
-
+  test('fetches file, platform, and public roots on mount for a dual-bucket view', () => {
     const fetchFiles = renderFileManager();
 
     expect(fetchFiles).toHaveBeenCalledOnce();
     expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
-  });
-
-  test('fetches file and public roots for a dual-bucket view when Catalog is disabled', () => {
-    mockFeatureFlags.catalogEnabled = false;
-
-    const fetchFiles = renderFileManager();
-
-    expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'public/']);
   });
 
   // Regression (4.4): conversation rows and the flat platform views have no folder concept, so
@@ -95,6 +78,26 @@ describe('FileManager', () => {
 
     const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onMoveToFiles).toBeUndefined();
+  });
+
+  // A cost object folder exists in Core only while it holds a record, so a policy record view has no folder
+  // marker to create, rename or move to.
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    'withholds onMoveToFiles and onCreateFolder for the nested platform view %s',
+    (view) => {
+      renderFileManager(view);
+
+      const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+      expect(props.onMoveToFiles).toBeUndefined();
+      expect(props.onCreateFolder).toBeUndefined();
+    },
+  );
+
+  test('still offers onCreateFolder for a foldered view', () => {
+    renderFileManager(ApplicationRoute.AssetsApplications);
+
+    const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props.onCreateFolder).toBeInstanceOf(Function);
   });
 
   test('wires onMoveToFiles for a foldered view', () => {
@@ -500,7 +503,6 @@ describe('FileManager — org units', () => {
 describe('FileManager — unit mode', () => {
   beforeEach(() => {
     dialFileManagerPropsSpy.mockClear();
-    mockFeatureFlags.catalogEnabled = true;
     unitContext.isUnitMode = true;
     unitContext.canWriteAt.mockReturnValue(true);
   });

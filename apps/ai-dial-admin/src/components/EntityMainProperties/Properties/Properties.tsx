@@ -7,11 +7,18 @@ import { isAssetView } from '@/src/utils/is-view';
 import AppRunnerCreateProperties from '@/src/components/Assets/Platform/AppRunners/CreateProperties';
 import CatalogSchemaCreateProperties from '@/src/components/Assets/Platform/CatalogSchemas/CreateProperties';
 import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
+import PolicyCreateProperties from '@/src/components/Assets/Platform/Policies/CreateProperties';
+import PolicyAssignmentCreateProperties from '@/src/components/Assets/Platform/PolicyAssignments/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
 import ProjectCreateProperties from '@/src/components/Assets/Artifacts/Projects/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Artifacts/Skills/CreateProperties';
-import { DialAppRunnerResource, DialCatalogSchemaResource } from '@/src/models/dial/resource';
+import {
+  DialAppRunnerResource,
+  DialCatalogSchemaResource,
+  DialPolicyAssignmentResource,
+  DialPolicyResource,
+} from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -98,6 +105,29 @@ const Properties = <T extends object>({
     return (
       <RouteCreateProperties
         entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Policy records carry no display name or description either, and a create also needs the budget fields.
+  if (view === ApplicationRoute.PlatformPolicies) {
+    return (
+      <PolicyCreateProperties
+        entity={entity as DialPolicyResource}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  if (view === ApplicationRoute.PlatformPolicyAssignments) {
+    return (
+      <PolicyAssignmentCreateProperties
+        entity={entity as DialPolicyAssignmentResource}
         names={props.names}
         isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}

@@ -90,6 +90,8 @@ Platform Roles, Keys and Interceptors are Core-direct and hidden by the `catalog
 | `Governance/Keys` | `platform-keys` | `Assets/Platform/Keys` |
 | `Governance/FoldersStorage` | `folders-storage` | `FoldersStorage` |
 | `Governance/Interceptors` | `platform-interceptors` | `Assets/Platform/Interceptors` |
+| `Governance/Policies` | `platform-policies` | `Assets/Platform/Policies` |
+| `Governance/PolicyAssignments` | `platform-policy-assignments` | `Assets/Platform/PolicyAssignments` |
 | `Governance/Approvals` | `publications` (detail tabs: `application-publications`, `toolset-publications`, `prompt-publications`, `file-publications`, `conversation-publications`, `skill-publications`) | `Publications` |
 
 ### `Audit` (deprecated group)

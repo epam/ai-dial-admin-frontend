@@ -46,6 +46,8 @@ export const TRANSLATORS_PREFIX = 'translators/platform/';
 export const ROLES_PREFIX = 'roles/platform/';
 export const ROUTES_PREFIX = 'routes/platform/';
 export const KEYS_PREFIX = 'keys/platform/';
+export const POLICIES_PREFIX = 'policies/platform/';
+export const POLICY_ASSIGNMENTS_PREFIX = 'policy_assignments/platform/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -63,6 +65,8 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.ROLE]: ROLES_PREFIX,
   [ResourceType.ROUTE]: ROUTES_PREFIX,
   [ResourceType.PROJECT_KEY]: KEYS_PREFIX,
+  [ResourceType.POLICY]: POLICIES_PREFIX,
+  [ResourceType.POLICY_ASSIGNMENT]: POLICY_ASSIGNMENTS_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

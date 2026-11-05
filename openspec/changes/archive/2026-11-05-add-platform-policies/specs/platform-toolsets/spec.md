@@ -1,0 +1,8 @@
+## MODIFIED Requirements
+
+### Requirement: File root shown above physical buckets in the Assets Toolsets grid
+The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Toolsets` grid, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. No new menu entry or top-level list route SHALL be introduced.
+
+#### Scenario: All roots appear
+- **WHEN** a user opens `/assets-toolsets`
+- **THEN** the grid shows `file`, `platform`, and `public` roots in that order

@@ -18,6 +18,8 @@ const PROVIDER_BY_VIEW: Partial<Record<ApplicationRoute, string>> = {
   [ApplicationRoute.Conversations]: 'ConversationFolderProvider',
   [ApplicationRoute.PlatformModels]: 'ModelsFolderProvider',
   [ApplicationRoute.PlatformAppRunners]: 'AppRunnersFolderProvider',
+  [ApplicationRoute.PlatformPolicies]: 'PoliciesFolderProvider',
+  [ApplicationRoute.PlatformPolicyAssignments]: 'PolicyAssignmentsFolderProvider',
   [ApplicationRoute.Skills]: 'SkillFolderProvider',
 };
 
