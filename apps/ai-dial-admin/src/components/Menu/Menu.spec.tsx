@@ -5,7 +5,6 @@ import Menu from './Menu';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => 'en',
-  useRouter: () => [],
 }));
 
 describe('Menu', () => {

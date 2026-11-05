@@ -12,11 +12,12 @@ vi.mock('next/navigation', () => ({
 }));
 
 const adminApiEnabled = { value: true };
+const readOnlyAdmin = { value: false };
 const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>() };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
-    isReadOnlyAdmin: false,
+    isReadOnlyAdmin: readOnlyAdmin.value,
     isUnitMode: unitMode.isUnitMode,
     canReadNamespace: (namespace: UnitNamespace) => unitMode.readable.has(namespace),
   }),
@@ -73,7 +74,33 @@ describe('MenuContent — footer pages', () => {
   test('renders a single navigation when collapsed', () => {
     render(<MenuContent disableMenuItems={[]} isSidebarOpen={false} />);
 
-    expect(screen.getAllByRole('navigation')).toHaveLength(1);
+    expect(screen.getByRole('navigation', { name: MenuI18nKey.MainNavigation })).toBeInTheDocument();
+  });
+});
+
+describe('MenuContent — read-only admin', () => {
+  beforeEach(() => {
+    adminApiEnabled.value = true;
+    readOnlyAdmin.value = true;
+  });
+
+  afterEach(() => {
+    readOnlyAdmin.value = false;
+  });
+
+  test('hides Import/Export config actions in the collapsed menu', () => {
+    render(<MenuContent disableMenuItems={[]} isSidebarOpen={false} />);
+
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
+  });
+
+  test('keeps Import/Export config actions in the expanded menu', () => {
+    render(<MenuContent disableMenuItems={[]} isSidebarOpen />);
+
+    expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.ExportConfig })).toBeInTheDocument();
   });
 });
 

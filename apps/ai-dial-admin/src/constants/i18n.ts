@@ -3,6 +3,7 @@ export enum GlobalI18nKey {
 }
 
 export enum MenuI18nKey {
+  MainNavigation = 'Menu.MainNavigation',
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',
   AccessManagement = 'Menu.AccessManagement',

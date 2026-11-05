@@ -118,6 +118,7 @@ export default {
     Shared: 'Shared',
   },
   Menu: {
+    MainNavigation: 'Main navigation',
     Entities: 'Entities',
     AccessManagement: 'Access Management',
     AiGateway: 'AI Gateway',

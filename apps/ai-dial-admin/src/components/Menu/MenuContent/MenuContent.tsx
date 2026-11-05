@@ -44,7 +44,10 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   return (
     <div id={MAIN_MENU_ID} className="flex flex-col h-full divide-y divide-tertiary">
       <MenuIconGradient />
-      <nav className={classNames('p-2 flex-1 min-h-0', isSidebarOpen ? 'overflow-auto' : 'overflow-hidden')}>
+      <nav
+        aria-label={t(MenuI18nKey.MainNavigation)}
+        className={classNames('p-2 flex-1 min-h-0', isSidebarOpen ? 'overflow-auto' : 'overflow-hidden')}
+      >
         <ul>
           {actualConfig.map((config, i) => (
             <MenuItem
