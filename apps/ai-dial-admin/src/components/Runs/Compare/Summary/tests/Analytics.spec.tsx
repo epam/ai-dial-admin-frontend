@@ -366,9 +366,9 @@ describe('Compare Summary :: Analytics', () => {
     await renderLoaded();
 
     expect(
-      side(RunsI18nKey.TotalRuntime, 'Run #316').getByText(`241${SECONDS}`, { selector: 'span.dial-display2-text' }),
+      side(RunsI18nKey.TotalRuntime, 'Run #316').getByText('4m 1s', { selector: 'span.dial-display2-text' }),
     ).toBeInTheDocument();
-    expect(side(RunsI18nKey.TotalRuntime, 'Run #315').getAllByText(`351${SECONDS}`).length).toBeGreaterThan(0);
+    expect(side(RunsI18nKey.TotalRuntime, 'Run #315').getAllByText('5m 51s').length).toBeGreaterThan(0);
     expect(card(RunsI18nKey.TotalRuntime).getByText(`delta:110${SECONDS}`)).toBeInTheDocument();
     expect(card(RunsI18nKey.TotalRuntime).getByText('delta-negative')).toBeInTheDocument();
   });

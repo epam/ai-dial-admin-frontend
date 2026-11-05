@@ -144,7 +144,8 @@ the same Cost / Runtime combo data the charts use. Each card SHALL:
 #### Scenario: Runtime total from combo segments
 
 - **WHEN** the latest run has source runtime `341s` and metrics runtime `291s`
-- **THEN** the Total Runtime card shows `632s` and the source / Metrics footer values
+- **THEN** the Total Runtime card shows `10m 32s` and the source / Metrics footer values (`5m 41s`, `4m 51s`),
+  scaling to minutes and hours like the Runs list Duration column
 
 #### Scenario: Cost total from combo segments
 

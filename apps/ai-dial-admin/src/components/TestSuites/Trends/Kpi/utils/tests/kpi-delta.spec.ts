@@ -24,6 +24,7 @@ describe('formatRuntimeDelta', () => {
     expect(formatRuntimeDelta(110, 100)).toBe('+10ms');
     expect(formatRuntimeDelta(2000, 1000)).toBe('+1s');
     expect(formatRuntimeDelta(500, 1500)).toBe('-1s');
+    expect(formatRuntimeDelta(2_077_200, 1_000_000)).toBe('+17m 57s');
   });
 
   test('returns null when either value is missing or delta is zero', () => {

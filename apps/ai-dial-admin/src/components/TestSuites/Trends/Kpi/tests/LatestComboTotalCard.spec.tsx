@@ -51,11 +51,11 @@ describe('LatestComboTotalCard', () => {
     );
 
     expect(screen.getByText(TestSuitesI18nKey.TotalRuntimeOfLatestRun)).toBeInTheDocument();
-    expect(screen.getByText('632s')).toBeInTheDocument();
+    expect(screen.getByText('10m 32s')).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.TrendsDeltaVsPrev)).toBeInTheDocument();
     expect(screen.getByText('Application:')).toBeInTheDocument();
-    expect(screen.getByText('341s')).toBeInTheDocument();
+    expect(screen.getByText('5m 41s')).toBeInTheDocument();
     expect(screen.getByText(`${TestSuitesI18nKey.TrendsMetricsLabel}:`)).toBeInTheDocument();
-    expect(screen.getByText('291s')).toBeInTheDocument();
+    expect(screen.getByText('4m 51s')).toBeInTheDocument();
   });
 });

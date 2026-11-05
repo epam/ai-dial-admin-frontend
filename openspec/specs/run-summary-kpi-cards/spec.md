@@ -182,9 +182,12 @@ suite request.
 
 ### Requirement: Total Runtime card
 
-The Total Runtime card SHALL show the run's total runtime in seconds with one decimal and an `s` suffix
-(`632s`): the sum, over the run's test cases, of the source execution time and the metric-evaluation time.
-Beneath the total it SHALL show two labelled values: `<Source type>: <seconds>` and `Metrics: <seconds>`.
+The Total Runtime card SHALL show the run's total runtime: the sum, over the run's test cases, of the source
+execution time and the metric-evaluation time. Durations under a minute SHALL read in seconds with one decimal
+(`45.2s`), under an hour in minutes and seconds (`10m 32s`), and from an hour up in hours and minutes
+(`1h 5m`) — the format of the Runs list Duration column. The same format SHALL apply on the Run Summary, the
+Run Comparison Summary Overview and the Test Suite Trends card.
+Beneath the total it SHALL show two labelled values: `<Source type>: <duration>` and `Metrics: <duration>`.
 `<Source type>` is the kind of the evaluated entity (Model, Application, MCP or Route) and falls back to
 "Source" when the kind cannot be determined. If only one of the two parts is absent that part SHALL show an
 em dash and the total SHALL be the other part alone. If both are absent the value SHALL be the Error badge
@@ -192,7 +195,11 @@ for a run that is not in an incomplete status and otherwise a single em dash wit
 
 #### Scenario: Total and breakdown
 - **WHEN** the source runtime is 341 s and the metrics runtime is 291 s
-- **THEN** the card shows `632s`, `Model: 341s` and `Metrics: 291s` for a model run
+- **THEN** the card shows `10m 32s`, `Model: 5m 41s` and `Metrics: 4m 51s` for a model run
+
+#### Scenario: Long runtime scales to minutes and hours
+- **WHEN** the source runtime is 3 900 s and the metrics runtime is 300 s
+- **THEN** the card shows `1h 10m`, `Model: 1h 5m` and `Metrics: 5m 0s`
 
 #### Scenario: Metrics runtime absent
 - **WHEN** the run computed no metrics so metric-evaluation time is absent
