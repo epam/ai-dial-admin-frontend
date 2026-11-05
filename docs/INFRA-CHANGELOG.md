@@ -6,9 +6,19 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 ### Added
 
+#### Governance
+
+- `POLICIES_ENABLED` [Preview] — shows the `Policies` and `Policy Assignments` pages in the Governance menu group, at `/platform-policies` and `/platform-policy-assignments`, over DIAL Core's `policies` and `policy_assignments` resources. Requires a DIAL Core that includes epam/ai-dial-core#2152. Core stores these records but does not enforce them yet (default: `false`)
+
 #### Analytics
 
 - `ANALYTICS_CUSTOM_DASHBOARDS_ENABLED` [Preview] — custom dashboards on the analytics Dashboards page, at `/dashboards/<id>`, stored by the Analytics service under `/v1/dashboards`. Requires an Analytics service that serves that endpoint, widget `settings` included. Takes effect only when `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` are both `true` (default: `false`)
+
+### Removed
+
+#### Menu
+
+- The `catalog` token of `DISABLE_MENU_ITEMS` no longer has an effect. It used to hide every Core-direct (`Platform*`) menu item and the `platform` bucket root of the Assets lists; both are now always shown (the `platform` root is still withheld in unit mode). Remove `catalog` from `DISABLE_MENU_ITEMS` — it is ignored, and other tokens such as `models` or `roles` behave as before
 
 ## 0.22.0
 

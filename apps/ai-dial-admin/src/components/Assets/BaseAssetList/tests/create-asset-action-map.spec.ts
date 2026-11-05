@@ -8,6 +8,8 @@ import { createTranslator } from '@/src/app/[lang]/platform-translators/actions'
 import { createRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { createRole } from '@/src/app/[lang]/platform-roles/actions';
 import { createKey } from '@/src/app/[lang]/platform-keys/actions';
+import { createPolicy } from '@/src/app/[lang]/platform-policies/actions';
+import { createPolicyAssignment } from '@/src/app/[lang]/platform-policy-assignments/actions';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CreateAssetRoute } from '../types';
 import { CreateAssetActionMap } from '../utils';
@@ -45,6 +47,15 @@ vi.mock('@/src/app/[lang]/platform-keys/actions', async (importOriginal) => ({
   createKey: vi.fn(),
 }));
 
+vi.mock('@/src/app/[lang]/platform-policies/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-policies/actions')>()),
+  createPolicy: vi.fn(),
+}));
+vi.mock('@/src/app/[lang]/platform-policy-assignments/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-policy-assignments/actions')>()),
+  createPolicyAssignment: vi.fn(),
+}));
+
 describe('CreateAssetActionMap', () => {
   test.each([
     [ApplicationRoute.PlatformModels, createModel, { name: 'model', endpoint: 'https://models.example.com' }],
@@ -77,5 +88,19 @@ describe('CreateAssetActionMap', () => {
     } as never);
 
     expect(createAction).toHaveBeenCalledWith(content);
+  });
+
+  // A policy record is stored under its cost object, so, unlike the flat views, the folder must reach the
+  // action, which builds the path from it and drops it from the body.
+  test.each([
+    [ApplicationRoute.PlatformPolicies, createPolicy],
+    [ApplicationRoute.PlatformPolicyAssignments, createPolicyAssignment],
+  ])('passes the cost object folder through to a %s create', async (view, createAction) => {
+    vi.mocked(createAction).mockResolvedValue({ success: true });
+    const asset = { name: 'cap', folderId: 'team-a/' };
+
+    await CreateAssetActionMap[view as CreateAssetRoute](asset as never);
+
+    expect(createAction).toHaveBeenCalledWith(asset);
   });
 });

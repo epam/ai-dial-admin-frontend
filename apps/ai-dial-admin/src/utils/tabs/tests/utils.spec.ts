@@ -95,7 +95,6 @@ const t = vi.fn((id) => id);
 
 const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   adminApiEnabled: false,
-  catalogEnabled: true,
   dashboardEnabled: false,
   deploymentsEnabled: false,
   evaluationEnabled: false,
@@ -105,6 +104,7 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
+  policiesEnabled: false,
   analyticsCustomDashboardsEnabled: false,
   ...overrides,
 });

@@ -8,6 +8,8 @@ const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.PlatformCatalogSchemas]: CreateI18nKey.CatalogSchema,
   [ApplicationRoute.PlatformInterceptors]: CreateI18nKey.Interceptor,
   [ApplicationRoute.PlatformRoutes]: CreateI18nKey.Route,
+  [ApplicationRoute.PlatformPolicies]: CreateI18nKey.Policy,
+  [ApplicationRoute.PlatformPolicyAssignments]: CreateI18nKey.PolicyAssignment,
   [ApplicationRoute.PlatformTranslators]: CreateI18nKey.Translator,
   [ApplicationRoute.PlatformRoles]: CreateI18nKey.Role,
   [ApplicationRoute.PlatformKeys]: CreateI18nKey.Key,

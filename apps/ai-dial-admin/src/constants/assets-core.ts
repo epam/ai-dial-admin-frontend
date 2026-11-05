@@ -15,6 +15,8 @@ export type VersionedResourceType = Exclude<
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY
+  | ResourceType.POLICY
+  | ResourceType.POLICY_ASSIGNMENT
   | ResourceType.CONVERSATION
   | ResourceType.PROMPT
 >;
@@ -22,13 +24,15 @@ export type VersionedResourceType = Exclude<
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [ResourceType.APPLICATION, ResourceType.TOOLSET];
 
 /**
- * Versionless resource types that nest in folders (prompt, conversation). Their paths parse with
- * folder semantics — name = last `/` segment, folderId = the rest — and a `__` in the name is
- * never split into name + version.
+ * Versionless resource types that nest in folders (prompt, conversation, and the policy records, whose
+ * one folder level is the cost object). Their paths parse with folder semantics — name = last `/`
+ * segment, folderId = the rest — and a `__` in the name is never split into name + version.
  */
 export const FOLDER_NESTED_VERSIONLESS_TYPES: ReadonlySet<ResourceType> = new Set([
   ResourceType.CONVERSATION,
   ResourceType.PROMPT,
+  ResourceType.POLICY,
+  ResourceType.POLICY_ASSIGNMENT,
 ]);
 
 /**
@@ -67,6 +71,8 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
   [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
+  [ResourceType.POLICY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
+  [ResourceType.POLICY_ASSIGNMENT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
 };
 
 /** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s and `PROJECT`'s entries are unreachable — see `CORE_RESOURCE_URL`. */
@@ -86,6 +92,8 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
   [ResourceType.PROJECT_KEY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
+  [ResourceType.POLICY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
+  [ResourceType.POLICY_ASSIGNMENT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
 };
 
 /** Backend default list path — only Conversation and Prompt default an omitted path (`ConversationService`/`PromptService`). */
@@ -98,8 +106,9 @@ export const DEFAULT_LIST_PATH_TYPES: ReadonlySet<ResourceType> = new Set([
 ]);
 
 /**
- * Resource types served by Core's `ConfigResourceController`: flat, unversioned, and stored under
- * the single fixed `platform` bucket that their `RESOURCE_TYPE_PREFIX` already includes.
+ * Resource types stored under the single fixed `platform` bucket that their `RESOURCE_TYPE_PREFIX`
+ * already includes: unversioned, and flat — except the policy records, which `PolicyController` serves
+ * with one folder level (the cost object).
  */
 export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set([
   ResourceType.MODEL,
@@ -110,6 +119,8 @@ export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set
   ResourceType.ROLE,
   ResourceType.ROUTE,
   ResourceType.PROJECT_KEY,
+  ResourceType.POLICY,
+  ResourceType.POLICY_ASSIGNMENT,
 ]);
 
 /** Backend default metadata page size for Conversation/Prompt list reads when the caller omits a limit. */

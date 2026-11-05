@@ -2,9 +2,9 @@
 
 This documentation describes the structure and contents of the menu items array used in the application. Each entry corresponds to a menu section with various properties, including its title, description, icon, and links to different routes.
 
-Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment of an item's key (`Menu.Models` → `models`), so a token hides every item with that key, in whichever section it sits. The `catalog` token is the exception that hides all Core-direct items — the ones keyed `Platform*` — wherever they are grouped.
+Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment of an item's key (`Menu.Models` → `models`), so a token hides every item with that key, in whichever section it sits.
 
-A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge.
+A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge, except the two Governance items marked `[Preview]` below.
 
 ---
 
@@ -32,7 +32,7 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
 
 ### 2. **AI Gateway**
 
-- **Description**: A section for the entities DIAL Core serves, read and written directly against Core rather than through the admin backend. The items keyed `Platform*` are hidden by the `catalog` token of `DISABLE_MENU_ITEMS`.
+- **Description**: A section for the entities DIAL Core serves, read and written directly against Core rather than through the admin backend. The items keyed `Platform*` are always shown.
 - **Items**:
   - **Models**
     - **Key**: `PlatformModels`
@@ -132,7 +132,7 @@ Documented per capability under `openspec/specs/analytics/`. Items, in order: Da
 
 ### 9. **Governance**
 
-- **Description**: A section for access, folder permissions, interceptors, and the approval of published artifacts. Roles, Keys, and Interceptors are Core-direct items (`Platform*`) hidden by the `catalog` token of `DISABLE_MENU_ITEMS`.
+- **Description**: A section for access, folder permissions, interceptors, and the approval of published artifacts. Roles, Keys, Interceptors, Policies, and Policy Assignments are Core-direct items (`Platform*`).
 - **Items**:
   - **Roles**
     - **Key**: `PlatformRoles`
@@ -146,6 +146,12 @@ Documented per capability under `openspec/specs/analytics/`. Items, in order: Da
   - **Interceptors**
     - **Key**: `PlatformInterceptors`
     - **Description**: Navigate to the interceptors page to manage interceptors and their catalog metadata.
+  - **Policies** [Preview]
+    - **Key**: `PlatformPolicies`
+    - **Description**: Navigate to the policies page (`/platform-policies`) to manage the spending-limit policies DIAL Core stores: a budget, what it applies to, and which subjects it reaches. A policy is global or belongs to one cost object. Core does not enforce policies yet. Shown only while `POLICIES_ENABLED` is `true`.
+  - **Policy Assignments** [Preview]
+    - **Key**: `PlatformPolicyAssignments`
+    - **Description**: Navigate to the policy assignments page (`/platform-policy-assignments`) to manage which cost object a policy applies to, and for whom. Shown only while `POLICIES_ENABLED` is `true`.
   - **Approvals**
     - **Key**: `Approvals`
     - **Description**: Navigate to the approvals page (`/publications`) to review and approve publication requests. One list shows the requests of every resource type (Application, Toolset, Prompt, Conversation, File, Skill), told apart by the Type column; opening a row shows the type's review page.

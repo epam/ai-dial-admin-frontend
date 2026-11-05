@@ -8,6 +8,7 @@ import {
   extractNameAndVersion,
   getVersionedName,
   parseEncodedVersionedPath,
+  parseOptionalFolderPath,
   parsePath,
   parseVersionedPath,
   replaceVersionedName,
@@ -42,6 +43,16 @@ describe('Server :: Publications :: path', () => {
     expect(extractNameAndVersion('Name')).toEqual({ name: 'Name' });
     expect(extractNameAndVersion('Name__1.0')).toEqual({ name: 'Name', version: '1.0' });
     expect(extractNameAndVersion('My__App__2')).toEqual({ name: 'My__App', version: '2' });
+  });
+
+  test('parseOptionalFolderPath reads a bare name as a root entry instead of throwing', () => {
+    expect(parseOptionalFolderPath('daily-cap')).toEqual({ path: 'daily-cap', folderId: '', name: 'daily-cap' });
+    expect(parseOptionalFolderPath('team-a/team-cap')).toEqual({
+      path: 'team-a/team-cap',
+      folderId: 'team-a/',
+      name: 'team-cap',
+    });
+    expect(parseOptionalFolderPath('team-a/')).toEqual({ path: 'team-a', folderId: '', name: 'team-a' });
   });
 
   test('parsePath splits folderId and name', () => {

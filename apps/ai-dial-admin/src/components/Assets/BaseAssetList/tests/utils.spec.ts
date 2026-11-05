@@ -2,7 +2,14 @@ import { FileManagerColumnKey } from '@epam/ai-dial-react-file-manager';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
-import { getGridColumns, getPlatformAssetDuplicate } from '@/src/components/Assets/BaseAssetList/utils';
+import {
+  getEmptyStateContent,
+  getFileManagerLabel,
+  getFlatDuplicateDestination,
+  getGridColumns,
+  getPlatformAssetDuplicate,
+} from '@/src/components/Assets/BaseAssetList/utils';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -159,6 +166,66 @@ describe('BaseAssetList', () => {
 
       expect(colIds).not.toContain(FileManagerColumnKey.Version);
       expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys)));
+    });
+  });
+
+  describe('policy records - nested platform views', () => {
+    test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+      '%s uses the same metadata-only columns as the flat platform views',
+      (view) => {
+        const colIds = resolveColIds(getGridColumns(view, 'platform/'));
+
+        expect(colIds).not.toContain(FileManagerColumnKey.Version);
+        expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys)));
+      },
+    );
+
+    test('labels the file manager and its empty state', () => {
+      const t = (key: string) => key;
+
+      expect(getFileManagerLabel(ApplicationRoute.PlatformPolicies)).toBe(FileManagerI18nKey.Policies);
+      expect(getFileManagerLabel(ApplicationRoute.PlatformPolicyAssignments)).toBe(
+        FileManagerI18nKey.PolicyAssignments,
+      );
+      expect(getEmptyStateContent(ApplicationRoute.PlatformPolicies, t)).toEqual({
+        title: FileManagerI18nKey.PoliciesEmptyStateTitle,
+        description: FileManagerI18nKey.PoliciesEmptyStateDescription,
+      });
+      expect(getEmptyStateContent(ApplicationRoute.PlatformPolicyAssignments, t)).toEqual({
+        title: FileManagerI18nKey.PolicyAssignmentsEmptyStateTitle,
+        description: FileManagerI18nKey.PolicyAssignmentsEmptyStateDescription,
+      });
+    });
+  });
+
+  describe('getFlatDuplicateDestination', () => {
+    const row = (folderId?: string) => ({ name: 'cap', _metadata: { folderId } }) as unknown as PlatformAsset;
+
+    test('keeps a project policy in the cost object folder it came from', () => {
+      expect(getFlatDuplicateDestination(ApplicationRoute.PlatformPolicies, row('team-a/'), false)).toBe(
+        'platform/team-a/',
+      );
+    });
+
+    test('keeps a global policy at the platform root', () => {
+      expect(getFlatDuplicateDestination(ApplicationRoute.PlatformPolicies, row(''), false)).toBe('platform/');
+    });
+
+    test('reads the folder off the row when it carries no merged metadata', () => {
+      const flat = { name: 'grant', folderId: 'team-b/' } as unknown as PlatformAsset;
+
+      expect(getFlatDuplicateDestination(ApplicationRoute.PlatformPolicyAssignments, flat, false)).toBe(
+        'platform/team-b/',
+      );
+    });
+
+    test('pins platform/ for a platform-bucket application or toolset', () => {
+      expect(getFlatDuplicateDestination(ApplicationRoute.AssetsApplications, row(), true)).toBe('platform/');
+    });
+
+    test('leaves every flat platform view on its own root', () => {
+      expect(getFlatDuplicateDestination(ApplicationRoute.PlatformRoutes, row('x/'), false)).toBeUndefined();
+      expect(getFlatDuplicateDestination(ApplicationRoute.PlatformModels, row(), false)).toBeUndefined();
     });
   });
 });

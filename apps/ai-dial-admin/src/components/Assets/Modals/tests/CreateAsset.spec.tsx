@@ -379,32 +379,6 @@ describe('CreateAsset — opens on platform', () => {
     expect(lastAssetProperties().names).toEqual(['in-platform']);
   });
 
-  test('stays on public with Catalog disabled, as there is no platform root', () => {
-    const { featureFlags } = useAppContext();
-    featureFlags.catalogEnabled = false;
-    try {
-      const { ctx, setFilePath } = makeRootsContext('public/');
-      const withoutPlatform = {
-        ...ctx,
-        fetchedFoldersData: { 'public/': [], 'file/': [] },
-      } as unknown as AssetsFolderContextReader;
-      render(
-        <CreateAsset
-          view={ApplicationRoute.AssetsToolsets}
-          isModalOpen={true}
-          context={() => withoutPlatform}
-          shouldOpenOnPlatform
-          onClose={vi.fn()}
-        />,
-      );
-
-      expect(folderListCalls.at(-1)!.rootPaths).toEqual(['file/', 'public/']);
-      expect(setFilePath).not.toHaveBeenCalled();
-    } finally {
-      featureFlags.catalogEnabled = true;
-    }
-  });
-
   test('re-validates the ID when the destination folder changes', () => {
     const { ctx } = makeRootsContext('platform/');
     let currentCtx = ctx;
