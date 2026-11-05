@@ -3,6 +3,7 @@ export enum GlobalI18nKey {
 }
 
 export enum MenuI18nKey {
+  MainNavigation = 'Menu.MainNavigation',
   Entities = 'Menu.Entities',
   EntitiesDescription = 'Menu.EntitiesDescription',
   AccessManagement = 'Menu.AccessManagement',
@@ -2574,6 +2575,7 @@ export enum ExportRunI18nKey {
 
 export enum FileManagerI18nKey {
   SelectedItems = 'FileManager.SelectedItems',
+  FolderPath = 'FileManager.FolderPath',
   File = 'FileManager.File',
   Files = 'FileManager.Files',
   Models = 'FileManager.Models',

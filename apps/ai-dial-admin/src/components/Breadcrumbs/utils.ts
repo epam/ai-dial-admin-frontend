@@ -9,7 +9,6 @@ import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useProjectFolder } from '@/src/context/assets/ProjectFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
-import { Dispatch, SetStateAction } from 'react';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { RUN_COMPARE_SEGMENT } from '@/src/components/Runs/Compare/constants';
 
@@ -73,18 +72,6 @@ const getFolderBreadcrumbs = (path: string, onFolderClick?: (href: string) => vo
   return newBreadcrumbs;
 };
 
-export function enrichWithFolderBreadcrumbs(
-  breadcrumbs: Breadcrumb[],
-  path?: string,
-  setFilePath?: Dispatch<SetStateAction<string>>,
-): Breadcrumb[] {
-  if (!path) {
-    return breadcrumbs;
-  }
-
-  return [...breadcrumbs, ...getFolderBreadcrumbs(path, (href) => setFilePath?.(href))];
-}
-
 /**
  * The folder an entity lives in, from the `path` its details URL carries (`public/folder/name__1.0`
  * gives `public/folder/`); `undefined` when the entity has no folder part.
@@ -141,12 +128,6 @@ export function getFolderContext(pathname: string, currentLocale: string) {
     default:
       return null;
   }
-}
-
-export function shouldEnrichWithFolderBreadcrumbs(pathname: string, currentLocale: string) {
-  const { pathSegments, config } = getRouteDataByPath(pathname, currentLocale);
-
-  return config?.segments?.[pathSegments.length - 1]?.shouldEnrichWithFolderBreadcrumbs;
 }
 
 export function shouldEnrichDetailsWithFolderBreadcrumbs(pathname: string, currentLocale: string) {

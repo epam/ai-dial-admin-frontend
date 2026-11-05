@@ -1,7 +1,6 @@
 'use client';
 
 import { FC } from 'react';
-import classNames from 'classnames';
 
 import { MenuGroupConfiguration } from '../menu-configuration';
 import { useI18n } from '@/src/locales/client';
@@ -20,9 +19,9 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isSidebarOpen, hasDivider
   const t = useI18n();
 
   return (
-    <li className={classNames('flex flex-col', isSidebarOpen && '[&:not(:first-child)]:mt-3')}>
+    <li className="flex flex-col [&:not(:first-child)]:mt-3">
       {isSidebarOpen ? (
-        <div className="flex flex-row items-center justify-between px-4 py-1 text-[11px] text-tertiary uppercase tracking-[0.06em] whitespace-nowrap select-none cursor-default leading-4 font-semibold">
+        <div className="flex h-6 flex-row items-center justify-between px-3 text-[10px] text-tertiary uppercase tracking-[0.06em] whitespace-nowrap select-none cursor-default leading-3 font-semibold">
           <span className="truncate">{t(config.key) ?? ''}</span>
           {config.badge && (
             <div className="ml-2 shrink-0 normal-case tracking-normal">
@@ -31,7 +30,9 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isSidebarOpen, hasDivider
           )}
         </div>
       ) : (
-        hasDivider && <div role="separator" className="w-8 mx-auto my-2 border-t border-tertiary" />
+        <div className="flex h-6 items-center justify-center">
+          {hasDivider && <div role="separator" className="w-6 border-t border-tertiary" />}
+        </div>
       )}
       {!!config.items.length && (
         <ul aria-label={t(config.key)} className="flex flex-col gap-px pt-0.5">

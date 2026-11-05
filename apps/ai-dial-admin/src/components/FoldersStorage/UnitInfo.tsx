@@ -82,7 +82,7 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
   }, [unit.folder, refreshUnits, fetchFiles, toggleFolder, showNotification, t]);
 
   return (
-    <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
+    <div className="size-full min-w-0 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-wrap justify-between items-center w-full gap-3">
         <div className="flex flex-1 min-w-0 items-center gap-3">
           <IconSitemap size={LARGE_ICON_SIZE} className="shrink-0 text-secondary" aria-hidden />

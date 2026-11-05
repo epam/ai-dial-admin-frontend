@@ -1,5 +1,6 @@
 'use client';
 
+import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -511,6 +512,7 @@ const FileManager: FC<Props> = ({
   ]);
 
   const isUnitFolderActive = hasUnits && isUnitFolder(units, filePath ?? '');
+  const hasFolderPath = !!filePath?.replaceAll('/', '');
 
   const toolbarOptions = useMemo(() => {
     const base = getToolbarOptions(view, isReadOnlyAdmin, t, filePath);
@@ -533,9 +535,9 @@ const FileManager: FC<Props> = ({
         items={filteredFiles as []}
         rootItem={isMultiRootView ? ({ label } as DialRootFolder) : (filteredFiles?.[0] as DialRootFolder)}
         filesLoading={isFetchingFiles}
-        showNavigationPanel={false}
-        contentHeaderClassName="h-[52px] items-start justify-end"
-        navigationPanelOptions={{ searchable: false }}
+        showNavigationPanel={hasFolderPath}
+        contentHeaderClassName={classNames('h-[52px] items-start', !hasFolderPath && 'justify-end')}
+        navigationPanelOptions={{ searchable: false, ariaLabel: t(FileManagerI18nKey.FolderPath) }}
         sortOptions={{ sortable: false }}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
         toolbarOptions={toolbarOptions}

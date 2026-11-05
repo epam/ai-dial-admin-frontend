@@ -10,6 +10,8 @@ export const LOCAL_STORAGE_SIDEBAR_OPEN_KEY = 'sidebar-open';
 export const BASE_BUTTON_ICON_SIZE = 20;
 export const BASE_BUTTON_ICON_PROPS = { size: BASE_BUTTON_ICON_SIZE, stroke: 2 };
 export const MENU_ACTION_ICON_PROPS = { size: 16, stroke: 1.5 };
+export const MENU_ICON_PROPS = { size: 20, stroke: 1.8 };
+export const MENU_ICON_GRADIENT_ID = 'menu-icon-gradient';
 
 // controls
 export const CONTROL_WIDTH = 'large_tablet:w-[640px] desktop:w-[640px] large_desktop:w-[40%] max-w-full';

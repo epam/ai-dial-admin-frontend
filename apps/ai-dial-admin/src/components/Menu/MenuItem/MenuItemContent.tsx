@@ -6,9 +6,9 @@ import { FC, useEffect, useRef } from 'react';
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
 import { MENU_ITEM_ICONS } from '../menu-item-icons';
+import { MENU_ENTRY_ACTIVE_CLASS_NAME, MENU_ENTRY_CLASS_NAME, MENU_ENTRY_INACTIVE_CLASS_NAME } from './constants';
 import MenuBadgeTag from './MenuBadgeTag';
-
-const MENU_ITEM_ICON_SIZE = 16;
+import MenuIcon from './MenuIcon';
 
 interface Props {
   menuItem: MenuItem;
@@ -21,8 +21,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   const ItemIcon = MENU_ITEM_ICONS[menuItem.key];
   const linkRef = useRef<HTMLAnchorElement>(null);
 
-  // Menu navigations remount on route change (and the hover-expanded copy is hidden), so each one
-  // must bring its own active item into view.
+  // The menu navigation remounts on route change, so it must bring its active item into view.
   useEffect(() => {
     if (isActive) {
       linkRef.current?.scrollIntoView?.({ block: 'center' });
@@ -30,12 +29,10 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   }, [isActive]);
 
   const menuClassName = classNames(
-    'group flex flex-row items-center w-full gap-3 px-2 rounded-full cursor-pointer text-sm font-normal leading-5',
-    'hover:bg-control-neutral-hover-muted focus-visible:bg-control-neutral-hover-muted',
-    isActive
-      ? 'bg-control-accent-alpha text-accent hover:bg-control-accent-alpha-hover focus-visible:bg-control-accent-alpha-hover'
-      : 'text-primary',
-    isSidebarOpen ? 'h-9' : 'justify-center h-8',
+    MENU_ENTRY_CLASS_NAME,
+    'group w-full gap-3',
+    isActive ? MENU_ENTRY_ACTIVE_CLASS_NAME : MENU_ENTRY_INACTIVE_CLASS_NAME,
+    !isSidebarOpen && 'justify-center',
   );
 
   return (
@@ -53,7 +50,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
         className={menuClassName}
         href={menuItem.href}
       >
-        {ItemIcon && <ItemIcon className="shrink-0" size={MENU_ITEM_ICON_SIZE} stroke={1.5} aria-hidden />}
+        {ItemIcon && <MenuIcon icon={ItemIcon} isActive={isActive} />}
         {isSidebarOpen && <EllipsisTooltip className="flex-1 min-w-0" text={t(menuItem.key)} />}
         {menuItem.badge && isSidebarOpen ? <MenuBadgeTag badge={menuItem.badge} /> : null}
       </Link>

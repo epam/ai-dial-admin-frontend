@@ -2,16 +2,17 @@
 
 import { IconDownload, IconUpload, IconWorldCog } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { FC } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
-import { MAIN_MENU_ID, MENU_ACTION_ICON_PROPS } from '@/src/constants/main-layout';
+import { MAIN_MENU_ID } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIsConfigTransferEnabled } from '@/src/utils/env/get-config-transfer-toggle';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { MENU_CONFIGURATION } from '../menu-configuration';
+import MenuIconGradient from '../MenuIconGradient';
 import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 import { useAppContext } from '@/src/context/AppContext';
@@ -24,7 +25,6 @@ interface Props {
 }
 const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
-  const router = useRouter();
   const { featureFlags, isUnitMode, canReadNamespace } = useAppContext();
   const isConfigTransferEnabled = getIsConfigTransferEnabled(featureFlags);
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -38,90 +38,60 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const enabledConfig = getActualMenuItems(MENU_CONFIGURATION(16, featureFlags), disableMenuItems);
   const actualConfig = isUnitMode ? filterMenuForUnitMode(enabledConfig, canReadNamespace) : enabledConfig;
 
-  const handleImport = () => {
-    router.push(ApplicationRoute.ImportConfig);
-  };
-
-  const handleExport = () => {
-    router.push(ApplicationRoute.ExportConfig);
-  };
-
-  const openProperties = () => {
-    router.push(ApplicationRoute.SystemProperties);
-  };
-
-  const MenuNavigation = ({ showExpanded }: { showExpanded?: boolean }) => (
-    <nav
-      className={classNames(
-        'p-2 flex-1 min-h-0',
-        showExpanded || isSidebarOpen ? 'overflow-auto' : 'overflow-hidden',
-        !showExpanded && 'mt-[-1px]',
-      )}
-    >
-      <ul>
-        {actualConfig.map((config, i) => (
-          <MenuItem
-            key={`menu-${showExpanded ? 'expanded' : 'default'}-${i}`}
-            config={config}
-            activeMenuItem={pathname}
-            isSidebarOpen={showExpanded || isSidebarOpen}
-            hasDivider={i > 0}
-          />
-        ))}
-      </ul>
-    </nav>
-  );
-
   // Config transfer and system properties are admin pages, which a unit user cannot open.
-  const showImportExport = (isColumn?: boolean) =>
-    isConfigTransferEnabled && !isUnitMode && !(isColumn && isReadOnlyAdmin);
-
-  const MenuActionsBar = ({ isColumn }: { isColumn?: boolean }) => (
-    <div className={classNames(actionsClassName, isColumn ? 'flex-col justify-center' : 'flex-row justify-start')}>
-      {showImportExport(isColumn) && (
-        <>
-          <MenuAction
-            tooltip={t(MenuI18nKey.ImportConfig)}
-            icon={<IconDownload {...MENU_ACTION_ICON_PROPS} />}
-            onClick={handleImport}
-          />
-          <MenuAction
-            tooltip={t(MenuI18nKey.ExportConfig)}
-            icon={<IconUpload {...MENU_ACTION_ICON_PROPS} />}
-            onClick={handleExport}
-          />
-        </>
-      )}
-      {!isUnitMode && (
-        <MenuAction
-          tooltip={t(MenuI18nKey.SystemProperties)}
-          icon={<IconWorldCog {...MENU_ACTION_ICON_PROPS} />}
-          onClick={openProperties}
-        />
-      )}
-    </div>
-  );
-
-  const actionsClassName = 'px-2 py-2 text-secondary flex gap-1 items-center';
-  const menuClassName = 'flex flex-col divide-tertiary';
+  const showImportExport = isConfigTransferEnabled && !isUnitMode && (isSidebarOpen || !isReadOnlyAdmin);
 
   return (
-    <div id={MAIN_MENU_ID} className={classNames(menuClassName, 'h-full relative divide-y group/menu')}>
+    <div id={MAIN_MENU_ID} className="flex flex-col h-full divide-y divide-tertiary">
+      <MenuIconGradient />
+      <nav
+        aria-label={t(MenuI18nKey.MainNavigation)}
+        className={classNames('p-2 flex-1 min-h-0', isSidebarOpen ? 'overflow-auto' : 'overflow-hidden')}
+      >
+        <ul>
+          {actualConfig.map((config, i) => (
+            <MenuItem
+              key={config.key}
+              config={config}
+              activeMenuItem={pathname}
+              isSidebarOpen={isSidebarOpen}
+              hasDivider={i > 0}
+            />
+          ))}
+        </ul>
+      </nav>
+
       <div
         className={classNames(
-          menuClassName,
-          'absolute left-0 top-0 bottom-0 w-72 border-r border-tertiary bg-layer-base divide-y z-[51]',
-          'opacity-0 invisible',
-          !isSidebarOpen && 'group-hover/menu:opacity-100 group-hover/menu:visible hover:opacity-100 hover:visible',
+          'p-2 flex gap-0.5 items-center',
+          isSidebarOpen ? 'flex-row justify-start' : 'flex-col justify-center',
         )}
       >
-        <MenuNavigation showExpanded />
-        <MenuActionsBar />
+        {showImportExport && (
+          <>
+            <MenuAction
+              tooltip={t(MenuI18nKey.ImportConfig)}
+              icon={IconDownload}
+              href={ApplicationRoute.ImportConfig}
+              isActive={pathname === ApplicationRoute.ImportConfig}
+            />
+            <MenuAction
+              tooltip={t(MenuI18nKey.ExportConfig)}
+              icon={IconUpload}
+              href={ApplicationRoute.ExportConfig}
+              isActive={pathname === ApplicationRoute.ExportConfig}
+            />
+          </>
+        )}
+        {!isUnitMode && (
+          <MenuAction
+            tooltip={t(MenuI18nKey.SystemProperties)}
+            icon={IconWorldCog}
+            href={ApplicationRoute.SystemProperties}
+            isActive={pathname === ApplicationRoute.SystemProperties}
+          />
+        )}
       </div>
-
-      <MenuNavigation />
-
-      {isSidebarOpen ? <MenuActionsBar /> : <MenuActionsBar isColumn />}
     </div>
   );
 };

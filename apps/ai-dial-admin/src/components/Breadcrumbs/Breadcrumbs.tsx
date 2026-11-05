@@ -6,12 +6,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
 import {
   enrichDetailsWithFolderBreadcrumbs,
-  enrichWithFolderBreadcrumbs,
   getBreadcrumbs,
   getEntityFolderPath,
   getFolderContext,
   shouldEnrichDetailsWithFolderBreadcrumbs,
-  shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
 import { Breadcrumbs as KitBreadcrumbs, BreadcrumbsItem, BreadcrumbsSize } from '@epam/ai-dial-ui-kit';
@@ -65,9 +63,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       setEnrichedBreadcrumbs(null);
       return;
     }
-    if (shouldEnrichWithFolderBreadcrumbs(pathname, currentLocale) && folderContext?.filePath) {
-      setEnrichedBreadcrumbs(enrichWithFolderBreadcrumbs(basicBreadcrumbs, folderContext.filePath, setFilePath));
-    } else if (shouldEnrichDetailsWithFolderBreadcrumbs(pathname, currentLocale) && setFilePath) {
+    if (shouldEnrichDetailsWithFolderBreadcrumbs(pathname, currentLocale) && setFilePath) {
       const folderPath = getEntityFolderPath(entityPath);
       setEnrichedBreadcrumbs(
         folderPath ? enrichDetailsWithFolderBreadcrumbs(basicBreadcrumbs, folderPath, onOpenFolder) : null,
@@ -75,7 +71,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
     } else {
       setEnrichedBreadcrumbs(null);
     }
-  }, [pathname, currentLocale, basicBreadcrumbs, folderContext?.filePath, setFilePath, entityPath, onOpenFolder]);
+  }, [pathname, currentLocale, basicBreadcrumbs, setFilePath, entityPath, onOpenFolder]);
 
   const breadcrumbs = enrichedBreadcrumbs ?? basicBreadcrumbs;
 
@@ -113,7 +109,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         mobile ? 'lg:hidden flex shrink-0 pl-10 md:px-0 pb-2 mb-2' : 'lg:flex hidden',
       )}
     >
-      <KitBreadcrumbs items={items} size={BreadcrumbsSize.Tiny} />
+      <KitBreadcrumbs items={items} size={BreadcrumbsSize.Tiny} itemClassName="aria-[current=page]:font-normal" />
     </div>
   );
 };

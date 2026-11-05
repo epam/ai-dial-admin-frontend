@@ -118,6 +118,7 @@ export default {
     Shared: 'Shared',
   },
   Menu: {
+    MainNavigation: 'Main navigation',
     Entities: 'Entities',
     AccessManagement: 'Access Management',
     AiGateway: 'AI Gateway',
@@ -2456,6 +2457,7 @@ export default {
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
+    FolderPath: 'Folder path',
     ShowHiddenFiles: 'Show hidden files',
     HideHiddenFiles: 'Hide hidden files',
     File: 'File',

@@ -6,21 +6,25 @@ import { UnitNamespace } from '@/src/models/user-access';
 
 import MenuContent from '../MenuContent';
 
+const currentPath = { value: '/en/home' };
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/en/home',
-  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => currentPath.value,
 }));
 
 const adminApiEnabled = { value: true };
+const readOnlyAdmin = { value: false };
 const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>() };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
-    isReadOnlyAdmin: false,
+    isReadOnlyAdmin: readOnlyAdmin.value,
     isUnitMode: unitMode.isUnitMode,
     canReadNamespace: (namespace: UnitNamespace) => unitMode.readable.has(namespace),
   }),
 }));
+
+const renderMenu = (isSidebarOpen: boolean) =>
+  render(<MenuContent disableMenuItems={[]} isSidebarOpen={isSidebarOpen} />);
 
 describe('MenuContent — Import/Export actions', () => {
   beforeEach(() => {
@@ -28,28 +32,80 @@ describe('MenuContent — Import/Export actions', () => {
   });
 
   test('renders Import/Export config actions when the admin API is enabled', () => {
-    render(<MenuContent disableMenuItems={[]} isSidebarOpen />);
+    renderMenu(true);
 
-    expect(screen.getAllByRole('button', { name: MenuI18nKey.ImportConfig }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: MenuI18nKey.ExportConfig }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: MenuI18nKey.SystemProperties }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.ExportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
   });
 
   test('hides Import/Export config actions in the expanded bar when the admin API is disabled', () => {
     adminApiEnabled.value = false;
-    render(<MenuContent disableMenuItems={[]} isSidebarOpen />);
+    renderMenu(true);
 
-    expect(screen.queryByRole('button', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: MenuI18nKey.SystemProperties }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
   });
 
   test('hides Import/Export config actions in the collapsed dropdown when the admin API is disabled', () => {
     adminApiEnabled.value = false;
-    render(<MenuContent disableMenuItems={[]} isSidebarOpen={false} />);
+    renderMenu(false);
 
-    expect(screen.queryByText(MenuI18nKey.ImportConfig)).not.toBeInTheDocument();
-    expect(screen.queryByText(MenuI18nKey.ExportConfig)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
+  });
+});
+
+describe('MenuContent — footer pages', () => {
+  beforeEach(() => {
+    adminApiEnabled.value = true;
+  });
+
+  afterEach(() => {
+    currentPath.value = '/en/home';
+  });
+
+  test('marks the footer page the user is on as the current page', () => {
+    currentPath.value = '/en/import-config';
+    renderMenu(true);
+
+    expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: MenuI18nKey.ExportConfig })).not.toHaveAttribute('aria-current');
+  });
+
+  test('renders a single navigation when collapsed', () => {
+    renderMenu(false);
+
+    expect(screen.getAllByRole('navigation')).toHaveLength(1);
+    expect(screen.getByRole('navigation', { name: MenuI18nKey.MainNavigation })).toBeInTheDocument();
+  });
+});
+
+describe('MenuContent — read-only admin', () => {
+  beforeEach(() => {
+    adminApiEnabled.value = true;
+    readOnlyAdmin.value = true;
+  });
+
+  afterEach(() => {
+    readOnlyAdmin.value = false;
+  });
+
+  test('hides Import/Export config actions in the collapsed menu', () => {
+    renderMenu(false);
+
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
+  });
+
+  test('keeps Import/Export config actions in the expanded menu', () => {
+    renderMenu(true);
+
+    expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.ExportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
   });
 });
 
@@ -66,17 +122,17 @@ describe('MenuContent — unit mode', () => {
   });
 
   test('hides the admin Import, Export and System properties actions', () => {
-    render(<MenuContent disableMenuItems={[]} isSidebarOpen />);
+    renderMenu(true);
 
-    expect(screen.queryByRole('button', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: MenuI18nKey.SystemProperties })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.SystemProperties })).not.toBeInTheDocument();
   });
 
   test('offers only the sections whose namespace is readable', () => {
-    render(<MenuContent disableMenuItems={[]} isSidebarOpen />);
+    renderMenu(true);
 
-    expect(screen.getAllByRole('link', { name: MenuI18nKey.Prompts }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: MenuI18nKey.Prompts })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: MenuI18nKey.Files })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: MenuI18nKey.PlatformModels })).not.toBeInTheDocument();
   });
