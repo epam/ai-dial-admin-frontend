@@ -11,9 +11,7 @@ import {
 } from '@/src/components/TestSuites/Trends/OverallScoreTrend/utils/threshold-segments';
 import {
   TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG,
-  TREND_TOOLTIP_TEXT_ACCENT,
-  TREND_TOOLTIP_TEXT_PRIMARY,
-  TREND_TOOLTIP_TEXT_SECONDARY,
+  TREND_TOOLTIP_TEXT_COLOR,
 } from '@/src/components/TestSuites/Trends/utils/chart-tooltip-styles';
 import { formatMetricTrendTooltipDate, formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TREND_SCORE_CHART_GRID } from '@/src/components/TestSuites/Trends/utils/score-axis';
@@ -366,15 +364,15 @@ export const buildOverallScoreChartOptions = (
           <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;min-width:140px;line-height:16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap;">
               <a href="${href}" target="_blank" rel="noopener noreferrer"
-                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_ACCENT};font-weight:600;text-decoration:underline;cursor:pointer;">
+                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_COLOR};font-weight:600;text-decoration:underline;cursor:pointer;">
                 <span>${point.runName}</span>
                 ${TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG}
               </a>
-              <span style="color:${TREND_TOOLTIP_TEXT_PRIMARY};font-weight:600;">${formatMetricTrendTooltipDate(point.computedAtMs)}</span>
+              <span style="color:${TREND_TOOLTIP_TEXT_COLOR};font-weight:600;">${formatMetricTrendTooltipDate(point.computedAtMs)}</span>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-              <span style="color:${TREND_TOOLTIP_TEXT_SECONDARY};">${labels.score}</span>
-              <span style="color:${TREND_TOOLTIP_TEXT_PRIMARY};font-weight:600;">${score}</span>
+              <span style="color:${TREND_TOOLTIP_TEXT_COLOR};">${labels.score}</span>
+              <span style="color:${TREND_TOOLTIP_TEXT_COLOR};font-weight:600;">${score}</span>
             </div>
           </div>`;
       },
