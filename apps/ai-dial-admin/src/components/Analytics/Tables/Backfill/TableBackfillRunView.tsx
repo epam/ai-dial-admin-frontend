@@ -2,7 +2,7 @@
 
 import { FC, useState } from 'react';
 
-import { Button, ButtonVariant, ElementSize } from '@epam/ai-dial-ui-kit';
+import { Button, ButtonAppearance, ButtonVariant, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import BackfillRunFacts from '@/src/components/Analytics/Common/BackfillSidebar/BackfillRunFacts';
 import BackfillStatusBadge from '@/src/components/Analytics/Common/BackfillSidebar/BackfillStatusBadge';
@@ -19,13 +19,14 @@ interface Props {
   isAnyRunInProgress: boolean;
   isStarting: boolean;
   onRerun: (range: BackfillRerunRange, shouldIncludeIngested: boolean) => void;
+  onOpenIngestFailures?: (runId: string) => void;
 }
 
 /**
  * One ingest run. `Failed` is the service's word for a run that stopped before its range; it is not inferred from
  * the counts, which sum to the total for a run that stops on its last day.
  */
-const TableBackfillRunView: FC<Props> = ({ run, isAnyRunInProgress, isStarting, onRerun }) => {
+const TableBackfillRunView: FC<Props> = ({ run, isAnyRunInProgress, isStarting, onRerun, onOpenIngestFailures }) => {
   const t = useI18n();
   const [shouldIncludeIngested, setShouldIncludeIngested] = useState(false);
 
@@ -65,6 +66,29 @@ const TableBackfillRunView: FC<Props> = ({ run, isAnyRunInProgress, isStarting, 
   const metrics: BackfillMetric[] = [
     ...(isRunning && run.currentDate ? [{ label: t(BackfillI18nKey.CurrentDay), value: run.currentDate }] : []),
     { label: t(BackfillI18nKey.FilesProcessed), value: run.filesProcessed.toLocaleString() },
+    ...(run.failedBlobs == null
+      ? []
+      : [
+          {
+            label: t(BackfillI18nKey.FailedBlobs),
+            value:
+              run.failedBlobs > 0 && onOpenIngestFailures ? (
+                <Button
+                  variant={ButtonVariant.Primary}
+                  appearance={ButtonAppearance.Link}
+                  size={ElementSize.Small}
+                  textClassName="text-error"
+                  label={<span>{run.failedBlobs.toLocaleString()}</span>}
+                  aria-label={`${t(BackfillI18nKey.FailedBlobs)}: ${run.failedBlobs.toLocaleString()}`}
+                  onClick={() => onOpenIngestFailures(run.runId)}
+                />
+              ) : (
+                run.failedBlobs.toLocaleString()
+              ),
+            hint: t(BackfillI18nKey.FailedBlobsHint),
+            tone: run.failedBlobs > 0 ? BackfillTone.Error : undefined,
+          },
+        ]),
   ];
 
   return (

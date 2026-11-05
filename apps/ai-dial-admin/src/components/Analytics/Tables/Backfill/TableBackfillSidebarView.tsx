@@ -16,6 +16,7 @@ interface Props {
   runs: TableBackfillRun[];
   isStarting: boolean;
   onStart: (range: BackfillRange, shouldIncludeIngested: boolean) => Promise<boolean>;
+  onOpenIngestFailures?: (runId: string) => void;
 }
 
 /**
@@ -24,7 +25,7 @@ interface Props {
  * the retained runs, absent when there are none. Presentation only: the caller supplies the runs and what starting
  * one does.
  */
-const TableBackfillSidebarView: FC<Props> = ({ runs, isStarting, onStart }) => {
+const TableBackfillSidebarView: FC<Props> = ({ runs, isStarting, onStart, onOpenIngestFailures }) => {
   const t = useI18n();
   const [selectedRunId, setSelectedRunId] = useState<string>();
 
@@ -58,6 +59,7 @@ const TableBackfillSidebarView: FC<Props> = ({ runs, isStarting, onStart }) => {
             run={presented}
             isAnyRunInProgress={Boolean(runningRun)}
             isStarting={isStarting}
+            onOpenIngestFailures={onOpenIngestFailures}
             onRerun={(range, shouldIncludeIngested) => void onStartRange(range, shouldIncludeIngested)}
           />
         </BackfillSection>

@@ -17,6 +17,12 @@ import {
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
+import {
+  IngestFailureFilters,
+  IngestFailureList,
+  IngestFailureRetryRequest,
+  IngestFailureRetryResult,
+} from '@/src/models/analytics/ingest-failure';
 import { TableBackfillRun, TableBackfillStart, TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { ConfigEntityRow } from '@/src/models/dial/config-file';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -101,6 +107,18 @@ export async function listTableBackfillRuns(
   state?: TableBackfillState,
 ): Promise<ServerActionResponse<TableBackfillRun[]>> {
   return analyticsDataApi.listTableBackfillRuns(await token(), state);
+}
+
+export async function listIngestFailures(
+  filters: IngestFailureFilters,
+): Promise<ServerActionResponse<IngestFailureList>> {
+  return analyticsDataApi.listIngestFailures(filters, await token());
+}
+
+export async function retryIngestFailures(
+  body: IngestFailureRetryRequest,
+): Promise<ServerActionResponse<IngestFailureRetryResult>> {
+  return analyticsDataApi.retryIngestFailures(body, await token());
 }
 
 export async function getRoles(): Promise<AnalyticsRoleCatalog> {
