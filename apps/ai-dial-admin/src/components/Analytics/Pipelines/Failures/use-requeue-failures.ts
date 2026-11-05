@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { requeueFailure, requeueFailures } from '@/src/app/[lang]/pipelines/actions';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
@@ -42,6 +42,7 @@ export const useRequeueFailures = ({ pipelineName, isPaused, onRequeued }: Param
   const { showNotification } = useNotification();
 
   const [isBusy, setIsBusy] = useState(false);
+  const isSending = useRef(false);
   const [outcome, setOutcome] = useState('');
 
   const report = useCallback(
@@ -63,8 +64,9 @@ export const useRequeueFailures = ({ pipelineName, isPaused, onRequeued }: Param
 
   const run = useCallback(
     async (act: () => Promise<ServerActionResponse<DlqRequeueResponse>>, expected: number) => {
-      if (isBusy) return;
+      if (isSending.current) return;
 
+      isSending.current = true;
       setIsBusy(true);
       setOutcome('');
 
@@ -92,10 +94,11 @@ export const useRequeueFailures = ({ pipelineName, isPaused, onRequeued }: Param
           // The listing failed to refresh; the hook that owns it reports that in its own state.
         }
 
+        isSending.current = false;
         setIsBusy(false);
       }
     },
-    [isBusy, report, onRequeued, showNotification, t],
+    [report, onRequeued, showNotification, t],
   );
 
   const retryOne = useCallback((id: number) => run(() => requeueFailure(id), 1), [run]);
