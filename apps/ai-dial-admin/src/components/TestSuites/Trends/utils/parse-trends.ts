@@ -1,5 +1,5 @@
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
-import { splitMetricName } from '@/src/components/Runs/Summary/utils';
+import { resolveRunScoreMethod, splitMetricName } from '@/src/components/Runs/Summary/utils';
 import {
   COMPUTED_AT_MS_FIELD,
   METRIC_NAME_FIELD,
@@ -101,6 +101,7 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
               computedAtMs: meta.computedAtMs,
               overallScore: meta.overallScore,
               overallScoreThreshold: run?.suiteSnapshot?.overallScoreThreshold,
+              overallScoreMethod: resolveRunScoreMethod(run),
               durationMs: runDurationMs(run),
               isFailed: run?.status === RunStatus.FAILED,
               metricNames: run?.metricNames,
@@ -117,6 +118,7 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
             computedAtMs: run.completedAt ?? run.startedAt ?? 0,
             overallScore: null,
             overallScoreThreshold: run.suiteSnapshot?.overallScoreThreshold,
+            overallScoreMethod: resolveRunScoreMethod(run),
             durationMs: runDurationMs(run),
             isFailed: run.status === RunStatus.FAILED,
             metricNames: run.metricNames,

@@ -37,10 +37,10 @@ const TestCasesByRunCard: FC<Props> = ({ segments, runOrder, isLoading, hasError
     >
       <h3 className="dial-body-semi-text text-primary">{labels.title}</h3>
       <div className="flex flex-wrap items-center gap-2">
-        {hasThreshold && <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.above} label={labels.aboveLabel} />}
         {hasNoThreshold && (
           <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.above} label={labels.completedLabel} />
         )}
+        {hasThreshold && <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.above} label={labels.aboveLabel} />}
         {labels.belowLabel != null && (
           <TestCasesLegendItem swatchClass={TEST_CASE_SEGMENT_BG.below} label={labels.belowLabel} />
         )}

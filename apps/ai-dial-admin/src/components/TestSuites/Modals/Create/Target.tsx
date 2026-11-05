@@ -7,7 +7,7 @@ import { Tabs } from '@epam/ai-dial-ui-kit';
 import { getDeployments, getRoutes } from '@/src/app/[lang]/test-suites/actions';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import {
-  EVALUATION_DEPLOYMENTS_COLUMNS,
+  EVALUATION_TARGET_DEPLOYMENTS_COLUMNS,
   EVALUATION_ROUTES_COLUMNS,
   MCP_DEPLOYMENTS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
@@ -122,7 +122,7 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targets, isLoading]);
 
-  let columnDefs = EVALUATION_DEPLOYMENTS_COLUMNS;
+  let columnDefs = EVALUATION_TARGET_DEPLOYMENTS_COLUMNS;
   if (activeTab === TargetTab.Mcp) columnDefs = MCP_DEPLOYMENTS_COLUMNS;
   if (activeTab === TargetTab.Routes) columnDefs = EVALUATION_ROUTES_COLUMNS;
   const idField = activeTab === TargetTab.Routes ? 'name' : 'deploymentId';
@@ -139,6 +139,7 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
       <div className="flex-1 min-h-0">
         <RadioSelectGrid
           isLoading={isLoading}
+          isRadioInNameColumn
           columnDefs={columnDefs}
           data={targets}
           idField={idField}

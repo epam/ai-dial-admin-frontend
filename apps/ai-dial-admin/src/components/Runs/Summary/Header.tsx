@@ -35,7 +35,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
   const additionalRequestsCount = suiteContext?.additionalRequests?.length ?? 0;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8 pb-8">
+    <div className="flex flex-col sm:flex-row gap-8">
       {!!run?.testRunName && <LabelledText label={t(EntityFieldsI18nKey.name)} text={run.testRunName} />}
 
       {!!run?.testSuiteId && (

@@ -1,9 +1,13 @@
+import { OverallScoreConfig } from '@/src/models/evaluation/test-suite';
+
 export interface TrendsRunPoint {
   runId: string;
   runName: string;
   computedAtMs: number;
   overallScore: number | null;
   overallScoreThreshold?: number | null;
+  /** The method the run was evaluated with, from its own snapshot; `null` when the run has no snapshot. */
+  overallScoreMethod?: OverallScoreConfig | null;
   durationMs: number | null;
   isFailed: boolean;
   metricNames?: string[];

@@ -10,9 +10,11 @@ import {
 } from '@/src/components/TestSuites/Trends/utils/format';
 
 describe('Trends format helpers', () => {
-  test('formatSuiteRunTime uses ms under one second and seconds otherwise', () => {
+  test('formatSuiteRunTime scales from ms through seconds and minutes to hours', () => {
     expect(formatSuiteRunTime(341)).toBe('341ms');
     expect(formatSuiteRunTime(1500)).toBe('1.5s');
+    expect(formatSuiteRunTime(2_077_200)).toBe('34m 37s');
+    expect(formatSuiteRunTime(3_900_000)).toBe('1h 5m');
   });
 
   test('formatComboRuntimeSeconds always uses seconds', () => {

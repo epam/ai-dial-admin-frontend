@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { NoDataContent, Spinner } from '@epam/ai-dial-ui-kit';
 import type { EChartsType } from 'echarts';
@@ -17,6 +17,7 @@ import {
   buildOverallScorePlotPoints,
   resolveNearestOverallScoreDataIndex,
 } from '@/src/components/TestSuites/Trends/OverallScoreTrend/utils/chart-options';
+import { createThresholdHoverHandlers } from '@/src/components/TestSuites/Trends/OverallScoreTrend/utils/threshold-hover';
 import { TREND_SCORE_Y_LABEL_WIDTH_PX } from '@/src/components/TestSuites/Trends/utils/score-axis';
 import { useStickyEchartsTooltip } from '@/src/components/TestSuites/Trends/utils/use-sticky-echarts-tooltip';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -70,13 +71,40 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
     resolveTipTarget,
   });
 
+  const plotRef = useRef<HTMLDivElement>(null);
+  const [plotWidth, setPlotWidth] = useState<number>();
+
+  // Layout effect: the first measurement must land before paint, or the threshold label is laid out
+  // without a width and visibly shifts once the real width arrives.
+  useLayoutEffect(() => {
+    const plot = plotRef.current;
+    if (!plot) {
+      return;
+    }
+    setPlotWidth(plot.clientWidth);
+    const observer = new ResizeObserver(([entry]) => setPlotWidth(Math.round(entry.contentRect.width)));
+    observer.observe(plot);
+    return () => observer.disconnect();
+  }, [isLoading, hasData]);
+
   const options = useMemo(
     () =>
-      buildOverallScoreChartOptions(palette, runOrder, {
-        score: t(TestSuitesI18nKey.TrendsOverallScoreTooltipScore),
-        threshold: t(TestSuitesI18nKey.OverallScoreThresholdLabel),
-      }),
-    [runOrder, t, palette],
+      buildOverallScoreChartOptions(
+        palette,
+        runOrder,
+        {
+          score: t(TestSuitesI18nKey.TrendsOverallScoreTooltipScore),
+          threshold: t(TestSuitesI18nKey.OverallScoreThresholdLabel),
+          thresholdShort: t(TestSuitesI18nKey.OverallScoreThresholdShortLabel),
+        },
+        plotWidth,
+      ),
+    [runOrder, t, palette, plotWidth],
+  );
+
+  const thresholdHoverHandlers = useMemo(
+    () => createThresholdHoverHandlers(() => chartRef.current?.getEchartsInstance()),
+    [chartRef],
   );
 
   return (
@@ -94,6 +122,7 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
           <div className="flex min-h-0 w-full flex-1 gap-2">
             <TrendScoreAxis />
             <div
+              ref={plotRef}
               className="min-h-0 min-w-0 flex-1 overflow-hidden rounded border border-secondary bg-layer-2"
               style={{ minHeight: OVERALL_SCORE_PLOT_MIN_HEIGHT_PX }}
             >
@@ -101,6 +130,7 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
                 ref={chartRef}
                 option={options}
                 onChartReady={onChartReady}
+                onEvents={thresholdHoverHandlers}
                 style={{ height: '100%', width: '100%' }}
                 opts={{ renderer: 'canvas' }}
               />

@@ -7,6 +7,7 @@ import {
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import {
   buildThresholdMarkPlan,
+  ThresholdHorizontalSegment,
   ThresholdMarkSegment,
 } from '@/src/components/TestSuites/Trends/OverallScoreTrend/utils/threshold-segments';
 import {
@@ -22,8 +23,10 @@ import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 
 interface OverallChartLabels {
   score: string;
-  /** i18n label for the threshold markLine (e.g. "Threshold"). */
+  /** Full threshold caption (e.g. "Threshold"); shown in the hover tooltip. */
   threshold?: string;
+  /** Short caption drawn on the chart (e.g. "Thld"): the full one is clipped by the last run's short segment. */
+  thresholdShort?: string;
 }
 
 /** Short dash / wide gap for vertical threshold transitions (sparser than horizontal). */
@@ -155,23 +158,60 @@ export const resolveNearestOverallScoreDataIndex = (
 
 const categoryAxisData = (runOrder: TrendsRunPoint[]): string[] => runOrder.map((point) => point.runId);
 
-const thresholdLabelPosition = (value: number): 'insideStartTop' | 'insideStartBottom' =>
+/** Rough 10px label metrics; deliberately a little generous so the caption is moved rather than clipped. */
+const THRESHOLD_LABEL_CHAR_WIDTH_PX = 6;
+const THRESHOLD_LABEL_PADDING_PX = 4;
+
+/**
+ * Whether the caption, drawn from the start of the segment, would run past the chart's right edge.
+ * Only a segment that ends on the last run can: the last run owns just half a slot.
+ */
+const isLabelClippedAtRightEdge = (
+  segment: ThresholdHorizontalSegment,
+  caption: string,
+  runCount: number,
+  plotWidth?: number,
+): boolean => {
+  if (plotWidth == null || segment.x1 < runCount - 1) {
+    return false;
+  }
+  const gridWidth = plotWidth - OVERALL_SCORE_TREND_GRID.left - OVERALL_SCORE_TREND_GRID.right;
+  const segmentWidth = ((segment.x1 - segment.x0) / (runCount - 1)) * gridWidth;
+  return caption.length * THRESHOLD_LABEL_CHAR_WIDTH_PX + THRESHOLD_LABEL_PADDING_PX > segmentWidth;
+};
+
+type ThresholdLabelPosition = 'insideStartTop' | 'insideStartBottom' | 'insideEndTop' | 'insideEndBottom';
+
+const thresholdLabelPosition = (value: number, isAnchoredToEnd = false): ThresholdLabelPosition => {
   // `insideStartTop` draws the caption above the line. At the axis max the line
   // sits on grid.top (8px) and the 10px caption is clipped. Place it below the line.
-  value >= SCORE_AXIS_MAX ? 'insideStartBottom' : 'insideStartTop';
+  const side = value >= SCORE_AXIS_MAX ? 'Bottom' : 'Top';
+  return `${isAnchoredToEnd ? 'insideEnd' : 'insideStart'}${side}`;
+};
+
+const thresholdCaption = (caption: string, value: number): string => `${caption} (${value})`;
+
+/** Hover tooltip with the full caption; the on-chart label only carries the short one. */
+const buildThresholdTooltip = (thresholdLabel: string, value: number) => ({
+  formatter: thresholdCaption(thresholdLabel, value),
+});
+
+/** Not silent so hover reaches the mark line; see `createThresholdHoverHandlers`. */
+const THRESHOLD_MARK_LINE_INTERACTION = { silent: false, emphasis: { disabled: true } };
 
 const buildFullWidthThresholdMarkLine = (
   value: number,
   thresholdLabel: string,
+  thresholdShortLabel: string,
   palette: ThemePalette,
   thresholdColor: string,
 ) => ({
-  silent: true,
+  ...THRESHOLD_MARK_LINE_INTERACTION,
   symbol: 'none' as const,
   label: {
     show: true,
     position: thresholdLabelPosition(value),
-    formatter: `${thresholdLabel} (${value})`,
+    formatter: thresholdCaption(thresholdShortLabel, value),
     // Figma caption on the threshold line uses primary text (#EEF1F7 / theme text-primary).
     color: palette['text-primary'],
     fontSize: 10,
@@ -181,19 +221,22 @@ const buildFullWidthThresholdMarkLine = (
     width: 1,
     type: 'dashed' as const,
   },
-  data: [{ yAxis: value }],
+  data: [{ yAxis: value, tooltip: buildThresholdTooltip(thresholdLabel, value) }],
 });
 
 const buildSegmentThresholdMarkLine = (
   segments: ThresholdMarkSegment[],
   thresholdLabel: string,
+  thresholdShortLabel: string,
   palette: ThemePalette,
   thresholdColor: string,
+  runCount: number,
+  plotWidth?: number,
 ) => {
   const labeledValues = new Set<number>();
 
   return {
-    silent: true,
+    ...THRESHOLD_MARK_LINE_INTERACTION,
     symbol: 'none' as const,
     label: { show: false },
     lineStyle: {
@@ -205,16 +248,19 @@ const buildSegmentThresholdMarkLine = (
       if (segment.kind === 'horizontal') {
         const shouldShowLabel = !labeledValues.has(segment.y);
         labeledValues.add(segment.y);
+        const caption = thresholdCaption(thresholdShortLabel, segment.y);
+        const isAnchoredToEnd = isLabelClippedAtRightEdge(segment, caption, runCount, plotWidth);
         return [
           {
             coord: [segment.x0, segment.y],
             label: {
               show: shouldShowLabel,
-              position: thresholdLabelPosition(segment.y),
-              formatter: `${thresholdLabel} (${segment.y})`,
+              position: thresholdLabelPosition(segment.y, isAnchoredToEnd),
+              formatter: caption,
               color: palette['text-primary'],
               fontSize: 10,
             },
+            tooltip: buildThresholdTooltip(thresholdLabel, segment.y),
           },
           { coord: [segment.x1, segment.y] },
         ];
@@ -223,6 +269,7 @@ const buildSegmentThresholdMarkLine = (
         {
           coord: [segment.x, segment.y0],
           label: { show: false },
+          tooltip: { show: false },
           lineStyle: {
             color: thresholdColor,
             width: 1,
@@ -239,6 +286,7 @@ export const buildOverallScoreChartOptions = (
   palette: ThemePalette,
   runOrder: TrendsRunPoint[],
   labels: OverallChartLabels,
+  plotWidth?: number,
 ): EChartsOption => {
   const passedColor = palette['text-accent-primary'];
   const axisColor = palette['text-secondary'];
@@ -258,8 +306,10 @@ export const buildOverallScoreChartOptions = (
     };
   });
 
+  const thresholdLabel = labels.threshold;
+  const thresholdShortLabel = labels.thresholdShort ?? thresholdLabel;
   const thresholdPlan =
-    labels.threshold != null
+    thresholdLabel != null
       ? buildThresholdMarkPlan(runOrder.map((point) => point.overallScoreThreshold))
       : { mode: 'none' as const };
 
@@ -286,12 +336,18 @@ export const buildOverallScoreChartOptions = (
   const series: EChartsOption['series'] = [scoreSeries];
   let xAxis: EChartsOption['xAxis'] = categoryXAxis;
 
-  if (thresholdPlan.mode === 'fullWidth' && labels.threshold != null) {
+  if (thresholdPlan.mode === 'fullWidth' && thresholdLabel != null && thresholdShortLabel != null) {
     series[0] = {
       ...scoreSeries,
-      markLine: buildFullWidthThresholdMarkLine(thresholdPlan.value, labels.threshold, palette, thresholdColor),
+      markLine: buildFullWidthThresholdMarkLine(
+        thresholdPlan.value,
+        thresholdLabel,
+        thresholdShortLabel,
+        palette,
+        thresholdColor,
+      ),
     };
-  } else if (thresholdPlan.mode === 'segments' && labels.threshold != null) {
+  } else if (thresholdPlan.mode === 'segments' && thresholdLabel != null && thresholdShortLabel != null) {
     const runCount = runOrder.length;
     xAxis = [
       categoryXAxis,
@@ -311,9 +367,16 @@ export const buildOverallScoreChartOptions = (
       type: 'line',
       xAxisIndex: 1,
       data: [],
-      silent: true,
-      tooltip: { show: false },
-      markLine: buildSegmentThresholdMarkLine(thresholdPlan.segments, labels.threshold, palette, thresholdColor),
+      // Not silent: a silent series silences its markLine too, which would kill the hover tooltip.
+      markLine: buildSegmentThresholdMarkLine(
+        thresholdPlan.segments,
+        thresholdLabel,
+        thresholdShortLabel,
+        palette,
+        thresholdColor,
+        runCount,
+        plotWidth,
+      ),
     });
   }
 

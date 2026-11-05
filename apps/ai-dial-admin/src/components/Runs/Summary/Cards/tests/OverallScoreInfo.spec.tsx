@@ -35,14 +35,14 @@ describe('OverallScoreInfo', () => {
     expect(text).toContain('deepeval.context_prec.score × 0.3');
   });
 
-  test('describes the dataset and P columns for a specific function', async () => {
+  test('describes the ground truth and prediction parameters for a specific function', async () => {
     const text = await hoverInfo({
       type: OverallScoreType.Function,
       expression: { mode: 'aggregate', entity: 'eval_summaries', select: [] } as never,
     });
 
     expect(text).toContain(TestSuitesI18nKey.OverallScoreFunctionLabel);
-    expect(text).toContain(TestSuitesI18nKey.OverallScoreDatasetColumn);
-    expect(text).toContain(TestSuitesI18nKey.OverallScoreParameterP);
+    expect(text).toContain(TestSuitesI18nKey.OverallScoreGroundTruth);
+    expect(text).toContain(TestSuitesI18nKey.OverallScorePrediction);
   });
 });

@@ -53,8 +53,6 @@ const STATUS_ROWS = {
 const RUN_TIME_ROWS = { rows: [{ total_duration_ms: 341000 }] };
 const METRIC_EVAL_ROWS = { rows: [{ total_metric_eval_duration_ms: 291123.6 }] };
 
-const SECONDS = RunsI18nKey.Seconds;
-
 const buildRun = (overrides: Partial<Run> = {}): Run => ({
   id: 'run-1',
   status: RunStatus.COMPLETED,
@@ -292,10 +290,10 @@ describe('Runs Summary :: Analytics', () => {
     await renderLoaded();
 
     const runtime = within(card(RunsI18nKey.TotalRuntime));
-    expect(runtime.getByText(`632.1${SECONDS}`)).toBeInTheDocument();
+    expect(runtime.getByText('10m 32s')).toBeInTheDocument();
     expect(runtime.getByText('Model:')).toBeInTheDocument();
-    expect(runtime.getByText(`341${SECONDS}`)).toBeInTheDocument();
-    expect(runtime.getByText(`291.1${SECONDS}`)).toBeInTheDocument();
+    expect(runtime.getByText('5m 41s')).toBeInTheDocument();
+    expect(runtime.getByText('4m 51s')).toBeInTheDocument();
   });
 
   test('falls back to a generic source label when the kind cannot be resolved', async () => {
@@ -311,7 +309,7 @@ describe('Runs Summary :: Analytics', () => {
     await renderLoaded();
 
     const runtime = within(card(RunsI18nKey.TotalRuntime));
-    expect(runtime.getAllByText(`341${SECONDS}`)).toHaveLength(2);
+    expect(runtime.getAllByText('5m 41s')).toHaveLength(2);
     expect(runtime.getByText('—')).toBeInTheDocument();
   });
 
@@ -339,7 +337,7 @@ describe('Runs Summary :: Analytics', () => {
     await renderLoaded();
 
     expect(within(card(RunsI18nKey.TotalRunCost)).getByRole('status')).toHaveTextContent(RunsI18nKey.Calculating);
-    expect(within(card(RunsI18nKey.TotalRuntime)).getByText(`341${SECONDS}`)).toBeInTheDocument();
+    expect(within(card(RunsI18nKey.TotalRuntime)).getByText('5m 41s')).toBeInTheDocument();
   });
 
   test('settles the Metrics value to a dash while a run without metrics is still calculating its cost', async () => {

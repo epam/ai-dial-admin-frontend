@@ -11,6 +11,7 @@ const palette = fallbackDarkTheme as ThemePalette;
 const labels = {
   score: 'Score',
   threshold: 'Threshold',
+  thresholdShort: 'Thld',
 };
 
 const run = (overrides: Partial<TrendsRunPoint> & Pick<TrendsRunPoint, 'runId' | 'computedAtMs'>): TrendsRunPoint => ({
@@ -94,12 +95,13 @@ describe('buildOverallScoreChartOptions', () => {
     expect(options.xAxis).toMatchObject({ type: 'category', data: ['a'] });
     expect(options.series).toHaveLength(1);
     expect(markLine).toMatchObject({
-      silent: true,
+      silent: false,
+      emphasis: { disabled: true },
       symbol: 'none',
       label: {
         show: true,
         position: 'insideStartTop',
-        formatter: 'Threshold (0.6)',
+        formatter: 'Thld (0.6)',
         color: palette['text-primary'],
       },
       lineStyle: {
@@ -107,7 +109,7 @@ describe('buildOverallScoreChartOptions', () => {
         width: 1,
         type: 'dashed',
       },
-      data: [{ yAxis: 0.6 }],
+      data: [{ yAxis: 0.6, tooltip: { formatter: 'Threshold (0.6)' } }],
     });
   });
 
@@ -163,9 +165,9 @@ describe('buildOverallScoreChartOptions', () => {
     expect(series[0].markLine).toBeUndefined();
     expect(series[1]).toMatchObject({
       xAxisIndex: 1,
-      silent: true,
       markLine: {
-        silent: true,
+        silent: false,
+        emphasis: { disabled: true },
         symbol: 'none',
         lineStyle: {
           color: palette['stroke-accent-secondary'],
@@ -181,10 +183,11 @@ describe('buildOverallScoreChartOptions', () => {
           label: {
             show: true,
             position: 'insideStartTop',
-            formatter: 'Threshold (0.6)',
+            formatter: 'Thld (0.6)',
             color: palette['text-primary'],
             fontSize: 10,
           },
+          tooltip: { formatter: 'Threshold (0.6)' },
         },
         { coord: [1.5, 0.6] },
       ],
@@ -192,6 +195,7 @@ describe('buildOverallScoreChartOptions', () => {
         {
           coord: [1.5, 0.6],
           label: { show: false },
+          tooltip: { show: false },
           lineStyle: {
             color: palette['stroke-accent-secondary'],
             width: 1,
@@ -206,10 +210,11 @@ describe('buildOverallScoreChartOptions', () => {
           label: {
             show: true,
             position: 'insideStartTop',
-            formatter: 'Threshold (0.8)',
+            formatter: 'Thld (0.8)',
             color: palette['text-primary'],
             fontSize: 10,
           },
+          tooltip: { formatter: 'Threshold (0.8)' },
         },
         { coord: [2.5, 0.8] },
       ],
@@ -219,10 +224,11 @@ describe('buildOverallScoreChartOptions', () => {
           label: {
             show: false,
             position: 'insideStartTop',
-            formatter: 'Threshold (0.6)',
+            formatter: 'Thld (0.6)',
             color: palette['text-primary'],
             fontSize: 10,
           },
+          tooltip: { formatter: 'Threshold (0.6)' },
         },
         { coord: [4, 0.6] },
       ],
@@ -239,11 +245,11 @@ describe('buildOverallScoreChartOptions', () => {
       {
         markLine: {
           data: [
-            [{ label: { show: true, formatter: 'Threshold (0)' } }, {}],
+            [{ label: { show: true, formatter: 'Thld (0)' } }, {}],
             [{ label: { show: false } }, {}],
-            [{ label: { show: true, formatter: 'Threshold (1)' } }, {}],
+            [{ label: { show: true, formatter: 'Thld (1)' } }, {}],
             [{ label: { show: false } }, {}],
-            [{ label: { show: false, formatter: 'Threshold (0)' } }, {}],
+            [{ label: { show: false, formatter: 'Thld (0)' } }, {}],
           ],
         },
       },
@@ -251,6 +257,39 @@ describe('buildOverallScoreChartOptions', () => {
 
     const nextOptions = buildOverallScoreChartOptions(palette, runOrder, labels);
     expect(nextOptions.series).toEqual(options.series);
+  });
+
+  describe('last-run threshold label', () => {
+    const thresholdRuns = [0.6, 0.6, 0.8].map((overallScoreThreshold, index) =>
+      run({ runId: `run-${index}`, computedAtMs: index, overallScoreThreshold }),
+    );
+    const lastLabelPosition = (plotWidth?: number) => {
+      const options = buildOverallScoreChartOptions(palette, thresholdRuns, labels, plotWidth);
+      const data = (options.series as { markLine?: { data: { label: { position: string } }[][] } }[])[1].markLine!.data;
+      return data[data.length - 1][0].label.position;
+    };
+
+    test('keeps the label at the segment start when the last segment fits it', () => {
+      expect(lastLabelPosition(1000)).toBe('insideStartTop');
+    });
+
+    test('keeps the label at the segment start when the plot width is unknown', () => {
+      expect(lastLabelPosition()).toBe('insideStartTop');
+    });
+
+    test('anchors the label to the chart edge when the last segment is too short for it', () => {
+      expect(lastLabelPosition(120)).toBe('insideEndTop');
+    });
+
+    test('anchors a label at the axis max below the line when moved to the chart edge', () => {
+      const runs = [0.6, 1].map((overallScoreThreshold, index) =>
+        run({ runId: `run-${index}`, computedAtMs: index, overallScoreThreshold }),
+      );
+      const options = buildOverallScoreChartOptions(palette, runs, labels, 60);
+      const data = (options.series as { markLine?: { data: { label: { position: string } }[][] } }[])[1].markLine!.data;
+
+      expect(data[data.length - 1][0].label.position).toBe('insideEndBottom');
+    });
   });
 
   test('tooltip shows run link, month-year time, and score row', () => {

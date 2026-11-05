@@ -36,8 +36,8 @@ When the Trends tab has at least one run, the KPI strip SHALL include four cards
    **Completion Rate of Latest Run** (rate from the latest `test_case_eval_scores` segments;
    loading indicator while the combined eval aggregate is pending)
 2. **Overall Score of Latest Run** (latest `runOrder` overall score, threshold glyph/tooltip when
-   set, delta vs previous run, and the static "Based on completed test cases" subtitle; no
-   calculation-method info)
+   set, delta vs previous run, and the static "Based on completed test cases" subtitle with a
+   calculation-method info control)
 3. **Total Runtime of Latest Run** (latest combo total + source/Metrics breakdown)
 4. **Total Cost of Latest Run** (latest combo total + source/Metrics breakdown)
 
@@ -107,7 +107,20 @@ Overall Score Trend plots), formatted to three decimals. The card SHALL:
   threshold (exact threshold counts as above)
 - show a signed delta vs the previous run’s overall score (`+0.12 vs prev.`); hide it when either
   score is missing or the delta is zero (higher is better → green)
-- show the static “Based on completed test cases” subtitle and omit the calculation-method tooltip
+- show the static “Based on completed test cases” subtitle followed by an info control whose tooltip
+  describes the overall-score method stored in the latest run’s own suite snapshot, never the suite as
+  configured now (same tooltip as the run Summary card); omit the control when the latest run has no
+  suite snapshot
+
+#### Scenario: Calculation method comes from the latest run snapshot
+
+- **WHEN** the suite’s overall score method was edited after the latest run completed
+- **THEN** hovering the info control shows the method the latest run was evaluated with
+
+#### Scenario: Latest run has no snapshot
+
+- **WHEN** the latest run has no suite snapshot
+- **THEN** the card shows no calculation-method info control
 
 #### Scenario: Latest overall score value
 
@@ -131,7 +144,8 @@ the same Cost / Runtime combo data the charts use. Each card SHALL:
 #### Scenario: Runtime total from combo segments
 
 - **WHEN** the latest run has source runtime `341s` and metrics runtime `291s`
-- **THEN** the Total Runtime card shows `632s` and the source / Metrics footer values
+- **THEN** the Total Runtime card shows `10m 32s` and the source / Metrics footer values (`5m 41s`, `4m 51s`),
+  scaling to minutes and hours like the Runs list Duration column
 
 #### Scenario: Cost total from combo segments
 
@@ -296,8 +310,12 @@ below the `xl` breakpoint). The card SHALL:
   `Score` and the formatted overall score
 - draw the threshold line from each run’s snapshot `overallScoreThreshold` (including `0`) as 1px
   dashed horizontal segments in the accent-secondary stroke color, with a left-side label
-  `Threshold (value)` at the start of the first segment for each distinct threshold value; suppress
-  repeated labels when the same value reappears after a gap or another threshold
+  `Thld (value)` at the start of the first segment for each distinct threshold value (shortened so
+  the label is not clipped on the last run's short segment; when the label still would not fit
+  inside the last run's segment it is right-aligned to the chart's right edge instead); suppress repeated labels when the same
+  value reappears after a gap or another threshold
+- show the full `Threshold (value)` text in a tooltip when a horizontal threshold segment or its label
+  is hovered
 - merge neighboring runs that share the same snapshot threshold into one continuous dashed segment
   with a single label
 - when the snapshot threshold changes between neighboring runs, join the segments with a vertical
@@ -319,9 +337,9 @@ below the `xl` breakpoint). The card SHALL:
 #### Scenario: Threshold line follows each run snapshot
 
 - **WHEN** the Trends window has runs whose snapshot thresholds are `0.6`, `0.6`, and `0.8`
-- **THEN** the chart shows one continuous dashed segment at `0.6` labeled `Threshold (0.6)`, a
+- **THEN** the chart shows one continuous dashed segment at `0.6` labeled `Thld (0.6)`, a
   sparse vertical join where the threshold changes, and a dashed segment at `0.8` labeled
-  `Threshold (0.8)`
+  `Thld (0.8)`; hovering a label shows `Threshold (0.6)` / `Threshold (0.8)` in a tooltip
 
 #### Scenario: Threshold line breaks when a run has no snapshot threshold
 
