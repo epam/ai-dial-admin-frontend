@@ -37,7 +37,7 @@ const ICON_SIZE = 14;
 const NOTIFICATION_ICON_SIZE = 16;
 const LOADER_SIZE = 18;
 
-const PANEL_CLASS = 'flex flex-col gap-2 rounded border border-primary bg-layer-3 px-3 py-2.5';
+const PANEL_CLASS = 'flex flex-col gap-2 rounded border border-secondary bg-layer-3 px-3 py-2.5';
 
 // One label/value pair of the middle tier. That tier is card-level throughout, so every value in it is read
 // from the card's own root row — never from the trace. The label is what keeps the two registers legible.
@@ -65,7 +65,7 @@ const TraceTier: FC<{ group: SessionTraceGroup; hasChevron?: boolean; hasTotals?
   const t = useI18n();
 
   return (
-    <span className="flex min-w-0 items-center gap-3 border-t border-primary pl-6 pt-2">
+    <span className="flex min-w-0 items-center gap-3 border-t border-tertiary pl-6 pt-2">
       <SessionTraceChips chips={group.chips} />
       {/* Stated here rather than on each card when the panel holds more than one: the totals are the trace's,
           so repeating them per card would present one fact as several. */}
@@ -258,7 +258,7 @@ const TraceGroup: FC<GroupProps> = ({ group, ratings, isCardTheRoot, onOpenTrace
     <div
       role="group"
       aria-label={t(SessionsTraceI18nKey.TraceGroupLabel, { traceId: group.traceId })}
-      className="flex flex-col gap-1.5 rounded border border-primary bg-layer-2 p-2"
+      className="flex flex-col gap-1.5 rounded border border-secondary bg-layer-2 p-2"
     >
       {group.cards.map((card) => (
         <TraceCard

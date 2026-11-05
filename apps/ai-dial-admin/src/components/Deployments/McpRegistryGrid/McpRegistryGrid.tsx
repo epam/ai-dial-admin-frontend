@@ -163,7 +163,6 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, vi
       additionalGridOptions={gridOptions}
       onGridReady={onGridReady}
       infoPanel={infoPanel}
-      isEmbedToModal
       isEnableColumnPanel
     />
   );

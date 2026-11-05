@@ -14,7 +14,7 @@ interface Props {
 const UserMessage: FC<{ message: string }> = ({ message }) => (
   <div className="flex justify-end">
     <div
-      className="bg-layer-4 px-6 py-4 max-w-[80%] whitespace-pre-wrap"
+      className="bg-layer-4 px-6 py-4 max-w-[80%] whitespace-pre-wrap break-words"
       style={{
         borderRadius: '16px 16px 0 16px',
       }}
@@ -29,7 +29,7 @@ const AssistantMessage: FC<{ message: string }> = ({ message }) => (
     <div className="shrink-0 mt-1">
       <Icon />
     </div>
-    <div className="whitespace-pre-wrap">{message}</div>
+    <div className="min-w-0 whitespace-pre-wrap break-words">{message}</div>
   </div>
 );
 

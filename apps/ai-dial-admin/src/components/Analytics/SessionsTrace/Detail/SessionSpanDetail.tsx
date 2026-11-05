@@ -93,7 +93,7 @@ const SessionSpanDetail: FC<Props> = ({ node, fieldGroups, feedback, isCommentTe
         </div>
         <SpanKindBadge kind={kind} hasFailed={hasFailed} />
       </div>
-      <dl className="grid grid-cols-2 gap-2 rounded border border-primary bg-layer-3 p-3">
+      <dl className="grid grid-cols-2 gap-2 rounded border border-secondary bg-layer-3 p-3">
         {metrics.map(({ label: metricLabel, value, valueClassName }, index) => (
           <div key={metricLabel} className={classNames('flex min-w-0 flex-col gap-0.5', index === 0 && 'col-span-2')}>
             <dt className="text-secondary dial-tiny-text">{metricLabel}</dt>
@@ -101,7 +101,7 @@ const SessionSpanDetail: FC<Props> = ({ node, fieldGroups, feedback, isCommentTe
           </div>
         ))}
       </dl>
-      <div className="shrink-0 divide-y divide-tertiary rounded border border-primary bg-layer-3 px-3">
+      <div className="shrink-0 divide-y divide-tertiary rounded border border-secondary bg-layer-3 px-3">
         {addresses.map((row) => (
           <SpanFactRow key={row.label} {...row} />
         ))}

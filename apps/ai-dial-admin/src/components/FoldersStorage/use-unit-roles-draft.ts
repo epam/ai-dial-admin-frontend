@@ -28,9 +28,10 @@ export interface SaveRolesResult {
 
 /**
  * Local draft of a unit's role assignments. Changing `unitPath` reloads from core, which drops any
- * unsaved edits, the same as the rules editor when another folder is selected.
+ * unsaved edits, the same as the rules editor when another folder is selected. When `isEnabled` is false
+ * the caller lacks `read` on role assignments here, so core is not asked and the card reports forbidden.
  */
-export const useUnitRolesDraft = (unitPath: string) => {
+export const useUnitRolesDraft = (unitPath: string, isEnabled = true) => {
   const [status, setStatus] = useState(RolesCardStatus.LOADING);
   const [roles, setRoles] = useState<OrgUnitRole[]>([]);
   const [stored, setStored] = useState<DraftHolder[]>([]);
@@ -53,9 +54,13 @@ export const useUnitRolesDraft = (unitPath: string) => {
   }, [unitPath]);
 
   useEffect(() => {
+    if (!isEnabled) {
+      setStatus(RolesCardStatus.FORBIDDEN);
+      return;
+    }
     setStatus(RolesCardStatus.LOADING);
     void load();
-  }, [load]);
+  }, [load, isEnabled]);
 
   const addHolder = useCallback((roleName: string, subject: OrgUnitSubject) => {
     const key = holderKey(roleName, subject);

@@ -520,7 +520,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const activeSurface = isEditorEnabled ? definitionJson : activeBody;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
+    <div className="flex flex-col flex-1 min-h-0 w-full relative">
       <div className="flex flex-col mb-8 gap-2">
         <div className="flex flex-row justify-between items-center gap-4">
           <div className="flex min-w-0 items-center gap-2">

@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { Input } from '@epam/ai-dial-ui-kit';
 
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { LABELLED_FIELD_TOP_OFFSET } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
@@ -73,7 +74,9 @@ const Path: FC<Props> = ({
           invalid={!!error}
         />
       </div>
-      {!disabled && <RemoveButton onClick={() => onRemove(index)} className={index === 0 ? 'mt-7' : ''} />}
+      {!disabled && (
+        <RemoveButton onClick={() => onRemove(index)} className={index === 0 ? LABELLED_FIELD_TOP_OFFSET : ''} />
+      )}
     </div>
   );
 };

@@ -20,7 +20,7 @@ interface Props {
 const NodePoolItem: FC<Props> = ({ radioName, inputId, value, name, description, poolId, checked, onSelect }) => (
   <li
     className={classNames(
-      'border-b border-primary last:border-b-0',
+      'border-b border-tertiary last:border-b-0',
       checked ? 'bg-accent-primary-alpha' : 'hover:bg-layer-3',
     )}
   >

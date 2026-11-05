@@ -23,7 +23,7 @@ interface Props {
   focusRequestId?: number;
 }
 
-const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-secondary dial-small-semi-text';
+const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-tertiary dial-small-semi-text';
 
 const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focusRequestId = 0 }) => {
   const t = useI18n();
@@ -54,7 +54,7 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
             gridTemplateColumns,
             // minmax(0, 1fr), not bare 1fr: a bare fr track can't shrink below its content's
             // min-content height, so a long cell value would blow out the row instead of
-            // being truncated to the cell by PivotValueCell.
+            // scrolling inside PivotValueCell.
             gridTemplateRows: 'auto auto minmax(0, 1fr)',
             minWidth: gridMinWidth,
           }}
@@ -85,11 +85,7 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
           ))}
 
           {columns.map((column) => (
-            <PivotValueCell
-              key={`value-${column.sectionKey}-${column.field.fieldKey}`}
-              field={column.field}
-              isTruncated
-            />
+            <PivotValueCell key={`value-${column.sectionKey}-${column.field.fieldKey}`} field={column.field} />
           ))}
         </div>
       </div>

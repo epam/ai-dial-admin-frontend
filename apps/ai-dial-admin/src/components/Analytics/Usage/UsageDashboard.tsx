@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, ReactNode, useCallback, useState } from 'react';
 
 import UsageControls from '@/src/components/Analytics/Usage/Controls/UsageControls';
 import { PAGE_SCOPE, VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
@@ -14,10 +14,12 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   callerSource: CallerSource;
+  // The dashboard switcher, while custom dashboards are on; it leads the controls row.
+  switcher?: ReactNode;
 }
 
 /** The standalone Dashboards page: one block, whichever view `View by` names. */
-const UsageDashboard: FC<Props> = ({ callerSource }) => {
+const UsageDashboard: FC<Props> = ({ callerSource, switcher }) => {
   const t = useI18n();
 
   const [view, setView] = useState<UsageView>(UsageView.Llm);
@@ -36,10 +38,11 @@ const UsageDashboard: FC<Props> = ({ callerSource }) => {
   return (
     // The widgets scroll inside this panel, so the cards keep a gutter the scrollbar can sit in
     // instead of being drawn over their right edge.
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto px-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto">
       <h1 className="dial-h1-text">{t(MenuI18nKey.Dashboard)}</h1>
 
       <UsageControls
+        leadingControl={switcher}
         view={view}
         onViewChange={setView}
         compare={compare}

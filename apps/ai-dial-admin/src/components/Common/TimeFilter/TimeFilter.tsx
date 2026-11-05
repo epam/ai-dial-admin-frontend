@@ -51,7 +51,7 @@ const MODERN_OPTION_SELECTED_CLASS = 'bg-control-accent-alpha';
 const LEGACY_OPTION_SELECTED_CLASS = 'bg-layer-3';
 
 const MODERN_DIVIDER_CLASS = 'my-1 border-t border-tertiary';
-const LEGACY_DIVIDER_CLASS = 'border-t border-secondary';
+const LEGACY_DIVIDER_CLASS = 'border-t border-tertiary';
 
 /** A 2.0 row truncates its label; the legacy one never wrapped, so it keeps growing the panel. */
 const MODERN_LABEL_CLASS = 'min-w-0 flex-1 truncate text-start';

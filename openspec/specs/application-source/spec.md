@@ -283,3 +283,10 @@ The system SHALL use the Platform App Runner's Core storage path only to fetch o
 - **WHEN** an admin selects a Platform App Runner stored under `quickapps2` whose declared `$id` is `https://dial.example.com/custom_application_schemas/quickapps2`
 - **THEN** the asset application's `application_type_schema_id` is `https://dial.example.com/custom_application_schemas/quickapps2`
 - **AND** the storage name is retained only for resource retrieval and navigation
+
+### Requirement: Runner options and details resolve without config-file access
+When the caller's `adminAccess` is not `FULL`, the runner picker SHALL be built from Core's caller-scoped schema list alone, with no platform-origin options, and a config-origin runner's details SHALL be read through the resolved schema (`GET /v1/application_type_schemas/schema?id=` by `$id`) instead of the config-file read. The resolved schema SHALL supply the same routes, interceptors and features.
+
+#### Scenario: Config runner details for a non-admin
+- **WHEN** a caller without full admin access selects a config-origin runner
+- **THEN** its details are read by `$id` through the resolved schema and the config-file read is not made

@@ -263,7 +263,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
           <TreeColumnsPanel
             columns={panelColDefs}
             onColumnsChange={onPanelColumnsChange}
-            panelClassName="absolute right-0 top-0 h-full w-72 bg-layer-3 flex flex-col border-l border-primary shadow-lg z-10"
+            panelClassName="absolute right-0 top-0 h-full w-72 bg-layer-3 flex flex-col border-l border-tertiary shadow-lg z-10"
             toggleColumnsPanel={toggleTreePanel}
           />
         )}

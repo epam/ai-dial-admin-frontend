@@ -5,6 +5,7 @@ import { FC, useMemo } from 'react';
 import { Tag, TagAppearance } from '@epam/ai-dial-ui-kit';
 
 import AddHolderForm from '@/src/components/FoldersStorage/AddHolderForm';
+import SubjectKindIcon from '@/src/components/FoldersStorage/SubjectKindIcon';
 import { DraftHolder } from '@/src/components/FoldersStorage/models';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -38,7 +39,7 @@ const UnitRolesCard: FC<Props> = ({ roles, holders, groupClaim, isReadonly, onAd
             key={role.name}
             role="group"
             aria-label={role.name}
-            className="flex flex-col gap-3 bg-layer-2 py-4 px-6 rounded min-w-0"
+            className="flex flex-col gap-3 bg-layer-2 py-4 px-6 rounded-lg min-w-0"
           >
             <div className="flex flex-col gap-1 min-w-0">
               <h3 className="truncate">{role.name}</h3>
@@ -55,6 +56,7 @@ const UnitRolesCard: FC<Props> = ({ roles, holders, groupClaim, isReadonly, onAd
                   <Tag
                     key={holder.key}
                     label={text}
+                    icon={<SubjectKindIcon kind={kind} />}
                     appearance={TagAppearance.Bordered}
                     closable={!isReadonly}
                     removeLabel={t(FoldersI18nKey.RemoveHolder, { holder: text })}

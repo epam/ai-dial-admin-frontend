@@ -20,7 +20,7 @@ const DashboardView: FC<Props> = ({ grafanaLink }) => {
   }, [grafanaLink]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
+    <div className="flex flex-col flex-1 min-h-0 w-full relative">
       <div className="flex flex-row mb-8 justify-between items-center h-[40px]">
         <h1>{t(MenuI18nKey.Dashboard)}</h1>
         {grafanaLink && (

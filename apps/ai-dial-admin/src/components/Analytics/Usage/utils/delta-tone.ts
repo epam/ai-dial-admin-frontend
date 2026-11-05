@@ -23,8 +23,14 @@ const RISE_IS_GOOD: Partial<Record<KpiMetric, boolean>> = {
   [KpiMetric.UniqueCallers]: true,
 };
 
-export const getDeltaTone = (metric: KpiMetric, deltaRatio: number | null): DeltaTone => {
-  const riseIsGood = RISE_IS_GOOD[metric];
+// `isRiseGood` states the welcome direction where no metric does: a custom dashboard's figure, whose widget
+// says which way is good. Without either the change is shown without a judgement.
+export const getDeltaTone = (
+  metric: KpiMetric | undefined,
+  deltaRatio: number | null,
+  isRiseGood?: boolean,
+): DeltaTone => {
+  const riseIsGood = isRiseGood ?? (metric ? RISE_IS_GOOD[metric] : undefined);
 
   if (deltaRatio == null || deltaRatio === 0 || riseIsGood == null) {
     return DeltaTone.Neutral;
@@ -39,5 +45,8 @@ const DELTA_TONE_BADGE: Record<DeltaTone, DeltaBadgeAppearance> = {
   [DeltaTone.Neutral]: { variant: BadgeVariant.Outlined },
 };
 
-export const getDeltaBadgeAppearance = (metric: KpiMetric, deltaRatio: number | null): DeltaBadgeAppearance =>
-  DELTA_TONE_BADGE[getDeltaTone(metric, deltaRatio)];
+export const getDeltaBadgeAppearance = (
+  metric: KpiMetric | undefined,
+  deltaRatio: number | null,
+  isRiseGood?: boolean,
+): DeltaBadgeAppearance => DELTA_TONE_BADGE[getDeltaTone(metric, deltaRatio, isRiseGood)];

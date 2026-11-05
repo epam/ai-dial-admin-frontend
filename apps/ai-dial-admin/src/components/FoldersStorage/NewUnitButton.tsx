@@ -14,22 +14,9 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { OrgUnit, OrgUnitsStatus } from '@/src/models/dial/org-unit';
 import { removeTrailingSlash } from '@/src/utils/files/path';
+import { useScrollSelectedFolder } from '@/src/hooks/use-scroll-selected-folder';
 import { getSuccessNotification } from '@/src/utils/notification';
 import { NewUnitBlock, getNewUnitBlock, normalizeFolder } from '@/src/utils/org-units/units';
-
-// The new row mounts after the state update commits, so look for it on the next frames.
-const scrollSelectedIntoView = () => {
-  let attempts = 0;
-  const tryScroll = () => {
-    const selected = document.querySelector('[role="tree"] [aria-selected="true"]');
-    if (selected) {
-      selected.scrollIntoView({ block: 'nearest' });
-    } else if (attempts++ < 20) {
-      requestAnimationFrame(tryScroll);
-    }
-  };
-  requestAnimationFrame(tryScroll);
-};
 
 /** Creates a unit under the selected folder: the shared space itself or an existing unit. */
 const NewUnitButton: FC = () => {
@@ -39,6 +26,7 @@ const NewUnitButton: FC = () => {
   const { units, unitsStatus, refreshUnits } = useOrgUnits();
   const [isOpen, setIsOpen] = useState(false);
 
+  const scrollToFolder = useScrollSelectedFolder();
   const parentFolder = normalizeFolder(filePath);
 
   const onCreated = useCallback(
@@ -51,10 +39,10 @@ const NewUnitButton: FC = () => {
         name: unit.name,
         nodeType: DialFileNodeType.FOLDER,
       } as DialFolder);
-      scrollSelectedIntoView();
+      scrollToFolder();
       showNotification(getSuccessNotification(t(FoldersI18nKey.UnitCreated)));
     },
-    [refreshUnits, fetchFiles, parentFolder, revealFolder, showNotification, t],
+    [refreshUnits, fetchFiles, parentFolder, revealFolder, scrollToFolder, showNotification, t],
   );
 
   if (unitsStatus !== OrgUnitsStatus.READY) {

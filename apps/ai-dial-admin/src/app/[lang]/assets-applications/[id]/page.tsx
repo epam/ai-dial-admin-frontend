@@ -18,9 +18,11 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { CatalogSchemaOptions, readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { readCallerOptions } from '@/src/server/config-entities/read-caller-options';
 import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
+import { isFullAdminCaller } from '@/src/server/user-access';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
@@ -33,6 +35,10 @@ export default async function Page(params: {
   searchParams: Promise<{ path?: string; configFile?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  // Admin-only reads (config file, platform runners/translators, roles, interceptors) are made only for a
+  // full admin; everyone else gets the caller-scoped lists. Not `mode === UNIT`: a failed access read
+  // resolves to DENIED, which must not fall back to admin reads.
+  const isFullAdmin = await isFullAdminCaller();
 
   let etag = DEFAULT_ETAG;
 
@@ -78,12 +84,16 @@ export default async function Page(params: {
       });
     }
 
-    assetRunners = await getAllRunners();
-    translators = (await getTranslators('')) || [];
+    if (isFullAdmin) {
+      assetRunners = await getAllRunners();
+      translators = (await getTranslators('')) || [];
+    }
 
     // Admin-backend enrichment only: without DIAL_ADMIN_API_URL there is no host to call, so
     // `applications`/`applicationSchemes` stay empty and the page renders on Core-direct data alone.
-    if (process.env.DIAL_ADMIN_API_URL) {
+    if (!isFullAdmin) {
+      ({ models, applications, schemes: applicationSchemes } = await readCallerOptions(token, optionWarnings));
+    } else if (process.env.DIAL_ADMIN_API_URL) {
       models = await getModelsList();
       applications = await applicationsApi.getApplicationsList(token);
       applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
@@ -107,9 +117,9 @@ export default async function Page(params: {
   // interceptors read here, which is likewise unconditional.
   let catalogSchemas: CatalogSchemaOptions;
   [roles, interceptors, globalInterceptors, catalogSchemas] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
-    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
-    readGlobalInterceptors(token, optionWarnings),
+    isFullAdmin ? readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings) : [],
+    isFullAdmin ? readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings) : [],
+    isFullAdmin ? readGlobalInterceptors(token, optionWarnings) : [],
     readCatalogSchemaOptions(token),
   ]);
 

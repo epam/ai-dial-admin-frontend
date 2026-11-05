@@ -14,6 +14,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
@@ -22,6 +23,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -36,6 +38,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+  useEntityReadOnlyAt(ApplicationRoute.Prompts, originalPrompt.folderId);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(structuredClone(originalPrompt));
@@ -103,7 +106,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
   }, [selectedPrompt, originalPrompt, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <AssetHeader
         etag={etag}
         view={ApplicationRoute.Prompts}
@@ -119,7 +122,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
         getAssetContext={usePromptFolder}
       />
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

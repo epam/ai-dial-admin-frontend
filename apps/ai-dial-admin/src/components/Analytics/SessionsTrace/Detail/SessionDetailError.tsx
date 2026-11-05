@@ -14,7 +14,7 @@ const SessionDetailError: FC<Props> = ({ chatId }) => {
   const t = useI18n();
 
   return (
-    <div className="flex size-full flex-col items-center justify-center rounded bg-layer-2">
+    <div className="flex size-full flex-col items-center justify-center">
       <NoDataContent
         title={t(SessionsTraceI18nKey.DetailLoadFailed)}
         description={chatId}

@@ -29,11 +29,13 @@ import { DialPlatformApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset, rolesTab, toolsTab } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -99,14 +101,12 @@ const PlatformApplicationView: FC<Props> = ({
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { visualizerConnector, setEntityReadOnly } = useAppContext();
+  const { visualizerConnector } = useAppContext();
 
   // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
-  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`. In unit mode the
+  // owning unit's `write` decides too.
+  useEntityReadOnlyAt(ApplicationRoute.AssetsApplications, originalApp.folderId, !!isConfigFileSource);
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -264,7 +264,7 @@ const PlatformApplicationView: FC<Props> = ({
   }, [isIframeDirty, onDiscard, onDiscardIframe]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.AssetsApplications}
         entity={selectedApp}
@@ -282,7 +282,7 @@ const PlatformApplicationView: FC<Props> = ({
         getAssetContext={useAppsFolder}
       />
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
           <EntityJsonEditor
             key={discardKey}

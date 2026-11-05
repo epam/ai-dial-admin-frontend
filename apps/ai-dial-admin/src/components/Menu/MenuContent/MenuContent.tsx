@@ -16,6 +16,7 @@ import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 import { useAppContext } from '@/src/context/AppContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { filterMenuForUnitMode } from '@/src/utils/org-units/menu';
 
 interface Props {
   disableMenuItems: string[];
@@ -24,7 +25,7 @@ interface Props {
 const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
   const router = useRouter();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, isUnitMode, canReadNamespace } = useAppContext();
   const isConfigTransferEnabled = getIsConfigTransferEnabled(featureFlags);
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -34,7 +35,8 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   // 2 - models
   const splittedPathname = usePathname().split('/');
   const pathname = `/${splittedPathname[2]}`;
-  const actualConfig = getActualMenuItems(MENU_CONFIGURATION(16, featureFlags), disableMenuItems);
+  const enabledConfig = getActualMenuItems(MENU_CONFIGURATION(16, featureFlags), disableMenuItems);
+  const actualConfig = isUnitMode ? filterMenuForUnitMode(enabledConfig, canReadNamespace) : enabledConfig;
 
   const handleImport = () => {
     router.push(ApplicationRoute.ImportConfig);
@@ -70,7 +72,9 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
     </nav>
   );
 
-  const showImportExport = (isColumn?: boolean) => isConfigTransferEnabled && !(isColumn && isReadOnlyAdmin);
+  // Config transfer and system properties are admin pages, which a unit user cannot open.
+  const showImportExport = (isColumn?: boolean) =>
+    isConfigTransferEnabled && !isUnitMode && !(isColumn && isReadOnlyAdmin);
 
   const MenuActionsBar = ({ isColumn }: { isColumn?: boolean }) => (
     <div className={classNames(actionsClassName, isColumn ? 'flex-col justify-center' : 'flex-row justify-start')}>
@@ -88,11 +92,13 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
           />
         </>
       )}
-      <MenuAction
-        tooltip={t(MenuI18nKey.SystemProperties)}
-        icon={<IconWorldCog {...MENU_ACTION_ICON_PROPS} />}
-        onClick={openProperties}
-      />
+      {!isUnitMode && (
+        <MenuAction
+          tooltip={t(MenuI18nKey.SystemProperties)}
+          icon={<IconWorldCog {...MENU_ACTION_ICON_PROPS} />}
+          onClick={openProperties}
+        />
+      )}
     </div>
   );
 
@@ -104,7 +110,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
       <div
         className={classNames(
           menuClassName,
-          'absolute left-0 top-0 bottom-0 w-72 bg-layer-3 divide-y z-[51]',
+          'absolute left-0 top-0 bottom-0 w-72 border-r border-tertiary bg-layer-base divide-y z-[51]',
           'opacity-0 invisible',
           !isSidebarOpen && 'group-hover/menu:opacity-100 group-hover/menu:visible hover:opacity-100 hover:visible',
         )}

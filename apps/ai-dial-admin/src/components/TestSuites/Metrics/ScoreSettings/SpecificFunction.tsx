@@ -89,13 +89,13 @@ const SpecificFunction: FC<Props> = ({
         onChange={onFunctionNameChange}
       />
 
-      <div className="flex flex-col gap-4 border-l border-secondary pl-4">
+      <div className="flex flex-col gap-4 border-l border-tertiary pl-4">
         <span className="dial-tiny-semi-text text-secondary">
           {t(TestSuitesI18nKey.OverallScoreFunctionParameters)}
         </span>
 
         <FunctionParameterRow
-          labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
+          labelKey={TestSuitesI18nKey.OverallScoreGroundTruth}
           source={parameterSources[0]}
           testCaseSchema={testCaseSchema}
           responseColumns={responseColumns}
@@ -103,7 +103,7 @@ const SpecificFunction: FC<Props> = ({
           onChange={(source) => onParameterChange(0, source)}
         />
         <FunctionParameterRow
-          labelKey={TestSuitesI18nKey.OverallScoreParameterP}
+          labelKey={TestSuitesI18nKey.OverallScorePrediction}
           source={parameterSources[1]}
           testCaseSchema={testCaseSchema}
           responseColumns={responseColumns}

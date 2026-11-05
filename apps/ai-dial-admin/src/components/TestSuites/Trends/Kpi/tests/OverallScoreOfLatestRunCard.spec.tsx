@@ -4,7 +4,6 @@ import { render, screen } from '@testing-library/react';
 import OverallScoreOfLatestRunCard from '@/src/components/TestSuites/Trends/Kpi/OverallScoreOfLatestRunCard';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Tooltip: ({
@@ -16,8 +15,8 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     tooltip?: React.ReactNode;
     hideTooltip?: boolean;
   }) => (
-    <div data-testid="kpi-tooltip" data-hide={String(!!hideTooltip)}>
-      {!hideTooltip && <span data-testid="kpi-tooltip-content">{tooltip}</span>}
+    <div role="tooltip" aria-hidden={!!hideTooltip}>
+      {!hideTooltip && <span>{tooltip}</span>}
       {children}
     </div>
   ),
@@ -41,52 +40,41 @@ const runOrder: TrendsRunPoint[] = [
 
 describe('OverallScoreOfLatestRunCard', () => {
   test('shows latest overall score and delta vs previous run', () => {
-    render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
-        metricCount={2}
-      />,
-    );
+    render(<OverallScoreOfLatestRunCard runOrder={runOrder} />);
 
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreOfLatestRun)).toBeInTheDocument();
     expect(screen.getByText('0.580')).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.TrendsDeltaVsPrev)).toBeInTheDocument();
+    const deltaBadgeTooltip = screen
+      .getAllByRole('tooltip', { hidden: true })
+      .find((node) => node.textContent?.includes(TestSuitesI18nKey.TrendsDeltaVsPrev));
+    expect(deltaBadgeTooltip).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
+    ).not.toBeInTheDocument();
   });
 
   test('shows above/below threshold tip on the score when suite has a threshold', () => {
-    render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.4 } as TestSuite}
-        metricCount={2}
-      />,
-    );
+    render(<OverallScoreOfLatestRunCard runOrder={runOrder} />);
 
     expect(screen.getByText(TestSuitesI18nKey.TrendsOverallScoreBelowThresholdTooltip)).toBeInTheDocument();
   });
 
   test('hides the score tip when latest run snapshot has no threshold', () => {
     render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-        metricCount={2}
-      />,
+      <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))} />,
     );
 
-    const scoreTip = screen.getAllByTestId('kpi-tooltip').find((node) => node.textContent?.includes('0.580'));
-    expect(scoreTip).toHaveAttribute('data-hide', 'true');
+    const scoreTip = screen
+      .getAllByRole('tooltip', { hidden: true })
+      .find((node) => node.textContent?.includes('0.580'));
+    expect(scoreTip).toHaveAttribute('aria-hidden', 'true');
   });
 
   test('omits threshold glyph when latest run snapshot has no threshold', () => {
     const { container } = render(
-      <OverallScoreOfLatestRunCard
-        runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))}
-        selectedTestSuite={{ id: 'suite-1', overallScoreThreshold: 0.6 } as TestSuite}
-        metricCount={2}
-      />,
+      <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreThreshold: null }))} />,
     );
 
     expect(container.querySelector('.bg-score-abs-11')).not.toBeInTheDocument();

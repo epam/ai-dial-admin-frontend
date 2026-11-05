@@ -151,6 +151,7 @@ vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnCont
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { AccessMode, AdminAccess } from '@/src/models/user-access';
 
 // Hoisted, not returned as a literal from the mock: a fresh object per call gives `featureFlags`
 // (and the context value itself) a new identity every render, so any component listing one of them
@@ -164,8 +165,12 @@ const appContextValue = {
     position: SidebarPosition.Right,
   },
   featureFlags: { deploymentsEnabled: true, adminApiEnabled: true, catalogEnabled: true },
+  userAccess: { mode: AccessMode.FULL, adminAccess: AdminAccess.FULL, units: [] },
   isReadOnlyAdmin: false,
   isFullAdmin: true,
+  isUnitMode: false,
+  canReadNamespace: () => true,
+  canWriteAt: () => true,
   isEnableAuth: false,
   showConfigFiles: false,
   toggleShowConfigFiles: vi.fn(),
@@ -178,6 +183,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 vi.mock('@/src/context/SaveValidationContext', () => {
   const dispatch = vi.fn();
+  const errorFields = new Map<string, boolean>();
   return {
     SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
     useSaveValidationContext: () => ({
@@ -185,6 +191,8 @@ vi.mock('@/src/context/SaveValidationContext', () => {
       dispatch,
       jsonErrors: [],
       jsonErrorNotifications: [],
+      resetCounter: 0,
+      errorFields,
     }),
     useJsonEditorValidation: () => {
       const editorId = useId();
@@ -221,7 +229,11 @@ vi.mock('echarts-for-react', () => ({
 vi.mock('@monaco-editor/react', () => {
   const Editor = ({ value, language, onChange, options }: EditorMockProps) =>
     onChange && !options?.readOnly ? (
-      <textarea aria-label="JSON editor" value={value || ''} onChange={(event) => onChange(event.target.value)} />
+      <textarea
+        aria-label={options?.ariaLabel ?? 'JSON editor'}
+        value={value || ''}
+        onChange={(event) => onChange(event.target.value)}
+      />
     ) : (
       <pre data-language={language}>{value}</pre>
     );

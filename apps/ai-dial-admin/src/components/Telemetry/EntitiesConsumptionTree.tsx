@@ -82,7 +82,7 @@ const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime, rows,
   const treeData = controlled ? controlledTreeData : internalTreeData;
 
   return (
-    <div className="flex flex-col size-full rounded-lg border border-primary p-4 max-h-[580px]">
+    <div className="flex flex-col size-full rounded-lg border border-secondary p-4 max-h-[580px]">
       <div className="mb-4 flex flex-row items-center justify-between">
         <h3>{title}</h3>
       </div>

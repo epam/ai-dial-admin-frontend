@@ -89,3 +89,10 @@ The system SHALL map Platform App Runners' file root to Core's `schemas` config-
 #### Scenario: App Runner names come from schemas
 - **WHEN** a user opens Platform App Runners' file root
 - **THEN** the system requests Core's `schemas` config-file type
+
+### Requirement: The file root needs config-file access
+The synthetic `file` root SHALL be offered in the FileManager, breadcrumbs and create dialog only to callers who can read the config-file endpoints. A caller without full admin access SHALL NOT see it, and no names read SHALL be made for it.
+
+#### Scenario: Non-admin opens Assets Applications
+- **WHEN** a caller without full admin access opens Assets Applications
+- **THEN** the roots shown exclude `file`, and no `GET /v1/admin/config/file/{type}` request is made

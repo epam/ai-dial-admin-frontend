@@ -136,7 +136,7 @@ const Variable: FC<Props> = ({
       )}
       style={{ opacity: isDragging ? 0 : 1 }}
     >
-      <div className="flex min-w-0 flex-1 flex-col rounded border border-primary p-3 lg:contents">
+      <div className="flex min-w-0 flex-1 flex-col rounded border border-secondary p-3 lg:contents">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer lg:hidden" onClick={toggleCollapse}>
             <h3 className="dial-small-text flex items-center">

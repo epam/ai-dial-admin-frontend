@@ -1,10 +1,14 @@
 import { notFound } from 'next/navigation';
 
+import { listDashboards } from '@/src/app/[lang]/dashboards/custom-actions';
+import DashboardSwitcher from '@/src/components/Analytics/CustomDashboards/Switcher/DashboardSwitcher';
 import UsageDashboard from '@/src/components/Analytics/Usage/UsageDashboard';
 import Page403 from '@/src/components/Page403/Page403';
 import DashboardView from '@/src/components/Telemetry/DashboardView';
+import { NO_DASHBOARD_CREATE_PERMISSIONS } from '@/src/constants/analytics/dashboards';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { getCallerSource } from '@/src/server/analytics/usage-caller-source';
+import { getIsCustomDashboardsEnabled } from '@/src/utils/env/get-custom-dashboards-toggle';
 import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +23,18 @@ export default async function Page() {
       return <Page403 />;
     }
 
-    return <UsageDashboard callerSource={callerSource} />;
+    let switcher;
+    if (getIsCustomDashboardsEnabled()) {
+      const list = (await listDashboards()).response;
+      switcher = (
+        <DashboardSwitcher
+          dashboards={list?.dashboards ?? []}
+          createPermissions={list?.permissions ?? NO_DASHBOARD_CREATE_PERMISSIONS}
+        />
+      );
+    }
+
+    return <UsageDashboard callerSource={callerSource} switcher={switcher} />;
   }
 
   // The same test the layout builds `dashboardEnabled` from: disabling the dashboard removes the

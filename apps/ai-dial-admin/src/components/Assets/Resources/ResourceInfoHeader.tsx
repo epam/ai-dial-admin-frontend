@@ -28,7 +28,7 @@ const ResourceInfoHeader = <T extends ResourceHeaderEntity>({ entity, prefix, po
   const author = entity?._metadata?.author;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-tertiary">
       {prefix}
       {!!author && <LabelledText label={t(EntityFieldsI18nKey.author)} text={author} />}
       {!!updatedAtValue && <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={updatedAt} />}

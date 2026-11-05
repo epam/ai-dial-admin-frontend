@@ -230,4 +230,48 @@ describe('FolderList tree', () => {
 
     expect(document.querySelector(UNIT_ICON)).toBeNull();
   });
+
+  describe('caret expansion in a rule folder context', () => {
+    const ruleContext = (overrides: Record<string, unknown> = {}) => {
+      const setExpandedFolders = vi.fn();
+      const { context, toggleFolder } = treeContext({
+        fetchFolderHierarchy: vi.fn(),
+        setExpandedFolders,
+        ...overrides,
+      });
+      return { context, toggleFolder, setExpandedFolders };
+    };
+    const clickCaret = async (name: string) =>
+      userEvent.click(screen.getByRole('treeitem', { name }).querySelector('svg')!);
+
+    test('expands an unloaded folder and loads its children without selecting it', async () => {
+      const { context, toggleFolder, setExpandedFolders } = ruleContext();
+      render(<FolderList context={() => context} />);
+
+      await clickCaret('apps');
+
+      expect(setExpandedFolders).toHaveBeenCalledWith(new Set(['public/apps/']));
+      expect(context.fetchFiles).toHaveBeenCalledWith('public/apps/');
+      expect(toggleFolder).not.toHaveBeenCalled();
+    });
+
+    test('does not reload a folder whose children are already cached', async () => {
+      const { context } = ruleContext({ fetchedFoldersData: { 'public/apps/': [] } });
+      render(<FolderList context={() => context} />);
+
+      await clickCaret('apps');
+
+      expect(context.fetchFiles).not.toHaveBeenCalled();
+    });
+
+    test('does not request a folder again while its load is pending', async () => {
+      const { context } = ruleContext({ fetchFiles: vi.fn(() => new Promise<void>(() => undefined)) });
+      render(<FolderList context={() => context} />);
+
+      await clickCaret('apps');
+      await clickCaret('apps');
+
+      expect(context.fetchFiles).toHaveBeenCalledTimes(1);
+    });
+  });
 });

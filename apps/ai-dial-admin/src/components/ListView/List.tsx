@@ -3,7 +3,6 @@
 import { GhostButton, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
-import classNames from 'classnames';
 import { MouseEvent, ReactNode, useCallback, useEffect, useState } from 'react';
 
 import GridView, { GridViewProps } from '@/src/components/Grid/GridView/GridView';
@@ -11,7 +10,6 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import ResetFiltersButton from './Header/ResetFiltersButton';
-import { mainListEntitiesViewClassName } from './constants';
 
 interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel'> {
   listLabel?: ReactNode;
@@ -23,8 +21,6 @@ interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleCo
   toolbar?: ReactNode;
   isGridLoading?: boolean;
   isEnableColumnPanel?: boolean;
-  isMainListView?: boolean;
-  isEmbedToModal?: boolean;
 }
 
 // TODO: rename to List view
@@ -32,8 +28,6 @@ const ListEntities = <T extends object>({
   listLabel,
   listLabelAddon,
   isEnableColumnPanel = false,
-  isMainListView = false,
-  isEmbedToModal = false,
   infoPanel,
   description,
   toolbar,
@@ -74,13 +68,7 @@ const ListEntities = <T extends object>({
   }, [closeColumnsPanel]);
 
   return (
-    <div
-      className={classNames(
-        'flex flex-col rounded size-full',
-        isMainListView && mainListEntitiesViewClassName,
-        !isEmbedToModal && 'bg-layer-2',
-      )}
-    >
+    <div className="flex flex-col size-full">
       {listLabel && (
         <div className="flex flex-row justify-between mb-3 items-center h-[40px] min-w-0 gap-4">
           <div className="flex items-center gap-3 shrink-0">

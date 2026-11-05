@@ -217,7 +217,7 @@ const PipelineFailuresCard: FC<Props> = ({ pipeline, failures, isPaused }) => {
 
       <div id={gridId}>
         {isExpanded && (
-          <div className="border-t border-secondary pt-4">
+          <div className="border-t border-tertiary pt-4">
             <FailuresGrid
               failures={failures}
               trigger={pipeline.trigger?.kind}

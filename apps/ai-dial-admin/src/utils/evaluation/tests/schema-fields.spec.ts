@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import { getDuplicateFieldNames, getRenamedFields, remapRenamedFields } from '../schema-fields';
+import {
+  fillEmptyStringFields,
+  fillEmptyStringFieldsInRows,
+  getDuplicateFieldNames,
+  getRenamedFields,
+  remapRenamedFields,
+} from '../schema-fields';
 import { CollapsibleTestCase } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
@@ -107,5 +113,48 @@ describe('remapRenamedFields', () => {
     const testCases = [{ data: { a: 1 } }];
 
     expect(remapRenamedFields(testCases, [field('a', '1')], [field('a', '1')])).toBe(testCases);
+  });
+});
+
+describe('fillEmptyStringFields', () => {
+  const numberField: TestCaseSchema = { ...field('count'), type: TestCaseItemType.NUMBER };
+
+  test('should add an empty string for an absent STRING field', () => {
+    expect(fillEmptyStringFields({}, [field('retries')])).toEqual({ retries: '' });
+  });
+
+  test('should replace null with an empty string', () => {
+    expect(fillEmptyStringFields({ retries: null }, [field('retries')])).toEqual({ retries: '' });
+  });
+
+  test('should keep existing values, including an empty string', () => {
+    expect(fillEmptyStringFields({ a: 'x', b: '' }, [field('a'), field('b')])).toEqual({ a: 'x', b: '' });
+  });
+
+  test('should leave non-STRING fields untouched', () => {
+    expect(fillEmptyStringFields({}, [numberField])).toEqual({});
+  });
+
+  test('should accept undefined data and missing schema', () => {
+    expect(fillEmptyStringFields(undefined, [field('a')])).toEqual({ a: '' });
+    expect(fillEmptyStringFields({ a: 1 }, undefined)).toEqual({ a: 1 });
+  });
+
+  test('should not mutate the input', () => {
+    const data = {};
+    fillEmptyStringFields(data, [field('a')]);
+
+    expect(data).toEqual({});
+  });
+});
+
+describe('fillEmptyStringFieldsInRows', () => {
+  test('should fill each row data and keep other row fields', () => {
+    const rows = [{ id: '1', data: { a: 'x' } }, { id: '2' }];
+
+    expect(fillEmptyStringFieldsInRows(rows, [field('a'), field('b')])).toEqual([
+      { id: '1', data: { a: 'x', b: '' } },
+      { id: '2', data: { a: '', b: '' } },
+    ]);
   });
 });

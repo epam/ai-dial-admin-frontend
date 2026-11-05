@@ -170,7 +170,7 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
         />
       </div>
 
-      <div className="flex flex-col gap-y-2 pl-4 border-l border-primary">
+      <div className="flex flex-col gap-y-2 pl-4 border-l border-tertiary">
         <PricingRateControl
           elementId={`${elementId}-if-true`}
           label={t(ModelViewI18nKey.IfTrue)}

@@ -19,7 +19,6 @@ import { useRunKpiCards } from '@/src/components/Runs/Summary/use-run-kpi-cards'
 import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   run: Run;
@@ -27,11 +26,9 @@ interface Props {
   overallScore?: number | null;
   /** How many metrics the run computed; omitted while the snapshots are still loading. */
   metricSnapshotCount?: number;
-  /** The run's suite, for the overall-score calculation method; omitted until it has loaded. */
-  testSuite?: TestSuite | null;
 }
 
-const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount, testSuite }) => {
+const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   const t = useI18n();
   const kpis = useRunKpiCards({ run, metricSnapshotCount });
 
@@ -68,7 +65,9 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount, testSuit
           description={
             <span className="flex items-center gap-1">
               <span>{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</span>
-              {testSuite && <OverallScoreInfo testSuite={testSuite} metricCount={metricSnapshotCount ?? 0} />}
+              {kpis.scoreMethod && (
+                <OverallScoreInfo scoreMethod={kpis.scoreMethod} metricCount={metricSnapshotCount ?? 0} />
+              )}
             </span>
           }
         />

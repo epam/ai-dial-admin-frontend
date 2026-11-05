@@ -20,6 +20,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialSkillResource } from '@/src/models/dial/resource';
+import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { removeTrailingSlash } from '@/src/utils/files/path';
@@ -29,6 +30,7 @@ import { buildSkillManifest, parseSkillManifest, SkillManifest } from '@/src/uti
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   skill: DialSkillResource;
@@ -48,6 +50,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   const { fetchFiles } = useSkillFolder();
   const { showNotification } = useNotification();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  useEntityReadOnlyAt(ApplicationRoute.Skills, originalSkill.folderId);
   const tabs = getTabsForAsset(t, ApplicationRoute.Skills);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -260,7 +263,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SkillHeader
         view={ApplicationRoute.Skills}
         entity={selectedSkill}
@@ -274,7 +277,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
         onRemove={onRemoveSkill}
         getAssetContext={useSkillFolder}
       />
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {activeTab === EntityViewTab.Properties && (
           <SkillAssetProperties
             skill={selectedSkill}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { removeProject } from '@/src/app/[lang]/projects/actions';
 import ProjectAssetProperties from '@/src/components/Assets/Artifacts/Projects/View/Properties';
@@ -18,6 +18,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
 interface Props {
   project: DialProjectResource;
@@ -37,10 +38,16 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
   const router = useRouter();
   const { fetchFiles } = useProjectFolder();
   const { showNotification } = useNotification();
+  const [detailsKey, setDetailsKey] = useState(0);
   const tabs = getTabsForAsset(t, ApplicationRoute.Projects);
 
   const staging = useProjectStaging({ manifestContent, projectName: project.name, files: project.files });
   const { apply, discard } = staging;
+
+  const onDiscard = useCallback(() => {
+    discard();
+    setDetailsKey((key) => key + 1);
+  }, [discard]);
 
   const onSave = useCallback(async () => {
     try {
@@ -56,6 +63,7 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
         return;
       }
 
+      setDetailsKey((key) => key + 1);
       showNotification(
         getSuccessNotification(
           getUpdateNotificationTitle(ApplicationRoute.Projects, t),
@@ -78,13 +86,13 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SkillHeader
         view={ApplicationRoute.Projects}
         entity={project}
         etag={project.etag}
         isChanged={staging.isChanged}
-        onDiscard={discard}
+        onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
         activeTab={EntityViewTab.Properties}
@@ -92,8 +100,8 @@ const ProjectView: FC<Props> = ({ project, manifestContent, limits }) => {
         onRemove={onRemoveProject}
         getAssetContext={useProjectFolder}
       />
-      <div className="flex-1 overflow-auto min-h-0">
-        <ProjectAssetProperties project={project} staging={staging} limits={limits} />
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
+        <ProjectAssetProperties key={detailsKey} project={project} staging={staging} limits={limits} />
       </div>
     </div>
   );

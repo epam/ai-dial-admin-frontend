@@ -11,15 +11,30 @@ interface Props {
   titleActions?: ReactNode;
   headerActions?: ReactNode;
   className?: string;
+  /** Added to the header: a custom dashboard widget makes it its drag handle in edit mode. */
+  headerClassName?: string;
   children: ReactNode;
 }
 
-const DashboardCard: FC<Props> = ({ title, subtitle, titleActions, headerActions, className, children }) => (
+const DashboardCard: FC<Props> = ({
+  title,
+  subtitle,
+  titleActions,
+  headerActions,
+  className,
+  headerClassName,
+  children,
+}) => (
   <section
     className={classNames('flex min-w-0 flex-col rounded border border-secondary bg-layer-2 shadow', className)}
     aria-label={title}
   >
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-secondary px-[18px] py-4">
+    <header
+      className={classNames(
+        'flex flex-wrap items-center justify-between gap-4 border-b border-tertiary px-[18px] py-4',
+        headerClassName,
+      )}
+    >
       {/* Shrinkable, so the title block wraps its own controls instead of pushing the header
           actions onto a line of their own. */}
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-4">

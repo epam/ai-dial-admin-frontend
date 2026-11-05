@@ -18,7 +18,12 @@ import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ActionMenuOperationI18nKey, ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
 import { useNotification } from '@/src/context/NotificationContext';
-import { BASE_BUTTON_ICON_PROPS, BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  BASE_BUTTON_ICON_SIZE,
+  ENTITY_VIEW_CLASS_NAME,
+  ENTITY_VIEW_SCROLL_CLASS_NAME,
+} from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -196,7 +201,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+      <div className={ENTITY_VIEW_CLASS_NAME}>
         <SimpleEntityHeader
           view={ApplicationRoute.Runs}
           entity={selectedRun}
@@ -212,7 +217,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
           statusBadges={<RunStatusBadge run={selectedRun} />}
         />
 
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
           <TabsContent activeTab={activeTab} run={selectedRun} tabState={tabState} />
         </div>
       </div>

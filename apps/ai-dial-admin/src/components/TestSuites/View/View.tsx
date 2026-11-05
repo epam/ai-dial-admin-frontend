@@ -15,9 +15,14 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import TrendsPreviewRunsBadge from '@/src/components/TestSuites/Trends/TrendsPreviewRunsBadge';
+import { omitSuiteValidity } from '@/src/components/TestSuites/utils/suite-validity';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  BASE_BUTTON_ICON_PROPS,
+  ENTITY_VIEW_CLASS_NAME,
+  ENTITY_VIEW_SCROLL_CLASS_NAME,
+} from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
@@ -80,7 +85,12 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   }, [originalTestSuite.datasetId]);
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalTestSuite, selectedTestSuite) || hasTestCaseChanges);
+    // Metric mutations refresh valid/validationWarnings from the API without editing score config;
+    // ignore those projections so Save/Discard stay tied to real suite edits.
+    setIsChanged(
+      !isEqualSkippingUndefined(omitSuiteValidity(originalTestSuite), omitSuiteValidity(selectedTestSuite)) ||
+        hasTestCaseChanges,
+    );
   }, [originalTestSuite, selectedTestSuite, hasTestCaseChanges]);
 
   useEffect(() => {
@@ -227,7 +237,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+      <div className={ENTITY_VIEW_CLASS_NAME}>
         <SimpleEntityHeader
           view={ApplicationRoute.TestSuites}
           entity={selectedTestSuite}
@@ -252,7 +262,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           />
         </SimpleEntityHeader>
 
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
           {isEditorEnabled ? (
             <EntityJsonEditor
               key={discardKey}

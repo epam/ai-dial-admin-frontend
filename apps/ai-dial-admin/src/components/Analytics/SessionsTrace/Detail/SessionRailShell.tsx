@@ -9,7 +9,7 @@ interface Props {
 }
 
 const SessionRailShell: FC<Props> = ({ className, children }) => (
-  <aside className={classNames('flex h-full w-[360px] shrink-0 border-l border-primary bg-layer-2 p-4', className)}>
+  <aside className={classNames('flex h-full w-[360px] shrink-0 border-l border-tertiary bg-layer-2 p-4', className)}>
     {children}
   </aside>
 );

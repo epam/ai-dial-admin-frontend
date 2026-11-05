@@ -49,7 +49,7 @@ import JsonToggle from '@/src/components/EntityHeaderControls/JsonToggle/JsonTog
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { AnalyticsPipelinesI18nKey, BackfillI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, ENTITY_VIEW_CLASS_NAME } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -348,7 +348,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative gap-4">
+    <div className={classNames(ENTITY_VIEW_CLASS_NAME, 'gap-4')}>
       <div className="flex flex-row items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           {/* Two axes, not one: `enabled` is the declaration and the runtime chip is what the runner is

@@ -159,7 +159,7 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'expanderColumn')).toBe(true);
     const activityTypeCol = cols.find((c) => c.field === 'activityType');
-    expect(activityTypeCol?.cellRendererParams).toEqual({ showIcon: true });
+    expect(activityTypeCol?.cellRendererParams).toEqual({ shouldIndent: true });
     expect(cols.some((c) => c.field === 'activityType')).toBe(true);
     expect(cols.some((c) => c.field === 'resourceId')).toBe(true);
     expect(cols.some((c) => c.field === 'parentActivityId')).toBe(true);
@@ -224,7 +224,7 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'resourceId')).toBe(false);
     expect(cols.some((c) => c.field === 'activityType')).toBe(true);
     const activityTypeCol = cols.find((c) => c.field === 'activityType');
-    expect(activityTypeCol?.cellRendererParams).toEqual({ showIcon: false });
+    expect(activityTypeCol?.cellRendererParams).toEqual({ shouldIndent: false });
     expect(cols.some((c) => c.field === 'activityId')).toBe(true);
   });
 

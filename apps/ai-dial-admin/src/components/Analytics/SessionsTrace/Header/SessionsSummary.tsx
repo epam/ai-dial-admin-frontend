@@ -34,7 +34,7 @@ const SummaryPill: FC<PillProps> = ({ value, label, valueClassName, hint, scope 
 
   return (
     <div
-      className="flex min-w-[92px] flex-col gap-0.5 rounded border border-primary bg-layer-3 px-3 py-2"
+      className="flex min-w-[92px] flex-col gap-0.5 rounded border border-secondary bg-layer-3 px-3 py-2"
       role="group"
       tabIndex={0}
       title={hint}

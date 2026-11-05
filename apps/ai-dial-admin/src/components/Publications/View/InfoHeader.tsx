@@ -24,7 +24,7 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-tertiary">
       {entity?.action && (
         <LabelledText label={t(EntitiesI18nKey.Action)}>
           <p className="truncate items-center flex">

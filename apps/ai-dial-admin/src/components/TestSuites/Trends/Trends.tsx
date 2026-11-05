@@ -52,8 +52,6 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
   const latestRunSegments = testCaseSegments.length > 0 ? testCaseSegments[testCaseSegments.length - 1] : null;
   const latestRunThreshold = runOrder[runOrder.length - 1]?.overallScoreThreshold;
 
-  const metricCount = runOrder[runOrder.length - 1]?.metricNames?.length ?? 0;
-
   useEffect(() => {
     onTrendsRunCountChange?.(data?.kpis.runCount ?? null);
   }, [data?.kpis.runCount, onTrendsRunCountChange]);
@@ -109,9 +107,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
       )}
       <KpiStrip
         runOrder={data.runOrder}
-        selectedTestSuite={selectedTestSuite}
         segments={testCaseSegments}
-        metricCount={metricCount}
         costPoints={costPoints}
         runtimePoints={runtimePoints}
         sourceKind={sourceKind}
@@ -134,11 +130,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
           hasError={hasEvalError}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <OverallScoreTrend
-            runOrder={data.runOrder}
-            overallScoreThreshold={selectedTestSuite.overallScoreThreshold}
-            isLoading={isLoading}
-          />
+          <OverallScoreTrend runOrder={data.runOrder} isLoading={isLoading} />
         </div>
       </div>
       <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-stretch">

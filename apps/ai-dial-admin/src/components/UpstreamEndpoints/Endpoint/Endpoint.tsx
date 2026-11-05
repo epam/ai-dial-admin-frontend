@@ -17,7 +17,7 @@ import {
   UpstreamEndpointsI18nKey,
 } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, LABELLED_FIELD_TOP_OFFSET } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { InterfaceFieldVariant } from '@/src/models/dial/interfaces';
@@ -28,6 +28,7 @@ import {
   UpstreamAuthType,
 } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
+import { createUpstreamAuth, isValidUpstreamHeaderName, normalizeUpstreamAuth } from '@/src/utils/models/upstream-auth';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
@@ -41,7 +42,7 @@ interface Props {
   view?: ApplicationRoute;
   withResponses?: boolean;
   isAuthTypeSupported?: boolean;
-  isBearerKeyRequired?: boolean;
+  isAuthKeyRequired?: boolean;
   updateEndpoint: (endpoint: DialModelEndpoint) => void;
   removeEndpoint: (index: number) => void;
 }
@@ -55,7 +56,7 @@ const Endpoint: FC<Props> = ({
   view,
   withResponses,
   isAuthTypeSupported,
-  isBearerKeyRequired,
+  isAuthKeyRequired,
   updateEndpoint,
   removeEndpoint,
 }) => {
@@ -78,10 +79,15 @@ const Endpoint: FC<Props> = ({
   const isInterfacesValid =
     !!endpoint.baseUrl ||
     Object.values(endpoint.interfaces ?? {}).every((upstreamInterface) => !!upstreamInterface.endpoint);
-  const isKeyRequired = isAuthTypeSupported ? !!isBearerKeyRequired : !isKeyOptional;
+  const isKeyRequired = isAuthTypeSupported ? !!isAuthKeyRequired : !isKeyOptional;
+  const authType = normalizeUpstreamAuth(endpoint.authType);
+  const isCustomHeader = isAuthTypeSupported && authType.type === UpstreamAuthType.CUSTOM_HEADER;
+  const isHeaderNameInvalid = isCustomHeader && !isValidUpstreamHeaderName(authType.headerName);
+  const headerNameValidationField = `upstream-header-name-${index}`;
   const authTypeOptions: SelectOption[] = [
     { value: UpstreamAuthType.API_KEY, label: t(UpstreamEndpointsI18nKey.ApiKey) },
     { value: UpstreamAuthType.BEARER, label: t(UpstreamEndpointsI18nKey.Bearer) },
+    { value: UpstreamAuthType.CUSTOM_HEADER, label: t(UpstreamEndpointsI18nKey.CustomHeader) },
   ];
   const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
@@ -148,19 +154,52 @@ const Endpoint: FC<Props> = ({
     dispatch({
       type: ValidationActionType.SetField,
       field: keyValidationField,
-      isValid: !isBearerKeyRequired || !!endpoint.key,
+      isValid: !isAuthKeyRequired || !!endpoint.key,
     });
 
     return () => {
       dispatch({ type: ValidationActionType.RemoveField, field: keyValidationField });
     };
-  }, [dispatch, endpoint.key, isAuthTypeSupported, isBearerKeyRequired, keyValidationField]);
+  }, [dispatch, endpoint.key, isAuthTypeSupported, isAuthKeyRequired, keyValidationField]);
+
+  useEffect(() => {
+    if (!isAuthTypeSupported) {
+      return;
+    }
+
+    dispatch({ type: ValidationActionType.SetField, field: headerNameValidationField, isValid: !isHeaderNameInvalid });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: headerNameValidationField });
+    };
+  }, [dispatch, headerNameValidationField, isAuthTypeSupported, isHeaderNameInvalid]);
 
   const onChangeAuthType = useCallback(
-    (authType: string) => {
-      updateEndpoint({ ...endpoint, authType: authType as UpstreamAuthType });
+    (type: string) => {
+      updateEndpoint({ ...endpoint, authType: createUpstreamAuth(type as UpstreamAuthType) });
     },
     [endpoint, updateEndpoint],
+  );
+
+  const onChangeHeaderName = useCallback(
+    (headerName?: string) => {
+      updateEndpoint({ ...endpoint, authType: createUpstreamAuth(UpstreamAuthType.CUSTOM_HEADER, headerName) });
+    },
+    [endpoint, updateEndpoint],
+  );
+
+  const headerNameInput = isCustomHeader && (
+    <Input
+      disabled={disabled}
+      id={`auth-header-name-${index}`}
+      value={authType.headerName}
+      placeholder={t(EntityPlaceholdersI18nKey.UpstreamAuthHeaderName)}
+      labelProps={{ label: t(UpstreamEndpointsI18nKey.HeaderName), required: true }}
+      containerClassName="w-full"
+      error={isHeaderNameInvalid ? t(ErrorI18nKey.InvalidHeaderName) : undefined}
+      invalid={isHeaderNameInvalid}
+      onChange={onChangeHeaderName}
+    />
   );
 
   const onChangeExtraData = useCallback(
@@ -182,13 +221,13 @@ const Endpoint: FC<Props> = ({
   }, []);
 
   return (
-    <div className="flex gap-4 items-center w-full lg:gap-2 lg:bg-layer-3 lg:rounded lg:p-4">
+    <div className="flex gap-4 items-center w-full lg:gap-2 lg:rounded lg:border lg:border-secondary lg:bg-layer-2 lg:p-4">
       {/* Desktop toggle — left of content, mirrors delete button positioning */}
       {!isTablet && (
         <div className="shrink-0 self-start">
           <button
             type="button"
-            className={'cursor-pointer block h-[40px] mt-7'}
+            className={classNames('cursor-pointer block h-[40px]', LABELLED_FIELD_TOP_OFFSET)}
             onClick={toggleExpand}
             aria-label="toggle expanded fields"
           >
@@ -201,7 +240,7 @@ const Endpoint: FC<Props> = ({
         </div>
       )}
 
-      <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-primary p-3 lg:border-none lg:p-0">
+      <div className="flex flex-1 min-w-0 flex-col gap-3 rounded border border-secondary p-3 lg:border-none lg:p-0">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
             <h3 className="dial-small-text flex items-center">
@@ -298,11 +337,12 @@ const Endpoint: FC<Props> = ({
                   fieldClassName="w-full"
                   className="w-full"
                   labelProps={{ label: t(UpstreamEndpointsI18nKey.AuthenticationType) }}
-                  value={endpoint.authType ?? UpstreamAuthType.API_KEY}
+                  value={authType.type}
                   options={authTypeOptions}
-                  onChange={(authType) => onChangeAuthType(authType as string)}
+                  onChange={(type) => onChangeAuthType(type as string)}
                 />
               )}
+              {headerNameInput}
               <PasswordInput
                 disabled={disabled}
                 id={`key-${index}`}
@@ -310,8 +350,8 @@ const Endpoint: FC<Props> = ({
                 placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
                 labelProps={{ label: t(UpstreamEndpointsI18nKey.Key), required: isKeyRequired }}
                 required={isKeyRequired}
-                error={isBearerKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
-                invalid={isBearerKeyRequired && !endpoint.key}
+                error={isAuthKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
+                invalid={isAuthKeyRequired && !endpoint.key}
                 onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
               />
             </>
@@ -392,8 +432,8 @@ const Endpoint: FC<Props> = ({
                     placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
                     labelProps={{ label: t(UpstreamEndpointsI18nKey.Key), required: isKeyRequired }}
                     required={isKeyRequired}
-                    error={isBearerKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
-                    invalid={isBearerKeyRequired && !endpoint.key}
+                    error={isAuthKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
+                    invalid={isAuthKeyRequired && !endpoint.key}
                     containerClassName="w-full"
                     onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
                   />
@@ -409,11 +449,12 @@ const Endpoint: FC<Props> = ({
                     fieldClassName="w-full"
                     className="w-full"
                     labelProps={{ label: t(UpstreamEndpointsI18nKey.AuthenticationType) }}
-                    value={endpoint.authType ?? UpstreamAuthType.API_KEY}
+                    value={authType.type}
                     options={authTypeOptions}
-                    onChange={(authType) => onChangeAuthType(authType as string)}
+                    onChange={(type) => onChangeAuthType(type as string)}
                   />
                 </div>
+                {headerNameInput && <div className="flex-1 min-w-0">{headerNameInput}</div>}
                 <div className="flex-1 min-w-0">
                   <PasswordInput
                     disabled={disabled}
@@ -422,8 +463,8 @@ const Endpoint: FC<Props> = ({
                     placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
                     labelProps={{ label: t(UpstreamEndpointsI18nKey.Key), required: isKeyRequired }}
                     required={isKeyRequired}
-                    error={isBearerKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
-                    invalid={isBearerKeyRequired && !endpoint.key}
+                    error={isAuthKeyRequired && !endpoint.key ? t(ErrorI18nKey.RequiredField) : undefined}
+                    invalid={isAuthKeyRequired && !endpoint.key}
                     containerClassName="w-full"
                     onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
                   />
@@ -465,7 +506,11 @@ const Endpoint: FC<Props> = ({
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 self-start">
-          <RemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
+          <RemoveButton
+            onClick={onRemove}
+            className={!isTablet ? LABELLED_FIELD_TOP_OFFSET : 'mt-0'}
+            aria-label="remove"
+          />
         </div>
       )}
     </div>

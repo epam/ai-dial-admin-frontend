@@ -47,7 +47,7 @@ const DatasetTabsContent: FC<Props> = ({
     <>
       {activeTab === EntityViewTab.Properties && (
         <div className="flex flex-col">
-          <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+          <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-tertiary">
             {!!selectedDataset.updatedAt && <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={updatedAt} />}
             {!!selectedDataset.createdAt && <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={createdAt} />}
           </div>

@@ -48,7 +48,7 @@ const HopEmbeddingResultPanel: FC<Props> = ({ facts, isLoading, suppression }) =
 
   return (
     <>
-      <dl className="grid grid-cols-2 gap-2 rounded border border-primary bg-layer-3 p-3">
+      <dl className="grid grid-cols-2 gap-2 rounded border border-secondary bg-layer-3 p-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <dt className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.InspectorEmbeddingDimensions)}</dt>
           <dd className="break-all text-primary dial-small-semi-text">{dimensionsValue(facts, t)}</dd>

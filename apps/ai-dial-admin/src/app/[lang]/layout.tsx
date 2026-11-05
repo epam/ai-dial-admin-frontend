@@ -5,11 +5,13 @@ import { ReactNode } from 'react';
 // @ts-ignore
 import '@epam/ai-dial-ui-kit/styles.css';
 import '@epam/ai-dial-react-file-manager/styles.css';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';
 
-import { getUserInfo, telemetryApi, themesApi } from '@/src/app/api/api';
+import { coreUtilityApi, telemetryApi, themesApi } from '@/src/app/api/api';
 import Content from '@/src/components/Content/Content';
 import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
@@ -24,11 +26,14 @@ import { OrgUnitsProvider } from '@/src/context/OrgUnitsContext';
 import { RuleFolderProvider } from '@/src/context/RuleFolderContext';
 import { ThemeProvider } from '@/src/context/ThemeContext';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
+import { AccessMode } from '@/src/models/user-access';
+import { getUserAccess } from '@/src/server/user-access';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsAdminApiEnabled } from '@/src/utils/env/get-admin-api-toggle';
 import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
+import { getIsCustomDashboardsEnabled } from '@/src/utils/env/get-custom-dashboards-toggle';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
@@ -58,15 +63,21 @@ export default async function Layout({ children, params }: { children: ReactNode
     analyticsEnabled: isAnalyticsEnabled,
     analyticsSessionsEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_SESSIONS_ENABLED),
     analyticsUsageEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
+    analyticsCustomDashboardsEnabled: getIsCustomDashboardsEnabled(),
     queryAssistantEnabled: isAnalyticsEnabled && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
   const themesImages = await themesApi.getImages();
 
-  const telemetryMaxRangeMs = featureFlags.adminApiEnabled
-    ? extractTelemetryMaxRangeMs(await telemetryApi.getDatasets(token))
-    : undefined;
+  // Identity is informational (id, email); access decides everything else and was already resolved by the root layout.
+  const [userAccess, userInfo] = await Promise.all([getUserAccess(), coreUtilityApi.getUserInfo(token)]);
+
+  // The datasets read is admin-only, so a unit user would only be refused.
+  const telemetryMaxRangeMs =
+    featureFlags.adminApiEnabled && userAccess.mode !== AccessMode.UNIT
+      ? extractTelemetryMaxRangeMs(await telemetryApi.getDatasets(token))
+      : undefined;
 
   return (
     <I18nProvider locale={lang}>
@@ -78,7 +89,8 @@ export default async function Layout({ children, params }: { children: ReactNode
           resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
           telemetryMaxRangeMs={telemetryMaxRangeMs}
           codeAppEditorUrl={process.env.CODE_APP_EDITOR_URL}
-          userInfo={(await getUserInfo(token)).response?.userInfo}
+          userInfo={userInfo.response?.userInfo}
+          userAccess={userAccess}
           isEnableAuth={isEnableAuth}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>

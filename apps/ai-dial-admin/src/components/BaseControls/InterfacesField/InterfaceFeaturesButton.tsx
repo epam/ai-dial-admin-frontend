@@ -96,13 +96,15 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
             <div key={title} className="flex flex-col gap-y-3">
               <Label label={t(title)} />
               {keys.map((key) => (
-                <Switch
-                  key={key}
-                  isOn={!!draft[key]}
-                  labelProps={{ label: t(featureLabelMap[key]) }}
-                  id={`${fieldId}-${key}`}
-                  onChange={(value) => setDraft((prev) => ({ ...prev, [key]: value }))}
-                />
+                // Anchor the switch's absolutely positioned input beside its visible control for focus scrolling.
+                <div key={key} className="relative">
+                  <Switch
+                    isOn={!!draft[key]}
+                    labelProps={{ label: t(featureLabelMap[key]) }}
+                    id={`${fieldId}-${key}`}
+                    onChange={(value) => setDraft((prev) => ({ ...prev, [key]: value }))}
+                  />
+                </div>
               ))}
             </div>
           ))}

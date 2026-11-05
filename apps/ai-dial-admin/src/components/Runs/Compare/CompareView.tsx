@@ -405,7 +405,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   useEffect(() => () => sidebarRef.current.closeSidebar(), []);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 h-full bg-layer-2 rounded overflow-hidden p-4 gap-4">
+    <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden gap-4">
       <h3 className="dial-h3 text-primary shrink-0">{t(RunsI18nKey.RunComparison)}</h3>
 
       <div className="flex items-center justify-between gap-4 shrink-0">

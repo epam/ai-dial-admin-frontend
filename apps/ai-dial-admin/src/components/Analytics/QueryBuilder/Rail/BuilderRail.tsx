@@ -23,11 +23,11 @@ const BuilderRail: FC<Props> = ({ onCollapse, switcher, children }) => {
     <aside
       aria-label={t(QueriesI18nKey.BuilderRail)}
       className={classNames(
-        'flex h-full shrink-0 flex-col border-l border-primary bg-layer-2',
+        'flex h-full shrink-0 flex-col border-l border-tertiary bg-layer-2',
         QUERY_BUILDER_RAIL_WIDTH_CLASS,
       )}
     >
-      <div className="flex items-center gap-2 border-b border-primary px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-tertiary px-3 py-2">
         <GhostIconButton
           size={ElementSize.Small}
           aria-label={t(QueryBuilderI18nKey.CollapsePanel)}

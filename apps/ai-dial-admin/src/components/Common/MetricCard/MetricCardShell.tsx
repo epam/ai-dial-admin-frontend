@@ -37,7 +37,7 @@ const MetricCardShell: FC<Props> = ({
   return (
     <div
       className={classNames(
-        'flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[120px] w-full p-4 flex-1 min-h-0',
+        'flex flex-col rounded-lg border border-secondary md:min-w-[250px] min-w-[120px] w-full p-4 flex-1 min-h-0',
         STATUS_BORDER[status],
       )}
     >

@@ -26,7 +26,8 @@ removed once the aggregated response carries `condition` itself.
 #### Scenario: Suite with no bound metrics
 - **WHEN** a user opens the Metrics tab of a test suite with no bound metrics
 - **THEN** the system issues the same two requests, receives empty results, and renders the
-  no-metrics state without any additional request and WITHOUT an Overall Score card or Edit affordance
+  no-metrics state for the bound-metric list without any additional metrics request, while the
+  Overall Score card remains visible (score settings live on the suite, not on the metric list)
 
 #### Scenario: Metric condition round-trips after being saved
 - **WHEN** a user sets a metric's condition in the create/edit metric modal and confirms, and the
@@ -74,25 +75,42 @@ Each bound metric on the Metrics tab SHALL render as a card with: avatar and met
 - **WHEN** the Metrics tab has loaded via the aggregated fetch and a metric's `outputSchema` lists properties
 - **THEN** the Outputs row lists those property names as tags without issuing an additional request for the schema
 
-### Requirement: Overall Score card and Edit modal when metrics exist
-When the Metrics tab has one or more bound metrics, the system SHALL render an Overall Score summary
-card with an Edit control. Edit SHALL open a modal (draft suite state) where the user configures
-Overall Score method (Mean, Weighted mean, or Specific function), optional Enable threshold, and —
-when Specific function is selected — nested Test Case Score (Mean or Weighted mean only). Apply
-SHALL commit the draft to the suite via the tab's `onChange`; Cancel SHALL discard the draft.
+### Requirement: Overall Score card and Edit modal
+The Metrics tab SHALL always render an Overall Score summary card with an Edit control after metrics
+have loaded, including when the suite has zero bound metrics. Score settings live on the suite and
+remain editable regardless of the bound-metric list. Edit SHALL open a modal (draft suite state)
+where the user configures Overall Score method (Mean, Weighted mean, or Specific function), optional
+Enable threshold, and — when Specific function is selected — nested Test Case Score (Mean or Weighted
+mean only). Apply SHALL commit the draft to the suite via the tab's `onChange`; Cancel SHALL discard
+the draft.
 
-#### Scenario: Card visible only when metrics exist
+#### Scenario: Card visible when metrics exist
 - **WHEN** the Metrics tab has loaded and the suite has at least one bound metric
 - **THEN** the Overall Score card is visible and Edit opens the Overall Score modal
 
-#### Scenario: No score chrome when empty
+#### Scenario: Card visible when empty
 - **WHEN** the Metrics tab has loaded and the suite has zero bound metrics
-- **THEN** neither the Overall Score card nor the Edit modal entry point is rendered
+- **THEN** the Overall Score card remains visible and Edit opens the Overall Score modal
 
 #### Scenario: Deleting the final metric does not create an unsaved suite change
 - **WHEN** a user deletes the final bound metric
-- **THEN** the metric deletion is reflected immediately, and the deletion alone does not create a
-  pending suite edit that exposes Save and Discard controls
+- **THEN** the metric deletion is reflected immediately, overall-score weights are left as stored on
+  the suite, and the deletion alone does not create a pending suite edit that exposes Save and
+  Discard controls for score configuration
+
+### Requirement: Suite validity refresh after metric mutations
+After a successful create, update, or delete of a bound metric, the system SHALL refetch the test
+suite and merge the returned `valid` and `validationWarnings` into the in-memory suite used by the
+detail header. The evaluation API owns Invalid status for overall-score definitions that reference a
+metric that no longer exists; the Metrics tab SHALL NOT invent client-side validity warnings. A
+validity-only update SHALL NOT mark the suite dirty for Save and Discard.
+
+#### Scenario: Orphan weighted-mean weight surfaces Invalid from the API
+- **WHEN** a user deletes a bound metric that is still referenced by a weighted-mean overall-score
+  weight, and the evaluation API revalidates the suite as invalid with a warning naming that metric
+- **THEN** the detail header shows Invalid from the refreshed `valid` / `validationWarnings`, the
+  overall-score weight rows remain on the suite draft, and Save/Discard are not shown solely because
+  of the validity refresh
 
 ### Requirement: Persist nested Test Case Score as `testCaseOverallScore`
 When the user Applies Overall Score as Specific function (`custom_function`), the system SHALL

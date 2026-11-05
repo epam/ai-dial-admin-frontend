@@ -100,7 +100,7 @@ const FilterGroup: FC<Props> = ({
       {isRoot && showOperator && <div className="flex items-center gap-1.5">{operatorSelect}</div>}
 
       {node.children.length > 0 && (
-        <div className={classNames('flex flex-col gap-1.5', !isRoot && 'border-l border-primary pl-2')}>
+        <div className={classNames('flex flex-col gap-1.5', !isRoot && 'border-l border-tertiary pl-2')}>
           {node.children.map((child) =>
             child.kind === FilterNodeKind.Group ? (
               <FilterGroup

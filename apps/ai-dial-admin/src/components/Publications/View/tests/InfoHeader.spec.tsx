@@ -164,7 +164,7 @@ describe('Publications :: InfoHeader', () => {
       'gap-8',
       'pb-8',
       'border-b',
-      'border-primary',
+      'border-tertiary',
     );
   });
 
@@ -188,7 +188,7 @@ describe('Publications :: InfoHeader', () => {
 
     const headerContainer = container.firstElementChild;
     expect(headerContainer).toBeInTheDocument();
-    expect(headerContainer).toHaveClass('border-b', 'border-primary');
+    expect(headerContainer).toHaveClass('border-b', 'border-tertiary');
 
     expect(screen.queryAllByRole('region', { name: 'labelled-text' })).toHaveLength(0);
   });

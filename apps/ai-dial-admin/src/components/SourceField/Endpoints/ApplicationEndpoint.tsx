@@ -206,7 +206,7 @@ const ApplicationEndpoint: FC<Props> = ({
   return (
     <div className="h-full flex flex-col gap-y-8">
       {!isCodeApp && (
-        <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
+        <div className="flex flex-col w-full gap-8 border border-secondary rounded p-4">
           <div className="flex flex-col w-full gap-4">
             <Checkbox
               isSelected={isContainerMode ? true : checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]}

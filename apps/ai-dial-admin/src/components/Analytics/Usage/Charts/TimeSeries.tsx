@@ -32,7 +32,7 @@ import {
   buildTimeSeriesOptions,
   getSliceColor,
 } from '@/src/components/Analytics/Usage/utils/chart-options';
-import { formatBucketRange, getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
+import { formatBucketLabel, formatBucketRange, getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY } from '@/src/components/Analytics/Usage/utils/labels';
 import { getBucketStepMs, padBucketPoints } from '@/src/components/Analytics/Usage/utils/buckets';
 import { buildStackedMatrix } from '@/src/components/Analytics/Usage/utils/stack';
@@ -77,9 +77,6 @@ const SUBTITLE_KEY: Record<TimeSeriesView, AnalyticsUsageI18nKey> = {
   [TimeSeriesView.Cost]: AnalyticsUsageI18nKey.TimeSeriesCostSubtitle,
   [TimeSeriesView.Latency]: AnalyticsUsageI18nKey.TimeSeriesLatencySubtitle,
 };
-
-const formatBucketLabel = (bucketMs: number): string =>
-  new Date(bucketMs).toLocaleString(void 0, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 /**
  * A spend bar is named by its bin's own width: a bin of a day or more has no hour worth stating,

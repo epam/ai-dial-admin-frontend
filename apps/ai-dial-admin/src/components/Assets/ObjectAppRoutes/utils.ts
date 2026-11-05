@@ -74,31 +74,37 @@ const appRunnerMapper: ObjectAppRouteMapper = {
       },
     }),
   }),
-  fromRoute: (route, previousRoute) => ({
-    ...previousRoute,
-    'dial:paths': route.paths ?? [],
-    'dial:methods': route.methods ?? [],
-    'dial:upstreams': (route.upstreams ?? []).map(toCoreUpstream),
-    ...(route.roleLimits != null && { 'dial:userRoles': Object.keys(route.roleLimits) }),
-    ...(route.rewritePath != null && { 'dial:rewritePath': route.rewritePath }),
-    ...(route.order != null && { 'dial:order': route.order }),
-    ...(route.maxRetryAttempts != null && { 'dial:maxRetryAttempts': route.maxRetryAttempts }),
-    ...(route.permissions != null && {
-      'dial:permissions': route.permissions.map((permission) => permission.toUpperCase()),
-    }),
-    ...(route.response != null && {
-      'dial:response': {
-        'dial:status': route.response.status,
-        'dial:body': route.response.body,
-      },
-    }),
-    ...(route.attachmentPaths != null && {
-      'dial:attachmentPaths': {
-        'dial:requestBody': route.attachmentPaths.requestBody,
-        'dial:responseBody': route.attachmentPaths.responseBody,
-      },
-    }),
-  }),
+  fromRoute: (route, previousRoute) => {
+    const nextRoute: Record<string, unknown> = {
+      ...previousRoute,
+      'dial:paths': route.paths ?? [],
+      'dial:methods': route.methods ?? [],
+      'dial:upstreams': (route.upstreams ?? []).map(toCoreUpstream),
+      ...(route.roleLimits != null && { 'dial:userRoles': Object.keys(route.roleLimits) }),
+      ...(route.rewritePath != null && { 'dial:rewritePath': route.rewritePath }),
+      ...(route.order != null && { 'dial:order': route.order }),
+      ...(route.maxRetryAttempts != null && { 'dial:maxRetryAttempts': route.maxRetryAttempts }),
+      ...(route.permissions != null && {
+        'dial:permissions': route.permissions.map((permission) => permission.toUpperCase()),
+      }),
+      ...(route.response != null && {
+        'dial:response': {
+          'dial:status': route.response.status,
+          'dial:body': route.response.body,
+        },
+      }),
+      ...(route.attachmentPaths != null && {
+        'dial:attachmentPaths': {
+          'dial:requestBody': route.attachmentPaths.requestBody,
+          'dial:responseBody': route.attachmentPaths.responseBody,
+        },
+      }),
+    };
+    if (route.response == null) {
+      delete nextRoute['dial:response'];
+    }
+    return nextRoute;
+  },
 };
 
 export const getObjectAppRouteMapper = (format: ObjectAppRouteFormat): ObjectAppRouteMapper =>

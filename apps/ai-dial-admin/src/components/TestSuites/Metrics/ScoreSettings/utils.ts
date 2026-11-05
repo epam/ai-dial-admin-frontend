@@ -41,10 +41,10 @@ import { JSONSchema7 } from 'json-schema';
 const DEFAULT_METRIC_SCORE_FIELD = 'score';
 
 export const getOverallScoreThresholdError = (
-  value: number | string | undefined,
+  value: number | string | null | undefined,
   t?: (key: string, options?: Record<string, string | number>) => string,
 ): FieldError | null => {
-  if (value === undefined || value === '') {
+  if (value == null || value === '') {
     return null;
   }
 
@@ -334,7 +334,7 @@ export const getOverallScoreCardMethodLabelKey = (suite: TestSuite): string => {
   }
 };
 
-export const getOverallScoreFormulaLabelKey = (suite: TestSuite): string | null => {
+export const getOverallScoreFormulaLabelKey = (suite: Pick<TestSuite, 'overallScore'>): string | null => {
   switch (suite.overallScore?.type) {
     case OverallScoreType.WeightedMean:
       return TestSuitesI18nKey.OverallScoreWeightedMeanFormula;
