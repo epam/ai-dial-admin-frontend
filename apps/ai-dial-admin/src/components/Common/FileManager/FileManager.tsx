@@ -43,7 +43,13 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getRootFolder, getRootFolders, isFileRootPath, isFlatPlatformView } from '@/src/utils/files/root-folder';
+import {
+  getRootFolder,
+  getRootFolders,
+  isFileRootPath,
+  isNestedPlatformView,
+  isPlatformBucketView,
+} from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { FILE_MANAGER_GRID_PERSISTENCE, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
@@ -123,7 +129,7 @@ const FileManager: FC<Props> = ({
 
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { featureFlags, isUnitMode, canWriteAt } = useAppContext();
+  const { isUnitMode, canWriteAt } = useAppContext();
   const { showNotification } = useNotification();
   const { units, ensureUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -145,7 +151,7 @@ const FileManager: FC<Props> = ({
   );
   // In unit mode the unit owning the open folder decides; a view with no unit namespace stays read-only.
   // The platform bucket is admin-only, so a unit user's roots stop at the shared space.
-  const isPlatformBucketEnabled = featureFlags.catalogEnabled && !isUnitMode;
+  const isPlatformBucketEnabled = !isUnitMode;
   const namespace = getRouteNamespace(view);
   const isReadOnly = isReadOnlyAdmin || (isUnitMode && (namespace == null || !canWriteAt(namespace, filePath ?? '')));
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -207,7 +213,10 @@ const FileManager: FC<Props> = ({
   // `FileManager/utils.ts`), but `onMoveToFiles` also drives drag-and-drop independently of those
   // menus, so it must be withheld here too rather than left to resolve as a silent no-op with a
   // false success toast (`handleMoveToFiles` reports success on an empty promise list).
-  const isMoveSupported = !isFlatPlatformView(view) && view !== ApplicationRoute.Conversations;
+  const isMoveSupported = !isPlatformBucketView(view) && view !== ApplicationRoute.Conversations;
+  // A nested platform view's folder (a cost object) exists only while it holds a record, so there is no
+  // folder marker to create: the create modal takes the folder instead.
+  const isCreateFolderSupported = !isNestedPlatformView(view);
   const isFileRootActive = isFileRootPath(filePath);
   const hasUnits = Object.keys(units).length > 0;
   const getUnitIcon = useCallback(
@@ -553,7 +562,7 @@ const FileManager: FC<Props> = ({
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         {...props}
         getItemActionRestriction={getItemActionRestriction}
-        onCreateFolder={isReadOnly || isFileRootActive ? undefined : handleCreateFolder}
+        onCreateFolder={isReadOnly || isFileRootActive || !isCreateFolderSupported ? undefined : handleCreateFolder}
         onDownloadFiles={isFileRootActive ? undefined : handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
         onRenameValidate={handleCreateFolderValidate}
@@ -569,7 +578,7 @@ const FileManager: FC<Props> = ({
           view,
           t,
           handleFolderNestingDepthExceeded,
-          isReadOnly || isFileRootActive ? undefined : handleDestinationFolderCreate,
+          isReadOnly || isFileRootActive || !isCreateFolderSupported ? undefined : handleDestinationFolderCreate,
         )}
         isRenameFileAvailable={false}
         isDuplicateFolderAvailable={false}

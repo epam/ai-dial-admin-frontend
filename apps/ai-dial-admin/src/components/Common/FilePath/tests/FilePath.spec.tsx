@@ -46,14 +46,8 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
 const platformRoot = { name: 'platform', path: 'platform/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 const publicRoot = { name: 'public', path: 'public/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 
-const { mockFeatureFlags } = vi.hoisted(() => ({
-  mockFeatureFlags: {
-    catalogEnabled: true,
-  },
-}));
-
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: mockFeatureFlags }),
+  useAppContext: () => ({ isUnitMode: false }),
 }));
 
 const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplications) => {
@@ -109,21 +103,10 @@ describe('FilePath', () => {
     expect(screen.getByText('root:public')).toBeInTheDocument();
   });
 
-  test('fetches file, platform, and public roots for a dual-bucket view when Catalog is enabled', () => {
-    mockFeatureFlags.catalogEnabled = true;
-
+  test('fetches file, platform, and public roots for a dual-bucket view', () => {
     const fetchFiles = renderFilePath([]);
 
     expect(fetchFiles).toHaveBeenCalledOnce();
     expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
-  });
-
-  test('fetches file and public roots for a dual-bucket view when Catalog is disabled', () => {
-    mockFeatureFlags.catalogEnabled = false;
-
-    const fetchFiles = renderFilePath([]);
-
-    expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'public/']);
   });
 });

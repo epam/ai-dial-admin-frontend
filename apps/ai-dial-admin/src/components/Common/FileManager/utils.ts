@@ -49,6 +49,8 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.PlatformRoutes]: FileManagerI18nKey.Routes,
   [ApplicationRoute.PlatformRoles]: FileManagerI18nKey.Roles,
   [ApplicationRoute.PlatformKeys]: FileManagerI18nKey.Keys,
+  [ApplicationRoute.PlatformPolicies]: FileManagerI18nKey.Policies,
+  [ApplicationRoute.PlatformPolicyAssignments]: FileManagerI18nKey.PolicyAssignments,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
@@ -265,6 +267,8 @@ export const getBulkActionsToolbarOptions = (
     view === ApplicationRoute.PlatformRoutes ||
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformKeys ||
+    view === ApplicationRoute.PlatformPolicies ||
+    view === ApplicationRoute.PlatformPolicyAssignments ||
     view === ApplicationRoute.Skills ||
     view === ApplicationRoute.Projects ||
     isPlatformDualBucketView(view, currentPath);

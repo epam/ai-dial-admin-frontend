@@ -41,8 +41,25 @@ const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
 
 export const isFlatPlatformView = (view?: ApplicationRoute): boolean => !!view && FLAT_PLATFORM_VIEWS.includes(view);
 
+/**
+ * Core's `platform` resource views that nest exactly one folder level — the policy records, whose
+ * folder is the cost object. Same bucket and root as the flat views, but the list shows that folder level,
+ * and create/duplicate write `[folder/]name`. Rename, move and a second level are never offered.
+ */
+const NESTED_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
+  ApplicationRoute.PlatformPolicies,
+  ApplicationRoute.PlatformPolicyAssignments,
+];
+
+export const isNestedPlatformView = (view?: ApplicationRoute): boolean =>
+  !!view && NESTED_PLATFORM_VIEWS.includes(view);
+
+/** Whether `view` lives in the physical `platform` bucket, with or without a folder level. */
+export const isPlatformBucketView = (view?: ApplicationRoute): boolean =>
+  isFlatPlatformView(view) || isNestedPlatformView(view);
+
 export const getRootFolder = (view: ApplicationRoute): string =>
-  isFlatPlatformView(view) ? PLATFORM_ROOT_FOLDER : ROOT_FOLDER;
+  isPlatformBucketView(view) ? PLATFORM_ROOT_FOLDER : ROOT_FOLDER;
 
 /** Views whose resources can be read from both physical Core buckets. */
 export const DUAL_BUCKET_VIEWS: readonly ApplicationRoute[] = [
@@ -76,7 +93,7 @@ export const isFileSource = (entitySource?: string, path?: string | null): boole
 
 /**
  * Ordered FileManager roots. `file` is synthetic and must never be sent to Core's resource metadata
- * endpoint. It remains visible when Catalog disables the physical platform bucket, and goes only when
+ * endpoint. It remains visible when the physical platform bucket is not offered (unit mode), and goes only when
  * the caller cannot read Core's config-file endpoints (`isFileRootEnabled` off).
  */
 export const getRootDescriptors = (

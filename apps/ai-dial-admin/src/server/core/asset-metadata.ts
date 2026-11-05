@@ -8,6 +8,8 @@ import {
   DialKeyResource,
   DialModelResource,
   DialModelResourceStatus,
+  DialPolicyAssignmentResource,
+  DialPolicyResource,
   DialRoleResource,
   DialRouteResource,
   DialToolsetResource,
@@ -26,6 +28,7 @@ import {
   decodeCorePath,
   parseEncodedFlatPath,
   parseEncodedFolderPath,
+  parseEncodedOptionalFolderPath,
   parseEncodedVersionedPath,
   stripPrefix,
   VersionedPathParts,
@@ -88,11 +91,23 @@ export const isVersioned = (type: ResourceType): boolean => (VERSIONED_RESOURCE_
 /** Versionless but folder-nested (prompt, conversation): folder-path parse, never a `__` split. */
 export const isFolderNestedVersionless = (type: ResourceType): boolean => FOLDER_NESTED_VERSIONLESS_TYPES.has(type);
 
+/** Policy records nest one optional folder level, so a path with no `/` is a root entry, not an error. */
+export const isOptionalFolderType = (type: ResourceType): boolean =>
+  type === ResourceType.POLICY || type === ResourceType.POLICY_ASSIGNMENT;
+
 const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType): ResourceInfo => {
   const prefix = RESOURCE_TYPE_PREFIX[type];
   let parts: VersionedPathParts;
   if (isVersioned(type)) {
     parts = parseEncodedVersionedPath(metadata.url, prefix);
+  } else if (isOptionalFolderType(type)) {
+    // Policy records: a global policy has no folder, so a bare name is a valid root entry. A FOLDER row
+    // (a cost object) re-adds the trailing slash, as for the folder-nested types below.
+    const folderParts = parseEncodedOptionalFolderPath(metadata.url, prefix);
+    parts = {
+      ...folderParts,
+      path: metadata.nodeType === 'FOLDER' ? `${folderParts.path}/` : folderParts.path,
+    };
   } else if (isFolderNestedVersionless(type) || type === ResourceType.SKILL || type === ResourceType.PROJECT) {
     // Prompt/conversation/skill/project: folder + plain name, never a `__` split. A genuine FOLDER row
     // re-adds the trailing slash `parsePath` strips — the one implementation of that convention,
@@ -200,6 +215,23 @@ const folderMetadataFields = (
   content: Record<string, unknown>,
 ): CoreResourceEntityMetadata => {
   const { path, folderId, name } = parseEncodedFolderPath(metadata.url, prefix);
+  return {
+    name,
+    folderId,
+    path,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
+  };
+};
+
+/** `folderMetadataFields` for the policy records, whose folder (the cost object) is optional. */
+const optionalFolderMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
+  const { path, folderId, name } = parseEncodedOptionalFolderPath(metadata.url, prefix);
   return {
     name,
     folderId,
@@ -464,6 +496,48 @@ export const mergeRouteResource = (
 };
 
 /**
+ * Policies and policy assignments are unversioned like routes but nest one folder deep (the cost
+ * object), so they merge through `folderMetadataFields`: the metadata `url`'s remainder after stripping
+ * `policies/platform/` is `[costObject/]name`. `folderId` is therefore the cost object, `''` for a global
+ * policy.
+ */
+export const mergePolicyResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialPolicyResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = optionalFolderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.POLICY], content);
+  return {
+    ...rest,
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
+  } as DialPolicyResource;
+};
+
+export const mergePolicyAssignmentResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialPolicyAssignmentResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = optionalFolderMetadataFields(
+    metadata,
+    RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT],
+    content,
+  );
+  return {
+    ...rest,
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
+  } as DialPolicyAssignmentResource;
+};
+
+/**
  * Roles are flat and unversioned like models, interceptors, and routes — merged via
  * `flatMetadataFields` for the same reason: the metadata `url`'s remainder after stripping
  * `roles/platform/` is a bare name with no `/` separator to split into folderId + name.
@@ -644,4 +718,6 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.ROUTE]: mergeRouteResource,
   [ResourceType.ROLE]: mergeRoleResource,
   [ResourceType.PROJECT_KEY]: mergeKeyResource,
+  [ResourceType.POLICY]: mergePolicyResource,
+  [ResourceType.POLICY_ASSIGNMENT]: mergePolicyAssignmentResource,
 };

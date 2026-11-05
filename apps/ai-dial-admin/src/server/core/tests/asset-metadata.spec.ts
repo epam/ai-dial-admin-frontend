@@ -11,6 +11,8 @@ import {
   mergeInterceptorResource,
   mergeKeyResource,
   mergeModelResource,
+  mergePolicyAssignmentResource,
+  mergePolicyResource,
   mergePrompt,
   mergeRoleResource,
   mergeRouteResource,
@@ -527,5 +529,68 @@ describe('Server :: Core :: asset-metadata', () => {
     const meta = metadata({ url: 'keys/platform/k' });
 
     expect(mergeKeyResource(content, meta)).toHaveProperty('allowedIpAddressRanges', ['192.168.0.0/24']);
+  });
+});
+
+describe('Server :: Core :: asset-metadata :: policy records', () => {
+  test('mergePolicyResource reads a global policy as a root entry with no folder', () => {
+    const meta = metadata({ url: 'policies/platform/daily-cap', author: 'ada', updatedAt: 5 });
+
+    expect(mergePolicyResource({ priority: 10 }, meta)).toEqual({
+      priority: 10,
+      name: 'daily-cap',
+      _metadata: { name: 'daily-cap', path: 'daily-cap', folderId: '', author: 'ada', updatedAt: '5' },
+    });
+  });
+
+  test('mergePolicyResource reads a project policy with its cost object as the folder', () => {
+    const meta = metadata({ url: 'policies/platform/team-a/team-cap', author: 'ada', updatedAt: 5 });
+
+    expect(mergePolicyResource({ priority: 10 }, meta)._metadata).toMatchObject({
+      name: 'team-cap',
+      path: 'team-a/team-cap',
+      folderId: 'team-a/',
+    });
+  });
+
+  test('mergePolicyAssignmentResource reads the cost object folder and the id', () => {
+    const meta = metadata({ url: 'policy_assignments/platform/team-a/grant-1', author: 'ada', updatedAt: 5 });
+
+    expect(mergePolicyAssignmentResource({ policy: 'daily-cap' }, meta)).toMatchObject({
+      policy: 'daily-cap',
+      name: 'grant-1',
+      _metadata: { name: 'grant-1', path: 'team-a/grant-1', folderId: 'team-a/' },
+    });
+  });
+
+  test('toResourceInfoList lists root policies, project policies and a cost object folder without throwing', () => {
+    const node = metadata({
+      nodeType: 'FOLDER',
+      items: [
+        metadata({ name: 'daily-cap', url: 'policies/platform/daily-cap' }),
+        metadata({ name: 'team-a', nodeType: 'FOLDER', url: 'policies/platform/team-a/' }),
+        metadata({ name: 'team-cap', url: 'policies/platform/team-a/team-cap' }),
+      ],
+    });
+
+    const result = toResourceInfoList(node, ResourceType.POLICY);
+
+    expect(result[0]).toMatchObject({ name: 'daily-cap', folderId: '', path: 'daily-cap', nodeType: 'item' });
+    expect(result[1]).toMatchObject({ name: 'team-a', path: 'team-a/', nodeType: 'folder' });
+    expect(result[2]).toMatchObject({ name: 'team-cap', folderId: 'team-a/', path: 'team-a/team-cap' });
+    expect(result[0].version).toBeUndefined();
+  });
+
+  test('toResourceInfoList reads assignments the same way', () => {
+    const node = metadata({
+      nodeType: 'FOLDER',
+      items: [metadata({ name: 'grant-1', url: 'policy_assignments/platform/team-a/grant-1' })],
+    });
+
+    expect(toResourceInfoList(node, ResourceType.POLICY_ASSIGNMENT)[0]).toMatchObject({
+      name: 'grant-1',
+      folderId: 'team-a/',
+      path: 'team-a/grant-1',
+    });
   });
 });

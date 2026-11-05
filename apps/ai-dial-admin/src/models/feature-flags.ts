@@ -1,6 +1,5 @@
 export interface FeatureFlags {
   adminApiEnabled: boolean;
-  catalogEnabled: boolean;
   dashboardEnabled: boolean;
   deploymentsEnabled: boolean;
   evaluationEnabled: boolean;
@@ -11,4 +10,5 @@ export interface FeatureFlags {
   analyticsUsageEnabled: boolean;
   analyticsCustomDashboardsEnabled: boolean;
   queryAssistantEnabled: boolean;
+  policiesEnabled: boolean;
 }

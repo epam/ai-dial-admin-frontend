@@ -34,8 +34,7 @@ admin-backend entity. A container that is not RUNNING SHALL offer no create acti
 
 #### Scenario: Toolset and application creates open on the platform bucket
 
-- **WHEN** a user chooses the Core option on a RUNNING MCP or application container while Catalog is
-  enabled
+- **WHEN** a user chooses the Core option on a RUNNING MCP or application container
 - **THEN** the asset create modal shows the `platform` and `public` roots in its folder tree
 - **AND** `platform` is selected when the modal opens
 
@@ -44,12 +43,6 @@ admin-backend entity. A container that is not RUNNING SHALL offer no create acti
 - **WHEN** the user selects a folder under `public` in that modal and saves
 - **THEN** the asset is written to the selected `public` folder with the version the modal shows,
   carrying the same routing fields as the platform create
-
-#### Scenario: Public bucket only when Catalog is disabled
-
-- **WHEN** Catalog is disabled and a user chooses the Core option on a RUNNING MCP or application
-  container
-- **THEN** the modal shows only the `public` root and creates there, as the Assets list does
 
 #### Scenario: Stopped container offers nothing
 

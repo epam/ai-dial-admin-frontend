@@ -36,6 +36,7 @@ import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
 import { getIsCustomDashboardsEnabled } from '@/src/utils/env/get-custom-dashboards-toggle';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
+import { getIsPoliciesEnabled } from '@/src/utils/env/get-policies-toggle';
 import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
 import { isValueTruthy } from '@/src/utils/types';
 import { normalizeUrl } from '@/src/utils/url';
@@ -54,7 +55,6 @@ export default async function Layout({ children, params }: { children: ReactNode
   const isAnalyticsEnabled = getIsAnalyticsEnabled();
   const featureFlags: FeatureFlags = {
     adminApiEnabled: getIsAdminApiEnabled(),
-    catalogEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('catalog'),
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
     evaluationEnabled: process.env.DIAL_EVAL_API_URL != null,
@@ -65,6 +65,7 @@ export default async function Layout({ children, params }: { children: ReactNode
     analyticsUsageEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
     analyticsCustomDashboardsEnabled: getIsCustomDashboardsEnabled(),
     queryAssistantEnabled: isAnalyticsEnabled && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
+    policiesEnabled: getIsPoliciesEnabled(),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();

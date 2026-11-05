@@ -119,6 +119,14 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key),
       });
+    case ApplicationRoute.PlatformPolicies:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Policies) : t(FileManagerI18nKey.Policy),
+      });
+    case ApplicationRoute.PlatformPolicyAssignments:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.PolicyAssignments) : t(FileManagerI18nKey.PolicyAssignment),
+      });
     case ApplicationRoute.Skills:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill),
@@ -217,6 +225,17 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.PlatformKeys:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformPolicies:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Policies) : t(FileManagerI18nKey.Policy)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformPolicyAssignments:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1
+          ? t(FileManagerI18nKey.PolicyAssignments)
+          : t(FileManagerI18nKey.PolicyAssignment)
+        ).toLowerCase(),
       });
     case ApplicationRoute.Projects:
       return hasFoldersToDelete
