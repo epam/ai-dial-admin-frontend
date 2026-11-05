@@ -73,12 +73,19 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     additionalGridOptions,
     columnWidths,
     onColumnWidthsChange,
+    rowData,
   }: {
+    rowData: unknown[];
     additionalGridOptions: Record<string, (e: unknown) => void>;
     columnWidths: Record<string, number>;
     onColumnWidthsChange: (widths: Record<string, number>) => void;
   }) => (
-    <div role="grid" aria-label="Analytics grid" data-column-widths={JSON.stringify(columnWidths)}>
+    <div
+      role="grid"
+      aria-label="Analytics grid"
+      data-column-widths={JSON.stringify(columnWidths)}
+      data-row-count={rowData.length}
+    >
       <button onClick={() => onColumnWidthsChange({ testCaseName: 240 })}>Resize column</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
@@ -146,6 +153,16 @@ describe('ExtractionResultTab', () => {
     expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Columns panel' })).not.toBeInTheDocument();
+  });
+
+  test('renders an empty grid when loading results rejects', async () => {
+    getTestCaseRunResultsMock.mockRejectedValueOnce(new Error('Results unavailable'));
+
+    render(<ControlledExtractionResultTab />);
+
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toHaveAttribute('data-row-count', '0');
+    expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+    expect(getTestCaseRunResultsMock).toHaveBeenCalledOnce();
   });
 
   test('keeps the column widths the grid reports in the tab state', async () => {

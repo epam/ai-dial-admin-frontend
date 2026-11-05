@@ -28,6 +28,7 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnsCompareOptions } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import {
+  disableGroupedRowSortingAndFiltering,
   ELLIPSIS_HEADER_PARAMS,
   lockedWidthColDef,
   RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
@@ -482,14 +483,6 @@ const getComparedTestCaseScoreGroup = (
     ],
   };
 };
-
-const disableGroupedRowSortingAndFiltering = (columns: (ColDef | ColGroupDef)[]): (ColDef | ColGroupDef)[] =>
-  columns.map((column) => {
-    if ('children' in column && column.children) {
-      return { ...column, children: disableGroupedRowSortingAndFiltering(column.children as ColDef[]) };
-    }
-    return { ...column, sortable: false, filter: false, floatingFilter: false };
-  });
 
 export const getCompareColumnsCompare = (
   results: CompareAnalyticsRow[],

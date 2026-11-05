@@ -13,6 +13,7 @@ import {
   GroupedAnalyticsResult,
 } from '@/src/components/Runs/ExecutionResults/models';
 import {
+  disableGroupedRowSortingAndFiltering,
   DURATION_COLUMN_WIDTH,
   ELLIPSIS_HEADER_PARAMS,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -297,14 +298,6 @@ const getDetailsColumns = (options?: ExecutionResultColumnOptions): ColGroupDef 
       : []),
   ],
 });
-
-const disableGroupedRowSortingAndFiltering = (columns: (ColDef | ColGroupDef)[]): (ColDef | ColGroupDef)[] =>
-  columns.map((column) => {
-    if ('children' in column && column.children) {
-      return { ...column, children: disableGroupedRowSortingAndFiltering(column.children as ColDef[]) };
-    }
-    return { ...column, sortable: false, filter: false, floatingFilter: false };
-  });
 
 /**
  * `Total requests` and `Total turns` ship hidden from `executionColumns`: a denominator is context for a

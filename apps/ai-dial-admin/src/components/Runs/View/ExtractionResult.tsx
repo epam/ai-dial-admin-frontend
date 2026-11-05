@@ -59,8 +59,12 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
     let isCancelled = false;
     const loadResults = async () => {
-      const resultsSettled = await getTestCaseRunResults(RESULT_FILTERS(run));
-      if (!isCancelled) setExtractionResultState({ results: resultsSettled?.content || [] });
+      try {
+        const resultsSettled = await getTestCaseRunResults(RESULT_FILTERS(run));
+        if (!isCancelled) setExtractionResultState({ results: resultsSettled?.content || [] });
+      } catch {
+        if (!isCancelled) setExtractionResultState({ results: [] });
+      }
     };
     void loadResults();
     return () => {

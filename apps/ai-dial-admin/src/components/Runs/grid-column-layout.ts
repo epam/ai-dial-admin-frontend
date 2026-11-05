@@ -1,4 +1,4 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef } from 'ag-grid-community';
 
 import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
 
@@ -30,6 +30,14 @@ export const NO_FILTER_COL_DEF: Pick<ColDef, 'filter' | 'floatingFilter'> = {
   filter: false,
   floatingFilter: false,
 };
+
+export const disableGroupedRowSortingAndFiltering = (columns: (ColDef | ColGroupDef)[]): (ColDef | ColGroupDef)[] =>
+  columns.map((column) => {
+    if ('children' in column && column.children) {
+      return { ...column, children: disableGroupedRowSortingAndFiltering(column.children) };
+    }
+    return { ...column, sortable: false, filter: false, floatingFilter: false };
+  });
 
 export const fixedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWidth'> => ({
   width,
