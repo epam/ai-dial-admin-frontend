@@ -28,6 +28,8 @@ interface CapturedGrid {
     initialSort?: string;
     tooltipValueGetter?: () => unknown;
     type?: string | string[];
+    cellClass?: string | string[];
+    headerClass?: string;
   }[];
   additionalGridOptions?: { domLayout?: string; suppressMultiSort?: boolean };
 }
@@ -257,6 +259,8 @@ describe('BreakdownTable', () => {
       expect(dimension.type).toBeUndefined();
       expect(measures.map((column) => column.colId)).toContain('share');
       expect(measures.every((column) => column.type === GridColumnType.RightAligned)).toBe(true);
+      expect(measures.every((column) => column.cellClass === 'column-divider')).toBe(true);
+      expect(measures.every((column) => column.headerClass === 'align-right')).toBe(true);
     }
   });
 

@@ -73,7 +73,7 @@ const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
   ...BREAKDOWN_COLUMN_BASE,
   flex: 1,
   minWidth: 170,
-  cellClass: ['align-right', 'column-divider'],
+  cellClass: 'column-divider',
   headerClass: 'align-right',
   type: GridColumnType.RightAligned,
 };
