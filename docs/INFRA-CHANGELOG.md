@@ -28,6 +28,11 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 ### Changed
 
+#### Access control
+
+- Who is an admin, and what a non-admin may do, now comes from DIAL Core's `GET /v1/user/role-assignments` (`adminAccess` plus the units the caller works in), not from the admin backend's `/security-info`. `DIAL_CORE_API_URL` is therefore required for access decisions, and the admin backend's `FULL_ADMIN` / `READ_ONLY_ADMIN` roles are no longer read: a caller who was only a read-only admin there is now treated as having no admin access. A caller with `adminAccess: NONE` who holds a role in at least one org unit gets a unit-scoped panel (menu sections, write actions and the role-assignments tab follow the roles' permissions); a caller with neither sees the 403 page. A Core with authentication on and no admin rules configured answers `NONE` for everyone, so configure Core's admin rules before upgrading
+- With authentication off, or when Core answers `404` because org units are switched off (`orgUnits.enabled`), the caller is treated as a full admin and Core still refuses what it does not allow. `DIAL_ADMIN_API_URL` keeps gating import/export, config sync and the version footer, and no longer affects roles
+
 #### Navigation
 
 - The telemetry dashboard moves from `/dashboard` to `/dashboards`, and its menu item is renamed `Dashboards`; `/dashboard` redirects to the new path. The `dashboard` token of `DISABLE_MENU_ITEMS` still hides the item, in whichever group it sits

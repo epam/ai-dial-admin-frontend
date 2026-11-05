@@ -71,11 +71,11 @@ update-success notification and page refresh apply. Editing any other tab SHALL 
 
 ### Requirement: Default cost object is validated before save
 
-The system SHALL disable Save while the default cost object is empty or whitespace-only, showing an
-error state and an inline validation message on the field, so a blank value is not sent to Core. The
-system SHALL NOT impose any other format rule on the value; stricter validation is Core's, surfaced
-through the existing error notification. Inline validation SHALL NOT produce a save-success
-notification.
+The system SHALL disable Save while the default cost object is empty or whitespace-only, regardless of
+the active tab, and show an error state and an inline validation message on the field when the Spending
+Limits tab is open, so a blank value is not sent to Core. The system SHALL NOT impose any other format
+rule on the value; stricter validation is Core's, surfaced through the existing error notification.
+Inline validation SHALL NOT produce a save-success notification.
 
 #### Scenario: Empty cost object disables Save
 
@@ -87,10 +87,20 @@ notification.
 - **WHEN** the user enters only spaces in the default cost object field
 - **THEN** the field shows the same error state and the Save button is disabled
 
+#### Scenario: Blank cost object keeps Save disabled across tabs
+
+- **WHEN** the user clears the default cost object or enters only whitespace, then switches to Global Interceptors or Rate Limit Schedule
+- **THEN** Save remains disabled and no update request or success notification occurs
+
+#### Scenario: Invalid stored cost object blocks another tab's save
+
+- **WHEN** the stored spending limits have an empty or whitespace-only default cost object and the user makes an edit on another tab without opening Spending Limits
+- **THEN** Save is disabled and no update request or success notification occurs
+
 #### Scenario: Correcting the cost object re-enables Save
 
-- **WHEN** the user enters a non-blank value such as `TEAM-A`
-- **THEN** the error state clears and the Save button is enabled when the page has unsaved changes
+- **WHEN** the user returns to Spending Limits and enters a non-blank value such as `TEAM-A`
+- **THEN** the error state clears and the Save button is enabled when the page has unsaved changes and no other validation errors
 
 #### Scenario: Any non-blank value is accepted client-side
 

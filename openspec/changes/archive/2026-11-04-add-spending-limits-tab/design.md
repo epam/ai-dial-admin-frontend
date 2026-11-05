@@ -46,9 +46,14 @@ helper text); confirmation modal on `enforce` (blocks the edit flow, and Save is
 The helper text wording for `shadow` is provisional until Core confirms its semantics.
 
 ### D4: `defaultCostObject` is a text input validated only for non-empty
-Trimmed value must be non-empty; the field reports through `SaveValidationContext` under the field key
-`spendingLimits`, exactly like `rateLimitSchedule`, and shows an inline `role="alert"` message. The value
-is saved as typed (no trimming rewrite of what the user sees until save).
+The trimmed value must be non-empty; the value is saved as typed, without a trimming rewrite. The tab
+shows the field's invalid state and an inline `role="alert"` message. `SystemProperties` derives cost-object
+validity from its current settings, using the displayed default when `spendingLimits` is absent, and
+registers it with `SaveValidationContext` under `spendingLimits` for the page's lifetime. The page
+re-registers validity after a context reset and removes the field when the page unmounts. Switching tabs
+or opening the page with an invalid stored value therefore cannot bypass the existing Save validation.
+The tab itself does not own a context registration that disappears on unmount.
+Other existing validation, including the schedule's current behavior, remains unchanged by this fix.
 *Alternative:* a pattern check. Rejected: Core documents no format, and a wrong guess would reject values
 Core accepts. Core's 400 surfaces through the existing error notification.
 

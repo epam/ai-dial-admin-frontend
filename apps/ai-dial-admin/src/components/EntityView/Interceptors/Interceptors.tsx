@@ -15,6 +15,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -75,7 +76,9 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   appRunner,
 }: Props<T>) => {
   const t = useI18n();
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { isFullAdmin } = useAppContext();
+  // Core refuses interceptors from a non-admin's write, so they are shown, not edited.
+  const isReadOnlyAdmin = useIsReadOnlyAdmin() || !isFullAdmin;
   const { interceptors: appRunnerInterceptors } = useAssetRunnerDetails(appRunner);
   const [availableInterceptors, setAvailableInterceptors] = useState<(DialInterceptor | InterceptorOption)[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -224,6 +224,47 @@ describe('ProjectView', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
   });
 
+  test('clears rejected file warnings after a successful save', async () => {
+    vi.mocked(uploadProjectFile).mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    renderView();
+
+    await user.type(descriptionBox(), '!');
+    await user.upload(addInput(), new File(['x'], 'a.csv'));
+    expect(screen.getAllByText(ProjectI18nKey.RejectedDuplicate).length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+    await vi.waitFor(() => expect(screen.queryAllByText(ProjectI18nKey.RejectedDuplicate)).toHaveLength(0));
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  test('keeps rejected file warnings when saving fails', async () => {
+    vi.mocked(uploadProjectFile).mockResolvedValue({ success: false });
+    const user = userEvent.setup();
+    renderView();
+
+    await user.type(descriptionBox(), '!');
+    await user.upload(addInput(), new File(['x'], 'a.csv'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledOnce());
+    expect(screen.getAllByText(ProjectI18nKey.RejectedDuplicate).length).toBeGreaterThan(0);
+  });
+
+  test('clears rejected file warnings after confirming discard', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.type(descriptionBox(), '!');
+    await user.upload(addInput(), new File(['x'], 'a.csv'));
+    expect(screen.getAllByText(ProjectI18nKey.RejectedDuplicate).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+    expect(screen.getAllByText(ProjectI18nKey.RejectedDuplicate).length).toBeGreaterThan(0);
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: ButtonsI18nKey.Discard }));
+
+    expect(screen.queryAllByText(ProjectI18nKey.RejectedDuplicate)).toHaveLength(0);
+  });
+
   test('discarding reverts the staged edits without calling Core', async () => {
     const user = userEvent.setup();
     renderView();

@@ -23,6 +23,8 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     setEntityReadOnly,
     featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
+    isUnitMode: false,
+    canWriteAt: () => true,
   }),
 }));
 

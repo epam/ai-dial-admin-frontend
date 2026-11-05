@@ -33,6 +33,7 @@ import {
 } from '@/src/constants/main-layout';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -43,6 +44,8 @@ import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { canDecidePublicationAt } from '@/src/utils/org-units/access';
+import { getPublicationTargetPaths } from '@/src/utils/org-units/publication-targets';
 import { getModalsTranslations, getPublicationEntityLabel, isAddAction } from '@/src/utils/publications';
 import { addTrailingSlash } from '@/src/utils/url';
 
@@ -70,6 +73,12 @@ const PublicationsButtonsWrapper = <T extends Publication>({
 }: PublicationsButtonsWrapperProps<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { isUnitMode, userAccess } = useAppContext();
+  // A unit user may decide a request only when every unit it touches grants publications read and write.
+  const canDecide = useMemo(
+    () => !isUnitMode || canDecidePublicationAt(userAccess.units, getPublicationTargetPaths(entity)),
+    [isUnitMode, userAccess.units, entity],
+  );
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
@@ -251,6 +260,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                       <OutlinedButton
                         className={buttonsClassName}
                         label={t(ButtonsI18nKey.Decline)}
+                        disabled={!canDecide}
                         onClick={() => setIsOpenDeclineModal(true)}
                         iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
                       />
@@ -258,6 +268,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                         <PrimaryButton
                           className={classNames(buttonsClassName, approveButtonClassName)}
                           label={t(ButtonsI18nKey.Publish)}
+                          disabled={!canDecide}
                           onClick={() => setIsOpenApproveModal(true)}
                           iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
                         />
@@ -266,6 +277,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                         <PrimaryButton
                           className={classNames(buttonsClassName, approveButtonClassName)}
                           label={t(ButtonsI18nKey.Unpublish)}
+                          disabled={!canDecide}
                           onClick={() => setIsOpenApproveModal(true)}
                           iconBefore={<IconWorldOff {...BASE_BUTTON_ICON_PROPS} />}
                         />

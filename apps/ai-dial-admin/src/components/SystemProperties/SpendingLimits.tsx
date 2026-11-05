@@ -1,15 +1,15 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import { Input, Select, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SystemPropertiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { SpendingLimitMode, SpendingLimits as SpendingLimitsModel } from '@/src/models/system-properties';
 import { DEFAULT_SPENDING_LIMITS, SPENDING_LIMIT_MODE_I18N_KEYS } from './constants';
+import { isDefaultCostObjectValid } from './utils/spending-limits';
 
 interface Props {
   spendingLimits?: SpendingLimitsModel;
@@ -19,7 +19,6 @@ interface Props {
 const SpendingLimits: FC<Props> = ({ spendingLimits, onChangeSpendingLimits }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { dispatch } = useSaveValidationContext();
 
   // An absent field displays Core's defaults but stays undefined in the page state, so the page never
   // goes falsely dirty; the first edit to either control materializes both values.
@@ -35,15 +34,7 @@ const SpendingLimits: FC<Props> = ({ spendingLimits, onChangeSpendingLimits }) =
     [t],
   );
 
-  const isCostObjectInvalid = defaultCostObject.trim() === '';
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'spendingLimits', isValid: !isCostObjectInvalid });
-
-    return () => {
-      dispatch({ type: ValidationActionType.RemoveField, field: 'spendingLimits' });
-    };
-  }, [dispatch, isCostObjectInvalid]);
+  const isCostObjectInvalid = !isDefaultCostObjectValid(defaultCostObject);
 
   const onModeChange = useCallback(
     (value: string | string[]) => {

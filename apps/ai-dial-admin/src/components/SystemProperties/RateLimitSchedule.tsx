@@ -1,16 +1,15 @@
 'use client';
 
-import { FC, FocusEvent, useCallback, useEffect, useMemo } from 'react';
+import { FC, FocusEvent, useCallback, useMemo } from 'react';
 
 import { Calendar, CalendarMode, CalendarValue, SelectOption, Select } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey, SystemPropertiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { RateLimitSchedule as RateLimitScheduleModel, WeekDay } from '@/src/models/system-properties';
 import { DEFAULT_RATE_LIMIT_SCHEDULE, RESET_TIME_PATTERN, WEEK_DAY_I18N_KEYS } from './constants';
-import { isRateLimitScheduleValid, SUPPORTED_TIMEZONES } from './utils/rate-limit-schedule';
+import { SUPPORTED_TIMEZONES } from './utils/rate-limit-schedule';
 
 interface Props {
   schedule?: RateLimitScheduleModel;
@@ -20,7 +19,6 @@ interface Props {
 const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { dispatch } = useSaveValidationContext();
 
   // An absent schedule displays Core's defaults but stays undefined in the page state, so the page
   // never goes falsely dirty; the first edit to any control materializes all three values (D2).
@@ -37,18 +35,6 @@ const RateLimitSchedule: FC<Props> = ({ schedule, onChangeRateLimitSchedule }) =
   );
 
   const isResetTimeInvalid = !RESET_TIME_PATTERN.test(effectiveSchedule.resetTime);
-
-  // The full util, not just the reset-time check: a hand-edited stored value can be invalid in any
-  // field, and Save must stay off until it is corrected (design D3).
-  const isScheduleValid = isRateLimitScheduleValid(effectiveSchedule);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'rateLimitSchedule', isValid: isScheduleValid });
-
-    return () => {
-      dispatch({ type: ValidationActionType.RemoveField, field: 'rateLimitSchedule' });
-    };
-  }, [dispatch, isScheduleValid]);
 
   const onTimezoneChange = useCallback(
     (value: string | string[]) => {

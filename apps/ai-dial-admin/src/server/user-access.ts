@@ -1,31 +1,38 @@
 import { cookies, headers } from 'next/headers';
+import { cache } from 'react';
 
-import { getUserInfo } from '@/src/app/api/api';
+import { coreUtilityApi } from '@/src/app/api/api';
+import { AccessMode, AdminAccess, UserAccess } from '@/src/models/user-access';
 import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { resolveIsFullAdmin } from '@/src/utils/auth/full-admin';
-import { getIsAdminApiEnabled } from '@/src/utils/env/get-admin-api-toggle';
+import { resolveUserAccess } from '@/src/utils/auth/user-access';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 /**
- * The server-side counterpart of `AppContext.isFullAdmin`, for a page that must decide on a request the
- * caller would only be refused. A failed identity read counts as not a full admin: the cost is an affordance
- * withheld, never a request the caller cannot make.
+ * What the caller may do, from Core's `GET /v1/user/role-assignments`. Takes no argument so `cache` can dedupe on
+ * the request: the layouts and `isFullAdminCaller` all ask, and Core is called once. A failed read counts as
+ * denied — the cost is an affordance withheld, never a request the caller cannot make.
  */
-export async function isFullAdminCaller(): Promise<boolean> {
-  const isAdminApiEnabled = getIsAdminApiEnabled();
+export const getUserAccess = cache(async (): Promise<UserAccess> => {
   const isEnableAuth = getIsEnableAuthToggle();
 
-  // Nothing to read when no role is enforced; the shared rule answers without one.
-  if (!isAdminApiEnabled || !isEnableAuth) return resolveIsFullAdmin(isAdminApiEnabled, isEnableAuth);
+  // Nothing is enforced with auth off, so there is nothing to ask Core.
+  if (!isEnableAuth) return resolveUserAccess(isEnableAuth);
 
   try {
     const token = await getUserToken(isEnableAuth, headers(), cookies());
-    const roles = (await getUserInfo(token)).response?.userInfo?.roles;
 
-    return resolveIsFullAdmin(isAdminApiEnabled, isEnableAuth, roles);
+    return resolveUserAccess(isEnableAuth, await coreUtilityApi.getUserRoleAssignments(token));
   } catch (e) {
-    errorObjLog(e, 'Failed to resolve the caller roles');
-    return false;
+    errorObjLog(e, 'Failed to read the caller access');
+    return { mode: AccessMode.DENIED, adminAccess: AdminAccess.NONE, units: [] };
   }
+});
+
+/**
+ * The server-side counterpart of `AppContext.isFullAdmin`, for a page that must decide on a request the
+ * caller would only be refused.
+ */
+export async function isFullAdminCaller(): Promise<boolean> {
+  return (await getUserAccess()).adminAccess === AdminAccess.FULL;
 }

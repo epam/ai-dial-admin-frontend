@@ -3,7 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetApi, filesCoreApi } from '@/src/app/api/api';
-import { DialFile } from '@/src/models/dial/file';
+import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -16,6 +16,20 @@ import { fetchAllPages } from '@/src/server/core/pagination';
 export async function getFiles(path: string): Promise<DialFile[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return fetchAllPages((nextToken) => filesCoreApi.getFileMetadata(token, path, false, nextToken), toFileList);
+}
+
+/**
+ * Folders only: the folder trees of other resource types borrow them from Files, so file rows
+ * (including the `.dial_folder` marker) are dropped here and never reach a client. A failed read
+ * adds no folders instead of failing the caller's own listing.
+ */
+export async function getFileFolders(path: string): Promise<DialFile[]> {
+  try {
+    const files = await getFiles(path);
+    return files.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+  } catch {
+    return [];
+  }
 }
 
 export async function bulkDeleteFiles(items: { path: string; etag: string }[]): Promise<ServerActionResponse> {

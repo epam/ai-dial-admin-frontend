@@ -27,8 +27,9 @@ const createDeferred = <T,>() => {
 const renderProviderWithCapture = (
   getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>,
   getConfigFileNames?: () => Promise<string[] | null | undefined>,
+  getFolderRows?: (path: string) => Promise<AssetListItem[]>,
 ) => {
-  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder', getConfigFileNames);
+  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder', getConfigFileNames, getFolderRows);
 
   let captured: AssetsFolderContext<AssetListItem> | null = null;
 
@@ -545,6 +546,131 @@ describe('createFolderContext config-file root', () => {
     });
 
     expect(get().fetchedFoldersData['file/']).toEqual([]);
+  });
+});
+
+describe('createFolderContext folder rows from another source', () => {
+  test('shows a folder that only the extra source has and keeps items type-only', async () => {
+    const getFiles = vi.fn().mockResolvedValue([createItem('public/prompt-1')]);
+    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Acme/')]);
+    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(getFolderRows).toHaveBeenCalledWith('public/');
+    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/Acme/', 'public/prompt-1']);
+    expect(get().fetchedFoldersData['public/']).toEqual([createItem('public/prompt-1')]);
+  });
+
+  test('shows a folder present in both sources once, keeping the listing own node', async () => {
+    const own = { ...createFolder('public/Shared/'), author: 'own' };
+    const getFiles = vi.fn().mockResolvedValue([own]);
+    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Shared/')]);
+    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    const children = getChildren(get().files[0]) ?? [];
+    expect(children).toHaveLength(1);
+    expect(children[0]).toMatchObject({ path: 'public/Shared/', author: 'own' });
+  });
+
+  test('shows the extra folders when the listing answers nothing for the path', async () => {
+    const getFiles = vi.fn().mockResolvedValue(null);
+    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Acme/')]);
+    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(get().hasFetchError).toBe(false);
+    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/Acme/']);
+  });
+
+  test('loads the children of an extra-only folder on expand', async () => {
+    const getFiles = vi.fn((path: string) =>
+      Promise.resolve(path === 'public/' ? [] : [createItem('public/Acme/prompt-1')]),
+    );
+    const getFolderRows = vi.fn((path: string) =>
+      Promise.resolve(path === 'public/' ? [createFolder('public/Acme/')] : []),
+    );
+    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+    await act(async () => {
+      get().toggleFolder(createFolder('public/Acme/'));
+    });
+
+    const acme = getChildren(get().files[0])?.find((child) => child.path === 'public/Acme/');
+    expect(getChildren(acme)?.map((child) => child.path)).toEqual(['public/Acme/prompt-1']);
+  });
+
+  test('keeps the listing folders when the extra source fails', async () => {
+    const getFiles = vi.fn().mockResolvedValue([createFolder('public/own/')]);
+    const getFolderRows = vi.fn().mockRejectedValue(new Error('boom'));
+    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(get().hasFetchError).toBe(false);
+    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/own/']);
+  });
+
+  test('reports the usual fetch error when the listing fails, even if the extra source has folders', async () => {
+    const getFiles = vi.fn().mockResolvedValue(undefined);
+    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Acme/')]);
+    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(get().hasFetchError).toBe(true);
+    expect(get().files).toEqual([]);
+  });
+
+  test('does not read the extra source outside the public bucket', async () => {
+    const getFolderRows = vi.fn().mockResolvedValue([createFolder('platform/x/')]);
+    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]), undefined, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles('platform/');
+    });
+
+    expect(getFolderRows).not.toHaveBeenCalled();
+  });
+
+  test('reads the extra source for the public root only when several roots are loaded', async () => {
+    const getFolderRows = vi.fn().mockResolvedValue([]);
+    const getConfigFileNames = vi.fn().mockResolvedValue(['one']);
+    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]), getConfigFileNames, getFolderRows);
+
+    await act(async () => {
+      get().fetchFiles(['file/', 'platform/', 'public/']);
+    });
+
+    expect(getFolderRows).toHaveBeenCalledOnce();
+    expect(getFolderRows).toHaveBeenCalledWith('public/');
+  });
+
+  test('does not read anything extra when no source is supplied', async () => {
+    const getFiles = vi.fn().mockResolvedValue([createFolder('public/own/')]);
+    const get = renderProviderWithCapture(getFiles);
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/own/']);
   });
 });
 

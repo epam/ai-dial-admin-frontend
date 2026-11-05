@@ -7,6 +7,7 @@ import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -19,6 +20,7 @@ interface Props {
 
 const FoldersStorage: FC<Props> = ({ initialPath }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { isUnitMode } = useAppContext();
   const t = useI18n();
   const folderContext = useRuleFolder();
   const isCollapseDisable =
@@ -32,7 +34,8 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
         <h1 className="dial-h1-text">{t(MenuI18nKey.FoldersStorage)}</h1>
-        {!isReadOnlyAdmin && <NewUnitButton />}
+        {/* A new top-level unit is created in the shared space, which only an admin may write. */}
+        {!isReadOnlyAdmin && !isUnitMode && <NewUnitButton />}
       </div>
       <div className="flex flex-1 gap-4 min-h-0">
         <CollapsibleSidebar

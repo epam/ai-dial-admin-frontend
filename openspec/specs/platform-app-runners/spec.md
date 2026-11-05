@@ -783,3 +783,23 @@ The merged picker's open-in-new-tab control SHALL open the selected runner on th
 
 - **WHEN** the selected runner is a Config-origin option with `$id` `urn:runner:entity`
 - **THEN** Open navigates to `/{locale}/platform-app-runners/urn%3Arunner%3Aentity?configFile=true` in a new tab
+
+### Requirement: App-route response validation gates Save
+
+A Platform App Runner route response SHALL have a non-empty string body and a status numerically between 100 and 999 inclusive. The form SHALL disable Save while any staged route has an invalid response, including when another route or tab is selected. Numeric strings and whitespace-only bodies retain the form's existing behavior. The system SHALL also validate responses on save from the JSON editor, showing the existing invalid-runner notification and preventing the Core update for invalid data. Existing JSON syntax-error handling and successful-save notifications remain unchanged.
+
+#### Scenario: An incomplete response blocks form Save
+
+- **WHEN** a user selects Response and its status or body is invalid
+- **THEN** Save is disabled until the response is corrected or removed
+- **AND** switching to another route or tab does not remove the block
+
+#### Scenario: An invalid JSON response is rejected
+
+- **WHEN** a user saves syntactically valid JSON containing an invalid route response
+- **THEN** the existing invalid-runner notification is shown and no Core update is sent
+
+#### Scenario: Correcting a response restores the response-specific Save gate
+
+- **WHEN** all staged responses have a valid status and non-empty body
+- **THEN** response validation no longer blocks Save, subject to the other existing Save gates

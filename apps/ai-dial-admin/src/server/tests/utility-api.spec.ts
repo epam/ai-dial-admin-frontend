@@ -118,11 +118,4 @@ describe('Server :: UtilityApi', () => {
       }),
     );
   });
-
-  test('should get core security info', async () => {
-    fetch.mockResponseOnce(JSON.stringify({}));
-
-    const result = await instance.getUserInfo(TOKEN_MOCK);
-    expect(result.response).toEqual(JSON.stringify({}));
-  });
 });

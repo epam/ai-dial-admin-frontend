@@ -6,10 +6,11 @@ import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
-import { UserInfo, UserRole } from '@/src/models/user-info';
+import { UserInfo } from '@/src/models/user-info';
+import { AccessMode, AdminAccess, UnitNamespace, UserAccess } from '@/src/models/user-access';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
-import { resolveIsFullAdmin } from '@/src/utils/auth/full-admin';
+import { canReadNamespace as canReadNamespaceIn, canWriteAt as canWriteAtIn } from '@/src/utils/org-units/access';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -25,14 +26,23 @@ export interface AppContextType {
   codeAppEditorUrl?: string;
 
   // user info
+  /** Who the caller is (`id`, `email`); informational — access decisions come from `userAccess`. */
   userInfo?: UserInfo;
-  /** True when user has READ_ONLY_ADMIN and does not have FULL_ADMIN. Always false without the admin backend. */
+  /** What the caller may do, resolved from Core's `GET /v1/user/role-assignments`. */
+  userAccess: UserAccess;
+  /** True when Core reports a read-only admin level, which it does not yet — so false for now. */
   isReadOnlyAdmin: boolean;
   /**
-   * True when the user holds FULL_ADMIN, or when authentication is disabled (nothing is enforced).
-   * Always true without the admin backend — there is no role to check.
+   * True when Core reports `adminAccess` FULL, or when nothing is enforced: authentication is disabled or
+   * org units are off (Core answers 404).
    */
   isFullAdmin: boolean;
+  /** True when the caller is no admin but works in at least one unit. */
+  isUnitMode: boolean;
+  /** Whether any unit grants `read` on the namespace; always true for an admin. */
+  canReadNamespace: (namespace: UnitNamespace) => boolean;
+  /** Whether the unit owning `path` grants `write` on the namespace; an admin follows `isFullAdmin`. */
+  canWriteAt: (namespace: UnitNamespace, path: string) => boolean;
   /** Whether authentication is enabled (NEXTAUTH_URL set). Needed to tell "auth off" from "no role". */
   isEnableAuth: boolean;
   /**
@@ -55,6 +65,8 @@ interface AppContextSidebar {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const FULL_USER_ACCESS: UserAccess = { mode: AccessMode.FULL, adminAccess: AdminAccess.FULL, units: [] };
+
 export const AppContextProvider = ({
   children,
   themeUrl,
@@ -62,6 +74,7 @@ export const AppContextProvider = ({
   disableDeploymentsJSONEditor,
   resourcesDefaults,
   userInfo,
+  userAccess = FULL_USER_ACCESS,
   telemetryMaxRangeMs,
   codeAppEditorUrl,
   isEnableAuth = false,
@@ -71,6 +84,7 @@ export const AppContextProvider = ({
   featureFlags: FeatureFlags;
   disableDeploymentsJSONEditor?: boolean;
   userInfo?: UserInfo;
+  userAccess?: UserAccess;
   resourcesDefaults?: ResourcesDefaults;
   telemetryMaxRangeMs?: number;
   codeAppEditorUrl?: string;
@@ -117,16 +131,15 @@ export const AppContextProvider = ({
     setSidebarPosition(SidebarPosition.Right);
   };
 
-  // Without the admin backend there's no FULL_ADMIN/READ_ONLY_ADMIN to read — nothing is
-  // enforced, so treat every caller as a full admin. `isEntityReadOnly` folds in on top: a
-  // `configFile=true` detail view sets it for the entity it's viewing, regardless of role.
-  const isReadOnlyAdmin =
-    isEntityReadOnly ||
-    (featureFlags.adminApiEnabled &&
-      !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) &&
-      !userInfo?.roles?.includes(UserRole.FULL_ADMIN));
+  // `isEntityReadOnly` folds in on top: a `configFile=true` detail view sets it for the entity it's
+  // viewing, regardless of access.
+  const isReadOnlyAdmin = isEntityReadOnly || userAccess.adminAccess === AdminAccess.READ_ONLY;
+  const isFullAdmin = userAccess.adminAccess === AdminAccess.FULL;
+  const isUnitMode = userAccess.mode === AccessMode.UNIT;
 
-  const isFullAdmin = resolveIsFullAdmin(featureFlags.adminApiEnabled, isEnableAuth, userInfo?.roles);
+  const canReadNamespace = (namespace: UnitNamespace) => !isUnitMode || canReadNamespaceIn(userAccess.units, namespace);
+  const canWriteAt = (namespace: UnitNamespace, path: string) =>
+    isUnitMode ? canWriteAtIn(userAccess.units, namespace, path) : isFullAdmin;
 
   const value = {
     sidebarOpen,
@@ -150,8 +163,12 @@ export const AppContextProvider = ({
     telemetryMaxRangeMs,
     codeAppEditorUrl,
     userInfo,
+    userAccess,
     isReadOnlyAdmin,
     isFullAdmin,
+    isUnitMode,
+    canReadNamespace,
+    canWriteAt,
     isEnableAuth,
     setEntityReadOnly,
   };

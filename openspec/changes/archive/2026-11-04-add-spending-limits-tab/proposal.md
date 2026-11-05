@@ -50,6 +50,6 @@ None.
   `getSystemPropertiesTabs`.
 - `src/constants/i18n.ts` and `src/locales/en.ts`: tab label and `SystemProperties` strings.
 - Shared code touched: `getSystemPropertiesTabs` is used only by the System Properties header, so no
-  other page is affected. `SaveValidationContext` gains one more field key.
+  other page is affected. The page registers spending-limits validity in `SaveValidationContext`.
 - Backend: Core `GET`/`PUT v1/settings/platform/global`, `spendingLimits` object. Requires a Core
   version that includes #2220; an older Core ignores or rejects the unknown field.
