@@ -2224,6 +2224,7 @@ export enum TestSuitesI18nKey {
   EditOverallScore = 'TestSuites.EditOverallScore',
   OverallScoreCalculationMethod = 'TestSuites.OverallScoreCalculationMethod',
   OverallScoreThresholdLabel = 'TestSuites.OverallScoreThresholdLabel',
+  OverallScoreThresholdShortLabel = 'TestSuites.OverallScoreThresholdShortLabel',
   OverallScoreTestCasesCalculatedBy = 'TestSuites.OverallScoreTestCasesCalculatedBy',
   TestCaseOverallScore = 'TestSuites.TestCaseOverallScore',
   TestCaseOverallScoreDescription = 'TestSuites.TestCaseOverallScoreDescription',

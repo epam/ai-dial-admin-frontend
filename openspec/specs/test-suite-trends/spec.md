@@ -296,8 +296,12 @@ below the `xl` breakpoint). The card SHALL:
   `Score` and the formatted overall score
 - draw the threshold line from each run’s snapshot `overallScoreThreshold` (including `0`) as 1px
   dashed horizontal segments in the accent-secondary stroke color, with a left-side label
-  `Threshold (value)` at the start of the first segment for each distinct threshold value; suppress
-  repeated labels when the same value reappears after a gap or another threshold
+  `Thld (value)` at the start of the first segment for each distinct threshold value (shortened so
+  the label is not clipped on the last run's short segment; when the label still would not fit
+  inside the last run's segment it is right-aligned to the chart's right edge instead); suppress repeated labels when the same
+  value reappears after a gap or another threshold
+- show the full `Threshold (value)` text in a tooltip when a horizontal threshold segment or its label
+  is hovered
 - merge neighboring runs that share the same snapshot threshold into one continuous dashed segment
   with a single label
 - when the snapshot threshold changes between neighboring runs, join the segments with a vertical
@@ -319,9 +323,9 @@ below the `xl` breakpoint). The card SHALL:
 #### Scenario: Threshold line follows each run snapshot
 
 - **WHEN** the Trends window has runs whose snapshot thresholds are `0.6`, `0.6`, and `0.8`
-- **THEN** the chart shows one continuous dashed segment at `0.6` labeled `Threshold (0.6)`, a
+- **THEN** the chart shows one continuous dashed segment at `0.6` labeled `Thld (0.6)`, a
   sparse vertical join where the threshold changes, and a dashed segment at `0.8` labeled
-  `Threshold (0.8)`
+  `Thld (0.8)`; hovering a label shows `Threshold (0.6)` / `Threshold (0.8)` in a tooltip
 
 #### Scenario: Threshold line breaks when a run has no snapshot threshold
 

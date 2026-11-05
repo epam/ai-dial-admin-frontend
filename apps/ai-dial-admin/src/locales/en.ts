@@ -2302,6 +2302,7 @@ export default {
     EditOverallScore: 'Edit overall score',
     OverallScoreCalculationMethod: 'Calculation method',
     OverallScoreThresholdLabel: 'Threshold',
+    OverallScoreThresholdShortLabel: 'Thld',
     OverallScoreTestCasesCalculatedBy: 'Test cases calculated by',
     TestCaseOverallScore: 'Test case score',
     TestCaseOverallScoreDescription:
