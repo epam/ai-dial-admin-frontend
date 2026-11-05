@@ -40,6 +40,8 @@ export type PublishableResourceType = Exclude<
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY
+  | ResourceType.POLICY
+  | ResourceType.POLICY_ASSIGNMENT
 >;
 
 export interface PublicationTypeConfig {

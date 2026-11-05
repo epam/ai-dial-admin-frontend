@@ -87,7 +87,6 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 const defaultFeatureFlags: FeatureFlags = {
   adminApiEnabled: false,
-  catalogEnabled: true,
   dashboardEnabled: false,
   deploymentsEnabled: false,
   evaluationEnabled: true,
@@ -97,6 +96,7 @@ const defaultFeatureFlags: FeatureFlags = {
   analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
+  policiesEnabled: false,
   analyticsCustomDashboardsEnabled: false,
 };
 

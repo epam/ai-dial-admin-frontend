@@ -10,7 +10,7 @@ import {
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import {
   isFileRootPath,
-  isFlatPlatformView,
+  isPlatformBucketView,
   isPlatformBucketRow,
   isPlatformDualBucketView,
 } from '@/src/utils/files/root-folder';
@@ -120,6 +120,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
+    case ApplicationRoute.PlatformPolicies:
+    case ApplicationRoute.PlatformPolicyAssignments:
     case ApplicationRoute.PlatformTranslators:
       return isReadOnlyAdmin
         ? []
@@ -157,7 +159,7 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
     return [];
   }
 
-  if (isFlatPlatformView(view) || isPlatformDualBucketView(view, currentPath)) {
+  if (isPlatformBucketView(view) || isPlatformDualBucketView(view, currentPath)) {
     return [];
   }
 
@@ -235,6 +237,22 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Route,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformPolicies:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Policy,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformPolicyAssignments:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.PolicyAssignment,
           icon: null,
         },
       ];
@@ -394,6 +412,8 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
+    case ApplicationRoute.PlatformPolicies:
+    case ApplicationRoute.PlatformPolicyAssignments:
     case ApplicationRoute.PlatformModels: {
       const itemLabel = (() => {
         if (view === ApplicationRoute.PlatformAppRunners) return FileManagerI18nKey.AppRunner;
@@ -403,6 +423,8 @@ export const getDeleteNotificationContent = (
         if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
         if (view === ApplicationRoute.PlatformRoles) return FileManagerI18nKey.Role;
         if (view === ApplicationRoute.PlatformKeys) return FileManagerI18nKey.Key;
+        if (view === ApplicationRoute.PlatformPolicies) return FileManagerI18nKey.Policy;
+        if (view === ApplicationRoute.PlatformPolicyAssignments) return FileManagerI18nKey.PolicyAssignment;
         return FileManagerI18nKey.Model;
       })();
       const title = isDeleteSeveralFiles

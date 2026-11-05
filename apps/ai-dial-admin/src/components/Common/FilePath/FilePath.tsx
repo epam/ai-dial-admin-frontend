@@ -49,23 +49,19 @@ const FilePath: FC<Props> = ({
   shouldAbleToCreateNewFolder = true,
 }) => {
   const t = useI18n();
-  const { featureFlags, isUnitMode } = useAppContext();
+  const { isUnitMode } = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { files, fetchFiles } = context?.() || {};
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [path, setPath] = useState(`${ROOT_FOLDER}/`);
 
   useEffect(() => {
-    const rootPaths = getRootFolders(
-      view as ApplicationRoute,
-      featureFlags.catalogEnabled && !isUnitMode,
-      !isUnitMode,
-    ).map((root) => `${root}/`);
+    const rootPaths = getRootFolders(view as ApplicationRoute, !isUnitMode, !isUnitMode).map((root) => `${root}/`);
     if (rootPaths.some((path) => !loadedPaths.has(path)) && fetchFiles) {
       fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
       setLoadedPaths(new Set(rootPaths));
     }
-  }, [fetchFiles, loadedPaths, view, featureFlags.catalogEnabled, isUnitMode]);
+  }, [fetchFiles, loadedPaths, view, isUnitMode]);
 
   useEffect(() => {}, [files]);
 

@@ -67,6 +67,48 @@ describe('getGridActionLabels', () => {
   );
 });
 
+describe('getGridActionLabels - nested platform views', () => {
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    '%s offers only duplicate, delete, and openInNewTab, like the flat platform views',
+    (view) => {
+      const keys = getGridActionLabels(view, false).map((item) => item.key);
+
+      expect(keys).toEqual(getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key));
+      expect(keys).not.toContain('move');
+    },
+  );
+
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    '%s offers a read-only admin nothing',
+    (view) => {
+      expect(getGridActionLabels(view, true)).toEqual([]);
+    },
+  );
+});
+
+describe('getTreeActionLabels - nested platform views', () => {
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    '%s offers no folder rename, move or delete, since a cost object folder is implicit in Core',
+    (view) => {
+      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
+      expect(getTreeActionLabels(false, view, 'team-a/')).toEqual([]);
+    },
+  );
+
+  test('leaves the flat platform views offering none, as before', () => {
+    expect(getTreeActionLabels(false, ApplicationRoute.PlatformRoutes, 'platform/')).toEqual([]);
+  });
+});
+
+describe('getToolbarOptionLabels - nested platform views', () => {
+  test.each([
+    [ApplicationRoute.PlatformPolicies, FileManagerI18nKey.Policy],
+    [ApplicationRoute.PlatformPolicyAssignments, FileManagerI18nKey.PolicyAssignment],
+  ])('%s offers a single new-item action named for the record', (view, label) => {
+    expect(getToolbarOptionLabels(view, false)).toEqual([{ key: 'newItem', label, icon: null }]);
+  });
+});
+
 describe('getTreeActionLabels', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
     '%s offers no tree actions while browsing the platform bucket',

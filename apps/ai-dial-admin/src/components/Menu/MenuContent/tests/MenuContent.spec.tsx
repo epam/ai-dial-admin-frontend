@@ -15,7 +15,7 @@ const adminApiEnabled = { value: true };
 const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>() };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
-    featureFlags: { adminApiEnabled: adminApiEnabled.value, catalogEnabled: true },
+    featureFlags: { adminApiEnabled: adminApiEnabled.value },
     isReadOnlyAdmin: false,
     isUnitMode: unitMode.isUnitMode,
     canReadNamespace: (namespace: UnitNamespace) => unitMode.readable.has(namespace),

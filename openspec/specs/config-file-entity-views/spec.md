@@ -19,12 +19,8 @@ The system SHALL expose DIAL Core configuration-file entities through a syntheti
 - **THEN** no `file` root or config-file display toggle is rendered
 
 #### Scenario: Applications and Toolsets expose three roots
-- **WHEN** Catalog is enabled and a user opens Assets Applications or Assets Toolsets
+- **WHEN** a user opens Assets Applications or Assets Toolsets
 - **THEN** the FileManager shows `file`, `platform`, and `public` roots in that order
-
-#### Scenario: File root remains when Catalog is disabled
-- **WHEN** Catalog is disabled and a user opens Assets Applications or Assets Toolsets
-- **THEN** the FileManager shows `file` and `public` roots, does not show `platform`, and does not request platform resources
 
 ### Requirement: File-root names load with the initial root batch and without resource-body fan-out
 
