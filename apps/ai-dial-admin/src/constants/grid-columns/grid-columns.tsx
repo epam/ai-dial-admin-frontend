@@ -286,15 +286,19 @@ const targetRadioNameColumn = (column: ColDef, idField: string): ColDef => ({
   tooltipValueGetter: () => undefined,
 });
 
-export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
-  DISPLAY_NAME_COLUMN_WITH_SORT,
+const EVALUATION_DEPLOYMENT_DETAIL_COLUMNS: ColDef[] = [
   { field: 'deploymentId', headerName: 'ID', hide: false },
   DESCRIPTION_COLUMN,
 ];
 
+export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  ...EVALUATION_DEPLOYMENT_DETAIL_COLUMNS,
+];
+
 export const EVALUATION_TARGET_DEPLOYMENTS_COLUMNS: ColDef[] = [
   targetRadioNameColumn(DISPLAY_NAME_COLUMN_WITH_SORT, 'deploymentId'),
-  ...EVALUATION_DEPLOYMENTS_COLUMNS.slice(1),
+  ...EVALUATION_DEPLOYMENT_DETAIL_COLUMNS,
 ];
 
 export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [

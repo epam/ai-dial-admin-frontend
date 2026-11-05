@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { NoDataContent, Spinner } from '@epam/ai-dial-ui-kit';
 import type { EChartsType } from 'echarts';
@@ -74,7 +74,9 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
   const plotRef = useRef<HTMLDivElement>(null);
   const [plotWidth, setPlotWidth] = useState<number>();
 
-  useEffect(() => {
+  // Layout effect: the first measurement must land before paint, or the threshold label is laid out
+  // without a width and visibly shifts once the real width arrives.
+  useLayoutEffect(() => {
     const plot = plotRef.current;
     if (!plot) {
       return;
