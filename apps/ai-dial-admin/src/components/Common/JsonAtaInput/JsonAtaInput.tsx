@@ -101,6 +101,8 @@ const JsonAtaInput: FC<Props> = ({
           onClose={onCancelModal}
           header={header}
           portalId="jsonAtaInputModal"
+          className="bg-layer-3"
+          footerDivider
           open={isModalOpen}
           size={PopupSize.Lg}
           mainButtons={getFormPopupButtons({
