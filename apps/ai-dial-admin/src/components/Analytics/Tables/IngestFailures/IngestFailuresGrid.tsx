@@ -173,7 +173,9 @@ const IngestFailuresGrid: FC<Props> = ({
             type="button"
             className="flex size-full items-center justify-center text-secondary hover:text-primary focus-visible:text-primary"
             aria-expanded={isOpen}
-            aria-label={t(isOpen ? IngestFailuresI18nKey.HideRow : IngestFailuresI18nKey.ShowRow)}
+            aria-label={t(isOpen ? IngestFailuresI18nKey.HideRow : IngestFailuresI18nKey.ShowRow, {
+              subject: subjectName(failure),
+            })}
             onClick={() => live.current.onToggleRow(failure)}
           >
             {isOpen ? (
