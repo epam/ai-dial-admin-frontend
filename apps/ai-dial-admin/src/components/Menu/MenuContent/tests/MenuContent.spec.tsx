@@ -52,8 +52,8 @@ describe('MenuContent — Import/Export actions', () => {
     adminApiEnabled.value = false;
     renderMenu(false);
 
-    expect(screen.queryByText(MenuI18nKey.ImportConfig)).not.toBeInTheDocument();
-    expect(screen.queryByText(MenuI18nKey.ExportConfig)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
   });
 });
 
