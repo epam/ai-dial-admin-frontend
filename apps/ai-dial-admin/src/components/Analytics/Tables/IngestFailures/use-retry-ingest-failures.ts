@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { listIngestFailures, retryIngestFailures } from '@/src/app/[lang]/tables/actions';
 import { IngestFailureGroup, RetryOutcomeNote } from '@/src/components/Analytics/Tables/IngestFailures/models';
@@ -42,6 +42,7 @@ export const useRetryIngestFailures = ({ backfillRunId, onRetried }: Params): In
   const { showNotification } = useNotification();
 
   const [isBusy, setIsBusy] = useState(false);
+  const isSending = useRef(false);
   const [outcome, setOutcome] = useState('');
 
   const describe = useCallback(
@@ -66,8 +67,9 @@ export const useRetryIngestFailures = ({ backfillRunId, onRetried }: Params): In
 
   const send = useCallback(
     async (body: IngestFailureRetryRequest) => {
-      if (isBusy) return;
+      if (isSending.current) return;
 
+      isSending.current = true;
       setIsBusy(true);
       setOutcome('');
 
@@ -88,10 +90,11 @@ export const useRetryIngestFailures = ({ backfillRunId, onRetried }: Params): In
           // The read hook reports its own failure.
         }
 
+        isSending.current = false;
         setIsBusy(false);
       }
     },
-    [isBusy, describe, onRetried, showNotification, t],
+    [describe, onRetried, showNotification, t],
   );
 
   const retryTargets = useCallback((targets: IngestFailureTarget[]) => send({ targets }), [send]);
