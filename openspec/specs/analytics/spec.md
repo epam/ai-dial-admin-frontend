@@ -20,7 +20,7 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/query-builder` | How a query is authored — the rail's four views (Form, JSON, SQL, AI) and the guarded transitions between them |
 | `analytics/query-viewer` | What a run produces — execution, the result grid, stat tiles, table and chart views |
 | `analytics/saved-queries` | Saved queries as addressable objects — storage contract, list page, CRUD, permission gating |
-| `analytics/tables` | The tables catalog, column schema and enum columns, row writes, per-table roles, the Connect panel |
+| `analytics/tables` | The tables catalog, column schema and enum columns, row writes, per-table roles, the Connect panel, backfill and ingest failures |
 | `analytics/sessions-listing` | The sessions log page — filters, provenance line, grid columns, ordering and filtering |
 | `analytics/session-trace-listing` | One session's page — route and guard, header, side panels, the trace listing |
 | `analytics/session-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
