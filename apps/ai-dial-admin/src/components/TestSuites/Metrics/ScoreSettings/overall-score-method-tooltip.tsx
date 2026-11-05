@@ -50,15 +50,15 @@ export const buildOverallScoreMethodTooltip = (
     const formulaKey = getOverallScoreFormulaLabelKey(suite);
     const functionLabel = formulaKey ? t(formulaKey) : getFunctionName(suite.overallScore.expression);
     const sources = getFunctionParameterSources(suite.overallScore.expression);
-    const datasetSource = sources[0] ?? { $type: FunctionParameterSourceType.TestCase };
-    const pSource = sources[1] ?? { $type: FunctionParameterSourceType.TestCase };
+    const groundTruthSource = sources[0] ?? { $type: FunctionParameterSourceType.TestCase };
+    const predictionSource = sources[1] ?? { $type: FunctionParameterSourceType.TestCase };
 
     const detailRows = [
       { label: `${t(TestSuitesI18nKey.OverallScoreFunctionLabel)}:`, value: functionLabel },
-      { label: `${t(TestSuitesI18nKey.OverallScoreDatasetColumn)}:`, value: sourceTypeLabel(datasetSource, t) },
-      { label: `${t(TestSuitesI18nKey.TrendsDatasetValue)}:`, value: sourceValueLabel(datasetSource) },
-      { label: `${t(TestSuitesI18nKey.OverallScoreParameterP)}:`, value: sourceTypeLabel(pSource, t) },
-      { label: `${t(TestSuitesI18nKey.TrendsPColumnValue)}:`, value: sourceValueLabel(pSource) },
+      { label: `${t(TestSuitesI18nKey.OverallScoreGroundTruth)}:`, value: sourceTypeLabel(groundTruthSource, t) },
+      { label: `${t(TestSuitesI18nKey.TrendsGroundTruthValue)}:`, value: sourceValueLabel(groundTruthSource) },
+      { label: `${t(TestSuitesI18nKey.OverallScorePrediction)}:`, value: sourceTypeLabel(predictionSource, t) },
+      { label: `${t(TestSuitesI18nKey.TrendsPredictionValue)}:`, value: sourceValueLabel(predictionSource) },
     ];
 
     return (

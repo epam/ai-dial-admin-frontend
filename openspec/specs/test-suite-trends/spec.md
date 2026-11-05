@@ -36,8 +36,8 @@ When the Trends tab has at least one run, the KPI strip SHALL include four cards
    **Completion Rate of Latest Run** (rate from the latest `test_case_eval_scores` segments;
    loading indicator while the combined eval aggregate is pending)
 2. **Overall Score of Latest Run** (latest `runOrder` overall score, threshold glyph/tooltip when
-   set, delta vs previous run, and the static "Based on completed test cases" subtitle; no
-   calculation-method info)
+   set, delta vs previous run, and the static "Based on completed test cases" subtitle with a
+   calculation-method info control)
 3. **Total Runtime of Latest Run** (latest combo total + source/Metrics breakdown)
 4. **Total Cost of Latest Run** (latest combo total + source/Metrics breakdown)
 
@@ -107,7 +107,20 @@ Overall Score Trend plots), formatted to three decimals. The card SHALL:
   threshold (exact threshold counts as above)
 - show a signed delta vs the previous run’s overall score (`+0.12 vs prev.`); hide it when either
   score is missing or the delta is zero (higher is better → green)
-- show the static “Based on completed test cases” subtitle and omit the calculation-method tooltip
+- show the static “Based on completed test cases” subtitle followed by an info control whose tooltip
+  describes the overall-score method stored in the latest run’s own suite snapshot, never the suite as
+  configured now (same tooltip as the run Summary card); omit the control when the latest run has no
+  suite snapshot
+
+#### Scenario: Calculation method comes from the latest run snapshot
+
+- **WHEN** the suite’s overall score method was edited after the latest run completed
+- **THEN** hovering the info control shows the method the latest run was evaluated with
+
+#### Scenario: Latest run has no snapshot
+
+- **WHEN** the latest run has no suite snapshot
+- **THEN** the card shows no calculation-method info control
 
 #### Scenario: Latest overall score value
 

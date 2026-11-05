@@ -64,14 +64,10 @@ describe('FunctionParameterRow', () => {
     const source: FunctionParameterSource = { $type: FunctionParameterSourceType.TestCase };
 
     render(
-      <FunctionParameterRow
-        labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
-        source={source}
-        onChange={vi.fn()}
-      />,
+      <FunctionParameterRow labelKey={TestSuitesI18nKey.OverallScoreGroundTruth} source={source} onChange={vi.fn()} />,
     );
 
-    expect(screen.getByText(TestSuitesI18nKey.OverallScoreDatasetColumn)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.OverallScoreGroundTruth)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.TestCase)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.ResponseColumn)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.Metric)).toBeInTheDocument();
@@ -83,7 +79,7 @@ describe('FunctionParameterRow', () => {
 
     render(
       <FunctionParameterRow
-        labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
+        labelKey={TestSuitesI18nKey.OverallScoreGroundTruth}
         source={source}
         testCaseSchema={testCaseSchema}
         onChange={onChange}
@@ -103,7 +99,7 @@ describe('FunctionParameterRow', () => {
 
     render(
       <FunctionParameterRow
-        labelKey={TestSuitesI18nKey.OverallScoreParameterP}
+        labelKey={TestSuitesI18nKey.OverallScorePrediction}
         source={source}
         responseColumns={responseColumns}
         onChange={onChange}
@@ -123,7 +119,7 @@ describe('FunctionParameterRow', () => {
 
     render(
       <FunctionParameterRow
-        labelKey={TestSuitesI18nKey.OverallScoreParameterP}
+        labelKey={TestSuitesI18nKey.OverallScorePrediction}
         source={source}
         metrics={metrics}
         onChange={onChange}
@@ -150,7 +146,7 @@ describe('FunctionParameterRow', () => {
 
     render(
       <FunctionParameterRow
-        labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
+        labelKey={TestSuitesI18nKey.OverallScoreGroundTruth}
         source={source}
         testCaseSchema={testCaseSchema}
         responseColumns={responseColumns}
@@ -179,7 +175,7 @@ describe('FunctionParameterRow', () => {
 
       return (
         <FunctionParameterRow
-          labelKey={TestSuitesI18nKey.OverallScoreDatasetColumn}
+          labelKey={TestSuitesI18nKey.OverallScoreGroundTruth}
           source={source}
           testCaseSchema={testCaseSchema}
           responseColumns={responseColumns}

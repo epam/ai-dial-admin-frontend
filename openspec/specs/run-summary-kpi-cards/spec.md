@@ -121,8 +121,8 @@ control; hovering or focusing the control SHALL show the calculation method the 
 - Mean: "Calculation method:", "Mean of <N> metrics" and the formula `score = mean(m₁, m₂, … mₙ)`;
 - Weighted mean: "Calculation method:", "Weighted mean of <N> metrics" and one `<metric>.<field> × <weight>`
   line per weight;
-- Specific function: a table of Calculation method (Specific function), Function, Dataset column, Dataset
-  value, P column and P column value.
+- Specific function: a table of Calculation method (Specific function), Function, Ground truth,
+  Ground truth value, Prediction and Prediction value.
 
 The calculation method SHALL come from the overall-score method stored in the run's own suite snapshot, never
 from the test suite as it is configured now, so editing the suite afterwards does not change what the tooltip
