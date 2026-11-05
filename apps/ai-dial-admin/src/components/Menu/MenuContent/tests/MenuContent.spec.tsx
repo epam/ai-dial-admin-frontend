@@ -34,9 +34,9 @@ describe('MenuContent — Import/Export actions', () => {
   test('renders Import/Export config actions when the admin API is enabled', () => {
     renderMenu(true);
 
-    expect(screen.getAllByRole('link', { name: MenuI18nKey.ImportConfig }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: MenuI18nKey.ExportConfig }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: MenuI18nKey.SystemProperties }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.ExportConfig })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
   });
 
   test('hides Import/Export config actions in the expanded bar when the admin API is disabled', () => {
@@ -45,7 +45,7 @@ describe('MenuContent — Import/Export actions', () => {
 
     expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: MenuI18nKey.SystemProperties }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
   });
 
   test('hides Import/Export config actions in the collapsed dropdown when the admin API is disabled', () => {
@@ -132,7 +132,7 @@ describe('MenuContent — unit mode', () => {
   test('offers only the sections whose namespace is readable', () => {
     renderMenu(true);
 
-    expect(screen.getAllByRole('link', { name: MenuI18nKey.Prompts }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: MenuI18nKey.Prompts })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: MenuI18nKey.Files })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: MenuI18nKey.PlatformModels })).not.toBeInTheDocument();
   });
