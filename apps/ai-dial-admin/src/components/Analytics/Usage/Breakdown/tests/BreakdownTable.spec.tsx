@@ -14,6 +14,7 @@ import {
 import { VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
+import { GridColumnType } from '@/src/types/grid-column';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
 interface CapturedGrid {
@@ -26,6 +27,9 @@ interface CapturedGrid {
     sort?: string;
     initialSort?: string;
     tooltipValueGetter?: () => unknown;
+    type?: string | string[];
+    cellClass?: string | string[];
+    headerClass?: string;
   }[];
   additionalGridOptions?: { domLayout?: string; suppressMultiSort?: boolean };
 }
@@ -242,6 +246,21 @@ describe('BreakdownTable', () => {
     for (const grid of grids) {
       const dimension = grid.columnDefs.find((column) => column.colId === 'dimension');
       expect(dimension?.tooltipValueGetter?.()).toBeNull();
+    }
+  });
+
+  test('right-aligns every measure column through the grid column type, but not the dimension', () => {
+    renderTable({ isShowingAll: true });
+
+    for (const grid of grids) {
+      const [dimension, ...measures] = grid.columnDefs;
+
+      expect(dimension.colId).toBe('dimension');
+      expect(dimension.type).toBeUndefined();
+      expect(measures.map((column) => column.colId)).toContain('share');
+      expect(measures.every((column) => column.type === GridColumnType.RightAligned)).toBe(true);
+      expect(measures.every((column) => column.cellClass === 'column-divider')).toBe(true);
+      expect(measures.every((column) => column.headerClass === 'align-right')).toBe(true);
     }
   });
 
