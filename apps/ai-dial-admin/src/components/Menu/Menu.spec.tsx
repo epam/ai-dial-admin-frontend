@@ -12,9 +12,6 @@ describe('Menu', () => {
   test('renders Sidebar and MenuContent with open state', () => {
     render(<Menu disableMenuItems={['item1']} />);
 
-    const items = screen.getAllByText(MenuI18nKey.AccessManagement);
-
-    expect(items.length).toBeGreaterThan(0);
-    expect(items[0]).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: MenuI18nKey.AccessManagement })).toBeInTheDocument();
   });
 });

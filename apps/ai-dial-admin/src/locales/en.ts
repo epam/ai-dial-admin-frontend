@@ -2457,6 +2457,7 @@ export default {
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
+    FolderPath: 'Folder path',
     ShowHiddenFiles: 'Show hidden files',
     HideHiddenFiles: 'Hide hidden files',
     File: 'File',

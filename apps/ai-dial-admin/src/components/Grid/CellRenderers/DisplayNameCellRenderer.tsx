@@ -16,7 +16,7 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
   const renderIcon = () => {
     if (TypeIcon) {
       return (
-        <span className="flex size-[28px] shrink-0 items-center justify-center">
+        <span className="flex size-5 shrink-0 items-center justify-center">
           <TypeIcon aria-hidden />
         </span>
       );

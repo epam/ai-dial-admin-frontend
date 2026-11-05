@@ -2575,6 +2575,7 @@ export enum ExportRunI18nKey {
 
 export enum FileManagerI18nKey {
   SelectedItems = 'FileManager.SelectedItems',
+  FolderPath = 'FileManager.FolderPath',
   File = 'FileManager.File',
   Files = 'FileManager.Files',
   Models = 'FileManager.Models',

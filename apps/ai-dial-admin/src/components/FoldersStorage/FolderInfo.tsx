@@ -83,7 +83,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
 
   if (isFetching) {
     return (
-      <div className="flex size-full items-center justify-center bg-layer-3 rounded">
+      <div className="flex size-full items-center justify-center">
         <Spinner size={40} fullWidth />
       </div>
     );
@@ -95,7 +95,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
 
   if (unitsStatus === OrgUnitsStatus.ERROR) {
     return (
-      <div className="flex size-full items-center justify-center bg-layer-3 rounded">
+      <div className="flex size-full items-center justify-center">
         <NoDataContent
           title={t(FoldersI18nKey.UnitsLoadError)}
           action={
@@ -117,7 +117,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
 
   if (owningUnit) {
     return (
-      <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
+      <div className="size-full min-w-0 flex flex-col gap-4 overflow-hidden">
         <FolderInfoHeader isChanged={false} title={currentFolder.name as string} />
         <div className="flex min-w-0 flex-col gap-1">
           <span className="dial-small-text text-secondary">{t(FoldersI18nKey.InsideUnitNote)}</span>
@@ -149,7 +149,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   }
 
   return (
-    <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
+    <div className="size-full min-w-0 flex flex-col gap-4 overflow-hidden">
       <FolderInfoHeader
         isChanged={isChanged}
         title={currentFolder?.name as string}

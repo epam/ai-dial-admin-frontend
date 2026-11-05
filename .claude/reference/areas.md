@@ -118,6 +118,7 @@ The Dashboards item exists in both Analytics and Audit; `/dashboards` belongs to
 | `CatalogAvailability` | — (`catalog` token of `DISABLE_MENU_ITEMS` hiding the Core-direct items + dual-bucket root folders) | `Common/FileManager`, `Common/FilePath`, `Menu` |
 | `CatalogProperties` | — (catalog schema picker on entity properties) | `CatalogProperties` |
 | `Grid` | — (shared AG Grid wrapper / cell renderers) | `Grid` |
+| `Menu` | — (side navigation menu and sidebar shell) | `Menu`, `SideBar` |
 
 ---
 

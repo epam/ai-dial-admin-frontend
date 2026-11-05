@@ -1,26 +1,40 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
-
 import { Tooltip } from '@epam/ai-dial-ui-kit';
+import { Icon } from '@tabler/icons-react';
+import classNames from 'classnames';
+import Link from 'next/link';
+import { FC } from 'react';
+
+import {
+  MENU_ENTRY_ACTIVE_CLASS_NAME,
+  MENU_ENTRY_CLASS_NAME,
+  MENU_ENTRY_INACTIVE_CLASS_NAME,
+} from '@/src/components/Menu/MenuItem/constants';
+import MenuIcon from '@/src/components/Menu/MenuItem/MenuIcon';
 
 interface Props {
   tooltip: string;
-  icon: ReactNode;
-  onClick: () => void;
+  icon: Icon;
+  href: string;
+  isActive: boolean;
 }
 
-const MenuAction: FC<Props> = ({ tooltip, icon, onClick }) => {
+const MenuAction: FC<Props> = ({ tooltip, icon, href, isActive }) => {
   return (
     <Tooltip tooltip={tooltip}>
-      <button
-        type="button"
+      <Link
+        prefetch={false}
+        href={href}
         aria-label={tooltip}
-        className="p-1 rounded-full cursor-pointer text-secondary hover:text-accent hover:bg-control-neutral-hover-muted focus-visible:text-accent focus-visible:bg-control-neutral-hover-muted"
-        onClick={onClick}
+        aria-current={isActive ? 'page' : undefined}
+        className={classNames(
+          MENU_ENTRY_CLASS_NAME,
+          isActive ? MENU_ENTRY_ACTIVE_CLASS_NAME : MENU_ENTRY_INACTIVE_CLASS_NAME,
+        )}
       >
-        {icon}
-      </button>
+        <MenuIcon icon={icon} isActive={isActive} />
+      </Link>
     </Tooltip>
   );
 };

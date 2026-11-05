@@ -59,17 +59,13 @@ describe('Components - Breadcrumbs', () => {
   });
 
   describe('Components - Breadcrumbs - folders on the list page', () => {
-    test('Should show the selected folder after the section', () => {
+    test('Should show only the section, leaving the folder path to the list', () => {
       navigation.pathname = '/assets-applications';
       appsFolder.filePath = 'public/team/';
 
       render(<Breadcrumbs mobile={false} />);
 
-      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-        MenuI18nKey.Applications,
-        'public',
-        'team',
-      ]);
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([MenuI18nKey.Applications]);
     });
   });
 
