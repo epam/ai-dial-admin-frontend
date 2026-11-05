@@ -11,12 +11,12 @@ import {
   GridApi,
   GridReadyEvent,
   ICellRendererParams,
-  IRowNode,
   IsFullWidthRowParams,
   RowClassParams,
   RowHeightParams,
 } from 'ag-grid-community';
 
+import { useMeasuredRows } from '@/src/components/Analytics/Common/Failures/use-measured-rows';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import FailureRowDetail from '@/src/components/Analytics/Pipelines/Failures/FailureRowDetail';
 import FailuresFilterBar from '@/src/components/Analytics/Pipelines/Failures/FailuresFilterBar';
@@ -98,10 +98,6 @@ const FailuresGrid: FC<Props> = ({
   const [runRetryable, setRunRetryable] = useState<Record<string, number>>({});
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
-  // Read by the one resize observer below, which must not be rebuilt when the api arrives.
-  const apiRef = useRef<GridApi | null>(null);
-  apiRef.current = gridApi;
-
   const { items, filters, hasFailed, hasMore, isLoading, isLoadingMore, loadMore, setLane, setRun, readRunRetryable } =
     failures;
 
@@ -174,58 +170,7 @@ const FailuresGrid: FC<Props> = ({
     [visible, expandedId],
   );
 
-  /**
-   * Sizes the detail row from what it actually rendered.
-   *
-   * A `ResizeObserver` rather than a measurement on every render: it reports only when the box really
-   * changes — the timestamp landing after mount, a reflow when the card's scrollbar appears — and it
-   * does so off the render path, so nothing forces a synchronous layout to find out.
-   *
-   * **One** observer for the grid, disconnected when the grid goes, with each element's row node in a
-   * weak map rather than captured — which is what lets the ref callback stay stable across renders.
-   * One observer per detail row leaked them instead, since nothing disconnected the ones a closed row
-   * left behind.
-   */
-  const detailNodes = useRef(new WeakMap<Element, IRowNode>());
-  const detailObserver = useRef<ResizeObserver | null>(null);
-
-  useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      let isChanged = false;
-
-      for (const entry of entries) {
-        const node = detailNodes.current.get(entry.target);
-        const height = Math.ceil(entry.contentRect.height);
-        if (!node || !height || node.rowHeight === height) continue;
-
-        node.setRowHeight(height);
-        isChanged = true;
-      }
-
-      if (isChanged && !apiRef.current?.isDestroyed()) apiRef.current?.onRowHeightChanged();
-    });
-
-    detailObserver.current = observer;
-
-    return () => observer.disconnect();
-  }, []);
-
-  /**
-   * React 19 runs the function a ref callback returns when the element goes, with the element still
-   * in hand — the only moment an `unobserve` is possible. Without it the observer held on to every
-   * detail element it had ever seen, and through the weak map to their row nodes with them.
-   */
-  const observeDetail = useCallback(
-    (node: IRowNode) => (element: HTMLDivElement | null) => {
-      if (!element) return;
-
-      detailNodes.current.set(element, node);
-      detailObserver.current?.observe(element);
-
-      return () => detailObserver.current?.unobserve(element);
-    },
-    [],
-  );
+  const observeDetail = useMeasuredRows(gridApi);
 
   const columnDefs = useMemo<ColDef[]>(
     () => [

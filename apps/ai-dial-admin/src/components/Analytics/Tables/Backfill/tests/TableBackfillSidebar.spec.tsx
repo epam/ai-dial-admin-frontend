@@ -709,3 +709,52 @@ describe('TableBackfillSidebar', () => {
     });
   });
 });
+
+describe('TableBackfillSidebar — failed blobs', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const renderWithFailures = async (run: TableBackfillRun, onOpenIngestFailures?: (runId: string) => void) => {
+    serve([run]);
+    render(<TableBackfillSidebar onRunsChange={vi.fn()} onOpenIngestFailures={onOpenIngestFailures} />);
+    await screen.findByRole('heading', { name: BackfillI18nKey.SectionRun });
+  };
+
+  test('come after files processed, explained by a hint', async () => {
+    await renderWithFailures(makeRun({ failedBlobs: 3 }), vi.fn());
+
+    const terms = screen.getAllByRole('term').map((term) => term.textContent);
+    expect(terms.indexOf(BackfillI18nKey.FailedBlobs)).toBe(terms.indexOf(BackfillI18nKey.FilesProcessed) + 1);
+    expect(screen.getByRole('button', { name: BackfillI18nKey.FailedBlobsHint })).toBeTruthy();
+  });
+
+  test('open the ingest failures narrowed to the run when above zero', async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    await renderWithFailures(makeRun({ runId: 'run-7', failedBlobs: 3 }), onOpen);
+
+    await user.click(screen.getByRole('button', { name: `${BackfillI18nKey.FailedBlobs}: 3` }));
+
+    expect(onOpen).toHaveBeenCalledWith('run-7');
+  });
+
+  test('are plain text at zero', async () => {
+    await renderWithFailures(makeRun({ failedBlobs: 0 }), vi.fn());
+
+    expect(screen.getByText(BackfillI18nKey.FailedBlobs)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Backfill\.FailedBlobs: / })).toBeNull();
+  });
+
+  test('are plain text when the listing is not available', async () => {
+    await renderWithFailures(makeRun({ failedBlobs: 3 }));
+
+    expect(screen.queryByRole('button', { name: /^Backfill\.FailedBlobs: / })).toBeNull();
+  });
+
+  test('are absent from a service that does not report them', async () => {
+    await renderWithFailures(makeRun());
+
+    expect(screen.queryByText(BackfillI18nKey.FailedBlobs)).toBeNull();
+  });
+});

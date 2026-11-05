@@ -10,17 +10,25 @@ import { TableBackfillRun } from '@/src/models/analytics/table-backfill';
 interface Props {
   /** Called with every answer, so the banner on the listing stays current while this is open. */
   onRunsChange: (runs: TableBackfillRun[]) => void;
+  onOpenIngestFailures?: (runId: string) => void;
 }
 
 /** The drawer content over the ingest service: reads its runs, polls the one in progress, starts new ones. */
-const TableBackfillSidebar: FC<Props> = ({ onRunsChange }) => {
+const TableBackfillSidebar: FC<Props> = ({ onRunsChange, onOpenIngestFailures }) => {
   const { runs, isStarting, start } = useTableBackfillRuns(onRunsChange);
   const onStart = useCallback(
     (range: BackfillRange, shouldIncludeIngested: boolean) => start(range.from, range.to, shouldIncludeIngested),
     [start],
   );
 
-  return <TableBackfillSidebarView runs={runs} isStarting={isStarting} onStart={onStart} />;
+  return (
+    <TableBackfillSidebarView
+      runs={runs}
+      isStarting={isStarting}
+      onStart={onStart}
+      onOpenIngestFailures={onOpenIngestFailures}
+    />
+  );
 };
 
 export default TableBackfillSidebar;

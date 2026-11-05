@@ -12,6 +12,7 @@ import {
   TransformType,
 } from '@/src/models/analytics/pipeline';
 import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { IngestFailureKind, IngestFailureState } from '@/src/models/analytics/ingest-failure';
 import { TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -1113,6 +1114,77 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
       const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
 
       expect(res.success).toBe(false);
+    });
+  });
+  describe('ingest failures', () => {
+    const list = {
+      failures: [],
+      truncated: false,
+      total: 0,
+      by_state: { pending: 0, parked: 0 },
+      retry_sweep: { enabled: true, next_sweep_at: '2026-11-05T10:15:00Z', max_per_sweep: 500 },
+    };
+
+    test('listIngestFailures sends the filters as a query string', async () => {
+      fetch.mockResponseOnce(JSON.stringify(list), JSON_HEADERS);
+
+      const res = await instance.listIngestFailures(
+        { state: IngestFailureState.Parked, backfill_run_id: 'run-1', limit: 1000 },
+        TOKEN_MOCK,
+      );
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: list }));
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/data-sync/failures?state=parked&backfill_run_id=run-1&limit=1000'),
+        expect.anything(),
+      );
+    });
+
+    test('listIngestFailures carries a 404 through for the caller to read as unavailable', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ status: 404, message: 'Not found' }), { status: 404, ...JSON_HEADERS });
+
+      const res = await instance.listIngestFailures({}, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 404 }));
+    });
+
+    test('listIngestFailures reports a body without failures as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
+
+      const res = await instance.listIngestFailures({}, TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+    });
+
+    test('retryIngestFailures posts targets that name each kind', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ requeued: 2, retry_sweep: list.retry_sweep }), JSON_HEADERS);
+      const body = {
+        targets: [
+          { kind: IngestFailureKind.Blob, subject: 'logs/a.gz' },
+          { kind: IngestFailureKind.Records, subject: 'logs/a.gz' },
+        ],
+      };
+
+      const res = await instance.retryIngestFailures(body, TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({ success: true, response: expect.objectContaining({ requeued: 2 }) }),
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/v1\/data-sync\/failures\/retry$/),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(body) }),
+      );
+    });
+
+    test('retryIngestFailures carries the service refusal through', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ status: 403, error: 'forbidden', message: 'Not allowed' }), {
+        status: 403,
+        ...JSON_HEADERS,
+      });
+
+      const res = await instance.retryIngestFailures({ state: IngestFailureState.Parked }, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, errorMessage: 'Not allowed' }));
     });
   });
 });

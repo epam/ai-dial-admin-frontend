@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { listTableBackfillRuns } from '@/src/app/[lang]/tables/actions';
+import { listIngestFailures, listTableBackfillRuns } from '@/src/app/[lang]/tables/actions';
 import TablesView from '@/src/components/Analytics/Tables/TablesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import {
@@ -11,9 +11,11 @@ import {
   AnalyticsTablesI18nKey,
   BackfillI18nKey,
   ButtonsI18nKey,
+  IngestFailuresI18nKey,
 } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
+import { IngestFailureState } from '@/src/models/analytics/ingest-failure';
 import { TableBackfillRun, TableBackfillState } from '@/src/models/analytics/table-backfill';
 
 vi.mock('@/src/app/[lang]/tables/actions');
@@ -384,5 +386,74 @@ describe('TablesView — Backfill data', () => {
     );
 
     expect(screen.queryByRole('dialog', { name: BackfillI18nKey.TableTitle })).toBeNull();
+  });
+});
+
+describe('TablesView — ingest failures', () => {
+  const serveCount = (total: number) =>
+    vi.mocked(listIngestFailures).mockResolvedValue({
+      success: true,
+      response: {
+        failures: [],
+        truncated: false,
+        total,
+        by_state: { parked: total, pending: 0 },
+        retry_sweep: { enabled: true, max_per_sweep: 500 },
+      },
+    });
+
+  afterEach(() => {
+    Object.assign(useAppContext(), { isFullAdmin: true });
+  });
+
+  test('offers the button with the exact number that needs retry in its name', async () => {
+    serveCount(1500);
+    render(<TablesView initialTables={TABLES} />);
+
+    expect(await screen.findByRole('button', { name: IngestFailuresI18nKey.ButtonAria })).toBeTruthy();
+    expect(screen.getByText('1500')).toBeTruthy();
+    expect(listIngestFailures).toHaveBeenCalledWith({ state: IngestFailureState.Parked, limit: 1 });
+  });
+
+  test('carries no number when nothing needs retry', async () => {
+    serveCount(0);
+    render(<TablesView initialTables={TABLES} />);
+
+    expect(await screen.findByRole('button', { name: IngestFailuresI18nKey.Title })).toBeTruthy();
+  });
+
+  test('withholds the button from a caller who is not a full admin, and asks nothing', async () => {
+    Object.assign(useAppContext(), { isFullAdmin: false });
+    serveCount(3);
+    render(<TablesView initialTables={TABLES} />);
+
+    await act(async () => {});
+    expect(screen.queryByRole('button', { name: IngestFailuresI18nKey.Title })).toBeNull();
+    expect(listIngestFailures).not.toHaveBeenCalled();
+  });
+
+  test('withholds the button from a service that does not serve the listing', async () => {
+    vi.mocked(listIngestFailures).mockResolvedValue({ success: false, status: 404 });
+    render(<TablesView initialTables={TABLES} />);
+
+    await vi.waitFor(() => expect(listIngestFailures).toHaveBeenCalled());
+    await act(async () => {});
+    expect(screen.queryByRole('button', { name: IngestFailuresI18nKey.Title })).toBeNull();
+  });
+
+  test('opens the drawer and reads the number again when it closes', async () => {
+    const user = userEvent.setup();
+    serveCount(0);
+    render(<TablesView initialTables={TABLES} />);
+
+    await user.click(await screen.findByRole('button', { name: IngestFailuresI18nKey.Title }));
+    expect(await screen.findByRole('dialog', { name: IngestFailuresI18nKey.Title })).toBeTruthy();
+
+    vi.mocked(listIngestFailures).mockClear();
+    await user.keyboard('{Escape}');
+
+    await vi.waitFor(() =>
+      expect(listIngestFailures).toHaveBeenCalledWith({ state: IngestFailureState.Parked, limit: 1 }),
+    );
   });
 });
