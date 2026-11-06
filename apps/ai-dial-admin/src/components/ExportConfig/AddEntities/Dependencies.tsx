@@ -58,7 +58,7 @@ const Dependencies: FC<Props> = ({
   }, [allDependencies, isAllSelected, onChangeSelectedDependencies]);
 
   return allDependencies.length ? (
-    <CollapsibleSidebar width={256} title={t(ExportI18nKey.Dependencies)} className="border border-primary ml-3">
+    <CollapsibleSidebar width={256} title={t(ExportI18nKey.Dependencies)} className="border border-tertiary ml-3">
       <div className="flex flex-col">
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>
         <div className="flex-1 min-h-0">

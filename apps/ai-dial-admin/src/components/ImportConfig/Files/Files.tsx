@@ -227,7 +227,7 @@ const Files: FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
+    <div className="flex flex-col flex-1 min-h-0 rounded border border-tertiary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Files)}</h1>
         <PrimaryButton
