@@ -40,6 +40,17 @@ describe('SessionCellRenderer', () => {
     expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
   });
 
+  test('links the title to the session and keeps the id as plain text', () => {
+    renderCell(row({ 'session_insights.title': 'Poland GDP for 2024' } as Partial<SessionRow>));
+
+    expect(screen.getByRole('link', { name: 'Poland GDP for 2024' })).toHaveAttribute(
+      'href',
+      expect.stringContaining(CHAT_ID),
+    );
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByRole('link').textContent).not.toContain(CHAT_ID);
+  });
+
   // Substituting the id would print it on both lines, and read as though the session were named
   // after its own hash — which is what most of them would show, the enrichment reaching few of them.
   test.each([

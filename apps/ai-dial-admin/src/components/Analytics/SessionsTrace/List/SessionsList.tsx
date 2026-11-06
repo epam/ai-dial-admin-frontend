@@ -36,6 +36,11 @@ interface Props {
   onToggleColumnsPanel: () => void;
 }
 
+const getSessionRowHref = (row: unknown): string | undefined => {
+  const sessionId = (row as SessionRow | undefined)?.client_session_id;
+  return sessionId ? sessionDetailHref(sessionId) : undefined;
+};
+
 const SessionsList: FC<Props> = ({
   datasource,
   gridContext,
@@ -72,10 +77,7 @@ const SessionsList: FC<Props> = ({
         }}
         onGridReady={onGridReady}
         getRowId={({ data }) => data.client_session_id}
-        getHref={(row) => {
-          const sessionId = (row as SessionRow | undefined)?.client_session_id;
-          return sessionId ? sessionDetailHref(sessionId) : undefined;
-        }}
+        getHref={getSessionRowHref}
         storageKey={SESSIONS_STORAGE_KEY}
         isLiveData
         showColumnsPanel={isColumnsPanelOpen}

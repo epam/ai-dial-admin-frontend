@@ -38,6 +38,7 @@ interface Props {
 const VIEW = ApplicationRoute.AnalyticsQueries;
 
 const getQueryHref = (query?: SavedQuery) => (query ? getUrnForEntity(VIEW, query) : undefined);
+const getQueryRowHref = (row: unknown) => getQueryHref(row as SavedQuery | undefined);
 
 const QueriesList = ({ data, entities }: Props) => {
   const t = useI18n();
@@ -83,7 +84,7 @@ const QueriesList = ({ data, entities }: Props) => {
         rowData={data}
         columnDefs={columnDefs}
         storageKey={VIEW}
-        getHref={(query) => getQueryHref(query as SavedQuery)}
+        getHref={getQueryRowHref}
         getRowId={({ data: query }) => query.id}
         emptyDataProps={{ title: t(emptyDataTitleMap[VIEW]) }}
       >
