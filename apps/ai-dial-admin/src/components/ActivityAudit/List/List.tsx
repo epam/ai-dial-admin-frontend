@@ -26,8 +26,7 @@ import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/c
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListEntities from '@/src/components/ListView/List';
 import { ACTIVITY_ID_COLUMN_ID, EXPANDER_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { getAuditResourceHref } from '@/src/components/ActivityAudit/View/Header/utils';
-import { moveColumnFirst, withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { moveColumnFirst, withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { ButtonsI18nKey, CompareI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -76,21 +75,6 @@ import {
   isDeploymentManagerResource,
 } from '@/src/types/activity-audit';
 import { FilterOperatorDto } from '@/src/types/request';
-
-const RESOURCE_ID_COLUMN_ID = 'resourceId';
-const PARENT_ACTIVITY_ID_COLUMN_ID = 'parentActivityId';
-
-export const getResourceHref = (data: unknown): string | undefined => {
-  const activity = data as DialActivity | undefined;
-  return getAuditResourceHref(activity?.resourceType, activity?.resourceId);
-};
-
-export const getParentActivityHref = (data: unknown): string | undefined => {
-  const parentActivityId = (data as DialActivity | undefined)?.parentActivityId;
-  return parentActivityId
-    ? getUrnForEntity(ApplicationRoute.ActivityAudit, { activityId: parentActivityId })
-    : undefined;
-};
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -531,18 +515,11 @@ const ActivityAuditList: FC<Props> = ({
       isSingleEntity: !!entity && !hasChildResourceActivities(entityType),
       isGlobalList: !entity,
     });
-    const linkedColumns = withColumnLink(
-      withColumnLink(
-        withNameLink(columns, getActivityHref, ACTIVITY_ID_COLUMN_ID, { isNewTab: true }),
-        RESOURCE_ID_COLUMN_ID,
-        getResourceHref,
-        { isNewTab: true },
-      ),
-      PARENT_ACTIVITY_ID_COLUMN_ID,
-      getParentActivityHref,
-      { isNewTab: true },
+    return moveColumnFirst(
+      withNameLink(columns, getActivityHref, ACTIVITY_ID_COLUMN_ID, { isNewTab: true }),
+      ACTIVITY_ID_COLUMN_ID,
+      [EXPANDER_COLUMN_CEL_ID],
     );
-    return moveColumnFirst(linkedColumns, ACTIVITY_ID_COLUMN_ID, [EXPANDER_COLUMN_CEL_ID]);
   }, [
     getActivityHref,
     entity,

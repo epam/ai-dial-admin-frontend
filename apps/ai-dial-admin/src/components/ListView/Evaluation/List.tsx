@@ -18,7 +18,7 @@ import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
-import { withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getCancelOperation,
@@ -48,13 +48,6 @@ import { emptyDataTitleMap, listViewTitleMap, RUNS_LIST_STORAGE_KEY } from '../c
 import DuplicateDataset from './DuplicateDataset';
 import DuplicateTestSuite from './Duplicate';
 import HeaderButtons from './Header';
-
-const TEST_SUITE_ID_COL_ID = 'testSuiteId';
-
-const getRunTestSuiteHref = (data: unknown) => {
-  const testSuiteId = (data as Run | undefined)?.testSuiteId;
-  return testSuiteId ? getUrnForEntity(ApplicationRoute.TestSuites, { id: testSuiteId }) : undefined;
-};
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -303,10 +296,10 @@ const EvaluationListView = <T extends object>({
   }
 
   const getHref = useCallback((data: unknown) => getUrnForEntity(route, data), [route]);
-  const linkedColumns = useMemo(() => {
-    const columns = withNameLink(baseColumns, getHref, isRunsList ? 'testRunName' : 'name');
-    return isRunsList ? withColumnLink(columns, TEST_SUITE_ID_COL_ID, getRunTestSuiteHref) : columns;
-  }, [baseColumns, getHref, isRunsList]);
+  const linkedColumns = useMemo(
+    () => withNameLink(baseColumns, getHref, isRunsList ? 'testRunName' : 'name'),
+    [baseColumns, getHref, isRunsList],
+  );
   const columnDefs = [...linkedColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
 
   return (

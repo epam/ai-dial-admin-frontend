@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
-import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { PIPELINES_NO_RUNTIME_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
@@ -40,11 +39,7 @@ interface MockColDef {
   hide?: boolean;
   sortable?: boolean;
   valueGetter?: (params: { data: PipelineListItem }) => unknown;
-  cellRendererParams?: {
-    items?: MockActionItem[];
-    getHref?: (row?: PipelineListItem) => string | undefined;
-    getLinks?: (row?: PipelineListItem) => { label: string; href?: string }[];
-  };
+  cellRendererParams?: { items?: MockActionItem[]; getHref?: (row?: PipelineListItem) => string | undefined };
 }
 
 let lastPipelineColumns: MockColDef[] = [];
@@ -194,30 +189,6 @@ describe('Pipelines :: PipelinesView', () => {
     const nameColumn = lastPipelineColumns.find((c) => c.colId === 'name');
     expect(nameColumn?.cellRendererParams?.getHref?.(rule())).toBe(pipelineDetailHref('turn-feedback-live'));
     expect(lastPipelineGetHref?.(rule())).toBe(pipelineDetailHref('turn-feedback-live'));
-  });
-
-  test('links the target and every input table to their detail pages', () => {
-    render(<PipelinesView initialPipelines={[rule({ inputs: ['response_ratings', 'usage'] })]} />);
-
-    const targetColumn = lastPipelineColumns.find((c) => c.colId === 'target');
-    const inputsColumn = lastPipelineColumns.find((c) => c.colId === 'inputs');
-
-    expect(targetColumn?.cellRendererParams?.getHref?.(rule())).toBe(tableDetailHref('turn_feedback'));
-    expect(inputsColumn?.cellRendererParams?.getLinks?.(rule({ inputs: ['response_ratings', 'usage'] }))).toEqual([
-      { label: 'response_ratings', href: tableDetailHref('response_ratings') },
-      { label: 'usage', href: tableDetailHref('usage') },
-    ]);
-  });
-
-  test('gives no input links to an enrichment that declares no input, leaving its label as text', () => {
-    render(<PipelinesView initialPipelines={[rule({ inputs: [] })]} />);
-
-    const inputsColumn = lastPipelineColumns.find((c) => c.colId === 'inputs');
-
-    expect(inputsColumn?.cellRendererParams?.getLinks?.(rule({ inputs: [] }))).toEqual([]);
-    expect(inputsColumn?.valueGetter?.({ data: rule({ inputs: [] }) })).toBe(
-      AnalyticsPipelinesI18nKey.SourceFollowsTarget,
-    );
   });
 
   test('renders the seeded rules and the specified columns', () => {

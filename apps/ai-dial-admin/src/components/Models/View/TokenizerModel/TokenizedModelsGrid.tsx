@@ -5,7 +5,6 @@ import { FC, useEffect, useRef, useState } from 'react';
 
 import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -13,17 +12,12 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { DialTokenizer } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 interface Props {
   selectedModel?: string;
   onSelectModelId: (id: string) => void;
 }
-
-const getModelHref = (data: unknown) => (data ? getUrnForEntity(ApplicationRoute.Models, data) : undefined);
-const COLUMNS = withNameLink(BASE_COLUMNS, getModelHref, undefined, { isNewTab: true });
 
 const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   const [data, setData] = useState<DialTokenizer[]>([]);
@@ -64,7 +58,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
 
   const onGridReady = (event: GridReadyEvent) => {
     event.api?.updateGridOptions({
-      columnDefs: COLUMNS,
+      columnDefs: BASE_COLUMNS,
       rowData: data,
     });
     event.api.forEachNode((node) => {
@@ -77,7 +71,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   return isLoading ? (
     <Spinner size={40} fullWidth />
   ) : (
-    <GridView columnDefs={COLUMNS} rowData={data} additionalGridOptions={options} onGridReady={onGridReady} />
+    <GridView columnDefs={BASE_COLUMNS} rowData={data} additionalGridOptions={options} onGridReady={onGridReady} />
   );
 };
 

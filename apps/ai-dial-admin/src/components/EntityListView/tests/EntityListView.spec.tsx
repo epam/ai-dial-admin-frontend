@@ -140,16 +140,6 @@ describe('BaseEntityList — name link', () => {
     expect(nameColumn.cellRendererParams.getHref).toBeTypeOf('function');
   });
 
-  test('links the source column to the adapter or container behind it', () => {
-    renderList([{ field: 'endpoint' }]);
-
-    const [sourceColumn] = capturedColumns ?? [];
-    expect(sourceColumn.cellRenderer).toBe(LinkCellRenderer);
-    expect(sourceColumn.cellRendererParams.getHref({ source: { $type: 'adapter', adapterName: 'openai' } })).toBe(
-      '/adapters/openai',
-    );
-  });
-
   test('does not navigate on a cell click', () => {
     renderList([DISPLAY_NAME_COLUMN]);
 

@@ -4,8 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { ColDef } from 'ag-grid-community';
 
-import { getEntitySourceHref } from '@/src/components/EntityListView/source-href';
-import { withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import ListEntities from '@/src/components/ListView/List';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -23,7 +22,6 @@ import { ModalType } from './Components/Modals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 const RUNNER_NAME_FIELD = 'dial:applicationTypeDisplayName';
-const SOURCE_VALUE_FIELD = 'endpoint';
 
 interface Props<T> {
   data: T[];
@@ -100,12 +98,7 @@ const BaseEntityList = <T extends object>({
   const getEntityHref = useCallback((row?: unknown) => getUrnForEntity(route, row), [route]);
 
   const linkedColumns = useMemo(
-    () =>
-      withColumnLink(
-        withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD),
-        SOURCE_VALUE_FIELD,
-        getEntitySourceHref,
-      ),
+    () => withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD),
     [baseColumns, getEntityHref],
   );
 

@@ -31,7 +31,6 @@ import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import EntityLinkCell from '@/src/components/Grid/CellRenderers/EntityLinkCell';
-import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
 import ListEntities from '@/src/components/ListView/List';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
@@ -51,9 +50,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 interface Props {
   initialTables: AnalyticsTable[];
 }
-
-const getSourceTableHref = (table?: AnalyticsTable) =>
-  table?.source_table ? tableDetailHref(table.source_table) : undefined;
 
 const TablesView: FC<Props> = ({ initialTables }) => {
   const t = useI18n();
@@ -234,13 +230,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         tooltipValueGetter: () => undefined,
       },
       // Populated for an enrichment only; a source table enriches nothing, so its cell stays blank.
-      {
-        headerName: t(AnalyticsTablesI18nKey.SourceTable),
-        field: 'source_table',
-        flex: 2,
-        cellRenderer: LinkCellRenderer,
-        cellRendererParams: { getHref: getSourceTableHref },
-      },
+      { headerName: t(AnalyticsTablesI18nKey.SourceTable), field: 'source_table', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
       {
         headerName: t(AnalyticsTablesI18nKey.ColumnsCount),

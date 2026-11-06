@@ -1,6 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -13,17 +12,9 @@ import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AddDependenciesButton from './AddDependenciesModal/AddDependenciesButton';
 import { countValidDependencies, getDependenciesData } from './utils';
-
-const getDependencyRoute = (entity?: EntitiesGridData) =>
-  entity?.type === MenuI18nKey.Models ? ApplicationRoute.Models : ApplicationRoute.Applications;
-
-const getDependencyHref = (data: unknown) => {
-  const entity = data as EntitiesGridData | undefined;
-  return entity ? getUrnForEntity(getDependencyRoute(entity), entity) : undefined;
-};
 
 interface Props {
   application: DialApplication;
@@ -65,13 +56,14 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
   );
 
   const onOpen = (entity?: EntitiesGridData) => {
-    onOpenInNewTab(getDependencyRoute(entity), entity);
+    const route = entity?.type === MenuI18nKey.Models ? ApplicationRoute.Models : ApplicationRoute.Applications;
+    onOpenInNewTab(route, entity);
   };
 
   const columns = useMemo(
     () => [
       TYPE_COLUMN(t),
-      ...withNameLink(DEPENDENCIES_COLUMNS, getDependencyHref, undefined, { isNewTab: true }),
+      ...DEPENDENCIES_COLUMNS,
       ACTION_COLUMN(
         isReadOnlyAdmin
           ? [getOpenInNewTabOperation(onOpen)]

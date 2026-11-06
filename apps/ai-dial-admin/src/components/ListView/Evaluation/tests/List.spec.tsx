@@ -169,35 +169,6 @@ describe('EvaluationListView — name links', () => {
     );
   });
 
-  test('links the test suite id on the runs list to that test suite', () => {
-    render(
-      <EvaluationListView
-        route={ApplicationRoute.Runs}
-        baseColumns={[{ colId: 'testSuiteId', field: 'testSuiteId' }]}
-        getData={noopGetData}
-      />,
-    );
-
-    const suiteColumn = listProps.columnDefs.find((col: any) => col.colId === 'testSuiteId');
-
-    expect(suiteColumn.cellRendererParams.getHref({ testSuiteId: 'suite-1' })).toBe('/test-suites/suite-1');
-    expect(suiteColumn.cellRendererParams.getHref({})).toBeUndefined();
-  });
-
-  test('leaves a test suite id column outside the runs list as text', () => {
-    render(
-      <EvaluationListView
-        route={ApplicationRoute.Datasets}
-        baseColumns={[{ colId: 'testSuiteId', field: 'testSuiteId' }]}
-        getData={noopGetData}
-      />,
-    );
-
-    const suiteColumn = listProps.columnDefs.find((col: any) => col.colId === 'testSuiteId');
-
-    expect(suiteColumn.cellRendererParams).toBeUndefined();
-  });
-
   test('does not navigate on a cell click', () => {
     render(<EvaluationListView route={ApplicationRoute.Datasets} baseColumns={[]} getData={noopGetData} />);
 
