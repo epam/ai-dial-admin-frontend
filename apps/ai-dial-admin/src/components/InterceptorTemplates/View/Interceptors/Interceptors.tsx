@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
@@ -12,11 +13,14 @@ import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   interceptorList?: string[];
 }
+
+const getInterceptorHref = (data: unknown) => (data ? getUrnForEntity(ApplicationRoute.Interceptors, data) : undefined);
+const NAME_COLUMNS = withNameLink(BASE_COLUMNS, getInterceptorHref, undefined, { isNewTab: true });
 
 const Interceptors: FC<Props> = ({ interceptorList }) => {
   const t = useI18n();
@@ -28,7 +32,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 
-  const colDefs = [...BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
+  const colDefs = [...NAME_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
 
   useEffect(() => {
     const fetchInterceptors = async () => {

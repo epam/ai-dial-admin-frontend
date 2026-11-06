@@ -38,7 +38,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerKind } from '@/src/utils/deployments/containers';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { getContainerSourceImageHref } from '@/src/components/Containers/List/source-image-href';
+import { withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
@@ -165,7 +166,11 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const duplicateNames = [...names, ...addedNames];
 
   const columnDefs = [
-    ...withNameLink(CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route), getContainerHref),
+    ...withColumnLink(
+      withNameLink(CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route), getContainerHref),
+      'source',
+      getContainerSourceImageHref,
+    ),
     ACTION_COLUMN(
       isReadOnlyAdmin
         ? [getOpenInNewTabOperation(onOpenInNewTabAction)]

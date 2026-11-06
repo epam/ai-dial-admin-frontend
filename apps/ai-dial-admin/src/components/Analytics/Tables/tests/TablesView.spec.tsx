@@ -129,6 +129,25 @@ describe('TablesView — type and system tags', () => {
   });
 });
 
+describe('TablesView — source table link', () => {
+  const sourceColumnHref = (data: Partial<AnalyticsTable>) => {
+    render(<TablesView initialTables={TABLES} />);
+    const column = lastColumnDefs.find((c) => c.field === 'source_table');
+
+    return (column?.cellRendererParams as { getHref: (row: Partial<AnalyticsTable>) => string | undefined }).getHref(
+      data,
+    );
+  };
+
+  test('links an enrichment source table to its details page', () => {
+    expect(sourceColumnHref({ ...TABLES[0], source_table: 'dial_usage_log' })).toBe(tableDetailHref('dial_usage_log'));
+  });
+
+  test('gives no link to a table without a source', () => {
+    expect(sourceColumnHref({ ...TABLES[0], source_table: undefined })).toBeUndefined();
+  });
+});
+
 describe('TablesView — Rows restricted badge', () => {
   const renderNameCell = (data: AnalyticsTable) => {
     render(<TablesView initialTables={TABLES} />);

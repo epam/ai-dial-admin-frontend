@@ -49,6 +49,14 @@ describe('ContainersList', () => {
     expect(link.getAttribute('href')).toMatch(/^\/containers\/.+/);
   });
 
+  test('renders an internal image source as a link to the image', async () => {
+    render(
+      <ContainersList route={ApplicationRoute.Containers} containersList={mockContainers} names={['container-1']} />,
+    );
+
+    expect(await screen.findByRole('link', { name: 'img-1' })).toHaveAttribute('href', '/deployment-images/img-1');
+  });
+
   test('renders with empty list', () => {
     render(<ContainersList route={ApplicationRoute.ModelServings} containersList={[]} names={[]} />);
 

@@ -16,7 +16,10 @@ import { PipelineKindCellRenderer } from '@/src/components/Analytics/Pipelines/C
 import { TriggerCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
+import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
+import { EntityLink } from '@/src/components/Grid/CellRenderers/models';
+import MultiLinkCellRenderer from '@/src/components/Grid/CellRenderers/MultiLinkCellRenderer';
 import ListEntities from '@/src/components/ListView/List';
 import { useAppContext } from '@/src/context/AppContext';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
@@ -40,6 +43,10 @@ interface Props {
 }
 
 const getPipelineHref = (pipeline?: PipelineListItem) => (pipeline ? pipelineDetailHref(pipeline.name) : undefined);
+const getPipelineTargetHref = (pipeline?: PipelineListItem) =>
+  pipeline?.target ? tableDetailHref(pipeline.target) : undefined;
+const getPipelineInputLinks = (pipeline?: PipelineListItem): EntityLink[] =>
+  (pipeline?.inputs ?? []).map((input) => ({ label: input, href: tableDetailHref(input) }));
 
 const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const t = useI18n();
@@ -200,7 +207,15 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
           ]
         : []),
       { headerName: t(AnalyticsPipelinesI18nKey.Generation), field: 'generation', colId: 'generation', flex: 1 },
-      { headerName: t(AnalyticsPipelinesI18nKey.Target), field: 'target', colId: 'target', flex: 2, hide: true },
+      {
+        headerName: t(AnalyticsPipelinesI18nKey.Target),
+        field: 'target',
+        colId: 'target',
+        flex: 2,
+        hide: true,
+        cellRenderer: LinkCellRenderer,
+        cellRendererParams: { getHref: getPipelineTargetHref },
+      },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Inputs),
         field: 'inputs',
@@ -218,6 +233,8 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
             : UNAVAILABLE_VALUE;
         },
         tooltipValueGetter: () => undefined,
+        cellRenderer: MultiLinkCellRenderer,
+        cellRendererParams: { getLinks: getPipelineInputLinks },
       },
       {
         headerName: t(AnalyticsPipelinesI18nKey.UpdatedAt),

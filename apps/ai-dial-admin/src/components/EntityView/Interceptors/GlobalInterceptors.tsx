@@ -12,7 +12,8 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { getInterceptorsColumnDefs } from './utils';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -24,6 +25,8 @@ interface Props {
   currentInterceptors: string[];
   onChangeInterceptors: (interceptors: string[]) => void;
 }
+
+const getInterceptorHref = (data: unknown) => (data ? getUrnForEntity(ApplicationRoute.Interceptors, data) : undefined);
 
 const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onChangeInterceptors }) => {
   const t = useI18n();
@@ -84,7 +87,12 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
   const rowData = globalInterceptors;
 
   const columns = useMemo(() => {
-    return getInterceptorsColumnDefs(onOpen, isReadOnlyAdmin ? void 0 : onRemoveInterceptor);
+    return withNameLink(
+      getInterceptorsColumnDefs(onOpen, isReadOnlyAdmin ? void 0 : onRemoveInterceptor),
+      getInterceptorHref,
+      undefined,
+      { isNewTab: true },
+    );
   }, [onRemoveInterceptor, isReadOnlyAdmin]);
 
   const additionalGridOptions = useMemo(() => {

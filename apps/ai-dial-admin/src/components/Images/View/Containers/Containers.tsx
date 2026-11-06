@@ -17,10 +17,11 @@ import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
 
 import ImageAddContainer from '@/src/components/Deployments/Modals/ImageAddContainer';
+import { withColumnLink } from '@/src/components/Grid/columns/name-link-column';
 import ListEntities from '@/src/components/ListView/List';
 
 interface Props {
@@ -69,8 +70,13 @@ const Containers: FC<Props> = ({ image, route, versions, disabled }) => {
     [handleModalClose, image.id, router, showNotification],
   );
 
+  const getContainerHref = useCallback(
+    (container: unknown) => getUrnForEntity(getRouteByType(image.$type), container),
+    [image.$type],
+  );
+
   const columnDefs = [
-    ...IMAGE_DEPENDENCIES_COLUMNS(t),
+    ...withColumnLink(IMAGE_DEPENDENCIES_COLUMNS(t), 'displayName', getContainerHref, { isNewTab: true }),
     ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)]),
   ];
 

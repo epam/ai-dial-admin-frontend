@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { ENTITY_COLUMNS, getAvailableEntities, getEntitiesGridData } from '@/src/components/AddEntitiesTab/utils';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -21,7 +22,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { Toolset } from '@/src/models/dial/toolset';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   viewTitle?: string;
@@ -42,6 +43,11 @@ interface Props {
   getRelevantDataForEntity?: (allEntities: EntitiesGridData[]) => EntitiesGridData[];
   isSkipRefresh?: boolean;
 }
+
+const getEntityRowHref = (data: unknown) => {
+  const row = data as EntitiesGridData | undefined;
+  return row?.route ? getUrnForEntity(row.route, row) : undefined;
+};
 
 const AddEntitiesView: FC<Props> = ({
   getRelevantDataForEntity,
@@ -102,7 +108,7 @@ const AddEntitiesView: FC<Props> = ({
   const columns: ColDef[] = customColumns || ENTITY_COLUMNS(t);
   const columnDefs = useMemo<ColDef[]>(
     () => [
-      ...columns,
+      ...withNameLink(columns, getEntityRowHref, undefined, { isNewTab: true }),
       ...(additionalColumns || []),
       ACTION_COLUMN([
         getOpenInNewTabOperation(onOpen),

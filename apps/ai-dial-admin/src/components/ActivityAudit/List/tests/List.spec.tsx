@@ -143,7 +143,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
+import ActivityAuditList, { getParentActivityHref, getResourceHref } from '@/src/components/ActivityAudit/List/List';
 import { ACTIONS_COLUMN_CEL_ID, EXPANDER_COLUMN_CEL_ID, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   ActionMenuOperationI18nKey,
@@ -1308,5 +1308,42 @@ describe('ActivityAuditList :: Analytics import grouping', () => {
     expect(listedIds(successCallback)).toEqual(['p1']);
     expect(importRequests()).toHaveLength(0);
     expect(lastColumnDefs().map((column) => column.field)).not.toContain('expanderColumn');
+  });
+});
+
+describe('ActivityAuditList :: related-entity links', () => {
+  const linkParams = (field: string) =>
+    lastColumnDefs().find((column) => column.field === field)?.cellRendererParams as
+      | { getHref: (row: unknown) => string | undefined; isNewTab: boolean }
+      | undefined;
+
+  test('links the resource identifier to the audited resource in a new tab', () => {
+    render(<ActivityAuditList />);
+
+    const params = linkParams('resourceId');
+
+    expect(params?.isNewTab).toBe(true);
+    expect(params?.getHref(activity({ resourceType: ActivityAuditResourceType.MODEL, resourceId: 'gpt-4' }))).toBe(
+      '/models/gpt-4',
+    );
+  });
+
+  test('links the parent id to the parent activity in a new tab', () => {
+    render(<ActivityAuditList />);
+
+    const params = linkParams('parentActivityId');
+
+    expect(params?.isNewTab).toBe(true);
+    expect(params?.getHref(activity({ parentActivityId: 'parent-1' }))).toBe('/activity-audit/parent-1');
+  });
+
+  test('gives no resource link when the row has no identifier', () => {
+    expect(
+      getResourceHref(activity({ resourceType: ActivityAuditResourceType.MODEL, resourceId: '' })),
+    ).toBeUndefined();
+  });
+
+  test('gives no parent link when the row has no parent', () => {
+    expect(getParentActivityHref(activity({ parentActivityId: undefined }))).toBeUndefined();
   });
 });

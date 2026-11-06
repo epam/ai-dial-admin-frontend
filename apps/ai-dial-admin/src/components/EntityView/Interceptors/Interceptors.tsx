@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom';
 
 import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { RowDragEvent } from 'ag-grid-community';
+import { ColDef, RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
 import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
@@ -24,7 +25,7 @@ import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { hasConfigEntityOrigin } from '@/src/utils/config-entities/source-column';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { AssetInterceptorOrigin, AssetInterceptorTagged, InterceptorOption } from './models';
 import {
@@ -53,6 +54,16 @@ const NEEDS_ASSET_MERGE_VIEWS: ApplicationRoute[] = [
 ];
 
 const BASE_ADD_INTERCEPTOR_COLUMNS = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+
+const getInterceptorRoute = (interceptor?: Partial<AssetInterceptorTagged>) =>
+  interceptor?.assetOrigin === AssetInterceptorOrigin.Asset
+    ? ApplicationRoute.PlatformInterceptors
+    : ApplicationRoute.Interceptors;
+
+const getInterceptorHref = (data: unknown) => {
+  const interceptor = data as (DialInterceptor & Partial<AssetInterceptorTagged>) | undefined;
+  return interceptor ? getUrnForEntity(getInterceptorRoute(interceptor), interceptor) : undefined;
+};
 
 interface Props<T> {
   entity: T;
@@ -217,18 +228,21 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   // an admin-BE URL for an entity that service need not hold at all — offer no link there. A row
   // tagged `AssetInterceptorOrigin.Asset` (from this component's own widening) does have a real
   // detail view, just under `Assets > Interceptors` instead of `Entities > Interceptors`.
+  const isOpenable = !hasConfigEntityOrigin(interceptors);
+
   const onOpen = useMemo(
     () =>
-      hasConfigEntityOrigin(interceptors)
-        ? void 0
-        : (interceptor?: DialInterceptor & Partial<AssetInterceptorTagged>) => {
-            const route =
-              interceptor?.assetOrigin === AssetInterceptorOrigin.Asset
-                ? ApplicationRoute.PlatformInterceptors
-                : ApplicationRoute.Interceptors;
-            onOpenInNewTab(route, interceptor);
-          },
-    [interceptors],
+      isOpenable
+        ? (interceptor?: DialInterceptor & Partial<AssetInterceptorTagged>) =>
+            onOpenInNewTab(getInterceptorRoute(interceptor), interceptor)
+        : void 0,
+    [isOpenable],
+  );
+
+  const withInterceptorLink = useCallback(
+    (columns: ColDef[]) =>
+      isOpenable ? withNameLink(columns, getInterceptorHref, undefined, { isNewTab: true }) : columns,
+    [isOpenable],
   );
 
   const rowData = getInterceptorsGridData(availableInterceptors, entityInterceptors);
@@ -238,9 +252,9 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     [availableInterceptors],
   );
 
-  const globalColumns = getInterceptorsColumnDefs(onOpen);
+  const globalColumns = withInterceptorLink(getInterceptorsColumnDefs(onOpen));
 
-  const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
+  const runnerColumns = withInterceptorLink(getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length));
 
   const onRemoveInterceptor = useCallback(
     (_?: DialInterceptor, index?: number) => {
@@ -265,13 +279,23 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   );
 
   const localColumns = useMemo(() => {
-    return getInterceptorsColumnDefs(
-      onOpen,
-      isReadOnlyAdmin ? undefined : onRemoveInterceptor,
-      (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
-      rowData,
+    return withInterceptorLink(
+      getInterceptorsColumnDefs(
+        onOpen,
+        isReadOnlyAdmin ? undefined : onRemoveInterceptor,
+        (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
+        rowData,
+      ),
     );
-  }, [onOpen, onRemoveInterceptor, globalInterceptors?.length, isReadOnlyAdmin, runnerInterceptors?.length, rowData]);
+  }, [
+    onOpen,
+    withInterceptorLink,
+    onRemoveInterceptor,
+    globalInterceptors?.length,
+    isReadOnlyAdmin,
+    runnerInterceptors?.length,
+    rowData,
+  ]);
 
   const additionalGridOptions = useMemo(() => {
     return isReadOnlyAdmin ? undefined : { rowDragManaged: true, onRowDragEnd };

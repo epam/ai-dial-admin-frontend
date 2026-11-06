@@ -48,7 +48,7 @@ describe('SessionCellRenderer', () => {
       expect.stringContaining(CHAT_ID),
     );
     expect(screen.getAllByRole('link')).toHaveLength(1);
-    expect(screen.getByRole('link').textContent).not.toContain(CHAT_ID);
+    expect(screen.getByRole('link')).not.toHaveTextContent(CHAT_ID);
   });
 
   // Substituting the id would print it on both lines, and read as though the session were named

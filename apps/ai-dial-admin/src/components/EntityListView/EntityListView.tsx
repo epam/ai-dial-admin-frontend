@@ -4,7 +4,8 @@ import { useCallback, useState } from 'react';
 
 import { ColDef } from 'ag-grid-community';
 
-import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { getEntitySourceHref } from '@/src/components/EntityListView/source-href';
+import { withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import ListEntities from '@/src/components/ListView/List';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -22,6 +23,7 @@ import { ModalType } from './Components/Modals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 const RUNNER_NAME_FIELD = 'dial:applicationTypeDisplayName';
+const SOURCE_VALUE_FIELD = 'endpoint';
 
 interface Props<T> {
   data: T[];
@@ -98,7 +100,11 @@ const BaseEntityList = <T extends object>({
   const getEntityHref = useCallback((row?: unknown) => getUrnForEntity(route, row), [route]);
 
   const getColumns = () => {
-    const linkedColumns = withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD);
+    const linkedColumns = withColumnLink(
+      withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD),
+      SOURCE_VALUE_FIELD,
+      getEntitySourceHref,
+    );
     const remove = isReadOnlyAdmin ? undefined : onOpenDeleteModal;
     const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
     const move = isReadOnlyAdmin ? undefined : onOpenMoveModal;

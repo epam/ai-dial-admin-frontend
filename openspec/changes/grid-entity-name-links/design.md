@@ -92,6 +92,15 @@ and feeds both the link and the grid's `getHref`; `onCellClicked` and the clicka
 *Alternative:* a same-tab link plus restoring the Audit tab on return — rejected: it brings back a removed
 mechanism for no gain over the behaviour users already have.
 
+### D7. Related-entity columns reuse the link cell
+
+`withColumnLink(columns, field, getHref, linkParams)` turns one named column into a link (`LinkCellRenderer`, or
+`getHref` on an existing linkable renderer); a multi-entity cell gets a renderer that lays out one
+`EntityLinkCell` per value. Each grid passes a getter built from the URL helpers it already has
+(`getUrnForEntity`, `tableDetailHref`, `getAuditResourceHref`) and returns `undefined` when the row has no
+resolvable target, which renders plain text. Grids inside an entity's tabs pass `isNewTab`, because a same-tab
+jump would drop the entity page and any unsaved edits on it.
+
 ## Risks / Trade-offs
 
 - [Users used to clicking anywhere on the row find nothing happens] → the name is visibly a link (accent

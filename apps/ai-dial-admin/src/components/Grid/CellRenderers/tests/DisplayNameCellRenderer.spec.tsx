@@ -26,6 +26,14 @@ describe('DisplayNameCellRenderer', () => {
     expect(screen.getByText('gpt-4-turbo')).toBeInTheDocument();
   });
 
+  test('opens the link in a new tab when asked to', () => {
+    render(
+      <DisplayNameCellRenderer {...params({ displayName: 'GPT-4 Turbo' })} getHref={() => '/models/gpt'} isNewTab />,
+    );
+
+    expect(screen.getByRole('link', { name: 'GPT-4 Turbo' })).toHaveAttribute('target', '_blank');
+  });
+
   test('renders no link when the row has no address', () => {
     render(<DisplayNameCellRenderer {...params({ displayName: 'GPT-4 Turbo' })} getHref={() => undefined} />);
 

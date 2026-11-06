@@ -1,4 +1,6 @@
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import AddEntitiesView from '../AddEntitiesView';
@@ -36,6 +38,25 @@ describe('AddEntitiesView', () => {
     const models = [{ id: '1', name: 'Model1' }];
     render(<AddEntitiesView models={models} applications={[]} roles={[]} keys={[]} onRemove={onRemove} />);
     expect(typeof onRemove).toBe('function');
+  });
+
+  test('links each entity name to its page in a new tab', async () => {
+    const getRelevantDataForEntity = vi.fn(() => [
+      { name: 'gpt-4', displayName: 'GPT 4', route: ApplicationRoute.Models },
+    ]) as unknown as () => EntitiesGridData[];
+    render(
+      <AddEntitiesView
+        models={[]}
+        applications={[]}
+        roles={[]}
+        keys={[]}
+        getRelevantDataForEntity={getRelevantDataForEntity}
+      />,
+    );
+
+    const link = await screen.findByRole('link', { name: 'GPT 4' });
+    expect(link).toHaveAttribute('href', '/models/gpt-4');
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   test('renders with getRelevantDataForEntity', () => {

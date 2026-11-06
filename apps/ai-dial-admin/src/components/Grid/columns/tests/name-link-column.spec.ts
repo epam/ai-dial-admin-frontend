@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
 import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
 import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
-import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
 
 const getHref = (data: unknown) => `/models/${(data as { name: string }).name}`;
 
@@ -59,5 +59,26 @@ describe('withNameLink', () => {
     const description = { field: 'description' };
 
     expect(withNameLink([description], getHref)).toEqual([description]);
+  });
+});
+
+describe('withColumnLink', () => {
+  test('links only the named column, even beside a display-name column', () => {
+    const [name, target] = withColumnLink(
+      [{ field: 'displayName', cellRenderer: DisplayNameCellRenderer }, { field: 'target' }],
+      'target',
+      getHref,
+      { isNewTab: true },
+    );
+
+    expect(name.cellRendererParams).toBeUndefined();
+    expect(target.cellRenderer).toBe(LinkCellRenderer);
+    expect(target.cellRendererParams).toEqual({ isNewTab: true, getHref });
+  });
+
+  test('leaves the columns unchanged when the field is absent', () => {
+    const columns = [{ field: 'description' }];
+
+    expect(withColumnLink(columns, 'target', getHref)).toEqual(columns);
   });
 });

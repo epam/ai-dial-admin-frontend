@@ -5,6 +5,7 @@ import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
 import { ICON_ROW_HEIGHT } from '@/src/components/Grid/constants';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -13,6 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './utils';
 
 interface Props {
@@ -32,6 +34,8 @@ interface Props {
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean;
   isReadOnlyAdmin?: boolean;
 }
+
+const getRoleHref = (data: unknown) => (data ? getUrnForEntity(ApplicationRoute.Roles, data) : undefined);
 
 const RolesGrid: FC<Props> = ({
   entity,
@@ -54,7 +58,7 @@ const RolesGrid: FC<Props> = ({
   const gridApiRef = useRef<GridApi | null>(null);
   const data = getRolesGridData(entity, roles);
 
-  const columns = getRolesColumnDefs(
+  const roleColumns = getRolesColumnDefs(
     entity,
     onChangeTokensValue,
     onRemoveRole,
@@ -66,6 +70,7 @@ const RolesGrid: FC<Props> = ({
     view,
     isReadOnlyAdmin,
   );
+  const columns = withNameLink(roleColumns, getRoleHref, undefined, { isNewTab: true });
 
   const onGridReady = (event: GridReadyEvent) => {
     gridApiRef.current = event.api ?? null;

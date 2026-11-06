@@ -45,6 +45,14 @@
 - [x] 9.4 Keep the expander and Activity ID first in restored layouts via `LEADING_COLUMN_IDS` (`mergeColumnOrder` and `applyColumnStateOrderToColDefs`), with tests
 - [x] 9.3 Update `ActivityAudit/List/tests/List.spec.tsx`: link params, first position, no `onCellClicked`, no link for Rollback/Import rows
 
+## 10. Related-entity links
+
+- [x] 10.1 Add `withColumnLink` to `Grid/columns/name-link-column.ts` with tests
+- [x] 10.2 Runs list Test Suite ID, Analytics Tables source table, Pipelines target and inputs (new multi-link renderer), with tests
+- [x] 10.3 Activity Audit Resource identifier (`getAuditResourceHref`) and Parent ID, new tab, with tests
+- [x] 10.4 Containers source image (internal only), Image → Containers tab name and image, entity lists adapter / container source, with tests
+- [x] 10.5 Entity tab grids (Roles, Interceptors ×3, Dependencies, Adapter models — fixing its empty-name new-tab URL, Image containers, Tokenizer models, Role entities, Interceptor template interceptors): name link in a new tab, with tests
+
 ## 7. Verification
 
 - [x] 7.1 Run the `spec-browser-verify` skill for this change against the local app (auth disabled): name link opens details in the same tab, a row click outside the name does not navigate, Cmd/Ctrl-click opens a new tab, a folder row opens the folder; resolve every `fail` verdict

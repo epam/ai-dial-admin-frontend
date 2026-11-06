@@ -20,12 +20,17 @@ modifier tracking or a menu item instead of the browser's own link handling.
 - Activity Audit (the `/activity-audit` page and every entity Audit tab) has no name column: its Activity ID
   column moves to the first place after the row expander and becomes the link. It keeps opening the activity
   in a new tab, as the row click did, so the list and the entity's Audit tab stay where they are.
+- Columns that name another entity with a details page (a run's test suite, source / target / input tables,
+  an audited resource, a container's image, an entity's adapter or container source, and the entities in an
+  entity's own tabs) become links to it; inside an entity's tabs and in Activity Audit they open a new tab.
 - **BREAKING** (behavior): a row click outside the name no longer opens the details page. Row hover stays.
 - The Pipelines listing renders the pipeline name as a link, reversing its earlier text-only rule.
 
 ## Non-goals
 
-- Links to related entities in other columns (e.g. a run's target): only the row's own entity name links.
+- Related-entity columns whose target kind is unknown or ambiguous: a run's target, a test suite's application,
+  query sources, usage-log and session deployments, an entity's schema or runner source, and the roles tabs of
+  assets and keys. They stay text until their route can be resolved.
 - Grids whose row click does something other than navigation (selection, expanding a row, opening a
   drawer or modal in place) and DATA / EDITABLE / HEAT MAP tables.
 - The other Admin table rules on the same design page (row density, vertical dividers, borders).

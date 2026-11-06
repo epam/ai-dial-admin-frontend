@@ -42,7 +42,7 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
       {renderIcon()}
       <div className="flex flex-col justify-center overflow-hidden">
         {href ? (
-          <EntityLinkCell href={href}>
+          <EntityLinkCell href={href} isNewTab={params.isNewTab}>
             <EllipsisTooltip className="dial-small-text" text={displayName ?? ''} />
           </EntityLinkCell>
         ) : (

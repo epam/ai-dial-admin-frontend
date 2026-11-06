@@ -30,6 +30,25 @@ export const withNameLink = (
     return column;
   });
 
+export const withColumnLink = (
+  columns: ColDef[],
+  field: string,
+  getHref: EntityHrefGetter,
+  linkParams?: Record<string, unknown>,
+): ColDef[] =>
+  columns.map((column) => {
+    if (!isNameColumn(column, field)) {
+      return column;
+    }
+    if (LINKABLE_RENDERERS.includes(column.cellRenderer)) {
+      return { ...column, cellRendererParams: { ...column.cellRendererParams, ...linkParams, getHref } };
+    }
+    if (!column.cellRenderer) {
+      return { ...column, cellRenderer: LinkCellRenderer, cellRendererParams: { ...linkParams, getHref } };
+    }
+    return column;
+  });
+
 export const moveColumnFirst = (columns: ColDef[], field: string, afterFields: string[] = []): ColDef[] => {
   const column = columns.find((col) => col.field === field);
   if (!column) {
