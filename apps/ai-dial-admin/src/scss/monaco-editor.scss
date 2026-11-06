@@ -27,6 +27,14 @@
   }
 }
 
+// Monaco pins the find widget to the editor's top edge, so its button tooltips (shown above the
+// button) are clipped under the header or land on the button itself. Drop the widget down a little
+// so the tooltips have room inside the editor (issue #5430).
+.monaco-editor .find-widget.visible {
+  // Monaco writes `top`/`right` inline on the widget, so only `!important` can override them.
+  @apply top-7! right-12!;
+}
+
 .diff-section {
   .monaco-editor-background {
     @apply bg-layer-2;
