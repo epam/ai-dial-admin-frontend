@@ -50,11 +50,11 @@ export const withColumnLink = (
   });
 
 export const moveColumnFirst = (columns: ColDef[], field: string, afterFields: string[] = []): ColDef[] => {
-  const column = columns.find((col) => col.field === field);
+  const column = columns.find((col) => (col.field ?? col.colId) === field);
   if (!column) {
     return columns;
   }
   const rest = columns.filter((col) => col !== column);
-  const leading = rest.filter((col) => !!col.field && afterFields.includes(col.field));
+  const leading = rest.filter((col) => afterFields.includes((col.field ?? col.colId) as string));
   return [...leading, column, ...rest.filter((col) => !leading.includes(col))];
 };

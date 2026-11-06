@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { ColDef } from 'ag-grid-community';
 
@@ -99,12 +99,17 @@ const BaseEntityList = <T extends object>({
 
   const getEntityHref = useCallback((row?: unknown) => getUrnForEntity(route, row), [route]);
 
+  const linkedColumns = useMemo(
+    () =>
+      withColumnLink(
+        withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD),
+        SOURCE_VALUE_FIELD,
+        getEntitySourceHref,
+      ),
+    [baseColumns, getEntityHref],
+  );
+
   const getColumns = () => {
-    const linkedColumns = withColumnLink(
-      withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD),
-      SOURCE_VALUE_FIELD,
-      getEntitySourceHref,
-    );
     const remove = isReadOnlyAdmin ? undefined : onOpenDeleteModal;
     const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
     const move = isReadOnlyAdmin ? undefined : onOpenMoveModal;

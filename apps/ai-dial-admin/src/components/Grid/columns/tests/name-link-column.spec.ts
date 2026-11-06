@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
 import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
 import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
-import { withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
+import { moveColumnFirst, withColumnLink, withNameLink } from '@/src/components/Grid/columns/name-link-column';
 
 const getHref = (data: unknown) => `/models/${(data as { name: string }).name}`;
 
@@ -80,5 +80,13 @@ describe('withColumnLink', () => {
     const columns = [{ field: 'description' }];
 
     expect(withColumnLink(columns, 'target', getHref)).toEqual(columns);
+  });
+});
+
+describe('moveColumnFirst', () => {
+  test('moves a column found by colId right after the leading columns', () => {
+    const columns = moveColumnFirst([{ colId: 'expander' }, { field: 'type' }, { colId: 'id' }], 'id', ['expander']);
+
+    expect(columns.map((column) => column.colId ?? column.field)).toEqual(['expander', 'id', 'type']);
   });
 });
