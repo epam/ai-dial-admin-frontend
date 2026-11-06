@@ -11,8 +11,12 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
 }));
 
 const adminApiEnabled = { value: true };
+const fullAdmin = { value: true };
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: { adminApiEnabled: adminApiEnabled.value } }),
+  useAppContext: () => ({
+    featureFlags: { adminApiEnabled: adminApiEnabled.value },
+    isFullAdmin: fullAdmin.value,
+  }),
 }));
 
 const router: ApplicationRoute[] = [];
@@ -29,16 +33,25 @@ describe('WelcomeView', () => {
   beforeEach(() => {
     isReadOnlyAdminMock.mockReturnValue(false);
     adminApiEnabled.value = true;
+    fullAdmin.value = true;
   });
 
-  test('renders read-only banner and hides import/export for read-only admin', () => {
+  test('renders read-only banner for read-only admin', () => {
     isReadOnlyAdminMock.mockReturnValue(true);
+    fullAdmin.value = false;
     render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
 
     expect(screen.getByText(ReadOnlyI18nKey.BannerTitle)).toBeInTheDocument();
     expect(screen.getByText(ReadOnlyI18nKey.Description)).toBeInTheDocument();
+  });
+
+  test('hides Import, Export and System properties quick actions for a non-full admin', () => {
+    fullAdmin.value = false;
+    render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
+
     expect(screen.queryByText(MenuI18nKey.ImportConfig)).not.toBeInTheDocument();
     expect(screen.queryByText(MenuI18nKey.ExportConfig)).not.toBeInTheDocument();
+    expect(screen.queryByText(MenuI18nKey.SystemProperties)).not.toBeInTheDocument();
   });
 
   test('hides Import/Export quick actions when the admin API is disabled', () => {
