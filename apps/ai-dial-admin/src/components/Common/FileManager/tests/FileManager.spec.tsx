@@ -537,7 +537,7 @@ describe('FileManager — unit mode', () => {
   });
 
   test('withholds folder creation for a view with no unit namespace', () => {
-    renderFileManager(ApplicationRoute.Projects);
+    renderFileManager(ApplicationRoute.PlatformRoles);
 
     expect(lastProps().onCreateFolder).toBeUndefined();
   });
