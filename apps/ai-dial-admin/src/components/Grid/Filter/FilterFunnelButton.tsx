@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { IconFilter } from '@tabler/icons-react';
+import { IconFilter2 } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 interface Props {
@@ -19,7 +19,7 @@ const FilterFunnelButton: FC<Props> = ({ isActive, title }) => (
       isActive ? 'text-accent-primary bg-accent-primary-alpha' : 'text-secondary hover:text-primary',
     )}
   >
-    <IconFilter size={16} />
+    <IconFilter2 size={16} aria-hidden />
   </span>
 );
 

@@ -53,7 +53,7 @@ describe('useEntityReadOnlyAt', () => {
   test('is read-only in unit mode for a view with no namespace', () => {
     appContext.isUnitMode = true;
 
-    renderHook(() => useEntityReadOnlyAt(ApplicationRoute.Projects, 'public/Acme/'));
+    renderHook(() => useEntityReadOnlyAt(ApplicationRoute.PlatformRoles, 'public/Acme/'));
 
     expect(appContext.setEntityReadOnly).toHaveBeenCalledWith(true);
     expect(appContext.canWriteAt).not.toHaveBeenCalled();

@@ -276,6 +276,10 @@
   @apply bg-transparent;
 }
 
+.ag-root-wrapper .ag-icon-filter::before {
+  mask-image: url(/images/icons/grid-filter.svg);
+}
+
 .ag-grid-no-checkbox {
   .ag-selection-checkbox {
     @apply hidden;
