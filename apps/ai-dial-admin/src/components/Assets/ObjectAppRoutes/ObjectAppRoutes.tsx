@@ -98,7 +98,7 @@ const ObjectAppRoutesView: FC<Props> = ({ routes, format, roles, disabled, onCha
   return (
     <>
       <div className="flex flex-row gap-4 size-full">
-        <CollapsibleSidebar width={296} title={t(TabsI18nKey.AppRoutes)} className="bg-layer-2 mr-4">
+        <CollapsibleSidebar width={296} title={t(TabsI18nKey.AppRoutes)} className="bg-layer-2 shadow-sm">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.AppRoutes)}</h1>
