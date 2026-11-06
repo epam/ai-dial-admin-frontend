@@ -13,14 +13,13 @@ vi.mock('next/navigation', () => ({
 
 const adminApiEnabled = { value: true };
 const readOnlyAdmin = { value: false };
-const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>(), writable: new Set<UnitNamespace>() };
+const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>() };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
     isReadOnlyAdmin: readOnlyAdmin.value,
     isUnitMode: unitMode.isUnitMode,
     canReadNamespace: (namespace: UnitNamespace) => unitMode.readable.has(namespace),
-    canWriteNamespace: (namespace: UnitNamespace) => unitMode.writable.has(namespace),
   }),
 }));
 
@@ -120,18 +119,17 @@ describe('MenuContent — unit mode', () => {
   afterEach(() => {
     unitMode.isUnitMode = false;
     unitMode.readable = new Set();
-    unitMode.writable = new Set();
   });
 
-  test('hides Folders when org units are only readable', () => {
+  test('hides Folders when only org units are readable', () => {
     unitMode.readable = new Set([UnitNamespace.ORG_UNITS]);
     renderMenu(true);
 
     expect(screen.queryByRole('link', { name: MenuI18nKey.FoldersStorage })).not.toBeInTheDocument();
   });
 
-  test('shows Folders when org units are writable', () => {
-    unitMode.writable = new Set([UnitNamespace.ORG_UNITS]);
+  test('shows Folders when role assignments are readable', () => {
+    unitMode.readable = new Set([UnitNamespace.ROLE_ASSIGNMENTS]);
     renderMenu(true);
 
     expect(screen.getByRole('link', { name: MenuI18nKey.FoldersStorage })).toBeInTheDocument();

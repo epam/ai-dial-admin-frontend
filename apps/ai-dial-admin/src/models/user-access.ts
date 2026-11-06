@@ -19,6 +19,7 @@ export enum UnitNamespace {
   PROMPTS = 'prompts',
   FILES = 'files',
   SKILLS = 'skills',
+  PROJECTS = 'projects',
   CONVERSATIONS = 'conversations',
   PUBLICATIONS = 'publications',
   ROLE_ASSIGNMENTS = 'role-assignments',

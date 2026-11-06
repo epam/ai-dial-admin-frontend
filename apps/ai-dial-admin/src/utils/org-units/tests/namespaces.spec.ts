@@ -11,20 +11,16 @@ describe('getRouteNamespace', () => {
     [ApplicationRoute.Prompts, UnitNamespace.PROMPTS],
     [ApplicationRoute.Files, UnitNamespace.FILES],
     [ApplicationRoute.Skills, UnitNamespace.SKILLS],
+    [ApplicationRoute.Projects, UnitNamespace.PROJECTS],
     [ApplicationRoute.Conversations, UnitNamespace.CONVERSATIONS],
     [ApplicationRoute.Publications, UnitNamespace.PUBLICATIONS],
     [ApplicationRoute.SkillPublications, UnitNamespace.PUBLICATIONS],
-    [ApplicationRoute.FoldersStorage, UnitNamespace.ORG_UNITS],
+    [ApplicationRoute.FoldersStorage, UnitNamespace.ROLE_ASSIGNMENTS],
   ])('maps %s to %s', (route, namespace) => {
     expect(getRouteNamespace(route)).toBe(namespace);
   });
 
-  test.each([
-    ApplicationRoute.Projects,
-    ApplicationRoute.PlatformModels,
-    ApplicationRoute.Models,
-    ApplicationRoute.Home,
-  ])('has no namespace for %s', (route) => {
+  test.each([ApplicationRoute.PlatformModels, ApplicationRoute.Models, ApplicationRoute.Home])('has no namespace for %s', (route) => {
     expect(getRouteNamespace(route)).toBeUndefined();
   });
 

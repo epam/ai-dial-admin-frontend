@@ -25,7 +25,7 @@ interface Props {
 }
 const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
-  const { featureFlags, isUnitMode, canReadNamespace, canWriteNamespace } = useAppContext();
+  const { featureFlags, isUnitMode, canReadNamespace } = useAppContext();
   const isConfigTransferEnabled = getIsConfigTransferEnabled(featureFlags);
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -36,9 +36,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const splittedPathname = usePathname().split('/');
   const pathname = `/${splittedPathname[2]}`;
   const enabledConfig = getActualMenuItems(MENU_CONFIGURATION(16, featureFlags), disableMenuItems);
-  const actualConfig = isUnitMode
-    ? filterMenuForUnitMode(enabledConfig, canReadNamespace, canWriteNamespace)
-    : enabledConfig;
+  const actualConfig = isUnitMode ? filterMenuForUnitMode(enabledConfig, canReadNamespace) : enabledConfig;
 
   // Config transfer and system properties are admin pages, which a unit user cannot open.
   const showImportExport = isConfigTransferEnabled && !isUnitMode && (isSidebarOpen || !isReadOnlyAdmin);

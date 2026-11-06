@@ -86,9 +86,9 @@ override. It SHALL also expose `canReadNamespace(namespace)` and `canWriteAt(nam
 
 ### Requirement: Unit-mode menu shows sections the caller can read
 In unit mode the menu SHALL show a section only when any unit grants `read` on its namespace: Applications
-`applications`, Toolsets `toolsets`, Prompts `prompts`, Files `files`, Skills `skills`, Conversations
-`conversations`, Approvals `publications`, Folders Storage `org-units`. Items with no namespace (every platform
-and admin-backend page, and Projects) SHALL NOT be shown, and neither SHALL the Import config, Export config or
+`applications`, Toolsets `toolsets`, Prompts `prompts`, Files `files`, Skills `skills`, Projects `projects`,
+Conversations `conversations`, Approvals `publications`, Folders Storage `role-assignments`. Items with no namespace
+(every platform and admin-backend page) SHALL NOT be shown, and neither SHALL the Import config, Export config or
 System properties actions. The layout SHALL NOT issue admin-only config reads, and file-manager views SHALL NOT
 load the `platform` bucket root.
 
