@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 
 import {
+  adminConsentApi,
   assetApi,
   configFileApi,
   externalServiceConsentApi,
@@ -32,11 +33,15 @@ import {
   signOutExternalService,
   grantExternalServiceConsent,
   withdrawExternalServiceConsent,
+  getAdminConsentStatus,
+  grantAdminConsent,
+  withdrawAdminConsent,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
 import { DialApplicationResource } from '@/src/models/dial/resource';
+import { ResourceAccess } from '@/src/models/dial/resource-dependency';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -612,6 +617,38 @@ describe('Assets application :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(externalServiceConsentApi.withdraw).toHaveBeenCalledWith(TOKEN_MOCK, 'public/als code apps/my app', 'dial');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getAdminConsentStatus action', async () => {
+    (adminConsentApi.getStatus as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getAdminConsentStatus('public/my-app');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(adminConsentApi.getStatus).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call grantAdminConsent action', async () => {
+    (adminConsentApi.grant as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const resources = [{ path: 'skills/{current-user}/', access: [ResourceAccess.Read] }];
+
+    const result = await grantAdminConsent('public/my-app', resources);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(adminConsentApi.grant).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app', resources);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call withdrawAdminConsent action', async () => {
+    (adminConsentApi.withdraw as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await withdrawAdminConsent('public/my-app');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(adminConsentApi.withdraw).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app');
     expect(result).toBe(RESPONSE_MOCK);
   });
 

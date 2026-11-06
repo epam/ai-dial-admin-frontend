@@ -36,7 +36,7 @@ import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { EntityViewTab, getTabsForAsset, toolsTab } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getTabsForAsset, toolsTab, withResourceDependenciesTab } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 
@@ -74,7 +74,9 @@ const AppView: FC<Props> = ({
 
   const { visualizerConnector, featureFlags } = useAppContext();
 
-  const [tabs, setTabs] = useState<TabItem[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags));
+  const [tabs, setTabs] = useState<TabItem[]>(
+    withResourceDependenciesTab(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags), t),
+  );
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -105,10 +107,14 @@ const AppView: FC<Props> = ({
   useEffect(() => {
     const appRunner = getAppRunner(originalApp, schemes);
 
+    const baseTabs = withResourceDependenciesTab(
+      getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags),
+      t,
+    );
     if (originalApp.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
-      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags).toSpliced(1, 0, toolsTab(t)));
+      setTabs(baseTabs.toSpliced(1, 0, toolsTab(t)));
     } else {
-      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags));
+      setTabs(baseTabs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalApp.mcp?.endpoint]);
@@ -327,6 +333,7 @@ const AppView: FC<Props> = ({
             isSkipRefresh={isSkipRefresh}
             discardKey={discardKey}
             isChanged={isChanged}
+            etag={etag}
             frameRef={frameRef}
             frameCallbacks={frameCallbacks}
             onSave={onSaveChanges}
