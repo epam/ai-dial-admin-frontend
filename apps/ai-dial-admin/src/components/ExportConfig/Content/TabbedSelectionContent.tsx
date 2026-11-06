@@ -147,7 +147,7 @@ const TabbedSelectionContent: FC<Props> = ({
   const itemsCount = (isFull ? tabData[selectedTab] : customExportData?.[selectedTab])?.length || 0;
 
   return (
-    <div className="flex-1 min-w-0 bg-layer-3 rounded p-4 flex flex-col h-full">
+    <div className="flex-1 min-w-0 p-4 flex flex-col h-full">
       {selectedTab && (
         <Tabs
           tabs={tabs}

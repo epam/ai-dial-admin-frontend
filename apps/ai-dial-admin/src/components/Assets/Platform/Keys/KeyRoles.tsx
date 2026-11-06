@@ -1,6 +1,6 @@
 'use client';
 
-import { OutlinedButton, NoDataContent } from '@epam/ai-dial-ui-kit';
+import { NoDataContent, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -9,7 +9,7 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, KeysI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -76,15 +76,18 @@ const KeyRoles = ({ asset, roles, onChange }: Props) => {
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      {!isReadOnlyAdmin && (
-        <div>
-          <OutlinedButton
-            title={t(RolesI18nKey.AddRoles)}
+      <div className="flex flex-row items-center justify-between h-[42px]">
+        <h1>
+          {t(TabsI18nKey.Roles)}: {selectedRoles.length}
+        </h1>
+        {!isReadOnlyAdmin && (
+          <PrimaryButton
+            label={t(RolesI18nKey.AddRoles)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenModal}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {selectedRoles.length ? (
         <GridView rowData={selectedRoles} columnDefs={columnDefs} />
