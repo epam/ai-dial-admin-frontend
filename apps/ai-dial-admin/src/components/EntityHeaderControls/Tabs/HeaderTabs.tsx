@@ -27,7 +27,7 @@ const HeaderTabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onCha
     [activeTab, onChangeActiveTab],
   );
 
-  const showTabs = !isEditorEnabled;
+  const showTabs = !isEditorEnabled && tabs.length > 1;
 
   return (
     showTabs && (
@@ -38,6 +38,7 @@ const HeaderTabs: FC<Props> = ({ isEditorEnabled = false, tabs, activeTab, onCha
           onTabChange={onChange}
           ariaLabel={t(TabsI18nKey.ListLabel)}
           tabListClassName="overflow-x-auto"
+          tabClassName="enabled:hover:text-primary disabled:border-transparent"
         />
       </div>
     )

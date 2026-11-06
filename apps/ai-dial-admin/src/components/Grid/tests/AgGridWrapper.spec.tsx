@@ -74,6 +74,20 @@ describe('AgGridWrapper', () => {
     expect(mockState.lastProps?.colorScheme).toBe(GridColorScheme.Light);
   });
 
+  test('marks the rows static when clicking a row opens nothing', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+    expect(mockState.lastProps?.className).toBe('ag-grid-static-rows');
+  });
+
+  test('keeps the row hover when clicking a row opens it', () => {
+    render(
+      <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} additionalGridOptions={{ onRowClicked: vi.fn() }} />,
+    );
+
+    expect(mockState.lastProps?.className).toBeUndefined();
+  });
+
   test('forwards the grid-ready callback with the api once the kit grid exposes it', () => {
     const onGridReady = vi.fn();
     const api = makeFakeApi();
