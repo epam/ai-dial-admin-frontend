@@ -175,6 +175,12 @@ const AgGridWrapper = <T extends object>({
     : {};
 
   const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
+  const isRowInteractive =
+    !!getHref ||
+    !!additionalGridOptions?.onRowClicked ||
+    !!additionalGridOptions?.onRowDoubleClicked ||
+    !!additionalGridOptions?.onCellClicked ||
+    !!additionalGridOptions?.rowSelection;
   const kitRowHeightRef = useRef<number | undefined>(undefined);
   const { defaultColDef: additionalDefaultColDef, ...gridOptionOverrides } = additionalGridOptions ?? {};
   // A new object on every render is a defaultColDef change, and ag-Grid rebuilds the
@@ -215,6 +221,7 @@ const AgGridWrapper = <T extends object>({
       onGridApiChange={onGridApiChange}
       additionalGridOptions={gridOptions}
       colorScheme={colorScheme}
+      className={isRowInteractive ? undefined : 'ag-grid-static-rows'}
     />
   );
 };

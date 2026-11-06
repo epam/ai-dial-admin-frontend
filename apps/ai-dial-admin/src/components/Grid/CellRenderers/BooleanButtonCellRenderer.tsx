@@ -32,8 +32,10 @@ const BooleanButtonCellRenderer = ({
         onClick={handleClick}
         disabled={isReadonly}
         className={classNames(
-          'flex items-center gap-1 dial-tiny rounded p-1 h-[22px] text-primary bg-layer-3 border',
-          !isRequired ? 'border-primary hover:bg-layer-4' : 'border-accent-primary hover:bg-accent-primary-alpha',
+          'flex items-center gap-1 dial-tiny rounded p-1 h-[22px] text-primary bg-layer-3 border disabled:cursor-default',
+          !isRequired
+            ? 'border-primary enabled:hover:bg-layer-4'
+            : 'border-accent-primary enabled:hover:bg-accent-primary-alpha',
         )}
       >
         {isRequired ? trueLabel : falseLabel}

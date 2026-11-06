@@ -78,11 +78,10 @@ describe('ProjectView', () => {
     );
   });
 
-  test('shows only the Properties tab and no folder field', () => {
+  test('draws no tab bar for its single Properties tab', () => {
     renderView();
 
-    expect(screen.getAllByRole('tab')).toHaveLength(1);
-    expect(screen.queryByRole('tab', { name: /audit/i })).toBeNull();
+    expect(screen.queryByRole('tablist')).toBeNull();
   });
 
   test('lists only files under context/, without PROJECT.md or files elsewhere', () => {
