@@ -155,7 +155,9 @@ describe('ResourceDependencies', () => {
       await user.click(screen.getAllByRole('button', { name: ButtonsI18nKey.Approve }).at(-1) as HTMLElement);
 
       expect(await screen.findByText(ResourceDependenciesI18nKey.Approved)).toBeTruthy();
-      expect(grantAdminConsent).toHaveBeenCalledWith(APP_PATH);
+      expect(grantAdminConsent).toHaveBeenCalledWith(APP_PATH, [
+        { path: 'files/public/a/', access: [ResourceAccess.Read] },
+      ]);
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: ResourceDependenciesI18nKey.ApproveSuccess }),
       );

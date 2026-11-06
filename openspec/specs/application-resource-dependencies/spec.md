@@ -139,8 +139,13 @@ normal save error notification.
   `{type}/{current-user}/…`
 
 #### Scenario: Bare type root is rejected
-- **WHEN** a user enters path `files/`
-- **THEN** the modal shows an error that a folder or resource within the type is required
+- **WHEN** a user enters path `files/` or `files/public` (a bucket with nothing after it)
+- **THEN** the modal shows an error that a folder or resource within a bucket is required
+- **AND** `files/public/` is accepted
+
+#### Scenario: Empty segment is rejected
+- **WHEN** a user enters path `files/public//x`, or one ending in `//`
+- **THEN** the modal shows an error that the path must not contain empty segments
 
 #### Scenario: Placeholder in the wrong position is rejected
 - **WHEN** a user enters path `files/public/{current-user}/`
@@ -326,8 +331,8 @@ tab.
 
 ### Requirement: Core-direct consent client
 Consent reads and writes SHALL go to DIAL Core directly, not through the admin backend, using
-`GET`, `POST` and `DELETE` on `/v1/consent/{application}/admin-consent` with the application's path
-encoded as Core paths are elsewhere on this surface. The client SHALL expose Core's approved-resource
+`GET`, `POST` and `DELETE` on `/v1/admin-consent/applications/{application}` with the application's
+path encoded as Core paths are elsewhere on this surface. The client SHALL expose Core's approved-resource
 entries (`url`, `access`) to the UI as `path` and `access`, so no UI code depends on that field name.
 
 #### Scenario: Status read maps entries
@@ -336,4 +341,9 @@ entries (`url`, `access`) to the UI as `path` and `access`, so no UI code depend
 
 #### Scenario: Mutations target the consent endpoint
 - **WHEN** an admin approves or revokes
-- **THEN** a `POST` or `DELETE` is sent to the application's `/admin-consent` endpoint respectively
+- **THEN** a `POST` or `DELETE` is sent to the application's `/v1/admin-consent/applications/{application}` endpoint respectively
+
+#### Scenario: Approval carries the reviewed list
+- **WHEN** an admin approves
+- **THEN** the `POST` body is `{ "resources": [{ "url", "access" }] }`, one entry per saved dependency in declaration order
+- **AND** Core answers `409` and stores nothing if the application's list changed since it was read

@@ -55,6 +55,18 @@ describe('validatePath', () => {
     expect(issue?.params?.type).toBe('files');
   });
 
+  test('rejects a bucket with nothing after it, accepting it as a folder', () => {
+    expect(validatePath('files/public')?.key).toBe(ResourceDependenciesI18nKey.PathTypeRoot);
+    expect(validatePath('skills/{current-user}')?.key).toBe(ResourceDependenciesI18nKey.PathTypeRoot);
+    expect(validatePath('files/public/')).toBeNull();
+    expect(validatePath('skills/{current-user}/')).toBeNull();
+  });
+
+  test('rejects an empty segment anywhere, including a trailing one', () => {
+    expect(validatePath('files/public//x')?.key).toBe(ResourceDependenciesI18nKey.PathEmptySegment);
+    expect(validatePath('files/public/x//')?.key).toBe(ResourceDependenciesI18nKey.PathEmptySegment);
+  });
+
   test('rejects the placeholder outside the second segment', () => {
     expect(validatePath('files/public/{current-user}/')?.key).toBe(ResourceDependenciesI18nKey.PathPlaceholderPosition);
   });

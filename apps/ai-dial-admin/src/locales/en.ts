@@ -4404,7 +4404,7 @@ export default {
     PathRequired: 'Target path is required',
     PathRoot: 'Target must start with one of: {roots}',
     PathUsers: 'Declare personal targets as {form}, not as a concrete users/… path',
-    PathTypeRoot: 'Target must address a folder or resource within {type}/, not the type root',
+    PathTypeRoot: 'Target must address a folder or resource within a bucket ({type}/{bucket}/…), not the type root',
     PathPlaceholderPosition: 'The {placeholder} placeholder is valid only as the second segment',
     PathEmptySegment: 'Path must not contain empty segments',
     PathWildcard: 'Wildcards are not allowed',

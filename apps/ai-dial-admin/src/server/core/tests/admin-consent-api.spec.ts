@@ -17,13 +17,13 @@ describe('Server :: Core :: AdminConsentApi', () => {
     fetch.resetMocks();
   });
 
-  test('getStatus calls GET v1/consent/applications/{path}/admin-consent', async () => {
+  test('getStatus calls GET v1/admin-consent/applications/{path}', async () => {
     fetch.mockResponseOnce(JSON.stringify({ consented: false }), JSON_HEADERS);
 
     const result = await instance.getStatus(TOKEN_MOCK, 'public/my app__1.0');
 
     const [calledUrl, options] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('v1/consent/applications/public/my%20app__1.0/admin-consent');
+    expect(calledUrl).toContain('v1/admin-consent/applications/public/my%20app__1.0');
     expect(options?.method).toBe('GET');
     expect(result).toMatchObject({ success: true, response: { consented: false } });
   });
@@ -62,11 +62,16 @@ describe('Server :: Core :: AdminConsentApi', () => {
   test('grant calls POST on the admin-consent endpoint', async () => {
     fetch.mockResponseOnce('', { status: 200 });
 
-    const result = await instance.grant(TOKEN_MOCK, 'public/app');
+    const result = await instance.grant(TOKEN_MOCK, 'public/app', [
+      { path: 'skills/{current-user}/', access: [ResourceAccess.Read, ResourceAccess.Write] },
+    ]);
 
     const [calledUrl, options] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('v1/consent/applications/public/app/admin-consent');
+    expect(calledUrl).toContain('v1/admin-consent/applications/public/app');
     expect(options?.method).toBe('POST');
+    expect(JSON.parse(options?.body as string)).toEqual({
+      resources: [{ url: 'skills/{current-user}/', access: ['READ', 'WRITE'] }],
+    });
     expect(result.success).toBe(true);
   });
 
@@ -76,7 +81,7 @@ describe('Server :: Core :: AdminConsentApi', () => {
     const result = await instance.withdraw(TOKEN_MOCK, 'public/app');
 
     const [calledUrl, options] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('v1/consent/applications/public/app/admin-consent');
+    expect(calledUrl).toContain('v1/admin-consent/applications/public/app');
     expect(options?.method).toBe('DELETE');
     expect(result.success).toBe(true);
   });
@@ -84,7 +89,7 @@ describe('Server :: Core :: AdminConsentApi', () => {
   test('grant reports a Core rejection', async () => {
     fetch.mockResponseOnce('Application declares no resource dependencies', { status: 400 });
 
-    const result = await instance.grant(TOKEN_MOCK, 'public/app');
+    const result = await instance.grant(TOKEN_MOCK, 'public/app', []);
 
     expect(result.success).toBe(false);
     expect(result.status).toBe(400);

@@ -39,6 +39,7 @@ import { getAssetDestinationError } from '@/src/utils/validation/asset-version';
 import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DialApplication } from '@/src/models/dial/application';
+import { ApprovedResource } from '@/src/models/dial/resource-dependency';
 
 // Besides the computed statuses, drops the read-only `client_secret_hint` and an untouched (empty) secret.
 function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
@@ -265,9 +266,9 @@ export async function getAdminConsentStatus(appPath: string) {
   return adminConsentApi.getStatus(token, appPath);
 }
 
-export async function grantAdminConsent(appPath: string) {
+export async function grantAdminConsent(appPath: string, resources: ApprovedResource[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return adminConsentApi.grant(token, appPath);
+  return adminConsentApi.grant(token, appPath, resources);
 }
 
 export async function withdrawAdminConsent(appPath: string) {

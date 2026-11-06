@@ -44,7 +44,11 @@ const ResourceDependencies: FC<Props> = ({ selectedApplication, originalApplicat
   const [modal, setModal] = useState<ModalState | null>(null);
 
   const appPath = originalApplication.path ?? originalApplication._metadata?.path ?? '';
-  const { status, isLoading, hasFailed, isMutating, approve, revoke } = useAdminConsent(appPath, etag);
+  const { status, isLoading, hasFailed, isMutating, approve, revoke } = useAdminConsent(
+    appPath,
+    etag,
+    originalApplication.resource_dependencies,
+  );
 
   const dependencies = useMemo(() => selectedApplication.resource_dependencies ?? [], [selectedApplication]);
   const isDirty = useMemo(

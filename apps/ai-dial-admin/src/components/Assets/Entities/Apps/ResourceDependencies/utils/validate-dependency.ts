@@ -28,7 +28,10 @@ const getSegments = (path: string): string[] => {
   return segments.map(decodeSegment);
 };
 
-const getRootIssue = (segments: string[]): ValidationIssue | null => {
+// Core wants `{type}/{bucket}/…`: a bare `files` or `files/public` addresses no folder or resource.
+const MIN_RAW_SEGMENTS = 3;
+
+const getRootIssue = (segments: string[], rawSegmentCount: number): ValidationIssue | null => {
   const [root] = segments;
   if (root === 'users') {
     return { key: ResourceDependenciesI18nKey.PathUsers, params: { form: PERSONAL_TARGET_FORM } };
@@ -36,7 +39,7 @@ const getRootIssue = (segments: string[]): ValidationIssue | null => {
   if (!DECLARABLE_TYPE_ROOTS.includes(root)) {
     return { key: ResourceDependenciesI18nKey.PathRoot, params: { roots: DECLARABLE_TYPE_ROOTS.join(', ') } };
   }
-  if (segments.length < 2) {
+  if (rawSegmentCount < MIN_RAW_SEGMENTS) {
     return { key: ResourceDependenciesI18nKey.PathTypeRoot, params: { type: root } };
   }
   return null;
@@ -78,9 +81,12 @@ export const validatePath = (path: string): ValidationIssue | null => {
   if (!trimmed || segments.length === 0) {
     return { key: ResourceDependenciesI18nKey.PathRequired };
   }
-  const rootIssue = getRootIssue(segments);
+  const rootIssue = getRootIssue(segments, trimmed.split('/').length);
   if (rootIssue) {
     return rootIssue;
+  }
+  if (trimmed.includes('//')) {
+    return { key: ResourceDependenciesI18nKey.PathEmptySegment };
   }
   for (let index = 0; index < segments.length; index++) {
     const issue = getSegmentIssue(segments[index], index);

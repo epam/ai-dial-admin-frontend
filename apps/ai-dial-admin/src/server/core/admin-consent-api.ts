@@ -1,5 +1,5 @@
 import { Token } from '@/src/models/auth';
-import { AdminConsentStatus, ResourceAccess } from '@/src/models/dial/resource-dependency';
+import { AdminConsentStatus, ApprovedResource, ResourceAccess } from '@/src/models/dial/resource-dependency';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { encodeCorePath } from '@/src/server/publications/path';
 import { CoreApi } from './core-api';
@@ -8,8 +8,12 @@ interface CoreAdminConsentStatus extends Omit<AdminConsentStatus, 'grantedResour
   grantedResources?: { url: string; access?: ResourceAccess[] }[];
 }
 
-const getAdminConsentUrl = (appPath: string): string =>
-  `v1/consent/applications/${encodeCorePath(appPath)}/admin-consent`;
+const getAdminConsentUrl = (appPath: string): string => `v1/admin-consent/applications/${encodeCorePath(appPath)}`;
+
+// Core compares the reviewed list with the application's current one and answers 409 when they differ.
+const toGrantBody = (resources: ApprovedResource[]) => ({
+  resources: resources.map(({ path, access }) => ({ url: path, access })),
+});
 
 // Core names an approved target `url`; the declaration it mirrors calls the same value `path`.
 export const toAdminConsentStatus = (status: CoreAdminConsentStatus): AdminConsentStatus => {
@@ -28,8 +32,8 @@ export class AdminConsentApi extends CoreApi {
     return res.success && res.response ? { ...res, response: toAdminConsentStatus(res.response) } : res;
   }
 
-  grant(token: Token, appPath: string): Promise<ServerActionResponse> {
-    return this.sendActionRequest(getAdminConsentUrl(appPath), 'POST', token);
+  grant(token: Token, appPath: string, resources: ApprovedResource[]): Promise<ServerActionResponse> {
+    return this.postAction(getAdminConsentUrl(appPath), toGrantBody(resources), token);
   }
 
   withdraw(token: Token, appPath: string): Promise<ServerActionResponse> {

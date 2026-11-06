@@ -41,6 +41,7 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
 import { DialApplicationResource } from '@/src/models/dial/resource';
+import { ResourceAccess } from '@/src/models/dial/resource-dependency';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -632,10 +633,12 @@ describe('Assets application :: server actions', () => {
   test('Should call grantAdminConsent action', async () => {
     (adminConsentApi.grant as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await grantAdminConsent('public/my-app');
+    const resources = [{ path: 'skills/{current-user}/', access: [ResourceAccess.Read] }];
+
+    const result = await grantAdminConsent('public/my-app', resources);
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(adminConsentApi.grant).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app');
+    expect(adminConsentApi.grant).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app', resources);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

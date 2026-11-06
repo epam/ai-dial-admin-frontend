@@ -11,9 +11,10 @@ import { ResourceDependenciesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { AdminConsentStatus } from '@/src/models/dial/resource-dependency';
+import { AdminConsentStatus, ResourceDependency } from '@/src/models/dial/resource-dependency';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { toApprovedResources } from './utils/resources';
 
 /**
  * Reads Core's admin-consent status for the application and re-reads it whenever `etag` changes (a
@@ -21,7 +22,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
  * last action. Any failed read — 403 for a non-admin, 404 for a Core without the feature — is reported
  * as `hasFailed`, which the tab renders as its no-data state.
  */
-export const useAdminConsent = (appPath: string, etag: string) => {
+export const useAdminConsent = (appPath: string, etag: string, savedDependencies?: ResourceDependency[]) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
@@ -50,12 +51,12 @@ export const useAdminConsent = (appPath: string, etag: string) => {
 
   const mutate = useCallback(
     async (
-      action: (appPath: string) => Promise<ServerActionResponse>,
+      action: () => Promise<ServerActionResponse>,
       successTitle: ResourceDependenciesI18nKey,
       successDescription: ResourceDependenciesI18nKey,
     ) => {
       setIsMutating(true);
-      const res = await getReqRef.current(action, appPath);
+      const res = await getReqRef.current(action);
       showNotification(
         res.success
           ? getSuccessNotification(t(successTitle), t(successDescription))
@@ -64,27 +65,27 @@ export const useAdminConsent = (appPath: string, etag: string) => {
       await refresh();
       setIsMutating(false);
     },
-    [appPath, refresh, showNotification, t],
+    [refresh, showNotification, t],
   );
 
   const approve = useCallback(
     () =>
       mutate(
-        grantAdminConsent,
+        () => grantAdminConsent(appPath, toApprovedResources(savedDependencies)),
         ResourceDependenciesI18nKey.ApproveSuccess,
         ResourceDependenciesI18nKey.ApproveSuccessDescription,
       ),
-    [mutate],
+    [appPath, mutate, savedDependencies],
   );
 
   const revoke = useCallback(
     () =>
       mutate(
-        withdrawAdminConsent,
+        () => withdrawAdminConsent(appPath),
         ResourceDependenciesI18nKey.RevokeSuccess,
         ResourceDependenciesI18nKey.RevokeSuccessDescription,
       ),
-    [mutate],
+    [appPath, mutate],
   );
 
   return { status, isLoading, hasFailed, isMutating, approve, revoke };
