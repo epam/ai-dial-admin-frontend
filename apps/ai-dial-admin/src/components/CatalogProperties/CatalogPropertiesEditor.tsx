@@ -125,6 +125,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
           options={viewItems}
           value={view}
           onChange={(value) => setView(value as CatalogValuesView)}
+          className="w-auto"
         />
       </div>
       {undeclaredBanner}
