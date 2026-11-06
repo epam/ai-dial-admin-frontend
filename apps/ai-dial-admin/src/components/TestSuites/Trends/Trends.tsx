@@ -143,7 +143,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
         byStatistic={data.byStatistic}
         isLoading={isLoading}
       />
-      <TestCaseStability runOrder={data.runOrder} selectedTestSuite={selectedTestSuite} />
+      <TestCaseStability runOrder={data.runOrder} />
     </div>
   );
 };
