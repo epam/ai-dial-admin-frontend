@@ -1,17 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
 import { UnitAction, UnitNamespace, UserOrgUnit } from '@/src/models/user-access';
-import {
-  canDecidePublicationAt,
-  canReadNamespace,
-  canWriteAt,
-  hasActionAt,
-} from '@/src/utils/org-units/access';
+import { canDecidePublicationAt, canReadNamespace, canWriteAt, hasActionAt } from '@/src/utils/org-units/access';
 
 const unit = (folder: string, permissions: UserOrgUnit['permissions']): UserOrgUnit => ({
   id: folder,
   name: folder,
-  displayName: folder,
+displayName: folder,
   path: folder.replace(/\/$/, ''),
   folder,
   roles: [],

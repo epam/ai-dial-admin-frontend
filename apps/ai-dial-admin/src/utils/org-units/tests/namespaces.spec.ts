@@ -20,9 +20,12 @@ describe('getRouteNamespace', () => {
     expect(getRouteNamespace(route)).toBe(namespace);
   });
 
-  test.each([ApplicationRoute.PlatformModels, ApplicationRoute.Models, ApplicationRoute.Home])('has no namespace for %s', (route) => {
-    expect(getRouteNamespace(route)).toBeUndefined();
-  });
+  test.each([ApplicationRoute.PlatformModels, ApplicationRoute.Models, ApplicationRoute.Home])(
+    'has no namespace for %s',
+    (route) => {
+      expect(getRouteNamespace(route)).toBeUndefined();
+    },
+  );
 
   test('has no namespace for an unknown route string', () => {
     expect(getRouteNamespace('/nowhere')).toBeUndefined();

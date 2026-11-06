@@ -10,10 +10,7 @@ import { FeatureFlags } from '@/src/models/feature-flags';
 import { AccessMode, AdminAccess, UnitNamespace, UserAccess } from '@/src/models/user-access';
 import { UserInfo } from '@/src/models/user-info';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import {
-  canReadNamespace as canReadNamespaceIn,
-  canWriteAt as canWriteAtIn,
-} from '@/src/utils/org-units/access';
+import { canReadNamespace as canReadNamespaceIn, canWriteAt as canWriteAtIn } from '@/src/utils/org-units/access';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -95,8 +92,7 @@ export const AppContextProvider = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isEntityReadOnly, setEntityReadOnly] = useState(false);
-  // temporary show current access rules
-  console.info(userAccess);
+
   useEffect(() => {
     const stored = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY);
     if (stored === 'false') {
