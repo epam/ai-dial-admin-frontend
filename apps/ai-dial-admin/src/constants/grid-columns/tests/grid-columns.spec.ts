@@ -54,6 +54,8 @@ vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
   NO_BORDER_CLASS: 'NO_BORDER_CLASS',
   ACTIONS_COLUMN_CEL_ID: 'actionsColumn',
+  EXPANDER_COLUMN_CEL_ID: 'expanderColumn',
+  ACTIVITY_ID_COLUMN_ID: 'activityId',
 }));
 
 describe('Constants :: grid columns', () => {

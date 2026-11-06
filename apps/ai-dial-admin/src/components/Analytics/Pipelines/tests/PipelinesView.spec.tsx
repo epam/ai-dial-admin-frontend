@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
+import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { PIPELINES_NO_RUNTIME_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
@@ -38,23 +39,30 @@ interface MockColDef {
   hide?: boolean;
   sortable?: boolean;
   valueGetter?: (params: { data: PipelineListItem }) => unknown;
-  cellRendererParams?: { items?: MockActionItem[] };
+  cellRendererParams?: { items?: MockActionItem[]; getHref?: (row?: PipelineListItem) => string | undefined };
 }
+
+let lastPipelineColumns: MockColDef[] = [];
+let lastPipelineGetHref: ((row?: PipelineListItem) => string | undefined) | undefined;
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({
     rowData,
     columnDefs,
+    getHref,
     storageKey,
     showColumnsPanel,
     toggleColumnsPanel,
   }: {
     rowData?: PipelineListItem[];
     columnDefs?: MockColDef[];
+    getHref?: (row?: PipelineListItem) => string | undefined;
     storageKey?: string;
     showColumnsPanel?: boolean;
     toggleColumnsPanel?: () => void;
   }) => {
+    lastPipelineColumns = columnDefs ?? [];
+    lastPipelineGetHref = getHref;
     const items = columnDefs?.find((c) => c.field === ACTIONS_COLUMN_CEL_ID)?.cellRendererParams?.items ?? [];
     const versionColumn = columnDefs?.find((c) => c.colId === 'versionColumn');
     const triggerColumn = columnDefs?.find((c) => c.colId === 'trigger');
@@ -173,6 +181,14 @@ describe('Pipelines :: PipelinesView', () => {
 
     await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification).toHaveBeenCalledOnce();
+  });
+
+  test('links the pipeline name to its detail page', () => {
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    const nameColumn = lastPipelineColumns.find((c) => c.colId === 'name');
+    expect(nameColumn?.cellRendererParams?.getHref?.(rule())).toBe(pipelineDetailHref('turn-feedback-live'));
+    expect(lastPipelineGetHref?.(rule())).toBe(pipelineDetailHref('turn-feedback-live'));
   });
 
   test('renders the seeded rules and the specified columns', () => {

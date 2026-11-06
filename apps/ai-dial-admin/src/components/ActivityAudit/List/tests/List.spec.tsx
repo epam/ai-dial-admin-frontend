@@ -144,7 +144,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
-import { ACTIONS_COLUMN_CEL_ID, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTIONS_COLUMN_CEL_ID, EXPANDER_COLUMN_CEL_ID, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   ActionMenuOperationI18nKey,
   ButtonsI18nKey,
@@ -548,20 +548,18 @@ describe('ActivityAuditList :: Analytics view rows', () => {
     expect(rowActionIds()).toEqual([ActionMenuOperationI18nKey.Open_in_new_tab]);
   });
 
-  test('opens the global detail page in a new tab on a row body click', () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+  test('links the activity id, placed first, to the global detail page in a new tab', () => {
     render(<ActivityAuditList viewMode={ActivityAuditView.Analytics} />);
 
-    const setSelected = vi.fn();
-    lastListViewProps().additionalGridOptions?.onCellClicked?.({
-      data: activity(),
-      colDef: { field: 'activityId' },
-      node: { setSelected },
-    } as never);
+    const columns = lastColumnDefs();
+    const idColumn = columns.find((column) => column.field === 'activityId');
+    const firstDataColumn = columns.find((column) => column.field !== EXPANDER_COLUMN_CEL_ID);
+    const params = idColumn?.cellRendererParams as { getHref: (row: unknown) => string; isNewTab: boolean };
 
-    expect(setSelected).toHaveBeenCalled();
-    expect(openSpy).toHaveBeenCalledWith('/activity-audit/abc-123', '_blank');
-    openSpy.mockRestore();
+    expect(firstDataColumn?.field).toBe('activityId');
+    expect(params.isNewTab).toBe(true);
+    expect(params.getHref(activity())).toBe('/activity-audit/abc-123');
+    expect(lastListViewProps().additionalGridOptions?.onCellClicked).toBeUndefined();
   });
 
   test('opens the global detail page in a new tab from the row action', () => {
@@ -802,19 +800,22 @@ describe('ActivityAuditList :: Analytics entity audit tab', () => {
     expect(rowActionIds()).not.toContain(ActionMenuOperationI18nKey.Resource_rollback);
   });
 
-  test('opens the global detail page in a new tab on a row click rather than an entity-namespaced route', () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+  test('gives no link to a rollback or import activity', () => {
     renderAnalyticsTab();
 
-    lastListViewProps().additionalGridOptions?.onCellClicked?.({
-      data: activity(),
-      colDef: { field: 'activityId' },
-      node: { setSelected: vi.fn() },
-    } as never);
+    const { getHref } = lastListViewProps() as { getHref: (row: unknown) => string | undefined };
 
-    expect(openSpy).toHaveBeenCalledWith('/activity-audit/abc-123', '_blank');
-    expect(openSpy).not.toHaveBeenCalledWith(expect.stringContaining('/tables/'), expect.anything());
-    openSpy.mockRestore();
+    expect(getHref(activity({ activityType: ActivityAuditType.Rollback }))).toBeUndefined();
+    expect(getHref(activity({ activityType: ActivityAuditType.Import }))).toBeUndefined();
+  });
+
+  test('links the activity id to the global detail page rather than an entity-namespaced route', () => {
+    renderAnalyticsTab();
+
+    const href = (lastListViewProps() as { getHref: (row: unknown) => string | undefined }).getHref(activity());
+
+    expect(href).toBe('/activity-audit/abc-123');
+    expect(lastListViewProps().additionalGridOptions?.onCellClicked).toBeUndefined();
   });
 
   test('reports an empty grid without a notification when the table has no recorded history', async () => {
@@ -1036,19 +1037,13 @@ describe('ActivityAuditList :: Analytics pipeline audit tab', () => {
     expect(rowActionIds()).not.toContain(ActionMenuOperationI18nKey.Resource_rollback);
   });
 
-  test('opens the global audit detail page in a new tab on a row body click', () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+  test('links the activity id to the global audit detail page', () => {
     renderPipelineTab();
 
-    lastListViewProps().additionalGridOptions?.onCellClicked?.({
-      data: pipelineActivity(),
-      colDef: { field: 'activityId' },
-      node: { setSelected: vi.fn() },
-    } as never);
+    const href = (lastListViewProps() as { getHref: (row: unknown) => string | undefined }).getHref(pipelineActivity());
 
-    expect(openSpy).toHaveBeenCalledWith('/activity-audit/abc-123', '_blank');
-    expect(openSpy).not.toHaveBeenCalledWith(expect.stringContaining('/pipelines/'), expect.anything());
-    openSpy.mockRestore();
+    expect(href).toBe('/activity-audit/abc-123');
+    expect(lastListViewProps().additionalGridOptions?.onCellClicked).toBeUndefined();
   });
 
   test('reports an empty grid without a notification for a pipeline with no recorded history', async () => {

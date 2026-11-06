@@ -5,10 +5,11 @@ import { createPortal } from 'react-dom';
 
 import { GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
-import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
 import { cancelRun, getRunsQuery, removeRun } from '@/src/app/[lang]/runs/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
@@ -16,7 +17,7 @@ import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareR
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import { withCostWaitStart } from '@/src/components/Runs/utils/run-list-values';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getCancelOperation,
   getCompareOperation,
@@ -32,12 +33,14 @@ import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData } from '@/src/models/request';
 import { ApplicationRoute } from '@/src/types/routes';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { RUN_FILTER } from './constants';
 import { useCalculatingRunCostsPoll } from './useCalculatingRunCostsPoll';
 import { useRunStatusStream } from './useRunStatusStream';
+
+const getRunHref = (run?: unknown) => getUrnForEntity(ApplicationRoute.Runs, run);
 
 interface Props {
   runRefreshRef: RefObject<(() => void) | null>;
@@ -75,17 +78,6 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     components: RUN_STATUS_FILTER_COMPONENTS,
-    rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
-    rowClassRules: {
-      'ag-activity-row-clickable': () => true,
-    },
-    onCellClicked: (e: CellClickedEvent) => {
-      if (e.colDef.field === ACTIONS_COLUMN_CEL_ID) {
-        return;
-      }
-      e.node.setSelected(true, true);
-      onOpenInNewTab(ApplicationRoute.Runs, e.data);
-    },
   };
 
   /**
@@ -250,7 +242,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const columnDefs = useMemo(
     () => [
-      ...SUITE_RUNS_COLUMN,
+      ...withNameLink(SUITE_RUNS_COLUMN, getRunHref, 'testRunName'),
       ACTION_COLUMN(
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),
@@ -286,6 +278,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
             onGridReady={onGridReady}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}
+            getHref={getRunHref}
             storageKey={`${ApplicationRoute.TestSuites}/runs`}
           />
         </div>
