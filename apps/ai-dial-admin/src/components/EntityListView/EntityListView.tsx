@@ -102,7 +102,7 @@ const BaseEntityList = <T extends object>({
     [baseColumns, getEntityHref],
   );
 
-  const getColumns = () => {
+  const columns = useMemo(() => {
     const remove = isReadOnlyAdmin ? undefined : onOpenDeleteModal;
     const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
     const move = isReadOnlyAdmin ? undefined : onOpenMoveModal;
@@ -112,9 +112,7 @@ const BaseEntityList = <T extends object>({
       return ENTITIES_COLUMNS(linkedColumns, remove, void 0, openInNewTab, move);
     }
     return ENTITIES_COLUMNS(linkedColumns, remove, duplicate, openInNewTab);
-  };
-
-  const columns = getColumns();
+  }, [isReadOnlyAdmin, linkedColumns, onOpenDeleteModal, onOpenDuplicateModal, onOpenMoveModal, openInNewTab, route]);
 
   return (
     <>

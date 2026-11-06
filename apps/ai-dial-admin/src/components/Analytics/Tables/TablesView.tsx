@@ -213,8 +213,8 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         cellRenderer: ({ data }: ICellRendererParams<AnalyticsTable>) =>
           data && (
             <span className="flex min-w-0 items-center gap-2">
-              <EntityLinkCell href={tableDetailHref(data.name)} className="truncate">
-                {data.name}
+              <EntityLinkCell href={tableDetailHref(data.name)}>
+                <EllipsisTooltip className="dial-small-text" text={data.name} />
               </EntityLinkCell>
               {data.permissions?.rows_restricted && <RowsRestrictedBadge />}
             </span>
