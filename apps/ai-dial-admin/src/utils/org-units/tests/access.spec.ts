@@ -6,7 +6,7 @@ import { canDecidePublicationAt, canReadNamespace, canWriteAt, hasActionAt } fro
 const unit = (folder: string, permissions: UserOrgUnit['permissions']): UserOrgUnit => ({
   id: folder,
   name: folder,
-displayName: folder,
+  displayName: folder,
   path: folder.replace(/\/$/, ''),
   folder,
   roles: [],
