@@ -10,26 +10,17 @@ import { HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE } from '@/src/components/Common/Hea
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { useTestCaseStabilityData } from '@/src/components/TestSuites/Trends/Stability/use-test-case-stability-data';
 import { buildStabilityColumns } from '@/src/components/TestSuites/Trends/Stability/utils/build-stability-columns';
-import { getStabilityMethodLabel } from '@/src/components/TestSuites/Trends/Stability/utils/stability-method-label';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   runOrder: TrendsRunPoint[];
-  selectedTestSuite: TestSuite;
 }
 
-const TestCaseStability: FC<Props> = ({ runOrder, selectedTestSuite }) => {
+const TestCaseStability: FC<Props> = ({ runOrder }) => {
   const t = useI18n();
   const { matrix, isLoading, hasError } = useTestCaseStabilityData(runOrder);
-
-  const latestMetricCount = runOrder[runOrder.length - 1]?.metricNames?.length ?? 0;
-  const methodLabel = useMemo(
-    () => getStabilityMethodLabel(selectedTestSuite, latestMetricCount, t),
-    [selectedTestSuite, latestMetricCount, t],
-  );
 
   const labels = useMemo(
     () => ({
@@ -66,12 +57,6 @@ const TestCaseStability: FC<Props> = ({ runOrder, selectedTestSuite }) => {
       title={
         <span className="inline-flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span>{t(TestSuitesI18nKey.TestCaseStability)}</span>
-          {methodLabel && (
-            <span className="dial-body-text inline-flex items-center gap-2 text-secondary">
-              <span className="size-1.5 shrink-0 rounded-full bg-secondary" aria-hidden />
-              {methodLabel}
-            </span>
-          )}
         </span>
       }
     >

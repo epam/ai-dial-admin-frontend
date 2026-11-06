@@ -10,10 +10,15 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
   executeStructuredQuery: vi.fn(),
   getRunsTotalCosts: vi.fn().mockResolvedValue([{ runId: 'run-1', testCaseCost: null, metricEvalCost: null }]),
   getRunsQuery: vi.fn(),
+  getRun: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
   default: () => <div data-testid="heat-map-grid" />,
+}));
+
+vi.mock('@/src/components/Runs/Summary/Cards/OverallScoreInfo', () => ({
+  default: ({ scoreMethod }: { scoreMethod: { type: string } }) => <span>{`method:${scoreMethod.type}`}</span>,
 }));
 
 vi.mock('echarts-for-react', () => ({
@@ -68,7 +73,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   InteractiveTooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-import { executeStructuredQuery, getRunsQuery } from '@/src/app/[lang]/runs/actions';
+import { executeStructuredQuery, getRun, getRunsQuery } from '@/src/app/[lang]/runs/actions';
 
 describe('Trends', () => {
   const suite = { id: 'suite-1', name: 'Suite', valid: true } as TestSuite;
@@ -238,5 +243,60 @@ describe('Trends', () => {
     expect(await screen.findByText('0.5')).toBeInTheDocument();
     // Pass rate = above / total = 8/10.
     expect(await screen.findByText('80%')).toBeInTheDocument();
+  });
+
+  describe('Trends — overall score method of the latest run', () => {
+    const renderWithLatestRun = (fullRun: unknown) => {
+      (executeStructuredQuery as ReturnType<typeof vi.fn>).mockImplementation(async (query: { entity?: string }) => ({
+        rows:
+          query?.entity === 'metric_score_results'
+            ? [
+                {
+                  test_suite_run_id: 'run-1',
+                  metric_name: 'overall',
+                  metric_score_name: 'overall',
+                  value: 0.8,
+                  computed_at_ms: 1000,
+                },
+              ]
+            : [],
+      }));
+      // The list projection has a snapshot (threshold) but never an `overallScore`.
+      (getRunsQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
+        content: [
+          {
+            id: 'run-1',
+            testRunName: 'Run#1',
+            status: 'COMPLETED',
+            suiteSnapshot: { overallScoreThreshold: 0.5 },
+            startedAt: 0,
+            completedAt: 100,
+          },
+        ],
+      });
+      (getRun as ReturnType<typeof vi.fn>).mockResolvedValue(fullRun);
+
+      render(<Trends selectedTestSuite={suite} />);
+    };
+
+    test('reads the method from the latest run snapshot instead of defaulting to a mean', async () => {
+      renderWithLatestRun({
+        id: 'run-1',
+        suiteSnapshot: {
+          overallScore: { type: 'weighted_mean', weights: [{ metricName: 'm', outputField: 'f', weight: 1 }] },
+        },
+      });
+
+      expect(await screen.findByText('method:weighted_mean')).toBeTruthy();
+      expect(screen.queryByText('method:mean')).toBeNull();
+      expect(getRun).toHaveBeenCalledWith('run-1');
+    });
+
+    test('hides the method info when the full run cannot be read', async () => {
+      renderWithLatestRun(null);
+
+      expect(await screen.findByText('0.800')).toBeTruthy();
+      expect(screen.queryByText(/^method:/)).toBeNull();
+    });
   });
 });

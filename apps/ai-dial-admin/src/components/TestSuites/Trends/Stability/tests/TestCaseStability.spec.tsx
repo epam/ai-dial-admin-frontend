@@ -64,7 +64,7 @@ describe('TestCaseStability', () => {
       ],
     });
 
-    render(<TestCaseStability runOrder={runOrder} selectedTestSuite={suite} />);
+    render(<TestCaseStability runOrder={runOrder} />);
 
     expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
 
@@ -74,7 +74,7 @@ describe('TestCaseStability', () => {
   test('shows no-data when summaries are empty', async () => {
     (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({ rows: [] });
 
-    render(<TestCaseStability runOrder={runOrder} selectedTestSuite={suite} />);
+    render(<TestCaseStability runOrder={runOrder} />);
 
     expect(await screen.findByText(BasicI18nKey.NoData)).toBeInTheDocument();
   });
@@ -82,32 +82,10 @@ describe('TestCaseStability', () => {
   test('shows load-failure message when the query rejects', async () => {
     (executeStructuredQuery as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('network'));
 
-    render(<TestCaseStability runOrder={runOrder} selectedTestSuite={suite} />);
+    render(<TestCaseStability runOrder={runOrder} />);
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(TestSuitesI18nKey.TrendsStabilityLoadFailed);
     expect(screen.queryByText(BasicI18nKey.NoData)).not.toBeInTheDocument();
-  });
-
-  test('shows test-case method label when suite overall is ROC AUC', async () => {
-    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({ rows: [] });
-
-    render(
-      <TestCaseStability
-        runOrder={runOrder}
-        selectedTestSuite={
-          {
-            ...suite,
-            overallScore: {
-              type: OverallScoreType.Function,
-              expression: { entity: 'eval_summaries', mode: QueryMode.Aggregate },
-            },
-            testCaseOverallScore: { type: OverallScoreType.Mean },
-          } as TestSuite
-        }
-      />,
-    );
-
-    expect(await screen.findByText(TestSuitesI18nKey.TrendsMeanOfNMetrics)).toBeInTheDocument();
   });
 });
