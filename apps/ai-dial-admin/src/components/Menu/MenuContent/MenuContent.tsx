@@ -45,7 +45,12 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
       <MenuIconGradient />
       <nav
         aria-label={t(MenuI18nKey.MainNavigation)}
-        className={classNames('p-2 flex-1 min-h-0', isSidebarOpen ? 'overflow-auto' : 'overflow-hidden')}
+        className={classNames(
+          'p-2 flex-1 min-h-0',
+          isSidebarOpen
+            ? 'overflow-auto'
+            : 'overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        )}
       >
         <ul>
           {actualConfig.map((config, i) => (
