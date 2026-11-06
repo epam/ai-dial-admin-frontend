@@ -15,4 +15,5 @@ export interface DisplayNameCellRendererParams extends ICellRendererParams {
 
 export interface LinkCellRendererParams<TData = unknown, TValue = unknown> extends ICellRendererParams<TData, TValue> {
   getHref?: EntityHrefGetter<TData>;
+  isNewTab?: boolean;
 }

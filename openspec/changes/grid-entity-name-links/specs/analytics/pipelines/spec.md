@@ -191,3 +191,130 @@ refresh client-side, preserving the filters currently applied.
 - **WHEN** the user activates a row's delete action and confirms in the red confirmation dialog
 - **THEN** the pipeline is deleted, a success notification is shown, and the listing is re-read
 - **AND** a failure surfaces an error notification without removing the row
+
+### Requirement: Pipeline Audit tab lists the pipeline's own activities
+
+The global Activity Audit page's own `Analytics` view — the third option in its `View` selector, its
+fetcher, its rollback absence, and how one of its rows resolves and renders on the audit detail page — is
+specified by the `activity-audit-analytics-view` capability. This requirement covers only the tab on the
+pipeline detail view.
+
+The **Audit** tab SHALL render the shared entity audit surface with the Activities list as its only sub-tab
+— no Dashboard, Traces, or Conversations sub-tab, which report DIAL request telemetry keyed by a deployment
+name and have no meaning for a pipeline — and with no view-type selector.
+
+The list SHALL be sourced from the analytics backend (`POST /v1/activities` at `DIAL_ANALYTICS_API_URL`) and
+SHALL be narrowed to the pipeline being viewed by an **exact** pair: a `resourceType` filter with the `eq`
+operator and the value `Pipeline`, and a `resourceId` filter with the `eq` operator and the pipeline's name.
+A `Pipeline` resource identifier is the pipeline's name and is never compound — the analytics backend
+records no child resource type under a pipeline, unlike a table and its columns — so the tab SHALL NOT
+widen the query to a substring match and SHALL NOT narrow the answer client-side. Every activity the feed
+answers with belongs to this pipeline and SHALL be displayed.
+
+Because the list carries exactly one resource type and one resource identifier, the tab SHALL present the
+single-entity column set the `Config` and `Deployments` entity Audit tabs already present: `Resource type`
+and `Resource identifier` SHALL NOT be rendered — two columns whose value is the same on every row of this
+list — and neither SHALL a row-expander column nor the `Version` column. `Activity type`, `Time`,
+`Initiated`, `Activity ID` and `Parent ID` SHALL be rendered, with `Time` keeping its default descending
+sort, and rows SHALL be listed flat, newest first.
+
+The activities the tab lists are the ones the analytics backend records against the pipeline: its own
+`Create`, `Update` and `Delete`; the `Update` produced when a bulk generation bump repoints its read source,
+which carries the source table's `Table` `Update` activity as its `parentActivityId`; and the `Delete`
+recorded when the pipeline's target table is deleted, which carries no parent at all. A parent identifier
+SHALL be shown in the `Parent ID` cell as the backend supplied it and SHALL NOT be resolved or expanded
+here.
+
+The suppression the `Analytics` view applies to a deleted table's children
+(`activity-audit-analytics-view`, *A child activity of a deleted table is not listed*) SHALL NOT remove any
+row from this tab, and SHALL NOT be widened to make it do so. A pipeline activity's only parent is a `Table`
+`Update`, never a `Table` `Delete`; the `Delete` recorded by its target table's deletion carries no parent,
+so it is never a candidate; and the rule leaves a row listed when its parent cannot be resolved.
+
+The tab SHALL offer the same time-period filter the shared entity audit surface already renders for other
+entities, initialized to the default period, and changing it SHALL re-request the list for the new range.
+The row action menu SHALL offer `Open in a new tab` and SHALL NOT offer `Rollback` — the analytics backend
+exposes no endpoint that writes an audit record, revision, or snapshot. A failed request SHALL leave the
+grid in its existing error/empty state and SHALL NOT raise a toast notification; this surface is read-only
+and performs no action a success or error notification would describe.
+
+#### Scenario: Request is narrowed to the pipeline by an exact resource pair
+
+- **WHEN** the Audit tab is opened on the pipeline named `daily_rollup` and the grid requests its first
+  row block
+- **THEN** the analytics activity feed is requested with a `resourceType` filter
+  `{ operator: "eq", value: "Pipeline" }` and a `resourceId` filter
+  `{ operator: "eq", value: "daily_rollup" }`
+- **AND** no `co` (substring) filter and no `in` filter over resource types is sent
+- **AND** the request is not sent to the admin backend or the deployment-manager backend
+
+#### Scenario: Every activity the feed answers with is listed
+
+- **GIVEN** the Audit tab is open on the pipeline named `daily_rollup`
+- **AND** the feed answers with several `Pipeline` activities
+- **WHEN** the grid renders the block
+- **THEN** every one of them is displayed
+- **AND** no row is dropped by a client-side resource-identifier check
+
+#### Scenario: A newly registered pipeline lists its Create activity
+
+- **GIVEN** a pipeline registered through `POST /v1/pipelines` and not edited since
+- **WHEN** the user opens its Audit tab
+- **THEN** a row whose activity type is `Create` is displayed for it
+
+#### Scenario: The tab presents no resource-type or resource-identifier column
+
+- **WHEN** the user selects the `Audit` tab on a pipeline
+- **THEN** the grid renders neither a `Resource type` nor a `Resource identifier` column
+- **AND** it renders neither a row-expander column nor a `Version` column
+- **AND** it renders the `Activity type`, `Time`, `Initiated`, `Activity ID` and `Parent ID` columns
+
+#### Scenario: A bulk-bumped update states the parent activity the backend supplied
+
+- **GIVEN** the Audit tab is open on a pipeline whose read source was repointed by a bulk generation bump
+- **AND** the feed answers that `Update` activity with the source table's activity identifier as its
+  `parentActivityId`
+- **WHEN** the grid renders the block
+- **THEN** that row is displayed at the top level
+- **AND** its `Parent ID` cell shows the identifier the backend supplied
+
+#### Scenario: A pipeline delete recorded by its target table's deletion is listed
+
+- **GIVEN** the feed answers with a `Pipeline` `Delete` activity carrying no `parentActivityId`
+- **WHEN** the grid renders the block
+- **THEN** that row is displayed
+- **AND** the deleted-table child suppression drops no row of this tab
+
+#### Scenario: Pipeline Audit tab renders only the Activities sub-tab
+
+- **WHEN** the user selects the `Audit` tab on a pipeline
+- **THEN** the sub-tab rail lists `Activities` and nothing else
+- **AND** no `Config / Deployments / Analytics` view-type dropdown is rendered
+
+#### Scenario: No rollback action is offered on a pipeline activity
+
+- **WHEN** the user opens the row action menu on any row in the pipeline Audit tab
+- **THEN** the menu offers `Open in a new tab`
+- **AND** the menu does not offer `Rollback`
+
+#### Scenario: Pipeline activity row click opens the global audit detail page
+
+- **GIVEN** the pipeline Audit tab lists an activity whose `activityId` is `abc-123`
+- **WHEN** the user clicks that row's Activity ID link
+- **THEN** the browser opens `/activity-audit/abc-123` in a new tab, as the shared audit list already does
+  for every other view
+- **AND** no `/pipelines/{name}/{activityId}` URL is requested
+
+#### Scenario: Pipeline with no recorded history
+
+- **GIVEN** a pipeline for which the analytics activity feed returns zero rows
+- **WHEN** the user opens the Audit tab
+- **THEN** the grid shows its existing empty state, with no error and no notification
+- **AND** the tab remains usable and the user can navigate away normally
+
+#### Scenario: Changing the time period re-requests the pipeline's list
+
+- **GIVEN** the pipeline Audit tab is open
+- **WHEN** the user changes the time-period filter
+- **THEN** the next request to the analytics activity feed carries the updated `epochTimestampMs` `ge` and
+  `le` filters

@@ -15,14 +15,15 @@ See proposal.md — Why. Every entity list opens its details page from a click i
   and marks rows static (no hover) when a grid has no `getHref`, row/cell click handler or selection.
 - No grid cell renders an anchor today; `DisplayNameCellRenderer` renders plain text with an icon.
 
-Activity Audit grids are out of scope and keep their wiring.
+Activity Audit (`ActivityAudit/List/List.tsx`, shared by `/activity-audit` and every entity Audit tab) navigated
+from `onCellClicked`, always into a new tab, guarded by `isRowNavigable`, Rollback/Import rows and parent rows.
 
 ## Goals / Non-Goals
 
 **Goals:** one way to render a name link in any grid cell; remove row/cell-click navigation from every
 in-scope list; keep folder navigation, row hover and the row context menu.
 
-**Non-Goals:** changing `@epam/ai-dial-react-file-manager`; changing row action menus; Activity Audit.
+**Non-Goals:** changing `@epam/ai-dial-react-file-manager`; changing row action menus.
 
 ## Decisions
 
@@ -78,6 +79,19 @@ A focusable link inside an AG Grid cell is reached by moving focus into the cell
 activates it natively. `AgGridWrapper`'s `suppressKeyboardEvent` suppresses only arrows and select-all, so
 Enter reaches the link. The name cell must not set `suppressKeyboardEvent` for Enter.
 
+### D6. Activity Audit: the Activity ID is the link, opening in a new tab
+
+The audit list has no name column, so the Activity ID column becomes the link and moves to the first place
+after the row expander (`moveColumnFirst`). `EntityLinkCell` gains an `isNewTab` mode (`target="_blank"`,
+`rel="noopener noreferrer"`) and the audit column uses it: the row click always opened a new tab, and the
+`audit-row-open-in-new-tab` capability removed the return-to-Audit-tab mechanism because the user never
+leaves the list, so a same-tab link would drop the entity back on its Properties tab. One `getActivityHref`
+applies the old click guards (non-navigable resource type, Rollback/Import, parent with children → no link)
+and feeds both the link and the grid's `getHref`; `onCellClicked` and the clickable-row class are removed.
+
+*Alternative:* a same-tab link plus restoring the Audit tab on return — rejected: it brings back a removed
+mechanism for no gain over the behaviour users already have.
+
 ## Risks / Trade-offs
 
 - [Users used to clicking anywhere on the row find nothing happens] → the name is visibly a link (accent
@@ -87,6 +101,9 @@ Enter reaches the link. The name cell must not set `suppressKeyboardEvent` for E
 - [Long names: a link that truncates] → the link wraps the existing `EllipsisTooltip` text, so the
   tooltip still exposes the full name.
 - [Prefetching on large grids] → `prefetch={false}`.
+- [A saved column order on `/activity-audit` would keep Activity ID where it was] → the expander and Activity
+  ID join the grid's leading columns (`LEADING_COLUMN_IDS`, like the row-selection column), so every restored
+  layout puts them first; the trade-off is that Activity ID can no longer be dragged elsewhere.
 
 ## Migration Plan
 

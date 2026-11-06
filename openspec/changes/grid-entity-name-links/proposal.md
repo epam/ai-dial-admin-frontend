@@ -17,13 +17,14 @@ modifier tracking or a menu item instead of the browser's own link handling.
   tab on a plain click and follow the same link behavior as every other list.
 - The Assets lists (Prompts, Skills, Projects, Conversations, Entities and Platform asset lists) open an
   item through the link in its name; a folder row still opens the folder in place.
+- Activity Audit (the `/activity-audit` page and every entity Audit tab) has no name column: its Activity ID
+  column moves to the first place after the row expander and becomes the link. It keeps opening the activity
+  in a new tab, as the row click did, so the list and the entity's Audit tab stay where they are.
 - **BREAKING** (behavior): a row click outside the name no longer opens the details page. Row hover stays.
 - The Pipelines listing renders the pipeline name as a link, reversing its earlier text-only rule.
 
 ## Non-goals
 
-- Activity Audit grids (the `/activity-audit` page and the entity Audit tabs): they have no name column
-  and keep their current row-click behavior; a separate change covers them.
 - Links to related entities in other columns (e.g. a run's target): only the row's own entity name links.
 - Grids whose row click does something other than navigation (selection, expanding a row, opening a
   drawer or modal in place) and DATA / EDITABLE / HEAT MAP tables.
@@ -49,10 +50,14 @@ modifier tracking or a menu item instead of the browser's own link handling.
 - `config-file-entity-views`: the new-tab URL matches the name link, not a row click.
 - `eval-runs-list`: a run opens through its name link; the same-tab / new-tab split follows the link.
 - `dataset-test-suites`: a bound test suite opens through its name link, same tab by default.
-- `analytics/tables`: a table opens through its name link.
+- `analytics/tables`: a table opens through its name link; a table Audit tab row opens through its Activity ID link.
 - `analytics/saved-queries`: a saved query opens through its name link.
 - `analytics/sessions-listing`: a session opens through its title link (its id when untitled).
-- `analytics/pipelines`: the pipeline name renders as a link and is the only navigating cell.
+- `analytics/pipelines`: the pipeline name renders as a link and is the only navigating cell; a pipeline
+  Audit tab row opens through its Activity ID link.
+- `audit-row-open-in-new-tab`: the Activity ID link, first after the expander, opens the detail in a new tab.
+- `activity-audit-analytics-view`, `activity-audit-deployments-view`, `activity-audit-deployments-tab`:
+  their row-body click becomes the Activity ID link.
 
 ## Impact
 

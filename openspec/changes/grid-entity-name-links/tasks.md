@@ -38,6 +38,13 @@
 - [x] 6.1 Delete whatever of `EntityListView/utils/on-cell-clicked.ts` (`onCellClicked`, `navigateEntityUrl`, `shouldOpenInNewTab`) no longer has a caller outside Activity Audit, with its tests
 - [x] 6.2 Update any doc under `docs/` that describes row-click navigation
 
+## 9. Activity Audit
+
+- [x] 9.1 `EntityLinkCell` / `LinkCellRenderer`: add an `isNewTab` mode (`target="_blank"`, `rel="noopener noreferrer"`); `withNameLink` forwards extra link params; add `moveColumnFirst`
+- [x] 9.2 `ActivityAudit/List/List.tsx`: Activity ID as a new-tab link placed first after the expander, one `getActivityHref` applying the old click guards, passed to the column and the grid; remove `onCellClicked` and the clickable-row class
+- [x] 9.4 Keep the expander and Activity ID first in restored layouts via `LEADING_COLUMN_IDS` (`mergeColumnOrder` and `applyColumnStateOrderToColDefs`), with tests
+- [x] 9.3 Update `ActivityAudit/List/tests/List.spec.tsx`: link params, first position, no `onCellClicked`, no link for Rollback/Import rows
+
 ## 7. Verification
 
 - [x] 7.1 Run the `spec-browser-verify` skill for this change against the local app (auth disabled): name link opens details in the same tab, a row click outside the name does not navigate, Cmd/Ctrl-click opens a new tab, a folder row opens the folder; resolve every `fail` verdict

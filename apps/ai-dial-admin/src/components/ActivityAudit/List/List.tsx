@@ -25,7 +25,8 @@ import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import ListEntities from '@/src/components/ListView/List';
-import { ACTIONS_COLUMN_CEL_ID, EXPANDER_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTIVITY_ID_COLUMN_ID, EXPANDER_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { moveColumnFirst, withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { ButtonsI18nKey, CompareI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -62,7 +63,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getAuditRequestFailure } from '@/src/utils/audit/audit-request-error';
 import { applyAnalyticsIdentifierFilters } from '@/src/utils/audit/analytics-identifier-filters';
-import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getEntityAuditFilterId, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { getTimeFilterOptions } from '@/src/utils/time-filter/since-creation-option';
@@ -174,6 +175,29 @@ const ActivityAuditList: FC<Props> = ({
       if (href) {
         window.open(href, '_blank');
       }
+    },
+    [entity, entityType, viewConfig],
+  );
+
+  const getActivityHref = useCallback(
+    (data: unknown): string | undefined => {
+      const activity = data as (DialActivity & { children?: DialActivity[] }) | undefined;
+      if (!activity?.activityId || !viewConfig.isRowNavigable(activity.resourceType) || activity.children?.length) {
+        return undefined;
+      }
+      if (activity.activityType === ActivityAuditType.Rollback || activity.activityType === ActivityAuditType.Import) {
+        return undefined;
+      }
+      if (!entity) {
+        return getUrnForEntity(ApplicationRoute.ActivityAudit, activity);
+      }
+      return (
+        viewConfig.getEntityActivityHref({
+          entity,
+          entityType: entityType as ActivityAuditResourceType,
+          activityId: activity.activityId,
+        }) || undefined
+      );
     },
     [entity, entityType, viewConfig],
   );
@@ -478,36 +502,11 @@ const ActivityAuditList: FC<Props> = ({
     ...infiniteGridOptions,
     components: AUDIT_FILTER_COMPONENTS,
     rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
-    rowClassRules: {
-      'ag-activity-row-clickable': (params) => {
-        const data = params.data as DialActivity & { children?: DialActivity[] };
-        if (!viewConfig.isRowNavigable(data?.resourceType)) return false;
-        return !data?.children?.length;
-      },
-    },
-    onCellClicked: (e) => {
-      if (!viewConfig.isRowNavigable(e.data?.resourceType)) {
-        return;
-      }
-      if (e.data?.activityType === ActivityAuditType.Rollback || e.data?.activityType === ActivityAuditType.Import) {
-        return;
-      }
-
-      e.node.setSelected(true, true);
-
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID && e.colDef.field !== EXPANDER_COLUMN_CEL_ID) {
-        if (entity) {
-          openInNewTabForEntity(e.data);
-        } else {
-          openInNewTab(e.data);
-        }
-      }
-    },
   };
 
   const columnDefs = useMemo(() => {
     const canRollback = viewConfig.hasRollback && !isReadOnlyAdmin;
-    return viewConfig.getColumns({
+    const columns = viewConfig.getColumns({
       t,
       open: entity ? openInNewTabForEntity : openInNewTab,
       onRollback: canRollback ? onOpenConfirmationModal : void 0,
@@ -516,7 +515,13 @@ const ActivityAuditList: FC<Props> = ({
       isSingleEntity: !!entity && !hasChildResourceActivities(entityType),
       isGlobalList: !entity,
     });
+    return moveColumnFirst(
+      withNameLink(columns, getActivityHref, ACTIVITY_ID_COLUMN_ID, { isNewTab: true }),
+      ACTIVITY_ID_COLUMN_ID,
+      [EXPANDER_COLUMN_CEL_ID],
+    );
   }, [
+    getActivityHref,
     entity,
     entityType,
     viewConfig,
@@ -707,6 +712,7 @@ const ActivityAuditList: FC<Props> = ({
         listLabel={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
         emptyDataProps={{ title: t(emptyDataTitleMap[ApplicationRoute.ActivityAudit]) }}
         onGridReady={onGridReady}
+        getHref={getActivityHref}
         storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${effectiveViewType.toLowerCase()}` : void 0}
         toolbar={entity ? embeddedToolbar : pageToolbar}
       >
