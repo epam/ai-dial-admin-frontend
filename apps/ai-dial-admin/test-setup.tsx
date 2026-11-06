@@ -232,7 +232,7 @@ vi.mock('next/image', () => ({
 // ECharts is heavy and not meaningful in jsdom — render a lightweight stub.
 vi.mock('echarts-for-react', () => ({
   __esModule: true,
-  default: () => <div data-mock="echarts" />,
+  default: vi.fn(() => <div data-mock="echarts" />),
 }));
 
 // Editable Monaco views expose a labeled textarea; read-only viewers keep the readable text stub.

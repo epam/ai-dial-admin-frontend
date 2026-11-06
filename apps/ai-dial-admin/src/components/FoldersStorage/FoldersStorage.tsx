@@ -41,7 +41,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
         <CollapsibleSidebar
           width={480}
           title={t(MenuI18nKey.FoldersStorage)}
-          className="bg-layer-2 border-transparent mr-0"
+          className="bg-layer-2 border-transparent mr-0 shadow-sm"
           additionalButtons={
             <Tooltip
               triggerClassName="flex items-center"

@@ -20,6 +20,8 @@ After setting the `THEMES_CONFIG_URL` environment variable, you can [add and cus
 
 Every theme in a custom config must define both color token sets: the legacy one (`bg-layer-0`…`bg-layer-4`, `controls-*`) and the ui-kit 2.0 one (`bg-layer-base`, `bg-layer-raised`, `bg-layer-sunken`, `bg-control-*`, `text-control-*`, `stroke-*`, `bg-gradient-*`, `shadow-*`). A token the config leaves out falls back to a value compiled into the app or into ui-kit, and ui-kit's fallbacks are light, so a dark theme missing the 2.0 set shows light controls.
 
+The shadows follow the chat's scale and read the same variables: `shadow-xs` paints one halo from `shadow-xs-1`; `shadow-sm` and `shadow-md` paint a drop from `shadow-sm-2` / `shadow-md-2` and a tight halo from `shadow-sm-1` / `shadow-md-1`; `shadow-lg` paints one layer from `shadow-lg`. A theme that still sets the single `shadow-sm` / `shadow-md` colour keeps it on the drop layer, and `shadow-xs-2` is no longer read.
+
 > Please note that after making modifications, you need to redeploy the server with themes for the changes to take effect.
 
 ## Caching

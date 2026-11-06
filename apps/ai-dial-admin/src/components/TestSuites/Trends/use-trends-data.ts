@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
-import { executeStructuredQuery, getRunsQuery } from '@/src/app/[lang]/runs/actions';
+import { executeStructuredQuery, getRun, getRunsQuery } from '@/src/app/[lang]/runs/actions';
+import { resolveRunScoreMethod } from '@/src/components/Runs/Summary/utils';
 import { RUN_FILTER } from '@/src/components/TestSuites/Runs/constants';
 import { RUN_ID_FIELD, TRENDS_RUN_WINDOW } from '@/src/components/TestSuites/Trends/constants';
-import { TrendsData } from '@/src/components/TestSuites/Trends/models';
+import { TrendsData, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { buildTrendsMetricScoresQuery } from '@/src/components/TestSuites/Trends/utils/build-trends-query';
 import { emptyTrendsData, parseTrendsData } from '@/src/components/TestSuites/Trends/utils/parse-trends';
 import { Run } from '@/src/models/evaluation/run';
@@ -34,6 +35,30 @@ const RUN_IDS_FILTER = (runIds: string[]): FilterDto => ({
   operator: FilterOperatorDto.INCLUDES,
   value: runIds.join(','),
 });
+
+/**
+ * The runs list projection carries no `overallScore`, and `resolveRunScoreMethod` reads a missing one as the
+ * default mean — so the latest run is read in full, or its score-method tooltip would claim a mean for a
+ * weighted-mean or function run. When the full run cannot be read the method stays unknown (no tooltip).
+ */
+const withLatestRunScoreMethod = async (trends: TrendsData): Promise<TrendsData> => {
+  const latestIndex = trends.runOrder.length - 1;
+  if (latestIndex < 0) {
+    return trends;
+  }
+
+  let overallScoreMethod: TrendsRunPoint['overallScoreMethod'] = null;
+  try {
+    overallScoreMethod = resolveRunScoreMethod(await getRun(trends.runOrder[latestIndex].runId));
+  } catch {
+    // Keep the method unknown rather than show the list projection's mean fallback.
+  }
+
+  return {
+    ...trends,
+    runOrder: trends.runOrder.map((point, index) => (index === latestIndex ? { ...point, overallScoreMethod } : point)),
+  };
+};
 
 export const useTrendsData = (suiteId: string | undefined): TrendsDataState => {
   const [data, setData] = useState<TrendsData | null>(null);
@@ -80,7 +105,13 @@ export const useTrendsData = (suiteId: string | undefined): TrendsDataState => {
           }
         }
 
-        setData(parseTrendsData(scoreResult as StructuredQueryResult | null, [...runsById.values()]));
+        const trends = parseTrendsData(scoreResult as StructuredQueryResult | null, [...runsById.values()]);
+        const trendsWithMethod = await withLatestRunScoreMethod(trends);
+        if (cancelled) {
+          return;
+        }
+
+        setData(trendsWithMethod);
       } catch {
         if (!cancelled) {
           setData(emptyTrendsData());

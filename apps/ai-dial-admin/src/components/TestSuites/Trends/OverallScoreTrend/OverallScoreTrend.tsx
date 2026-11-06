@@ -126,14 +126,18 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
               className="min-h-0 min-w-0 flex-1 overflow-hidden rounded border border-secondary bg-layer-2"
               style={{ minHeight: OVERALL_SCORE_PLOT_MIN_HEIGHT_PX }}
             >
-              <ReactECharts
-                ref={chartRef}
-                option={options}
-                onChartReady={onChartReady}
-                onEvents={thresholdHoverHandlers}
-                style={{ height: '100%', width: '100%' }}
-                opts={{ renderer: 'canvas' }}
-              />
+              {/* Mounted only once the width is measured: a first `setOption` without it would be re-applied
+                  mid-animation when the width arrives, and the chart would visibly load twice. */}
+              {plotWidth != null && (
+                <ReactECharts
+                  ref={chartRef}
+                  option={options}
+                  onChartReady={onChartReady}
+                  onEvents={thresholdHoverHandlers}
+                  style={{ height: '100%', width: '100%' }}
+                  opts={{ renderer: 'canvas' }}
+                />
+              )}
             </div>
           </div>
           <div className="flex w-full gap-2">

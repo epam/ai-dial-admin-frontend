@@ -194,7 +194,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     : t(TestSuitesI18nKey.RequestChainPreviousOutputsInfo);
 
   return (
-    <div className="flex flex-row gap-6 h-full overflow-hidden">
+    <div className="flex flex-row gap-4 h-full overflow-hidden">
       <div className="h-full overflow-y-scroll">
         <RequestsSidebar
           testSuite={testSuite}
