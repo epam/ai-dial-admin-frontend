@@ -295,8 +295,11 @@ const EvaluationListView = <T extends object>({
     actionColumn.push(getCancelOperation(onOpenCancelModal));
   }
 
-  const getHref = (data: unknown) => getUrnForEntity(route, data);
-  const linkedColumns = withNameLink(baseColumns, getHref, isRunsList ? 'testRunName' : 'name');
+  const getHref = useCallback((data: unknown) => getUrnForEntity(route, data), [route]);
+  const linkedColumns = useMemo(
+    () => withNameLink(baseColumns, getHref, isRunsList ? 'testRunName' : 'name'),
+    [baseColumns, getHref, isRunsList],
+  );
   const columnDefs = [...linkedColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
 
   return (

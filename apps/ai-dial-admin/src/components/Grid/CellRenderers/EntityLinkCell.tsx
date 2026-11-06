@@ -16,7 +16,7 @@ const EntityLinkCell: FC<Props> = ({ href, children, className, isNewTab }) => (
     target={isNewTab ? '_blank' : undefined}
     rel={isNewTab ? 'noopener noreferrer' : undefined}
     className={classNames(
-      'inline-block w-fit min-w-0 max-w-full self-start rounded text-accent hover:underline focus-visible:underline focus-visible:outline focus-visible:outline-focus',
+      'block w-fit min-w-0 max-w-full rounded text-accent hover:underline focus-visible:underline focus-visible:outline focus-visible:outline-focus',
       className,
     )}
   >
