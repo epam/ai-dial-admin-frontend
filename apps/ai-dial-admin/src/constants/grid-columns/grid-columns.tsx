@@ -23,6 +23,8 @@ import OptionalValueCellRenderer, {
   MISSING_VALUE_DISPLAY,
 } from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
 import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
+import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
+import { EntityHrefGetter } from '@/src/components/Grid/CellRenderers/models';
 import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
@@ -2038,13 +2040,15 @@ export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => 
 // Saved queries. The service returns every visible row unpaged with no server-side sort or filter, so
 // these are client-side filters. Field names are the wire ones (snake_case), which is why the shared
 // created/updated columns cannot be reused as-is — only their formatting is.
-export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
+export const QUERIES_COLUMN = (t: (str: string) => string, getHref?: EntityHrefGetter<SavedQuery>): ColDef[] => [
   {
     field: 'name',
     colId: 'name',
     headerName: t(QueriesI18nKey.Name),
     hide: false,
     sort: 'asc',
+    cellRenderer: LinkCellRenderer,
+    cellRendererParams: { getHref },
     ...baseStringFilter,
   },
   {

@@ -4,14 +4,11 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { GridOptions } from 'ag-grid-community';
-import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 
 import CreateQuery from '@/src/components/Analytics/Queries/Modals/CreateQuery';
 import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
-import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
@@ -40,9 +37,10 @@ interface Props {
 
 const VIEW = ApplicationRoute.AnalyticsQueries;
 
+const getQueryHref = (query?: SavedQuery) => (query ? getUrnForEntity(VIEW, query) : undefined);
+
 const QueriesList = ({ data, entities }: Props) => {
   const t = useI18n();
-  const router = useRouter();
   const { isFullAdmin } = useAppContext();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -63,7 +61,7 @@ const QueriesList = ({ data, entities }: Props) => {
 
   const columnDefs = useMemo(
     () => [
-      ...QUERIES_COLUMN(t),
+      ...QUERIES_COLUMN(t, getQueryHref),
       ACTION_COLUMN<SavedQuery>(
         [
           getOpenInNewTabOperation(onOpenNewTab),
@@ -77,11 +75,6 @@ const QueriesList = ({ data, entities }: Props) => {
     [t, onOpenNewTab, isWritable],
   );
 
-  const gridOptions: GridOptions = useMemo(
-    () => ({ onCellClicked: (e) => onCellClicked(e, VIEW, router.push) }),
-    [router.push],
-  );
-
   return (
     <>
       <ListEntities<SavedQuery>
@@ -89,9 +82,8 @@ const QueriesList = ({ data, entities }: Props) => {
         listLabel={t(listViewTitleMap[VIEW])}
         rowData={data}
         columnDefs={columnDefs}
-        additionalGridOptions={gridOptions}
         storageKey={VIEW}
-        getHref={(query) => getUrnForEntity(VIEW, query)}
+        getHref={(query) => getQueryHref(query as SavedQuery)}
         getRowId={({ data: query }) => query.id}
         emptyDataProps={{ title: t(emptyDataTitleMap[VIEW]) }}
       >

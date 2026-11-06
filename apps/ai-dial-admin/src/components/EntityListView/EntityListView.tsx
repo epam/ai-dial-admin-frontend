@@ -1,10 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import ListEntities from '@/src/components/ListView/List';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -20,7 +20,8 @@ import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
-import { onCellClicked } from './utils/on-cell-clicked';
+
+const RUNNER_NAME_FIELD = 'dial:applicationTypeDisplayName';
 
 interface Props<T> {
   data: T[];
@@ -50,12 +51,8 @@ const BaseEntityList = <T extends object>({
   getAssetContext,
 }: Props<T>) => {
   const t = useI18n();
-  const router = useRouter();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
-  const gridOptions: GridOptions = {
-    onCellClicked: (e) => onCellClicked(e, route, router.push),
-  };
   // entity for which the modals (delete and duplicate) is open
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(void 0);
 
@@ -98,16 +95,19 @@ const BaseEntityList = <T extends object>({
     [route],
   );
 
+  const getEntityHref = useCallback((row?: unknown) => getUrnForEntity(route, row), [route]);
+
   const getColumns = () => {
+    const linkedColumns = withNameLink(baseColumns, getEntityHref, RUNNER_NAME_FIELD);
     const remove = isReadOnlyAdmin ? undefined : onOpenDeleteModal;
     const duplicate = isReadOnlyAdmin ? undefined : onOpenDuplicateModal;
     const move = isReadOnlyAdmin ? undefined : onOpenMoveModal;
     if (isAssetWithVersion(route)) {
-      return ENTITIES_COLUMNS(baseColumns, remove, duplicate, openInNewTab, move);
+      return ENTITIES_COLUMNS(linkedColumns, remove, duplicate, openInNewTab, move);
     } else if (route === ApplicationRoute.Files) {
-      return ENTITIES_COLUMNS(baseColumns, remove, void 0, openInNewTab, move);
+      return ENTITIES_COLUMNS(linkedColumns, remove, void 0, openInNewTab, move);
     }
-    return ENTITIES_COLUMNS(baseColumns, remove, duplicate, openInNewTab);
+    return ENTITIES_COLUMNS(linkedColumns, remove, duplicate, openInNewTab);
   };
 
   const columns = getColumns();
@@ -119,9 +119,8 @@ const BaseEntityList = <T extends object>({
         columnDefs={columns}
         listLabel={t(listViewTitleMap[route])}
         emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
-        additionalGridOptions={gridOptions}
         storageKey={route}
-        getHref={(data) => getUrnForEntity(route, data)}
+        getHref={getEntityHref}
         isEnableColumnPanel={showColumnsButton}
       >
         <EntityListHeaderButtons

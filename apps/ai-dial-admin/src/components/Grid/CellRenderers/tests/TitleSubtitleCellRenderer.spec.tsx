@@ -32,6 +32,18 @@ describe('TitleSubtitleCellRenderer', () => {
     expect(screen.getByText('run-0001')).toBeTruthy();
   });
 
+  test('renders the title as a link and keeps the subtitle as text when an address is given', () => {
+    renderCell({
+      value: 'Nightly regression',
+      data: ROW,
+      getSubtitle: (data) => data?.id,
+      getHref: (data) => `/runs/${data?.id}`,
+    });
+
+    expect(screen.getByRole('link', { name: 'Nightly regression' })).toHaveAttribute('href', '/runs/run-0001');
+    expect(screen.getByRole('link').textContent).not.toContain('run-0001');
+  });
+
   test('truncates each line independently rather than as one block of text', () => {
     const title = 'A run name long enough to be clipped by any realistic column width';
     renderCell({ value: title, data: ROW, getSubtitle: (data) => data?.id });

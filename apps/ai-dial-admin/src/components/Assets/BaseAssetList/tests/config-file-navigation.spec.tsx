@@ -1,16 +1,16 @@
 import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useRouter } from 'next/navigation';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import BaseAssetList from '../BaseAssetList';
 
-const { push, windowOpen, fetchedFoldersData } = vi.hoisted(() => ({
-  push: vi.fn(),
+const { windowOpen, fetchedFoldersData, lastProps } = vi.hoisted(() => ({
   windowOpen: vi.fn(),
   fetchedFoldersData: {} as Record<string, unknown[]>,
+  lastProps: { value: null as null | Record<string, unknown> },
 }));
 
 const item = {
@@ -32,45 +32,40 @@ vi.mock('@/src/context/assets/AppsFolderContext', () => ({
 
 vi.mock('@/src/components/Common/FileManager/FileManager', () => ({
   __esModule: true,
-  default: (props: any) => (
-    <>
-      <button onClick={() => props.onTableFileClick(item)}>open-details</button>
-      <button onClick={() => props.onOpenInNewTab(item)}>open-in-new-tab</button>
-    </>
-  ),
+  default: (props: Record<string, unknown>) => {
+    lastProps.value = props;
+    return <button onClick={() => (props.onOpenInNewTab as (file: unknown) => void)(item)}>open-in-new-tab</button>;
+  },
 }));
 
 vi.mock('../Modals', () => ({ __esModule: true, default: () => null }));
 
+const CONFIG_FILE_URL = '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true';
+
+const renderNameCell = () => {
+  const columns = lastProps.value?.columnDefs as Array<(...args: unknown[]) => ColDef>;
+  const nameColumn = columns[0](undefined, undefined, false);
+  const cellRenderer = nameColumn.cellRenderer as (params: ICellRendererParams) => React.ReactNode;
+  return render(<>{cellRenderer({ data: item, context: {} } as unknown as ICellRendererParams)}</>);
+};
+
 describe('BaseAssetList config-file navigation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
     vi.stubGlobal('open', windowOpen);
   });
 
-  test('preserves the path query when opening config-file asset details', async () => {
-    const user = userEvent.setup();
+  test('links a config-file asset name to its details with the path query preserved', () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
+    renderNameCell();
 
-    await user.click(screen.getByRole('button', { name: 'open-details' }));
-
-    expect(push).toHaveBeenCalledWith('/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true');
+    expect(screen.getByRole('link', { name: 'MyApp' })).toHaveAttribute('href', CONFIG_FILE_URL);
   });
 
-  test('opens the corrected URL in a new tab for modifier-click navigation', async () => {
-    const user = userEvent.setup();
+  test('does not open details on a file-row click', () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
-    await user.keyboard('[ControlLeft>]');
-    await user.click(screen.getByRole('button', { name: 'open-details' }));
-    await user.keyboard('[/ControlLeft]');
-
-    expect(windowOpen).toHaveBeenCalledWith(
-      '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true',
-      '_blank',
-    );
-    expect(push).not.toHaveBeenCalled();
+    expect(lastProps.value?.onTableFileClick).toBeUndefined();
   });
 
   test('opens the corrected URL through the action-menu new-tab callback', async () => {
@@ -79,9 +74,6 @@ describe('BaseAssetList config-file navigation', () => {
 
     await user.click(screen.getByRole('button', { name: 'open-in-new-tab' }));
 
-    expect(windowOpen).toHaveBeenCalledWith(
-      '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true',
-      '_blank',
-    );
+    expect(windowOpen).toHaveBeenCalledWith(CONFIG_FILE_URL, '_blank');
   });
 });

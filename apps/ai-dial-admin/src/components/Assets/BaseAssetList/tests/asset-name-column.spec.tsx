@@ -47,6 +47,40 @@ describe('getAssetNameColumn', () => {
     expect(screen.getByText('summarize-text')).toBeInTheDocument();
   });
 
+  test('links an asset row name to the address the getter returns', () => {
+    const cellRenderer = getAssetNameColumn('Name', ApplicationRoute.Prompts, () => '/prompts/summarize-text')(
+      undefined,
+      undefined,
+      false,
+    ).cellRenderer as (p: ICellRendererParams) => React.ReactNode;
+    render(
+      <>
+        {cellRenderer(
+          params({ name: 'summarize-text', displayName: 'Summarize text', nodeType: DialFileNodeType.ITEM }),
+        )}
+      </>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Summarize text' })).toHaveAttribute('href', '/prompts/summarize-text');
+  });
+
+  test('renders no link on a folder row even with a getter', () => {
+    const cellRenderer = getAssetNameColumn('Name', ApplicationRoute.Prompts, () => '/prompts/x')(
+      undefined,
+      undefined,
+      false,
+    ).cellRenderer as (p: ICellRendererParams) => React.ReactNode;
+    render(<>{cellRenderer(params({ name: 'team', path: 'public/team', nodeType: DialFileNodeType.FOLDER }))}</>);
+
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  test('renders no link without a getter', () => {
+    renderCell({ name: 'summarize-text', displayName: 'Summarize text', nodeType: DialFileNodeType.ITEM });
+
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
   test('shows the initials fallback for a view without a type icon', () => {
     const cellRenderer = getAssetNameColumn('Name', ApplicationRoute.PlatformModels)(undefined, undefined, false)
       .cellRenderer as (p: ICellRendererParams) => React.ReactNode;

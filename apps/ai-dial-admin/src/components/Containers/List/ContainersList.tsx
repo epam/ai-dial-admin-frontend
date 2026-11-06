@@ -1,6 +1,5 @@
 'use client';
 
-import { CellClickedEvent, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -39,7 +38,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerKind } from '@/src/utils/deployments/containers';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
@@ -66,9 +65,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const [modalType, setModalType] = useState<ModalType>();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const gridOptions: GridOptions = {
-    onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
-  };
+  const getContainerHref = useCallback((row?: unknown) => getUrnForEntity(route, row), [route]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -168,7 +165,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const duplicateNames = [...names, ...addedNames];
 
   const columnDefs = [
-    ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route),
+    ...withNameLink(CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route), getContainerHref),
     ACTION_COLUMN(
       isReadOnlyAdmin
         ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
@@ -251,7 +248,6 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
       <ListEntities
         rowData={containersList}
         columnDefs={columnDefs}
-        additionalGridOptions={gridOptions}
         listLabel={
           isUnified
             ? t(MenuI18nKey.Containers)
@@ -270,7 +266,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         }}
         isEnableColumnPanel
         storageKey={route}
-        getHref={(data) => getUrnForEntity(route, data)}
+        getHref={getContainerHref}
       >
         <HeaderButtons route={route} names={names} isReadOnlyAdmin={isReadOnlyAdmin} />
       </ListEntities>

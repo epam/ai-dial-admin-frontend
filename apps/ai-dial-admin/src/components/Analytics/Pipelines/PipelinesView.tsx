@@ -2,8 +2,6 @@
 
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -18,11 +16,11 @@ import { PipelineKindCellRenderer } from '@/src/components/Analytics/Pipelines/C
 import { TriggerCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
-import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
 import ListEntities from '@/src/components/ListView/List';
 import { useAppContext } from '@/src/context/AppContext';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { PIPELINES_NO_RUNTIME_STORAGE_KEY, PIPELINES_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
@@ -41,9 +39,10 @@ interface Props {
   loadFailure?: ReadFailure | null;
 }
 
+const getPipelineHref = (pipeline?: PipelineListItem) => (pipeline ? pipelineDetailHref(pipeline.name) : undefined);
+
 const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const t = useI18n();
-  const router = useRouter();
   const { showNotification } = useNotification();
   const { isFullAdmin } = useAppContext();
   // One read for the page: the runner answers with every paused pipeline at once and offers no
@@ -132,7 +131,14 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
     // tooltip is suppressed so the raw value is not repeated over the rendered badge. The leading seven
     // are shown by default; the rest stay available in the columns panel.
     const dataColumns: ColDef[] = [
-      { headerName: t(AnalyticsPipelinesI18nKey.Name), field: 'name', colId: 'name', flex: 2 },
+      {
+        headerName: t(AnalyticsPipelinesI18nKey.Name),
+        field: 'name',
+        colId: 'name',
+        flex: 2,
+        cellRenderer: LinkCellRenderer,
+        cellRendererParams: { getHref: getPipelineHref },
+      },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Kind),
         field: 'kind',
@@ -234,12 +240,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
         columnDefs={columns}
         rowData={pipelines}
         getRowId={(params) => params.data.name}
-        additionalGridOptions={{
-          onCellClicked: (e) => {
-            if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
-            navigateEntityUrl(pipelineDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
-          },
-        }}
+        getHref={(pipeline) => getPipelineHref(pipeline as PipelineListItem)}
         emptyDataProps={{ title: t(AnalyticsPipelinesI18nKey.NoPipelines) }}
         storageKey={runtime.isRead ? PIPELINES_STORAGE_KEY : PIPELINES_NO_RUNTIME_STORAGE_KEY}
       >

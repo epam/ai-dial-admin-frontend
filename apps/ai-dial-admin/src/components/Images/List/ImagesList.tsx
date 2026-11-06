@@ -1,7 +1,7 @@
 'use client';
 import { createImage, deleteImage, getImageVersions } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
@@ -21,7 +21,6 @@ import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entit
 import { getImageType, getUniqueImagesNames } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { CellClickedEvent, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -69,9 +68,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     setModalType(void 0);
   }, [handleModalClose]);
 
-  const gridOptions: GridOptions = {
-    onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
-  };
+  const getImageHref = useCallback((row?: unknown) => getUrnForEntity(route, row), [route]);
 
   const onDeleteAction = useCallback(
     (image?: Image) => {
@@ -136,7 +133,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         ],
   );
 
-  const columnDefs = [...IMAGES_LIST_COLUMNS(t), actionColumn];
+  const columnDefs = [...withNameLink(IMAGES_LIST_COLUMNS(t), getImageHref, 'name'), actionColumn];
 
   useEffect(() => {
     if (imagesList?.length) {
@@ -149,11 +146,10 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
       <ListEntities
         rowData={imagesList}
         columnDefs={columnDefs}
-        additionalGridOptions={gridOptions}
         listLabel={t(ImagesI18nKey.ImagesListTitle)}
         emptyDataProps={{ title: t(EntitiesI18nKey.NoImages) }}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.images}`}
-        getHref={(data) => getUrnForEntity(route, data)}
+        getHref={getImageHref}
         isEnableColumnPanel
       >
         <HeaderButtons route={route} isReadOnlyAdmin={isReadOnlyAdmin} />
