@@ -1,13 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { UnitAction, UnitNamespace, UserOrgUnit } from '@/src/models/user-access';
-import {
-  canDecidePublicationAt,
-  canReadNamespace,
-  canWriteAt,
-  canWriteNamespace,
-  hasActionAt,
-} from '@/src/utils/org-units/access';
+import { canDecidePublicationAt, canReadNamespace, canWriteAt, hasActionAt } from '@/src/utils/org-units/access';
 
 const unit = (folder: string, permissions: UserOrgUnit['permissions']): UserOrgUnit => ({
   id: folder,
@@ -27,17 +21,6 @@ const UNITS = [
   }),
   unit('public/Other/', { [UnitNamespace.PUBLICATIONS]: [UnitAction.READ] }),
 ];
-
-describe('canWriteNamespace', () => {
-  test('is true when any unit grants write', () => {
-    expect(canWriteNamespace(UNITS, UnitNamespace.APPLICATIONS)).toBe(true);
-  });
-
-  test('is false when units grant only read, or nothing', () => {
-    expect(canWriteNamespace(UNITS, UnitNamespace.ORG_UNITS)).toBe(false);
-    expect(canWriteNamespace([], UnitNamespace.ORG_UNITS)).toBe(false);
-  });
-});
 
 describe('canReadNamespace', () => {
   test('is true when any unit grants read', () => {

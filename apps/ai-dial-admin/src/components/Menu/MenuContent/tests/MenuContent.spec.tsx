@@ -12,15 +12,14 @@ vi.mock('next/navigation', () => ({
 }));
 
 const adminApiEnabled = { value: true };
-const readOnlyAdmin = { value: false };
-const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>(), writable: new Set<UnitNamespace>() };
+const fullAdmin = { value: true };
+const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>() };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
-    isReadOnlyAdmin: readOnlyAdmin.value,
+    isFullAdmin: fullAdmin.value,
     isUnitMode: unitMode.isUnitMode,
     canReadNamespace: (namespace: UnitNamespace) => unitMode.readable.has(namespace),
-    canWriteNamespace: (namespace: UnitNamespace) => unitMode.writable.has(namespace),
   }),
 }));
 
@@ -83,31 +82,26 @@ describe('MenuContent — footer pages', () => {
   });
 });
 
-describe('MenuContent — read-only admin', () => {
+describe('MenuContent — non-full admin', () => {
   beforeEach(() => {
     adminApiEnabled.value = true;
-    readOnlyAdmin.value = true;
+    fullAdmin.value = false;
   });
 
   afterEach(() => {
-    readOnlyAdmin.value = false;
+    fullAdmin.value = true;
   });
 
-  test('hides Import/Export config actions in the collapsed menu', () => {
-    renderMenu(false);
+  test.each([true, false])(
+    'hides Import, Export and System properties actions when the sidebar open state is %s',
+    (isSidebarOpen) => {
+      renderMenu(isSidebarOpen);
 
-    expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
-  });
-
-  test('keeps Import/Export config actions in the expanded menu', () => {
-    renderMenu(true);
-
-    expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: MenuI18nKey.ExportConfig })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: MenuI18nKey.SystemProperties })).toBeInTheDocument();
-  });
+      expect(screen.queryByRole('link', { name: MenuI18nKey.ImportConfig })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: MenuI18nKey.ExportConfig })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: MenuI18nKey.SystemProperties })).not.toBeInTheDocument();
+    },
+  );
 });
 
 describe('MenuContent — unit mode', () => {
@@ -120,18 +114,17 @@ describe('MenuContent — unit mode', () => {
   afterEach(() => {
     unitMode.isUnitMode = false;
     unitMode.readable = new Set();
-    unitMode.writable = new Set();
   });
 
-  test('hides Folders when org units are only readable', () => {
+  test('hides Folders when only org units are readable', () => {
     unitMode.readable = new Set([UnitNamespace.ORG_UNITS]);
     renderMenu(true);
 
     expect(screen.queryByRole('link', { name: MenuI18nKey.FoldersStorage })).not.toBeInTheDocument();
   });
 
-  test('shows Folders when org units are writable', () => {
-    unitMode.writable = new Set([UnitNamespace.ORG_UNITS]);
+  test('shows Folders when role assignments are readable', () => {
+    unitMode.readable = new Set([UnitNamespace.ROLE_ASSIGNMENTS]);
     renderMenu(true);
 
     expect(screen.getByRole('link', { name: MenuI18nKey.FoldersStorage })).toBeInTheDocument();

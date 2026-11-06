@@ -8,7 +8,6 @@ import { FC } from 'react';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { MAIN_MENU_ID } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIsConfigTransferEnabled } from '@/src/utils/env/get-config-transfer-toggle';
@@ -25,9 +24,8 @@ interface Props {
 }
 const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
-  const { featureFlags, isUnitMode, canReadNamespace, canWriteNamespace } = useAppContext();
+  const { featureFlags, isUnitMode, isFullAdmin, canReadNamespace } = useAppContext();
   const isConfigTransferEnabled = getIsConfigTransferEnabled(featureFlags);
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // pathname - /en/models/[id]
   // 0 - empty ''
@@ -36,12 +34,11 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const splittedPathname = usePathname().split('/');
   const pathname = `/${splittedPathname[2]}`;
   const enabledConfig = getActualMenuItems(MENU_CONFIGURATION(16, featureFlags), disableMenuItems);
-  const actualConfig = isUnitMode
-    ? filterMenuForUnitMode(enabledConfig, canReadNamespace, canWriteNamespace)
-    : enabledConfig;
+  const actualConfig = isUnitMode ? filterMenuForUnitMode(enabledConfig, canReadNamespace) : enabledConfig;
 
-  // Config transfer and system properties are admin pages, which a unit user cannot open.
-  const showImportExport = isConfigTransferEnabled && !isUnitMode && (isSidebarOpen || !isReadOnlyAdmin);
+  // Config transfer and system properties are available to full admins only.
+  const showImportExport = isConfigTransferEnabled && isFullAdmin && !isUnitMode;
+  const showSystemProperties = isFullAdmin && !isUnitMode;
 
   return (
     <div id={MAIN_MENU_ID} className="flex flex-col h-full divide-y divide-tertiary">
@@ -85,7 +82,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
             />
           </>
         )}
-        {!isUnitMode && (
+        {showSystemProperties && (
           <MenuAction
             tooltip={t(MenuI18nKey.SystemProperties)}
             icon={IconWorldCog}

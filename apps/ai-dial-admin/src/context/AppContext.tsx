@@ -10,11 +10,7 @@ import { FeatureFlags } from '@/src/models/feature-flags';
 import { AccessMode, AdminAccess, UnitNamespace, UserAccess } from '@/src/models/user-access';
 import { UserInfo } from '@/src/models/user-info';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import {
-  canReadNamespace as canReadNamespaceIn,
-  canWriteAt as canWriteAtIn,
-  canWriteNamespace as canWriteNamespaceIn,
-} from '@/src/utils/org-units/access';
+import { canReadNamespace as canReadNamespaceIn, canWriteAt as canWriteAtIn } from '@/src/utils/org-units/access';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -45,8 +41,6 @@ export interface AppContextType {
   isUnitMode: boolean;
   /** Whether any unit grants `read` on the namespace; always true for an admin. */
   canReadNamespace: (namespace: UnitNamespace) => boolean;
-  /** Whether any unit grants `write` on the namespace; an admin follows `isFullAdmin`. */
-  canWriteNamespace: (namespace: UnitNamespace) => boolean;
   /** Whether the unit owning `path` grants `write` on the namespace; an admin follows `isFullAdmin`. */
   canWriteAt: (namespace: UnitNamespace, path: string) => boolean;
   /** Whether authentication is enabled (NEXTAUTH_URL set). Needed to tell "auth off" from "no role". */
@@ -144,8 +138,6 @@ export const AppContextProvider = ({
   const isUnitMode = userAccess.mode === AccessMode.UNIT;
 
   const canReadNamespace = (namespace: UnitNamespace) => !isUnitMode || canReadNamespaceIn(userAccess.units, namespace);
-  const canWriteNamespace = (namespace: UnitNamespace) =>
-    isUnitMode ? canWriteNamespaceIn(userAccess.units, namespace) : isFullAdmin;
   const canWriteAt = (namespace: UnitNamespace, path: string) =>
     isUnitMode ? canWriteAtIn(userAccess.units, namespace, path) : isFullAdmin;
 
@@ -176,7 +168,6 @@ export const AppContextProvider = ({
     isFullAdmin,
     isUnitMode,
     canReadNamespace,
-    canWriteNamespace,
     canWriteAt,
     isEnableAuth,
     setEntityReadOnly,

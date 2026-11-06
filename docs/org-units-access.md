@@ -17,16 +17,17 @@ What a signed-in user sees and can do, driven by DIAL Core's `GET /v1/user/role-
 
 A section is shown when the caller holds `read` on its namespace in any unit.
 
-| Menu item                         | Namespace needed |
-| --------------------------------- | ---------------- |
-| Applications                      | `applications`   |
-| Toolsets                          | `toolsets`       |
-| Prompts                           | `prompts`        |
-| Files                             | `files`          |
-| Skills                            | `skills`         |
-| Conversations                     | `conversations`  |
-| Approvals (all publication lists) | `publications`   |
-| Folders Storage                   | `org-units`      |
+| Menu item                         | Namespace needed   |
+| --------------------------------- | ------------------ |
+| Applications                      | `applications`     |
+| Toolsets                          | `toolsets`         |
+| Prompts                           | `prompts`          |
+| Files                             | `files`            |
+| Skills                            | `skills`           |
+| Projects                          | `projects`         |
+| Conversations                     | `conversations`    |
+| Approvals (all publication lists) | `publications`     |
+| Folders Storage                   | `role-assignments` |
 
 Hidden in unit mode: Models, Interceptors, Roles, Keys, Routes, Translators, Catalog schemas, App runners,
 Entities, Analytics, Import/Export and System properties.

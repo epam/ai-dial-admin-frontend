@@ -38,41 +38,38 @@ const allowed =
 
 describe('filterMenuForUnitMode', () => {
   test('keeps only items whose namespace can be read', () => {
-    const result = filterMenuForUnitMode(CONFIG, allowed(UnitNamespace.PROMPTS), allowed());
+    const result = filterMenuForUnitMode(CONFIG, allowed(UnitNamespace.PROMPTS));
 
     expect(result).toHaveLength(1);
     expect(result[0].items.map((item) => item.href)).toEqual([ApplicationRoute.Prompts]);
   });
 
-  test('drops items with no namespace, such as platform pages and Projects', () => {
-    const result = filterMenuForUnitMode(
-      CONFIG,
-      () => true,
-      () => true,
-    );
+  test('shows Projects when the projects namespace can be read', () => {
+    const result = filterMenuForUnitMode(CONFIG, allowed(UnitNamespace.PROJECTS));
+
+    expect(result[0].items.map((item) => item.href)).toEqual([ApplicationRoute.Projects]);
+  });
+
+  test('drops items with no namespace, such as platform pages', () => {
+    const result = filterMenuForUnitMode(CONFIG, () => true);
 
     expect(result.flatMap((group) => group.items.map((item) => item.href))).toEqual([
       ApplicationRoute.Prompts,
       ApplicationRoute.Files,
+      ApplicationRoute.Projects,
     ]);
   });
 
   test('drops a group left with no items', () => {
-    expect(
-      filterMenuForUnitMode(
-        CONFIG,
-        () => false,
-        () => false,
-      ),
-    ).toEqual([]);
+    expect(filterMenuForUnitMode(CONFIG, () => false)).toEqual([]);
   });
 
-  test('hides Folders when org units are only readable', () => {
-    expect(filterMenuForUnitMode(FOLDERS_CONFIG, allowed(UnitNamespace.ORG_UNITS), allowed())).toEqual([]);
+  test('hides Folders when only org units are readable', () => {
+    expect(filterMenuForUnitMode(FOLDERS_CONFIG, allowed(UnitNamespace.ORG_UNITS))).toEqual([]);
   });
 
-  test('shows Folders when org units are writable', () => {
-    const result = filterMenuForUnitMode(FOLDERS_CONFIG, allowed(), allowed(UnitNamespace.ORG_UNITS));
+  test('shows Folders when role assignments are readable', () => {
+    const result = filterMenuForUnitMode(FOLDERS_CONFIG, allowed(UnitNamespace.ROLE_ASSIGNMENTS));
 
     expect(result[0].items.map((item) => item.href)).toEqual([ApplicationRoute.FoldersStorage]);
   });
