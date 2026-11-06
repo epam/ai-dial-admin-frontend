@@ -1,8 +1,10 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import { FC } from 'react';
+import { BasicI18nKey } from '@/src/constants/i18n';
 
 import { APP_RUNNER_META_COLUMNS, APP_RUNNER_REQUIRED_META_COLUMNS, CATALOG_SCHEMA_META_COLUMNS } from '../constants';
 import { getSchemaGridColumns } from '../columns';
@@ -85,10 +87,15 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
     expect(ids).not.toContain('propertyKind');
   });
 
-  test('Should offer exactly the widget values Core allows', () => {
-    const widget = columnsFor(CATALOG_SCHEMA_META_COLUMNS).find((column) => column.colId === 'catalogWidget');
+  test('offers the eight supported widgets and a localized clear option only for widgets', () => {
+    const columns = columnsFor([...CATALOG_SCHEMA_META_COLUMNS, SchemaMetaColumn.PropertyKind]);
+    const widget = columns.find((column) => column.colId === 'catalogWidget');
+    const kind = columns.find((column) => column.colId === 'propertyKind');
+    const type = columns.find((column) => column.colId === 'dataType');
+    const items = widget?.cellRendererParams.items;
 
-    expect((widget?.cellRendererParams as { items: { value: string }[] }).items.map((item) => item.value)).toEqual([
+    expect(items[0]).toEqual({ value: '', label: BasicI18nKey.None });
+    expect(items.slice(1).map((item: { value: string }) => item.value)).toEqual([
       'text',
       'richText',
       'badge',
@@ -98,6 +105,45 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
       'image',
       'date',
     ]);
+    expect(kind?.cellRendererParams.items.map((item: { value: string }) => item.value)).toEqual(['server', 'client']);
+    expect(type?.cellRendererParams.items.some((item: { value: string }) => item.value === '')).toBe(false);
+  });
+
+  test('shows the empty placeholder when a required property has no widget', () => {
+    const column = columnsFor([SchemaMetaColumn.Widget]).find((c) => c.colId === 'catalogWidget');
+    const Renderer = column?.cellRenderer as FC<ICellRendererParams<SchemaFieldRow>>;
+    const params = { data: row({ required: true }), value: undefined, colDef: column };
+
+    render(<Renderer {...(params as ICellRendererParams<SchemaFieldRow>)} />);
+
+    expect(screen.getByRole('combobox')).toHaveValue('');
+    expect(screen.getByRole('combobox')).toHaveAttribute('placeholder', 'Select...');
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('clears and reselects a widget while displaying an empty value for a required property', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const column = columnsFor([SchemaMetaColumn.Widget], { [SchemaMetaColumn.Widget]: onChange }).find(
+      (c) => c.colId === 'catalogWidget',
+    );
+    const data = row({ required: true, dialMeta: { 'dial:widget': 'badge' } });
+    const Renderer = column?.cellRenderer as FC<ICellRendererParams<SchemaFieldRow>>;
+    const params = { data, value: 'badge', colDef: column } as ICellRendererParams<SchemaFieldRow>;
+    const view = render(<Renderer {...params} />);
+
+    expect(screen.getByRole('combobox')).toHaveValue('Badge');
+    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByText(BasicI18nKey.None));
+    expect(onChange).toHaveBeenCalledWith('', data);
+    expect(screen.getByRole('combobox')).toHaveValue('');
+    expect(screen.getByRole('combobox')).toHaveAttribute('placeholder', 'Select...');
+
+    view.rerender(<Renderer {...params} value={undefined} data={row({ required: true })} />);
+    expect(screen.getByRole('combobox')).toHaveValue('');
+    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByText('Image'));
+    expect(onChange).toHaveBeenCalledWith('image', expect.objectContaining({ required: true }));
   });
 
   test.each([

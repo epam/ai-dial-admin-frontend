@@ -279,6 +279,7 @@ export default {
     NoCatalogProperties: 'This catalog schema declares no properties.',
     CatalogSchemaUnavailable: 'The selected catalog schema could not be read from DIAL Core.',
     UndeclaredCatalogProperties: 'These values are not declared by the selected catalog schema: {names}.',
+    UndeclaredCatalogPropertiesMessage: 'Undeclared catalog values',
     UndeclaredCatalogPropertiesForbidden:
       'The selected catalog schema does not allow undeclared values. Remove them to save: {names}.',
     RemoveUndeclaredCatalogProperties: 'Remove undeclared values',

@@ -262,6 +262,7 @@ export enum EntitiesI18nKey {
   NoCatalogProperties = 'Entities.NoCatalogProperties',
   CatalogSchemaUnavailable = 'Entities.CatalogSchemaUnavailable',
   UndeclaredCatalogProperties = 'Entities.UndeclaredCatalogProperties',
+  UndeclaredCatalogPropertiesMessage = 'Entities.UndeclaredCatalogPropertiesMessage',
   UndeclaredCatalogPropertiesForbidden = 'Entities.UndeclaredCatalogPropertiesForbidden',
   RemoveUndeclaredCatalogProperties = 'Entities.RemoveUndeclaredCatalogProperties',
   ExternalEndpoint = 'Entities.ExternalEndpoint',

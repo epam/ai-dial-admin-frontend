@@ -94,14 +94,15 @@ SHALL be offered or required in the modal.
 - **THEN** the request fails, the modal stays open, and an error notification is shown
 
 ### Requirement: Project detail view has a single Properties tab with read-only metadata
-The system SHALL render a project's detail page with one `Properties` tab and no other tab. It SHALL show the
+The system SHALL render a project's detail page with one `Properties` tab and no other tab; because it is the
+only tab, the tab bar itself SHALL NOT be drawn (an entity view hides a tab bar holding a single tab). It SHALL show the
 project's path, author and created/updated dates read from Core, a disabled `Name` input holding the
 project's name (its last path segment), and no destination-folder field. A project that no longer exists SHALL
 render the standard not-found page. Breadcrumbs SHALL reflect the project's folder path.
 
 #### Scenario: Properties shows read-only metadata and a disabled name
 - **WHEN** a user opens a project
-- **THEN** the path, author and dates are shown, `Name` is shown disabled, and no other tab or folder field is
+- **THEN** the path, author and dates are shown, `Name` is shown disabled, and no tab bar or folder field is
   present
 
 #### Scenario: A missing project renders not-found
