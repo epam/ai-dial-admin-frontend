@@ -26,7 +26,7 @@ const DashboardCard: FC<Props> = ({
   children,
 }) => (
   <section
-    className={classNames('flex min-w-0 flex-col rounded border border-secondary bg-layer-2 shadow', className)}
+    className={classNames('flex min-w-0 flex-col rounded border border-secondary bg-layer-2 shadow-xs', className)}
     aria-label={title}
   >
     <header

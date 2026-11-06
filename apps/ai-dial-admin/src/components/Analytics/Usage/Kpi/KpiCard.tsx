@@ -60,7 +60,7 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed, head
   return (
     <div
       className={classNames(
-        'flex flex-col gap-2.5 rounded border border-secondary bg-layer-2 px-4 pb-3 pt-4 shadow',
+        'flex flex-col gap-2.5 rounded border border-secondary bg-layer-2 px-4 pb-3 pt-4 shadow-xs',
         className,
       )}
       style={style}

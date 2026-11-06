@@ -17,7 +17,7 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
   const t = useI18n();
 
   return (
-    <CollapsibleSidebar width={296} title={t(TabsI18nKey.Conversations)} className="bg-layer-2 mr-4">
+    <CollapsibleSidebar width={296} title={t(TabsI18nKey.Conversations)} className="bg-layer-2 shadow-sm">
       <div className="h-full flex flex-col">
         <h1 className="mb-6">{t(TabsI18nKey.Conversations)}</h1>
         <div className="flex-1 min-h-0 flex flex-col gap-y-2 overflow-auto">

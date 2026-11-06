@@ -73,7 +73,7 @@ const RequestsSidebar: FC<Props> = ({
 
   return (
     <>
-      <CollapsibleSidebar width={296} title={t(TestSuitesI18nKey.Requests)} className="h-full bg-layer-2">
+      <CollapsibleSidebar width={296} title={t(TestSuitesI18nKey.Requests)} className="h-full bg-layer-2 shadow-sm">
         <div className="flex flex-col gap-6 h-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
