@@ -83,7 +83,7 @@ const KeyRoles = ({ asset, roles, onChange }: Props) => {
         {!isReadOnlyAdmin && (
           <PrimaryButton
             label={t(RolesI18nKey.AddRoles)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             onClick={onOpenModal}
           />
         )}

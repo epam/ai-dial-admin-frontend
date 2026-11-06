@@ -137,7 +137,7 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
         {!isReadOnlyAdmin && isSpecificRoles && (
           <PrimaryButton
             label={t(RolesI18nKey.AddRoles)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             onClick={onOpenModal}
           />
         )}
