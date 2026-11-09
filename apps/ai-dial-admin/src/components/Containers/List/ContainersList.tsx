@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -164,20 +164,32 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
 
   const duplicateNames = [...names, ...addedNames];
 
-  const columnDefs = [
-    ...withNameLink(CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route), getContainerHref),
-    ACTION_COLUMN(
-      isReadOnlyAdmin
-        ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
-        : [
-            getOpenInNewTabOperation(onOpenInNewTabAction),
-            getDuplicateOperation(onOpenDuplicateModal),
-            getRunOperation(onContainerStatusChange),
-            getStopOperation(onContainerStatusChange),
-            getDeleteOperation(onOpenDeleteModal),
-          ],
-    ),
-  ];
+  const columnDefs = useMemo(
+    () => [
+      ...withNameLink(CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route), getContainerHref),
+      ACTION_COLUMN(
+        isReadOnlyAdmin
+          ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
+          : [
+              getOpenInNewTabOperation(onOpenInNewTabAction),
+              getDuplicateOperation(onOpenDuplicateModal),
+              getRunOperation(onContainerStatusChange),
+              getStopOperation(onContainerStatusChange),
+              getDeleteOperation(onOpenDeleteModal),
+            ],
+      ),
+    ],
+    [
+      getContainerHref,
+      isReadOnlyAdmin,
+      onContainerStatusChange,
+      onOpenDeleteModal,
+      onOpenDuplicateModal,
+      onOpenInNewTabAction,
+      route,
+      t,
+    ],
+  );
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;

@@ -22,7 +22,7 @@ import { getImageType, getUniqueImagesNames } from '@/src/utils/deployments/imag
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import ImageDelete from '@/src/components/Deployments/Modals/ImageDelete';
@@ -123,17 +123,18 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     [route, router, showNotification],
   );
 
-  const actionColumn = ACTION_COLUMN(
-    isReadOnlyAdmin
-      ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
-      : [
-          getOpenInNewTabOperation(onOpenInNewTabAction),
-          getDuplicateOperation(onDuplicateAction),
-          getDeleteOperation(onDeleteAction),
-        ],
-  );
-
-  const columnDefs = [...withNameLink(IMAGES_LIST_COLUMNS(t), getImageHref, 'name'), actionColumn];
+  const columnDefs = useMemo(() => {
+    const actionColumn = ACTION_COLUMN(
+      isReadOnlyAdmin
+        ? [getOpenInNewTabOperation(onOpenInNewTabAction)]
+        : [
+            getOpenInNewTabOperation(onOpenInNewTabAction),
+            getDuplicateOperation(onDuplicateAction),
+            getDeleteOperation(onDeleteAction),
+          ],
+    );
+    return [...withNameLink(IMAGES_LIST_COLUMNS(t), getImageHref, 'name'), actionColumn];
+  }, [getImageHref, isReadOnlyAdmin, onDeleteAction, onDuplicateAction, onOpenInNewTabAction, t]);
 
   useEffect(() => {
     if (imagesList?.length) {
