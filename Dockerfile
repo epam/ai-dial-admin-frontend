@@ -25,7 +25,8 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/dist/apps/ai-dial-admin ./
 COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm install --global npm@11.21.2 --ignore-scripts --no-audit --no-fund \
+    && npm ci --omit=dev --ignore-scripts
 
 USER nextjs
 
