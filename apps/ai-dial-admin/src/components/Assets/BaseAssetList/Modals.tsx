@@ -48,12 +48,7 @@ interface Props {
     ignorePaths?: boolean,
   ) => void;
   onExport?: (fileType: ImportFileType) => void;
-  onCreate?: (
-    asset: AssetWithVersion,
-    path?: string,
-    isCreateDuplicate?: boolean,
-    shouldCloseModal?: boolean,
-  ) => Promise<ServerActionResponse>;
+  onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
   onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onRemove: () => Promise<void>;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
