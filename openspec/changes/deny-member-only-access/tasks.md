@@ -10,7 +10,7 @@
 
 ## 3. Spec
 
-- [ ] 3.1 Update `openspec/specs/user-org-units-access/spec.md` with the "Start mode follows the access read" delta (done on archive via sync).
+- [x] 3.1 Update `openspec/specs/user-org-units-access/spec.md` with the "Start mode follows the access read" delta.
 
 ## 4. Quality checks
 
