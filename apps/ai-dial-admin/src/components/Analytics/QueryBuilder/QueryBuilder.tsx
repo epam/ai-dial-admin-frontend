@@ -5,6 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GhostButton, Spinner, OutlinedButton, NoDataContent, SegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -647,7 +648,7 @@ const QueryBuilder: FC<Props> = ({
                   onSave={savedQueryPage.onSave}
                 >
                   <OutlinedButton
-                    className={saveAsClassName}
+                    className={classNames('whitespace-nowrap', saveAsClassName)}
                     label={t(ButtonsI18nKey.SaveAs)}
                     onClick={savedQueryPage.onOpenSaveAs}
                     disabled={runDisabled || savedQueryPage.isSaving}
