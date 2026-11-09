@@ -62,6 +62,10 @@ vi.mock('@/src/components/SourceField/Application/SelectAppRunnersModal', () => 
   default: () => null,
 }));
 
+vi.mock('@/src/components/Common/RemoveButton/RemoveButton', () => ({
+  default: ({ onClick, 'aria-label': label }: any) => <button type="button" aria-label={label} onClick={onClick} />,
+}));
+
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
@@ -222,6 +226,48 @@ describe('AppRunnersResource', () => {
 
     test('a configuration-file runner opens in config-file mode', async () => {
       await expectOpenUrl('urn:runner:entity', /\/platform-app-runners\/urn%3Arunner%3Aentity\?configFile=true$/);
+    });
+  });
+
+  describe('optional selection', () => {
+    test('offers no clear control while the schema is required', () => {
+      render(
+        <AppRunnersResource selectedValue="urn:runner:entity" onChangeValue={vi.fn()} runners={options} isPopup />,
+      );
+
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Clear })).toBeNull();
+    });
+
+    test('opens the popup picker instead of a dropdown when asked to', () => {
+      render(<AppRunnersResource selectedValue="" onChangeValue={vi.fn()} runners={options} isOptional isPopup />);
+
+      expect(screen.queryByRole('combobox')).toBeNull();
+    });
+
+    test('clears the schema and its properties without resolving a runner', async () => {
+      const user = userEvent.setup();
+      const onChangeValue = vi.fn();
+      vi.mocked(getRunner).mockClear();
+      render(
+        <AppRunnersResource
+          selectedValue="urn:runner:entity"
+          onChangeValue={onChangeValue}
+          runners={options}
+          isOptional
+          isPopup
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Clear }));
+
+      expect(onChangeValue).toHaveBeenCalledWith(undefined, undefined);
+      expect(getRunner).not.toHaveBeenCalled();
+    });
+
+    test('offers no clear control when nothing is selected', () => {
+      render(<AppRunnersResource selectedValue="" onChangeValue={vi.fn()} runners={options} isOptional isPopup />);
+
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Clear })).toBeNull();
     });
   });
 });

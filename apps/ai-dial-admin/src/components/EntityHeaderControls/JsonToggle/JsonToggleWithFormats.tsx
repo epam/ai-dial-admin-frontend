@@ -23,6 +23,7 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformInterceptors,
   ApplicationRoute.PlatformTranslators,
+  ApplicationRoute.PlatformRouters,
   ApplicationRoute.PlatformRoutes,
   ApplicationRoute.PlatformRoles,
   ApplicationRoute.PlatformKeys,

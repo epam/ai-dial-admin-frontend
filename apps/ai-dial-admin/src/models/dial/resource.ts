@@ -5,12 +5,33 @@ import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { LocalizedText } from '@/src/models/dial/localized';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
 import { DeploymentInterfaceType, DialResourceInterface } from '@/src/models/dial/interfaces';
+import { RouterDecision, RouterMode } from '@/src/models/dial/router';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { DialCoreRoleLimits, DialCoreRoleShare } from '@/src/models/dial/role-limits';
 import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
 import { DialPolicy, DialPolicyAssignment } from '@/src/models/dial/policy';
 import { AttachmentPaths, RouteResponse } from '@/src/models/dial/route';
 import { ToolsetTransport } from '@/src/types/toolset';
+
+// ---------------------------------------------------------------------------------------------
+// 1. Core resource envelope — the merge layer's `_metadata` graft and the bases every
+//    Core-direct resource builds on
+// ---------------------------------------------------------------------------------------------
+
+export enum DialModelResourceStatus {
+  Valid = 'valid',
+  Invalid = 'invalid',
+}
+
+/**
+ * Accompanies an `invalid` status on read. DIAL Core serves a rejected entity through a separate
+ * projection that names the offending field — the only channel explaining *why* the entity was left out
+ * of the served configuration. Admin callers only; absent for a valid resource.
+ */
+export interface CoreValidationWarning {
+  field?: string;
+  message?: string;
+}
 
 /**
  * The merge layer's `_metadata` graft object on a merged Core-resource detail entity (see the
@@ -38,80 +59,19 @@ export interface CoreResourceEntityMetadata {
 
 export type CoreResourceValidity = Pick<CoreResourceEntityMetadata, 'status' | 'validationWarnings'>;
 
-export interface DialResource extends BaseEntity {
-  display_name?: string;
-  display_version?: string;
-  description_keywords: string[];
-  dependencies: string[];
-  interceptors: string[];
-  /**
-   * Client-only create/duplicate identity: the folder the create modal runs in and the version it
-   * seeds (`DEFAULT_NEW_ENTITY_VERSION`) or a duplicate flow overrides. A merged read never sets
-   * these flat — its identity lives in `_metadata` — so write paths resolve them as
-   * `app.folderId ?? app._metadata?.folderId` to serve both flows.
-   */
-  folderId?: string;
-  version?: string;
-  author?: string;
-  endpoint?: string;
-  icon_url: string;
-  reference: string;
-  max_retry_attempts: number;
-  forward_auth_token: boolean;
-  responses_defaults?: Record<string, unknown>;
-  created_at: number;
-  updated_at: number;
-  etag?: string;
+/** Base of every Core-direct resource read: modification timestamps plus the merge layer's graft. */
+export interface CoreResource extends ModifiedEntity {
   _metadata?: CoreResourceEntityMetadata;
 }
 
-export interface DialApplicationResource
-  extends Omit<DialResource, 'display_name' | 'description' | 'intro'>, EntityDefaults {
-  display_name?: LocalizedText;
-  description?: LocalizedText;
-  intro?: LocalizedText;
-  application_type_schema_id?: string;
-  input_attachment_types: string[];
-  max_input_attachments?: number | string;
-  responses_endpoint?: string;
-  editor_url?: string;
-  viewer_url?: string;
-  application_properties: Record<string, unknown>;
-  routes?: Record<string, unknown>;
-  features?: DialApplicationResourceFeatures;
-  external_services?: Record<string, DialExternalService>;
-  interfaces?: Record<string, DialResourceInterface>;
-  // Root url every `interfaces` entry with no `base_url` of its own falls back to (Deployment.baseUrl).
-  base_url?: string;
-  default_headers?: Record<string, string>;
-  /**
-   * `Application` is `@JsonNaming(SnakeCaseStrategy)` on Core — unlike `Model`/`Route`, whose
-   * `RoleBasedEntity.userRoles` serializes as plain camelCase, Core always writes this back as
-   * `user_roles`. `RoleBasedEntity`'s `@JsonAlias({"userRoles", "user_roles", "dial:userRoles"})`
-   * only widens what a *write* accepts — it does not change what a *read* returns, so reading this
-   * field as `userRoles` would silently never see a value back.
-   */
-  user_roles?: string[];
-  /**
-   * Snake_case, unlike `DialModelResource`/`DialInterceptorResource`, for the reason `user_roles`
-   * documents: Core declares the pair on `Deployment` as `catalogSchemaId`/`catalogProperties` with
-   * a `@JsonAlias` covering both spellings, but `Application`/`ToolSet` are
-   * `@JsonNaming(SnakeCaseStrategy)`, so a read only ever returns the snake_case names. Declared on
-   * the user-bucket shape so the platform-bucket one inherits it — Core carries it on both.
-   */
-  catalog_schema_id?: string;
-  catalog_properties?: Record<string, unknown>;
+/** A `CoreResource` whose identity is a required flat `name` (the resource name inside its bucket). */
+export interface NamedCoreResource extends CoreResource {
+  name: string;
 }
 
-export interface DialExternalService {
-  display_name?: string;
-  description?: string;
-  auth_settings?: DialExternalServiceAuthSettings;
-}
-
-export interface DialExternalServiceAuthSettings extends DialToolsetResourceAuthSettings {
-  app_level_auth_status?: ToolsetAuthStatus;
-}
+// ---------------------------------------------------------------------------------------------
+// 2. Shared deployment shapes — features and the field groups several resources repeat
+// ---------------------------------------------------------------------------------------------
 
 /**
  * The feature flags shared by every DIAL resource features shape (model, application). Resource-specific
@@ -146,30 +106,28 @@ export interface DialApplicationResourceFeatures extends DialResourceFeatures {
   consent_required: boolean;
 }
 
-export interface DialModelResource extends EntityAttachment, EntityDefaults, ModifiedEntity {
-  name: string;
-  _metadata?: CoreResourceEntityMetadata;
-  type?: DialModelResourceType;
-  tokenizerModel?: string;
+export interface DialModelResourceFeatures extends DialResourceFeatures {
+  cache_supported: boolean;
+  auto_caching_supported: boolean;
+}
+
+/**
+ * Fields Core's `Deployment` base serializes in camelCase, shared by `DialModelResource` and
+ * `DialRouterResource`. Each subtype adds only what it alone carries.
+ */
+export interface CoreDeploymentResource extends NamedCoreResource, EntityAttachment, EntityDefaults {
   overrideName?: string;
-  limits?: DialModelLimit;
-  pricing?: DialModelPricing;
-  upstreams?: DialModelEndpoint[];
-  embeddingDimensions?: number;
   displayName?: LocalizedText;
   displayVersion?: string;
   description?: LocalizedText;
   intro?: LocalizedText;
   reference?: string;
   iconUrl?: string;
-  endpoint?: string;
-  responsesEndpoint?: string;
   interfaces?: Record<string, DialResourceInterface>;
   baseUrl?: string;
   defaultHeaders?: Record<string, string>;
   forwardAuthToken?: boolean;
   maxRetryAttempts?: number;
-  interceptors?: string[];
   features?: DialModelResourceFeatures;
   descriptionKeywords?: string[];
   dependencies?: string[];
@@ -179,40 +137,136 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
   catalogProperties?: Record<string, unknown>;
 }
 
-export enum DialModelResourceStatus {
-  Valid = 'valid',
-  Invalid = 'invalid',
+/**
+ * The role and catalog fields of the snake_case (`@JsonNaming(SnakeCaseStrategy)`) entities —
+ * `Application` and `ToolSet`.
+ *
+ * Unlike `Model`/`Route`, whose `RoleBasedEntity.userRoles` serializes as plain camelCase, Core always
+ * writes `user_roles` back. `RoleBasedEntity`'s `@JsonAlias({"userRoles", "user_roles", "dial:userRoles"})`
+ * only widens what a *write* accepts — it does not change what a *read* returns, so reading it as
+ * `userRoles` would silently never see a value back.
+ *
+ * The same holds for `catalog_schema_id`/`catalog_properties`: `Deployment` declares them as
+ * `catalogSchemaId`/`catalogProperties` with a `@JsonAlias` covering both spellings, but a read only
+ * ever returns the snake_case names here.
+ */
+export interface DialSnakeCaseRoleCatalogFields {
+  user_roles?: string[];
+  catalog_schema_id?: string;
+  catalog_properties?: Record<string, unknown>;
 }
 
-/**
- * Accompanies an `invalid` status on read. DIAL Core serves a rejected entity through a separate
- * projection that names the offending field — the only channel explaining *why* the entity was left out
- * of the served configuration. Admin callers only; absent for a valid resource.
- */
-export interface CoreValidationWarning {
-  field?: string;
-  message?: string;
-}
+// ---------------------------------------------------------------------------------------------
+// 3. Versioned user-bucket resources — applications and toolsets (snake_case, inline timestamps)
+// ---------------------------------------------------------------------------------------------
 
-/**
- * App-runner (`schemas/platform/{name}`) as returned by Core, in the same `dial:`-prefixed shape the
- * admin-BE-backed `DialApplicationScheme` uses — so the runner editors are shared between the two
- * surfaces. `applications` is excluded because that association exists only in the admin BE's
- * database, and routes are narrowed to `DialAppRoute` since this surface edits attachment paths and
- * permissions.
- */
-export interface DialAppRunnerResource extends Omit<
-  DialApplicationScheme,
-  'applications' | 'dial:applicationTypeRoutes'
-> {
+export interface DialResource extends BaseEntity {
+  display_name?: string;
+  display_version?: string;
+  description_keywords: string[];
+  dependencies: string[];
+  interceptors: string[];
   /**
-   * Client-only create-flow identity — the resource name Core stores the schema under (the
-   * percent-encoded `$id`). A merged read never sets it flat: its identity lives in `_metadata`,
-   * with `$id` carrying the decoded form.
+   * Client-only create/duplicate identity: the folder the create modal runs in and the version it
+   * seeds (`DEFAULT_NEW_ENTITY_VERSION`) or a duplicate flow overrides. A merged read never sets
+   * these flat — its identity lives in `_metadata` — so write paths resolve them as
+   * `app.folderId ?? app._metadata?.folderId` to serve both flows.
    */
-  name?: string;
+  folderId?: string;
+  version?: string;
+  author?: string;
+  endpoint?: string;
+  icon_url: string;
+  reference: string;
+  max_retry_attempts: number;
+  forward_auth_token: boolean;
+  responses_defaults?: Record<string, unknown>;
+  created_at: number;
+  updated_at: number;
+  etag?: string;
   _metadata?: CoreResourceEntityMetadata;
-  ['dial:applicationTypeRoutes']?: CoreAppRunnerRoutes;
+}
+
+export interface DialApplicationResource
+  extends Omit<DialResource, 'display_name' | 'description' | 'intro'>, EntityDefaults, DialSnakeCaseRoleCatalogFields {
+  display_name?: LocalizedText;
+  description?: LocalizedText;
+  intro?: LocalizedText;
+  application_type_schema_id?: string;
+  input_attachment_types: string[];
+  max_input_attachments?: number | string;
+  responses_endpoint?: string;
+  editor_url?: string;
+  viewer_url?: string;
+  application_properties: Record<string, unknown>;
+  routes?: Record<string, unknown>;
+  features?: DialApplicationResourceFeatures;
+  external_services?: Record<string, DialExternalService>;
+  interfaces?: Record<string, DialResourceInterface>;
+  // Root url every `interfaces` entry with no `base_url` of its own falls back to (Deployment.baseUrl).
+  base_url?: string;
+  default_headers?: Record<string, string>;
+}
+
+export interface DialExternalService {
+  display_name?: string;
+  description?: string;
+  auth_settings?: DialExternalServiceAuthSettings;
+}
+
+export interface DialExternalServiceAuthSettings extends DialToolsetResourceAuthSettings {
+  app_level_auth_status?: ToolsetAuthStatus;
+}
+
+export interface DialToolsetResource
+  extends Omit<DialResource, 'display_name' | 'description' | 'intro'>, DialSnakeCaseRoleCatalogFields {
+  name: string;
+  display_name?: LocalizedText;
+  description: LocalizedText;
+  intro?: LocalizedText;
+  defaults?: Record<string, unknown>;
+  responses_defaults?: Record<string, unknown>;
+  forward_per_request_key: boolean;
+  auth_settings?: DialToolsetResourceAuthSettings;
+  transport?: ToolsetTransport;
+  allowed_tools: string[];
+  provider?: string;
+  vendor_website?: string;
+}
+
+// ---------------------------------------------------------------------------------------------
+// 4. Flat `platform` bucket resources — flat, unversioned, `ModifiedEntity` timestamps
+// ---------------------------------------------------------------------------------------------
+
+export enum DialModelResourceType {
+  Chat = 'CHAT',
+  Completion = 'COMPLETION',
+  Embedding = 'EMBEDDING',
+}
+
+export interface DialModelResource extends CoreDeploymentResource {
+  type?: DialModelResourceType;
+  tokenizerModel?: string;
+  limits?: DialModelLimit;
+  pricing?: DialModelPricing;
+  upstreams?: DialModelEndpoint[];
+  embeddingDimensions?: number;
+  endpoint?: string;
+  responsesEndpoint?: string;
+  interceptors?: string[];
+}
+
+/**
+ * A router resource (`routers/platform/{name}`) as returned by Core. Flat and unversioned like
+ * `DialModelResource`; Core's `Router` extends the same `Deployment` base, so the display, feature, role
+ * and catalog fields match. It deliberately has no `upstreams`, `limits`, `pricing`, `interceptors`,
+ * `endpoint` or `responsesEndpoint`: Core rejects each on a router.
+ */
+export interface DialRouterResource extends CoreDeploymentResource {
+  mode?: RouterMode;
+  decision?: RouterDecision;
+  applicationTypeSchemaId?: string;
+  applicationProperties?: Record<string, unknown>;
 }
 
 /**
@@ -223,9 +277,7 @@ export interface DialAppRunnerResource extends Omit<
  * meaningful for a routing deployment but not for an interceptor (e.g. `maxRetryAttempts`,
  * `responsesEndpoint`) are left off.
  */
-export interface DialInterceptorResource extends ModifiedEntity {
-  name: string;
-  _metadata?: CoreResourceEntityMetadata;
+export interface DialInterceptorResource extends NamedCoreResource {
   displayName?: LocalizedText;
   description?: LocalizedText;
   iconUrl?: string;
@@ -251,9 +303,7 @@ export interface DialInterceptorResource extends ModifiedEntity {
  * tab (`AssetRoles`); full role-limit editing remains out of scope, same as every other Core-direct
  * asset surface.
  */
-export interface DialRouteResource extends ModifiedEntity {
-  name: string;
-  _metadata?: CoreResourceEntityMetadata;
+export interface DialRouteResource extends NamedCoreResource {
   userRoles?: string[];
   paths?: string[];
   methods?: string[];
@@ -270,60 +320,10 @@ export interface DialRouteResource extends ModifiedEntity {
  * project-scoped inside the folder of its cost object. Like `DialRouteResource` it has no
  * `displayName`/`description`, so the merge graft supplies only `name` and `_metadata`.
  */
-export interface DialPolicyResource extends DialPolicy, ModifiedEntity {
-  name: string;
-  _metadata?: CoreResourceEntityMetadata;
-}
+export interface DialPolicyResource extends DialPolicy, NamedCoreResource {}
 
 /** A policy assignment resource (`policy_assignments/platform/{costObject}/{id}`) as returned by Core. */
-export interface DialPolicyAssignmentResource extends DialPolicyAssignment, ModifiedEntity {
-  name: string;
-  _metadata?: CoreResourceEntityMetadata;
-}
-
-/**
- * A catalog schema resource (`catalog_schemas/platform/{encodeURIComponent($id)}`) as returned by
- * Core. The body is stored verbatim and only the `$id` is validated — unique at create, immutable
- * afterwards — so `validateCatalogSchema` enforces every other meta-schema constraint.
- *
- * `properties`/`required` are the schema's own JSON-Schema keywords; a property's `dial:file` and
- * `dial:meta` hints stay inside the body rather than becoming typed fields here.
- */
-export interface DialCatalogSchemaResource extends ModifiedEntity {
-  $id?: string;
-  ['dial:catalogEntityType']?: CatalogEntityType;
-  ['dial:catalogDisplayName']?: string;
-  ['dial:defaultLocale']?: string;
-  properties?: JSONSchema7['properties'];
-  required?: string[];
-  /**
-   * Client-only create-flow identity — the percent-encoded `$id` Core stores the schema under. A
-   * merged read never sets it flat: its identity lives in `_metadata`, with `$id` carrying the
-   * decoded form.
-   */
-  name?: string;
-  _metadata?: CoreResourceEntityMetadata;
-}
-
-/**
- * A translator resource (`translators/platform/{name}`) as returned by Core. Flat and unversioned
- * like `DialModelResource`/`DialInterceptorResource`/`DialRouteResource`, and — unlike any of
- * those — a plain POJO on Core (`Translator` extends neither `Deployment` nor `RoleBasedEntity`), so
- * it has no `displayName`/`description`/`endpoint`/`features`/`userRoles`. `in`/`out` reuse the same
- * `DeploymentInterfaceType` enum `interfaces` fields elsewhere already key by — Core's `InterfaceType`
- * and this enum carry the same four values.
- */
-export interface DialTranslatorResource extends ModifiedEntity {
-  /**
-   * Client-only create-flow identity — Core's `Translator` declares no `name` field, so this only
-   * ever holds what the create form seeds; a merged read's identity lives in `_metadata`.
-   */
-  name?: string;
-  _metadata?: CoreResourceEntityMetadata;
-  in?: DeploymentInterfaceType;
-  out?: DeploymentInterfaceType;
-  baseUrl?: string;
-}
+export interface DialPolicyAssignmentResource extends DialPolicyAssignment, NamedCoreResource {}
 
 /**
  * A role resource (`roles/platform/{name}`) as returned by Core. Flat and unversioned like
@@ -339,9 +339,7 @@ export interface DialTranslatorResource extends ModifiedEntity {
  * function's doc comment for why. `share` keeps Core's own snake_case `ShareResourceLimit` shape
  * (`DialCoreRoleShare`), distinct from the admin-backend's camelCase `DialRoleShare`.
  */
-export interface DialRoleResource extends ModifiedEntity {
-  name: string;
-  _metadata?: CoreResourceEntityMetadata;
+export interface DialRoleResource extends NamedCoreResource {
   limits?: Record<string, DialCoreRoleLimits>;
   costLimit?: DialCoreRoleLimits;
   share?: Record<string, DialCoreRoleShare>;
@@ -355,19 +353,81 @@ export interface DialRoleResource extends ModifiedEntity {
  * The `roles` field lists the role names this key GRANTS to its bearer, which is the inverse of
  * the `userRoles` pattern on other entity types.
  */
-export interface DialKeyResource extends ModifiedEntity {
+export interface DialKeyResource extends CoreResource {
   /**
    * Client-only create-flow identity — Core's `Key` declares no `name` field, so this only ever
    * holds what the create form seeds (the resource path is built from it); a merged read's
    * identity lives in `_metadata`. Stripped from every write payload alongside `_metadata`.
    */
   name?: string;
-  _metadata?: CoreResourceEntityMetadata;
   key?: string;
   project?: string;
   secured?: boolean;
   roles?: string[];
   allowedIpAddressRanges?: string[];
+}
+
+/**
+ * A translator resource (`translators/platform/{name}`) as returned by Core. Flat and unversioned
+ * like `DialModelResource`/`DialInterceptorResource`/`DialRouteResource`, and — unlike any of
+ * those — a plain POJO on Core (`Translator` extends neither `Deployment` nor `RoleBasedEntity`), so
+ * it has no `displayName`/`description`/`endpoint`/`features`/`userRoles`. `in`/`out` reuse the same
+ * `DeploymentInterfaceType` enum `interfaces` fields elsewhere already key by — Core's `InterfaceType`
+ * and this enum carry the same four values.
+ */
+export interface DialTranslatorResource extends CoreResource {
+  /**
+   * Client-only create-flow identity — Core's `Translator` declares no `name` field, so this only
+   * ever holds what the create form seeds; a merged read's identity lives in `_metadata`.
+   */
+  name?: string;
+  in?: DeploymentInterfaceType;
+  out?: DeploymentInterfaceType;
+  baseUrl?: string;
+}
+
+/**
+ * A catalog schema resource (`catalog_schemas/platform/{encodeURIComponent($id)}`) as returned by
+ * Core. The body is stored verbatim and only the `$id` is validated — unique at create, immutable
+ * afterwards — so `validateCatalogSchema` enforces every other meta-schema constraint.
+ *
+ * `properties`/`required` are the schema's own JSON-Schema keywords; a property's `dial:file` and
+ * `dial:meta` hints stay inside the body rather than becoming typed fields here.
+ */
+export interface DialCatalogSchemaResource extends CoreResource {
+  $id?: string;
+  ['dial:catalogEntityType']?: CatalogEntityType;
+  ['dial:catalogDisplayName']?: string;
+  ['dial:defaultLocale']?: string;
+  properties?: JSONSchema7['properties'];
+  required?: string[];
+  /**
+   * Client-only create-flow identity — the percent-encoded `$id` Core stores the schema under. A
+   * merged read never sets it flat: its identity lives in `_metadata`, with `$id` carrying the
+   * decoded form.
+   */
+  name?: string;
+}
+
+/**
+ * App-runner (`schemas/platform/{name}`) as returned by Core, in the same `dial:`-prefixed shape the
+ * admin-BE-backed `DialApplicationScheme` uses — so the runner editors are shared between the two
+ * surfaces. `applications` is excluded because that association exists only in the admin BE's
+ * database, and routes are narrowed to `DialAppRoute` since this surface edits attachment paths and
+ * permissions.
+ */
+export interface DialAppRunnerResource extends Omit<
+  DialApplicationScheme,
+  'applications' | 'dial:applicationTypeRoutes'
+> {
+  /**
+   * Client-only create-flow identity — the resource name Core stores the schema under (the
+   * percent-encoded `$id`). A merged read never sets it flat: its identity lives in `_metadata`,
+   * with `$id` carrying the decoded form.
+   */
+  name?: string;
+  _metadata?: CoreResourceEntityMetadata;
+  ['dial:applicationTypeRoutes']?: CoreAppRunnerRoutes;
 }
 
 /**
@@ -379,9 +439,8 @@ export interface DialKeyResource extends ModifiedEntity {
  * `ConfigResourceController` reads never serve inline. Flat and unversioned like `DialKeyResource`.
  */
 export interface DialPlatformApplicationResource
-  extends Omit<DialApplicationResource, 'created_at' | 'updated_at' | 'etag'>, ModifiedEntity {
+  extends Omit<DialApplicationResource, 'created_at' | 'updated_at' | 'etag' | '_metadata'>, CoreResource {
   name: string;
-  _metadata?: CoreResourceEntityMetadata;
 }
 
 /**
@@ -394,9 +453,8 @@ export interface DialPlatformApplicationResource
  * `DialPlatformApplicationResource`.
  */
 export interface DialPlatformToolsetResource
-  extends Omit<DialToolsetResource, 'created_at' | 'updated_at' | 'etag'>, ModifiedEntity {
+  extends Omit<DialToolsetResource, 'created_at' | 'updated_at' | 'etag' | '_metadata'>, CoreResource {
   name: string;
-  _metadata?: CoreResourceEntityMetadata;
 }
 
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
@@ -406,41 +464,16 @@ export type PlatformAsset =
   | DialCatalogSchemaResource
   | DialInterceptorResource
   | DialTranslatorResource
+  | DialRouterResource
   | DialRouteResource
   | DialRoleResource
   | DialKeyResource
   | DialPlatformApplicationResource
   | DialPlatformToolsetResource;
 
-export enum DialModelResourceType {
-  Chat = 'CHAT',
-  Completion = 'COMPLETION',
-  Embedding = 'EMBEDDING',
-}
-
-export interface DialModelResourceFeatures extends DialResourceFeatures {
-  cache_supported: boolean;
-  auto_caching_supported: boolean;
-}
-
-export interface DialToolsetResource extends Omit<DialResource, 'display_name' | 'description' | 'intro'> {
-  name: string;
-  display_name?: LocalizedText;
-  description: LocalizedText;
-  intro?: LocalizedText;
-  defaults?: Record<string, unknown>;
-  responses_defaults?: Record<string, unknown>;
-  forward_per_request_key: boolean;
-  auth_settings?: DialToolsetResourceAuthSettings;
-  transport?: ToolsetTransport;
-  allowed_tools: string[];
-  provider?: string;
-  vendor_website?: string;
-  /** See `DialApplicationResource.user_roles` — `ToolSet` is also `@JsonNaming(SnakeCaseStrategy)`. */
-  user_roles?: string[];
-  catalog_schema_id?: string;
-  catalog_properties?: Record<string, unknown>;
-}
+// ---------------------------------------------------------------------------------------------
+// 5. Complex resources — skills and projects (folder bundles with a manifest)
+// ---------------------------------------------------------------------------------------------
 
 /**
  * A complex resource's (skill's or project's) folder metadata. `name`/`folderId` are derived from `path`
@@ -481,6 +514,10 @@ export type DialSkillResource = DialComplexResource;
 export type DialSkillFile = DialComplexResourceFile;
 export type DialProjectResource = DialComplexResource;
 export type DialProjectFile = DialComplexResourceFile;
+
+// ---------------------------------------------------------------------------------------------
+// 6. Toolset authentication
+// ---------------------------------------------------------------------------------------------
 
 export interface DialToolsetResourceAuthSettings {
   authentication_type?: ToolsetAuthType;

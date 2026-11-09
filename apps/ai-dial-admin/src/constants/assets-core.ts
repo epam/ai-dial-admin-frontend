@@ -12,6 +12,7 @@ export type VersionedResourceType = Exclude<
   | ResourceType.CATALOG_SCHEMA
   | ResourceType.INTERCEPTOR
   | ResourceType.TRANSLATOR
+  | ResourceType.ROUTER
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY
@@ -68,6 +69,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.CATALOG_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.TRANSLATOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
+  [ResourceType.ROUTER]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTER]}`,
   [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
   [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
@@ -89,6 +91,7 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.CATALOG_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.TRANSLATOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
+  [ResourceType.ROUTER]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTER]}`,
   [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
   [ResourceType.PROJECT_KEY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
@@ -116,6 +119,7 @@ export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set
   ResourceType.CATALOG_SCHEMA,
   ResourceType.INTERCEPTOR,
   ResourceType.TRANSLATOR,
+  ResourceType.ROUTER,
   ResourceType.ROLE,
   ResourceType.ROUTE,
   ResourceType.PROJECT_KEY,

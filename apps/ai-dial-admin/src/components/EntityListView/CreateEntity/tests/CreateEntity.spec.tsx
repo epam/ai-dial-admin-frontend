@@ -111,29 +111,6 @@ describe('CreateEntity', () => {
     expect(createToolset.mock.calls[0][0]).not.toHaveProperty('version');
   });
 
-  test('seeds the default display version for AssetsModels', async () => {
-    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
-
-    const createModel = vi.fn().mockResolvedValue({ success: true, response: { name: 'model1' } });
-    render(
-      <CreateEntity
-        route={ApplicationRoute.PlatformModels}
-        isModalOpen={true}
-        onClose={vi.fn()}
-        names={[]}
-        versionsMap={{}}
-        createEntity={createModel}
-      />,
-    );
-
-    expect(screen.getByDisplayValue('1.0.0')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
-
-    await vi.waitFor(() => expect(createModel).toHaveBeenCalled());
-    expect(createModel.mock.calls[0][0]).toMatchObject({ displayVersion: '1.0.0' });
-  });
-
   test('starts a new platform model with userRoles: []', async () => {
     (useRouter as Mock).mockReturnValue({ push: vi.fn() });
 

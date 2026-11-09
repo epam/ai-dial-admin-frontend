@@ -123,6 +123,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.PlatformPolicies:
     case ApplicationRoute.PlatformPolicyAssignments:
     case ApplicationRoute.PlatformTranslators:
+    case ApplicationRoute.PlatformRouters:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
@@ -229,6 +230,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Translator,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformRouters:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Router,
           icon: null,
         },
       ];
@@ -409,6 +418,7 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformTranslators:
+    case ApplicationRoute.PlatformRouters:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
@@ -420,6 +430,7 @@ export const getDeleteNotificationContent = (
         if (view === ApplicationRoute.PlatformCatalogSchemas) return FileManagerI18nKey.CatalogSchema;
         if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
         if (view === ApplicationRoute.PlatformTranslators) return FileManagerI18nKey.Translator;
+        if (view === ApplicationRoute.PlatformRouters) return FileManagerI18nKey.Router;
         if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
         if (view === ApplicationRoute.PlatformRoles) return FileManagerI18nKey.Role;
         if (view === ApplicationRoute.PlatformKeys) return FileManagerI18nKey.Key;

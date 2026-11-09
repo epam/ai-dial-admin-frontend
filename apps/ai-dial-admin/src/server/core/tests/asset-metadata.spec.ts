@@ -16,6 +16,7 @@ import {
   mergePrompt,
   mergeRoleResource,
   mergeRouteResource,
+  mergeRouterResource,
   mergeToolsetResource,
   toResourceInfoList,
 } from '../asset-metadata';
@@ -220,6 +221,24 @@ describe('Server :: Core :: asset-metadata', () => {
         folderId: '',
         author: 'eve',
         updatedAt: '555',
+      },
+    });
+  });
+
+  test('mergeRouterResource grafts identity under _metadata and keeps the router-only fields in the content', () => {
+    const content = { mode: 'decision', decision: { timeoutMs: 2000 }, baseUrl: 'http://localhost:4848' };
+    const meta = metadata({ url: 'routers/platform/cost-aware', author: 'gina', updatedAt: 777 });
+
+    expect(mergeRouterResource(content, meta)).toEqual({
+      mode: 'decision',
+      decision: { timeoutMs: 2000 },
+      baseUrl: 'http://localhost:4848',
+      _metadata: {
+        name: 'cost-aware',
+        path: 'cost-aware',
+        folderId: '',
+        author: 'gina',
+        updatedAt: '777',
       },
     });
   });

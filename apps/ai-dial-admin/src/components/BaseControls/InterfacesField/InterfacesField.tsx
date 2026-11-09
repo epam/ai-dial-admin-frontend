@@ -37,6 +37,9 @@ interface Props<V extends InterfaceValue> {
   entityBaseUrl?: string;
   // The parent upstream Base URL an endpoint-variant interface falls back to when its endpoint is empty.
   upstreamBaseUrl?: string;
+  // Offers only Passthrough on every row, for an entity that cannot serve an interface through a translator
+  // (a router in decision mode).
+  isTranslatorDisabled?: boolean;
 }
 
 export const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
@@ -63,6 +66,7 @@ const InterfacesField = <V extends InterfaceValue>({
   translators,
   entityBaseUrl,
   upstreamBaseUrl,
+  isTranslatorDisabled,
   view,
 }: Props<V>) => {
   const t = useI18n();
@@ -167,6 +171,7 @@ const InterfacesField = <V extends InterfaceValue>({
                 isAsset={isAsset}
                 translators={translators}
                 entityBaseUrl={entityBaseUrl}
+                isTranslatorDisabled={isTranslatorDisabled}
                 view={view}
               />
             )}
