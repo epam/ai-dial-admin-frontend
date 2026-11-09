@@ -54,7 +54,7 @@ entries.
 - **THEN** the grid occupies the remaining height of the tab and scrolls its own rows
 
 #### Scenario: Rows show all columns
-- **WHEN** an application declares `{ link_id: "skills-link", target: { path: "skills/{current-user}/" }, access: ["WRITE","READ"], required: true }`
+- **WHEN** an application declares `{ link_id: "skills-link", target: { url: "skills/{current-user}/" }, access: ["WRITE","READ"], required: true }`
 - **THEN** its row shows `skills-link`, `skills/{current-user}/`, both rights, and a required state of yes
 
 #### Scenario: Empty declaration
@@ -196,13 +196,13 @@ saved as an empty array.
 
 ### Requirement: Dependency persistence shape
 Dependencies SHALL be stored in the application's `resource_dependencies` array. Each entry SHALL have
-the shape `{ "kind": "dial.resourceLink", "link_id": <string>, "target": { "path": <string> },
+the shape `{ "kind": "dial.resourceLink", "link_id": <string>, "target": { "url": <string> },
 "access": [<"READ" | "WRITE">...], "required": <boolean> }`. `access` SHALL be emitted in the fixed
 order `READ`, `WRITE`. `required` SHALL be written explicitly as a boolean.
 
 #### Scenario: Entry shape
 - **WHEN** a user adds a dependency with Read and Write selected and Required on, then saves
-- **THEN** the saved array contains `{ "kind": "dial.resourceLink", "link_id": <id>, "target": { "path": <path> }, "access": ["READ","WRITE"], "required": true }`
+- **THEN** the saved array contains `{ "kind": "dial.resourceLink", "link_id": <id>, "target": { "url": <path> }, "access": ["READ","WRITE"], "required": true }`
 
 #### Scenario: Existing declarations round-trip
 - **WHEN** an application already holds `resource_dependencies` and the user changes an unrelated property

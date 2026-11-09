@@ -56,7 +56,7 @@ const APP_PATH = 'public/team/assistant__1.0';
 const makeDependency = (linkId: string, overrides: Partial<ResourceDependency> = {}): ResourceDependency => ({
   kind: 'dial.resourceLink',
   link_id: linkId,
-  target: { path: `files/public/${linkId}/` },
+  target: { url: `files/public/${linkId}/` },
   access: [ResourceAccess.Read],
   required: false,
   ...overrides,
@@ -214,7 +214,7 @@ describe('ResourceDependencies', () => {
         {
           kind: 'dial.resourceLink',
           link_id: 'skills',
-          target: { path: 'skills/{current-user}/' },
+          target: { url: 'skills/{current-user}/' },
           access: ['READ', 'WRITE'],
           required: false,
         },
@@ -236,11 +236,14 @@ describe('ResourceDependencies', () => {
       renderTab([makeDependency('a'), makeDependency('b')]);
 
       await user.click(await screen.findByRole('button', { name: 'edit a' }));
+      expect(screen.getByRole('textbox', { name: new RegExp(ResourceDependenciesI18nKey.TargetPath) })).toHaveValue(
+        'files/public/a/',
+      );
       setText(ResourceDependenciesI18nKey.TargetPath, 'files/public/changed/');
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
       expect(lastChange()).toEqual([
-        makeDependency('a', { target: { path: 'files/public/changed/' } }),
+        makeDependency('a', { target: { url: 'files/public/changed/' } }),
         makeDependency('b'),
       ]);
     });

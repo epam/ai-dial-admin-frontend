@@ -41,7 +41,7 @@ export const getDependencyColumns = ({ t, isReadonly, onEdit, onDuplicate, onRem
       ...TEXT_COLUMN,
       colId: 'path',
       headerName: t(ResourceDependenciesI18nKey.TargetPath),
-      valueGetter: ({ data }: ValueGetterParams<ResourceDependency>) => data?.target?.path,
+      valueGetter: ({ data }: ValueGetterParams<ResourceDependency>) => data?.target?.url,
       flex: 2,
     },
     {
