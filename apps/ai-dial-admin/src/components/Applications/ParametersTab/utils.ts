@@ -82,7 +82,10 @@ export const getAppRunner = (
   return applicationSchemes?.find((scheme) => {
     const resource = entity as DialApplicationResource;
     const application = entity as DialApplication;
-    const schemaSourceId = resource.application_type_schema_id || getSchemaSourceId(application.source);
+    const schemaSourceId =
+      resource.application_type_schema_id ||
+      (entity as { applicationTypeSchemaId?: string }).applicationTypeSchemaId ||
+      getSchemaSourceId(application.source);
     const editorUrl = resource.editor_url || application.editorUrl;
 
     return (

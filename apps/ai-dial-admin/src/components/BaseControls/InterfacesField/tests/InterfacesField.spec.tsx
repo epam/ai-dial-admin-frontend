@@ -298,6 +298,40 @@ describe('InterfacesField', () => {
   });
 });
 
+describe('InterfacesField — translators disabled', () => {
+  const renderRow = (isTranslatorDisabled?: boolean) =>
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'http://a' } }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+        translators={[{ name: 'my-translator' }] as any}
+        isTranslatorDisabled={isTranslatorDisabled}
+        isAsset
+      />,
+    );
+  const modeOptions = () =>
+    Array.from(
+      screen
+        .getByRole('combobox', { name: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-mode` })
+        .querySelectorAll('option'),
+    )
+      .map((option) => option.getAttribute('value'))
+      .filter(Boolean);
+
+  test('offers only Passthrough when translators are disabled', () => {
+    renderRow(true);
+
+    expect(modeOptions()).toEqual([InterfaceMode.Passthrough]);
+  });
+
+  test('offers Passthrough and Translator otherwise', () => {
+    renderRow();
+
+    expect(modeOptions()).toEqual([InterfaceMode.Passthrough, InterfaceMode.Translator]);
+  });
+});
+
 describe('InterfacesField — asset surfaces: mode & translator', () => {
   const modeSelect = () =>
     screen.getByRole('combobox', { name: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-mode` });

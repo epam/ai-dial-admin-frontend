@@ -278,6 +278,43 @@ describe('Folder Utils :: mergeFiles', () => {
   });
 });
 
+describe('Folder Utils :: mergeFiles — empty sibling root', () => {
+  const roots = () => [
+    { name: 'file', path: 'file/', nodeType: DialFileNodeType.FOLDER, items: [] },
+    { name: 'platform', path: 'platform/', nodeType: DialFileNodeType.FOLDER, items: [] },
+  ];
+  const router = {
+    name: 'r1',
+    path: 'r1',
+    folderId: 'platform/',
+    nodeType: DialFileNodeType.ITEM,
+    permissions: [],
+  };
+
+  test('loads the target root without creating a folder inside an empty sibling root', () => {
+    const result = mergeFiles(roots(), [router], 'platform/');
+
+    expect(result.map((root) => root.path)).toEqual(['file/', 'platform/']);
+    expect(result[0].items).toEqual([]);
+    expect(result[1].items).toHaveLength(1);
+  });
+
+  test('still loads a folder nested inside a sibling root that has children', () => {
+    const existing = [
+      {
+        name: 'file',
+        path: 'file/',
+        nodeType: DialFileNodeType.FOLDER,
+        items: [{ name: 'a', path: 'file/a/', nodeType: DialFileNodeType.FOLDER, items: [] }],
+      },
+    ];
+
+    const result = mergeFiles(existing, [router], 'file/a/');
+
+    expect(result[0].items?.[0].items).toHaveLength(1);
+  });
+});
+
 describe('Folder Utils :: fillFolderRules', () => {
   test('creates all folder levels when rules is empty', () => {
     const path = 'folder/folder2/lastFolder/';

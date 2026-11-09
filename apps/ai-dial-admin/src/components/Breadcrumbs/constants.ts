@@ -106,6 +106,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.PlatformRouters]: {
+    segments: [
+      { name: 'PlatformRouters', i18nKey: MenuI18nKey.PlatformRouters },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.PlatformTranslators]: {
     segments: [
       { name: 'PlatformTranslators', i18nKey: MenuI18nKey.PlatformTranslators },

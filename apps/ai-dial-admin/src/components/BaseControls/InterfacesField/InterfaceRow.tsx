@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { Input, Select } from '@epam/ai-dial-ui-kit';
 
@@ -46,6 +46,8 @@ interface Props<V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue> {
   // Models/Applications/Interceptors, platform Interceptors), where the row stays unconditionally
   // required.
   entityBaseUrl?: string;
+  // Offers only Passthrough: the owning entity cannot serve this interface through a translator.
+  isTranslatorDisabled?: boolean;
 }
 
 const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
@@ -61,11 +63,11 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   isAsset,
   translators,
   entityBaseUrl,
+  isTranslatorDisabled,
   view,
 }: Props<V>) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
-  const [error, setError] = useState<FieldError | null>(null);
 
   const baseUrl = value[baseUrlKey] || '';
   const effectiveMode = value.mode ?? InterfaceMode.Passthrough;
@@ -74,83 +76,67 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   const baseUrlValidationField = `${fieldId}-base-url`;
   const translatorValidationField = `${fieldId}-translator`;
 
-  const validate = useCallback(
-    (url?: string, shouldShowError = true) => {
-      const urlError = getUrlError(url, t, isRequired);
-      dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: !urlError });
-      if (shouldShowError) {
-        setError(urlError);
-      }
-    },
-    [baseUrlValidationField, dispatch, isRequired, t],
-  );
+  // Derived, not stored: the error always reflects the current value, so it cannot go stale when the
+  // value, the required-ness (entity base URL) or the mode changes under a mounted row.
+  const error: FieldError | null = isPassthrough ? getUrlError(baseUrl, t, isRequired) : null;
+  const isBaseUrlValid = !error;
+  const hasTranslator = !!value.translator;
 
+  // Validity is a pure function of the row's props, so one effect keeps the context in sync. A mode
+  // switch (a router moved to decision mode drops its translators) only changes those props. It also
+  // re-runs on `resetCounter`, because a validation reset clears every registered field.
   useEffect(() => {
-    if (isPassthrough) {
-      validate(baseUrl, false);
-      dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
-    } else {
-      dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: true });
-      dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: !!value.translator });
-    }
+    dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: isBaseUrlValid });
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: translatorValidationField,
+      isValid: isPassthrough || hasTranslator,
+    });
+  }, [
+    baseUrlValidationField,
+    dispatch,
+    hasTranslator,
+    isBaseUrlValid,
+    isPassthrough,
+    resetCounter,
+    translatorValidationField,
+  ]);
 
-    return () => {
+  useEffect(
+    () => () => {
       dispatch({ type: ValidationActionType.RemoveField, field: baseUrlValidationField });
       dispatch({ type: ValidationActionType.RemoveField, field: translatorValidationField });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (resetCounter && isPassthrough) {
-      validate(baseUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetCounter]);
-
-  useEffect(() => {
-    if (isPassthrough) {
-      validate(baseUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityBaseUrl]);
+    },
+    [baseUrlValidationField, dispatch, translatorValidationField],
+  );
 
   const onChangeBaseUrl = useCallback(
     (newValue?: string) => {
       const trimmedValue = newValue?.trimStart() || undefined;
-      validate(trimmedValue);
       // undefined, never '': Core treats an empty-string base_url as a present, broken URL rather
       // than an absent one, so an emptied value must be omitted from the payload.
       onChange({ ...value, [baseUrlKey]: trimmedValue });
     },
-    [value, baseUrlKey, onChange, validate],
+    [value, baseUrlKey, onChange],
   );
 
   // base_url and translator are mutually exclusive on the wire (Core's DeploymentInterface carries
-  // one or the other), so switching mode drops whichever field the new mode doesn't use and clears
-  // validation for that inactive field. overridePaths is dropped with base_url: Core rejects it on a
-  // translated interface.
+  // one or the other), so switching mode drops whichever field the new mode doesn't use.
+  // overridePaths is dropped with base_url: Core rejects it on a translated interface.
   const onChangeMode = useCallback(
     (mode: InterfaceMode) => {
       if (mode === InterfaceMode.Translator) {
-        dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: true });
-        dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: false });
         onChange({ ...value, mode, [baseUrlKey]: undefined, overridePaths: undefined });
       } else {
-        validate(baseUrl);
-        dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
         onChange({ ...value, mode, translator: undefined });
       }
     },
-    [baseUrl, baseUrlKey, baseUrlValidationField, dispatch, onChange, translatorValidationField, validate, value],
+    [baseUrlKey, onChange, value],
   );
 
   const onChangeTranslator = useCallback(
-    (translator: TranslatorReference) => {
-      dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
-      onChange({ ...value, translator });
-    },
-    [dispatch, onChange, translatorValidationField, value],
+    (translator: TranslatorReference) => onChange({ ...value, translator }),
+    [onChange, value],
   );
 
   const onChangeDefaultHeaders = useCallback(
@@ -175,7 +161,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
 
   const modeOptions = [
     { value: InterfaceMode.Passthrough, label: t(InterfacesI18nKey.ModePassthrough) },
-    { value: InterfaceMode.Translator, label: t(InterfacesI18nKey.ModeTranslator) },
+    ...(isTranslatorDisabled ? [] : [{ value: InterfaceMode.Translator, label: t(InterfacesI18nKey.ModeTranslator) }]),
   ];
 
   return (
@@ -206,6 +192,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
         <Select
           id={`${fieldId}-mode`}
           labelProps={{ label: t(InterfacesI18nKey.Mode) }}
+          caption={isTranslatorDisabled ? t(InterfacesI18nKey.InfoDecisionMode) : undefined}
           className="max-w-[300px]"
           options={modeOptions}
           value={effectiveMode}
@@ -224,7 +211,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             onChange={onChangeBaseUrl}
             disabled={disabled}
             error={error?.text}
-            invalid={!!error}
+            invalid={!isBaseUrlValid}
             containerClassName="w-full"
           />
         ) : (
@@ -250,14 +237,12 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
       )}
 
       {isAsset && (
-        <>
-          <KeyValueGrid
-            label={t(EntityFieldsI18nKey.defaultHeaders)}
-            value={value[defaultHeadersKey]}
-            disabled={disabled}
-            onChange={onChangeDefaultHeaders}
-          />
-        </>
+        <KeyValueGrid
+          label={t(EntityFieldsI18nKey.defaultHeaders)}
+          value={value[defaultHeadersKey]}
+          disabled={disabled}
+          onChange={onChangeDefaultHeaders}
+        />
       )}
     </div>
   );
