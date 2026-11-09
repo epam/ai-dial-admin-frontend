@@ -25,7 +25,7 @@ import {
 } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-display-tree';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { RowDetailFieldSchema, RowDetailScoreThresholds } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { createEmptyComparePrimaryRow, getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -42,6 +42,7 @@ interface Props {
   focusFieldKey?: string | null;
   focusRequestId?: number;
   fieldSchema?: RowDetailFieldSchema;
+  scoreThresholds?: RowDetailScoreThresholds;
   metricGroupOrder?: readonly string[];
   initialDisplayTree?: ColDef[];
   onDisplayTreeChange?: (tree: ColDef[]) => void;
@@ -61,6 +62,7 @@ const CompareRowDetailPanel: FC<Props> = ({
   focusFieldKey,
   focusRequestId = 0,
   fieldSchema,
+  scoreThresholds,
   metricGroupOrder = [],
   initialDisplayTree,
   onDisplayTreeChange,
@@ -141,8 +143,23 @@ const CompareRowDetailPanel: FC<Props> = ({
 
   const sections = useMemo(() => {
     if (!primaryDetail) return [];
-    return buildRowDetailSections(primaryDetail, comparedDetail, metricGroupOrder, fieldSchema);
-  }, [primaryDetail, comparedDetail, metricGroupOrder, fieldSchema]);
+    // The detail endpoint does not return the overall score; the grid row carries each run's.
+    return buildRowDetailSections(
+      { ...primaryDetail, testCaseScore: row.testCaseScore },
+      comparedDetail ? { ...comparedDetail, testCaseScore: row._compared?.testCaseScore } : null,
+      metricGroupOrder,
+      fieldSchema,
+      scoreThresholds,
+    );
+  }, [
+    primaryDetail,
+    comparedDetail,
+    row.testCaseScore,
+    row._compared?.testCaseScore,
+    metricGroupOrder,
+    fieldSchema,
+    scoreThresholds,
+  ]);
 
   useEffect(() => {
     if (sections.length === 0) {

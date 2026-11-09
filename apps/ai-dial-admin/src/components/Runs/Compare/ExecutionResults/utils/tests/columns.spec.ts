@@ -9,6 +9,7 @@ import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import {
   RUN_COMPARE_PRIMARY_INDEX,
   RUN_COMPARE_SECONDARY_INDEX,
+  CompareRunSlot,
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
@@ -16,7 +17,6 @@ import {
   EXTRACTED_GROUP_HEADER,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
-  formatCompareColumnHeader,
   COMPARE_SCORE_COLUMN_MIN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
@@ -42,6 +42,12 @@ const makeResult = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyt
 const withFlattenedMetricLeaves = (col: ColDef | ColGroupDef): ColGroupDef => {
   const group = col as ColGroupDef;
   return { ...group, children: (group.children as ColGroupDef[]).flatMap((metric) => metric.children) };
+};
+
+// Every Execution field is a group over its per-run leaves; most assertions only care about the leaves.
+const withFlattenedExecutionLeaves = (col: ColDef | ColGroupDef): ColGroupDef => {
+  const group = col as ColGroupDef;
+  return { ...group, children: (group.children as ColGroupDef[]).flatMap((field) => field.children) };
 };
 
 describe('Runs Compare :: getCompareColumnsCompare', () => {
@@ -133,7 +139,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
         _compared: makeResult({ responseStatusCode: 500, execDurationMs: 250 }),
       }),
     ]);
-    const exec = cols[2] as { children: ExecCol[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecCol[] };
     const httpPrimary = exec.children.find((col) => col.colId === 'http');
     const httpSecondary = exec.children.find((col) => col.colId === 'cmp_http');
     const durationPrimary = exec.children.find((col) => col.colId === 'duration');
@@ -159,7 +165,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       headerComponentParams?: { isRightAligned?: boolean };
     };
     const cols = getCompareColumnsCompare([makeRow()]);
-    const exec = cols[2] as { children: ExecCol[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecCol[] };
     const executionColIds = [
       'runIndex',
       'cmp_runIndex',
@@ -183,12 +189,107 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
   test('execution columns are hidden by default', () => {
     type ExecCol = { colId?: string; hide?: boolean };
     const cols = getCompareColumnsCompare([makeRow()]);
-    const exec = cols[2] as { children: ExecCol[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecCol[] };
     const executionColIds = ['runIndex', 'cmp_runIndex', 'http', 'cmp_http', 'duration', 'cmp_duration'];
 
     executionColIds.forEach((colId) => {
       const col = exec.children.find((child) => child.colId === colId);
       expect(col?.hide).toBe(true);
+    });
+  });
+
+  describe('Overall score columns', () => {
+    type ScoreCol = ColDef & {
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+
+    const getScoreGroup = (options?: Parameters<typeof getCompareColumnsCompare>[3]) => {
+      const exec = getCompareColumnsCompare([makeRow()], undefined, undefined, options)[2] as {
+        children: ColGroupDef[];
+      };
+      return exec.children.find((child) => child.headerName === 'Overall score') as ColGroupDef;
+    };
+
+    const getScoreColumns = (options?: Parameters<typeof getCompareColumnsCompare>[3]) => {
+      const [primary, secondary] = getScoreGroup(options).children as ScoreCol[];
+      return { primary, secondary };
+    };
+
+    const valueOf = (col: ScoreCol, data: CompareAnalyticsRow) =>
+      (col.valueGetter as (params: { data?: CompareAnalyticsRow }) => unknown)({ data });
+
+    test('sit under one Overall score header, each headed by its run index', () => {
+      const group = getScoreGroup();
+      const [primary, secondary] = group.children as ScoreCol[];
+
+      expect(group.headerGroupComponent).toBe(EllipsisHeaderGroup);
+      expect(primary.colId).toBe('overallScore');
+      expect(secondary.colId).toBe('cmp_overallScore');
+      expect(primary.headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX));
+      expect(secondary.headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX));
+      expect(primary.headerComponent).toBe(CompareRunIndexHeader);
+    });
+
+    test('are hidden by default and right-aligned like the other numeric columns', () => {
+      const { primary, secondary } = getScoreColumns();
+
+      expect(primary.hide).toBe(true);
+      expect(secondary.hide).toBe(true);
+      expect(primary.cellClass).toBe('align-right');
+      expect(secondary.cellClass).toBe('align-right');
+      expect(primary.headerComponentParams?.isRightAligned).toBe(true);
+      expect(secondary.headerComponentParams?.isRightAligned).toBe(true);
+    });
+
+    test('read each run’s own test case score, rounded', () => {
+      const { primary, secondary } = getScoreColumns();
+      const row = makeRow({ testCaseScore: 0.92857, _compared: makeResult({ testCaseScore: 0.5 }) });
+
+      expect(valueOf(primary, row)).toBe(0.929);
+      expect(valueOf(secondary, row)).toBe(0.5);
+    });
+
+    test('have no value for a missing score or a test case absent from the other run', () => {
+      const { primary, secondary } = getScoreColumns();
+
+      expect(valueOf(primary, makeRow({ testCaseScore: null }))).toBeUndefined();
+      expect(valueOf(secondary, makeRow({ testCaseScore: 1, _compared: null }))).toBeUndefined();
+    });
+
+    test('pass each run its own threshold to the cell renderer', () => {
+      const { primary, secondary } = getScoreColumns({
+        thresholds: { [CompareRunSlot.Primary]: 0.6, [CompareRunSlot.Secondary]: 0.8 },
+      });
+
+      expect(primary.cellRendererParams).toEqual({ threshold: 0.6 });
+      expect(secondary.cellRendererParams).toEqual({ threshold: 0.8 });
+    });
+
+    test('read as having no threshold until one is known', () => {
+      const { primary, secondary } = getScoreColumns();
+
+      expect(primary.cellRendererParams).toEqual({ threshold: undefined });
+      expect(secondary.cellRendererParams).toEqual({ threshold: undefined });
+    });
+
+    test('highlight the pair when the two scores differ and not when they match', () => {
+      const { primary, secondary } = getScoreColumns();
+      const changedRow = makeRow({ testCaseScore: 0.5, _compared: makeResult({ testCaseScore: 0.7 }) });
+      const sameRow = makeRow({ testCaseScore: 0.7, _compared: makeResult({ testCaseScore: 0.7 }) });
+      const missingRow = makeRow({ testCaseScore: 0.7, _compared: makeResult({ testCaseScore: null }) });
+
+      expect(primary.cellClassRules?.['compare-metric-new-start']?.({ data: changedRow })).toBe(true);
+      expect(secondary.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
+      expect(primary.cellClassRules?.['compare-metric-new-start']?.({ data: sameRow })).toBe(false);
+      expect(primary.cellClassRules?.['compare-metric-regressed-start']?.({ data: missingRow })).toBe(true);
+      expect(secondary.cellClassRules?.['compare-metric-regressed-end']?.({ data: missingRow })).toBe(true);
+    });
+
+    test('carry no highlight rules when highlights are hidden', () => {
+      const { primary, secondary } = getScoreColumns({ hideHighlights: true });
+
+      expect(primary.cellClassRules).toBeUndefined();
+      expect(secondary.cellClassRules).toBeUndefined();
     });
   });
 
@@ -226,27 +327,28 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(secondaryCol?.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
   });
 
-  test('EXECUTION group has flat columns with run index in header name', () => {
+  test('EXECUTION group heads every field with one title over a leaf per run', () => {
     const cols = getCompareColumnsCompare([makeRow()]);
-    const exec = cols[2] as {
-      headerName: string;
-      children: { headerName: string }[];
-    };
+    const exec = cols[2] as { headerName: string; children: ColGroupDef[] };
 
     expect(exec.headerName).toBe(EXECUTION_GROUP_HEADER);
-    expect(exec.children).toHaveLength(10);
-    expect(exec.children.map((child) => child.headerName)).toEqual([
-      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
-      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Request'),
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Request'),
-      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Turn'),
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Turn'),
-      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
-      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+    expect(exec.children.map((field) => field.headerName)).toEqual([
+      '# Run number',
+      'Request',
+      'Turn',
+      'Overall score',
+      'HTTP',
+      'Duration',
     ]);
+
+    exec.children.forEach((field) => {
+      expect(field.headerGroupComponent).toBe(EllipsisHeaderGroup);
+      expect((field.children as ColDef[]).map((leaf) => leaf.headerName)).toEqual([
+        formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX),
+        formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX),
+      ]);
+      expect((field.children as ColDef[]).every((leaf) => leaf.headerComponent === CompareRunIndexHeader)).toBe(true);
+    });
   });
 
   test('Request and Turn columns are hidden by default and render the 1-based index for both runs', () => {
@@ -256,7 +358,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown;
     };
     const cols = getCompareColumnsCompare([makeRow()]);
-    const exec = cols[2] as { children: ExecChild[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecChild[] };
     const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
 
     const requestPrimary = byColId('requestIndex');
@@ -280,7 +382,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
   test('Request and Turn columns stay empty for a non-chained, single-turn run', () => {
     type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
     const cols = getCompareColumnsCompare([makeRow()]);
-    const exec = cols[2] as { children: ExecChild[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecChild[] };
     const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
     const row = makeRow({ _compared: makeResult() });
 
@@ -298,7 +400,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
         metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
       }),
     ]);
-    const exec = cols[2] as { children: ExecChild[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecChild[] };
     const secondaryCol = exec.children[1];
 
     expect(secondaryCol.valueGetter({ data: makeRow({ _compared: makeResult({ runIndex: 3 }) }) })).toBe(4);
@@ -550,7 +652,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
   test('primary HTTP valueGetter returns dash for compared-only rows', () => {
     type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
     const cols = getCompareColumnsCompare([makeRow()]);
-    const exec = cols[2] as { children: ExecChild[] };
+    const exec = withFlattenedExecutionLeaves(cols[2]) as { children: ExecChild[] };
     const primaryHttpCol = exec.children.find((child) => child.colId === 'http') as ExecChild;
 
     expect(primaryHttpCol.colId).toBe('http');
@@ -609,7 +711,9 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       }),
     ]);
 
-    const execution = cols.find((col) => (col as ColGroupDef).headerName === EXECUTION_GROUP_HEADER) as ColGroupDef;
+    const execution = withFlattenedExecutionLeaves(
+      cols.find((col) => (col as ColGroupDef).headerName === EXECUTION_GROUP_HEADER)!,
+    );
     const indexPairs = ['runIndex', 'cmp_runIndex', 'requestIndex', 'cmp_requestIndex', 'turnIndex', 'cmp_turnIndex'];
     const hiddenColIds = (execution.children as ColDef[]).filter((col) => col.hide).map((col) => col.colId);
 

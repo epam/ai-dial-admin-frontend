@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
+import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 import ExecutionRowDetailPanel from '../ExecutionRowDetailPanel';
 
@@ -14,7 +15,19 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 }));
 
 vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailPivotTable', () => ({
-  default: () => <div role="region" aria-label="pivot table" />,
+  default: ({ sections }: { sections: RowDetailSection[] }) => (
+    <div role="region" aria-label="pivot table">
+      <output aria-label="overall score">
+        {sections.flatMap((section) => section.rows).find((row) => row.fieldKey === 'overallScore')?.primaryRaw ??
+          'none'}
+      </output>
+      <output aria-label="score threshold">
+        {String(
+          sections.flatMap((section) => section.rows).find((row) => row.fieldKey === 'overallScore')?.primaryThreshold,
+        )}
+      </output>
+    </div>
+  ),
 }));
 
 vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailTable', () => ({
@@ -82,6 +95,36 @@ describe('ExecutionRowDetailPanel', () => {
 
       expect(await screen.findByText(RunsI18nKey.LoadError)).toBeTruthy();
       expect(screen.queryByRole('region', { name: 'field table' })).toBeNull();
+    });
+
+    test('shows the row’s overall score in the Execution section, which the detail endpoint does not return', async () => {
+      renderPanel({ position: SidebarPosition.Bottom, testCaseScore: 0.7 });
+
+      expect(await screen.findByRole('status', { name: 'overall score' })).toHaveTextContent('0.7');
+    });
+
+    test('hands the run’s threshold to the score row for its above/below icon', async () => {
+      renderPanel({ position: SidebarPosition.Bottom, testCaseScore: 0.7, scoreThreshold: 0.6 });
+
+      expect(await screen.findByRole('status', { name: 'score threshold' })).toHaveTextContent('0.6');
+    });
+
+    test('leaves the threshold off when the run has none', async () => {
+      renderPanel({ position: SidebarPosition.Bottom, testCaseScore: 0.7 });
+
+      expect(await screen.findByRole('status', { name: 'score threshold' })).toHaveTextContent('undefined');
+    });
+
+    test('shows a zero score as a score', async () => {
+      renderPanel({ position: SidebarPosition.Bottom, testCaseScore: 0 });
+
+      expect(await screen.findByRole('status', { name: 'overall score' })).toHaveTextContent('0');
+    });
+
+    test('leaves the overall score empty for a row without one', async () => {
+      renderPanel({ position: SidebarPosition.Bottom });
+
+      expect(await screen.findByRole('status', { name: 'overall score' })).toHaveTextContent('none');
     });
 
     test('shows the row title in the header once loaded', async () => {

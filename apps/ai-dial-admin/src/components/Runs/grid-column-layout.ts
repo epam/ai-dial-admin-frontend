@@ -9,6 +9,9 @@ export const TOTAL_TURNS_COLUMN_WIDTH = 96;
 export const REQUEST_INDEX_COLUMN_WIDTH = 52;
 export const TOTAL_REQUESTS_COLUMN_WIDTH = 96;
 export const TEST_CASE_NAME_COLUMN_WIDTH = 156;
+export const OVERALL_SCORE_COLUMN_WIDTH = 124;
+/** One leaf per run under a shared "Overall score" group header; each holds an icon and up to five characters. */
+export const COMPARE_OVERALL_SCORE_COLUMN_WIDTH = 88;
 export const HTTP_COLUMN_WIDTH = 62;
 export const DURATION_COLUMN_WIDTH = 100;
 export const EXTRACTED_COLUMN_MIN_WIDTH = 120;

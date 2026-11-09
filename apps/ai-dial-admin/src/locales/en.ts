@@ -2739,6 +2739,8 @@ export default {
     RunCompareColorDisplay: 'Color display:',
     RunCompareAbsoluteValues: 'Absolute values',
     RunCompareDelta: 'Delta',
+    TestCaseOverallScoreAboveThresholdTooltip: "The test case's overall score is above the threshold ({threshold}).",
+    TestCaseOverallScoreBelowThresholdTooltip: "The test case's overall score is below the threshold ({threshold}).",
     RunCompareFilterDelta: 'Filter',
     RunCompareFilterField: 'Filter',
     RunCompareDiffLabel: 'Diff:',

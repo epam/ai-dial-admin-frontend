@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   ROW_DETAIL_DURATION_FIELD_KEY,
   ROW_DETAIL_HTTP_FIELD_KEY,
+  ROW_DETAIL_OVERALL_SCORE_FIELD_KEY,
   ROW_DETAIL_RUN_NUMBER_FIELD_KEY,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
@@ -22,12 +23,14 @@ const field = (fieldKey: string, overrides: Partial<RowDetailField> = {}): RowDe
 });
 
 describe('isRightAlignedRowDetailField', () => {
-  test.each([ROW_DETAIL_RUN_NUMBER_FIELD_KEY, ROW_DETAIL_HTTP_FIELD_KEY, ROW_DETAIL_DURATION_FIELD_KEY])(
-    'returns true for %s',
-    (fieldKey) => {
-      expect(isRightAlignedRowDetailField(field(fieldKey))).toBe(true);
-    },
-  );
+  test.each([
+    ROW_DETAIL_RUN_NUMBER_FIELD_KEY,
+    ROW_DETAIL_OVERALL_SCORE_FIELD_KEY,
+    ROW_DETAIL_HTTP_FIELD_KEY,
+    ROW_DETAIL_DURATION_FIELD_KEY,
+  ])('returns true for %s', (fieldKey) => {
+    expect(isRightAlignedRowDetailField(field(fieldKey))).toBe(true);
+  });
 
   test('returns false for an unrelated field, regardless of isNumeric', () => {
     expect(isRightAlignedRowDetailField(field('answer', { isNumeric: false }))).toBe(false);
