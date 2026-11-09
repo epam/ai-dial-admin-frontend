@@ -29,7 +29,7 @@ const EntityInfoHeader: FC<Props> = ({ entity, view, prefix, postfix }) => {
   const createdAt = useLocalDateTimeString(createdAtValue);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
+    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-tertiary">
       {prefix}
       {!!updatedAtValue && view !== ApplicationRoute.Runs && (
         <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={updatedAt} />

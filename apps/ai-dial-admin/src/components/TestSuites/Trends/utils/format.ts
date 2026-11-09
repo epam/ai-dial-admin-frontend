@@ -1,10 +1,11 @@
-/** Formats a suite run duration for KPI display (ms under 1s, otherwise seconds). */
+import { formatRunDuration } from '@/src/components/Runs/utils/run-list-values';
+
+/** Formats a suite run duration for KPI display (ms under 1s, otherwise seconds → minutes → hours). */
 export const formatSuiteRunTime = (durationMs: number): string => {
   if (durationMs < 1000) {
     return `${Math.round(durationMs)}ms`;
   }
-  const seconds = Math.round(durationMs / 100) / 10;
-  return `${seconds}s`;
+  return formatRunDuration(durationMs) ?? '—';
 };
 
 export const formatComboRuntimeSeconds = (durationMs: number): string => {

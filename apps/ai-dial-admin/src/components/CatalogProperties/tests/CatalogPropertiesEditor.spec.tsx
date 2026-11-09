@@ -207,6 +207,36 @@ describe('CatalogPropertiesEditor — undeclared values', () => {
     expect(screen.queryByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties })).toBeNull();
   });
 
+  test('keeps a long warning in a keyboard-focusable scroll region without hiding the editor', async () => {
+    const user = userEvent.setup();
+    const longName = 'long-name'.repeat(100);
+    renderEditor({ values: { tag: 'New', [longName]: 'x' } });
+
+    const message = screen.getByRole('region', { name: EntitiesI18nKey.UndeclaredCatalogPropertiesMessage });
+    expect(message).toHaveTextContent(EntitiesI18nKey.UndeclaredCatalogProperties);
+    expect(message).toHaveClass('max-h-40', 'overflow-y-auto', 'wrap-anywhere');
+    expect(screen.getByRole('button', { name: 'schema-renderer' })).toBeTruthy();
+
+    await user.tab();
+    await user.tab();
+    expect(message).toHaveFocus();
+  });
+
+  test('keeps the removal action outside the long error scroll region', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const longName = 'long-name'.repeat(100);
+    renderEditor({ schema: closed, values: { tag: 'New', [longName]: 'x' }, onChange });
+
+    const message = screen.getByRole('region', { name: EntitiesI18nKey.UndeclaredCatalogPropertiesMessage });
+    const remove = screen.getByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties });
+    expect(message).toHaveTextContent(EntitiesI18nKey.UndeclaredCatalogPropertiesForbidden);
+    expect(message).not.toContainElement(remove);
+
+    await user.click(remove);
+    expect(onChange).toHaveBeenCalledWith({ tag: 'New' });
+  });
+
   test('shows no banner when every value is declared', () => {
     renderEditor({ values: { tag: 'New' } });
 
@@ -264,9 +294,11 @@ describe('CatalogPropertiesEditor — undeclared values', () => {
 
   test('offers no remove control to a read-only admin', () => {
     isReadOnlyAdmin.mockReturnValue(true);
-    renderEditor({ schema: closed });
+    renderEditor({ schema: closed, values: { tag: 'New', ['long-name'.repeat(100)]: 'x' } });
 
-    expect(screen.getByText(EntitiesI18nKey.UndeclaredCatalogPropertiesForbidden)).toBeTruthy();
+    expect(screen.getByRole('region', { name: EntitiesI18nKey.UndeclaredCatalogPropertiesMessage })).toHaveTextContent(
+      EntitiesI18nKey.UndeclaredCatalogPropertiesForbidden,
+    );
     expect(screen.queryByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties })).toBeNull();
   });
 });

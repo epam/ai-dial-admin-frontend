@@ -10,10 +10,12 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { Publication } from '@/src/models/dial/publications';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { readCallerOptions } from '@/src/server/config-entities/read-caller-options';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
+import { isFullAdminCaller } from '@/src/server/user-access';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getPublicationView, isComplexResourcePublicationView } from '@/src/utils/publications';
@@ -43,10 +45,14 @@ export default async function Page(params: { searchParams: Promise<SearchParams>
   try {
     data = await publicationsApi.getPublication(token, path);
     if (type === ResourceType.APPLICATION) {
-      assetRunners = await getAllRunners();
-      applicationSchemes = process.env.DIAL_ADMIN_API_URL
-        ? await applicationRunnersApi.getApplicationSchemesList(token)
-        : await readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, [], true);
+      if (await isFullAdminCaller()) {
+        assetRunners = await getAllRunners();
+        applicationSchemes = process.env.DIAL_ADMIN_API_URL
+          ? await applicationRunnersApi.getApplicationSchemesList(token)
+          : await readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, [], true);
+      } else {
+        ({ schemes: applicationSchemes } = await readCallerOptions(token, []));
+      }
     }
   } catch (e) {
     errorObjLog(e, `Failed to fetch ${type} publication view data`);

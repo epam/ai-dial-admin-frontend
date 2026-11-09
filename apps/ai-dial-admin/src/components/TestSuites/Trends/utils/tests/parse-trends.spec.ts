@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { parseTrendsData } from '@/src/components/TestSuites/Trends/utils/parse-trends';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
+import { OverallScoreType } from '@/src/models/evaluation/test-suite';
 
 describe('parseTrendsData', () => {
   const runs: Run[] = [
@@ -68,6 +69,10 @@ describe('parseTrendsData', () => {
     expect(parsed.runOrder.map((point) => point.runId)).toEqual(['run-1', 'run-2']);
     expect(parsed.runOrder.map((point) => point.isFailed)).toEqual([false, false]);
     expect(parsed.runOrder.map((point) => point.overallScoreThreshold)).toEqual([0.6, undefined]);
+    expect(parsed.runOrder.map((point) => point.overallScoreMethod)).toEqual([
+      { type: OverallScoreType.Mean },
+      { type: OverallScoreType.Mean },
+    ]);
     expect(parsed.kpis).toEqual({
       runCount: 2,
     });
@@ -138,6 +143,7 @@ describe('parseTrendsData', () => {
         computedAtMs: 1400,
         overallScore: null,
         overallScoreThreshold: undefined,
+        overallScoreMethod: null,
         durationMs: 400,
         isFailed: false,
       },

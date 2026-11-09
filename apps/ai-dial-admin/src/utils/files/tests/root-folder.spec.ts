@@ -7,7 +7,9 @@ import {
   getRootFolders,
   isFileRootPath,
   isFlatPlatformView,
+  isNestedPlatformView,
   isPlatformBucketPath,
+  isPlatformBucketView,
   isPlatformDualBucketView,
   PLATFORM_ROOT_FOLDER,
 } from '../root-folder';
@@ -58,12 +60,41 @@ describe('Root Folder Utils :: isFlatPlatformView', () => {
     expect(isFlatPlatformView(view)).toBe(false);
   });
 
-  test('Should agree with getRootFolder, so the two cannot drift apart', () => {
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    'Should not treat %s as flat, since it nests one folder level',
+    (view) => {
+      expect(isFlatPlatformView(view)).toBe(false);
+    },
+  );
+
+  test('Should agree with isPlatformBucketView on the root, so the two cannot drift apart', () => {
     const views = Object.values(ApplicationRoute);
 
     views.forEach((view) => {
-      expect(isFlatPlatformView(view)).toBe(getRootFolder(view) === PLATFORM_ROOT_FOLDER);
+      expect(isPlatformBucketView(view)).toBe(getRootFolder(view) === PLATFORM_ROOT_FOLDER);
     });
+  });
+});
+
+describe('Root Folder Utils :: isNestedPlatformView', () => {
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    'Should treat %s as nested, with the platform root',
+    (view) => {
+      expect(isNestedPlatformView(view)).toBe(true);
+      expect(isPlatformBucketView(view)).toBe(true);
+      expect(getRootFolder(view)).toBe(PLATFORM_ROOT_FOLDER);
+    },
+  );
+
+  test.each([
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformRoutes,
+    ApplicationRoute.PlatformRoles,
+    ApplicationRoute.Prompts,
+    ApplicationRoute.AssetsApplications,
+    undefined,
+  ])('Should not treat %s as nested', (view) => {
+    expect(isNestedPlatformView(view)).toBe(false);
   });
 });
 
@@ -94,6 +125,14 @@ describe('Root Folder Utils :: getRootFolders', () => {
   test('Should return file, platform, and public when the platform bucket is explicitly enabled', () => {
     expect(getRootFolders(ApplicationRoute.AssetsApplications, true)).toEqual(['file', 'platform', 'public']);
   });
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should drop the file root for %s when it is disabled',
+    (view) => {
+      expect(getRootFolders(view, true, false)).toEqual(['platform', 'public']);
+      expect(getRootFolders(view, false, false)).toEqual(['public']);
+    },
+  );
 
   test('Should ignore the platform bucket flag for non-dual-bucket views', () => {
     const views = [ApplicationRoute.Prompts, ApplicationRoute.Conversations, ApplicationRoute.PlatformKeys];

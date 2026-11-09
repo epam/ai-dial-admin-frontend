@@ -45,7 +45,7 @@ interface Props {
   focusRequestId?: number;
 }
 
-const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-secondary dial-small-semi-text';
+const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-tertiary dial-small-semi-text';
 const LEFT_CELL_STICKY = 'sticky left-0';
 const VALUE_CELL_BASE =
   'p-3 border-b border-r border-tertiary min-w-0 overflow-hidden h-full min-h-10 flex items-start self-stretch';

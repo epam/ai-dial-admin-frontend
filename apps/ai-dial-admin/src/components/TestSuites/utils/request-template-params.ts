@@ -20,7 +20,7 @@ const collectParamsFromString = (str: string): ParsedTemplateParam[] => {
     const hasDefault = defaultValue !== undefined;
     params.push({
       name: name.trim(),
-      effectiveType: TEMPLATE_VARIABLE_TYPE_BY_HINT[typeHint ?? ''] ?? TestCaseItemType.STRING,
+      effectiveType: TEMPLATE_VARIABLE_TYPE_BY_HINT[(typeHint ?? '').toLowerCase()] ?? TestCaseItemType.STRING,
       hasDefault,
       defaultValue: hasDefault ? defaultValue.trim() : undefined,
     });

@@ -12,6 +12,7 @@ import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -45,7 +46,9 @@ interface Props<T> {
  */
 const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, onChange }: Props<T>) => {
   const t = useI18n();
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { isFullAdmin } = useAppContext();
+  // Core drops a non-admin's `userRoles` without an error, so they are shown, not edited.
+  const isReadOnlyAdmin = useIsReadOnlyAdmin() || !isFullAdmin;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isSpecificRoles = Array.isArray(asset.userRoles);
 
@@ -134,7 +137,7 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
         {!isReadOnlyAdmin && isSpecificRoles && (
           <PrimaryButton
             label={t(RolesI18nKey.AddRoles)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             onClick={onOpenModal}
           />
         )}

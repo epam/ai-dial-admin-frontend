@@ -1,9 +1,8 @@
 # utility-core-api Specification
 
 ## Purpose
-`CoreUtilityApi`'s direct-to-Core deployment listing/lookup and user-identity read, and the
-`getUserInfo` picker in `src/app/api/api.ts` that chooses between it and the admin-backend-routed
-`UtilityApi.getUserInfo`. Created as part of migrating `UtilityApi`'s admin-backend proxy endpoints
+`CoreUtilityApi`'s direct-to-Core deployment listing/lookup and user-identity read (`id` and `email`
+only; roles and access come from `user-org-units-access`). Created as part of migrating `UtilityApi`'s admin-backend proxy endpoints
 to DIAL Core directly, alongside the global-settings singleton now owned by `SettingsApi`.
 
 ## Requirements
@@ -20,19 +19,20 @@ The system SHALL provide a server-side client (`CoreUtilityApi`) that lists depl
 - **THEN** the client issues a `GET` request to Core's deployment-by-name route, because Core registers only `GET` for that route and a `HEAD` request would 404 unconditionally
 - **AND** a 404 response resolves to `null`, matching the existing "name is unique" contract
 
-### Requirement: A caller's own identity read prefers the admin backend when configured
-The system SHALL expose a single `getUserInfo(token)` entry point (in `src/app/api/api.ts`) that every consumer calls, which routes to the admin backend's identity endpoint when `DIAL_ADMIN_API_URL` is configured, and to DIAL Core's `GET /v1/user/info` directly otherwise. No consumer SHALL call either underlying client's `getUserInfo` directly.
+### Requirement: A caller's own identity read comes from DIAL Core
+The system SHALL read the caller's own identity only from DIAL Core's `GET /v1/user/info` through
+`CoreUtilityApi.getUserInfo`, whatever `DIAL_ADMIN_API_URL` is. The returned `UserInfo` SHALL carry `id`
+(`userId`, else `project`) and `email` (the `email` claim) and SHALL NOT carry roles. The admin backend's
+identity endpoint and the `getUserInfo` picker in `src/app/api/api.ts` SHALL NOT exist.
 
-#### Scenario: Admin backend configured routes to the admin backend
+#### Scenario: Admin backend configured still reads identity from Core
 - **WHEN** `DIAL_ADMIN_API_URL` is set and a caller requests the current user's identity
-- **THEN** the request goes to the admin backend's security-info endpoint
-- **AND** the returned `roles` reflect the admin backend's own `FULL_ADMIN`/`READ_ONLY_ADMIN` mapping
+- **THEN** the request goes to DIAL Core's `GET /v1/user/info`, never to the admin backend
 
-#### Scenario: Admin backend not configured routes to Core directly
-- **WHEN** `DIAL_ADMIN_API_URL` is unset and a caller requests the current user's identity
-- **THEN** the request goes to DIAL Core's `GET /v1/user/info`
-- **AND** the returned `id`/`email` are derived from Core's response (`userId`/`project` for `id`, the `email` claim for `email`)
-- **AND** `roles` is empty — DIAL Core reports only raw, unmapped roles, which are not translated into `FULL_ADMIN`/`READ_ONLY_ADMIN`
+#### Scenario: Identity is derived from Core's response
+- **WHEN** Core answers `/v1/user/info`
+- **THEN** `id` comes from `userId` or `project` and `email` from the `email` claim
+- **AND** the result has no `roles` field
 
 ### Requirement: The global-settings singleton has one owner
 The system SHALL expose reads and writes of DIAL Core's global-settings singleton (`v1/settings/platform/global`) — the unconditional read used by `getGlobalInterceptors`, and the etag-conditional read/write the System Properties page uses — from a single client (`SettingsApi`), sharing one URL constant. No other client SHALL address this resource.
@@ -56,3 +56,14 @@ The System Properties page's interceptor picker SHALL read from the same Core-di
 - **WHEN** one of the two population reads fails while the other succeeds
 - **THEN** the page still renders the surviving population
 - **AND** shows the same "incomplete option list" notification `ModelView` shows for the same condition
+
+### Requirement: Caller-scoped option reads come from DIAL Core
+`CoreUtilityApi` SHALL read runner schemas from `GET /v1/application_type_schemas/schemas` and the caller's deployments from `GET /openai/models` and `GET /openai/applications`. These lists are readable by any user, and the deployment lists SHALL be treated as exactly the valid dependency choices for that caller. A server helper SHALL map them to the picker shapes and degrade a failed read to an empty list with an option-list-unavailable warning.
+
+#### Scenario: Deployment list read
+- **WHEN** the caller's models are requested
+- **THEN** `GET /openai/models` is called and each `{id, display_name}` becomes a picker option, falling back to the id for the label
+
+#### Scenario: Failed read
+- **WHEN** a caller-scoped read fails
+- **THEN** that picker is empty and the warning is raised, and the other pickers still load

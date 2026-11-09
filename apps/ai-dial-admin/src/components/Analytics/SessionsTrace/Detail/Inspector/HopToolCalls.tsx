@@ -32,7 +32,7 @@ const HopToolCalls: FC<Props> = ({ calls }) => {
             {id != null && <span className="pl-1.5">#{shortCallId(id)}</span>}
           </span>
           {args !== null && (
-            <pre className="whitespace-pre-wrap break-words rounded border border-primary bg-layer-1 p-2 font-mono text-primary dial-caption-text">
+            <pre className="whitespace-pre-wrap break-words rounded border border-secondary bg-layer-1 p-2 font-mono text-primary dial-caption-text">
               {args}
             </pre>
           )}

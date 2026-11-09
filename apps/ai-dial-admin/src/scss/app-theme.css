@@ -295,10 +295,7 @@
 
   /* shadows */
   --shadow: 0 0 4px 0 var(--bg-blackout, #161b2d4d);
-  --shadow-xs: 0 1px 4px 0 var(--shadow-xs-1, #2764d933), 0 1px 2px 0 var(--shadow-xs-2, #161b2d08);
-  --shadow-sm: 0 8px 10px 0 var(--shadow-sm, #2764d914);
-  --shadow-md: 0 8px 24px 0 var(--shadow-md, #2764d90f);
-  --shadow-lg: 0 8px 44px 0 var(--shadow-lg, #2764d914);
+  --shadow-xs: 0 0 8px 1px var(--shadow-xs-1, #2764d933);
 
   --radius: 3px;
 
@@ -358,6 +355,18 @@
 /* The bare `font` utility: the theme font, falling back to Inter. */
 @utility font {
   font-family: var(--theme-font, var(--font-inter));
+}
+
+/*
+ * These keys share a name with the theme variable they read, so declaring them on `:root` would make them
+ * reference themselves; `reference` keeps them in the utilities only.
+ */
+@theme inline reference {
+  --shadow-sm:
+    4px 9px 16px 1px var(--shadow-sm-2, var(--shadow-sm, #2764d90f)), 0 -2px 4px 2px var(--shadow-sm-1, #2764d90a);
+  --shadow-md:
+    0 10px 30px 9px var(--shadow-md-2, var(--shadow-md, #2764d90f)), 0 0 8px 2px var(--shadow-md-1, #2764d90a);
+  --shadow-lg: 1px 10px 25px 12px var(--shadow-lg, #2764d914);
 }
 
 /* ScoreCell picks a bucket at runtime, so the classes cannot be found by scanning. */

@@ -10,15 +10,11 @@ requirements for the write-path details); the differences this capability covers
 view). Created by archiving change `add-platform-applications`.
 ## Requirements
 ### Requirement: File root shown above physical buckets in the Assets Applications grid
-The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Applications` grid when Catalog is enabled, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. When Catalog is disabled, the system SHALL omit `platform` and its resource requests but SHALL retain `file` and `public` roots. No new menu entry or top-level list route SHALL be introduced.
+The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Applications` grid, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. No new menu entry or top-level list route SHALL be introduced.
 
-#### Scenario: All roots appear when Catalog is enabled
-- **WHEN** a user opens `/assets-applications` with Catalog enabled
+#### Scenario: All roots appear
+- **WHEN** a user opens `/assets-applications`
 - **THEN** the grid shows `file`, `platform`, and `public` roots in that order
-
-#### Scenario: File root remains when Catalog is disabled
-- **WHEN** a user opens `/assets-applications` with Catalog disabled
-- **THEN** the grid shows `file` and `public`, does not show `platform`, and makes no platform resource request
 
 ### Requirement: File-root applications are flat and read-only
 The system SHALL treat Applications under the synthetic `file` root as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `applications` endpoint with the initial root batch. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
@@ -253,7 +249,7 @@ end-users; this notification SHALL NOT be shown when `user_roles` is `undefined`
 #### Scenario: Roles tab appears on the platform application detail view
 - **WHEN** a user opens a platform-bucket application's detail view
 - **THEN** a `Roles` tab is present alongside Properties, Features, Parameters, Interceptors,
-  Dependencies, and App Routes
+  and App Routes, and no `Dependencies` tab is present
 
 #### Scenario: Roles selection round-trips on the platform application resource
 - **WHEN** a user selects roles on a platform application and saves
@@ -372,3 +368,15 @@ SHALL be labelled to cover tools, functions and skills. The value SHALL be store
 #### Scenario: Toggling persists the flag
 - **WHEN** a user turns `skills_supported` on and saves
 - **THEN** the payload carries `features.skills_supported: true`
+
+### Requirement: Application pickers for a caller without admin access
+When the caller's `adminAccess` is not `FULL`, the Assets Applications editor, list and publication detail SHALL NOT read the config-file endpoints, platform App Runners or translators, roles, interceptors or the global interceptor chain. Runner options SHALL come from `GET /v1/application_type_schemas/schemas`, and model and application options from `GET /openai/models` and `GET /openai/applications`. A runner's routes, interceptors and features SHALL be resolved through `GET /v1/application_type_schemas/schema?id=`. The Interceptors and user-roles controls SHALL be read-only. A failed list read SHALL leave that picker empty and show the option-list-unavailable warning. A full admin SHALL keep today's sources.
+
+#### Scenario: Non-admin opens an application
+- **WHEN** a caller without full admin access opens an application
+- **THEN** no config-file, platform runner, translator, roles or interceptor read is made
+- **AND** the model, application and runner pickers list the caller's own deployments and schemas
+
+#### Scenario: Non-admin selects a runner
+- **WHEN** a caller without full admin access selects a runner
+- **THEN** its routes, interceptors and features come from the resolved schema read, not the config-file read

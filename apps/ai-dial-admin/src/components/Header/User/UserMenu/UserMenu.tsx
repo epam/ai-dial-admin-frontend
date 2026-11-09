@@ -82,7 +82,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth }) => {
         onOpenChange={(open) => setIsOpen(open)}
         items={dropdownItems}
         menuHeader={
-          <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
+          <div className="flex flex-row items-center gap-3 border-b border-tertiary p-3">
             <UserIcon />
 
             <div className="flex min-w-0 flex-col">

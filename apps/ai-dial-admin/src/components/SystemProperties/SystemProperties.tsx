@@ -8,7 +8,7 @@ import { cloneDeep, isEqual } from 'lodash';
 import { updateProperties } from '@/src/app/[lang]/system-properties/actions';
 import GlobalInterceptors from '@/src/components/EntityView/Interceptors/GlobalInterceptors';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -22,9 +22,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
+import { DEFAULT_SPENDING_LIMITS } from './constants';
 import Header from './Header';
 import RateLimitSchedule from './RateLimitSchedule';
 import SpendingLimits from './SpendingLimits';
+import { isRateLimitScheduleValid } from './utils/rate-limit-schedule';
+import { isDefaultCostObjectValid } from './utils/spending-limits';
 
 interface Props {
   interceptors: DialInterceptor[];
@@ -39,7 +43,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
@@ -51,6 +55,26 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.GlobalInterceptors);
   const [currentSettings, setCurrentSettings] = useState(cloneDeep(globalSettings));
+  const isCostObjectInvalid = !isDefaultCostObjectValid(
+    (currentSettings?.spendingLimits ?? DEFAULT_SPENDING_LIMITS).defaultCostObject,
+  );
+  const isScheduleValid = isRateLimitScheduleValid(currentSettings?.rateLimitSchedule);
+
+  // Reset clears registered fields, so re-register even if the value did not change.
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'spendingLimits', isValid: !isCostObjectInvalid });
+  }, [dispatch, isCostObjectInvalid, resetCounter]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'rateLimitSchedule', isValid: isScheduleValid });
+  }, [dispatch, isScheduleValid, resetCounter]);
+
+  useEffect(() => {
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: 'spendingLimits' });
+      dispatch({ type: ValidationActionType.RemoveField, field: 'rateLimitSchedule' });
+    };
+  }, [dispatch]);
 
   const isChanged = useMemo(() => {
     return !isEqual(currentSettings, globalSettings);
@@ -75,25 +99,30 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
     );
   }, []);
 
-  const onSave = useCallback(() => {
+  const onSave = useCallback(async () => {
     // No blob yet -> omit If-Match (create); a blob already exists -> assert existence with '*'.
     // Core never hands back a real etag to compare against — see settings-api.ts.
     const etag = doesSettingsExist ? DEFAULT_ETAG : undefined;
+    let res: Awaited<ReturnType<typeof updateProperties>>;
+    try {
+      res = await updateProperties(currentSettings as GlobalSettings, etag);
+    } catch {
+      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(ErrorI18nKey.TryAgainLater)));
+      return;
+    }
 
-    updateProperties(currentSettings as GlobalSettings, etag).then((res) => {
-      if (res.success) {
-        dispatch({ type: ValidationActionType.Reset });
-        showNotification(
-          getSuccessNotification(
-            getUpdateNotificationTitle(ApplicationRoute.SystemProperties, t),
-            getUpdateNotificationDescription(ApplicationRoute.SystemProperties, '', t),
-          ),
-        );
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-      }
-    });
+    if (res.success) {
+      dispatch({ type: ValidationActionType.Reset });
+      showNotification(
+        getSuccessNotification(
+          getUpdateNotificationTitle(ApplicationRoute.SystemProperties, t),
+          getUpdateNotificationDescription(ApplicationRoute.SystemProperties, '', t),
+        ),
+      );
+      router.refresh();
+    } else {
+      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+    }
   }, [currentSettings, dispatch, doesSettingsExist, router, showNotification, t]);
 
   const onDiscard = useCallback(() => {
@@ -105,16 +134,18 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   }, []);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <Header
         isChanged={isChanged}
+        isScheduleValid={isScheduleValid}
+        isCostObjectInvalid={isCostObjectInvalid}
         onSave={onSave}
         onDiscard={onDiscard}
         activeTab={activeTab}
         onChangeTab={changeTab}
       />
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {activeTab === EntityViewTab.GlobalInterceptors && (
           <GlobalInterceptors
             interceptors={interceptors}

@@ -229,7 +229,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   return (
     <>
       <ListEntities<PipelineListItem>
-        isMainListView
         isEnableColumnPanel
         listLabel={t(MenuI18nKey.Pipelines)}
         columnDefs={columns}

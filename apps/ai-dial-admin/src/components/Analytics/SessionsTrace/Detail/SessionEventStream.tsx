@@ -146,7 +146,7 @@ const HopTreeRowView: FC<RowProps> = ({
   const cardClassName = classNames(
     'flex min-w-0 flex-1 items-center gap-2 rounded border bg-layer-3',
     (isOpenable || children.length > 0) && 'hover:border-hover focus-within:border-hover',
-    isSelected ? 'border-accent-primary' : 'border-primary',
+    isSelected ? 'border-accent-primary' : 'border-secondary',
     node.isFailed && 'border-error',
     isDimmed && 'opacity-50',
   );
@@ -318,7 +318,7 @@ const SessionEventStream: FC<Props> = ({ tree, feedbackBySpanId, selectedSpanId,
       <div
         role="group"
         aria-label={t(SessionsTraceI18nKey.StreamFilterLabel)}
-        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-primary px-4 py-2"
+        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-tertiary px-4 py-2"
       >
         <GhostButton
           size={ElementSize.Small}
@@ -329,7 +329,7 @@ const SessionEventStream: FC<Props> = ({ tree, feedbackBySpanId, selectedSpanId,
           className={classNames(FILTER_CHIP_CLASS, emphasis === null ? SELECTED_CHIP_CLASS : NEUTRAL_CHIP_CLASS)}
           textClassName="dial-tiny-text"
         />
-        <span aria-hidden className="mx-1 h-4 shrink-0 border-l border-primary" />
+        <span aria-hidden className="mx-1 h-4 shrink-0 border-l border-tertiary" />
         {kinds.map((kind) => (
           <GhostButton
             key={kind}

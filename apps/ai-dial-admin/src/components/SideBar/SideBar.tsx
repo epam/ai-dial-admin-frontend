@@ -173,7 +173,7 @@ const SidebarContent: FC<SidebarContentProps> = ({ itemComponent, resizable }) =
   return (
     <div
       className={classNames(
-        'flex flex-none shrink-0 flex-col divide-y divide-tertiary bg-layer-3 transition-all z-20',
+        'flex flex-none shrink-0 flex-col divide-y divide-tertiary shadow-[inset_-1px_0_0_var(--border-color-tertiary)] bg-layer-base transition-all z-20',
         resizable ? 'size-full shrink-0' : 'w-16 max-w-16',
       )}
     >

@@ -21,6 +21,10 @@ import BackfillDrawer from '@/src/components/Analytics/Common/BackfillSidebar/Ba
 import IdentityTag from '@/src/components/Analytics/Common/IdentityTag';
 import TableBackfillBanner from '@/src/components/Analytics/Tables/Backfill/TableBackfillBanner';
 import TableBackfillSidebar from '@/src/components/Analytics/Tables/Backfill/TableBackfillSidebar';
+import IngestFailuresButton from '@/src/components/Analytics/Tables/IngestFailures/IngestFailuresButton';
+import IngestFailuresDrawer from '@/src/components/Analytics/Tables/IngestFailures/IngestFailuresDrawer';
+import { IngestFailuresDrawerState } from '@/src/components/Analytics/Tables/IngestFailures/models';
+import { useIngestFailuresCount } from '@/src/components/Analytics/Tables/IngestFailures/use-ingest-failures-count';
 import { findRunningTableBackfill } from '@/src/components/Analytics/Tables/Backfill/use-table-backfill-runs';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
@@ -62,6 +66,8 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   const [editTarget, setEditTarget] = useState<AnalyticsTable | null>(null);
   const [runningBackfill, setRunningBackfill] = useState<TableBackfillRun | null>(null);
   const [isBackfillOpen, setIsBackfillOpen] = useState(false);
+  const [ingestFailures, setIngestFailures] = useState<IngestFailuresDrawerState | null>(null);
+  const failuresCount = useIngestFailuresCount(isFullAdmin);
 
   const createItems: DropdownItem[] = useMemo(
     () => [
@@ -125,6 +131,16 @@ const TablesView: FC<Props> = ({ initialTables }) => {
 
   const onOpenBackfill = useCallback(() => setIsBackfillOpen(true), []);
   const onCloseBackfill = useCallback(() => setIsBackfillOpen(false), []);
+
+  const onOpenIngestFailures = useCallback(() => setIngestFailures({}), []);
+  const onOpenRunFailures = useCallback((backfillRunId: string) => {
+    setIsBackfillOpen(false);
+    setIngestFailures({ backfillRunId });
+  }, []);
+  const onCloseIngestFailures = useCallback(() => {
+    setIngestFailures(null);
+    void failuresCount.reload();
+  }, [failuresCount]);
 
   const onConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -248,7 +264,6 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   return (
     <>
       <ListEntities<AnalyticsTable>
-        isMainListView
         listLabel={t(MenuI18nKey.Tables)}
         description={
           isFullAdmin && runningBackfill && <TableBackfillBanner run={runningBackfill} onOpen={onOpenBackfill} />
@@ -264,6 +279,9 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         }}
         emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoTables) }}
       >
+        {isFullAdmin && !failuresCount.isUnavailable && (
+          <IngestFailuresButton count={failuresCount.parked} onOpen={onOpenIngestFailures} />
+        )}
         {isFullAdmin && !runningBackfill && (
           <Button variant={ButtonVariant.Neutral} label={t(BackfillI18nKey.TableTitle)} onClick={onOpenBackfill} />
         )}
@@ -298,8 +316,15 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       )}
 
       <BackfillDrawer isOpen={isBackfillOpen} onClose={onCloseBackfill} title={t(BackfillI18nKey.TableTitle)}>
-        <TableBackfillSidebar onRunsChange={onBackfillRunsChange} />
+        <TableBackfillSidebar
+          onRunsChange={onBackfillRunsChange}
+          onOpenIngestFailures={failuresCount.isUnavailable ? undefined : onOpenRunFailures}
+        />
       </BackfillDrawer>
+
+      {ingestFailures && (
+        <IngestFailuresDrawer backfillRunId={ingestFailures.backfillRunId} onClose={onCloseIngestFailures} />
+      )}
 
       {createType !== null && (
         <CreateTablePopup

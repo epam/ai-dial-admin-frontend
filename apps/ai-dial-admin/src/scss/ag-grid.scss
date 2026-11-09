@@ -131,6 +131,13 @@
   }
 
   @apply overflow-x-auto;
+  // The row actions column is pinned right; the header draws no divider before it.
+  .ag-pinned-right-header {
+    @apply border-l-0;
+  }
+  .ag-header:has(.ag-pinned-right-header .ag-header-cell) .ag-header-viewport .ag-header-cell:last-child::after {
+    @apply border-r-0;
+  }
   .ag-header {
     @apply border-b border-tertiary;
     .ag-header-cell.align-right {
@@ -263,6 +270,14 @@
       @apply bg-transparent;
     }
   }
+}
+
+.ag-grid-static-rows .ag-row-hover:not(.ag-full-width-row)::before {
+  @apply bg-transparent;
+}
+
+.ag-root-wrapper .ag-icon-filter::before {
+  mask-image: url(/images/icons/grid-filter.svg);
 }
 
 .ag-grid-no-checkbox {

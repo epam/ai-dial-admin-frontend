@@ -2,7 +2,7 @@ import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-import { CoreUtilityApi } from '../core-utility-api';
+import { CallerDeploymentKind, CoreUtilityApi } from '../core-utility-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -76,7 +76,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     expect(result).toBeNull();
   });
 
-  test('getUserInfo maps a JWT caller into id/email', async () => {
+  test('getUserInfo maps a JWT caller into id/email and carries no roles', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         roles: ['admin'],
@@ -90,11 +90,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     const [calledUrl] = fetch.mock.calls[0];
     expect(calledUrl).toContain('/v1/user/info');
-    expect(result.response?.userInfo).toEqual({
-      id: 'user-1',
-      email: 'user@example.com',
-      roles: [],
-    });
+    expect(result.response?.userInfo).toEqual({ id: 'user-1', email: 'user@example.com' });
   });
 
   test('getUserInfo falls back to the project as id for an API-key caller', async () => {
@@ -104,7 +100,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     const result = await instance.getUserInfo(TOKEN_MOCK);
 
-    expect(result.response?.userInfo).toEqual({ id: 'proj-1', email: '', roles: [] });
+    expect(result.response?.userInfo).toEqual({ id: 'proj-1', email: '' });
   });
 
   test('getUserInfo passes through a failed response unchanged', async () => {
@@ -114,5 +110,50 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
+  });
+  test('getUserRoleAssignments calls the Core user role-assignments route and returns the access', async () => {
+    const body = { adminAccess: 'NONE', items: [{ id: '1', name: 'Acme', folder: 'public/Acme/', roles: [] }] };
+    fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getUserRoleAssignments(TOKEN_MOCK);
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/user/role-assignments');
+    expect(calledUrl).not.toContain('/api/');
+    expect(result.response).toEqual(body);
+  });
+
+  test('getRunnerSchemas reads the caller-scoped schema list from Core', async () => {
+    const body = [{ $id: 'runner' }];
+    fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getRunnerSchemas(TOKEN_MOCK);
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/application_type_schemas/schemas');
+    expect(result.response).toEqual(body);
+  });
+
+  test.each([CallerDeploymentKind.Models, CallerDeploymentKind.Applications])(
+    'getCallerDeployments reads the caller-scoped %s list from Core',
+    async (kind) => {
+      const body = { data: [{ id: 'a', display_name: 'A' }] };
+      fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+      const result = await instance.getCallerDeployments(TOKEN_MOCK, kind);
+
+      const [calledUrl] = fetch.mock.calls[0];
+      expect(calledUrl).toContain(`/openai/${kind}`);
+      expect(result.response).toEqual(body);
+    },
+  );
+
+  test('getUserRoleAssignments keeps the 404 status when org units are off', async () => {
+    fetch.mockResponseOnce('Not Found', { status: 404 });
+
+    const result = await instance.getUserRoleAssignments(TOKEN_MOCK);
+
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(404);
   });
 });

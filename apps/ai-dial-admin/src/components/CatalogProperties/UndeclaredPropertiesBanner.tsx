@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex -- the scrollable message must be keyboard accessible. */
+
 import { OutlinedButton, Notification, NotificationType, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import { FC } from 'react';
@@ -34,7 +36,16 @@ const UndeclaredPropertiesBanner: FC<Props> = ({ className, names, isForbidden, 
       type={NotificationType.SectionMessage}
       className={className}
       variant={isForbidden ? NotificationVariant.Error : NotificationVariant.Warning}
-      message={<span className="dial-small-text">{message}</span>}
+      message={
+        <span
+          role="region"
+          aria-label={t(EntitiesI18nKey.UndeclaredCatalogPropertiesMessage)}
+          tabIndex={0}
+          className="dial-small-text block min-w-0 max-h-40 overflow-y-auto wrap-anywhere"
+        >
+          {message}
+        </span>
+      }
     >
       {isForbidden && !isReadOnlyAdmin && (
         <OutlinedButton

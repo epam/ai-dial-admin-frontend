@@ -53,12 +53,12 @@ const ExecutionLog: FC<Props> = ({ containerId, route, pods }) => {
   return (
     <div className="flex flex-col size-full">
       {tabs.length ? (
-        <div className="flex h-full min-h-0 gap-8">
+        <div className="flex h-full min-h-0 gap-4">
           {tabs.length > 1 && (
             <CollapsibleSidebar
               width={320}
               title={t(ContainersI18nKey.Pods)}
-              className="bg-layer-3 border-transparent mr-0"
+              className="bg-layer-2 border-transparent mr-0 shadow-sm"
             >
               <Tabs
                 tabs={tabs}

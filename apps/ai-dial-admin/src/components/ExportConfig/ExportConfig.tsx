@@ -333,7 +333,7 @@ const ExportConfig: FC<Props> = ({
 
   if (isReadOnlyAdmin) {
     return (
-      <div className="flex flex-col size-full rounded p-4 bg-layer-2 gap-4">
+      <div className="flex flex-col size-full gap-4">
         <h1>{t(MenuI18nKey.ExportConfig)}</h1>
         <Notification
           type={NotificationType.SectionMessage}
@@ -346,7 +346,7 @@ const ExportConfig: FC<Props> = ({
 
   return (
     <>
-      <div className="flex flex-col size-full rounded p-4 bg-layer-2">
+      <div className="flex flex-col size-full">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
           <PrimaryButton
@@ -357,7 +357,7 @@ const ExportConfig: FC<Props> = ({
           />
         </div>
         <div className="flex-1 min-h-0 gap-x-3 flex flex-row w-full">
-          <div className="border border-primary p-4 rounded w-[340px] flex flex-col">
+          <div className="border border-tertiary p-4 rounded w-[340px] flex flex-col">
             <h3 className="mb-4">{t(ExportI18nKey.Structure)}</h3>
             <div className="flex flex-1 flex-col gap-y-8 min-h-0 min-w-0 overflow-auto">
               {scopes.length > 1 && (

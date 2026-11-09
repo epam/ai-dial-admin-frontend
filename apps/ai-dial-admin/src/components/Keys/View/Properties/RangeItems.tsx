@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 
-import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, LABELLED_FIELD_TOP_OFFSET, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IpRange, IpRangeError, IpRangeProperty } from './types';
@@ -87,7 +87,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
           />
           {!disabled && (
             <RemoveButton
-              className={classNames(index === 0 && 'mt-7')}
+              className={classNames(index === 0 && LABELLED_FIELD_TOP_OFFSET)}
               onClick={() => {
                 onRemoveRange(index);
               }}

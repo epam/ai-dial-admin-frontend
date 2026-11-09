@@ -1,4 +1,5 @@
 import { getCompareRunsPath } from '@/src/components/Runs/Compare/utils';
+import { getPolicyRecordPath } from '@/src/utils/policies/path';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -119,6 +120,19 @@ export const getEntityPath = (
       const storagePath = _metadata?.path ?? path ?? name ?? _metadata?.name ?? declaredId ?? '';
 
       return forRemove ? decodeURIComponent(escapePercentSign(storagePath)) : encodeURIComponent(storagePath);
+    }
+
+    case ApplicationRoute.PlatformPolicies:
+    case ApplicationRoute.PlatformPolicyAssignments: {
+      // One optional folder level (the cost object): the `[id]` segment carries `[costObject/]name`, encoded.
+      const { name, folderId, _metadata } = data as {
+        name?: string;
+        folderId?: string;
+        _metadata?: { name?: string; folderId?: string };
+      };
+      const path = getPolicyRecordPath(name || _metadata?.name || '', _metadata?.folderId ?? folderId);
+
+      return forRemove ? decodeURIComponent(escapePercentSign(path)) : encodeURIComponent(path);
     }
 
     case ApplicationRoute.PlatformModels:

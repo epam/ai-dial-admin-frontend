@@ -13,6 +13,8 @@ export type BaseAssetRoute =
   | ApplicationRoute.PlatformRoutes
   | ApplicationRoute.PlatformRoles
   | ApplicationRoute.PlatformKeys
+  | ApplicationRoute.PlatformPolicies
+  | ApplicationRoute.PlatformPolicyAssignments
   | ApplicationRoute.Skills
   | ApplicationRoute.Projects;
 
@@ -30,7 +32,9 @@ export type CreateAssetRoute =
   | ApplicationRoute.PlatformTranslators
   | ApplicationRoute.PlatformRoutes
   | ApplicationRoute.PlatformRoles
-  | ApplicationRoute.PlatformKeys;
+  | ApplicationRoute.PlatformKeys
+  | ApplicationRoute.PlatformPolicies
+  | ApplicationRoute.PlatformPolicyAssignments;
 
 export enum ModalType {
   create = 'create',

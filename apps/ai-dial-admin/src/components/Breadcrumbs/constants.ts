@@ -124,6 +124,24 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.PlatformPolicies]: {
+    segments: [
+      { name: 'PlatformPolicies', i18nKey: MenuI18nKey.PlatformPolicies },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformPolicyAssignments]: {
+    segments: [
+      { name: 'PlatformPolicyAssignments', i18nKey: MenuI18nKey.PlatformPolicyAssignments },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.PlatformRoles]: {
     segments: [
       { name: 'PlatformRoles', i18nKey: MenuI18nKey.PlatformRoles },

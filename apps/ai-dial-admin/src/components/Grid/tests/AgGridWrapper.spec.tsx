@@ -1,6 +1,6 @@
 import { GridColorScheme } from '@epam/ai-dial-ui-kit';
 import { act, render } from '@testing-library/react';
-import type { ColDef } from 'ag-grid-community';
+import type { ColDef, GridColumnsChangedEvent } from 'ag-grid-community';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const { mockState } = vi.hoisted(() => ({
@@ -72,6 +72,20 @@ describe('AgGridWrapper', () => {
     render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
 
     expect(mockState.lastProps?.colorScheme).toBe(GridColorScheme.Light);
+  });
+
+  test('marks the rows static when clicking a row opens nothing', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+    expect(mockState.lastProps?.className).toBe('ag-grid-static-rows');
+  });
+
+  test('keeps the row hover when clicking a row opens it', () => {
+    render(
+      <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} additionalGridOptions={{ onRowClicked: vi.fn() }} />,
+    );
+
+    expect(mockState.lastProps?.className).toBeUndefined();
   });
 
   test('forwards the grid-ready callback with the api once the kit grid exposes it', () => {
@@ -158,6 +172,58 @@ describe('AgGridWrapper', () => {
       );
 
       expect(gridOptions().rowHeight).toBe(56);
+    });
+
+    describe('columns supplied through the grid api', () => {
+      const createApi = (columnDefs: ColDef[]) => {
+        let rowHeight: number | undefined = 40;
+        return {
+          getColumnDefs: vi.fn(() => columnDefs),
+          getGridOption: vi.fn(() => rowHeight),
+          setGridOption: vi.fn((_key: string, value: number | undefined) => {
+            rowHeight = value;
+          }),
+          resetRowHeights: vi.fn(),
+          sizeColumnsToFit: vi.fn(),
+        };
+      };
+      const fireColumnsChanged = (api: ReturnType<typeof createApi>) => {
+        const onGridColumnsChanged = gridOptions().onGridColumnsChanged as (event: GridColumnsChangedEvent) => void;
+        onGridColumnsChanged({ api } as unknown as GridColumnsChangedEvent);
+      };
+      const iconColumns: ColDef[] = [{ field: 'name', cellRenderer: DisplayNameCellRenderer }];
+
+      test('switches to 56px rows when an icon name column arrives', () => {
+        render(<AgGridWrapper rowData={[]} />);
+        const api = createApi(iconColumns);
+
+        fireColumnsChanged(api);
+
+        expect(api.setGridOption).toHaveBeenCalledWith('rowHeight', 56);
+        expect(api.resetRowHeights).toHaveBeenCalledOnce();
+      });
+
+      test('does not reset row heights again while the icon column stays', () => {
+        render(<AgGridWrapper rowData={[]} />);
+        const api = createApi(iconColumns);
+
+        fireColumnsChanged(api);
+        fireColumnsChanged(api);
+
+        expect(api.resetRowHeights).toHaveBeenCalledOnce();
+      });
+
+      test('restores the kit row height when the icon column goes away', () => {
+        render(<AgGridWrapper rowData={[]} />);
+        const columnDefs = [...iconColumns];
+        const api = createApi(columnDefs);
+
+        fireColumnsChanged(api);
+        columnDefs.splice(0, columnDefs.length, { field: 'id' });
+        fireColumnsChanged(api);
+
+        expect(api.setGridOption).toHaveBeenLastCalledWith('rowHeight', 40);
+      });
     });
 
     test('keeps a custom row height supplied by the caller', () => {

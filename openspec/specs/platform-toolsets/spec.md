@@ -11,15 +11,11 @@ this capability covers are structural (flat, no folders, no versioning) and surf
 restricted action set, a dedicated detail view). Created by archiving change `add-platform-toolsets`.
 ## Requirements
 ### Requirement: File root shown above physical buckets in the Assets Toolsets grid
-The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Toolsets` grid when Catalog is enabled, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. When Catalog is disabled, the system SHALL omit `platform` and its resource requests but SHALL retain `file` and `public` roots. No new menu entry or top-level list route SHALL be introduced.
+The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Toolsets` grid, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. No new menu entry or top-level list route SHALL be introduced.
 
-#### Scenario: All roots appear when Catalog is enabled
-- **WHEN** a user opens `/assets-toolsets` with Catalog enabled
+#### Scenario: All roots appear
+- **WHEN** a user opens `/assets-toolsets`
 - **THEN** the grid shows `file`, `platform`, and `public` roots in that order
-
-#### Scenario: File root remains when Catalog is disabled
-- **WHEN** a user opens `/assets-toolsets` with Catalog disabled
-- **THEN** the grid shows `file` and `public`, does not show `platform`, and makes no platform resource request
 
 ### Requirement: File-root toolsets are flat and read-only
 The system SHALL treat Toolsets under the synthetic `file` root as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `toolsets` endpoint with the initial root batch. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
@@ -378,3 +374,9 @@ missing-`CLIENT_SECRET` error. A toolset whose `authentication_type` is `API_KEY
   `NONE`, `DIAL_NATIVE`, or a value the frontend does not recognise
 - **THEN** `auth_settings` is carried over to the duplicate unchanged
 
+### Requirement: Toolset roles picker for a caller without admin access
+When the caller's `adminAccess` is not `FULL`, the Assets Toolsets editor SHALL NOT read the config-file or platform roles lists, and the user-roles control SHALL be read-only. A full admin SHALL keep today's roles source.
+
+#### Scenario: Non-admin opens a toolset
+- **WHEN** a caller without full admin access opens a toolset
+- **THEN** no roles read is made and the user-roles control cannot be edited

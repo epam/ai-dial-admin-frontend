@@ -136,13 +136,13 @@ const InterfacesField = <V extends InterfaceValue>({
 
       <div
         className={classNames(
-          'flex flex-col gap-y-2 rounded border border-primary p-4',
+          'flex flex-col gap-y-2 rounded border border-secondary p-4',
           className ?? STANDARD_CONTROL_WIDTH,
         )}
       >
         {usedTypes.map((type, index) => (
           <Fragment key={type}>
-            {index > 0 && <hr className="border-t border-primary" />}
+            {index > 0 && <hr className="border-t border-tertiary" />}
             {isEndpointVariant ? (
               <InterfaceEndpointRow
                 fieldId={`interface-${type}`}

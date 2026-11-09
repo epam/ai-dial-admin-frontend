@@ -1,11 +1,12 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
-import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreConfig, OverallScoreType, SuiteSnapshot } from '@/src/models/evaluation/test-suite';
 import Analytics from '../Analytics';
 
 const executeStructuredQueryMock = vi.fn();
@@ -52,9 +53,6 @@ const STATUS_ROWS = {
 const RUN_TIME_ROWS = { rows: [{ total_duration_ms: 341000 }] };
 const METRIC_EVAL_ROWS = { rows: [{ total_metric_eval_duration_ms: 291123.6 }] };
 
-const SECONDS = RunsI18nKey.Seconds;
-const MEAN_SUITE: TestSuite = { id: 'suite-1', overallScore: { type: OverallScoreType.Mean } };
-
 const buildRun = (overrides: Partial<Run> = {}): Run => ({
   id: 'run-1',
   status: RunStatus.COMPLETED,
@@ -83,6 +81,26 @@ const mockQueries = (status = STATUS_ROWS, runTime = RUN_TIME_ROWS, metricEval =
       return Promise.resolve(metricEval);
     }
     return Promise.resolve({ rows: [] });
+  });
+};
+
+const execution = (testCaseId: string, status: string, count = 1) => ({
+  test_case_id: testCaseId,
+  execution_status: status,
+  count,
+});
+
+/** A run whose suite has no metrics: the scores table is empty, the executions are `executions`. */
+const mockNoMetricsQueries = (executions: unknown[]) => {
+  executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
+    if (query.entity === 'test_case_eval_scores') {
+      return Promise.resolve({ rows: [] });
+    }
+    if (query.group_by) {
+      return Promise.resolve({ rows: executions });
+    }
+    const alias = query.select?.[0]?.as;
+    return Promise.resolve(alias === 'total_duration_ms' ? RUN_TIME_ROWS : { rows: [] });
   });
 };
 
@@ -140,7 +158,8 @@ describe('Runs Summary :: Analytics', () => {
 
     for (const title of [
       RunsI18nKey.TestCasesCompleted,
-      RunsI18nKey.ThresholdPassRate,
+      // A threshold needs score rows; this run has none, so it is rated by completion.
+      RunsI18nKey.CompletionRate,
       RunsI18nKey.TotalRuntime,
       RunsI18nKey.TotalRunCost,
     ]) {
@@ -184,7 +203,7 @@ describe('Runs Summary :: Analytics', () => {
   });
 
   test('shows the overall score with its glyph, footer and info control', async () => {
-    await renderLoaded({ overallScore: 0.812, testSuite: MEAN_SUITE, metricSnapshotCount: 3 });
+    await renderLoaded({ overallScore: 0.812, metricSnapshotCount: 3 });
 
     const overall = within(card(RunsI18nKey.OverallScore));
     expect(overall.getByText('0.812')).toBeInTheDocument();
@@ -192,14 +211,73 @@ describe('Runs Summary :: Analytics', () => {
     expect(overall.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeInTheDocument();
   });
 
-  test('omits the info control until the test suite has loaded', async () => {
-    await renderLoaded({ overallScore: 0.812, testSuite: null });
+  test('omits the info control for a run that has no suite snapshot', async () => {
+    await renderLoaded({ run: buildRun({ suiteSnapshot: undefined }), overallScore: 0.812 });
 
     expect(
       within(card(RunsI18nKey.OverallScore)).queryByRole('button', {
         name: TestSuitesI18nKey.OverallScoreCalculationMethod,
       }),
     ).not.toBeInTheDocument();
+  });
+
+  describe('the calculation method tooltip', () => {
+    const snapshotWith = (overallScore?: OverallScoreConfig): SuiteSnapshot => ({
+      overallScoreThreshold: 0.5,
+      deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+      ...(overallScore ? { overallScore } : {}),
+    });
+    const openMethodTooltip = async (run: Run) => {
+      const user = userEvent.setup();
+      await renderLoaded({ run, overallScore: 0.812, metricSnapshotCount: 2 });
+      await user.hover(
+        within(card(RunsI18nKey.OverallScore)).getByRole('button', {
+          name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+        }),
+      );
+      return (await screen.findByRole('tooltip')).textContent ?? '';
+    };
+
+    test('describes the weighted mean stored on the run, with its stored weights', async () => {
+      const text = await openMethodTooltip(
+        buildRun({
+          suiteSnapshot: snapshotWith({
+            type: OverallScoreType.WeightedMean,
+            weights: [
+              { metricName: 'aidial_rag_eval.retrieval', outputField: 'f1', weight: 0.7 },
+              { metricName: 'deepeval.context_prec', outputField: 'score', weight: 0.3 },
+            ],
+          }),
+        }),
+      );
+
+      expect(text).toContain(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics);
+      expect(text).toContain('aidial_rag_eval.retrieval.f1 × 0.7');
+      expect(text).toContain('deepeval.context_prec.score × 0.3');
+    });
+
+    test('describes the mean stored on the run', async () => {
+      const text = await openMethodTooltip(buildRun({ suiteSnapshot: snapshotWith({ type: OverallScoreType.Mean }) }));
+
+      expect(text).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
+      expect(text).toContain(TestSuitesI18nKey.OverallScoreMeanFormula);
+    });
+
+    test('describes a snapshot that stores no method as the default mean', async () => {
+      const text = await openMethodTooltip(buildRun({ suiteSnapshot: snapshotWith() }));
+
+      expect(text).toContain(TestSuitesI18nKey.TrendsMeanOfNMetrics);
+    });
+
+    test('shows the control without any test suite being loaded', async () => {
+      await renderLoaded({ overallScore: 0.812 });
+
+      expect(
+        within(card(RunsI18nKey.OverallScore)).getByRole('button', {
+          name: TestSuitesI18nKey.OverallScoreCalculationMethod,
+        }),
+      ).toBeInTheDocument();
+    });
   });
 
   test.each([[null], [undefined]])('omits the overall score card when the score is %s', async (overallScore) => {
@@ -212,10 +290,10 @@ describe('Runs Summary :: Analytics', () => {
     await renderLoaded();
 
     const runtime = within(card(RunsI18nKey.TotalRuntime));
-    expect(runtime.getByText(`632.1${SECONDS}`)).toBeInTheDocument();
+    expect(runtime.getByText('10m 32s')).toBeInTheDocument();
     expect(runtime.getByText('Model:')).toBeInTheDocument();
-    expect(runtime.getByText(`341${SECONDS}`)).toBeInTheDocument();
-    expect(runtime.getByText(`291.1${SECONDS}`)).toBeInTheDocument();
+    expect(runtime.getByText('5m 41s')).toBeInTheDocument();
+    expect(runtime.getByText('4m 51s')).toBeInTheDocument();
   });
 
   test('falls back to a generic source label when the kind cannot be resolved', async () => {
@@ -231,7 +309,7 @@ describe('Runs Summary :: Analytics', () => {
     await renderLoaded();
 
     const runtime = within(card(RunsI18nKey.TotalRuntime));
-    expect(runtime.getAllByText(`341${SECONDS}`)).toHaveLength(2);
+    expect(runtime.getAllByText('5m 41s')).toHaveLength(2);
     expect(runtime.getByText('—')).toBeInTheDocument();
   });
 
@@ -259,7 +337,7 @@ describe('Runs Summary :: Analytics', () => {
     await renderLoaded();
 
     expect(within(card(RunsI18nKey.TotalRunCost)).getByRole('status')).toHaveTextContent(RunsI18nKey.Calculating);
-    expect(within(card(RunsI18nKey.TotalRuntime)).getByText(`341${SECONDS}`)).toBeInTheDocument();
+    expect(within(card(RunsI18nKey.TotalRuntime)).getByText('5m 41s')).toBeInTheDocument();
   });
 
   test('settles the Metrics value to a dash while a run without metrics is still calculating its cost', async () => {
@@ -303,5 +381,102 @@ describe('Runs Summary :: Analytics', () => {
 
     expect(getRunsTotalCostsMock).not.toHaveBeenCalled();
     expect(within(card(RunsI18nKey.TotalRunCost)).queryByRole('status')).not.toBeInTheDocument();
+  });
+  describe('a run whose suite has no metrics', () => {
+    const renderNoMetrics = async (
+      executions: unknown[],
+      run: Partial<Run> = { numberOfTestCases: 4, suiteSnapshot: {} },
+    ) => {
+      mockNoMetricsQueries(executions);
+      await renderLoaded({ run: buildRun(run) });
+    };
+    const completedCard = () => within(card(RunsI18nKey.TestCasesCompleted));
+
+    test('shows completed over total, no error line, and a full Completion Rate', async () => {
+      await renderNoMetrics([
+        execution('a', 'SUCCESS'),
+        execution('b', 'SUCCESS'),
+        execution('c', 'SUCCESS'),
+        execution('d', 'SUCCESS'),
+      ]);
+
+      expect(completedCard().getByText('4', { selector: 'span.dial-display2-text' })).toBeInTheDocument();
+      expect(completedCard().getByText('/4')).toBeInTheDocument();
+      expect(completedCard().queryByText(ErrorI18nKey.Error)).not.toBeInTheDocument();
+      expect(within(card(RunsI18nKey.CompletionRate)).getByText('100%')).toBeInTheDocument();
+      expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+    });
+
+    test('counts repeat executions of a test case once', async () => {
+      await renderNoMetrics([execution('a', 'SUCCESS', 3), execution('b', 'SUCCESS', 3)], {
+        numberOfTestCases: 2,
+        suiteSnapshot: {},
+      });
+
+      expect(completedCard().getByText('/2')).toBeInTheDocument();
+      expect(completedCard().queryByText('/6')).not.toBeInTheDocument();
+    });
+
+    test('does not complete a test case with a failed execution', async () => {
+      await renderNoMetrics(
+        [execution('a', 'SUCCESS'), execution('a', 'FAILED'), execution('b', 'SUCCESS'), execution('c', 'SUCCESS')],
+        { numberOfTestCases: 3, suiteSnapshot: {} },
+      );
+
+      expect(completedCard().getByText('2', { selector: 'span.dial-display2-text' })).toBeInTheDocument();
+      expect(completedCard().getByText('/3')).toBeInTheDocument();
+      expect(completedCard().getByText(ErrorI18nKey.Error)).toBeInTheDocument();
+      expect(within(card(RunsI18nKey.CompletionRate)).getByText('66.7%')).toBeInTheDocument();
+    });
+
+    test('shows a test case that never executed as N/A', async () => {
+      const user = userEvent.setup();
+      await renderNoMetrics([execution('a', 'SUCCESS')], { numberOfTestCases: 3, suiteSnapshot: {} });
+
+      expect(completedCard().getByText('/3')).toBeInTheDocument();
+      await user.hover(completedCard().getByText('1', { selector: 'span.dial-display2-text' }));
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip.textContent).toContain(TestSuitesI18nKey.TrendsTestCasesErrorOrNa);
+      expect(tooltip.textContent).not.toContain(TestSuitesI18nKey.TrendsScoreAboveThreshold);
+      expect(tooltip.textContent).not.toContain(TestSuitesI18nKey.TrendsScoreBelowThreshold);
+    });
+
+    test('rates a threshold without score rows by completion', async () => {
+      await renderNoMetrics([execution('a', 'SUCCESS'), execution('b', 'SUCCESS')], {
+        numberOfTestCases: 2,
+        suiteSnapshot: { overallScoreThreshold: 0.5 },
+      });
+
+      expect(screen.getByRole('region', { name: RunsI18nKey.CompletionRate })).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: RunsI18nKey.ThresholdPassRate })).not.toBeInTheDocument();
+      expect(screen.queryByText(TestSuitesI18nKey.TrendsThresholdLabel)).not.toBeInTheDocument();
+    });
+
+    test('still shows Error for a COMPLETED run that reports no test cases at all', async () => {
+      await renderNoMetrics([], { numberOfTestCases: 0, suiteSnapshot: {} });
+
+      expect(completedCard().getByText('error-tag')).toBeInTheDocument();
+    });
+
+    test('counts only what an in-flight run has seen, not its reported total', async () => {
+      await renderNoMetrics([execution('a', 'SUCCESS'), execution('b', 'SUCCESS'), execution('c', 'SUCCESS')], {
+        status: RunStatus.RUNNING,
+        numberOfTestCases: 10,
+        suiteSnapshot: {},
+      });
+
+      expect(completedCard().getByText('/3')).toBeInTheDocument();
+      expect(completedCard().queryByText(ErrorI18nKey.Error)).not.toBeInTheDocument();
+    });
+
+    test('keeps the per-test-case scores for a run that has them', async () => {
+      await renderLoaded({ run: buildRun({ numberOfTestCases: 99 }) });
+
+      expect(completedCard().getByText('/43')).toBeInTheDocument();
+      expect(
+        executeStructuredQueryMock.mock.calls.every(([query]) => query.entity !== 'eval_summaries' || !query.group_by),
+      ).toBe(true);
+    });
   });
 });

@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PublicationsButtonsWrapper from '@/src/components/EntityHeaderControls/Wrappers/PublicationsButtonsWrapper';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { ActionType, Publication } from '@/src/models/dial/publications';
+import { UnitAction, UnitNamespace, UserOrgUnit } from '@/src/models/user-access';
 import { ApplicationRoute } from '@/src/types/routes';
 import { approvePublication, declinePublication, deletePublication } from '@/src/app/actions/publications';
 
@@ -14,6 +15,9 @@ vi.mock('@/src/app/actions/publications', () => ({
   declinePublication: vi.fn(),
   deletePublication: vi.fn(),
 }));
+
+const appContext = vi.hoisted(() => ({ isUnitMode: false, userAccess: { units: [] as UserOrgUnit[] } }));
+vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
 
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
@@ -68,11 +72,15 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   DangerButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{label}</button>
   ),
-  OutlinedButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick}>{label}</button>
+  OutlinedButton: ({ label, onClick, disabled }: { label: ReactNode; onClick?: () => void; disabled?: boolean }) => (
+    <button onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
   ),
-  PrimaryButton: ({ label, onClick }: { label: ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick}>{label}</button>
+  PrimaryButton: ({ label, onClick, disabled }: { label: ReactNode; onClick?: () => void; disabled?: boolean }) => (
+    <button onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
   ),
   Textarea: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
     <textarea value={value} onChange={(e) => onChange(e.target.value)} />
@@ -82,23 +90,23 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: vi.fn() }));
 
-const basePublication = (action: ActionType): Publication => ({
+const basePublication = (action: ActionType, folderId = 'public/'): Publication => ({
   path: 'publications/public/request-path',
   requestName: 'my-request',
   author: 'author@example.com',
   createdAt: '2024-01-01T00:00:00Z',
   status: 'pending',
   action,
-  folderId: 'public/',
+  folderId,
   rules: [{}] as never,
 });
 
-const renderWrapper = (action: ActionType) =>
+const renderWrapper = (action: ActionType, folderId?: string) =>
   render(
     <PublicationsButtonsWrapper
       view={ApplicationRoute.ApplicationPublications}
       isChanged={false}
-      entity={basePublication(action)}
+      entity={basePublication(action, folderId)}
       onDiscard={vi.fn()}
       onSave={vi.fn()}
     />,
@@ -245,5 +253,51 @@ describe('PublicationsButtonsWrapper :: failure path preserved', () => {
     const notification = showNotification.mock.calls[0][0];
     expect(notification.title).toBe('Error.Header');
     expect(notification.description).toBe('Error.Message');
+  });
+});
+
+const unit = (permissions: UserOrgUnit['permissions']): UserOrgUnit => ({
+  id: '1',
+  name: 'Risk',
+  displayName: 'Risk',
+  path: 'public/Acme/Risk',
+  folder: 'public/Acme/Risk/',
+  roles: [],
+  permissions,
+});
+
+describe('PublicationsButtonsWrapper :: unit mode', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
+    appContext.isUnitMode = true;
+  });
+
+  afterEach(() => {
+    appContext.isUnitMode = false;
+    appContext.userAccess.units = [];
+  });
+
+  test('enables Publish and Decline when publications read and write are held at the target unit', () => {
+    appContext.userAccess.units = [unit({ [UnitNamespace.PUBLICATIONS]: [UnitAction.READ, UnitAction.WRITE] })];
+    renderWrapper(ActionType.ADD, 'public/Acme/Risk/');
+
+    expect(screen.getByRole('button', { name: 'Buttons.Publish' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Buttons.Decline' })).toBeEnabled();
+  });
+
+  test('disables Publish and Decline when the target unit grants publications read only', () => {
+    appContext.userAccess.units = [unit({ [UnitNamespace.PUBLICATIONS]: [UnitAction.READ] })];
+    renderWrapper(ActionType.ADD, 'public/Acme/Risk/');
+
+    expect(screen.getByRole('button', { name: 'Buttons.Publish' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Buttons.Decline' })).toBeDisabled();
+  });
+
+  test('disables Unpublish when no unit owns the target folder', () => {
+    appContext.userAccess.units = [unit({ [UnitNamespace.PUBLICATIONS]: [UnitAction.READ, UnitAction.WRITE] })];
+    renderWrapper(ActionType.DELETE, 'public/Elsewhere/');
+
+    expect(screen.getByRole('button', { name: 'Buttons.Unpublish' })).toBeDisabled();
   });
 });

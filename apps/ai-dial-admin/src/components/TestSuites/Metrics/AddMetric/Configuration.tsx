@@ -182,7 +182,7 @@ const MetricConfiguration: FC<Props> = ({
               />
             </div>
 
-            <div className="border-b border-secondary" />
+            <div className="border-b border-tertiary" />
 
             <MetricSchemaSection
               title={t(TestSuitesI18nKey.Configuration)}
@@ -192,7 +192,7 @@ const MetricConfiguration: FC<Props> = ({
               onChange={onChangeConfigBindings}
             />
 
-            <div className="border-b border-secondary" />
+            <div className="border-b border-tertiary" />
 
             <MetricInputs
               title={t(TestSuitesI18nKey.Inputs)}

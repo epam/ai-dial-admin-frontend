@@ -38,7 +38,7 @@ const HopEmbeddingPanel: FC<Props> = ({ facts, isLoading, tokens }) => {
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <dl className="grid grid-cols-2 gap-2 rounded border border-primary bg-layer-3 p-3">
+      <dl className="grid grid-cols-2 gap-2 rounded border border-secondary bg-layer-3 p-3">
         {cells.map(({ label, value }) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">
             <dt className="text-secondary dial-tiny-text">{label}</dt>
@@ -51,7 +51,7 @@ const HopEmbeddingPanel: FC<Props> = ({ facts, isLoading, tokens }) => {
       ) : (
         <div className="flex min-w-0 flex-col gap-1">
           <span className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.InspectorEmbeddingText)}</span>
-          <p className="whitespace-pre-wrap break-words rounded border border-primary bg-layer-1 p-2 text-primary dial-tiny-text">
+          <p className="whitespace-pre-wrap break-words rounded border border-secondary bg-layer-1 p-2 text-primary dial-tiny-text">
             {facts.inputText}
           </p>
           <HopClampNote clamp={facts.inputClamp} />

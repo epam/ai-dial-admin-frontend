@@ -1,7 +1,7 @@
 import { Popup, Spinner } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -45,6 +45,7 @@ const MultiselectModal: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n();
+  const portalId = useId();
   const { isValid, errorFields } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
@@ -100,7 +101,7 @@ const MultiselectModal: FC<Props> = ({
     <Popup
       onClose={onClose}
       header={heading}
-      portalId="itemsMultiSelect"
+      portalId={portalId}
       open={isModalOpen}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
@@ -110,7 +111,7 @@ const MultiselectModal: FC<Props> = ({
         onSubmit: onApply,
       })}
     >
-      <div className="flex flex-col overflow-auto px-6 py-4">
+      <div className="flex min-h-0 flex-col px-6 py-4">
         {isLoading ? (
           <Spinner size={40} fullWidth />
         ) : (

@@ -2,12 +2,12 @@
 
 import { FC } from 'react';
 
-import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { sumRunTimeParts } from '@/src/components/Runs/Summary/utils';
+import { formatRunDuration } from '@/src/components/Runs/utils/run-list-values';
 import { NO_DATA_VALUE } from './constants';
 import TotalBreakdownValue from './TotalBreakdownValue';
-import { formatSecondsLabel } from './utils';
 
 interface Props {
   sourceMs: number | null;
@@ -22,8 +22,7 @@ interface Props {
  */
 const RuntimeValue: FC<Props> = ({ sourceMs, metricsMs, sourceLabel }) => {
   const t = useI18n();
-  const suffix = t(RunsI18nKey.Seconds);
-  const total = formatSecondsLabel(sumRunTimeParts(sourceMs, metricsMs), suffix);
+  const total = formatRunDuration(sumRunTimeParts(sourceMs, metricsMs));
 
   if (total == null) {
     return <span className="dial-display2-text text-secondary">{NO_DATA_VALUE}</span>;
@@ -33,10 +32,10 @@ const RuntimeValue: FC<Props> = ({ sourceMs, metricsMs, sourceLabel }) => {
     <TotalBreakdownValue
       total={total}
       parts={[
-        { label: sourceLabel, value: formatSecondsLabel(sourceMs, suffix) ?? NO_DATA_VALUE },
+        { label: sourceLabel, value: formatRunDuration(sourceMs) ?? NO_DATA_VALUE },
         {
           label: t(TestSuitesI18nKey.TrendsMetricsLabel),
-          value: formatSecondsLabel(metricsMs, suffix) ?? NO_DATA_VALUE,
+          value: formatRunDuration(metricsMs) ?? NO_DATA_VALUE,
         },
       ]}
     />

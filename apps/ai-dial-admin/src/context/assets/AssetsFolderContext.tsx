@@ -15,10 +15,10 @@ import {
 import { createInitialFolderState, folderReducer, toggleFolderState } from '@/src/context/assets/folder-reducer';
 import { FolderActionType } from '@/src/context/assets/models';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
-import { getFolderItems } from '@/src/utils/files/folder';
+import { getFolderItems, mergeFolderRows } from '@/src/utils/files/folder';
 import { loadFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
 import { buildRootNodes, toConfigFileItems } from '@/src/utils/files/folder-nodes';
-import { isFileRootPath } from '@/src/utils/files/root-folder';
+import { isFileRootPath, isPublicPath } from '@/src/utils/files/root-folder';
 
 export interface AssetsFolderContext<T extends AssetListItem> {
   isFetchingFiles: boolean;
@@ -54,10 +54,17 @@ export type AssetsFolderContextReader<T extends AssetListItem = AssetListItem> =
   'toggleFolder'
 >;
 
+/**
+ * `getFolderRows` lets a tree borrow another source's folders (Files, for the resource types that
+ * share its public tree). Its rows join the listing of every `public/` folder load, folders only and
+ * deduplicated by path with the listing's own rows winning; a failed read adds nothing and never
+ * fails `getFilesFunc`.
+ */
 export function createFolderContext<T extends AssetListItem>(
   getFilesFunc: (path: string) => Promise<T[] | null | undefined>,
   contextName: string,
   getConfigFileNames?: () => Promise<string[] | null | undefined>,
+  getFolderRows?: (path: string) => Promise<T[]>,
 ) {
   const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
 
@@ -94,7 +101,12 @@ export function createFolderContext<T extends AssetListItem>(
 
     const fetchByPath = useCallback(async (path: string): Promise<T[] | null | undefined> => {
       if (!isFileRootPath(path)) {
-        return getFilesFunc(path);
+        if (!getFolderRows || !isPublicPath(path)) {
+          return getFilesFunc(path);
+        }
+
+        const [own, folderRows] = await Promise.all([getFilesFunc(path), getFolderRows(path).catch((): T[] => [])]);
+        return own === undefined ? undefined : mergeFolderRows(own ?? [], folderRows);
       }
 
       if (!getConfigFileNames) {

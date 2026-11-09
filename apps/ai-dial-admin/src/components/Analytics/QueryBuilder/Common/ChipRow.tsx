@@ -108,7 +108,7 @@ const ChipRow: FC<Props> = ({
 
   return (
     <div ref={containerRef} className="flex flex-col gap-2 rounded border border-primary bg-layer-2 p-2">
-      <div className="flex items-center justify-between gap-2 border-b border-primary pb-1.5">
+      <div className="flex items-center justify-between gap-2 border-b border-tertiary pb-1.5">
         <button
           type="button"
           aria-expanded="true"

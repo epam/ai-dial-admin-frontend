@@ -7,7 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { updateApp, moveApps } from '@/src/app/[lang]/assets-applications/actions';
-import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import AppView from '@/src/components/Assets/Entities/Apps/View';
 
@@ -88,6 +88,13 @@ describe('AppView', () => {
         interceptors={mockInterceptors}
       />,
     );
+
+  test('offers the Resource Dependencies tab in place of the Dependencies tab', () => {
+    renderView();
+
+    expect(screen.getByRole('tab', { name: TabsI18nKey.ResourceDependencies })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Dependencies })).toBeNull();
+  });
 
   test('shows readonly path Version without sibling controls', () => {
     renderView();

@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import OverallScoreOfLatestRunCard from '@/src/components/TestSuites/Trends/Kpi/OverallScoreOfLatestRunCard';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { OverallScoreType } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Tooltip: ({
@@ -79,5 +80,30 @@ describe('OverallScoreOfLatestRunCard', () => {
 
     expect(container.querySelector('.bg-score-abs-11')).not.toBeInTheDocument();
     expect(container.querySelector('.bg-score-abs-00')).not.toBeInTheDocument();
+  });
+
+  test('describes the latest run snapshot method in the info tooltip', () => {
+    render(
+      <OverallScoreOfLatestRunCard
+        runOrder={runOrder.map((point, index) =>
+          index === 1
+            ? { ...point, overallScoreMethod: { type: OverallScoreType.Mean }, metricNames: ['a', 'b'] }
+            : { ...point, overallScoreMethod: { type: OverallScoreType.WeightedMean, weights: [] } },
+        )}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.OverallScoreMeanFormula)).toBeInTheDocument();
+  });
+
+  test('omits the info control when the latest run records no method', () => {
+    render(
+      <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreMethod: null }))} />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
+    ).not.toBeInTheDocument();
   });
 });

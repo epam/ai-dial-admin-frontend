@@ -301,7 +301,7 @@ export const getSchemaGridColumns = (
       cellRenderer: WidgetCellRenderer,
       cellRendererParams: {
         isReadonly,
-        items: WIDGET_OPTIONS,
+        items: [{ value: '', label: t(BasicI18nKey.None) }, ...WIDGET_OPTIONS],
         onChange: (value: string, data: SchemaFieldRow) => onChangeWidget(value, data),
       },
     });

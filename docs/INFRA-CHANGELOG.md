@@ -6,9 +6,19 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 ### Added
 
+#### Governance
+
+- `POLICIES_ENABLED` [Preview] — shows the `Policies` and `Policy Assignments` pages in the Governance menu group, at `/platform-policies` and `/platform-policy-assignments`, over DIAL Core's `policies` and `policy_assignments` resources. Requires a DIAL Core that includes epam/ai-dial-core#2152. Core stores these records but does not enforce them yet (default: `false`)
+
 #### Analytics
 
 - `ANALYTICS_CUSTOM_DASHBOARDS_ENABLED` [Preview] — custom dashboards on the analytics Dashboards page, at `/dashboards/<id>`, stored by the Analytics service under `/v1/dashboards`. Requires an Analytics service that serves that endpoint, widget `settings` included. Takes effect only when `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` are both `true` (default: `false`)
+
+### Removed
+
+#### Menu
+
+- The `catalog` token of `DISABLE_MENU_ITEMS` no longer has an effect. It used to hide every Core-direct (`Platform*`) menu item and the `platform` bucket root of the Assets lists; both are now always shown (the `platform` root is still withheld in unit mode). Remove `catalog` from `DISABLE_MENU_ITEMS` — it is ignored, and other tokens such as `models` or `roles` behave as before
 
 ## 0.22.0
 
@@ -27,6 +37,11 @@ All notable infrastructure-relevant changes to this project will be documented i
 - `PROJECT_CONTEXT_ALLOWED_EXTENSIONS`, `PROJECT_CONTEXT_FILE_MAX_BYTES`, `PROJECT_CONTEXT_TOTAL_MAX_BYTES` — limits applied when adding context files to a project (allowed extensions, size of one file, total size of the context); a file over a limit is rejected before it is staged. Use the same values as the chat application. Extensions are comma-separated, case-insensitive, with an optional leading dot; unset or empty values, and invalid or non-positive byte values, fall back to the defaults (default: `csv,pdf,xlsx`, `1048576`, `10485760`)
 
 ### Changed
+
+#### Access control
+
+- Who is an admin, and what a non-admin may do, now comes from DIAL Core's `GET /v1/user/role-assignments` (`adminAccess` plus the units the caller works in), not from the admin backend's `/security-info`. `DIAL_CORE_API_URL` is therefore required for access decisions, and the admin backend's `FULL_ADMIN` / `READ_ONLY_ADMIN` roles are no longer read: a caller who was only a read-only admin there is now treated as having no admin access. A caller with `adminAccess: NONE` who holds a role in at least one org unit gets a unit-scoped panel (menu sections, write actions and the role-assignments tab follow the roles' permissions); a caller with neither sees the 403 page. A Core with authentication on and no admin rules configured answers `NONE` for everyone, so configure Core's admin rules before upgrading
+- With authentication off, or when Core answers `404` because org units are switched off (`orgUnits.enabled`), the caller is treated as a full admin and Core still refuses what it does not allow. `DIAL_ADMIN_API_URL` keeps gating import/export, config sync and the version footer, and no longer affects roles
 
 #### Navigation
 

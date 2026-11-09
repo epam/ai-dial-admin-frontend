@@ -67,7 +67,7 @@ describe('ImageFields', () => {
 
     const sourceGroup = screen.getByText('ImageSource').parentElement as HTMLElement;
     expect(sourceGroup.className).toContain('border-t');
-    expect(sourceGroup.className).toContain('border-primary');
+    expect(sourceGroup.className).toContain('border-tertiary');
   });
 
   test('should not render dividers or extra spacing in modal mode', () => {

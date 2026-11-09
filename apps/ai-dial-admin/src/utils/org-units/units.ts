@@ -25,11 +25,11 @@ const safeDecode = (segment: string): string => {
 /** Decoded, trailing-slash form used to key and compare folders; tree paths and core `folder` values both reduce to it. */
 export const normalizeFolder = (path: string): string => addTrailingSlash(path.split('/').map(safeDecode).join('/'));
 
-export const toUnitMap = (units: OrgUnit[]): Record<string, OrgUnit> =>
+export const toUnitMap = <T extends OrgUnit>(units: T[]): Record<string, T> =>
   Object.fromEntries(units.map((unit) => [normalizeFolder(unit.folder), unit]));
 
 /** Nearest unit at or above `path`; the trailing slash makes `Risk/` never match `Risk2/`. */
-export const getOwningUnit = (units: Record<string, OrgUnit>, path: string): OrgUnit | undefined => {
+export const getOwningUnit = <T extends OrgUnit>(units: Record<string, T>, path: string): T | undefined => {
   const folder = normalizeFolder(path);
   const key = Object.keys(units)
     .filter((unitFolder) => folder.startsWith(unitFolder))

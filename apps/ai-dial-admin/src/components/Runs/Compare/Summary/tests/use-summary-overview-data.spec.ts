@@ -129,7 +129,7 @@ describe('useSummaryOverviewData', () => {
 
     renderOverviewData();
 
-    await vi.waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalledTimes(6));
+    await vi.waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalledTimes(8));
 
     // NOT (field IN [...]) shape: and([runFilter, not(in(field, values))]).
     const exclusionField = (query: { filter: { args: unknown[] } }) => {
@@ -140,15 +140,19 @@ describe('useSummaryOverviewData', () => {
 
     const queries = executeStructuredQueryMock.mock.calls.map(([query]) => query);
     const statusQueries = queries.filter((query) => query.entity === 'test_case_eval_scores');
-    const durationQueries = queries.filter((query) => query.entity === 'eval_summaries');
+    const evalSummariesQueries = queries.filter((query) => query.entity === 'eval_summaries');
+    // The scores come back empty, so each run also falls back to its executions.
+    const executionQueries = evalSummariesQueries.filter((query) => query.group_by);
+    const durationQueries = evalSummariesQueries.filter((query) => !query.group_by);
 
     expect(statusQueries).toHaveLength(2);
+    expect(executionQueries).toHaveLength(2);
     // Source runtime and metric-eval runtime, once per run.
     expect(durationQueries).toHaveLength(4);
     statusQueries.forEach((query) => {
       expect(exclusionField(query)).toEqual({ field: 'test_case_id', values: ['case-1', 'case-2'] });
     });
-    durationQueries.forEach((query) => {
+    [...executionQueries, ...durationQueries].forEach((query) => {
       expect(exclusionField(query)).toEqual({ field: 'id', values: ['eval-1', 'eval-2'] });
     });
   });
@@ -188,6 +192,7 @@ describe('useSummaryOverviewData', () => {
     await waitFor(() => expect(result.current.comparedMatchedAnalytics).not.toBeNull());
     expect(result.current.primaryMatchedAnalytics).toEqual({
       statusCounts: { passed: 7, failed: 0, error: 0, unscored: 0, total: 7 },
+      hasScoreRows: true,
       totalRunTimeMs: 341000,
       totalMetricEvalDurationMs: 291000,
     });
@@ -203,5 +208,49 @@ describe('useSummaryOverviewData', () => {
     expect(result.current.primaryMetricCount).toBeUndefined();
     await waitFor(() => expect(result.current.primaryMetricCount).toBe(2));
     expect(result.current.comparedMetricCount).toBe(0);
+  });
+
+  test('counts a run without score rows from its matched executions only', async () => {
+    const MATCHED_RUN = {
+      computationId: 'c1',
+      totalRowCount: 10,
+      matchedRowCount: 8,
+      unmatchedEvalSummaryIds: ['eval-1'],
+      unmatchedEvalTestCaseIds: ['case-1'],
+      scores: [],
+    };
+    getMetricScoresComparisonMock.mockResolvedValue({
+      runs: [
+        { ...MATCHED_RUN, runId: 'run-1' },
+        { ...MATCHED_RUN, runId: 'run-2', computationId: 'c2' },
+      ],
+    });
+    executeStructuredQueryMock.mockImplementation((query: { entity: string; group_by?: unknown }) => {
+      if (query.entity === 'test_case_eval_scores') {
+        return Promise.resolve({ rows: [] });
+      }
+      if (query.group_by) {
+        return Promise.resolve({
+          rows: [
+            { test_case_id: 'a', execution_status: 'SUCCESS', count: 3 },
+            { test_case_id: 'b', execution_status: 'SUCCESS', count: 1 },
+            { test_case_id: 'b', execution_status: 'FAILED', count: 1 },
+          ],
+        });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+
+    const { result } = renderOverviewData();
+
+    await waitFor(() => expect(result.current.primaryMatchedAnalytics).not.toBeNull());
+    expect(result.current.primaryMatchedAnalytics?.statusCounts).toEqual({
+      passed: 0,
+      failed: 0,
+      error: 1,
+      unscored: 1,
+      total: 2,
+    });
+    expect(result.current.primaryMatchedAnalytics?.hasScoreRows).toBe(false);
   });
 });

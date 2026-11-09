@@ -36,8 +36,8 @@ export interface MenuItem {
 }
 
 export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags): MenuGroupConfiguration[] => {
-  // The `catalog` token of DISABLE_MENU_ITEMS hides every Core-direct (Preview) item, wherever it is grouped.
-  const catalogItems = (...items: MenuItem[]): MenuItem[] => (featureFlags.catalogEnabled === false ? [] : items);
+  // Policies are opt-in (`POLICIES_ENABLED`): Core stores them but does not enforce them yet.
+  const policyItems = (...items: MenuItem[]): MenuItem[] => (featureFlags.policiesEnabled ? items : []);
 
   const config: MenuGroupConfiguration[] = [
     {
@@ -58,22 +58,22 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.AiGatewayDescription,
       icon: <IconRouter width={iconSize} height={iconSize} />,
       items: [
-        ...catalogItems({ key: MenuI18nKey.PlatformModels, href: ApplicationRoute.PlatformModels }),
+        { key: MenuI18nKey.PlatformModels, href: ApplicationRoute.PlatformModels },
         { key: MenuI18nKey.Toolsets, href: ApplicationRoute.AssetsToolsets },
-        ...catalogItems({
+        {
           key: MenuI18nKey.PlatformTranslators,
           href: ApplicationRoute.PlatformTranslators,
-        }),
-        ...catalogItems({ key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes }),
+        },
+        { key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes },
         { key: MenuI18nKey.Applications, href: ApplicationRoute.AssetsApplications },
-        ...catalogItems({
+        {
           key: MenuI18nKey.PlatformAppRunners,
           href: ApplicationRoute.PlatformAppRunners,
-        }),
-        ...catalogItems({
+        },
+        {
           key: MenuI18nKey.PlatformCatalogSchemas,
           href: ApplicationRoute.PlatformCatalogSchemas,
-        }),
+        },
       ],
     },
     {
@@ -154,13 +154,25 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.GovernanceDescription,
       icon: <IconScale width={iconSize} height={iconSize} />,
       items: [
-        ...catalogItems({ key: MenuI18nKey.PlatformRoles, href: ApplicationRoute.PlatformRoles }),
-        ...catalogItems({ key: MenuI18nKey.PlatformKeys, href: ApplicationRoute.PlatformKeys }),
+        { key: MenuI18nKey.PlatformRoles, href: ApplicationRoute.PlatformRoles },
+        { key: MenuI18nKey.PlatformKeys, href: ApplicationRoute.PlatformKeys },
         { key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage },
-        ...catalogItems({
+        {
           key: MenuI18nKey.PlatformInterceptors,
           href: ApplicationRoute.PlatformInterceptors,
-        }),
+        },
+        ...policyItems(
+          {
+            key: MenuI18nKey.PlatformPolicies,
+            href: ApplicationRoute.PlatformPolicies,
+            badge: MenuBadge.Preview,
+          },
+          {
+            key: MenuI18nKey.PlatformPolicyAssignments,
+            href: ApplicationRoute.PlatformPolicyAssignments,
+            badge: MenuBadge.Preview,
+          },
+        ),
         { key: MenuI18nKey.Approvals, href: ApplicationRoute.Publications },
       ],
     },

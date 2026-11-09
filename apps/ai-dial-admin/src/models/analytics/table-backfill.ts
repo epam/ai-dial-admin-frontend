@@ -49,6 +49,8 @@ export interface TableBackfillRun {
   rowsSkipped: number;
   /** Rows with no deduplication key. Not a failure. */
   rowsDropped: number;
+  /** Blobs the run could not ingest. Absent from a service that predates the failure ledger. */
+  failedBlobs?: number;
   startedAt: string;
   finishedAt?: string | null;
 }

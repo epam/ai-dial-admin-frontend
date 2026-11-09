@@ -1,4 +1,3 @@
-import { Token } from '@/src/models/auth';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { AnalyticsRunnerApi } from '@/src/server/analytics/analytics-runner-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
@@ -13,6 +12,7 @@ import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
+import { AdminConsentApi } from '@/src/server/core/admin-consent-api';
 import { ExternalServiceConsentApi } from '@/src/server/core/external-service-consent-api';
 import { ExternalServiceOpsApi } from '@/src/server/core/external-service-ops-api';
 import { QueryAssistantApi } from '@/src/server/core/query-assistant-api';
@@ -267,20 +267,19 @@ export const externalServiceConsentApi = new ExternalServiceConsentApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+export const adminConsentApi = new AdminConsentApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
 export const queryAssistantApi = new QueryAssistantApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
-// Deployment listing/lookup, the global-settings singleton, and user identity — endpoints the
-// admin backend only ever proxied to Core unchanged.
+// Deployment listing/lookup, the global-settings singleton, and the caller's identity and access —
+// endpoints the admin backend only ever proxied to Core unchanged, or no longer decides.
 export const coreUtilityApi = new CoreUtilityApi({
   host: process.env.DIAL_CORE_API_URL,
 });
-
-// User identity: the admin backend's own security-info endpoint when it's configured (it computes
-// the FULL_ADMIN/READ_ONLY_ADMIN roles AppContext relies on), otherwise Core directly.
-export const getUserInfo = (token: Token) =>
-  process.env.DIAL_ADMIN_API_URL ? utilityApi.getUserInfo(token) : coreUtilityApi.getUserInfo(token);
 
 /**
  * Application/toolset-resource content DTOs reject `folderId`/`path`/`version`/`id`

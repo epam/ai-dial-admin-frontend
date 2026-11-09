@@ -6,10 +6,13 @@ import {
 } from '@/src/components/TestSuites/Trends/constants';
 import { TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import {
+  buildThresholdMarkPlan,
+  ThresholdHorizontalSegment,
+  ThresholdMarkSegment,
+} from '@/src/components/TestSuites/Trends/OverallScoreTrend/utils/threshold-segments';
+import {
   TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG,
-  TREND_TOOLTIP_TEXT_ACCENT,
-  TREND_TOOLTIP_TEXT_PRIMARY,
-  TREND_TOOLTIP_TEXT_SECONDARY,
+  TREND_TOOLTIP_TEXT_COLOR,
 } from '@/src/components/TestSuites/Trends/utils/chart-tooltip-styles';
 import { formatMetricTrendTooltipDate, formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 import { TREND_SCORE_CHART_GRID } from '@/src/components/TestSuites/Trends/utils/score-axis';
@@ -20,9 +23,15 @@ import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 
 interface OverallChartLabels {
   score: string;
-  /** i18n label for the threshold markLine (e.g. "Threshold"). */
+  /** Full threshold caption (e.g. "Threshold"); shown in the hover tooltip. */
   threshold?: string;
+  /** Short caption drawn on the chart (e.g. "Thld"): the full one is clipped by the last run's short segment. */
+  thresholdShort?: string;
 }
+
+/** Short dash / wide gap for vertical threshold transitions (sparser than horizontal). */
+const THRESHOLD_VERTICAL_DASH: [number, number] = [2, 8];
+const SCORE_AXIS_MAX = 1;
 
 export interface OverallScorePlotPoint {
   /** Category index in `runOrder` (equal horizontal slots). */
@@ -149,22 +158,141 @@ export const resolveNearestOverallScoreDataIndex = (
 
 const categoryAxisData = (runOrder: TrendsRunPoint[]): string[] => runOrder.map((point) => point.runId);
 
+/** Rough 10px label metrics; deliberately a little generous so the caption is moved rather than clipped. */
+const THRESHOLD_LABEL_CHAR_WIDTH_PX = 6;
+const THRESHOLD_LABEL_PADDING_PX = 4;
+
+/**
+ * Whether the caption, drawn from the start of the segment, would run past the chart's right edge.
+ * Only a segment that ends on the last run can: the last run owns just half a slot.
+ */
+const isLabelClippedAtRightEdge = (
+  segment: ThresholdHorizontalSegment,
+  caption: string,
+  runCount: number,
+  plotWidth?: number,
+): boolean => {
+  if (plotWidth == null || segment.x1 < runCount - 1) {
+    return false;
+  }
+  const gridWidth = plotWidth - OVERALL_SCORE_TREND_GRID.left - OVERALL_SCORE_TREND_GRID.right;
+  const segmentWidth = ((segment.x1 - segment.x0) / (runCount - 1)) * gridWidth;
+  return caption.length * THRESHOLD_LABEL_CHAR_WIDTH_PX + THRESHOLD_LABEL_PADDING_PX > segmentWidth;
+};
+
+type ThresholdLabelPosition = 'insideStartTop' | 'insideStartBottom' | 'insideEndTop' | 'insideEndBottom';
+
+const thresholdLabelPosition = (value: number, isAnchoredToEnd = false): ThresholdLabelPosition => {
+  // `insideStartTop` draws the caption above the line. At the axis max the line
+  // sits on grid.top (8px) and the 10px caption is clipped. Place it below the line.
+  const side = value >= SCORE_AXIS_MAX ? 'Bottom' : 'Top';
+  return `${isAnchoredToEnd ? 'insideEnd' : 'insideStart'}${side}`;
+};
+
+const thresholdCaption = (caption: string, value: number): string => `${caption} (${value})`;
+
+/** Hover tooltip with the full caption; the on-chart label only carries the short one. */
+const buildThresholdTooltip = (thresholdLabel: string, value: number) => ({
+  formatter: thresholdCaption(thresholdLabel, value),
+});
+
+/** Not silent so hover reaches the mark line; see `createThresholdHoverHandlers`. */
+const THRESHOLD_MARK_LINE_INTERACTION = { silent: false, emphasis: { disabled: true } };
+
+const buildFullWidthThresholdMarkLine = (
+  value: number,
+  thresholdLabel: string,
+  thresholdShortLabel: string,
+  palette: ThemePalette,
+  thresholdColor: string,
+) => ({
+  ...THRESHOLD_MARK_LINE_INTERACTION,
+  symbol: 'none' as const,
+  label: {
+    show: true,
+    position: thresholdLabelPosition(value),
+    formatter: thresholdCaption(thresholdShortLabel, value),
+    // Figma caption on the threshold line uses primary text (#EEF1F7 / theme text-primary).
+    color: palette['text-primary'],
+    fontSize: 10,
+  },
+  lineStyle: {
+    color: thresholdColor,
+    width: 1,
+    type: 'dashed' as const,
+  },
+  data: [{ yAxis: value, tooltip: buildThresholdTooltip(thresholdLabel, value) }],
+});
+
+const buildSegmentThresholdMarkLine = (
+  segments: ThresholdMarkSegment[],
+  thresholdLabel: string,
+  thresholdShortLabel: string,
+  palette: ThemePalette,
+  thresholdColor: string,
+  runCount: number,
+  plotWidth?: number,
+) => {
+  const labeledValues = new Set<number>();
+
+  return {
+    ...THRESHOLD_MARK_LINE_INTERACTION,
+    symbol: 'none' as const,
+    label: { show: false },
+    lineStyle: {
+      color: thresholdColor,
+      width: 1,
+      type: 'dashed' as const,
+    },
+    data: segments.map((segment) => {
+      if (segment.kind === 'horizontal') {
+        const shouldShowLabel = !labeledValues.has(segment.y);
+        labeledValues.add(segment.y);
+        const caption = thresholdCaption(thresholdShortLabel, segment.y);
+        const isAnchoredToEnd = isLabelClippedAtRightEdge(segment, caption, runCount, plotWidth);
+        return [
+          {
+            coord: [segment.x0, segment.y],
+            label: {
+              show: shouldShowLabel,
+              position: thresholdLabelPosition(segment.y, isAnchoredToEnd),
+              formatter: caption,
+              color: palette['text-primary'],
+              fontSize: 10,
+            },
+            tooltip: buildThresholdTooltip(thresholdLabel, segment.y),
+          },
+          { coord: [segment.x1, segment.y] },
+        ];
+      }
+      return [
+        {
+          coord: [segment.x, segment.y0],
+          label: { show: false },
+          tooltip: { show: false },
+          lineStyle: {
+            color: thresholdColor,
+            width: 1,
+            type: THRESHOLD_VERTICAL_DASH,
+          },
+        },
+        { coord: [segment.x, segment.y1] },
+      ];
+    }),
+  };
+};
+
 export const buildOverallScoreChartOptions = (
   palette: ThemePalette,
   runOrder: TrendsRunPoint[],
   labels: OverallChartLabels,
-  overallScoreThreshold?: number | null,
+  plotWidth?: number,
 ): EChartsOption => {
   const passedColor = palette['text-accent-primary'];
   const axisColor = palette['text-secondary'];
   const thresholdColor = palette['stroke-accent-secondary'];
-  const hasThreshold = overallScoreThreshold != null;
   const scoreAxisMin = 0;
-  const scoreAxisMax = 1;
-  // `insideStartTop` draws the caption above the line. At the axis max the line
-  // sits on grid.top (8px) and the 10px caption is clipped. Place it below the line.
-  const thresholdLabelPosition =
-    overallScoreThreshold != null && overallScoreThreshold >= scoreAxisMax ? 'insideStartBottom' : 'insideStartTop';
+  const scoreAxisMax = SCORE_AXIS_MAX;
 
   const values: OverallScoreSeriesDatum[] = runOrder.map((point, index) => {
     if (point.overallScore == null) {
@@ -178,27 +306,79 @@ export const buildOverallScoreChartOptions = (
     };
   });
 
-  const markLine =
-    hasThreshold && labels.threshold != null
-      ? {
-          silent: true,
-          symbol: 'none' as const,
-          label: {
-            show: true,
-            position: thresholdLabelPosition,
-            formatter: `${labels.threshold} (${overallScoreThreshold})`,
-            // Figma caption on the threshold line uses primary text (#EEF1F7 / theme text-primary).
-            color: palette['text-primary'],
-            fontSize: 10,
-          },
-          lineStyle: {
-            color: thresholdColor,
-            width: 1,
-            type: 'dashed' as const,
-          },
-          data: [{ yAxis: overallScoreThreshold }],
-        }
-      : undefined;
+  const thresholdLabel = labels.threshold;
+  const thresholdShortLabel = labels.thresholdShort ?? thresholdLabel;
+  const thresholdPlan =
+    thresholdLabel != null
+      ? buildThresholdMarkPlan(runOrder.map((point) => point.overallScoreThreshold))
+      : { mode: 'none' as const };
+
+  const categoryXAxis = {
+    type: 'category' as const,
+    data: categoryAxisData(runOrder),
+    show: false,
+    boundaryGap: false,
+  };
+
+  const scoreSeries = {
+    type: 'line' as const,
+    data: values,
+    smooth: false,
+    showSymbol: true,
+    symbol: 'circle' as const,
+    symbolSize: TREND_OVERALL_SYMBOL_SIZE,
+    lineStyle: { color: passedColor, width: 2 },
+    itemStyle: { color: passedColor },
+    areaStyle: { color: passedColor, opacity: 0.2 },
+    connectNulls: false,
+  };
+
+  const series: EChartsOption['series'] = [scoreSeries];
+  let xAxis: EChartsOption['xAxis'] = categoryXAxis;
+
+  if (thresholdPlan.mode === 'fullWidth' && thresholdLabel != null && thresholdShortLabel != null) {
+    series[0] = {
+      ...scoreSeries,
+      markLine: buildFullWidthThresholdMarkLine(
+        thresholdPlan.value,
+        thresholdLabel,
+        thresholdShortLabel,
+        palette,
+        thresholdColor,
+      ),
+    };
+  } else if (thresholdPlan.mode === 'segments' && thresholdLabel != null && thresholdShortLabel != null) {
+    const runCount = runOrder.length;
+    xAxis = [
+      categoryXAxis,
+      {
+        type: 'value',
+        min: 0,
+        // Segment plans require at least two runs; single-run thresholds use a full-width markLine.
+        max: runCount - 1,
+        show: false,
+        axisLabel: { show: false },
+        splitLine: { show: false },
+        axisLine: { show: false },
+        axisTick: { show: false },
+      },
+    ];
+    series.push({
+      type: 'line',
+      xAxisIndex: 1,
+      data: [],
+      // Not silent: a silent series silences its markLine too, which would kill the hover tooltip.
+      markLine: buildSegmentThresholdMarkLine(
+        thresholdPlan.segments,
+        thresholdLabel,
+        thresholdShortLabel,
+        palette,
+        thresholdColor,
+        runCount,
+        plotWidth,
+      ),
+    });
+  }
 
   return {
     title: { show: false },
@@ -247,15 +427,15 @@ export const buildOverallScoreChartOptions = (
           <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;min-width:140px;line-height:16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap;">
               <a href="${href}" target="_blank" rel="noopener noreferrer"
-                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_ACCENT};font-weight:600;text-decoration:none;cursor:pointer;">
+                 style="display:inline-flex;align-items:center;gap:4px;color:${TREND_TOOLTIP_TEXT_COLOR};font-weight:600;text-decoration:underline;cursor:pointer;">
                 <span>${point.runName}</span>
                 ${TREND_TOOLTIP_EXTERNAL_LINK_ICON_SVG}
               </a>
-              <span style="color:${TREND_TOOLTIP_TEXT_PRIMARY};font-weight:600;">${formatMetricTrendTooltipDate(point.computedAtMs)}</span>
+              <span style="color:${TREND_TOOLTIP_TEXT_COLOR};font-weight:600;">${formatMetricTrendTooltipDate(point.computedAtMs)}</span>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-              <span style="color:${TREND_TOOLTIP_TEXT_SECONDARY};">${labels.score}</span>
-              <span style="color:${TREND_TOOLTIP_TEXT_PRIMARY};font-weight:600;">${score}</span>
+              <span style="color:${TREND_TOOLTIP_TEXT_COLOR};">${labels.score}</span>
+              <span style="color:${TREND_TOOLTIP_TEXT_COLOR};font-weight:600;">${score}</span>
             </div>
           </div>`;
       },
@@ -266,12 +446,7 @@ export const buildOverallScoreChartOptions = (
       bottom: OVERALL_SCORE_TREND_GRID.bottom,
       top: OVERALL_SCORE_TREND_GRID.top,
     },
-    xAxis: {
-      type: 'category',
-      data: categoryAxisData(runOrder),
-      show: false,
-      boundaryGap: false,
-    },
+    xAxis,
     yAxis: {
       type: 'value',
       min: scoreAxisMin,
@@ -282,20 +457,6 @@ export const buildOverallScoreChartOptions = (
       axisLine: { show: false },
       axisTick: { show: false },
     },
-    series: [
-      {
-        type: 'line',
-        data: values,
-        smooth: false,
-        showSymbol: true,
-        symbol: 'circle',
-        symbolSize: TREND_OVERALL_SYMBOL_SIZE,
-        lineStyle: { color: passedColor, width: 2 },
-        itemStyle: { color: passedColor },
-        areaStyle: { color: passedColor, opacity: 0.2 },
-        connectNulls: false,
-        ...(markLine != null ? { markLine } : {}),
-      },
-    ],
+    series,
   };
 };

@@ -13,7 +13,7 @@ import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlat
 import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
 import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isPlatformBucketView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -48,12 +48,7 @@ interface Props {
     ignorePaths?: boolean,
   ) => void;
   onExport?: (fileType: ImportFileType) => void;
-  onCreate?: (
-    asset: AssetWithVersion,
-    path?: string,
-    isCreateDuplicate?: boolean,
-    shouldCloseModal?: boolean,
-  ) => Promise<ServerActionResponse>;
+  onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
   onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onRemove: () => Promise<void>;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
@@ -148,7 +143,7 @@ const Modals: FC<Props> = ({
         // platform-bucket row since `fix-platform-bucket-folder-storage`; a `.path` fallback used to
         // be needed here and was the cause of Issue #4420 — `.path` never carries the bucket prefix,
         // so it always won the `||` and made this check false for a platform-bucket row).
-        (isFlatPlatformView(view) || isPlatformDualBucketView(view, duplicateItem?._metadata?.folderId) ? (
+        (isPlatformBucketView(view) || isPlatformDualBucketView(view, duplicateItem?._metadata?.folderId) ? (
           <DuplicatePlatformAsset
             view={view}
             isModalOpen={isModalOpen}

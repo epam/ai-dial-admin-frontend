@@ -11,7 +11,7 @@ under `context/`. Created by archiving change `add-projects-entity`.
 
 ### Requirement: Artifacts > Projects menu entry
 The system SHALL add a `Projects` item to the `Artifacts` menu group directly after `Skills`, linking to the
-`/projects` route. The item SHALL be shown unconditionally, with no feature flag and no `catalog` token gating.
+`/projects` route. The item SHALL be shown unconditionally, with no feature flag.
 
 #### Scenario: Projects follows Skills in the Artifacts group
 - **WHEN** the Artifacts group of the menu renders
@@ -94,14 +94,15 @@ SHALL be offered or required in the modal.
 - **THEN** the request fails, the modal stays open, and an error notification is shown
 
 ### Requirement: Project detail view has a single Properties tab with read-only metadata
-The system SHALL render a project's detail page with one `Properties` tab and no other tab. It SHALL show the
+The system SHALL render a project's detail page with one `Properties` tab and no other tab; because it is the
+only tab, the tab bar itself SHALL NOT be drawn (an entity view hides a tab bar holding a single tab). It SHALL show the
 project's path, author and created/updated dates read from Core, a disabled `Name` input holding the
 project's name (its last path segment), and no destination-folder field. A project that no longer exists SHALL
 render the standard not-found page. Breadcrumbs SHALL reflect the project's folder path.
 
 #### Scenario: Properties shows read-only metadata and a disabled name
 - **WHEN** a user opens a project
-- **THEN** the path, author and dates are shown, `Name` is shown disabled, and no other tab or folder field is
+- **THEN** the path, author and dates are shown, `Name` is shown disabled, and no tab bar or folder field is
   present
 
 #### Scenario: A missing project renders not-found
@@ -212,6 +213,10 @@ shown regardless of extension.
 #### Scenario: A duplicate name is rejected
 - **WHEN** a user adds a file whose name matches an existing or staged context file
 - **THEN** the file is not staged and a message names it with the duplicate reason
+
+#### Scenario: Rejection messages clear after Save or Discard
+- **WHEN** a user successfully saves staged changes or confirms Discard after a context file is rejected
+- **THEN** the rejection messages disappear
 
 #### Scenario: Stored files count toward the capacity after a reload
 - **WHEN** a project holding context files is opened

@@ -1,19 +1,20 @@
-import type { ComponentProps } from 'react';
 import type { DialFileManager } from '@epam/ai-dial-react-file-manager';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ColDef } from 'ag-grid-community';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { ComponentProps } from 'react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
-import FileManager from '../FileManager';
-import { SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX } from '../constants';
+import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { BucketType } from '@/src/models/dial/asset-list-item';
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { UnitNamespace } from '@/src/models/user-access';
 import { ApplicationRoute } from '@/src/types/routes';
+import FileManager from '../FileManager';
+import { SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX } from '../constants';
 
 const { dialFileManagerPropsSpy } = vi.hoisted(() => ({ dialFileManagerPropsSpy: vi.fn() }));
 
@@ -28,14 +29,10 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
   };
 });
 
-const { mockFeatureFlags } = vi.hoisted(() => ({
-  mockFeatureFlags: {
-    catalogEnabled: true,
-  },
-}));
+const { unitContext } = vi.hoisted(() => ({ unitContext: { isUnitMode: false, canWriteAt: vi.fn(() => true) } }));
 
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: mockFeatureFlags, isReadOnlyAdmin: false }),
+  useAppContext: () => ({ isReadOnlyAdmin: false, ...unitContext }),
 }));
 
 const renderFileManager = (
@@ -58,22 +55,11 @@ describe('FileManager', () => {
     dialFileManagerPropsSpy.mockClear();
   });
 
-  test('fetches file, platform, and public roots on mount for a dual-bucket view when Catalog is enabled', () => {
-    mockFeatureFlags.catalogEnabled = true;
-
+  test('fetches file, platform, and public roots on mount for a dual-bucket view', () => {
     const fetchFiles = renderFileManager();
 
     expect(fetchFiles).toHaveBeenCalledOnce();
     expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
-  });
-
-  test('fetches file and public roots for a dual-bucket view when Catalog is disabled', () => {
-    mockFeatureFlags.catalogEnabled = false;
-
-    const fetchFiles = renderFileManager();
-
-    expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'public/']);
   });
 
   // Regression (4.4): conversation rows and the flat platform views have no folder concept, so
@@ -92,6 +78,26 @@ describe('FileManager', () => {
 
     const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onMoveToFiles).toBeUndefined();
+  });
+
+  // A cost object folder exists in Core only while it holds a record, so a policy record view has no folder
+  // marker to create, rename or move to.
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    'withholds onMoveToFiles and onCreateFolder for the nested platform view %s',
+    (view) => {
+      renderFileManager(view);
+
+      const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+      expect(props.onMoveToFiles).toBeUndefined();
+      expect(props.onCreateFolder).toBeUndefined();
+    },
+  );
+
+  test('still offers onCreateFolder for a foldered view', () => {
+    renderFileManager(ApplicationRoute.AssetsApplications);
+
+    const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(props.onCreateFolder).toBeInstanceOf(Function);
   });
 
   test('wires onMoveToFiles for a foldered view', () => {
@@ -491,5 +497,48 @@ describe('FileManager — org units', () => {
     expect(
       lastProps().getItemActionRestriction({ nodeType: 'folder', path: 'public/Acme/' }, 'delete'),
     ).toBeUndefined();
+  });
+});
+
+describe('FileManager — unit mode', () => {
+  beforeEach(() => {
+    dialFileManagerPropsSpy.mockClear();
+    unitContext.isUnitMode = true;
+    unitContext.canWriteAt.mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    unitContext.isUnitMode = false;
+  });
+
+  const lastProps = () => dialFileManagerPropsSpy.mock.lastCall?.[0] as { onCreateFolder?: unknown };
+
+  test('never fetches the admin-only platform root', () => {
+    const fetchFiles = renderFileManager();
+
+    expect(fetchFiles).toHaveBeenCalledOnce();
+    expect(fetchFiles.mock.calls[0][0]).not.toContain('platform/');
+    expect(fetchFiles.mock.calls[0][0]).toContain('public/');
+  });
+
+  test('offers folder creation when the owning unit grants write on the view namespace', () => {
+    renderFileManager();
+
+    expect(unitContext.canWriteAt).toHaveBeenCalledWith(UnitNamespace.APPLICATIONS, '');
+    expect(lastProps().onCreateFolder).toBeDefined();
+  });
+
+  test('withholds folder creation when the owning unit does not grant write', () => {
+    unitContext.canWriteAt.mockReturnValue(false);
+
+    renderFileManager();
+
+    expect(lastProps().onCreateFolder).toBeUndefined();
+  });
+
+  test('withholds folder creation for a view with no unit namespace', () => {
+    renderFileManager(ApplicationRoute.PlatformRoles);
+
+    expect(lastProps().onCreateFolder).toBeUndefined();
   });
 });

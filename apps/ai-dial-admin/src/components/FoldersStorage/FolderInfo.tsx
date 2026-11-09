@@ -8,6 +8,7 @@ import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
 import RulesList from '@/src/components/Rules/RulesList';
 import UnitInfo from '@/src/components/FoldersStorage/UnitInfo';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -26,6 +27,7 @@ interface Props {
 
 const FolderInfo: FC<Props> = ({ isReadonly }) => {
   const t = useI18n();
+  const { isUnitMode } = useAppContext();
   const { currentFolder, fetchedFoldersRule, filePath, fetchRules, isLoading, files, toggleFolder } = useRuleFolder();
   const { units, unitsStatus, getOwningUnit, refreshUnits } = useOrgUnits();
   const [originalRules, setOriginalRules] = useState(fetchedFoldersRule?.[filePath]);
@@ -81,7 +83,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
 
   if (isFetching) {
     return (
-      <div className="flex size-full items-center justify-center bg-layer-3 rounded">
+      <div className="flex size-full items-center justify-center">
         <Spinner size={40} fullWidth />
       </div>
     );
@@ -93,7 +95,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
 
   if (unitsStatus === OrgUnitsStatus.ERROR) {
     return (
-      <div className="flex size-full items-center justify-center bg-layer-3 rounded">
+      <div className="flex size-full items-center justify-center">
         <NoDataContent
           title={t(FoldersI18nKey.UnitsLoadError)}
           action={
@@ -115,7 +117,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
 
   if (owningUnit) {
     return (
-      <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
+      <div className="size-full min-w-0 flex flex-col gap-4 overflow-hidden">
         <FolderInfoHeader isChanged={false} title={currentFolder.name as string} />
         <div className="flex min-w-0 flex-col gap-1">
           <span className="dial-small-text text-secondary">{t(FoldersI18nKey.InsideUnitNote)}</span>
@@ -147,7 +149,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   }
 
   return (
-    <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
+    <div className="size-full min-w-0 flex flex-col gap-4 overflow-hidden">
       <FolderInfoHeader
         isChanged={isChanged}
         title={currentFolder?.name as string}
@@ -155,7 +157,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
         onDiscard={onDiscard}
         isSaveDisable={isSaveDisable}
       />
-      <RulesList rulesMap={editableRules} onChange={onChangeRules} isReadonly={isReadonly} />
+      <RulesList rulesMap={editableRules} onChange={onChangeRules} isReadonly={isReadonly || isUnitMode} />
     </div>
   );
 };

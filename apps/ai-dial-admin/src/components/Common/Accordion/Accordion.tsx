@@ -62,7 +62,7 @@ const Accordion: FC<Props> = ({
   return (
     <div
       className={classNames(
-        'flex flex-col rounded border border-primary gap-4',
+        'flex flex-col rounded border border-secondary gap-4',
         containerClassName,
         containerPaddingClassName,
       )}

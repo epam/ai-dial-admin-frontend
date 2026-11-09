@@ -58,7 +58,7 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
       <Select
         options={items || []}
         selectAll={params.isMulti}
-        value={params.isMulti ? multipleValues : localValue}
+        value={params.isMulti ? multipleValues : (localValue ?? '')}
         multiple={params.isMulti}
         onChange={(value) => onChangeValue(value as string)}
         customMultiSelectTagsRenderer={params.customMultiSelectTagsRenderer}

@@ -157,7 +157,7 @@ const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid,
         )}
 
         {/* A budget rather than a readiness condition, so it sits apart from the three above. */}
-        <div className="flex flex-col gap-1 border-t border-secondary pt-4">
+        <div className="flex flex-col gap-1 border-t border-tertiary pt-4">
           <label htmlFor="pipeline-cost-ceiling" className="text-secondary dial-tiny-text">
             {t(AnalyticsPipelinesI18nKey.CostCeilingLabel)}
           </label>

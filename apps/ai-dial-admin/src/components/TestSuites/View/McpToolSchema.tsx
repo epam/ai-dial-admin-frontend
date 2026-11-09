@@ -104,7 +104,7 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
   const isSchemaTab = activeTab === EntityViewTab.InputSchema || activeTab === EntityViewTab.OutputSchema;
 
   return (
-    <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
+    <div className="flex flex-col size-full gap-2 border border-secondary rounded p-4">
       <div className="flex flex-row justify-between items-start mb-3">
         <h3>{t(TestSuitesI18nKey.ToolSchema)}</h3>
         {isSchemaTab && (

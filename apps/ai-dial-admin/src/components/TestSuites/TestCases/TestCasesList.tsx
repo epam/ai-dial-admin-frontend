@@ -65,6 +65,7 @@ import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/tes
 import { DatasetDetachMode, TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { clearDatasetTestCases } from '@/src/utils/evaluation/clear-dataset-test-cases';
+import { fillEmptyStringFieldsInRows } from '@/src/utils/evaluation/schema-fields';
 import { expandTestCasesToRows, getPerTurnFieldNames } from '@/src/utils/evaluation/test-case-grouping';
 import { getUniqueTestCaseCopyName } from '@/src/utils/evaluation/test-case-name';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -404,7 +405,10 @@ const TestCasesList: FC<Props> = ({
       if (!datasetId) return;
 
       const sourceRows = row.rowType === GridRowType.GROUP ? (row.turns ?? []) : [row];
-      const [sourceCase] = collapseRowsToTestCases(sourceRows, getPerTurnFieldNames(dataset?.testCaseSchema));
+      const [sourceCase] = collapseRowsToTestCases(
+        fillEmptyStringFieldsInRows(sourceRows, dataset?.testCaseSchema),
+        getPerTurnFieldNames(dataset?.testCaseSchema),
+      );
       if (!sourceCase) return;
       const existingNames = turnGrid.groups.flatMap((group) =>
         group.turns.map((turn) => String(turn.testCaseName ?? '')),
@@ -482,14 +486,14 @@ const TestCasesList: FC<Props> = ({
   const onAddTestCase = useCallback(() => {
     const datasetId = selectedTestSuite.datasetId;
     if (!datasetId) return;
-    createTestCase(datasetId, createNewTestCaseRow()).then((res) => {
+    createTestCase(datasetId, createNewTestCaseRow(dataset?.testCaseSchema)).then((res) => {
       if (res?.success) {
         refreshGrid();
       } else {
         showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
       }
     });
-  }, [selectedTestSuite.datasetId, refreshGrid, showNotification]);
+  }, [selectedTestSuite.datasetId, dataset?.testCaseSchema, refreshGrid, showNotification]);
 
   const onRemoveTestCase = useCallback(
     async (testCaseId: string) => {

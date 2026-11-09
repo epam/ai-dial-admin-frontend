@@ -93,25 +93,19 @@ When the user clicks a cell in the main Execution Result grid whose column maps 
 
 ### Requirement: Pivot cells truncate and open a full-value popup
 
-Pivot value cells SHALL be capped to the cell height and SHALL truncate their content with an ellipsis at the
-end of the last line that fits when it does not, instead of scrolling inside the cell or growing the row.
-Every pivot value cell SHALL be one control over the whole cell, whether or not its content is truncated.
-On hover or keyboard focus, the cell SHALL show an "open in popup" affordance at the bottom-right. Activating
-the cell SHALL open the popup defined by `run-value-popups`: the score popup for a metric field and the text
-popup, showing the full value, for any other.
+Pivot value cells SHALL be capped to the cell height and SHALL scroll vertically within that height when content
+does not fit, instead of expanding the row. Every pivot value cell SHALL be one control over the whole cell,
+whether or not its content scrolls. On hover or keyboard focus, the cell SHALL show an "open in popup"
+affordance at the bottom-right. Activating the cell SHALL open the popup defined by `run-value-popups`: the
+score popup for a metric field and the text popup, showing the full value, for any other.
 
 #### Scenario: Truncate long value
 - **WHEN** a field value is taller than the cell
-- **THEN** the cell shows as many lines as fit, the last ending in an ellipsis, with no scrollbar, and the row height does not grow
+- **THEN** the cell shows an internal vertical scrollbar and the row height does not grow to fit the value
 
 #### Scenario: Short value shows no scroll
 - **WHEN** a field value fits within the cell
-- **THEN** the cell shows the whole value with no ellipsis and no scrollbar
-
-#### Scenario: Truncation follows the cell height
-- **WHEN** the panel is resized so the cell is taller or shorter
-- **THEN** the number of visible lines changes to fit and the ellipsis moves with it
-
+- **THEN** the cell shows the whole value with no scrollbar and no ellipsis
 #### Scenario: Hover shows open-popup icon
 - **WHEN** the user hovers a value cell
 - **THEN** an open-in-popup icon appears at the bottom-right of the cell

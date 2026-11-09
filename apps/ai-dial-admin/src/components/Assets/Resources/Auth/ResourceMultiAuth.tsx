@@ -119,7 +119,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
 
   if (editState) {
     return (
-      <div className={classNames('flex flex-col gap-y-4 rounded border border-primary p-4', STANDARD_CONTROL_WIDTH)}>
+      <div className={classNames('flex flex-col gap-y-4 rounded border border-secondary p-4', STANDARD_CONTROL_WIDTH)}>
         <div className="flex items-center gap-x-2">
           <GhostIconButton
             size={ElementSize.Small}
@@ -188,7 +188,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
     <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
       <Label label={t(ExternalServiceI18nKey.ExternalServices)} />
 
-      <div className="flex flex-col gap-y-2 rounded border border-primary p-4">
+      <div className="flex flex-col gap-y-2 rounded border border-secondary p-4">
         {Object.keys(services).length === 0 && (
           <p className="dial-small text-secondary">{t(ExternalServiceI18nKey.NoServices)}</p>
         )}

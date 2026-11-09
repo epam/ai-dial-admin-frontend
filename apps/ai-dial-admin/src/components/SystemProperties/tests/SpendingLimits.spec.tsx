@@ -6,10 +6,7 @@ import { ComponentProps, useState } from 'react';
 import SpendingLimits from '@/src/components/SystemProperties/SpendingLimits';
 import { SystemPropertiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
-import { ValidationActionType, useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { SpendingLimitMode, SpendingLimits as SpendingLimitsModel } from '@/src/models/system-properties';
-
-const { dispatch } = useSaveValidationContext();
 
 const LIMITS: SpendingLimitsModel = { mode: SpendingLimitMode.Shadow, defaultCostObject: 'TEAM-A' };
 
@@ -52,11 +49,6 @@ describe('SpendingLimits', () => {
     expect(getMode()).toBeTruthy();
     expect(getCostObject()).toBeTruthy();
     expect(screen.getByText(SystemPropertiesI18nKey.SpendingLimitsDescription)).toBeTruthy();
-    expect(dispatch).toHaveBeenCalledWith({
-      type: ValidationActionType.SetField,
-      field: 'spendingLimits',
-      isValid: true,
-    });
   });
 
   test('reflects the stored mode and default cost object with the mode hint', () => {
@@ -116,29 +108,16 @@ describe('SpendingLimits', () => {
   test.each([
     ['empty', ''],
     ['whitespace-only', '   '],
-  ])('marks a %s cost object invalid and reports it to the validation context', (_name, value) => {
+  ])('marks a %s cost object invalid', (_name, value) => {
     renderSpendingLimits({ spendingLimits: { ...LIMITS, defaultCostObject: value } });
 
     expect(screen.getByRole('alert')).toHaveTextContent(SystemPropertiesI18nKey.DefaultCostObjectInvalid);
-    expect(dispatch).toHaveBeenCalledWith({
-      type: ValidationActionType.SetField,
-      field: 'spendingLimits',
-      isValid: false,
-    });
   });
 
   test('accepts any non-blank cost object client-side', () => {
     renderSpendingLimits({ spendingLimits: { ...LIMITS, defaultCostObject: 'team/a b' } });
 
     expect(screen.queryByRole('alert')).toBeNull();
-  });
-
-  test('removes its validation field on unmount', () => {
-    const { unmount } = renderSpendingLimits({ spendingLimits: LIMITS });
-
-    unmount();
-
-    expect(dispatch).toHaveBeenCalledWith({ type: ValidationActionType.RemoveField, field: 'spendingLimits' });
   });
 
   test('disables both controls for a read-only admin', async () => {

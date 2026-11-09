@@ -138,13 +138,12 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
-      <div className="flex shrink-0 flex-col gap-8">
+      <div className="flex shrink-0 flex-col gap-6">
         <Header run={run} testSuite={testSuite} />
         <Analytics
           run={run}
           overallScore={enrichedMetricScores?.overallScore}
           metricSnapshotCount={metricSnapshotCount}
-          testSuite={testSuite}
         />
       </div>
       <div className={SUMMARY_PANELS_GRID_CLASS}>

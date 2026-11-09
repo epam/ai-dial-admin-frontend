@@ -20,7 +20,7 @@ const CollapsableSection: FC<Props> = ({ title, children, headerButton }) => {
   }, []);
 
   return (
-    <div className={classNames('flex flex-col rounded border border-primary p-4', !isCollapsed && 'flex-1')}>
+    <div className={classNames('flex flex-col rounded border border-secondary p-4', !isCollapsed && 'flex-1')}>
       <div className="flex flex-row">
         <button className="flex flex-1 items-center justify-between" onClick={toggleCollapse}>
           <div className="flex flex-row">

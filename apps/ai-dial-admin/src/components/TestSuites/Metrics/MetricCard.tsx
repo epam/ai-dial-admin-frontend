@@ -27,7 +27,7 @@ const MetricCard: FC<Props> = ({ metric, onEdit, onDelete }) => {
 
   return (
     <div
-      className="flex flex-row items-start gap-24 border-b border-secondary pb-4 rounded bg-layer-2"
+      className="flex flex-row items-start gap-24 border-b border-tertiary pb-4 rounded"
       role="article"
       aria-label={metric.name}
     >

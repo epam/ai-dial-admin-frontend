@@ -20,6 +20,7 @@ export enum EntityViewTab {
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
+  Subjects = 'Subjects',
   Applications = 'Applications',
   Models = 'Models',
   Preview = 'Preview',
@@ -29,6 +30,7 @@ export enum EntityViewTab {
   Activities = 'Activities',
   Dashboard = 'Dashboard',
   Dependencies = 'Dependencies',
+  ResourceDependencies = 'ResourceDependencies',
   AppRoutes = 'AppRoutes',
   Routes = 'Routes',
   Traces = 'Traces',
@@ -175,6 +177,17 @@ export const dependenciesTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Dependencies),
 });
 
+export const resourceDependenciesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.ResourceDependencies,
+  label: t(TabsI18nKey.ResourceDependencies),
+});
+
+/** Public-bucket applications only: inserted where the removed Dependencies tab sat, before App Routes. */
+export const withResourceDependenciesTab = (tabs: TabItem[], t: (key: string) => string): TabItem[] => {
+  const appRoutesIndex = tabs.findIndex((tab) => tab.id === EntityViewTab.AppRoutes);
+  return tabs.toSpliced(appRoutesIndex === -1 ? tabs.length : appRoutesIndex, 0, resourceDependenciesTab(t));
+};
+
 export const appRouteTab = (t: (key: string) => string) => ({
   id: EntityViewTab.AppRoutes,
   label: t(TabsI18nKey.AppRoutes),
@@ -223,6 +236,11 @@ export const catalogTab = (t: (key: string) => string) => ({
 export const entitiesTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Entities,
   label: t(TabsI18nKey.Entities),
+});
+
+export const subjectsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Subjects,
+  label: t(TabsI18nKey.Subjects),
 });
 
 export const keysTab = (t: (key: string) => string) => ({
@@ -486,7 +504,6 @@ export const getTabsForAsset = (
       parametersTab(t),
       catalogTab(t),
       interceptorsTab(t),
-      dependenciesTab(t),
       appRouteTab(t),
       // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
       ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),
@@ -526,6 +543,9 @@ export const getTabsForAsset = (
   }
   if (view === ApplicationRoute.PlatformRoles) {
     return [propertiesTab(t), entitiesTab(t)];
+  }
+  if (view === ApplicationRoute.PlatformPolicies || view === ApplicationRoute.PlatformPolicyAssignments) {
+    return [propertiesTab(t), subjectsTab(t)];
   }
   if (view === ApplicationRoute.Skills) {
     return [propertiesTab(t), skillTab(t)];

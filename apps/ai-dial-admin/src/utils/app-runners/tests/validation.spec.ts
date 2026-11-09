@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
-import { isValidAppRunner, validateAppRunner } from '../validation';
+import { hasInvalidAppRunnerResponses, isValidAppRunner, validateAppRunner } from '../validation';
 
 const route = {
   'dial:paths': ['/a'],
@@ -98,9 +98,54 @@ describe('App Runner Utils :: validateAppRunner', () => {
       }),
     );
 
-    expect(errors.some((error) => error.message === 'A dial:response requires both dial:status and dial:body')).toBe(
-      true,
-    );
+    expect(
+      errors.some((error) => error.message === 'A dial:response requires a valid dial:status and non-empty dial:body'),
+    ).toBe(true);
+  });
+
+  test.each([
+    ['missing response fields', {}],
+    ['a null response', null],
+    ['a malformed response', 'invalid'],
+    ['missing status', { 'dial:body': 'ok' }],
+    ['missing body', { 'dial:status': 200 }],
+    ['an empty body', { 'dial:status': 200, 'dial:body': '' }],
+    ['a non-string body', { 'dial:status': 200, 'dial:body': 1 }],
+    ['a nonnumeric status', { 'dial:status': 'bad', 'dial:body': 'ok' }],
+    ['a low status', { 'dial:status': 99, 'dial:body': 'ok' }],
+    ['a high status', { 'dial:status': 1000, 'dial:body': 'ok' }],
+  ])('rejects %s', (_description, response) => {
+    const value = runner({ 'dial:applicationTypeRoutes': { health: { ...route, 'dial:response': response } } });
+
+    expect(hasInvalidAppRunnerResponses(value)).toBe(true);
+    expect(validateAppRunner(value)).toContainEqual({
+      field: 'dial:applicationTypeRoutes.health',
+      message: 'A dial:response requires a valid dial:status and non-empty dial:body',
+    });
+  });
+
+  test.each([
+    { 'dial:status': 100, 'dial:body': 'ok' },
+    { 'dial:status': 999, 'dial:body': 'ok' },
+    { 'dial:status': '200', 'dial:body': ' ' },
+  ])('accepts valid response fields %o', (response) => {
+    const value = runner({ 'dial:applicationTypeRoutes': { health: { ...route, 'dial:response': response } } });
+
+    expect(hasInvalidAppRunnerResponses(value)).toBe(false);
+    expect(validateAppRunner(value)).toEqual([]);
+  });
+
+  test('detects an invalid response in an inactive route but accepts upstream-only routes', () => {
+    const value = runner({
+      'dial:applicationTypeRoutes': {
+        first: route,
+        second: { ...route, 'dial:response': { 'dial:status': 200, 'dial:body': '' } },
+      },
+    });
+
+    expect(hasInvalidAppRunnerResponses(value)).toBe(true);
+    expect(hasInvalidAppRunnerResponses(runner({ 'dial:applicationTypeRoutes': { first: route } }))).toBe(false);
+    expect(hasInvalidAppRunnerResponses(runner())).toBe(false);
   });
 
   describe('parameters', () => {

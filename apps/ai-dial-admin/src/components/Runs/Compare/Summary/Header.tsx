@@ -85,7 +85,7 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, runs, primaryTestSuite, co
     }));
 
   return (
-    <div className="flex flex-col gap-8 pb-8 sm:flex-row">
+    <div className="flex flex-col gap-8 sm:flex-row">
       {hasDifferentSuites && (
         <DualRunField
           label={t(RunsI18nKey.TestSuite)}

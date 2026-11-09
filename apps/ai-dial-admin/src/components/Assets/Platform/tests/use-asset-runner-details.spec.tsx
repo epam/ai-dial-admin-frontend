@@ -3,11 +3,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 
-const { getRunner, getConfigFileAppRunner, getResolvedRunnerSchema } = vi.hoisted(() => ({
+const { getRunner, getConfigFileAppRunner, getResolvedRunnerSchema, appContext } = vi.hoisted(() => ({
   getRunner: vi.fn(),
   getConfigFileAppRunner: vi.fn(),
   getResolvedRunnerSchema: vi.fn(),
+  appContext: { isFullAdmin: true },
 }));
+
+vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
 
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getRunner,
@@ -32,6 +35,22 @@ const details = {
 describe('useAssetRunnerDetails', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    appContext.isFullAdmin = true;
+  });
+
+  test('resolves a Config-origin runner by its $id when the caller is not a full admin', async () => {
+    appContext.isFullAdmin = false;
+    getResolvedRunnerSchema.mockResolvedValue({ success: true, response: details });
+    const runner = { $id: 'config-runner', origin: AppRunnerOrigin.Config } as AppRunnerOption;
+
+    const { result } = renderHook(() => useAssetRunnerDetails(runner));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('config-runner');
+    expect(getConfigFileAppRunner).not.toHaveBeenCalled();
+    expect(result.current.routes).toEqual(details['dial:applicationTypeRoutes']);
+    expect(result.current.interceptors).toEqual(details['dial:applicationTypeInterceptors']);
   });
 
   test('loads Config-origin runner details through the config-file action', async () => {

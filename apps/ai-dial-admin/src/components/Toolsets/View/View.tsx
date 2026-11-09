@@ -32,6 +32,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
 import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -189,7 +190,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
   }, [isEditorEnabled, onSave, selectedFormat, selectedToolset, onModalOpen]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.Toolsets}
         entity={selectedToolset}
@@ -211,7 +212,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
         />
       </SimpleEntityHeader>
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

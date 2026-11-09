@@ -54,7 +54,7 @@ import {
   getTranslatedEntity,
 } from '@/src/utils/deployments/entity';
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { isPlatformBucketView } from '@/src/utils/files/root-folder';
 import { getErrorNotification } from '@/src/utils/notification';
 
 export interface ContainersButtonsWrapperProps {
@@ -312,7 +312,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
         createPortal(
           // Flat platform types (models, interceptors) go through the same create flow as their
           // Assets list; only the dual-bucket types need the folder-aware asset modal.
-          isFlatPlatformView(assetView) ? (
+          isPlatformBucketView(assetView) ? (
             <CreateEntity
               route={assetView}
               isModalOpen={isModalOpen}

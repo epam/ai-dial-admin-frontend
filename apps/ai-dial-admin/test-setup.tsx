@@ -101,6 +101,16 @@ vi.mock('@/src/context/assets/RoutesFolderContext', () => ({
   RoutesFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/PoliciesFolderContext', () => ({
+  usePoliciesFolder: () => ({ fetchFiles: vi.fn() }),
+  PoliciesFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/PolicyAssignmentsFolderContext', () => ({
+  usePolicyAssignmentsFolder: () => ({ fetchFiles: vi.fn() }),
+  PolicyAssignmentsFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/assets/RolesFolderContext', () => ({
   useRolesFolder: () => ({ fetchFiles: vi.fn() }),
   RolesFolderProvider: ({ children }: any) => <div>{children}</div>,
@@ -151,6 +161,7 @@ vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnCont
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { AccessMode, AdminAccess } from '@/src/models/user-access';
 
 // Hoisted, not returned as a literal from the mock: a fresh object per call gives `featureFlags`
 // (and the context value itself) a new identity every render, so any component listing one of them
@@ -163,9 +174,13 @@ const appContextValue = {
     closeSidebar: vi.fn(),
     position: SidebarPosition.Right,
   },
-  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true, catalogEnabled: true },
+  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
+  userAccess: { mode: AccessMode.FULL, adminAccess: AdminAccess.FULL, units: [] },
   isReadOnlyAdmin: false,
   isFullAdmin: true,
+  isUnitMode: false,
+  canReadNamespace: () => true,
+  canWriteAt: () => true,
   isEnableAuth: false,
   showConfigFiles: false,
   toggleShowConfigFiles: vi.fn(),
@@ -178,6 +193,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 vi.mock('@/src/context/SaveValidationContext', () => {
   const dispatch = vi.fn();
+  const errorFields = new Map<string, boolean>();
   return {
     SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
     useSaveValidationContext: () => ({
@@ -185,6 +201,8 @@ vi.mock('@/src/context/SaveValidationContext', () => {
       dispatch,
       jsonErrors: [],
       jsonErrorNotifications: [],
+      resetCounter: 0,
+      errorFields,
     }),
     useJsonEditorValidation: () => {
       const editorId = useId();
@@ -214,7 +232,7 @@ vi.mock('next/image', () => ({
 // ECharts is heavy and not meaningful in jsdom — render a lightweight stub.
 vi.mock('echarts-for-react', () => ({
   __esModule: true,
-  default: () => <div data-mock="echarts" />,
+  default: vi.fn(() => <div data-mock="echarts" />),
 }));
 
 // Editable Monaco views expose a labeled textarea; read-only viewers keep the readable text stub.

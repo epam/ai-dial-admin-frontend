@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { KeysI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
@@ -52,10 +52,16 @@ describe('KeyRoles', () => {
     expect(screen.getByText('grid:1')).toBeInTheDocument();
   });
 
+  test('Renders the Roles heading with the number of granted roles', () => {
+    renderKeyRoles({ roles: ['admin'] });
+
+    expect(screen.getByRole('heading', { name: `${TabsI18nKey.Roles}: 1` })).toBeInTheDocument();
+  });
+
   test('Renders the Add Roles button for a write admin', () => {
     renderKeyRoles();
 
-    expect(screen.getByTitle(RolesI18nKey.AddRoles)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: RolesI18nKey.AddRoles })).toBeInTheDocument();
   });
 
   test('Calls onChange with added role names when Add Roles is confirmed', async () => {
@@ -63,7 +69,7 @@ describe('KeyRoles', () => {
     const onChange = vi.fn();
     renderKeyRoles({}, onChange);
 
-    await user.click(screen.getByTitle(RolesI18nKey.AddRoles));
+    await user.click(screen.getByRole('button', { name: RolesI18nKey.AddRoles }));
     await user.click(screen.getByText('ApplyRoles'));
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ roles: ['reader'] }));
@@ -74,6 +80,6 @@ describe('KeyRoles', () => {
 
     renderKeyRoles();
 
-    expect(screen.queryByTitle(RolesI18nKey.AddRoles)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: RolesI18nKey.AddRoles })).not.toBeInTheDocument();
   });
 });

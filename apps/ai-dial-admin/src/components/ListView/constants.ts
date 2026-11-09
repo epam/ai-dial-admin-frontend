@@ -16,6 +16,8 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.PlatformCatalogSchemas]: MenuI18nKey.PlatformCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: MenuI18nKey.PlatformInterceptors,
   [ApplicationRoute.PlatformRoutes]: MenuI18nKey.PlatformRoutes,
+  [ApplicationRoute.PlatformPolicies]: MenuI18nKey.PlatformPolicies,
+  [ApplicationRoute.PlatformPolicyAssignments]: MenuI18nKey.PlatformPolicyAssignments,
   [ApplicationRoute.PlatformRoles]: MenuI18nKey.PlatformRoles,
   [ApplicationRoute.PlatformKeys]: MenuI18nKey.PlatformKeys,
   [ApplicationRoute.AssetsApplications]: MenuI18nKey.Applications,
@@ -58,8 +60,6 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.Runs]: EntitiesI18nKey.NoRuns,
   [ApplicationRoute.ModelServings]: EntitiesI18nKey.NoModelServings,
 };
-
-export const mainListEntitiesViewClassName = 'py-4 px-6';
 
 /**
  * Column state is stored per view, and the reworked runs columns cannot be reconciled with what earlier

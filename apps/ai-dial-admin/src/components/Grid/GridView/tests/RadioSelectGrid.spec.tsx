@@ -23,7 +23,7 @@ interface Row {
 
 const COLUMN_DEFS: ColDef[] = [{ field: 'id' }];
 
-const renderGrid = (components?: GridOptions['components']) =>
+const renderGrid = (components?: GridOptions['components'], isRadioInNameColumn?: boolean) =>
   render(
     <RadioSelectGrid<Row>
       data={[{ id: '1' }]}
@@ -32,6 +32,7 @@ const renderGrid = (components?: GridOptions['components']) =>
       emptyTitle="empty"
       onSelect={vi.fn()}
       components={components}
+      isRadioInNameColumn={isRadioInNameColumn}
     />,
   );
 
@@ -48,5 +49,45 @@ describe('RadioSelectGrid', () => {
     renderGrid();
 
     expect(capturedGridProps?.additionalGridOptions?.components).toBeUndefined();
+  });
+
+  test('keeps a separate radio selection column by default', () => {
+    renderGrid();
+
+    expect(capturedGridProps?.additionalGridOptions?.selectionColumnDef?.cellRenderer).toBeDefined();
+  });
+
+  test('drops the selection column when the radio lives in the name column', () => {
+    renderGrid(undefined, true);
+
+    const options = capturedGridProps?.additionalGridOptions;
+
+    expect(options?.selectionColumnDef).toBeUndefined();
+    expect(options?.rowSelection).toMatchObject({ mode: 'singleRow', checkboxes: false });
+  });
+
+  test('refreshes the row and reports the selection when a name-column radio is picked', () => {
+    const onSelect = vi.fn();
+    render(
+      <RadioSelectGrid<Row>
+        data={[{ id: '1' }]}
+        columnDefs={COLUMN_DEFS}
+        idField="id"
+        emptyTitle="empty"
+        onSelect={onSelect}
+        isRadioInNameColumn
+      />,
+    );
+    const refreshCells = vi.fn();
+    const node = { isSelected: () => true };
+
+    capturedGridProps?.additionalGridOptions?.onRowSelected?.({
+      api: { refreshCells },
+      node,
+      data: { id: '1' },
+    } as never);
+
+    expect(refreshCells).toHaveBeenCalledWith({ rowNodes: [node], force: true });
+    expect(onSelect).toHaveBeenCalledWith({ id: '1' });
   });
 });

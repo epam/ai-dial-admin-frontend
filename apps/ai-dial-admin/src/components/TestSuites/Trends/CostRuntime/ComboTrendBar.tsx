@@ -65,10 +65,12 @@ const ComboTrendBar = forwardRef<HTMLDivElement, Props>(
         className="flex h-full min-w-px flex-1 flex-col items-center justify-end"
         style={{ height: plotHeightPx, maxWidth: COMBO_TREND_COLUMN_MAX_PX }}
       >
+        {/* TODO: remove the background and text color classes once ui-kit InteractiveTooltip implements the inverted style */}
         <InteractiveTooltip
           content={barTooltip}
           asChild
           triggerClassName="flex w-full flex-col items-center justify-end"
+          contentClassName="bg-control-inverted text-control-inverted"
         >
           <div
             ref={ref}

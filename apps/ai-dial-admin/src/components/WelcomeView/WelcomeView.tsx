@@ -30,7 +30,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
   const router = useRouter();
   const t = useI18n();
   const isTabletScreen = useIsTabletScreen();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, isFullAdmin } = useAppContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const actualConfig = getActualMenuItems(MENU_CONFIGURATION(40, featureFlags), disableMenuItems);
@@ -61,7 +61,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
       <div className="mb-6 flex flex-col">
         <h2 className="mb-3">{t(WelcomeViewI18nKey.QuickActions)}</h2>
         <div className="flex flex-row gap-x-3">
-          {!isReadOnlyAdmin && getIsConfigTransferEnabled(featureFlags) && (
+          {isFullAdmin && getIsConfigTransferEnabled(featureFlags) && (
             <>
               <OutlinedButton
                 iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
@@ -81,14 +81,16 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
               />
             </>
           )}
-          <OutlinedButton
-            iconBefore={<IconWorldCog {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
-            className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
-            label={isTabletScreen ? '' : t(MenuI18nKey.SystemProperties)}
-            onClick={() => {
-              router.push(ApplicationRoute.SystemProperties);
-            }}
-          />
+          {isFullAdmin && (
+            <OutlinedButton
+              iconBefore={<IconWorldCog {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
+              className="p-4 lg:px-3 lg:py-2 size-[56px] lg:h-[42px] lg:w-auto"
+              label={isTabletScreen ? '' : t(MenuI18nKey.SystemProperties)}
+              onClick={() => {
+                router.push(ApplicationRoute.SystemProperties);
+              }}
+            />
+          )}
           {dialLink && (
             <OutlinedButton
               iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}

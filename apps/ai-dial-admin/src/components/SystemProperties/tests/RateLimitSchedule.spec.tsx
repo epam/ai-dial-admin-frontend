@@ -6,10 +6,7 @@ import { ComponentProps, useState } from 'react';
 import RateLimitSchedule from '@/src/components/SystemProperties/RateLimitSchedule';
 import { BasicI18nKey, SystemPropertiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
-import { ValidationActionType, useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { RateLimitSchedule as RateLimitScheduleModel, WeekDay } from '@/src/models/system-properties';
-
-const { dispatch } = useSaveValidationContext();
 
 const SCHEDULE: RateLimitScheduleModel = {
   timezone: 'Europe/Warsaw',
@@ -63,11 +60,6 @@ describe('RateLimitSchedule', () => {
     expect(getResetTime()).toHaveValue('09:30');
     expect(screen.getByRole('button', { name: 'Choose time' })).toBeTruthy();
     expect(screen.getByText(SystemPropertiesI18nKey.RateLimitScheduleDescription)).toBeTruthy();
-    expect(dispatch).toHaveBeenCalledWith({
-      type: ValidationActionType.SetField,
-      field: 'rateLimitSchedule',
-      isValid: true,
-    });
   });
 
   test('reflects the stored timezone and week start day', () => {
@@ -98,11 +90,6 @@ describe('RateLimitSchedule', () => {
 
     expect(screen.queryByRole('dialog', { name: 'Choose time' })).toBeNull();
     expect(onChangeRateLimitSchedule).not.toHaveBeenCalled();
-    expect(dispatch).toHaveBeenCalledWith({
-      type: ValidationActionType.SetField,
-      field: 'rateLimitSchedule',
-      isValid: true,
-    });
   });
 
   test('filters the full IANA id list from the timezone search', async () => {
@@ -196,7 +183,7 @@ describe('RateLimitSchedule', () => {
     'validates the incomplete draft "%s" on blur and clears the error after correction',
     async (draft) => {
       const user = userEvent.setup();
-      const { getSchedule, unmount } = renderWithState(SCHEDULE);
+      const { getSchedule } = renderWithState(SCHEDULE);
 
       await user.clear(getResetTime());
       if (draft) {
@@ -206,25 +193,12 @@ describe('RateLimitSchedule', () => {
 
       expect(getSchedule()).toEqual({ ...SCHEDULE, resetTime: draft });
       expect(screen.getByRole('alert')).toHaveTextContent(SystemPropertiesI18nKey.ResetTimeInvalid);
-      expect(dispatch).toHaveBeenCalledWith({
-        type: ValidationActionType.SetField,
-        field: 'rateLimitSchedule',
-        isValid: false,
-      });
 
       await user.clear(getResetTime());
       await user.type(getResetTime(), '0930');
 
       expect(getResetTime()).toHaveValue('09:30');
       expect(screen.queryByRole('alert')).toBeNull();
-      expect(dispatch).toHaveBeenCalledWith({
-        type: ValidationActionType.SetField,
-        field: 'rateLimitSchedule',
-        isValid: true,
-      });
-
-      unmount();
-      expect(dispatch).toHaveBeenCalledWith({ type: ValidationActionType.RemoveField, field: 'rateLimitSchedule' });
     },
   );
 

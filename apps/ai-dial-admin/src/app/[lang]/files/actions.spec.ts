@@ -6,7 +6,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { bulkDeleteFiles, exportFiles, getFiles, moveFiles, removeFile } from './actions';
+import { bulkDeleteFiles, exportFiles, getFileFolders, getFiles, moveFiles, removeFile } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -134,5 +134,55 @@ describe('Files :: server actions', () => {
 
     expect(filesCoreApi.deleteFile).toHaveBeenCalledTimes(1);
     expect(result).toBe(failure);
+  });
+});
+
+describe('Files :: getFileFolders', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+  });
+
+  test('keeps only folders: file rows and the .dial_folder marker are dropped', async () => {
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue({
+      name: 'public',
+      items: [
+        { name: 'Acme', url: 'files/public/Acme/', bucket: 'public', nodeType: 'FOLDER' },
+        { name: 'report.pdf', url: 'files/public/report.pdf', bucket: 'public', nodeType: 'ITEM' },
+        { name: '.dial_folder', url: 'files/public/.dial_folder', bucket: 'public', nodeType: 'ITEM' },
+      ],
+    });
+
+    const result = await getFileFolders('public/');
+
+    expect(filesCoreApi.getFileMetadata).toHaveBeenCalledWith(TOKEN_MOCK, 'public/', false, undefined);
+    expect(result).toEqual([expect.objectContaining({ name: 'Acme', path: 'public/Acme/', nodeType: 'folder' })]);
+  });
+
+  test('collects folders from every page', async () => {
+    (filesCoreApi.getFileMetadata as any)
+      .mockResolvedValueOnce({
+        items: [{ name: 'A', url: 'files/public/A/', nodeType: 'FOLDER' }],
+        nextToken: 'next',
+      })
+      .mockResolvedValueOnce({ items: [{ name: 'B', url: 'files/public/B/', nodeType: 'FOLDER' }] });
+
+    const result = await getFileFolders('public/');
+
+    expect(filesCoreApi.getFileMetadata).toHaveBeenNthCalledWith(2, TOKEN_MOCK, 'public/', false, 'next');
+    expect(result.map((folder) => folder.path)).toEqual(['public/A/', 'public/B/']);
+  });
+
+  test('returns an empty array when the read is rejected', async () => {
+    (filesCoreApi.getFileMetadata as any).mockRejectedValue(new Error('boom'));
+
+    await expect(getFileFolders('public/')).resolves.toEqual([]);
+  });
+
+  test('returns an empty array when the folder has no metadata', async () => {
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue(null);
+
+    await expect(getFileFolders('public/')).resolves.toEqual([]);
   });
 });

@@ -76,7 +76,7 @@ const FeedbackEntry: FC<Props> = ({ row, isCommentTextReadable }) => {
     : formatDateTimeToLocalString(row.last_rate_time ?? undefined);
 
   return (
-    <div className="shrink-0 divide-y divide-tertiary rounded border border-primary bg-layer-3 px-3">
+    <div className="shrink-0 divide-y divide-tertiary rounded border border-secondary bg-layer-3 px-3">
       <EntryRow label={t(SessionsTraceI18nKey.DetailRatedResponse)}>
         <span className="flex items-start justify-between gap-2 dial-tiny-text">
           <span className="break-all font-mono text-primary">{row.response_id ?? UNAVAILABLE_VALUE}</span>

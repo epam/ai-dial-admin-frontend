@@ -5,6 +5,7 @@ import { cookies, headers } from 'next/headers';
 import {
   assetApi,
   configFileApi,
+  adminConsentApi,
   externalServiceConsentApi,
   externalServiceOpsApi,
   toolsetOpsApi,
@@ -38,6 +39,7 @@ import { getAssetDestinationError } from '@/src/utils/validation/asset-version';
 import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DialApplication } from '@/src/models/dial/application';
+import { ApprovedResource } from '@/src/models/dial/resource-dependency';
 
 // Besides the computed statuses, drops the read-only `client_secret_hint` and an untouched (empty) secret.
 function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
@@ -257,6 +259,21 @@ export async function grantExternalServiceConsent(appPath: string, serviceId: st
 export async function withdrawExternalServiceConsent(appPath: string, serviceId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return externalServiceConsentApi.withdraw(token, appPath, serviceId);
+}
+
+export async function getAdminConsentStatus(appPath: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return adminConsentApi.getStatus(token, appPath);
+}
+
+export async function grantAdminConsent(appPath: string, resources: ApprovedResource[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return adminConsentApi.grant(token, appPath, resources);
+}
+
+export async function withdrawAdminConsent(appPath: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return adminConsentApi.withdraw(token, appPath);
 }
 
 export async function signOutExternalService(appPath: string, serviceId: string, level: string, authType: string) {

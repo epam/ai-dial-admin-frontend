@@ -10,6 +10,7 @@ import {
   getFolderItems,
   getFolderName,
   mergeFiles,
+  mergeFolderRows,
 } from '../folder';
 
 // `DialRule` is a source/function/targets triple; these cases only need distinguishable rules.
@@ -521,5 +522,44 @@ describe('Folder Utils :: getFolderItems', () => {
 
   test('Should return an empty array for an empty listing', () => {
     expect(getFolderItems([])).toEqual([]);
+  });
+});
+
+describe('Folder Utils :: mergeFolderRows', () => {
+  const row = (path: string, name = 'own') => ({ path, name });
+
+  test('Should append folders the listing does not have, keeping own rows first', () => {
+    const own = [row('public/a/')];
+    const extra = [row('public/b/', 'extra')];
+
+    expect(mergeFolderRows(own, extra)).toEqual([row('public/a/'), row('public/b/', 'extra')]);
+  });
+
+  test('Should keep the own row when both sources have the folder', () => {
+    const result = mergeFolderRows([row('public/a/', 'own')], [row('public/a/', 'extra')]);
+
+    expect(result).toEqual([row('public/a/', 'own')]);
+  });
+
+  test('Should treat encoded and decoded paths and a missing trailing slash as the same folder', () => {
+    const result = mergeFolderRows([row('public/My%20Unit/')], [row('public/My Unit', 'extra')]);
+
+    expect(result).toEqual([row('public/My%20Unit/')]);
+  });
+
+  test('Should add a repeated extra folder only once', () => {
+    const result = mergeFolderRows([], [row('public/a/', 'first'), row('public/a/', 'second')]);
+
+    expect(result).toEqual([row('public/a/', 'first')]);
+  });
+
+  test('Should return the own rows untouched when there is nothing to add', () => {
+    const own = [row('public/a/')];
+
+    expect(mergeFolderRows(own, [])).toBe(own);
+  });
+
+  test('Should return only the extra folders for an empty listing', () => {
+    expect(mergeFolderRows([], [row('public/a/', 'extra')])).toEqual([row('public/a/', 'extra')]);
   });
 });

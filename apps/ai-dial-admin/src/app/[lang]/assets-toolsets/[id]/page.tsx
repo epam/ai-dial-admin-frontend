@@ -12,6 +12,7 @@ import { readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-opti
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
+import { isFullAdminCaller } from '@/src/server/user-access';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
@@ -69,8 +70,9 @@ export default async function Page(params: {
   // interceptors read on the sibling assets-applications page — an option-list problem must not
   // prevent the toolset from loading. Core-direct (`readConfigEntities`), not the admin-BE role list,
   // which cannot see a role declared only in Core's configuration file.
+  const isFullAdmin = await isFullAdminCaller();
   const [rolesResult, catalogSchemas] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
+    isFullAdmin ? readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings) : [],
     readCatalogSchemaOptions(token),
   ]);
   roles = rolesResult;

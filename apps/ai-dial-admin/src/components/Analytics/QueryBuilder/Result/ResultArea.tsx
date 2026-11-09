@@ -92,7 +92,7 @@ const ResultArea: FC<Props> = ({
   const isChartView = view === QueryResultView.Chart;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 py-4 pr-4">
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl
           aria-label={t(QueryBuilderI18nKey.ResultViewSwitcher)}

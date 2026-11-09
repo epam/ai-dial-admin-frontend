@@ -25,13 +25,14 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
-import { validateAppRunner } from '@/src/utils/app-runners/validation';
+import { hasInvalidAppRunnerResponses, validateAppRunner } from '@/src/utils/app-runners/validation';
 import { createSchemaSource } from '@/src/utils/entities/application-source';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -60,7 +61,7 @@ const AppRunnerAssetView: FC<Props> = ({
   const router = useRouter();
   const { fetchFiles } = useAppRunnersFolder();
   const { showNotification } = useNotification();
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
   const { setEntityReadOnly } = useAppContext();
 
@@ -79,6 +80,16 @@ const AppRunnerAssetView: FC<Props> = ({
   const [discardKey, setDiscardKey] = useState(0);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
   const [applicationProperties, setApplicationProperties] = useState<Record<string, unknown>>();
+
+  const isRouteResponseValid = !hasInvalidAppRunnerResponses(selectedRunner);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'appRunnerRouteResponses', isValid: isRouteResponseValid });
+  }, [dispatch, isRouteResponseValid, resetCounter]);
+
+  useEffect(() => {
+    return () => dispatch({ type: ValidationActionType.RemoveField, field: 'appRunnerRouteResponses' });
+  }, [dispatch]);
 
   const createItems: DropdownItem[] = [
     {
@@ -176,7 +187,7 @@ const AppRunnerAssetView: FC<Props> = ({
   }, [selectedRunner, etag, showNotification, t, router, fetchFiles]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+    <div className={ENTITY_VIEW_CLASS_NAME}>
       <SimpleEntityHeader
         view={ApplicationRoute.PlatformAppRunners}
         entity={selectedRunner}
@@ -199,7 +210,7 @@ const AppRunnerAssetView: FC<Props> = ({
         />
       </SimpleEntityHeader>
 
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (
           <EntityJsonEditor
             key={discardKey}

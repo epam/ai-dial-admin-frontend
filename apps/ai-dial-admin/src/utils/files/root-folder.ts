@@ -41,8 +41,25 @@ const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
 
 export const isFlatPlatformView = (view?: ApplicationRoute): boolean => !!view && FLAT_PLATFORM_VIEWS.includes(view);
 
+/**
+ * Core's `platform` resource views that nest exactly one folder level — the policy records, whose
+ * folder is the cost object. Same bucket and root as the flat views, but the list shows that folder level,
+ * and create/duplicate write `[folder/]name`. Rename, move and a second level are never offered.
+ */
+const NESTED_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
+  ApplicationRoute.PlatformPolicies,
+  ApplicationRoute.PlatformPolicyAssignments,
+];
+
+export const isNestedPlatformView = (view?: ApplicationRoute): boolean =>
+  !!view && NESTED_PLATFORM_VIEWS.includes(view);
+
+/** Whether `view` lives in the physical `platform` bucket, with or without a folder level. */
+export const isPlatformBucketView = (view?: ApplicationRoute): boolean =>
+  isFlatPlatformView(view) || isNestedPlatformView(view);
+
 export const getRootFolder = (view: ApplicationRoute): string =>
-  isFlatPlatformView(view) ? PLATFORM_ROOT_FOLDER : ROOT_FOLDER;
+  isPlatformBucketView(view) ? PLATFORM_ROOT_FOLDER : ROOT_FOLDER;
 
 /** Views whose resources can be read from both physical Core buckets. */
 export const DUAL_BUCKET_VIEWS: readonly ApplicationRoute[] = [
@@ -76,10 +93,15 @@ export const isFileSource = (entitySource?: string, path?: string | null): boole
 
 /**
  * Ordered FileManager roots. `file` is synthetic and must never be sent to Core's resource metadata
- * endpoint. It remains visible when Catalog disables the physical platform bucket.
+ * endpoint. It remains visible when the physical platform bucket is not offered (unit mode), and goes only when
+ * the caller cannot read Core's config-file endpoints (`isFileRootEnabled` off).
  */
-export const getRootDescriptors = (view: ApplicationRoute, isPlatformBucketEnabled = true): RootDescriptor[] => {
-  const hasFileRoot = getConfigFileEntityType(view) != null;
+export const getRootDescriptors = (
+  view: ApplicationRoute,
+  isPlatformBucketEnabled = true,
+  isFileRootEnabled = true,
+): RootDescriptor[] => {
+  const hasFileRoot = isFileRootEnabled && getConfigFileEntityType(view) != null;
 
   if (DUAL_BUCKET_VIEWS.includes(view)) {
     const roots = isPlatformBucketEnabled
@@ -92,12 +114,18 @@ export const getRootDescriptors = (view: ApplicationRoute, isPlatformBucketEnabl
   return hasFileRoot ? [fileRoot(), ...roots] : roots;
 };
 
-export const getRootFolders = (view: ApplicationRoute, isPlatformBucketEnabled = true): string[] =>
-  getRootDescriptors(view, isPlatformBucketEnabled).map((root) => root.name);
+export const getRootFolders = (
+  view: ApplicationRoute,
+  isPlatformBucketEnabled = true,
+  isFileRootEnabled = true,
+): string[] => getRootDescriptors(view, isPlatformBucketEnabled, isFileRootEnabled).map((root) => root.name);
 
 /** The bucket segment a path/folderId begins with, for views whose resources can live in either. */
 export const isPlatformBucketPath = (path?: string | null): boolean =>
   !!path && path.startsWith(`${PLATFORM_ROOT_FOLDER}/`);
+
+/** True for the public bucket's root and every folder below it. */
+export const isPublicPath = (path?: string | null): boolean => !!path && path.startsWith(`${ROOT_FOLDER}/`);
 
 /** True when a row belongs to the physical platform bucket. */
 export const isPlatformBucketRow = (bucket?: string, fallbackPath?: string | null): boolean =>

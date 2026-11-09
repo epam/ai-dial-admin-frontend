@@ -8,6 +8,7 @@ import { DeploymentInterfaceType, DialResourceInterface } from '@/src/models/dia
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { DialCoreRoleLimits, DialCoreRoleShare } from '@/src/models/dial/role-limits';
 import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
+import { DialPolicy, DialPolicyAssignment } from '@/src/models/dial/policy';
 import { AttachmentPaths, RouteResponse } from '@/src/models/dial/route';
 import { ToolsetTransport } from '@/src/types/toolset';
 
@@ -262,6 +263,22 @@ export interface DialRouteResource extends ModifiedEntity {
   maxRetryAttempts?: number;
   order?: number;
   attachmentPaths?: AttachmentPaths;
+}
+
+/**
+ * A policy resource (`policies/platform/[{costObject}/]{name}`) as returned by Core: global at the root,
+ * project-scoped inside the folder of its cost object. Like `DialRouteResource` it has no
+ * `displayName`/`description`, so the merge graft supplies only `name` and `_metadata`.
+ */
+export interface DialPolicyResource extends DialPolicy, ModifiedEntity {
+  name: string;
+  _metadata?: CoreResourceEntityMetadata;
+}
+
+/** A policy assignment resource (`policy_assignments/platform/{costObject}/{id}`) as returned by Core. */
+export interface DialPolicyAssignmentResource extends DialPolicyAssignment, ModifiedEntity {
+  name: string;
+  _metadata?: CoreResourceEntityMetadata;
 }
 
 /**

@@ -1,11 +1,9 @@
 import {
   enrichDetailsWithFolderBreadcrumbs,
-  enrichWithFolderBreadcrumbs,
   getBreadcrumbs,
   getEntityFolderPath,
   getFolderContext,
   shouldEnrichDetailsWithFolderBreadcrumbs,
-  shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { MenuI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test, vi } from 'vitest';
@@ -80,7 +78,6 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
 
   test('Should not enrich platform models breadcrumbs with folder context', () => {
     expect(getFolderContext('/en/platform-models/modelId', 'en')).toBeNull();
-    expect(shouldEnrichWithFolderBreadcrumbs('/en/platform-models/modelId', 'en')).toBeFalsy();
   });
 
   test("Should keep the list breadcrumb pointed at the entity type's own route", () => {
@@ -96,84 +93,6 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[1].href).toBeFalsy();
     expect(config[1].key).toEqual(RunsI18nKey.RunComparison);
     expect(config[1].name).toEqual('compare');
-  });
-});
-
-describe('Breadcrumbs :: enrichWithFolderBreadcrumbs', () => {
-  it('returns original breadcrumbs if path is undefined', () => {
-    const breadcrumbs: Breadcrumb[] = [{ name: 'root', href: '/' }];
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, undefined);
-    expect(result).toEqual(breadcrumbs);
-  });
-
-  it('returns original breadcrumbs if path is empty string', () => {
-    const breadcrumbs: Breadcrumb[] = [{ name: 'root', href: '/' }];
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, '');
-    expect(result).toEqual(breadcrumbs);
-  });
-
-  it('correctly splits path and creates breadcrumbs', () => {
-    const breadcrumbs: Breadcrumb[] = [{ name: 'root', href: '/' }];
-    const path = '/folder1/folder2/';
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
-
-    expect(result.length).toBe(3);
-    expect(result[1].name).toBe('folder1');
-    expect(result[1].href).toBe('folder1/');
-    expect(result[2].name).toBe('folder2');
-    expect(result[2].href).toBe('folder1/folder2/');
-  });
-
-  it('trims leading and trailing slashes', () => {
-    const breadcrumbs: Breadcrumb[] = [];
-    const path = '/a/b/c/';
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
-
-    expect(result.map((b) => b.name)).toEqual(['a', 'b', 'c']);
-    expect(result.map((b) => b.href)).toEqual(['a/', 'a/b/', 'a/b/c/']);
-  });
-
-  it('calls setFilePath callback when breadcrumb callback is invoked', () => {
-    const breadcrumbs: Breadcrumb[] = [];
-    const path = 'foo/bar';
-    const setFilePath = vi.fn();
-
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path, setFilePath);
-
-    // Проверяем, что callback существует и вызывает setFilePath с правильным href
-    result[0].callback?.('foo/');
-    expect(setFilePath).toHaveBeenCalledWith('foo/');
-
-    result[1].callback?.('foo/bar/');
-    expect(setFilePath).toHaveBeenCalledWith('foo/bar/');
-  });
-
-  it('works with single folder in path', () => {
-    const breadcrumbs: Breadcrumb[] = [];
-    const path = 'single';
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
-
-    expect(result.length).toBe(1);
-    expect(result[0].name).toBe('single');
-    expect(result[0].href).toBe('single/');
-  });
-
-  it('appends new breadcrumbs to existing ones', () => {
-    const breadcrumbs: Breadcrumb[] = [{ name: 'root', href: '/' }];
-    const path = 'a/b';
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
-
-    expect(result[0].name).toBe('root');
-    expect(result[1].name).toBe('a');
-    expect(result[2].name).toBe('b');
-  });
-
-  it('keeps every folder of a deep path', () => {
-    const breadcrumbs: Breadcrumb[] = [];
-    const path = '/a/b/c/d/e/';
-    const result = enrichWithFolderBreadcrumbs(breadcrumbs, path);
-
-    expect(result.map((b) => b.name)).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 });
 

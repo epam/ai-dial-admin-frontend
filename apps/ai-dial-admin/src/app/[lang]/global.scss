@@ -3,7 +3,7 @@
 
 html,
 body {
-  @apply size-full bg-layer-1 text-primary;
+  @apply size-full bg-layer-base text-primary;
 }
 
 // Marks the JSON line of a row-limit filter that names the field the service refused (Monaco decoration).

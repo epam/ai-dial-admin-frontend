@@ -63,7 +63,7 @@ interface Props {
 }
 
 const DISPLAY_PANEL_CLASS_NAME =
-  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
+  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-tertiary shadow-lg z-20';
 
 const loadRunResults = async (runId: string) => {
   const run = await getRun(runId);

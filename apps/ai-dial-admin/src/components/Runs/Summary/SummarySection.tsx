@@ -33,7 +33,7 @@ const SummarySection: FC<Props> = ({ title, description, control, children, clas
       <h3 className="dial-body-semi-text min-w-0 text-primary">{title}</h3>
       {control}
     </div>
-    {!!description && <p className="dial-body-text shrink-0 text-primary">{description}</p>}
+    {!!description && <p className="dial-small-text text-secondary">{description}</p>}
     <div className={classNames(isFillHeight && 'min-h-0 flex-1 overflow-auto')}>{children}</div>
   </section>
 );

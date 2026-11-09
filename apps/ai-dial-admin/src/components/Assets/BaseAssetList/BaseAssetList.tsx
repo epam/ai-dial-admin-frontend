@@ -49,12 +49,13 @@ import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import {
   getRootFolder,
   isFileRootPath,
-  isFlatPlatformView,
+  isNestedPlatformView,
+  isPlatformBucketView,
   isPlatformBucketPath,
   isPlatformDualBucketView,
-  PLATFORM_ROOT_FOLDER,
 } from '@/src/utils/files/root-folder';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
+import { excludeRecordsInFolders } from '@/src/utils/policies/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
@@ -70,11 +71,13 @@ import {
   getEmptyStateContent,
   getFileManagerLabel,
   getGridColumns,
+  getFlatDuplicateDestination,
   getPlatformAssetDuplicate,
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
   PlatformBulkDeleteAssetActionMap,
+  RemoveCostObjectFolderActionMap,
   PlatformCreateAssetActionMap,
   PlatformGetAssetActionMap,
 } from './utils';
@@ -276,8 +279,11 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   );
 
   const handleCreateAsset = useCallback(
-    async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean, shouldCloseModal = true) => {
-      const folderPath = path || destinationFolder || `${getRootFolder(view)}/`;
+    async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
+      // A nested platform view's create modal asks for the cost object, so the folder it chose wins over
+      // the folder the list happens to be showing.
+      const chosenFolder = isNestedPlatformView(view) ? (asset as { folderId?: string }).folderId : undefined;
+      const folderPath = path || chosenFolder || destinationFolder || `${getRootFolder(view)}/`;
 
       // A real skill and its folder marker are different Core operations for this type (design D2),
       // so Skill is called directly here rather than through `CreateAssetActionMap`, whose single
@@ -300,58 +306,55 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
               ? () => PlatformCreateAssetActionMap[view]!({ ...asset, folderId: folderPath })
               : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
 
-      return createAsset().then((res) => {
-        if (res.success) {
-          fetchFiles?.(folderPath);
-          if (isCreateDuplicate) {
-            const isFlatAsset = isFlatPlatformView(view) || isPlatformDualBucketView(view, folderPath);
-            // A versionless duplicate is identified by its plain name — no `__version` suffix.
-            let entityLabel: string;
-            if (isFlatAsset) {
-              entityLabel = asset.name || (asset as DialAppRunnerResource).$id || '';
-            } else if (isVersionlessAssetView(view)) {
-              entityLabel = asset.name || '';
-            } else {
-              entityLabel = `${asset.name}__${asset._metadata?.version}`;
-            }
-            showNotification(
-              getSuccessNotification(
-                getCreateNotificationTitle(view, t),
-                getCreateNotificationDescription(view, entityLabel, t),
-              ),
-            );
-            // `getPlatformAssetDuplicate` strips `folderId` from `asset` (Core's platform-bucket
-            // write doesn't want it) — harmless for the six genuinely flat views, whose
-            // `getEntityPath` case never reads `folderId`, but `AssetsApplications`/
-            // `AssetsToolsets` need it back here to recognize the redirect target as
-            // platform-bucket; otherwise `getEntityPath` falls through to the versioned-path
-            // branch and builds `?path=undefined{name}__` (design.md D5).
-            let redirectEntity: Parameters<typeof getUrnForEntity>[1];
-            if (isFlatAsset) {
-              redirectEntity = { ...asset, folderId: folderPath };
-            } else if (isVersionlessAssetView(view)) {
-              redirectEntity = { name: asset.name, folderId: folderPath };
-            } else {
-              redirectEntity = { name: asset.name, version: asset._metadata?.version, folderId: folderPath };
-            }
-            router.push(getUrnForEntity(view, redirectEntity));
+      const res = await createAsset();
+      if (res.success) {
+        fetchFiles?.(folderPath);
+        if (isNestedPlatformView(view)) {
+          // A first record in a new cost object adds that folder to the root listing.
+          fetchFiles?.(`${getRootFolder(view)}/`);
+        }
+        if (isCreateDuplicate) {
+          const isFlatAsset = isPlatformBucketView(view) || isPlatformDualBucketView(view, folderPath);
+          // A versionless duplicate is identified by its plain name — no `__version` suffix.
+          let entityLabel: string;
+          if (isFlatAsset) {
+            entityLabel = asset.name || (asset as DialAppRunnerResource).$id || '';
+          } else if (isVersionlessAssetView(view)) {
+            entityLabel = asset.name || '';
+          } else {
+            entityLabel = `${asset.name}__${asset._metadata?.version}`;
           }
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(view, t),
+              getCreateNotificationDescription(view, entityLabel, t),
+            ),
+          );
+          // `getPlatformAssetDuplicate` strips `folderId` from `asset` (Core's platform-bucket
+          // write doesn't want it) — harmless for the six genuinely flat views, whose
+          // `getEntityPath` case never reads `folderId`, but `AssetsApplications`/
+          // `AssetsToolsets` need it back here to recognize the redirect target as
+          // platform-bucket; otherwise `getEntityPath` falls through to the versioned-path
+          // branch and builds `?path=undefined{name}__` (design.md D5).
+          let redirectEntity: Parameters<typeof getUrnForEntity>[1];
+          if (isFlatAsset) {
+            redirectEntity = { ...asset, folderId: folderPath };
+          } else if (isVersionlessAssetView(view)) {
+            redirectEntity = { name: asset.name, folderId: folderPath };
+          } else {
+            redirectEntity = { name: asset.name, version: asset._metadata?.version, folderId: folderPath };
+          }
+          router.push(getUrnForEntity(view, redirectEntity));
         }
+      }
 
-        if (shouldCloseModal) {
-          handleModalClose();
-        }
-
-        return res;
-      });
+      return res;
     },
-    [destinationFolder, fetchFiles, handleModalClose, showNotification, t, router, view],
+    [destinationFolder, fetchFiles, showNotification, t, router, view],
   );
 
   const handleDuplicate = useCallback(
-    (asset: AssetWithVersion | DialPrompt) => {
+    async (asset: AssetWithVersion | DialPrompt) => {
       const platformAsset = asset as unknown as PlatformAsset;
       // A platform-bucket application/toolset row duplicates the same flat, unversioned way the six
       // other flat platform views already do (design.md D2/`platform-applications`/
@@ -361,36 +364,39 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
       // carries the bucket prefix, so it always won the `||` and made this check false for a
       // platform-bucket row).
       const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, asset.folderId);
-      if (isFlatPlatformView(view) || isPlatformDualBucketDuplicate) {
+      let createRequest: Promise<ServerActionResponse>;
+      if (isPlatformBucketView(view) || isPlatformDualBucketDuplicate) {
         const duplicate = getPlatformAssetDuplicate(view, platformAsset);
         // `getRootFolder(view)`'s fallback (used when the second argument is omitted) resolves to
         // `platform` for every genuinely flat view, but a dual-bucket view's own root is `public` —
         // it serves both buckets — so a platform-bucket duplicate must pin its destination
         // explicitly rather than relying on that fallback.
-        const flatDestinationFolder = isPlatformDualBucketDuplicate ? `${PLATFORM_ROOT_FOLDER}/` : void 0;
-        handleCreateAsset(duplicate as unknown as AssetWithVersion, flatDestinationFolder, true);
-        handleModalClose();
-        return;
-      }
-
-      // A versionless duplicate is addressed by its plain path — no `__version` suffix.
-      let newAsset: AssetWithVersion | DialPrompt;
-      if (isVersionlessAssetView(view)) {
-        newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
+        const flatDestinationFolder = getFlatDuplicateDestination(view, platformAsset, isPlatformDualBucketDuplicate);
+        createRequest = handleCreateAsset(duplicate as unknown as AssetWithVersion, flatDestinationFolder, true);
       } else {
-        newAsset = {
-          ...asset,
-          _metadata: {
-            ...asset._metadata,
-            path: `${asset._metadata?.folderId}${asset.name}__${asset._metadata?.version}`,
-          },
-        } as AssetWithVersion;
+        // A versionless duplicate is addressed by its plain path — no `__version` suffix.
+        let newAsset: AssetWithVersion | DialPrompt;
+        if (isVersionlessAssetView(view)) {
+          newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
+        } else {
+          newAsset = {
+            ...asset,
+            _metadata: {
+              ...asset._metadata,
+              path: `${asset._metadata?.folderId}${asset.name}__${asset._metadata?.version}`,
+            },
+          } as AssetWithVersion;
+        }
+        delete (newAsset as AssetApp).reference;
+        createRequest = handleCreateAsset(newAsset as AssetApp, asset._metadata?.folderId, true);
       }
-      delete (newAsset as AssetApp).reference;
-      handleCreateAsset(newAsset as AssetApp, asset._metadata?.folderId, true);
       handleModalClose();
+      const res = await createRequest;
+      if (!res.success) {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
     },
-    [handleCreateAsset, handleModalClose, view],
+    [handleCreateAsset, handleModalClose, showNotification, view],
   );
 
   const handleMoveItems = useCallback(
@@ -551,14 +557,28 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         ? PlatformBulkDeleteAssetActionMap[view]!
         : BulkDeleteAssetActionMap[view as BaseAssetRoute];
 
+      // A deleted cost object folder takes its records with it, so a record selected next to it is left to
+      // that pass: deleting it twice would fail the second time and report the whole delete as failed.
+      const assetsToDelete = isNestedPlatformView(view)
+        ? excludeRecordsInFolders(
+            assets,
+            folders.map((folder) => folder.path),
+          )
+        : assets;
+
       const promises = [];
-      if (assets.length > 0) {
+      if (assetsToDelete.length > 0) {
         // Only skills and projects use the optional listing etag for bulk deletion.
-        const assetsPaths = assets.map((asset) => ({ path: asset.path, etag: asset.etag || DEFAULT_ETAG }));
+        const assetsPaths = assetsToDelete.map((asset) => ({ path: asset.path, etag: asset.etag || DEFAULT_ETAG }));
         promises.push(bulkDeleteAsset(assetsPaths));
       }
       const resourceType = getResourceTypeByRoute(view);
-      if (resourceType) {
+      const removeCostObjectFolder = RemoveCostObjectFolderActionMap[view];
+      if (removeCostObjectFolder) {
+        folders.forEach((folder) => {
+          promises.push(removeCostObjectFolder(folder.path));
+        });
+      } else if (resourceType) {
         folders.forEach((folder) => {
           promises.push(removeFolder(folder.path, resourceType));
         });
@@ -583,6 +603,10 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         if (isSuccess) {
           const parentPath = destinationFolder || `${getRootFolder(view)}/`;
           fetchFiles(parentPath);
+          if (isNestedPlatformView(view)) {
+            // Deleting the last record of a cost object folder removes the folder from the root listing too.
+            fetchFiles(`${getRootFolder(view)}/`);
+          }
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
           const notifications = getDeleteNotificationContent(view, deletedItems as DialFile[], t);

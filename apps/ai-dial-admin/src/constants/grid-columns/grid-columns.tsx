@@ -276,19 +276,41 @@ export const ROUTES_COLUMNS: ColDef[] = [
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
-export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
-  DISPLAY_NAME_COLUMN_WITH_SORT,
+export const TARGET_RADIO_GROUP_NAME = 'target-selection';
+
+const targetRadioNameColumn = (column: ColDef, idField: string): ColDef => ({
+  ...column,
+  lockPosition: 'left',
+  cellRenderer: RadioNameCellRenderer,
+  cellRendererParams: { groupName: TARGET_RADIO_GROUP_NAME, idField },
+  tooltipValueGetter: () => undefined,
+});
+
+const EVALUATION_DEPLOYMENT_DETAIL_COLUMNS: ColDef[] = [
   { field: 'deploymentId', headerName: 'ID', hide: false },
   DESCRIPTION_COLUMN,
 ];
 
-export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
+export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
+  ...EVALUATION_DEPLOYMENT_DETAIL_COLUMNS,
+];
+
+export const EVALUATION_TARGET_DEPLOYMENTS_COLUMNS: ColDef[] = [
+  targetRadioNameColumn(DISPLAY_NAME_COLUMN_WITH_SORT, 'deploymentId'),
+  ...EVALUATION_DEPLOYMENT_DETAIL_COLUMNS,
+];
+
+export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
+  targetRadioNameColumn(DISPLAY_NAME_COLUMN_WITH_SORT, 'deploymentId'),
   { field: 'deploymentId', headerName: 'ID', hide: false },
   { field: 'transport', headerName: 'Transport', hide: false },
 ];
 
-export const EVALUATION_ROUTES_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
+export const EVALUATION_ROUTES_COLUMNS: ColDef[] = [
+  targetRadioNameColumn(NAME_COLUMN_WITH_SORT, 'name'),
+  AUTHOR_COLUMN,
+];
 
 export const MCP_TOOLS_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Tool Name', hide: false },

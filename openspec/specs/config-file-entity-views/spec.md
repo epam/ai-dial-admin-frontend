@@ -19,12 +19,8 @@ The system SHALL expose DIAL Core configuration-file entities through a syntheti
 - **THEN** no `file` root or config-file display toggle is rendered
 
 #### Scenario: Applications and Toolsets expose three roots
-- **WHEN** Catalog is enabled and a user opens Assets Applications or Assets Toolsets
+- **WHEN** a user opens Assets Applications or Assets Toolsets
 - **THEN** the FileManager shows `file`, `platform`, and `public` roots in that order
-
-#### Scenario: File root remains when Catalog is disabled
-- **WHEN** Catalog is disabled and a user opens Assets Applications or Assets Toolsets
-- **THEN** the FileManager shows `file` and `public` roots, does not show `platform`, and does not request platform resources
 
 ### Requirement: File-root names load with the initial root batch and without resource-body fan-out
 
@@ -89,3 +85,10 @@ The system SHALL map Platform App Runners' file root to Core's `schemas` config-
 #### Scenario: App Runner names come from schemas
 - **WHEN** a user opens Platform App Runners' file root
 - **THEN** the system requests Core's `schemas` config-file type
+
+### Requirement: The file root needs config-file access
+The synthetic `file` root SHALL be offered in the FileManager, breadcrumbs and create dialog only to callers who can read the config-file endpoints. A caller without full admin access SHALL NOT see it, and no names read SHALL be made for it.
+
+#### Scenario: Non-admin opens Assets Applications
+- **WHEN** a caller without full admin access opens Assets Applications
+- **THEN** the roots shown exclude `file`, and no `GET /v1/admin/config/file/{type}` request is made
