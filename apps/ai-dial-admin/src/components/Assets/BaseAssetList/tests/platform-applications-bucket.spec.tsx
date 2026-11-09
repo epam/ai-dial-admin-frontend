@@ -1,5 +1,6 @@
 import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -11,7 +12,9 @@ import {
   getApp,
   getPlatformApplication,
 } from '@/src/app/[lang]/assets-applications/actions';
+import { useNotification } from '@/src/context/NotificationContext';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification } from '@/src/utils/notification';
 import BaseAssetList from '../BaseAssetList';
 
 vi.mock('@/src/app/[lang]/assets-applications/actions', async (importOriginal) => ({
@@ -128,6 +131,29 @@ describe('BaseAssetList :: AssetsApplications bucket-aware branches', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof useRouter>);
+  });
+
+  test.each([
+    ['confirm-duplicate-public', createApp],
+    ['confirm-duplicate-platform', createPlatformApplication],
+  ])('reports a failed duplicate for %s once', async (buttonName, createAction) => {
+    const user = userEvent.setup();
+    const { showNotification } = useNotification();
+    vi.mocked(createAction).mockResolvedValueOnce({
+      success: false,
+      errorHeader: 'Conflict',
+      errorMessage: 'Already exists',
+      requestId: 'request-123',
+    });
+    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
+
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: buttonName }));
+    });
+
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(getErrorNotification('Conflict', 'Already exists', 'request-123'));
+    expect(createAction).toHaveBeenCalledOnce();
   });
 
   test('Fetching a duplicate source on a platform-bucket row calls getPlatformApplication, not getApp', async () => {
