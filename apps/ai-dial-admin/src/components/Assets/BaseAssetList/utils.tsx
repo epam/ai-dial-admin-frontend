@@ -112,6 +112,7 @@ import {
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { ReactNode } from 'react';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
+import { EntityHrefGetter } from '@/src/components/Grid/CellRenderers/models';
 import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
 import { ASSET_TYPE_ICONS } from './constants';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
@@ -134,7 +135,7 @@ import { CreateAssetRoute, CrudAssetRoute } from './types';
  * the one layout where the date column is hidden.
  */
 export const getAssetNameColumn =
-  (headerName: string, view?: ApplicationRoute) =>
+  (headerName: string, view?: ApplicationRoute, getItemHref?: EntityHrefGetter) =>
   (
     dateLocale: Intl.LocalesArgument,
     dateOptions: Intl.DateTimeFormatOptions | undefined,
@@ -151,14 +152,14 @@ export const getAssetNameColumn =
       filterValueGetter: ({ data }) => displayNameFilterValue(data),
       cellRenderer: (params: ICellRendererParams) =>
         params.data?.nodeType === DialFileNodeType.FOLDER ? (
-          renderFileManagerName(params)
+          <div className="contents [&_.dial-kit-ellipsis-tooltip]:text-accent">{renderFileManagerName(params)}</div>
         ) : (
-          <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} />
+          <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} getHref={getItemHref} />
         ),
     };
   };
 
-export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => {
+export const getGridColumns = (view: ApplicationRoute, currentPath?: string, getItemHref?: EntityHrefGetter) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
     field: 'author',
@@ -190,7 +191,7 @@ export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => 
 
   // Cast once: ui-kit accepts a column factory wherever a `ColDef` is declared and resolves it in
   // `useFileManagerColumns`, but that union is not in ag-grid's own type.
-  const NAME_COLUMN_DEF = getAssetNameColumn('Name', view) as unknown as ColDef;
+  const NAME_COLUMN_DEF = getAssetNameColumn('Name', view, getItemHref) as unknown as ColDef;
 
   if (isFileRootPath(currentPath)) {
     return [NAME_COLUMN_DEF];

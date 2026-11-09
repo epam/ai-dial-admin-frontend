@@ -7,6 +7,7 @@ import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
 import { NotificationType } from '@/src/models/notification';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import EvaluationListView from '../List';
 
 const routerRefresh = vi.fn();
@@ -59,8 +60,12 @@ const mockGridApi = {
   }),
 };
 
+const listProps: { columnDefs?: any; additionalGridOptions?: any } = {};
+
 vi.mock('@/src/components/ListView/List', () => ({
-  default: ({ columnDefs, onGridReady }: any) => {
+  default: ({ columnDefs, onGridReady, additionalGridOptions }: any) => {
+    listProps.columnDefs = columnDefs;
+    listProps.additionalGridOptions = additionalGridOptions;
     onGridReady?.({ api: mockGridApi });
     const actionCol = (columnDefs || []).find((col: any) => col.field === 'actionsColumn');
     const items = actionCol?.cellRendererParams?.items ?? [];
@@ -130,6 +135,44 @@ describe('EvaluationListView', () => {
       expect.objectContaining({ id: 'run-running', status: RunStatus.CANCELLING }),
     );
     expect(routerRefresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('EvaluationListView — name links', () => {
+  test('links a plain name column to the entity details page', () => {
+    render(
+      <EvaluationListView
+        route={ApplicationRoute.TestSuites}
+        baseColumns={[{ field: 'name' }]}
+        getData={noopGetData}
+      />,
+    );
+
+    const nameColumn = listProps.columnDefs.find((col: any) => col.field === 'name');
+
+    expect(nameColumn.cellRendererParams.getHref({ id: 'suite-1' })).toBe('/test-suites/suite-1');
+  });
+
+  test('links the run name column on the runs list', () => {
+    render(
+      <EvaluationListView
+        route={ApplicationRoute.Runs}
+        baseColumns={[{ colId: 'testRunName', field: 'testRunName' }]}
+        getData={noopGetData}
+      />,
+    );
+
+    const nameColumn = listProps.columnDefs.find((col: any) => col.colId === 'testRunName');
+
+    expect(nameColumn.cellRendererParams.getHref({ id: 'run-1' })).toBe(
+      getUrnForEntity(ApplicationRoute.Runs, { id: 'run-1' }),
+    );
+  });
+
+  test('does not navigate on a cell click', () => {
+    render(<EvaluationListView route={ApplicationRoute.Datasets} baseColumns={[]} getData={noopGetData} />);
+
+    expect(listProps.additionalGridOptions.onCellClicked).toBeUndefined();
   });
 });
 

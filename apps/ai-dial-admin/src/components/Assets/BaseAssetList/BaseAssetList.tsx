@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  DialCopiedItem,
-  DialFile,
-  DialFileNodeType,
-  DialUploadFileItem,
-  FileManagerGridRow,
-} from '@epam/ai-dial-react-file-manager';
+import { DialCopiedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createProject, createProjectFolder } from '@/src/app/[lang]/projects/actions';
@@ -24,12 +18,9 @@ import {
   getVersionsPerName,
 } from '@/src/components/Assets/utils';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
-import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
-import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getFolderName } from '@/src/utils/files/folder';
 import { useImportProgress } from '@/src/hooks/use-import-progress';
-import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -57,8 +48,9 @@ import {
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { excludeRecordsInFolders } from '@/src/utils/policies/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
+import { getAssetItemHref, getAssetItemUrl } from './asset-item-url';
 import Modals from './Modals';
 import { BaseAssetRoute, CreateAssetRoute, CrudAssetRoute, ModalType } from './types';
 import {
@@ -109,7 +101,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const runImport = useImportProgress();
-  const pointerClickModifierRef = usePointerClickModifier();
 
   const getContext = useCallback(() => {
     return AssetFolderContextMap[view as BaseAssetRoute]();
@@ -195,24 +186,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
     setDuplicateItem(null);
   }, []);
 
-  const handleGridItemClick = useCallback(
-    (file: FileManagerGridRow) => {
-      if (isItemOpenable(view, file.name)) {
-        const pointerEvent = pointerClickModifierRef.current;
-        pointerClickModifierRef.current = null;
-        const url = getUrnForEntity(view, file);
-        navigateEntityUrl(
-          isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas
-            ? appendUrlQuery(url, 'configFile=true')
-            : url,
-          router.push,
-          pointerEvent,
-        );
-      }
-    },
-    [view, router, pointerClickModifierRef, filePath],
-  );
-
   const handlePathChange = useCallback(
     (nextPath?: string) => {
       if (nextPath) {
@@ -243,7 +216,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   );
 
   const columnDefs = useMemo(() => {
-    return getGridColumns(view, filePath);
+    return getGridColumns(view, filePath, (item) => getAssetItemHref(view, item as { name?: string }, filePath));
   }, [view, filePath]);
 
   const handleCreateFolder = useCallback(
@@ -640,13 +613,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
   const handleOpenInNewTab = useCallback(
     (file: DialFile) => {
-      const url = getUrnForEntity(view, file);
-      window.open(
-        isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas
-          ? appendUrlQuery(url, 'configFile=true')
-          : url,
-        '_blank',
-      );
+      window.open(getAssetItemUrl(view, file, filePath), '_blank');
     },
     [view, filePath],
   );
@@ -666,7 +633,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         customDeleteItemsAction={handleDeleteModalOpen}
         onMoveItems={handleMoveItems}
         onOpenInNewTab={handleOpenInNewTab}
-        onTableFileClick={handleGridItemClick}
         onPathChange={handlePathChange}
         onSelectedPathsChange={handleSelectedPathsChange}
         selectedPaths={selectedPaths}

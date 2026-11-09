@@ -88,8 +88,9 @@ export const mergeColumnOrder = (current: ColumnState[], stored: ColumnState[]):
 };
 
 const columnRank = ({ colId }: ColumnState): number => {
-  if (LEADING_COLUMN_IDS.includes(colId)) return 0;
-  return TRAILING_COLUMN_IDS.includes(colId) ? 2 : 1;
+  const leadingIndex = LEADING_COLUMN_IDS.indexOf(colId);
+  if (leadingIndex !== -1) return leadingIndex;
+  return LEADING_COLUMN_IDS.length + (TRAILING_COLUMN_IDS.includes(colId) ? 1 : 0);
 };
 
 // The select column stays first and the actions column last, whatever slot a stored order or a rebuild with
@@ -182,7 +183,10 @@ export const applyColumnStateOrderToColDefs = (columnDefs: ColDef[], columnState
 
   byColId.forEach((col) => ordered.push(col));
 
-  return ordered;
+  return ordered.sort(
+    (a, b) =>
+      columnRank({ colId: (a.field ?? a.colId) as string }) - columnRank({ colId: (b.field ?? b.colId) as string }),
+  );
 };
 
 export const haveColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]) =>

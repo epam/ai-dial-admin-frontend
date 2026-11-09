@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { listIngestFailures, listTableBackfillRuns } from '@/src/app/[lang]/tables/actions';
+import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import TablesView from '@/src/components/Analytics/Tables/TablesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import {
@@ -153,6 +154,14 @@ describe('TablesView — Rows restricted badge', () => {
     renderNameCell(TABLES[0]);
 
     expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
+  });
+
+  test('links the name to the table detail page and keeps the badge outside the link', () => {
+    renderNameCell({ ...TABLES[0], permissions: { rows_restricted: true } as AnalyticsTable['permissions'] });
+
+    const link = screen.getByRole('link', { name: 'dial_usage_log' });
+    expect(link).toHaveAttribute('href', tableDetailHref('dial_usage_log'));
+    expect(link).not.toHaveTextContent(AnalyticsTableAccessI18nKey.RowsRestricted);
   });
 });
 

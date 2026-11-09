@@ -2,18 +2,19 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
 import { getDatasetTestSuitesPage } from '@/src/app/[lang]/datasets/actions';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { DATASET_TEST_SUITES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { DatasetsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 
@@ -23,22 +24,16 @@ interface Props {
 
 const openTestSuite = (testSuite?: TestSuite) => onOpenInNewTab(ApplicationRoute.TestSuites, testSuite);
 
+const getTestSuiteHref = (testSuite?: unknown) => getUrnForEntity(ApplicationRoute.TestSuites, testSuite);
+
 const gridOptions: GridOptions = {
   ...infiniteGridOptions,
-  rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
-  rowClassRules: {
-    'ag-activity-row-clickable': () => true,
-  },
-  onCellClicked: (e: CellClickedEvent) => {
-    if (e.colDef.field === ACTIONS_COLUMN_CEL_ID) {
-      return;
-    }
-    e.node.setSelected(true, true);
-    openTestSuite(e.data);
-  },
 };
 
-const columnDefs = [...DATASET_TEST_SUITES_COLUMN, ACTION_COLUMN([getOpenInNewTabOperation(openTestSuite)], true)];
+const columnDefs = [
+  ...withNameLink(DATASET_TEST_SUITES_COLUMN, getTestSuiteHref, 'name'),
+  ACTION_COLUMN([getOpenInNewTabOperation(openTestSuite)], true),
+];
 
 const DatasetTestSuites: FC<Props> = ({ datasetId }) => {
   const t = useI18n();
@@ -90,6 +85,7 @@ const DatasetTestSuites: FC<Props> = ({ datasetId }) => {
           additionalGridOptions={gridOptions}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoTestSuites) }}
           onGridReady={onGridReady}
+          getHref={getTestSuiteHref}
           storageKey={`${ApplicationRoute.Datasets}/test-suites`}
         />
       </div>
