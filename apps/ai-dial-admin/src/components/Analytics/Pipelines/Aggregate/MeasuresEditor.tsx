@@ -78,7 +78,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
           so a row whose function takes no column — or offers no distinct — lands out of line with the rest.
           The minimums are what the row costs before it starts scrolling sideways, so they stay near the
           shortest useful select rather than at a comfortable width. */}
-      <div className="grid grid-cols-[minmax(104px,1fr)_minmax(104px,1fr)_minmax(104px,1fr)_minmax(120px,1.3fr)_2rem_2rem] items-center gap-x-2 gap-y-2 overflow-x-auto">
+      <div className="grid grid-cols-[minmax(104px,1fr)_minmax(104px,1fr)_minmax(104px,1fr)_minmax(120px,1.3fr)_auto_auto] items-center gap-x-2 gap-y-2 overflow-x-auto pb-0.5 pr-0.5">
         {rows.length > 0 && (
           <>
             <Label label={t(AnalyticsPipelinesI18nKey.MeasureName)} />
