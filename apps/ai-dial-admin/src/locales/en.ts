@@ -3190,6 +3190,8 @@ export default {
       'When a probe last found nothing left to do. It only moves on an empty probe, so a busy pipeline keeps an old value while running perfectly. Read the materialized-through position to tell whether it is advancing.',
     LastError: 'Last error',
     NeverRun: 'This pipeline has not run yet.',
+    RuntimeDisabledTitle: 'Pipeline is disabled',
+    RuntimeDisabled: 'Nothing is running it. The values below are from its last run.',
     RuntimeUnavailableTitle: 'Runtime state unavailable',
     RuntimeUnavailable: "The runtime state could not be read. The pipeline's configuration is unaffected.",
     Runtime: 'Runtime',

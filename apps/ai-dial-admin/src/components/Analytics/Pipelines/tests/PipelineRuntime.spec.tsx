@@ -248,6 +248,44 @@ describe('PipelineRuntime', () => {
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.LastRun)).toBeNull();
   });
 
+  test('says a pipeline has not run yet when the registry reports only that nothing is left', () => {
+    renderRuntime({ has_more: false });
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.StatusUpToDate)).toBeNull();
+  });
+
+  describe('a disabled pipeline', () => {
+    const disabled = (state?: PipelineState): Pipeline => ({ ...pipeline(state), enabled: false });
+
+    test('states that its values are from the last run', () => {
+      renderRuntime(RAN, { pipeline: disabled(RAN) });
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeDisabledTitle)).toBeTruthy();
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.LastRun)).toBeTruthy();
+    });
+
+    test('presents no next run', () => {
+      renderRuntime(RAN, { pipeline: disabled(RAN) });
+
+      expect(screen.queryByText(AnalyticsPipelinesI18nKey.NextRun)).toBeNull();
+    });
+
+    test('says it has not run yet without the disabled notice when it never ran', () => {
+      renderRuntime({ has_more: false }, { pipeline: disabled({ has_more: false }) });
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeTruthy();
+      expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeDisabledTitle)).toBeNull();
+    });
+  });
+
+  test('says nothing about being disabled for an enabled pipeline', () => {
+    renderRuntime(RAN);
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeDisabledTitle)).toBeNull();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.NextRun)).toBeTruthy();
+  });
+
   test('says the runtime could not be read when neither service reported anything', () => {
     renderRuntime(undefined);
 

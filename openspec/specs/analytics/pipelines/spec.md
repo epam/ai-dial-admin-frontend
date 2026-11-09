@@ -729,6 +729,10 @@ group answers:
     **Catching up (last up to date …)** — where one is known: the runner's caught-up time for an
     enrichment, falling back to the registry's drained-at probe for a SQL enrichment. An aggregate states a
     bare Catching up. Up to date carries no date: it would repeat the status.
+    The registry's `has_more` SHALL be presented only beside evidence that the pipeline ran — a last run,
+    a Data up to, a recorded position or a failure. The registry reports `false` for a pipeline that has
+    never fired, and read alone it called such a pipeline Up to date. The runner's own answer needs no
+    such evidence: it reports progress only for a pipeline it drives.
   - **Data up to**, for an `aggregate` pipeline and an `enrich` pipeline whose transform is SQL — the moment
     up to which the output has been computed, converted from the epoch-millisecond version the registry
     records (the cursor version for an aggregate, the materialized-through version for a SQL enrichment) to
@@ -824,6 +828,11 @@ The tab SHALL present exactly one of these content states:
 - **Unavailable** — neither service reported anything: the pipeline carries no state and no runtime view was
   read. The tab SHALL state that the runtime state could not be read and SHALL state that the pipeline's
   configuration is unaffected, so the reader does not act on the absence as if the pipeline were broken.
+
+A **disabled** pipeline in the Loaded state SHALL carry an information notice above its values stating
+that nothing is running it and the values are from its last run, and SHALL NOT present a next run: a
+status read beside a stopped pipeline otherwise reads as a live one. The header's badge says it is
+disabled, not that the tab below describes the past.
 
 The failures card is governed by its own requirements and SHALL be presented independently of these three:
 it reads a different service, and a pipeline that has never run can still hold dead letters from before
@@ -1034,6 +1043,28 @@ State SHALL NOT be sent when the pipeline is saved.
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** the tab does not state that the pipeline has not run yet
 - **AND** the failure is presented in the failures group
+
+#### Scenario: A registry that reports only an empty backlog is not called up to date
+
+- **GIVEN** a pipeline whose state carries `has_more: false` and nothing else
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the pipeline has not run yet
+- **AND** no status reading Up to date is presented
+
+#### Scenario: A disabled pipeline states that its values are from its last run
+
+- **GIVEN** a disabled pipeline whose state records a run
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** an information notice states that the pipeline is disabled and the values are from its last run
+- **AND** the last run is still presented
+- **AND** no next run is presented
+
+#### Scenario: A disabled pipeline that never ran carries no disabled notice
+
+- **GIVEN** a disabled pipeline whose state records no run
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the pipeline has not run yet
+- **AND** no disabled notice is presented
 
 #### Scenario: Unclamped reads are not presented
 
