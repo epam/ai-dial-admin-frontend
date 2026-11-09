@@ -81,7 +81,7 @@ import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storag
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS } from '@/src/constants/main-layout';
 
 interface Props {
   initialEntities: AnalyticsEntity[];
@@ -244,17 +244,15 @@ const QueryBuilder: FC<Props> = ({
   const isSqlView = view === QueryBuilderView.Sql;
   const isAiView = view === QueryBuilderView.Ai;
 
-  // Binds the page to its stored query: seeds the builder on open, tracks unsaved changes, and owns
-  // save, discard, and metadata editing. Inert when no stored query was passed.
-  // Matches the width `ChangedEntityButtons` gives Discard and Save on narrow screens. Set after mount, as
-  // that component does, so the server render and the first client render agree.
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
-  const [saveAsClassName, setSaveAsClassName] = useState('');
-  useEffect(() => {
-    setSaveAsClassName(isTablet || isMobile ? 'w-1/2 flex justify-center' : '');
-  }, [isTablet, isMobile]);
+  const saveAsClassName = useMemo(
+    () => classNames('whitespace-nowrap', (isTablet || isMobile) && SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS),
+    [isTablet, isMobile],
+  );
 
+  // Binds the page to its stored query: seeds the builder on open, tracks unsaved changes, and owns
+  // save, discard, and metadata editing. Inert when no stored query was passed.
   const savedQueryPage = useSavedQueryPage({
     savedQuery,
     state,
@@ -648,7 +646,7 @@ const QueryBuilder: FC<Props> = ({
                   onSave={savedQueryPage.onSave}
                 >
                   <OutlinedButton
-                    className={classNames('whitespace-nowrap', saveAsClassName)}
+                    className={saveAsClassName}
                     label={t(ButtonsI18nKey.SaveAs)}
                     onClick={savedQueryPage.onOpenSaveAs}
                     disabled={runDisabled || savedQueryPage.isSaving}
