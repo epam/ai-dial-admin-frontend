@@ -3296,6 +3296,8 @@ export enum AnalyticsPipelinesI18nKey {
   DrainedAtHint = 'AnalyticsPipelines.DrainedAtHint',
   LastError = 'AnalyticsPipelines.LastError',
   NeverRun = 'AnalyticsPipelines.NeverRun',
+  RuntimeDisabledTitle = 'AnalyticsPipelines.RuntimeDisabledTitle',
+  RuntimeDisabled = 'AnalyticsPipelines.RuntimeDisabled',
   RuntimeUnavailableTitle = 'AnalyticsPipelines.RuntimeUnavailableTitle',
   RuntimeUnavailable = 'AnalyticsPipelines.RuntimeUnavailable',
   Runtime = 'AnalyticsPipelines.Runtime',
