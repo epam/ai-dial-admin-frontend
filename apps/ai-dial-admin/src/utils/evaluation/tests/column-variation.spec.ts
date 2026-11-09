@@ -2,12 +2,32 @@ import { ColDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import { ResultDto } from '@/src/models/evaluation/run';
-import { ExecutionIndexField, getUniformExecutionFields, hideUniformColumns } from '../column-variation';
+import {
+  ExecutionIndexField,
+  getUniformExecutionFields,
+  hasVaryingExecutionIndices,
+  hideUniformColumns,
+} from '../column-variation';
 
 const result = (overrides: Partial<ResultDto> = {}): ResultDto => ({
   responseStatusCode: 200,
   runIndex: 0,
   ...overrides,
+});
+
+describe('hasVaryingExecutionIndices', () => {
+  test('returns false without results or with only one run, request, and turn position', () => {
+    expect(hasVaryingExecutionIndices([])).toBe(false);
+    expect(hasVaryingExecutionIndices([result(), result()])).toBe(false);
+  });
+
+  test.each([
+    ['runs', [result({ runIndex: 0 }), result({ runIndex: 1 })]],
+    ['requests', [result({ requestIndex: 0 }), result({ requestIndex: 1 })]],
+    ['turns', [result({ turnIndex: 0 }), result({ turnIndex: 1 })]],
+  ])('returns true for multiple %s', (_name, results) => {
+    expect(hasVaryingExecutionIndices(results)).toBe(true);
+  });
 });
 
 describe('getUniformExecutionFields', () => {

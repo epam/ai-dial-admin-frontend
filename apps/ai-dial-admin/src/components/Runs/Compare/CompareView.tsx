@@ -42,6 +42,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+import { hasVaryingExecutionIndices } from '@/src/utils/evaluation/column-variation';
 
 interface Props {
   runId: string;
@@ -191,6 +192,10 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     [CompareRunSlot.Primary]: isPrimaryEditDisabled,
     [CompareRunSlot.Secondary]: isSecondaryEditDisabled,
   };
+  const canGroupExecutionResults = hasVaryingExecutionIndices([
+    ...(tabState.executionResults.results ?? []),
+    ...(tabState.executionResults.comparedResults ?? []),
+  ]);
 
   const openSelectRun = (slot: CompareRunSlot) => setSelectRunSlot(slot);
   const closeSelectRun = () => setSelectRunSlot(null);
@@ -449,11 +454,21 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           />
         )}
         {activeTab === CompareViewTab.ExecutionResults && (
-          <GhostButton
-            label={t(RunsI18nKey.RunCompareDisplay)}
-            iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={toggleDisplayPanel}
-          />
+          <div className="flex items-center gap-3">
+            {canGroupExecutionResults && (
+              <Switch
+                id="groupCompareResultsByTestCase"
+                isOn={tabState.executionResults.isGroupedByTestCase}
+                labelProps={{ label: t(RunsI18nKey.GroupByTestCase) }}
+                onChange={(isGrouped) => setExecutionResultsState({ isGroupedByTestCase: isGrouped })}
+              />
+            )}
+            <GhostButton
+              label={t(RunsI18nKey.RunCompareDisplay)}
+              iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+              onClick={toggleDisplayPanel}
+            />
+          </div>
         )}
       </div>
 

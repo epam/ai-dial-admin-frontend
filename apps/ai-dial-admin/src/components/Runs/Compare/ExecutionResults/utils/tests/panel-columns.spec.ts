@@ -56,6 +56,15 @@ const getFlatDefs = () =>
     }),
   ]) as ColDef[];
 
+const getOverallScoreDefs = () =>
+  getCompareColumnsCompare([], undefined, DEFAULT_COMPARE_DELTA_HEADER, {
+    runs,
+    isGrouped: true,
+    primaryThreshold: 0.5,
+    comparedThreshold: 0.5,
+    groupingLabels: { score: 'Overall score', notApplicable: 'N/A' },
+  }) as ColDef[];
+
 const getChildren = (node: ColDef): ColDef[] =>
   'children' in node && node.children ? (node.children as ColDef[]) : [];
 
@@ -118,6 +127,25 @@ describe('panel-columns', () => {
     expect(getChildren(precisionGroup)).toHaveLength(3);
     expect((precisionLeaves[2].context as CompareColumnPanelContext).panelName).toBe(DEFAULT_COMPARE_DELTA_HEADER);
     expect((precisionLeaves[2].context as CompareColumnPanelContext).panelRunIndex).toBeUndefined();
+  });
+
+  test('overall score roundtrip preserves one run pair and one delta column', () => {
+    const flatDefs = getOverallScoreDefs();
+    const panelTree = buildComparePanelColumnTree(flatDefs, runs);
+    const panelScoreGroup = panelTree.find((col) => col.headerName === 'Overall score') as ColDef;
+    const flattened = flattenComparePanelColumnTree(panelTree);
+    const gridScoreGroup = flattened.find((col) => col.headerName === 'Overall score') as ColDef;
+
+    expect(getChildren(panelScoreGroup).map(getColId)).toEqual([
+      'testCaseScore',
+      'cmp_testCaseScore',
+      'delta_testCaseScore',
+    ]);
+    expect(getChildren(gridScoreGroup).map(getColId)).toEqual([
+      'testCaseScore',
+      'cmp_testCaseScore',
+      'delta_testCaseScore',
+    ]);
   });
 
   test('buildComparePanelColumnTree nests extracted fields under run leaves', () => {
