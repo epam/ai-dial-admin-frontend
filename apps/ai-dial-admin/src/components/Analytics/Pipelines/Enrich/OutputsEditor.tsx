@@ -178,7 +178,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
             if (isSql) {
               return (
                 <DraggableItem key={row.id} id={row.id} findItem={findItem} moveItem={moveItem}>
-                  <div className="flex w-full flex-row items-end gap-3">
+                  <div className="flex min-w-0 flex-1 flex-row items-end gap-3">
                     {nameField}
                     <Input
                       id={`transform-output-expression-${index}`}
@@ -208,7 +208,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
             return (
               <DraggableItem key={row.id} id={row.id} findItem={findItem} moveItem={moveItem}>
-                <div className="flex w-full flex-col gap-3 border-b border-tertiary pb-6 last:border-b-0 last:pb-0">
+                <div className="flex min-w-0 flex-1 flex-col gap-3 border-b border-tertiary pb-6 last:border-b-0 last:pb-0">
                   <div className="flex flex-row items-end gap-3">
                     {nameField}
                     {deleteButton(row)}
