@@ -1,13 +1,17 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createElement } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { ASSET_APPLICATION_CREATE_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification } from '@/src/utils/notification';
 import CreateApplication from '../CreateApplication';
 
 const mockSourceField = vi.fn();
@@ -100,6 +104,7 @@ describe('CreateApplication', () => {
     vi.clearAllMocks();
     vi.mocked(checkIsUniqueDeploymentName).mockResolvedValue(true);
     vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as never);
+    vi.mocked(useSession).mockReturnValue({ update: vi.fn() } as never);
   });
 
   test('shows identity fields before source configuration', () => {
@@ -139,16 +144,51 @@ describe('CreateApplication', () => {
     await configureInterfaces(user);
   });
 
-  test('keeps the creation modal open after a failed submit', async () => {
-    const onCreate = vi.fn().mockResolvedValue({ success: false, status: 400 });
-    renderCreateApplication({ onCreate });
+  test('shows one error and keeps the creation modal open after a failed submit', async () => {
+    const onCreate = vi.fn().mockResolvedValue({
+      success: false,
+      status: 400,
+      errorHeader: 'Request error',
+      errorMessage: 'Invalid application',
+      requestId: 'request-123',
+    });
+    const { showNotification } = useNotification();
+    const { onClose } = renderCreateApplication({ onCreate });
     const user = await advanceToSource();
     await configureInterfaces(user);
 
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+    });
 
-    await vi.waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
+    expect(onCreate).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(
+      getErrorNotification('Request error', 'Invalid application', 'request-123'),
+    );
+    expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByText('resource-source-field')).toBeInTheDocument();
+  });
+
+  test('does not notify about an unauthorized response when retry succeeds', async () => {
+    const { showNotification } = useNotification();
+    vi.mocked(useSession).mockReturnValue({ update: vi.fn().mockResolvedValue({ expires: '2099-01-01' }) } as never);
+    const onCreate = vi
+      .fn()
+      .mockResolvedValueOnce({ success: false, status: 401 })
+      .mockResolvedValueOnce({ success: true });
+    const { onClose } = renderCreateApplication({ onCreate });
+    const user = await advanceToSource();
+    await configureInterfaces(user);
+
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+    });
+
+    expect(onCreate).toHaveBeenCalledTimes(2);
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ type: NotificationType.success }));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   test('submits the Interfaces draft without a source discriminator', async () => {
@@ -167,16 +207,8 @@ describe('CreateApplication', () => {
         interfaces: { 'test-interface': { base_url: 'https://example.com' } },
         name: 'app',
       }),
-      undefined,
-      undefined,
-      false,
     );
-    expect(onCreate).toHaveBeenCalledWith(
-      expect.not.objectContaining({ source: expect.anything() }),
-      undefined,
-      undefined,
-      false,
-    );
+    expect(onCreate).toHaveBeenCalledWith(expect.not.objectContaining({ source: expect.anything() }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 });
