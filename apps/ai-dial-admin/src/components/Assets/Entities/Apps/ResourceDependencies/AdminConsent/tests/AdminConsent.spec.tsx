@@ -14,7 +14,7 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn
 const makeDependency = (path: string, access = [ResourceAccess.Read]): ResourceDependency => ({
   kind: 'dial.resourceLink',
   link_id: path,
-  target: { path },
+  target: { url: path },
   access,
   required: false,
 });
