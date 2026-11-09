@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getPolicies } from '@/src/app/[lang]/platform-policies/actions';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
-import { PolicyAssignmentsI18nKey, PolicySubjectsI18nKey } from '@/src/constants/i18n';
+import { PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
 import { DialPolicyAssignmentResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -44,6 +44,8 @@ describe('Policy assignment :: create form', () => {
       (screen.getByRole('textbox', { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) }) as HTMLInputElement)
         .value,
     ).toBe('team-a');
+    expect(screen.getByText(PolicyAssignmentsI18nKey.CostObjectDerived)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: new RegExp(PolicyAssignmentsI18nKey.Policy) })).toBeInTheDocument();
   });
 
   test('stores the typed cost object as the folder', () => {
@@ -56,10 +58,17 @@ describe('Policy assignment :: create form', () => {
     expect(onChangeEntity).toHaveBeenCalledWith(expect.objectContaining({ folderId: 'team-b/' }));
   });
 
-  test('asks for the subject rules, since Core needs them pinned by the policy or the assignment', () => {
-    renderCreateForm();
+  test('marks the required cost object and policy invalid when they are missing', async () => {
+    renderCreateForm({ name: 'grant-1', folderId: '' });
 
-    expect(screen.getByRole('button', { name: PolicySubjectsI18nKey.AddRule })).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    expect(await screen.findByRole('combobox', { name: new RegExp(PolicyAssignmentsI18nKey.Policy) })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
   });
 
   test('reads the policies for the typed cost object', async () => {

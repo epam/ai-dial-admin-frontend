@@ -10,8 +10,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialPolicyResource } from '@/src/models/dial/resource';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { getCostObjectFromFolder } from '@/src/utils/policies/path';
-import { areRulesValid } from '@/src/utils/policies/subjects';
+import { getCostObjectFromFolder, isPolicyPathElementValid } from '@/src/utils/policies/path';
 import { getPolicyFormErrors } from '@/src/utils/policies/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 
@@ -24,27 +23,24 @@ interface Props {
   onChangeEntity: (entity: object) => void;
 }
 
-/**
- * Create-modal body for a policy: the name, the optional cost object (the folder it is stored in — blank is
- * a global policy), and the budget fields. Core requires `priority`, `object`, and a cost window on every
- * write, so a name-only create would always be refused. The cost object travels as `folderId`, which the
- * list's create handler reads, rather than as the body's own `costObject` pin.
- */
+/** Details for the first step; the cost object selects the policy's folder. */
 const PolicyCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, onChangeEntity }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const costObject = getCostObjectFromFolder(entity.folderId);
-  const costObjectError = useMemo(
-    () => (costObject ? getErrorForName(costObject, undefined, t)?.text : undefined),
-    [costObject, t],
-  );
+  const costObjectError = useMemo(() => {
+    if (!costObject) return undefined;
+    return (
+      getErrorForName(costObject, undefined, t)?.text ||
+      (isPolicyPathElementValid(costObject) ? undefined : t(PoliciesI18nKey.InvalidPathElement))
+    );
+  }, [costObject, t]);
 
   useEffect(() => {
     dispatch({
       type: ValidationActionType.SetField,
       field: 'policy',
-      isValid:
-        Object.keys(getPolicyFormErrors(entity)).length === 0 && !costObjectError && areRulesValid(entity.subject),
+      isValid: Object.keys(getPolicyFormErrors(entity)).length === 0 && !costObjectError,
     });
   }, [dispatch, entity, costObjectError]);
 
@@ -65,12 +61,15 @@ const PolicyCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, o
         entity={entity}
         names={names}
         isUniqueNameError={isUniqueNameError}
+        externalError={
+          entity.name && !isPolicyPathElementValid(entity.name) ? t(PoliciesI18nKey.InvalidPathElement) : undefined
+        }
         onChangeEntity={onChangeEntity}
       />
       <Input
         id="costObjectFolder"
         labelProps={{ label: t(PoliciesI18nKey.CostObject) }}
-        caption={t(PoliciesI18nKey.CostObjectHint)}
+        caption={t(PoliciesI18nKey.CreateCostObjectHint)}
         value={costObject}
         error={costObjectError}
         invalid={!!costObjectError}

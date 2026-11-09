@@ -893,6 +893,8 @@ export enum PoliciesI18nKey {
   CostPerMonth = 'Policies.CostPerMonth',
   CostObject = 'Policies.CostObject',
   CostObjectHint = 'Policies.CostObjectHint',
+  CreateCostObjectHint = 'Policies.CreateCostObjectHint',
+  InvalidPathElement = 'Policies.InvalidPathElement',
   PriorityInvalid = 'Policies.PriorityInvalid',
   AmountInvalid = 'Policies.AmountInvalid',
   CostWindowRequired = 'Policies.CostWindowRequired',
