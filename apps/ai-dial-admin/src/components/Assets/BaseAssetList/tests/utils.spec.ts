@@ -97,6 +97,22 @@ describe('BaseAssetList', () => {
       expect(duplicate['dial:applicationTypeDisplayName']).toBe('Runner copy');
     });
 
+    test('preserves an unpinned policy body when preparing a project-policy duplicate', () => {
+      const source = {
+        name: 'copy',
+        priority: 5,
+        object: '*',
+        cost: { day: 1 },
+        folderId: 'team-a/',
+      } as unknown as PlatformAsset;
+
+      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.PlatformPolicies, source);
+
+      expect(duplicate).not.toHaveProperty('costObject');
+      expect(duplicate).not.toHaveProperty('folderId');
+      expect(duplicate).toMatchObject({ name: 'copy', priority: 5, object: '*', cost: { day: 1 } });
+    });
+
     test('should not mutate the asset it was given', () => {
       const source = { ...model } as PlatformAsset;
       getPlatformAssetDuplicate(ApplicationRoute.PlatformModels, source);

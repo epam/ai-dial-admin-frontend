@@ -918,6 +918,9 @@ export default {
     CostPerMonth: 'Per month',
     CostObject: 'Cost object',
     CostObjectHint: 'Pins the policy to one cost object. Must match the folder of a project policy.',
+    CreateCostObjectHint:
+      'Sets the policy folder. With subject rules, it also pins the policy to this cost object; otherwise an assignment supplies it.',
+    InvalidPathElement: 'Use only letters, numbers, and . _ : @ [ ] ( ) -.',
     PriorityInvalid: 'Priority must be a whole number',
     AmountInvalid: 'Amount must be greater than 0',
     CostWindowRequired: 'Set a limit for at least one window',
