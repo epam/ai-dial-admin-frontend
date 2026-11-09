@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { cancelRun, getRun, getRunsQuery } from '@/src/app/[lang]/runs/actions';
 import { ActionMenuOperationI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -44,7 +43,7 @@ const MOCK_ROWS = [
 ];
 
 /** The grid options the component hands the grid, so a test can fire the grid's own callbacks. */
-const gridProps: { additionalGridOptions?: any; datasource?: any } = {};
+const gridProps: { additionalGridOptions?: any; datasource?: any; columnDefs?: any; getHref?: any } = {};
 
 const mockGridApi = {
   setGridOption: vi.fn((option: string, value: unknown) => {
@@ -61,8 +60,10 @@ const mockGridApi = {
 };
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ columnDefs, onGridReady, additionalGridOptions, showColumnsPanel }: any) => {
+  default: ({ columnDefs, onGridReady, additionalGridOptions, showColumnsPanel, getHref }: any) => {
     gridProps.additionalGridOptions = additionalGridOptions;
+    gridProps.columnDefs = columnDefs;
+    gridProps.getHref = getHref;
     onGridReady?.({ api: mockGridApi });
     const actionCol = (columnDefs || []).find((col: any) => col.field === 'actionsColumn');
     const items = actionCol?.cellRendererParams?.items ?? [];
@@ -252,39 +253,27 @@ describe('Runs — row navigation', () => {
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
   };
 
-  const clickCell = (field: string, event: Partial<MouseEvent> = {}) => {
-    gridProps.additionalGridOptions?.onCellClicked?.({
-      colDef: { field },
-      data: CLICKED_RUN,
-      node: { setSelected: vi.fn() },
-      event,
-    });
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getRunsQuery).mockResolvedValue({ content: [], totalElements: 0 } as any);
   });
 
-  test.each([{}, { ctrlKey: true }, { metaKey: true }])(
-    'opens the run details in a new tab regardless of click modifiers (%o)',
-    (modifier) => {
-      const open = vi.spyOn(window, 'open').mockReturnValue(null);
-      renderRuns();
+  test('links the run name to the run details page', () => {
+    renderRuns();
 
-      clickCell('testRunName', modifier);
+    const nameColumn = gridProps.columnDefs.find((col: any) => col.colId === 'testRunName');
 
-      expect(open).toHaveBeenCalledWith(getUrnForEntity(ApplicationRoute.Runs, CLICKED_RUN), '_blank');
-      open.mockRestore();
-    },
-  );
+    expect(nameColumn.cellRendererParams.getHref(CLICKED_RUN)).toBe(
+      getUrnForEntity(ApplicationRoute.Runs, CLICKED_RUN),
+    );
+    expect(gridProps.getHref(CLICKED_RUN)).toBe(getUrnForEntity(ApplicationRoute.Runs, CLICKED_RUN));
+  });
 
-  test('navigates nowhere for a click in the actions column', () => {
+  test('does not navigate on a row click', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     renderRuns();
 
-    clickCell(ACTIONS_COLUMN_CEL_ID);
-
+    expect(gridProps.additionalGridOptions?.onCellClicked).toBeUndefined();
     expect(open).not.toHaveBeenCalled();
     open.mockRestore();
   });

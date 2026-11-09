@@ -40,6 +40,15 @@ describe('ContainersList', () => {
     expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
+  test('renders a container name as a link to its details page', async () => {
+    render(
+      <ContainersList route={ApplicationRoute.Containers} containersList={mockContainers} names={['container-1']} />,
+    );
+
+    const link = await screen.findByRole('link', { name: 'container-1' });
+    expect(link.getAttribute('href')).toMatch(/^\/containers\/.+/);
+  });
+
   test('renders with empty list', () => {
     render(<ContainersList route={ApplicationRoute.ModelServings} containersList={[]} names={[]} />);
 

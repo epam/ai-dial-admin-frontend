@@ -1,9 +1,7 @@
 'use client';
-import { GridOptions } from 'ag-grid-community';
-import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
-import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ListEntities from '@/src/components/ListView/List';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
@@ -20,26 +18,25 @@ interface Props<T> {
 
 const PublicationsList = <T extends Publication>({ data }: Props<T>) => {
   const t = useI18n();
-  const router = useRouter();
 
   const openInNewTab = useCallback((publication?: Publication) => {
     onOpenInNewTab(ROUTE, publication);
   }, []);
 
-  const gridColumns = useMemo(() => getPublicationColumns(openInNewTab, t), [openInNewTab, t]);
+  const getPublicationHref = useCallback((row?: unknown) => getUrnForEntity(ROUTE, row), []);
 
-  const gridOptions: GridOptions = {
-    onCellClicked: (e) => onCellClicked(e, ROUTE, router.push),
-  };
+  const gridColumns = useMemo(
+    () => withNameLink(getPublicationColumns(openInNewTab, t), getPublicationHref, 'requestName'),
+    [openInNewTab, t, getPublicationHref],
+  );
 
   return (
     <ListEntities
       rowData={data}
-      additionalGridOptions={gridOptions}
       columnDefs={gridColumns}
       listLabel={t(listViewTitleMap[ROUTE])}
       emptyDataProps={{ title: t(emptyDataTitleMap[ROUTE]) }}
-      getHref={(row) => getUrnForEntity(ROUTE, row)}
+      getHref={getPublicationHref}
       storageKey={ApplicationRoute.Publications}
     />
   );

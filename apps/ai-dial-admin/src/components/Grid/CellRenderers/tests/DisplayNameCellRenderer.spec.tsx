@@ -14,6 +14,24 @@ describe('DisplayNameCellRenderer', () => {
     expect(screen.getByText('gpt-4-turbo')).toBeInTheDocument();
   });
 
+  test('renders the display name as a link to the row address when one is given', () => {
+    render(
+      <DisplayNameCellRenderer
+        {...params({ displayName: 'GPT-4 Turbo', name: 'gpt-4-turbo' })}
+        getHref={() => '/models/gpt-4-turbo'}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'GPT-4 Turbo' })).toHaveAttribute('href', '/models/gpt-4-turbo');
+    expect(screen.getByText('gpt-4-turbo')).toBeInTheDocument();
+  });
+
+  test('renders no link when the row has no address', () => {
+    render(<DisplayNameCellRenderer {...params({ displayName: 'GPT-4 Turbo' })} getHref={() => undefined} />);
+
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
   test('falls back to the name when displayName is missing', () => {
     render(<DisplayNameCellRenderer {...params({ name: 'gpt-4-turbo' })} />);
 
