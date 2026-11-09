@@ -8,6 +8,8 @@ describe('mapGridColToPivotField', () => {
     expect(mapGridColToPivotField('runIndex')).toBe('runNumber');
     expect(mapGridColToPivotField('http')).toBe('httpStatusCode');
     expect(mapGridColToPivotField('duration')).toBe('execDurationMs');
+    expect(mapGridColToPivotField('overallScore')).toBe('overallScore');
+    expect(mapGridColToPivotField('cmp_overallScore')).toBe('overallScore');
   });
 
   test('returns null for grid-only columns', () => {

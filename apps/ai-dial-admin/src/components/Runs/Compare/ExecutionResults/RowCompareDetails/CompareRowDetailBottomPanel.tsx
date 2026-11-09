@@ -6,7 +6,7 @@ import { FC } from 'react';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { RowDetailFieldSchema, RowDetailScoreThresholds } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
   focusFieldKey?: string | null;
   focusRequestId?: number;
   fieldSchema?: RowDetailFieldSchema;
+  scoreThresholds?: RowDetailScoreThresholds;
   metricGroupOrder?: readonly string[];
   initialDisplayTree?: ColDef[];
   onDisplayTreeChange?: (tree: ColDef[]) => void;
@@ -34,6 +35,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
   focusFieldKey,
   focusRequestId,
   fieldSchema,
+  scoreThresholds,
   metricGroupOrder,
   initialDisplayTree,
   onDisplayTreeChange,
@@ -53,6 +55,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
         focusFieldKey={focusFieldKey}
         focusRequestId={focusRequestId}
         fieldSchema={fieldSchema}
+        scoreThresholds={scoreThresholds}
         metricGroupOrder={metricGroupOrder}
         initialDisplayTree={initialDisplayTree}
         onDisplayTreeChange={onDisplayTreeChange}

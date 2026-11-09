@@ -2531,6 +2531,8 @@ export enum RunsI18nKey {
   RunCompareColorDisplay = 'Runs.RunCompareColorDisplay',
   RunCompareAbsoluteValues = 'Runs.RunCompareAbsoluteValues',
   RunCompareDelta = 'Runs.RunCompareDelta',
+  TestCaseOverallScoreAboveThresholdTooltip = 'Runs.TestCaseOverallScoreAboveThresholdTooltip',
+  TestCaseOverallScoreBelowThresholdTooltip = 'Runs.TestCaseOverallScoreBelowThresholdTooltip',
   RunCompareFilterDelta = 'Runs.RunCompareFilterDelta',
   RunCompareFilterField = 'Runs.RunCompareFilterField',
   RunCompareDiffLabel = 'Runs.RunCompareDiffLabel',

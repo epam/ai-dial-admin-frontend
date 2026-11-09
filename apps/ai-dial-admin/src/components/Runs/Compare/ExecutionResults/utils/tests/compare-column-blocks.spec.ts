@@ -35,6 +35,23 @@ describe('compare column blocks', () => {
     ]);
   });
 
+  test('collects each field group nested in the execution group as one block', () => {
+    const withFieldGroups: (ColDef | ColGroupDef)[] = [
+      {
+        headerName: EXECUTION_GROUP_HEADER,
+        children: [
+          { headerName: 'HTTP', children: [{ colId: 'http' }, { colId: 'cmp_http' }] },
+          { headerName: 'Overall score', children: [{ colId: 'overallScore' }, { colId: 'cmp_overallScore' }] },
+        ],
+      },
+    ];
+
+    expect(collectCompareColumnBlocks(withFieldGroups)).toEqual([
+      ['http', 'cmp_http'],
+      ['overallScore', 'cmp_overallScore'],
+    ]);
+  });
+
   test('moves a metric block with its delta and keeps run, compare, delta order', () => {
     const dropped = [
       'status',

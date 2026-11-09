@@ -32,6 +32,15 @@ const getTestCaseRunResultsMock = vi.fn().mockResolvedValue({
   ],
 });
 
+const executeStructuredQueryMock = vi.fn();
+
+const SCORE_ROWS_RESULT = {
+  rows: [
+    { test_suite_run_id: 'run-1', test_case_name: 'Test Case 1', score: 0.7 },
+    { test_suite_run_id: 'run-1', test_case_name: 'Test Case 2', score: 0 },
+  ],
+};
+
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     sidebar: {
@@ -47,6 +56,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
+  executeStructuredQuery: (...args: unknown[]) => executeStructuredQueryMock(...args),
   getTestCaseRunResultDetails: vi.fn().mockResolvedValue({
     id: 'r1',
     responseStatusCode: 200,
@@ -72,12 +82,19 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     additionalGridOptions,
     columnWidths,
     onColumnWidthsChange,
+    rowData,
   }: {
     additionalGridOptions: Record<string, (e: unknown) => void>;
     columnWidths: Record<string, number>;
     onColumnWidthsChange: (widths: Record<string, number>) => void;
+    rowData: { testCaseScore?: number | null }[] | null;
   }) => (
-    <div role="grid" aria-label="Analytics grid" data-column-widths={JSON.stringify(columnWidths)}>
+    <div
+      role="grid"
+      aria-label="Analytics grid"
+      data-column-widths={JSON.stringify(columnWidths)}
+      data-row-scores={JSON.stringify((rowData ?? []).map((row) => row.testCaseScore))}
+    >
       <button onClick={() => onColumnWidthsChange({ testCaseName: 240 })}>Resize column</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
@@ -138,6 +155,7 @@ const ControlledExtractionResultTab: FC<{ initialState?: Partial<ExtractionResul
 describe('ExtractionResultTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    executeStructuredQueryMock.mockResolvedValue(SCORE_ROWS_RESULT);
   });
 
   test('renders grid after loading without Columns button in tab body', async () => {
@@ -185,6 +203,61 @@ describe('ExtractionResultTab', () => {
     expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
 
     expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
+  });
+
+  test('requests the scores of the run with one structured query', async () => {
+    render(<ControlledExtractionResultTab />);
+
+    await screen.findByRole('grid', { name: 'Analytics grid' });
+
+    expect(executeStructuredQueryMock).toHaveBeenCalledOnce();
+    expect(executeStructuredQueryMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entity: 'test_case_eval_scores',
+        filter: expect.objectContaining({
+          args: [expect.anything(), expect.objectContaining({ items: [expect.objectContaining({ value: 'run-1' })] })],
+        }),
+      }),
+    );
+  });
+
+  test('hands the grid rows that carry their test case score', async () => {
+    render(<ControlledExtractionResultTab />);
+
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toHaveAttribute(
+      'data-row-scores',
+      JSON.stringify([0.7, 0]),
+    );
+  });
+
+  test('keeps the spinner until the scores have loaded', async () => {
+    executeStructuredQueryMock.mockReturnValue(new Promise(() => {}));
+    render(<ControlledExtractionResultTab />);
+
+    expect(await screen.findByLabelText('loading-40')).toBeInTheDocument();
+    await vi.waitFor(() => expect(getTestCaseRunResultsMock).toHaveBeenCalledOnce());
+    expect(screen.queryByRole('grid', { name: 'Analytics grid' })).not.toBeInTheDocument();
+  });
+
+  test.each([
+    ['rejects', () => executeStructuredQueryMock.mockRejectedValue(new Error('boom'))],
+    ['returns nothing', () => executeStructuredQueryMock.mockResolvedValue(null)],
+  ])('still renders the grid, with no scores, when the scores request %s', async (_name, arrange) => {
+    arrange();
+    render(<ControlledExtractionResultTab />);
+
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toHaveAttribute(
+      'data-row-scores',
+      JSON.stringify([null, null]),
+    );
+  });
+
+  test('does not refetch scores when cached state is provided', async () => {
+    render(<ControlledExtractionResultTab initialState={{ testCaseScores: [] }} />);
+
+    await screen.findByRole('grid', { name: 'Analytics grid' });
+
+    expect(executeStructuredQueryMock).not.toHaveBeenCalled();
   });
 
   test('opens bottom panel on row click by default', async () => {

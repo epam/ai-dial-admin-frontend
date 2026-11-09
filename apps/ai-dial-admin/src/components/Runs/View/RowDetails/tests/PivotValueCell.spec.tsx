@@ -216,3 +216,34 @@ describe('PivotValueCell', () => {
     });
   });
 });
+
+describe('PivotValueCell overall score threshold', () => {
+  const score = (overrides: Partial<RowDetailField> = {}) =>
+    field('overallScore', { primaryRaw: '0.7', secondaryRaw: '0.5', ...overrides });
+
+  test('shows the icon after the value for a row whose primary threshold is set', () => {
+    const { container } = render(<PivotValueCell field={score({ primaryThreshold: 0.6 })} />);
+
+    expect(screen.getByText('Runs.TestCaseOverallScoreAboveThresholdTooltip')).toBeInTheDocument();
+    expect(container.querySelector('svg.text-score-abs-11')).toBeInTheDocument();
+  });
+
+  test('takes an explicit threshold over the field’s, so a compared run reads against its own', () => {
+    render(<PivotValueCell field={score({ primaryThreshold: 0.6 })} raw="0.5" threshold={0.8} />);
+
+    expect(screen.getByText('Runs.TestCaseOverallScoreBelowThresholdTooltip')).toBeInTheDocument();
+  });
+
+  test('shows no icon without a threshold', () => {
+    const { container } = render(<PivotValueCell field={score()} />);
+
+    expect(screen.getByText('0.7')).toBeInTheDocument();
+    expect(container.querySelector('svg.text-score-abs-11, svg.text-score-abs-00')).not.toBeInTheDocument();
+  });
+
+  test('right-aligns the overall score like the other short figures', () => {
+    render(<PivotValueCell field={score()} />);
+
+    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+  });
+});

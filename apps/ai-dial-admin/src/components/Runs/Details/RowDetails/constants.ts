@@ -28,6 +28,7 @@ export const ROW_DETAIL_FIELD_INDENT = 'pl-16';
 
 export const ROW_DETAIL_EXECUTION_SECTION_KEY = 'execution';
 export const ROW_DETAIL_RUN_NUMBER_FIELD_KEY = 'runNumber';
+export const ROW_DETAIL_OVERALL_SCORE_FIELD_KEY = 'overallScore';
 export const ROW_DETAIL_HTTP_FIELD_KEY = 'httpStatusCode';
 export const ROW_DETAIL_DURATION_FIELD_KEY = 'execDurationMs';
 export const ROW_DETAIL_REQUEST_BODY_FIELD_KEY = 'requestBody';

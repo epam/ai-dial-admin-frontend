@@ -27,7 +27,10 @@ import {
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { getRowDetailRunValue } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
+import {
+  getRowDetailRunThreshold,
+  getRowDetailRunValue,
+} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
 import FieldCompareModal from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/FieldCompareModal';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
@@ -98,6 +101,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
     field: RowDetailField,
     raw: string | null,
     isFailed: boolean,
+    threshold: number | null | undefined,
     rowBg: string,
     position: CompareDiffPivotPosition,
   ) => {
@@ -110,6 +114,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
         field={field}
         raw={raw}
         isFailed={isFailed}
+        threshold={threshold}
         className={mergeClasses(rowBg, props.className)}
         data-compare-diff={props['data-compare-diff']}
         onOpenFullscreen={() => setDiffField(field)}
@@ -137,7 +142,15 @@ const CompareRowDetailPivotTable: FC<Props> = ({
           }
 
           const { raw, isFailed } = getRowDetailRunValue(column.field, run.slot);
-          return renderValueCell(key, column.field, raw, isFailed, 'bg-layer-3', position);
+          return renderValueCell(
+            key,
+            column.field,
+            raw,
+            isFailed,
+            getRowDetailRunThreshold(column.field, run.slot),
+            'bg-layer-3',
+            position,
+          );
         })}
       </Fragment>
     );

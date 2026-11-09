@@ -10,12 +10,14 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
+import { OVERALL_SCORE_COL_ID, OVERALL_SCORE_HEADER } from '@/src/components/Runs/constants';
 import { getCompareRunColId } from '@/src/components/Runs/Compare/utils';
 
 const EXECUTION_FIELD_GROUPS = [
   { fieldLabel: '# Run number', colId: 'runIndex' },
   { fieldLabel: 'Request', colId: 'requestIndex' },
   { fieldLabel: 'Turn', colId: 'turnIndex' },
+  { fieldLabel: OVERALL_SCORE_HEADER, colId: OVERALL_SCORE_COL_ID },
   { fieldLabel: 'HTTP', colId: 'http' },
   { fieldLabel: 'Duration', colId: 'duration' },
 ] as const;
@@ -81,7 +83,8 @@ const nestPairedFieldGroup = (
 };
 
 const nestExecutionGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
-  const leaves = getChildren(group);
+  // The score columns sit one level down, under their own header, so look through nested groups.
+  const leaves = getLeaves(group);
 
   return {
     headerName: EXECUTION_GROUP_HEADER,
@@ -197,6 +200,18 @@ const flattenGroupedNode = (node: ColDef): ColDef | ColGroupDef => {
 
   if (children.every((child) => getChildren(child).length > 0)) {
     const group = node as ColGroupDef;
+
+    if (group.headerName === EXECUTION_GROUP_HEADER) {
+      // The grid heads every Execution field with its own title over the per-run leaves, like a metric.
+      return {
+        ...group,
+        children: children.map((fieldGroup) => ({
+          headerName: fieldGroup.headerName,
+          headerGroupComponent: EllipsisHeaderGroup,
+          children: getChildren(fieldGroup).map(stripPanelContext),
+        })),
+      };
+    }
 
     return {
       ...group,
