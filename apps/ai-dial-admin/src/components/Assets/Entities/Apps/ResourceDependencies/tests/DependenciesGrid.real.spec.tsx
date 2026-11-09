@@ -15,7 +15,7 @@ describe('DependenciesGrid — real grid', () => {
           {
             kind: 'dial.resourceLink',
             link_id: 'docs',
-            target: { path: 'files/public/folder/' },
+            target: { url: 'files/public/folder/' },
             access: [ResourceAccess.Read],
             required: true,
           },
