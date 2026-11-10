@@ -52,6 +52,7 @@ import {
   isPlatformBucketView,
 } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { addTrailingSlash } from '@/src/utils/url';
 import MoveItemsModal from './MoveItemsModal';
 import { FILE_MANAGER_GRID_PERSISTENCE, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import { useShowHiddenFiles } from './use-show-hidden-files';
@@ -329,11 +330,14 @@ const FileManager: FC<Props> = ({
     [createFolder],
   );
 
-  const handleOnPathChange = useCallback(
-    (nextPath: string | undefined) => {
-      if (!nextPath) {
+  // The breadcrumb reports `public/folder` (segments joined with no trailing slash), while the tree, the
+  // expanded set and the fetched-folder cache are all keyed `public/folder/`.
+  const onPathChangeNormalized = useCallback(
+    (rawPath: string | undefined) => {
+      if (!rawPath) {
         return;
       }
+      const nextPath = addTrailingSlash(rawPath);
       const newExpanded = new Set(expandedFolders);
 
       if (newExpanded.has(nextPath)) {
@@ -560,7 +564,7 @@ const FileManager: FC<Props> = ({
         }}
         gridOptions={gridOptions}
         onGridApiChange={setGridApi}
-        onPathChange={handleOnPathChange}
+        onPathChange={onPathChangeNormalized}
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         {...props}
         getItemActionRestriction={getItemActionRestriction}
