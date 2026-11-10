@@ -30,6 +30,8 @@ interface UseDetailModeReturn {
 export function useDetailMode(
   metricGroupOrder: readonly string[] = [],
   fieldSchema?: RowDetailFieldSchema,
+  testCaseScoreByResultId?: ReadonlyMap<string, number | null | undefined>,
+  scoreThreshold?: number | null,
 ): UseDetailModeReturn {
   const { sidebar } = useAppContext();
   const [detailMode, setDetailMode] = useState<DetailMode>(DetailMode.Drawer);
@@ -90,6 +92,8 @@ export function useDetailMode(
           focusRequestId={focusRequestId}
           metricGroupOrder={metricGroupOrder}
           fieldSchema={fieldSchema}
+          testCaseScore={testCaseScoreByResultId?.get(resultId)}
+          scoreThreshold={scoreThreshold}
           initialDisplayTree={displayTreeRef.current}
           onDisplayTreeChange={persistDisplayTree}
           onClose={closeDetail}
@@ -99,7 +103,16 @@ export function useDetailMode(
         position,
       );
     },
-    [closeDetail, switchToSidebar, switchToDrawer, persistDisplayTree, metricGroupOrder, fieldSchema],
+    [
+      closeDetail,
+      switchToSidebar,
+      switchToDrawer,
+      persistDisplayTree,
+      metricGroupOrder,
+      fieldSchema,
+      testCaseScoreByResultId,
+      scoreThreshold,
+    ],
   );
 
   showDetailPanelRef.current = showDetailPanel;

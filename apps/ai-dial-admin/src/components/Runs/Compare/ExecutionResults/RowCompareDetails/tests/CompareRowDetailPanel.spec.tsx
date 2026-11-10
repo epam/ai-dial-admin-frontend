@@ -90,6 +90,45 @@ const row = {
 const runs = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' });
 
 describe('CompareRowDetailPanel', () => {
+  test('lists the Overall score field in the Display tree, shown by default, from the grid row’s scores', async () => {
+    const onDisplayTreeChange = vi.fn();
+
+    render(
+      <CompareRowDetailPanel
+        row={{ ...row, testCaseScore: 0.5, _compared: { ...row._compared, testCaseScore: 0.7 } } as CompareAnalyticsRow}
+        runs={runs}
+        onClose={vi.fn()}
+        position={SidebarPosition.Bottom}
+        onSwitchDisplayMode={vi.fn()}
+        onDisplayTreeChange={onDisplayTreeChange}
+      />,
+    );
+
+    await vi.waitFor(() => expect(onDisplayTreeChange).toHaveBeenCalled());
+    const tree = onDisplayTreeChange.mock.calls.at(-1)?.[0] as ColDef[];
+    const execution = tree.find((node) => (node.context as { panelName?: string }).panelName === 'execution');
+    const scoreLeaf = (execution as { children: ColDef[] }).children.find(
+      (leaf) => (leaf.context as { panelName?: string }).panelName === 'overallScore',
+    );
+
+    expect(scoreLeaf?.headerName).toBe('Overall score');
+    expect(scoreLeaf?.hide).toBe(false);
+  });
+
+  test('counts a differing overall score as a difference', async () => {
+    render(
+      <CompareRowDetailPanel
+        row={{ ...row, testCaseScore: 0.5, _compared: { ...row._compared, testCaseScore: 0.7 } } as CompareAnalyticsRow}
+        runs={runs}
+        onClose={vi.fn()}
+        position={SidebarPosition.Bottom}
+        onSwitchDisplayMode={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText('diff:1')).toBeTruthy();
+  });
+
   test('persists Display tree after sections load', async () => {
     const onDisplayTreeChange = vi.fn();
 

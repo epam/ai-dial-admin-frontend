@@ -5,11 +5,17 @@ import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Spinner } from '@epam/ai-dial-ui-kit';
 
-import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { executeStructuredQuery, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ColumnWidths } from '@/src/components/Grid/models';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
+import {
+  attachTestCaseScores,
+  buildTestCaseScoreLookup,
+  buildTestCaseScoresQuery,
+  parseTestCaseScores,
+} from '@/src/components/Runs/utils/test-case-scores';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import { ExtractionResultTabUiState } from '@/src/components/Runs/View/models';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -26,14 +32,30 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
-  const { showTreePanel, colDefs, panelColDefs, columnWidths, results } = extractionResultState;
+  const { showTreePanel, colDefs, panelColDefs, columnWidths, results, testCaseScores } = extractionResultState;
   const metricGroupOrder = useMemo(() => getMetricGroupOrder(colDefs ?? []), [colDefs]);
   const fieldSchema = useMemo(() => getRowDetailFieldSchema(results ?? []), [results]);
-  const detailMode = useDetailMode(metricGroupOrder, fieldSchema);
+  const rowData = useMemo(
+    () =>
+      results && testCaseScores
+        ? attachTestCaseScores(results, buildTestCaseScoreLookup(testCaseScores), run.id ?? '')
+        : null,
+    [results, testCaseScores, run.id],
+  );
+  const testCaseScoreByResultId = useMemo(
+    () => new Map((rowData ?? []).flatMap((row) => (row.id ? [[row.id, row.testCaseScore] as const] : []))),
+    [rowData],
+  );
+  const detailMode = useDetailMode(
+    metricGroupOrder,
+    fieldSchema,
+    testCaseScoreByResultId,
+    run.suiteSnapshot?.overallScoreThreshold,
+  );
   const { openDetail } = detailMode;
 
   const gridApiRef = useRef<GridApi | null>(null);
-  const isLoading = results === null;
+  const isLoading = results === null || testCaseScores === null;
   /** Suppress row-click toggle when a cell click already opened/focused detail. */
   const cellClickHandledRef = useRef(false);
 
@@ -44,7 +66,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
     getTestCaseRunResults(RESULT_FILTERS(run)).then((resultsSettled) => {
       const content = resultsSettled?.content || [];
-      const nextColDefs = getAnalyticsColumns(content);
+      const nextColDefs = getAnalyticsColumns(content, { threshold: run.suiteSnapshot?.overallScoreThreshold });
       setExtractionResultState({
         results: content,
         colDefs: nextColDefs,
@@ -52,6 +74,27 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       });
     });
   }, [run, results, setExtractionResultState]);
+
+  useEffect(() => {
+    if (!run?.id || testCaseScores !== null) {
+      return;
+    }
+
+    let isCancelled = false;
+    const loadScores = async () => {
+      try {
+        const result = await executeStructuredQuery(buildTestCaseScoresQuery([run.id as string]));
+        if (!isCancelled) setExtractionResultState({ testCaseScores: parseTestCaseScores(result) });
+      } catch {
+        if (!isCancelled) setExtractionResultState({ testCaseScores: [] });
+      }
+    };
+    void loadScores();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [run?.id, testCaseScores, setExtractionResultState]);
 
   const panelColDefsRef = useRef(panelColDefs);
   panelColDefsRef.current = panelColDefs;
@@ -159,7 +202,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
             columnDefs={colDefs}
             columnWidths={columnWidths}
             onColumnWidthsChange={onColumnWidthsChange}
-            rowData={results}
+            rowData={rowData}
             onGridReady={onGridReady}
             additionalGridOptions={gridOptions}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}

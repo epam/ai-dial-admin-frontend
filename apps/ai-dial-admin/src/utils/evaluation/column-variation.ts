@@ -5,8 +5,8 @@ import { ResultDto } from '@/src/models/evaluation/run';
 /**
  * The `Execution` columns whose default visibility follows the data. Three deliberate absences:
  * `Total requests` and `Total turns` start hidden whatever they hold — a denominator is context for a
- * position, not a reading of its own — and `HTTP` and `Duration` stay visible whatever they hold, since
- * an all-`200` run is still worth seeing.
+ * position, not a reading of its own — and `Overall score`, `HTTP` and `Duration` stay visible whatever
+ * they hold, since an all-`200` run is still worth seeing.
  */
 export enum ExecutionIndexField {
   RunIndex = 'runIndex',

@@ -303,6 +303,26 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test('returns Properties, Features, Catalog, Roles for PlatformRouters, with no Interceptors or Audit', () => {
+    expect(
+      getTabsForAsset(t, ApplicationRoute.PlatformRouters, flags({ dashboardEnabled: true, adminApiEnabled: true })),
+    ).toEqual([propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t)]);
+  });
+
+  test('inserts Parameters after Features for PlatformRouters that have a schema', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRouters, undefined, undefined, true)).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      rolesTab(t),
+    ]);
+  });
+
+  test('threads rolesWarning into the Roles tab for PlatformRouters', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRouters, undefined, true)).toContainEqual(rolesTab(t, true));
+  });
+
   test('omits Audit for PlatformModels with dashboardEnabled but without adminApiEnabled', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ dashboardEnabled: true }));
     expect(tabs).toEqual([propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t), interceptorsTab(t)]);

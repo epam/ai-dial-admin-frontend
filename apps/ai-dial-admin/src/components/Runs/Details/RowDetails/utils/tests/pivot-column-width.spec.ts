@@ -46,6 +46,7 @@ describe('resolvePivotFieldWidthTier', () => {
     expect(resolvePivotFieldWidthTier(field('runNumber'))).toBe(PivotColumnWidthTier.RunNumber);
     expect(resolvePivotFieldWidthTier(field('httpStatusCode'))).toBe(PivotColumnWidthTier.Http);
     expect(resolvePivotFieldWidthTier(field('execDurationMs'))).toBe(PivotColumnWidthTier.Duration);
+    expect(resolvePivotFieldWidthTier(field('overallScore', { isNumeric: true }))).toBe(PivotColumnWidthTier.Score);
   });
 
   test('maps score indicators to score tier', () => {

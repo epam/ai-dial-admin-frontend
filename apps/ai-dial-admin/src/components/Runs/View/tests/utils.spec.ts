@@ -802,6 +802,64 @@ describe('Runs View :: executionColumns are right-aligned', () => {
   });
 });
 
+describe('Runs View :: executionColumns Overall score', () => {
+  const getScoreCol = (threshold?: number | null) => {
+    const cols = getAnalyticsColumns([], { threshold });
+    const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
+    return execGroup.children.find((c: any) => c.colId === 'overallScore');
+  };
+
+  test('sits between the position columns and HTTP', () => {
+    const execGroup = getAnalyticsColumns([]).find((c: any) => c.headerName === 'Execution') as any;
+    const colIds = execGroup.children.map((c: any) => c.colId);
+
+    expect(colIds.indexOf('overallScore')).toBe(colIds.indexOf('http') - 1);
+    expect(colIds.indexOf('overallScore')).toBeGreaterThan(colIds.indexOf('turnIndex'));
+  });
+
+  test('is visible by default, right-aligned like the other numeric columns and without a filter', () => {
+    const col = getScoreCol();
+
+    expect(col.headerName).toBe('Overall score');
+    expect(col.hide).toBeUndefined();
+    expect(col).toEqual(expect.objectContaining({ cellClass: 'align-right', headerClass: 'align-right' }));
+    expect(col.headerComponentParams.innerHeaderComponentParams).toEqual({ isRightAligned: true });
+    expect(col.filter).toBe(false);
+  });
+
+  test('stays visible when every test case has the same score', () => {
+    const results = [makeResult({ testCaseScore: 1 }), makeResult({ testCaseScore: 1 })];
+
+    expect(getExecutionColumn('overallScore', results).hide).toBeUndefined();
+  });
+
+  test('passes the run threshold to the cell renderer', () => {
+    expect(getScoreCol(0.6).cellRendererParams).toEqual({ threshold: 0.6 });
+    expect(getScoreCol().cellRendererParams).toEqual({ threshold: undefined });
+  });
+
+  test('reads the rounded test case score and leaves a missing one undefined', () => {
+    const col = getScoreCol();
+
+    expect(col.valueGetter({ data: { testCaseScore: 0.92857 } })).toBe(0.929);
+    expect(col.valueGetter({ data: { testCaseScore: 0 } })).toBe(0);
+    expect(col.valueGetter({ data: { testCaseScore: null } })).toBeUndefined();
+    expect(col.valueGetter({ data: {} })).toBeUndefined();
+    expect(col.valueGetter({ data: undefined })).toBeUndefined();
+  });
+
+  test('sorts numerically with unscored rows last in both directions', () => {
+    const { comparator } = getScoreCol();
+    const node = {} as never;
+
+    expect(comparator(0.2, 0.7, node, node, false)).toBeLessThan(0);
+    expect(comparator(0.7, 0.2, node, node, false)).toBeGreaterThan(0);
+    expect(comparator(undefined, 0.2, node, node, false)).toBeGreaterThan(0);
+    expect(comparator(undefined, 0.2, node, node, true)).toBeLessThan(0);
+    expect(comparator(0.2, 0.2, node, node, false)).toBe(0);
+  });
+});
+
 describe('Runs View :: createEmptyComparePrimaryRow', () => {
   test('carries request/turn identity fields from the source row', () => {
     const row = createEmptyComparePrimaryRow(
@@ -1205,7 +1263,7 @@ describe('Runs View :: getAnalyticsColumns default column visibility', () => {
   test('hides every index column of a single-request, single-turn run', () => {
     const visible = visibleExecutionColIds([makeResult(), makeResult()]);
 
-    expect(visible).toEqual(['http', 'duration']);
+    expect(visible).toEqual(['overallScore', 'http', 'duration']);
   });
 
   test('keeps the turn column, but not its total, when the run spans several turns', () => {
@@ -1254,7 +1312,7 @@ describe('Runs View :: getAnalyticsColumns default column visibility', () => {
   test('hides the totals but no index column before any result has loaded', () => {
     const visible = visibleExecutionColIds([]);
 
-    expect(visible).toEqual(['runIndex', 'requestIndex', 'turnIndex', 'http', 'duration']);
+    expect(visible).toEqual(['runIndex', 'requestIndex', 'turnIndex', 'overallScore', 'http', 'duration']);
   });
 
   test('leaves the other groups’ defaults untouched', () => {

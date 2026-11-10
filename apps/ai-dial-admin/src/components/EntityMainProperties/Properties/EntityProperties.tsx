@@ -75,7 +75,7 @@ const EntityProperties: FC<Props> = ({
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
 
-      {view === ApplicationRoute.PlatformModels && (
+      {(view === ApplicationRoute.PlatformModels || view === ApplicationRoute.PlatformRouters) && (
         <VersionControl
           title={t(EntityFieldsI18nKey.displayVersion)}
           version={(entity as DialModelResource).displayVersion}

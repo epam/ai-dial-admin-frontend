@@ -1,5 +1,7 @@
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
+export const isPolicyPathElementValid = (value?: string): boolean => !!value && !/[^A-Za-z0-9._:@[\]()-]/.test(value);
+
 /**
  * The cost object a policy record is stored under, from any shape a caller holds a folder in:
  * `platform/team-a/` (a list path), `team-a/` (a metadata `folderId`) or `team-a`. A root entry — a

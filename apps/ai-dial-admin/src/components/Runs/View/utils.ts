@@ -1,8 +1,10 @@
-import { ColDef, ColGroupDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ValueGetterParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+import OverallScoreCellRenderer from '@/src/components/Grid/CellRenderers/OverallScoreCellRenderer';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import {
   DURATION_COLUMN_WIDTH,
@@ -14,6 +16,7 @@ import {
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
+  OVERALL_SCORE_COLUMN_WIDTH,
   REQUEST_INDEX_COLUMN_WIDTH,
   RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
   RUN_INDEX_COLUMN_WIDTH,
@@ -28,6 +31,7 @@ import {
   EXECUTION_GROUP_HEADER,
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import { OVERALL_SCORE_COL_ID, OVERALL_SCORE_HEADER } from '@/src/components/Runs/constants';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
@@ -35,8 +39,9 @@ import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
+import { getRoundedTestCaseScore } from '@/src/components/Runs/utils/test-case-scores';
 
-import { CompareAnalyticsRow } from './models';
+import { AnalyticsColumnsOptions, CompareAnalyticsRow } from './models';
 
 export const RUN_FILTER = (id?: string | null): FilterDto[] => [
   { column: 'runId', operator: FilterOperatorDto.EQUALS, value: id || '' },
@@ -169,7 +174,24 @@ const buildIndexColumn = (field: IndexColumnField, headerName: string, width: nu
   valueGetter: (params) => (params.data?.[field] != null ? params.data[field] + 1 : null),
 });
 
-const executionColumns: ColDef[] = [
+const getOverallScoreValue = (params: ValueGetterParams): number | undefined =>
+  getRoundedTestCaseScore(params.data?.testCaseScore);
+
+const buildOverallScoreColumn = (threshold?: number | null): ColDef => ({
+  headerName: OVERALL_SCORE_HEADER,
+  headerComponentParams: RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
+  colId: OVERALL_SCORE_COL_ID,
+  ...lockedWidthColDef(OVERALL_SCORE_COLUMN_WIDTH),
+  ...NO_FILTER_COL_DEF,
+  ...rightAlignedColumn,
+  sortable: true,
+  comparator: numberValueComparator,
+  cellRenderer: OverallScoreCellRenderer,
+  cellRendererParams: { threshold },
+  valueGetter: getOverallScoreValue,
+});
+
+const executionColumnsBeforeScore: ColDef[] = [
   buildIndexColumn('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
   buildIndexColumn('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
   {
@@ -195,6 +217,9 @@ const executionColumns: ColDef[] = [
     ...rightAlignedColumn,
     valueGetter: (params) => params.data?.totalTurns ?? null,
   },
+];
+
+const executionColumnsAfterScore: ColDef[] = [
   {
     field: 'responseStatusCode',
     headerName: 'HTTP',
@@ -219,6 +244,13 @@ const executionColumns: ColDef[] = [
     // Replaces the spread's cellClass: the status tint is added on top of `align-right`.
     cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
+];
+
+/** Only the score column depends on the run (its threshold); the rest stay shared instances. */
+const getExecutionColumns = (threshold?: number | null): ColDef[] => [
+  ...executionColumnsBeforeScore,
+  buildOverallScoreColumn(threshold),
+  ...executionColumnsAfterScore,
 ];
 
 const detailsColumns = {
@@ -251,10 +283,10 @@ const detailsColumns = {
  * every row distinguishes no result from another, so it too starts hidden and the operator re-enables it
  * from the columns panel.
  */
-const getExecutionGroup = (results: AnalyticsResult[]) => ({
+const getExecutionGroup = (results: AnalyticsResult[], threshold?: number | null) => ({
   headerName: EXECUTION_GROUP_HEADER,
   headerGroupComponent: EllipsisHeaderGroup,
-  children: hideUniformColumns(executionColumns, getUniformExecutionFields(results)),
+  children: hideUniformColumns(getExecutionColumns(threshold), getUniformExecutionFields(results)),
 });
 
 /**
@@ -291,13 +323,13 @@ export const getRowDetailFieldSchema = (results: AnalyticsResult[]): RowDetailFi
   extractedColumns: mergeRecordSchema(results, (result) => result.extractedColumns),
 });
 
-export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[], options?: AnalyticsColumnsOptions) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = mergeRecordSchema(results, (result) => result.testCaseData);
 
   return [
     detailsColumns,
-    getExecutionGroup(results),
+    getExecutionGroup(results, options?.threshold),
     ...getMetricsColumns(metrics),
     {
       headerName: INPUT_BINDINGS_GROUP_HEADER,

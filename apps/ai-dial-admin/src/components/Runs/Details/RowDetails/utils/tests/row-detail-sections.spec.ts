@@ -95,16 +95,79 @@ describe('buildRowDetailSections', () => {
     expect(precisionRow?.secondaryInfo).toBeUndefined();
   });
 
-  test('orders execution fields as status, run number, HTTP, duration', () => {
+  test('orders execution fields as status, run number, overall score, HTTP, duration', () => {
     const sections = buildRowDetailSections(primaryResult, comparedResult);
     const execution = sections.find((section) => section.key === 'execution');
 
     expect(execution?.rows.map((row) => row.fieldKey)).toEqual([
       'executionStatus',
       'runNumber',
+      'overallScore',
       'httpStatusCode',
       'execDurationMs',
     ]);
+  });
+
+  describe('overall score field', () => {
+    const getScoreRow = (primary: AnalyticsResult, compared: AnalyticsResult | null) =>
+      buildRowDetailSections(primary, compared)
+        .find((section) => section.key === 'execution')
+        ?.rows.find((row) => row.fieldKey === 'overallScore');
+
+    test('shows each side’s test case score, rounded to three decimals', () => {
+      const row = getScoreRow({ ...primaryResult, testCaseScore: 0.92857 }, { ...comparedResult, testCaseScore: 0.5 });
+
+      expect(row).toMatchObject({
+        label: 'Overall score',
+        primaryRaw: '0.929',
+        secondaryRaw: '0.5',
+        isNumeric: true,
+        isScoreIndicator: false,
+        isMetric: false,
+      });
+    });
+
+    test('keeps a zero score and leaves a missing one empty', () => {
+      expect(getScoreRow({ ...primaryResult, testCaseScore: 0 }, null)?.primaryRaw).toBe('0');
+      expect(getScoreRow({ ...primaryResult, testCaseScore: null }, null)?.primaryRaw).toBeNull();
+      expect(getScoreRow(primaryResult, null)?.primaryRaw).toBeNull();
+    });
+
+    test('carries each run’s threshold on the field, for the above/below icon', () => {
+      const sections = buildRowDetailSections(primaryResult, comparedResult, [], undefined, {
+        primary: 0.6,
+        compared: 0.8,
+      });
+      const row = sections
+        .find((section) => section.key === 'execution')
+        ?.rows.find((r) => r.fieldKey === 'overallScore');
+
+      expect(row).toMatchObject({ primaryThreshold: 0.6, secondaryThreshold: 0.8 });
+    });
+
+    test('carries no threshold when none is given, and none on other execution rows', () => {
+      const execution = buildRowDetailSections(primaryResult, null).find((section) => section.key === 'execution');
+
+      expect(execution?.rows.find((r) => r.fieldKey === 'overallScore')?.primaryThreshold).toBeUndefined();
+      expect(execution?.rows.find((r) => r.fieldKey === 'httpStatusCode')).not.toHaveProperty('primaryThreshold');
+    });
+
+    test('has no compared value for a single run', () => {
+      const row = getScoreRow({ ...primaryResult, testCaseScore: 0.7 }, null);
+
+      expect(row?.secondaryRaw).toBeNull();
+      expect(row?.diffKind).toBe(MetricDeltaKind.Empty);
+    });
+
+    test('marks differing scores as a diff and equal ones as none', () => {
+      const changed = getScoreRow({ ...primaryResult, testCaseScore: 0.5 }, { ...comparedResult, testCaseScore: 0.7 });
+      const same = getScoreRow({ ...primaryResult, testCaseScore: 0.7 }, { ...comparedResult, testCaseScore: 0.7 });
+      const removed = getScoreRow({ ...primaryResult, testCaseScore: 0.7 }, { ...comparedResult, testCaseScore: null });
+
+      expect(changed?.diffKind).toBe(MetricDeltaKind.Changed);
+      expect(same?.diffKind).toBe(MetricDeltaKind.Empty);
+      expect(removed?.diffKind).toBe(MetricDeltaKind.Removed);
+    });
   });
 
   test('places metric sections immediately after execution', () => {
