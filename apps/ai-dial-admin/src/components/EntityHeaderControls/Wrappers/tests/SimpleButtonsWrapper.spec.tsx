@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import SimpleButtonsWrapper from '@/src/components/EntityHeaderControls/Wrappers/SimpleButtonsWrapper';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
+vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
 vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsOnlyTabletScreen: () => false }));
 
@@ -35,6 +36,23 @@ const openDeleteModal = async () => {
   await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
   return user;
 };
+
+beforeEach(() => {
+  vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+});
+
+describe('SimpleButtonsWrapper :: read-only role', () => {
+  test('does not offer save or delete controls for a read-only role', () => {
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+
+    const { rerender } = render(<SimpleButtonsWrapper {...baseProps} view={ApplicationRoute.PlatformRoles} />);
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Delete })).toBeNull();
+
+    rerender(<SimpleButtonsWrapper {...baseProps} view={ApplicationRoute.PlatformRoles} isChanged />);
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();
+  });
+});
 
 describe('SimpleButtonsWrapper :: getAssetContext forwarding', () => {
   test('forwards getAssetContext to DeleteConfirmationModal when provided', async () => {

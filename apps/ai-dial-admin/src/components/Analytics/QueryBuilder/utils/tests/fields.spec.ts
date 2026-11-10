@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  argumentFieldOptions,
   comparableFieldOptions,
   computedColumnNames,
   defaultValueType,
@@ -60,6 +61,14 @@ describe('fieldsToOptions', () => {
     const options = fieldsToOptions(fields);
     expect(options[0]).toMatchObject({ name: 'email', sensitive: true });
     expect(options[1].sensitive).toBeUndefined();
+  });
+
+  test('carries the projection-only flag through to the option', () => {
+    const options = fieldsToOptions([
+      { ...field('request_body_full', AnalyticsFieldType.String), projection_only: true },
+      field('project_id', AnalyticsFieldType.String),
+    ]);
+    expect(options.map((o) => o.isProjectionOnly)).toEqual([true, false]);
   });
 });
 
@@ -288,6 +297,7 @@ describe('fieldsToOptions', () => {
         tag: 'metric',
         display_name: 'Total money spend',
         description: 'Money spent on the request',
+        isProjectionOnly: false,
       },
     ]);
   });
@@ -552,6 +562,39 @@ describe('comparableFieldOptions', () => {
 
   test('an empty option list stays empty', () => {
     expect(comparableFieldOptions([], ['attributes'])).toEqual([]);
+  });
+
+  test('withholds a projection-only field of any type', () => {
+    const options: FieldOption[] = [
+      ...OPTIONS,
+      { name: 'request_body_full', type: AnalyticsFieldType.String, isProjectionOnly: true },
+    ];
+    expect(comparableFieldOptions(options).map((o) => o.name)).toEqual(['project_id', 'tags']);
+  });
+
+  test('keeps a projection-only field whose name is in kept', () => {
+    const options: FieldOption[] = [{ name: 'request_body_full', isProjectionOnly: true }];
+    expect(comparableFieldOptions(options, ['request_body_full']).map((o) => o.name)).toEqual(['request_body_full']);
+  });
+});
+
+describe('argumentFieldOptions', () => {
+  const OPTIONS: FieldOption[] = [
+    { name: 'attributes', type: AnalyticsFieldType.Map },
+    { name: 'request_body_full', type: AnalyticsFieldType.String, isProjectionOnly: true },
+    { name: 'project_id', type: AnalyticsFieldType.String },
+  ];
+
+  test('keeps a map field and withholds a projection-only one', () => {
+    expect(argumentFieldOptions(OPTIONS).map((o) => o.name)).toEqual(['attributes', 'project_id']);
+  });
+
+  test('keeps a projection-only field the argument already names', () => {
+    expect(argumentFieldOptions(OPTIONS, ['request_body_full']).map((o) => o.name)).toEqual([
+      'attributes',
+      'request_body_full',
+      'project_id',
+    ]);
   });
 });
 

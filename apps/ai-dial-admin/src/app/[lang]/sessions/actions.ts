@@ -106,6 +106,7 @@ import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspect
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import {
   buildRequestEnvelope,
+  isRebuildPartial,
   NO_CLAMP,
   parseJson,
   textByteLength,
@@ -773,16 +774,21 @@ interface HopBodyRead {
 // — while this row is keyed by the column itself. Stripping the namespace once, here, is what keeps the move
 // out of every reader below: a projection alias is not honoured on a row read, so the qualified key arrives
 // whatever the query asked for, and a row keyed by it reads as a hop that recorded nothing.
-const bodyRowOf = (raw: Record<string, unknown>): SessionEntryBodyRow =>
-  Object.fromEntries(
+const bodyRowOf = (raw: Record<string, unknown>): SessionEntryBodyRow => {
+  const { [UsageLogField.RequestBodyFull]: rebuilt, ...row } = Object.fromEntries(
     Object.entries(raw).map(([key, cell]) => [unqualified(key), cell]),
-  ) as unknown as SessionEntryBodyRow;
+  );
+
+  return (rebuilt === undefined
+    ? row
+    : { ...row, [UsageLogField.RequestBody]: rebuilt }) as unknown as SessionEntryBodyRow;
+};
 
 // The names the grant resolved against this instance's schema, not the constants: the read has to select a
 // column under the name the service answered with.
 const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): string[] => {
   if (side === HopInspectorSide.Request) {
-    return fields.requestField === null ? [] : [fields.requestField];
+    return [fields.requestField, fields.requestStatusField].filter((name): name is string => name !== null);
   }
 
   return fields.responseFields;
@@ -848,6 +854,7 @@ const emptyRequestEnvelope = (state: HopReadState): HopRequestEnvelope => ({
   roleCounts: [],
   recordedBytes: null,
   isClamped: false,
+  isPartial: false,
 });
 
 // Tier 1. What crosses to the browser is an envelope — roles, positions, sizes, property names and sizes, and
@@ -866,6 +873,7 @@ export async function getSessionHopRequest(
   }
 
   const dialect = dialectOf(row.request_uri ?? null);
+  const isPartial = isRebuildPartial(row.request_body_rebuild);
   const parsed = parseJson(row.request_body);
   const params = paramsOf(parsed);
   const recordedBytes = row.request_body === null ? null : textByteLength(row.request_body);
@@ -873,7 +881,7 @@ export async function getSessionHopRequest(
   if (dialect === HopDialect.Unknown) {
     return {
       success: true,
-      response: { ...emptyRequestEnvelope(HopReadState.Unstructured), params, recordedBytes },
+      response: { ...emptyRequestEnvelope(HopReadState.Unstructured), params, recordedBytes, isPartial },
     };
   }
 
@@ -882,11 +890,11 @@ export async function getSessionHopRequest(
   if (!messages.length) {
     return {
       success: true,
-      response: { ...emptyRequestEnvelope(HopReadState.NoBody), dialect, params, recordedBytes },
+      response: { ...emptyRequestEnvelope(HopReadState.NoBody), dialect, params, recordedBytes, isPartial },
     };
   }
 
-  return { success: true, response: buildRequestEnvelope({ dialect, params, messages, recordedBytes }) };
+  return { success: true, response: buildRequestEnvelope({ dialect, params, messages, recordedBytes, isPartial }) };
 }
 
 const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
@@ -957,12 +965,15 @@ export async function getSessionHopRawBody(
   const { row, state } = read;
 
   if (!row) {
-    return hopReadEnvelope(read, { state, text: null, clamp: NO_CLAMP });
+    return hopReadEnvelope(read, { state, text: null, clamp: NO_CLAMP, isPartial: false });
   }
 
   return {
     success: true,
-    response: rawBodyOf(side === HopInspectorSide.Request ? row.request_body : row.response_body),
+    response:
+      side === HopInspectorSide.Request
+        ? rawBodyOf(row.request_body, isRebuildPartial(row.request_body_rebuild))
+        : rawBodyOf(row.response_body),
   };
 }
 

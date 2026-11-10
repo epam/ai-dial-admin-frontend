@@ -51,6 +51,7 @@ const field = (name: string, type: AnalyticsFieldType, enumValues?: string[]): A
 });
 
 const FIELDS = [
+  { ...field('request_body_full', AnalyticsFieldType.String), projection_only: true },
   field('deployment', AnalyticsFieldType.String),
   field('status_code', AnalyticsFieldType.Integer),
   field('status', AnalyticsFieldType.Enum, ['ok', 'failed']),
@@ -157,6 +158,15 @@ describe('PipelineFilterField — a new filter', () => {
     await user.click(sqlRadio());
 
     expect(sqlText()).toHaveValue(`"deployment" = 'o''neil' AND "status_code" IN (200, 201)`);
+  });
+
+  test('does not offer a projection-only column', async () => {
+    const { user } = renderField();
+
+    await user.click(await screen.findByRole('button', { name: AnalyticsPipelinesI18nKey.FilterAddCondition }));
+
+    expect(optionsOf(columnSelect(0))).not.toContain('request_body_full');
+    expect(optionsOf(columnSelect(0))).toContain('deployment');
   });
 
   test('draws the labels on the first condition only, and names every control', async () => {

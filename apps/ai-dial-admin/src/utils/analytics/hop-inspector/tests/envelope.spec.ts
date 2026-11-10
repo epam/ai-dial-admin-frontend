@@ -78,6 +78,7 @@ describe('buildRequestEnvelope :: the calls a message makes and answers', () => 
       params: { stated: [], rest: [] },
       messages,
       recordedBytes: 100,
+      isPartial: false,
     });
 
   const call = (name: string, id: string | null) => ({ name, args: '{}', id });

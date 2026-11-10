@@ -335,12 +335,12 @@ export const responseEnvelopeOf = (row: SessionEntryBodyRow, dialect: HopDialect
 
 // Silent truncation in an observability tool produces a reader who believes they have read the whole body, so
 // the recorded size travels with the delivered one whenever the budget bites.
-export const rawBodyOf = (body: string | null | undefined): HopRawBody => {
+export const rawBodyOf = (body: string | null | undefined, isPartial = false): HopRawBody => {
   if (body == null) {
-    return { state: HopReadState.NoBody, text: null, clamp: NO_CLAMP };
+    return { state: HopReadState.NoBody, text: null, clamp: NO_CLAMP, isPartial: false };
   }
 
   const { text, clamp } = clampToBudget(body, RAW_BODY_BYTE_BUDGET);
 
-  return { state: HopReadState.Available, text, clamp };
+  return { state: HopReadState.Available, text, clamp, isPartial };
 };

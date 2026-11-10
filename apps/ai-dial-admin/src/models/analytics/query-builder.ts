@@ -171,6 +171,7 @@ export interface FieldOption {
   display_name?: string;
   description?: string;
   sensitive?: boolean;
+  isProjectionOnly?: boolean;
 }
 
 export interface FieldOptionGroup {

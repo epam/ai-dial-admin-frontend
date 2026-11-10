@@ -12,6 +12,7 @@ const FAILED: HopRawBody = {
   state: HopReadState.LoadFailed,
   text: null,
   clamp: NO_CLAMP,
+  isPartial: false,
 };
 
 interface Params {
