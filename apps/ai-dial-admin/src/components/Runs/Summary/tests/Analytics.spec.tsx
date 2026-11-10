@@ -202,17 +202,19 @@ describe('Runs Summary :: Analytics', () => {
     expect(rate.getByText('0.5')).toBeInTheDocument();
   });
 
-  test('shows the overall score with its glyph, footer and info control', async () => {
+  test('shows the overall score with its glyph, method name and info control', async () => {
     await renderLoaded({ overallScore: 0.812, metricSnapshotCount: 3 });
 
     const overall = within(card(RunsI18nKey.OverallScore));
     expect(overall.getByText('0.812')).toBeInTheDocument();
-    expect(overall.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
+    expect(overall.getByText(TestSuitesI18nKey.TrendsBasedOnMethod)).toBeInTheDocument();
     expect(overall.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeInTheDocument();
   });
 
-  test('omits the info control for a run that has no suite snapshot', async () => {
+  test('omits the info control and method name for a run that has no suite snapshot', async () => {
     await renderLoaded({ run: buildRun({ suiteSnapshot: undefined }), overallScore: 0.812 });
+
+    expect(within(card(RunsI18nKey.OverallScore)).queryByText(TestSuitesI18nKey.TrendsBasedOnMethod)).toBeNull();
 
     expect(
       within(card(RunsI18nKey.OverallScore)).queryByRole('button', {

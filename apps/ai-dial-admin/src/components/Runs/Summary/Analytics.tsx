@@ -5,7 +5,7 @@ import { FC } from 'react';
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
 import CostValue from '@/src/components/Runs/Summary/Cards/CostValue';
-import OverallScoreInfo from '@/src/components/Runs/Summary/Cards/OverallScoreInfo';
+import OverallScoreMethod from '@/src/components/Runs/Summary/Cards/OverallScoreMethod';
 import OverallScoreValue from '@/src/components/Runs/Summary/Cards/OverallScoreValue';
 import PassRateValue from '@/src/components/Runs/Summary/Cards/PassRateValue';
 import RuntimeValue from '@/src/components/Runs/Summary/Cards/RuntimeValue';
@@ -16,7 +16,7 @@ import {
   ANALYTICS_KPI_GRID_CLASS,
 } from '@/src/components/Runs/Summary/constants';
 import { useRunKpiCards } from '@/src/components/Runs/Summary/use-run-kpi-cards';
-import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
@@ -63,12 +63,9 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
           title={t(RunsI18nKey.OverallScore)}
           value={<OverallScoreValue score={overallScore} threshold={figures.threshold} />}
           description={
-            <span className="flex items-center gap-1">
-              <span>{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</span>
-              {kpis.scoreMethod && (
-                <OverallScoreInfo scoreMethod={kpis.scoreMethod} metricCount={metricSnapshotCount ?? 0} />
-              )}
-            </span>
+            kpis.scoreMethod && (
+              <OverallScoreMethod scoreMethod={kpis.scoreMethod} metricCount={metricSnapshotCount ?? 0} />
+            )
           }
         />
       )}

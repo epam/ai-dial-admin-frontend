@@ -116,8 +116,10 @@ value — above when the score is at or over the threshold (inclusive), below ot
 focusing the value SHALL show a tooltip stating `Overall score is above the threshold (<threshold>).` or
 `Overall score is below the threshold (<threshold>).`. The above/below state SHALL also be available to
 assistive technology as text, since the glyph is decorative. Without a threshold the card SHALL show neither
-glyph nor tooltip on the value. The card SHALL show a static "Based on completed test cases" label and an info
-control; hovering or focusing the control SHALL show the calculation method the run was evaluated with:
+glyph nor tooltip on the value. The card SHALL show a "Based on <method>" label naming the calculation method the run was evaluated with —
+"mean of <N> metrics", "weighted mean of <N> metrics" or "specific function" — followed by an info control; the
+label SHALL truncate with an ellipsis, revealing its full text in a tooltip, when it does not fit the card; hovering or focusing the
+control SHALL show the calculation method the run was evaluated with:
 - Mean: "Calculation method:", "Mean of <N> metrics" and the formula `score = mean(m₁, m₂, … mₙ)`;
 - Weighted mean: "Calculation method:", "Weighted mean of <N> metrics" and one `<metric>.<field> × <weight>`
   line per weight;
@@ -225,9 +227,9 @@ each in dual-run layout: the baseline run's value on the left and the second run
 headed by its run name, separated by a divider, with the card title followed by a diff badge when a diff
 exists. Per-run content SHALL match the single-run card (Test Cases Completed value, error line and hover
 tooltip, headed by the run name; per-run rate with bar and threshold line; per-run overall score; per-run
-runtime and cost breakdown). On the Overall Score card each run's value SHALL be followed by its own info
-control with that run's calculation-method tooltip, taken from that run's own stored method as the single-run
-card does, and the "Based on completed test cases" label SHALL stay below both runs. Each run's glyph,
+runtime and cost breakdown). On the Overall Score card each run's value SHALL be followed by only its own info control, at the end of the
+score row and with no label, showing that run's calculation-method tooltip, taken from that
+run's own stored method as the single-run card does. Each run's glyph,
 threshold tooltip and `Threshold:` line SHALL use that run's own threshold.
 The rate card SHALL be titled Threshold Pass Rate when either run has a threshold and Completion Rate when
 neither does. In a pair where only one run has a threshold, the run without a threshold SHALL show an em dash
@@ -239,10 +241,10 @@ aggregates have loaded.
 - **THEN** it shows Test Cases Completed, Threshold Pass Rate, Overall Score, Total Runtime and Total Run
   Cost, each with Run #316 on the left and Run #315 on the right
 
-#### Scenario: Info control beside each score
+#### Scenario: Info control without a label beside each score
 - **WHEN** the Overall Score card renders in compare mode
-- **THEN** an info control follows each run's score value
-- **AND** the "Based on completed test cases" label appears once, below both runs
+- **THEN** each run's score row ends with an info control
+- **AND** no "Based on" label is shown
 
 #### Scenario: Per-run threshold glyphs
 - **WHEN** run #316 scores 0.812 and run #315 scores 0.265 against a threshold of 0.6

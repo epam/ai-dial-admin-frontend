@@ -64,7 +64,7 @@ export const SUMMARY_PANELS_GRID_CLASS =
 
 export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
 
-/** Card with a footer pinned to the bottom (Overall Score's "Based on completed test cases"). */
+/** Card with a footer pinned to the bottom (Overall Score's calculation method). */
 export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-between';
 
 /** Card whose content sits right under the title however tall the row is stretched by its neighbours. */

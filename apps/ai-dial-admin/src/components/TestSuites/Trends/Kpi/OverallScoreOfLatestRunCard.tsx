@@ -4,7 +4,7 @@ import { FC, useMemo } from 'react';
 
 import { Tooltip } from '@epam/ai-dial-ui-kit';
 
-import OverallScoreInfo from '@/src/components/Runs/Summary/Cards/OverallScoreInfo';
+import OverallScoreMethod from '@/src/components/Runs/Summary/Cards/OverallScoreMethod';
 import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import KpiDeltaBadge from '@/src/components/TestSuites/Trends/Kpi/KpiDeltaBadge';
@@ -61,12 +61,9 @@ const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, className }) => {
             </>
           )}
         </div>
-        <div className="flex items-center gap-1">
-          <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</p>
-          {latest?.overallScoreMethod && (
-            <OverallScoreInfo scoreMethod={latest.overallScoreMethod} metricCount={latest.metricNames?.length ?? 0} />
-          )}
-        </div>
+        {latest?.overallScoreMethod && (
+          <OverallScoreMethod scoreMethod={latest.overallScoreMethod} metricCount={latest.metricNames?.length ?? 0} />
+        )}
       </div>
     </KpiCardFrame>
   );
