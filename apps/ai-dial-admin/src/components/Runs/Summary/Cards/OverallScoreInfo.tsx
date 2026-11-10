@@ -25,7 +25,7 @@ const OverallScoreInfo: FC<Props> = ({ scoreMethod, metricCount }) => {
       <button
         type="button"
         aria-label={t(TestSuitesI18nKey.OverallScoreCalculationMethod)}
-        className="flex size-6 shrink-0 items-center justify-center rounded text-secondary hover:text-accent-primary focus-visible:text-accent-primary"
+        className="-my-1 flex size-6 shrink-0 items-center justify-center rounded text-secondary hover:text-accent-primary focus-visible:text-accent-primary"
       >
         <IconInfoCircle size={16} aria-hidden />
       </button>

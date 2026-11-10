@@ -46,23 +46,27 @@ const OverallScoreOfLatestRunCard: FC<Props> = ({ runOrder, className }) => {
   const title = t(TestSuitesI18nKey.OverallScoreOfLatestRun);
 
   return (
-    <KpiCardFrame className={className} ariaLabel={title} title={title}>
-      <div className="flex flex-1 flex-col justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {score == null ? (
-            <p className="dial-display2-text text-secondary">—</p>
-          ) : (
-            <>
-              {hasThreshold && <ChevronBadge isPositive={isAboveThreshold} />}
-              <Tooltip tooltip={scoreTooltip} hideTooltip={!scoreTooltip} asChild>
-                <p className="dial-display2-text cursor-default text-primary">{formatOverallScore(score)}</p>
-              </Tooltip>
-              {deltaLabel != null && <KpiDeltaBadge label={deltaLabel} higherIsBetter />}
-            </>
-          )}
-        </div>
-        {latest?.overallScoreMethod && (
+    <KpiCardFrame
+      className={className}
+      ariaLabel={title}
+      title={title}
+      footer={
+        latest?.overallScoreMethod && (
           <OverallScoreMethod scoreMethod={latest.overallScoreMethod} metricCount={latest.metricNames?.length ?? 0} />
+        )
+      }
+    >
+      <div className="flex items-center gap-2">
+        {score == null ? (
+          <p className="dial-display2-text text-secondary">—</p>
+        ) : (
+          <>
+            {hasThreshold && <ChevronBadge isPositive={isAboveThreshold} />}
+            <Tooltip tooltip={scoreTooltip} hideTooltip={!scoreTooltip} asChild>
+              <p className="dial-display2-text cursor-default text-primary">{formatOverallScore(score)}</p>
+            </Tooltip>
+            {deltaLabel != null && <KpiDeltaBadge label={deltaLabel} higherIsBetter />}
+          </>
         )}
       </div>
     </KpiCardFrame>

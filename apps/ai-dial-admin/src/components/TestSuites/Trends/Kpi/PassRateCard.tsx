@@ -38,7 +38,21 @@ const PassRateCard: FC<Props> = ({ segments, threshold, isLoading, hasError, cla
     : t(TestSuitesI18nKey.CompletionRateOfLatestRun);
 
   return (
-    <KpiCardFrame className={className} ariaLabel={title} title={title}>
+    <KpiCardFrame
+      className={className}
+      ariaLabel={title}
+      title={title}
+      footer={
+        hasThreshold &&
+        threshold != null &&
+        !hasError && (
+          <div className="flex gap-1 dial-tiny-text">
+            <span className="text-secondary">{t(TestSuitesI18nKey.TrendsThresholdLabel)}</span>
+            <span className="text-primary">{formatScore(threshold)}</span>
+          </div>
+        )
+      }
+    >
       {hasError ? (
         <Notification
           variant={NotificationVariant.Error}
@@ -62,12 +76,6 @@ const PassRateCard: FC<Props> = ({ segments, threshold, isLoading, hasError, cla
             )}
           </div>
           {latestRate != null && <PassRateBar rate={latestRate} label={title} />}
-        </div>
-      )}
-      {hasThreshold && threshold != null && !hasError && (
-        <div className="flex gap-1 dial-tiny-text">
-          <span className="text-secondary">{t(TestSuitesI18nKey.TrendsThresholdLabel)}</span>
-          <span className="text-primary">{formatScore(threshold)}</span>
         </div>
       )}
     </KpiCardFrame>

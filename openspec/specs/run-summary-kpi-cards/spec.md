@@ -36,6 +36,24 @@ Until the run's test-case aggregates have loaded the strip SHALL show a spinner 
 - **WHEN** the run has no run-level overall score
 - **THEN** the strip shows the other four cards and no Overall Score card
 
+### Requirement: KPI cards share one vertical layout
+
+Every card in the single-run strip, and every card in the Test Suite Trends KPI strip, SHALL be laid out as
+three levels: the title at the top, the primary figure beneath it, and — when the card has one — a footer
+(threshold line, source / metrics split, calculation method, error count) pinned to the card's bottom edge.
+The levels SHALL be positioned by one shared layout, not by per-card spacing, so that in a row without text
+wrapping the titles, the figures and the footers each sit at the same vertical offset across all cards.
+
+#### Scenario: Footers align across the row
+- **WHEN** the single-run strip renders at a width where no card text wraps
+- **THEN** the Threshold line, the Overall Score method label and the Application / Metrics split are
+  vertically centred on the same line
+- **AND** every card's figure starts at the same offset below its title
+
+#### Scenario: Trends strip follows the same rule
+- **WHEN** the Test Suite Trends KPI strip renders without wrapping
+- **THEN** its footers line up in the same way
+
 ### Requirement: Test Cases Completed card
 
 The Test Cases Completed card SHALL show `<completed> /<total>` as its value, where *total* is every test

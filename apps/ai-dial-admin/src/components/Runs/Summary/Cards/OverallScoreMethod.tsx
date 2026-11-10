@@ -29,7 +29,7 @@ const OverallScoreMethod: FC<Props> = ({ scoreMethod, metricCount }) => {
   });
 
   return (
-    <div className="flex min-w-0 items-center gap-1">
+    <div className="flex w-full min-w-0 items-center gap-1">
       <EllipsisTooltip text={label} className="dial-tiny-text text-secondary flex-auto" />
       <OverallScoreInfo scoreMethod={scoreMethod} metricCount={metricCount} />
     </div>
