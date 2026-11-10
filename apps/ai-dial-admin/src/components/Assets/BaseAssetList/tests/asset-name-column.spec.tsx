@@ -35,6 +35,16 @@ describe('getAssetNameColumn', () => {
     expect(container.querySelector('.dial-kit-folder-name .dial-kit-file-icon svg')).toBeInTheDocument();
   });
 
+  test('styles a folder name as a link on hover and when its cell has grid focus', () => {
+    const { container } = renderCell({ name: 'team', path: 'public/team', nodeType: DialFileNodeType.FOLDER });
+
+    const wrapper = container.firstElementChild as HTMLElement;
+
+    expect(wrapper.className).toContain('[&_.dial-kit-ellipsis-tooltip]:cursor-pointer');
+    expect(wrapper.className).toContain('[&_.dial-kit-ellipsis-tooltip]:hover:underline');
+    expect(wrapper.className).toContain('[.ag-cell-focus_&_.dial-kit-ellipsis-tooltip]:underline');
+  });
+
   test('keeps the display-name presentation for an asset row, id sub-line included', () => {
     renderCell({
       name: 'summarize-text',

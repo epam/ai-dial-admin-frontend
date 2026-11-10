@@ -154,7 +154,9 @@ export const getAssetNameColumn =
       filterValueGetter: ({ data }) => displayNameFilterValue(data),
       cellRenderer: (params: ICellRendererParams) =>
         params.data?.nodeType === DialFileNodeType.FOLDER ? (
-          <div className="contents [&_.dial-kit-ellipsis-tooltip]:text-accent">{renderFileManagerName(params)}</div>
+          <div className="contents [&_.dial-kit-ellipsis-tooltip]:cursor-pointer [&_.dial-kit-ellipsis-tooltip]:text-accent [&_.dial-kit-ellipsis-tooltip]:hover:underline [.ag-cell-focus_&_.dial-kit-ellipsis-tooltip]:underline">
+            {renderFileManagerName(params)}
+          </div>
         ) : (
           <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} getHref={getItemHref} />
         ),
