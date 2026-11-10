@@ -91,7 +91,7 @@ const EvalTrendsTab: FC<Props> = ({ deploymentId }) => {
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 px-4 pt-4">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="small text-primary font-semibold whitespace-nowrap">
+          <span className="dial-small-semi-text text-primary whitespace-nowrap">
             {t(TestSuitesI18nKey.ViewInTestSuite)}
           </span>
           <Select

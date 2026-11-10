@@ -25,13 +25,24 @@ export const useEntityTestSuites = (deploymentId: string | undefined): EntityTes
     setSuites([]);
     setIsLoading(true);
 
-    void getTestSuitesForDeployment(deploymentId).then((result) => {
-      if (cancelled) {
-        return;
+    const load = async () => {
+      try {
+        const result = await getTestSuitesForDeployment(deploymentId);
+        if (!cancelled) {
+          setSuites(result ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setSuites([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-      setSuites(result ?? []);
-      setIsLoading(false);
-    });
+    };
+
+    void load();
 
     return () => {
       cancelled = true;

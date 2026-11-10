@@ -33,20 +33,32 @@ export const useDeploymentMonthCosts = (deploymentId: string | undefined): Deplo
     let cancelled = false;
     setIsLoading(true);
 
-    void getDeploymentPeriodCosts(
-      deploymentId,
-      windows.current.fromMs,
-      windows.current.toMs,
-      windows.previous.fromMs,
-      windows.previous.toMs,
-    ).then((result) => {
-      if (cancelled) {
-        return;
+    const load = async () => {
+      try {
+        const result = await getDeploymentPeriodCosts(
+          deploymentId,
+          windows.current.fromMs,
+          windows.current.toMs,
+          windows.previous.fromMs,
+          windows.previous.toMs,
+        );
+        if (!cancelled) {
+          setCurrentTotal(sumDeploymentCostParts(result.current));
+          setPreviousTotal(sumDeploymentCostParts(result.previous));
+        }
+      } catch {
+        if (!cancelled) {
+          setCurrentTotal(null);
+          setPreviousTotal(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-      setCurrentTotal(sumDeploymentCostParts(result.current));
-      setPreviousTotal(sumDeploymentCostParts(result.previous));
-      setIsLoading(false);
-    });
+    };
+
+    void load();
 
     return () => {
       cancelled = true;

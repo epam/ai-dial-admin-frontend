@@ -113,6 +113,16 @@ describe('EvalTrendsTab', () => {
     });
   });
 
+  test('shows the empty state when suite loading fails', async () => {
+    getTestSuitesForDeploymentMock.mockRejectedValue(new Error('network'));
+
+    render(<EvalTrendsTab deploymentId="gpt-4" />);
+
+    expect(await screen.findByText(TestSuitesI18nKey.EvalTrendsNoSuitesTitle)).toBeInTheDocument();
+    expect(screen.queryByText('loader')).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsMonthCostTitle)).not.toBeInTheDocument();
+  });
+
   test('shows empty state when the entity has no suites', async () => {
     getTestSuitesForDeploymentMock.mockResolvedValue([]);
 
@@ -139,6 +149,10 @@ describe('EvalTrendsTab', () => {
     expect(screen.getByTestId('suite-search')).toHaveTextContent(BasicI18nKey.Search);
     expect(screen.getByText(TestSuitesI18nKey.EvalTrendsAllSuitesTitle)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.EvalTrendsMonthCostTitle)).toBeInTheDocument();
+    const suiteLabel = screen
+      .getAllByText(TestSuitesI18nKey.ViewInTestSuite)
+      .find((node) => node.classList.contains('dial-small-semi-text'));
+    expect(suiteLabel).toHaveClass('dial-small-semi-text', 'text-primary', 'whitespace-nowrap');
 
     await userEvent.click(screen.getByRole('button', { name: 'beta' }));
 

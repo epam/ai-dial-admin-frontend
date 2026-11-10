@@ -77,6 +77,16 @@ describe('EvalMonthCostCard', () => {
     expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsDeltaVsPrevPeriod)).not.toBeInTheDocument();
   });
 
+  test('shows an em dash when the cost request rejects', async () => {
+    getDeploymentPeriodCostsMock.mockRejectedValue(new Error('network'));
+
+    render(<EvalMonthCostCard deploymentId="gpt-4" suiteCount={3} />);
+
+    expect((await screen.findAllByText('—')).length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText('loader')).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsDeltaVsPrevPeriod)).not.toBeInTheDocument();
+  });
+
   test('shows an em dash when a period request fails and is treated as empty', async () => {
     getDeploymentPeriodCostsMock.mockResolvedValue({
       current: { totalTestCaseCost: null, totalMetricEvalCost: null },
