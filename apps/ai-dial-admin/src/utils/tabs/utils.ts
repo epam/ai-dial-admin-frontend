@@ -59,6 +59,7 @@ export enum EntityViewTab {
   Summary = 'Summary',
   ExtractionResult = 'ExtractionResult',
   Trends = 'Trends',
+  EvalTrends = 'EvalTrends',
   Permissions = 'Permissions',
   Body = 'Body',
   Headers = 'Headers',
@@ -335,6 +336,11 @@ export const trendsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Trends),
 });
 
+export const evalTrendsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.EvalTrends,
+  label: t(TabsI18nKey.EvalTrends),
+});
+
 export const runsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Runs,
   label: t(TabsI18nKey.Runs),
@@ -423,6 +429,7 @@ export const getApplicationTabs = (t: (key: string) => string, featureFlags?: Fe
     appRouteTab(t),
     rolesTab(t),
     interceptorsTab(t),
+    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
     ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
   ];
 };
@@ -433,6 +440,7 @@ export const getModelsTabs = (t: (key: string) => string, featureFlags?: Feature
     featuresTab(t),
     rolesTab(t),
     interceptorsTab(t),
+    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
     ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
   ];
 };

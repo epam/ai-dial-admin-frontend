@@ -14,6 +14,7 @@ import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import AssetApplicationAppRoutes from '@/src/components/Assets/ObjectAppRoutes/AssetApplicationAppRoutes';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
+import EvalTrendsTab from '@/src/components/EntityView/EvalTrends/EvalTrendsTab';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
@@ -285,8 +286,10 @@ const TabsContent: FC<Props> = ({
           view={view}
         />
       )}
-
       {activeTab === EntityViewTab.Audit && <EntityAudit key={discardKey} entity={selectedApplication} view={view} />}
+      {activeTab === EntityViewTab.EvalTrends && selectedApplication.name && (
+        <EvalTrendsTab deploymentId={selectedApplication.name} />
+      )}
     </>
   );
 };

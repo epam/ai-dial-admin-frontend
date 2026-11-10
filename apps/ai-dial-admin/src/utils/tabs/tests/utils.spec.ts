@@ -18,6 +18,7 @@ import {
   dependenciesTab,
   deploymentsToolsTab,
   entitiesTab,
+  evalTrendsTab,
   eventsTab,
   executionLogTab,
   extractionResultTab,
@@ -123,6 +124,18 @@ describe('Entities :: tabs', () => {
     expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)]);
   });
 
+  test('includes Eval Trends for models when evaluationEnabled is true', () => {
+    const res = getModelsTabs(t, flags({ evaluationEnabled: true, adminApiEnabled: true }));
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      evalTrendsTab(t),
+      auditTab(t),
+    ]);
+  });
+
   test('Should return tabs for application', () => {
     const res = getApplicationTabs(t, flags({ adminApiEnabled: true }));
     expect(res).toEqual([
@@ -147,6 +160,21 @@ describe('Entities :: tabs', () => {
       appRouteTab(t),
       rolesTab(t),
       interceptorsTab(t),
+    ]);
+  });
+
+  test('includes Eval Trends for application when evaluationEnabled is true', () => {
+    const res = getApplicationTabs(t, flags({ evaluationEnabled: true, adminApiEnabled: true }));
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      evalTrendsTab(t),
+      auditTab(t),
     ]);
   });
 

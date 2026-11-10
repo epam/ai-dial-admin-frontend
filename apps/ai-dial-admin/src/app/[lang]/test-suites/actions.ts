@@ -2,16 +2,22 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import { assetApi, datasetsApi, runsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import {
+  buildTestSuitesForDeploymentQuery,
+  EVAL_TRENDS_SUITES_PAGE_SIZE,
+} from '@/src/components/EntityView/EvalTrends/build-suites-for-deployment-query';
+import { collectEvaluationPages } from '@/src/components/ListView/Evaluation/utils/collect-evaluation-pages';
 import {
   buildTestSuitesQuery,
   mapTestSuitesQueryResult,
 } from '@/src/components/ListView/Evaluation/utils/test-suites-query';
-import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
-import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Metric } from '@/src/models/evaluation/metric';
+import { DeploymentPeriodCosts, EMPTY_DEPLOYMENT_COSTS } from '@/src/models/evaluation/run';
+import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { ResourceType } from '@/src/types/resource-type';
@@ -62,6 +68,43 @@ export async function getTestSuites(page: number, size: number, sorts: SortDto[]
   const query = buildTestSuitesQuery(page, size, sorts, filters);
   const result = await structuredQueryApi.execute(query, token);
   return mapTestSuitesQueryResult(result, page, size);
+}
+
+/** All test suites targeting a deployment or MCP deployment id (entity `name`), name-sorted. */
+export async function getTestSuitesForDeployment(deploymentId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+
+  return collectEvaluationPages(async (page) => {
+    const result = await structuredQueryApi.execute(
+      buildTestSuitesForDeploymentQuery(deploymentId, page, EVAL_TRENDS_SUITES_PAGE_SIZE),
+      token,
+    );
+    return mapTestSuitesQueryResult(result, page, EVAL_TRENDS_SUITES_PAGE_SIZE);
+  });
+}
+
+/**
+ * Eval cost totals for a deployment over the current month-to-date window and the matching
+ * previous-month span. A failed GET for a window is treated as no usage for that window so the
+ * card can show an em dash (same as a successful empty body).
+ */
+export async function getDeploymentPeriodCosts(
+  deploymentId: string,
+  currentFromMs: number,
+  currentToMs: number,
+  previousFromMs: number,
+  previousToMs: number,
+): Promise<DeploymentPeriodCosts> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const [current, previous] = await Promise.all([
+    runsApi.getDeploymentCosts(deploymentId, currentFromMs, currentToMs, token),
+    runsApi.getDeploymentCosts(deploymentId, previousFromMs, previousToMs, token),
+  ]);
+
+  return {
+    current: current ?? EMPTY_DEPLOYMENT_COSTS,
+    previous: previous ?? EMPTY_DEPLOYMENT_COSTS,
+  };
 }
 
 export async function getTestSuiteByName(name: string) {
