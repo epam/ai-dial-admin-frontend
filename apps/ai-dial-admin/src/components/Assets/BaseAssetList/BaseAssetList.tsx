@@ -89,9 +89,10 @@ interface Props {
   view: ApplicationRoute;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  isUnsafeImportEnabled?: boolean;
 }
 
-const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
+const BaseAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEnabled }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
@@ -684,6 +685,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         names={names}
         runners={runners || []}
         translators={translators}
+        isUnsafeImportEnabled={isUnsafeImportEnabled}
         versionsMap={versionsMap}
         preselectedItems={dragAndDropsItems}
         duplicateItem={duplicateItem}

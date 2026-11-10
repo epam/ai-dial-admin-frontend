@@ -37,6 +37,7 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  isUnsafeImportEnabled?: boolean;
   duplicateItem?: AssetWithVersion | null;
   deletedItems?: DialFile[] | null;
   getContext: () => AssetsFolderContextReader<AssetListItem>;
@@ -68,6 +69,7 @@ const Modals: FC<Props> = ({
   versionsMap,
   runners,
   translators,
+  isUnsafeImportEnabled,
   preselectedItems,
   duplicateItem,
   deletedItems,
@@ -191,6 +193,7 @@ const Modals: FC<Props> = ({
           onClose={onClose}
           onApply={onImport}
           preselectedItems={preselectedItems}
+          isUnsafeImportEnabled={isUnsafeImportEnabled}
         />
       );
     case ModalType.create:
