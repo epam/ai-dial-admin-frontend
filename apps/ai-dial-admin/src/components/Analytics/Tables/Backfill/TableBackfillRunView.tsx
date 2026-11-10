@@ -78,7 +78,7 @@ const TableBackfillRunView: FC<Props> = ({ run, isAnyRunInProgress, isStarting, 
                   appearance={ButtonAppearance.Link}
                   size={ElementSize.Small}
                   textClassName="text-error"
-                  label={<span>{run.failedBlobs.toLocaleString()}</span>}
+                  label={<span className="dial-body-text">{run.failedBlobs.toLocaleString()}</span>}
                   aria-label={`${t(BackfillI18nKey.FailedBlobs)}: ${run.failedBlobs.toLocaleString()}`}
                   onClick={() => onOpenIngestFailures(run.runId)}
                 />

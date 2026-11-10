@@ -1,9 +1,10 @@
 'use client';
 
 import { Spinner } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useId } from 'react';
 
 import HopClampNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopClampNote';
+import HopPartialNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopPartialNote';
 import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import HopStateNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopStateNote';
 import { useHopRaw } from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/use-hop-raw';
@@ -28,6 +29,7 @@ interface Props {
 
 const HopRawView: FC<Props> = ({ traceId, coreSpanId, requestTime, side }) => {
   const t = useI18n();
+  const partialNoteId = useId();
   const { body, isLoading, onRequestRaw } = useHopRaw({ traceId, coreSpanId, requestTime, side });
 
   useEffect(() => {
@@ -47,7 +49,13 @@ const HopRawView: FC<Props> = ({ traceId, coreSpanId, requestTime, side }) => {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-1">
+    <div
+      role="group"
+      aria-label={t(TITLE_KEY[side])}
+      aria-describedby={body.isPartial ? partialNoteId : undefined}
+      className="flex min-w-0 flex-col gap-1"
+    >
+      {body.isPartial && <HopPartialNote id={partialNoteId} />}
       <HopClampNote clamp={body.clamp} />
       {/* The app's own readable-JSON surface rather than a `<pre>`: a recorded body is one unwrapped line of
           up to half a megabyte, and pretty-printing, highlighting, folding and a copy control are the

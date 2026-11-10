@@ -5,6 +5,7 @@ import { FC, useCallback } from 'react';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
+import ScoreThresholdTooltip from '@/src/components/Runs/Details/RowDetails/ScoreThresholdTooltip';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
@@ -34,40 +35,43 @@ const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
   const onOpenFullValue = useCallback(() => onOpen(field), [onOpen, field]);
 
   return (
-    <div
-      className={mergeClasses(
-        EXECUTION_ROW_DETAIL_CELL_BASE,
-        'group/cell',
-        isRightAlignedRowDetailField(field) && 'justify-end text-right',
-        hasScore ? 'p-0' : 'group-hover:bg-accent-primary-alpha',
-      )}
-    >
-      {isStatusRow ? (
-        <StatusValue raw={raw} />
-      ) : (
-        <FieldValue
-          raw={raw}
-          isFailed={isFailed}
-          isScoreIndicator={field.isScoreIndicator}
-          failedLabel={t(RunsI18nKey.MetricFailedText)}
-          clampClassName={EXECUTION_ROW_DETAIL_CLAMP_CLASS}
-        />
-      )}
-      <button
-        type="button"
-        onClick={onOpenFullValue}
-        aria-label={t(RunsI18nKey.OpenFullValue, { field: field.label })}
-        aria-haspopup="dialog"
-        className="group/open absolute inset-0 cursor-pointer outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus"
+    <ScoreThresholdTooltip raw={raw} threshold={field.primaryThreshold}>
+      <div
+        className={mergeClasses(
+          EXECUTION_ROW_DETAIL_CELL_BASE,
+          'group/cell',
+          isRightAlignedRowDetailField(field) && 'justify-end text-right',
+          hasScore ? 'p-0' : 'group-hover:bg-accent-primary-alpha',
+        )}
       >
-        <span
-          className="absolute bottom-1 right-1 size-4 text-secondary opacity-0 transition-opacity group-hover/cell:opacity-100 group-focus-visible/open:opacity-100"
-          aria-hidden
+        {isStatusRow ? (
+          <StatusValue raw={raw} />
+        ) : (
+          <FieldValue
+            raw={raw}
+            isFailed={isFailed}
+            isScoreIndicator={field.isScoreIndicator}
+            threshold={field.primaryThreshold}
+            failedLabel={t(RunsI18nKey.MetricFailedText)}
+            clampClassName={EXECUTION_ROW_DETAIL_CLAMP_CLASS}
+          />
+        )}
+        <button
+          type="button"
+          onClick={onOpenFullValue}
+          aria-label={t(RunsI18nKey.OpenFullValue, { field: field.label })}
+          aria-haspopup="dialog"
+          className="group/open absolute inset-0 cursor-pointer outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus"
         >
-          <OpenPopup />
-        </span>
-      </button>
-    </div>
+          <span
+            className="absolute bottom-1 right-1 size-4 text-secondary opacity-0 transition-opacity group-hover/cell:opacity-100 group-focus-visible/open:opacity-100"
+            aria-hidden
+          >
+            <OpenPopup />
+          </span>
+        </button>
+      </div>
+    </ScoreThresholdTooltip>
   );
 };
 

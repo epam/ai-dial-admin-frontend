@@ -1074,6 +1074,122 @@ describe('the hop inspector reads', () => {
     // "ge" (usa*ge*_client_identity), so a bare `toContain` passes for the wrong reason.
     expect(JSON.stringify(query.filter)).not.toContain(`"op":"${QueryOperator.Ge}"`);
   });
+
+  describe('the rebuilt request body', () => {
+    const payload = (name: UsageLogField) => `dial_usage_log_payload.${name}`;
+    const REBUILT_SCHEMA = [
+      payload(UsageLogField.RequestBody),
+      payload(UsageLogField.RequestBodyFull),
+      payload(UsageLogField.RequestBodyRebuild),
+      payload(UsageLogField.ResponseBody),
+    ];
+    const WHOLE = JSON.stringify({
+      tools: [{ type: 'function', function: { name: 'calc' } }],
+      messages: [
+        { role: 'system', content: 'you are a quartermaster' },
+        { role: 'user', content: 'the first prompt' },
+        { role: 'assistant', content: 'the first answer' },
+        { role: 'user', content: 'the second prompt' },
+      ],
+    });
+    const DELTA = JSON.stringify({ messages: [{ role: 'user', content: 'the second prompt' }] });
+
+    const rebuiltRow = (status: string | null, full: string | null = WHOLE) => ({
+      trace_id: 'tr1',
+      request_uri: '/openai/deployments/gpt/chat/completions',
+      [payload(UsageLogField.RequestBody)]: DELTA,
+      [payload(UsageLogField.RequestBodyFull)]: full,
+      [payload(UsageLogField.RequestBodyRebuild)]: status,
+    });
+
+    const selectOf = () => JSON.stringify((execute().mock.calls[0][0] as StructuredQuery).select);
+
+    test('selects the rebuilt body and its status instead of the stored body', async () => {
+      schemaOf(REBUILT_SCHEMA);
+      execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow('rebuilt')] } });
+
+      await readRequest();
+
+      expect(selectOf()).toContain(payload(UsageLogField.RequestBodyFull));
+      expect(selectOf()).toContain(payload(UsageLogField.RequestBodyRebuild));
+      expect(selectOf()).not.toContain(`"${payload(UsageLogField.RequestBody)}"`);
+    });
+
+    test('names neither new column where the schema does not report them', async () => {
+      schemaOf(READABLE);
+      execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+      await readRequest();
+
+      expect(selectOf()).not.toContain(UsageLogField.RequestBodyFull);
+      expect(selectOf()).not.toContain(UsageLogField.RequestBodyRebuild);
+    });
+
+    test('decodes the whole request from the rebuilt body', async () => {
+      schemaOf(REBUILT_SCHEMA);
+      execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow('rebuilt')] } });
+
+      const result = await readRequest();
+
+      expect(result.response?.messages.map(({ role }) => role)).toEqual([
+        MessageRole.System,
+        MessageRole.User,
+        MessageRole.Assistant,
+        MessageRole.User,
+      ]);
+      expect(result.response?.isPartial).toBe(false);
+    });
+
+    test('numbers the message it returns in full the way the envelope numbered it', async () => {
+      schemaOf(REBUILT_SCHEMA);
+      execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow('rebuilt')] } });
+
+      const envelope = await readRequest();
+      const message = await getSessionHopMessage('tr1', 'sp1', 1, 3);
+
+      expect(envelope.response?.messages[3].text).toBe('the second prompt');
+      expect(message.response?.text).toBe('the second prompt');
+    });
+
+    test('marks a partially rebuilt request and still returns its messages', async () => {
+      schemaOf(REBUILT_SCHEMA);
+      execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow('partial', DELTA)] } });
+
+      const result = await readRequest();
+
+      expect(result.success).toBe(true);
+      expect(result.response?.state).toBe(HopReadState.Available);
+      expect(result.response?.isPartial).toBe(true);
+      expect(result.response?.messages).toHaveLength(1);
+    });
+
+    test('marks the raw view of a partially rebuilt request', async () => {
+      schemaOf(REBUILT_SCHEMA);
+      execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow('partial', DELTA)] } });
+
+      const result = await getSessionHopRawBody('tr1', 'sp1', 1, HopInspectorSide.Request);
+
+      expect(result.response?.text).toBe(DELTA);
+      expect(result.response?.isPartial).toBe(true);
+    });
+
+    test.each(['stored', 'rebuilt', 'resolvable', null])(
+      'does not mark a request whose status is %s',
+      async (status) => {
+        schemaOf(REBUILT_SCHEMA);
+        execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow(status)] } });
+
+        expect((await readRequest()).response?.isPartial).toBe(false);
+      },
+    );
+
+    test('resolves a row with no stored body as a request that recorded nothing', async () => {
+      schemaOf(REBUILT_SCHEMA);
+      execute().mockResolvedValue({ success: true, response: { rows: [rebuiltRow(null, null)] } });
+
+      expect((await readRequest()).response?.state).toBe(HopReadState.NoBody);
+    });
+  });
 });
 
 describe('getEntityTracePage', () => {

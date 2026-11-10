@@ -24,5 +24,8 @@ const ROUTE_NAMESPACES: Partial<Record<ApplicationRoute, UnitNamespace>> = {
   [ApplicationRoute.FoldersStorage]: UnitNamespace.ROLE_ASSIGNMENTS,
 };
 
+/** Every namespace a route belongs to: the ones a unit user has a section for. `org-units` is not among them. */
+export const ROUTABLE_NAMESPACES: UnitNamespace[] = [...new Set(Object.values(ROUTE_NAMESPACES))];
+
 export const getRouteNamespace = (route: ApplicationRoute | string): UnitNamespace | undefined =>
   ROUTE_NAMESPACES[route as ApplicationRoute];

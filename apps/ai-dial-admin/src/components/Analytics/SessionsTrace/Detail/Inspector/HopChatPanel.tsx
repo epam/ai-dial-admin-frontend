@@ -1,11 +1,12 @@
 'use client';
 
 import { Spinner } from '@epam/ai-dial-ui-kit';
-import { FC } from 'react';
+import { FC, useId } from 'react';
 
 import HopPanelLoader from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopPanelLoader';
 import HopChatBubble from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopChatBubble';
 import HopChatTurn from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopChatTurn';
+import HopPartialNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopPartialNote';
 import HopStateNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopStateNote';
 import { useHopMessage } from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/use-hop-message';
 import { INSPECTOR_LOADER_SIZE } from '@/src/constants/analytics/sessions-trace';
@@ -50,6 +51,7 @@ const HopChatPanel: FC<Props> = ({
   hasFailed,
 }) => {
   const t = useI18n();
+  const partialNoteId = useId();
   const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({
     traceId,
     coreSpanId: span.core_span_id,
@@ -91,8 +93,10 @@ const HopChatPanel: FC<Props> = ({
     <div
       role="group"
       aria-label={t(SessionsTraceI18nKey.InspectorChatLabel)}
+      aria-describedby={request.isPartial ? partialNoteId : undefined}
       className="mx-auto flex w-[800px] max-w-full flex-col gap-6"
     >
+      {request.isPartial && <HopPartialNote id={partialNoteId} />}
       {/* The envelope's own budget, not a per-message clamp: a session short of what was recorded says
           so, rather than stating a shorter exchange than the span received. Counted over the whole history,
           because that is what the budget clamped — not over the turns that survived the filter. */}

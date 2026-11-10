@@ -3,9 +3,10 @@
 import { GhostButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconCheck } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useId, useMemo, useState } from 'react';
 
 import HopMessageRow from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopMessageRow';
+import HopPartialNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopPartialNote';
 import HopRawView from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopRawView';
 import HopStateNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopStateNote';
 import {
@@ -30,6 +31,7 @@ interface Props {
 
 const HopRequestPanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, requestTime }) => {
   const t = useI18n();
+  const partialNoteId = useId();
   const [role, setRole] = useState<MessageRole | null>(null);
   const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({ traceId, coreSpanId, requestTime });
 
@@ -114,6 +116,11 @@ const HopRequestPanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, requ
         />
       ) : (
         <>
+          {envelope.isPartial && (
+            <div className="pb-3">
+              <HopPartialNote id={partialNoteId} />
+            </div>
+          )}
           {envelope.isClamped && (
             <p role="status" aria-live="polite" className="pb-3 text-secondary dial-caption-text">
               {t(SessionsTraceI18nKey.InspectorEnvelopeClamped, {
@@ -122,7 +129,7 @@ const HopRequestPanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, requ
               })}
             </p>
           )}
-          <ul className="flex min-w-0 flex-col gap-2">
+          <ul className="flex min-w-0 flex-col gap-2" aria-describedby={envelope.isPartial ? partialNoteId : undefined}>
             {shown.map((message) => (
               <HopMessageRow
                 key={message.index}

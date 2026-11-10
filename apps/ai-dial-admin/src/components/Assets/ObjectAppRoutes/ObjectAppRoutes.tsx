@@ -161,6 +161,7 @@ const ObjectAppRoutesView: FC<Props> = ({ routes, format, roles, disabled, onCha
               parentRoles={roles?.map((role) => role.name as string)}
               routeNames={routeNames.filter((name) => name !== activeRouteName)}
               isAppRunnerView={format === ObjectAppRouteFormat.AppRunner}
+              isCoreRoleSource={true}
               disabled={disabled}
               onChangeRoute={onChangeRoute}
             />

@@ -40,6 +40,9 @@ vi.mock('next-auth/react', () => ({
 // ------------------ Next.js hooks ------------------
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
 vi.mock('next/navigation', () => ({
+  notFound: vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
   useRouter: vi.fn(),
   usePathname: vi.fn(),
   useSearchParams: vi.fn(() => new URLSearchParams()),
@@ -94,6 +97,11 @@ vi.mock('@/src/context/assets/InterceptorsFolderContext', () => ({
 vi.mock('@/src/context/assets/TranslatorsFolderContext', () => ({
   useTranslatorsFolder: () => ({ fetchFiles: vi.fn() }),
   TranslatorsFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/RoutersFolderContext', () => ({
+  useRoutersFolder: () => ({ fetchFiles: vi.fn() }),
+  RoutersFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/src/context/assets/RoutesFolderContext', () => ({

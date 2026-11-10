@@ -4,7 +4,7 @@ export enum ResourceAccess {
 }
 
 export interface ResourceDependencyTarget {
-  path: string;
+  url: string;
 }
 
 export interface ResourceDependency {

@@ -30,9 +30,14 @@ interface GridProps {
     headerName?: string;
     valueGetter?: (params: { data: SavedQuery }) => unknown;
     filterValueGetter?: (params: { data: SavedQuery }) => unknown;
-    cellRendererParams?: { items: { id: string; onClick: (entity?: SavedQuery) => void; hidden?: unknown }[] };
+    cellRendererParams?: {
+      items?: { id: string; onClick: (entity?: SavedQuery) => void; hidden?: unknown }[];
+      getHref?: (query?: SavedQuery) => string | undefined;
+    };
   }[];
   emptyDataProps?: { title?: string };
+  additionalGridOptions?: { onCellClicked?: unknown };
+  getHref?: (query?: SavedQuery) => string | undefined;
 }
 
 let lastGrid: GridProps = {};
@@ -72,7 +77,7 @@ const COMMON = baseQuery({
 });
 
 const column = (colId: string) => lastGrid.columnDefs?.find((c) => c.colId === colId);
-const actions = () => lastGrid.columnDefs?.find((c) => c.cellRendererParams)?.cellRendererParams?.items ?? [];
+const actions = () => lastGrid.columnDefs?.find((c) => c.cellRendererParams?.items)?.cellRendererParams?.items ?? [];
 
 const renderList = (data: SavedQuery[] = [PERSONAL, COMMON]) => render(<QueriesList data={data} entities={ENTITIES} />);
 
@@ -87,6 +92,15 @@ describe('QueriesList', () => {
     renderList();
 
     expect(screen.getByText('rows: 2')).toBeInTheDocument();
+  });
+
+  test('links the query name to its page and does not navigate on a row click', () => {
+    renderList();
+
+    const href = lastGrid.getHref?.(PERSONAL);
+    expect(href).toBe('/queries/sq_1');
+    expect(column('name')?.cellRendererParams?.getHref?.(PERSONAL)).toBe(href);
+    expect(lastGrid.additionalGridOptions?.onCellClicked).toBeUndefined();
   });
 
   test('shows each row its scope', () => {

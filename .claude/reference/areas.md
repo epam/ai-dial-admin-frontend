@@ -28,12 +28,11 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Entities/Routes` | `routes` | `Routes` |
 
 ### `AiGateway`
-Core-direct items (Models, Translators, Routes, App Runners, Catalog Schemas) are hidden by the `catalog` token of `DISABLE_MENU_ITEMS`.
-
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `AiGateway/Models` | `platform-models` | `Assets/Platform/Models` |
 | `AiGateway/Toolsets` | `assets-toolsets` | `Assets/Entities/Toolsets`, `Assets/Platform/Toolsets` |
+| `AiGateway/Routers` | `platform-routers` | `Assets/Platform/Routers` |
 | `AiGateway/Translators` | `platform-translators` | `Assets/Platform/Translators` |
 | `AiGateway/Routes` | `platform-routes` | `Assets/Platform/Routes` |
 | `AiGateway/Applications` | `assets-applications` | `Assets/Entities/Apps`, `Assets/Platform/Applications` |
@@ -82,8 +81,6 @@ that dominates the change.
 | `analytics/Pipelines` | `pipelines` | `Analytics/Pipelines` |
 
 ### `Governance`
-Platform Roles, Keys and Interceptors are Core-direct and hidden by the `catalog` token.
-
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `Governance/Roles` | `platform-roles` | `Assets/Platform/Roles` |
@@ -115,7 +112,7 @@ The Dashboards item exists in both Analytics and Audit; `/dashboards` belongs to
 | `Home` | `home` | `WelcomeView` |
 | `AdminApiAvailability` | — (route guards on all Admin-API routes) | `Menu`, `Content`, `WelcomeView` |
 | `ConfigFiles` | — (toggle on the seven entity list views) | `Common/ConfigFilesToggle` |
-| `CatalogAvailability` | — (`catalog` token of `DISABLE_MENU_ITEMS` hiding the Core-direct items + dual-bucket root folders) | `Common/FileManager`, `Common/FilePath`, `Menu` |
+| `CatalogAvailability` | — | `Common/FileManager`, `Common/FilePath`, `Menu` |
 | `CatalogProperties` | — (catalog schema picker on entity properties) | `CatalogProperties` |
 | `Grid` | — (shared AG Grid wrapper / cell renderers) | `Grid` |
 

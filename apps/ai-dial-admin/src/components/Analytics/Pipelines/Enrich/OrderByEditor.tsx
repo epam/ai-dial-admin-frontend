@@ -11,6 +11,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { MemberSelectOrderBy, SortDirection } from '@/src/models/analytics/pipeline';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
@@ -25,7 +26,9 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
 
   const rows = orderBy ?? [];
 
-  const fieldOptions = fields.map((field) => ({ value: field.name, label: field.name }));
+  const fieldOptions = fields
+    .filter((field) => !isProjectionOnly(field))
+    .map((field) => ({ value: field.name, label: field.name }));
 
   const isStranded = (name: string): boolean => Boolean(name) && !fields.some((field) => field.name === name);
 

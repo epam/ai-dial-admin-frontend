@@ -32,6 +32,27 @@ describe('TitleSubtitleCellRenderer', () => {
     expect(screen.getByText('run-0001')).toBeTruthy();
   });
 
+  test('renders the title as a link and keeps the subtitle as text when an address is given', () => {
+    renderCell({
+      value: 'Nightly regression',
+      data: ROW,
+      getSubtitle: (data) => data?.id,
+      getHref: (data) => `/runs/${data?.id}`,
+    });
+
+    expect(screen.getByRole('link', { name: 'Nightly regression' })).toHaveAttribute('href', '/runs/run-0001');
+    expect(screen.getByRole('link')).not.toHaveTextContent('run-0001');
+  });
+
+  test('renders no link and skips the address lookup when the title is empty', () => {
+    const getHref = vi.fn(() => '/runs/run-0001');
+    renderCell({ value: '', data: ROW, getSubtitle: (data) => data?.id, getHref });
+
+    expect(screen.getByText('run-0001')).toBeTruthy();
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(getHref).not.toHaveBeenCalled();
+  });
+
   test('truncates each line independently rather than as one block of text', () => {
     const title = 'A run name long enough to be clipped by any realistic column width';
     renderCell({ value: title, data: ROW, getSubtitle: (data) => data?.id });

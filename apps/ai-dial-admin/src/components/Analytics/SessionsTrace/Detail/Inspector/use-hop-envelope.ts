@@ -24,6 +24,7 @@ const FAILED_REQUEST: HopRequestEnvelope = {
   roleCounts: [],
   recordedBytes: null,
   isClamped: false,
+  isPartial: false,
 };
 
 const FAILED_RESPONSE: HopResponseEnvelope = {

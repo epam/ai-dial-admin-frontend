@@ -23,6 +23,7 @@ export enum ApplicationRoute {
   PlatformInterceptors = '/platform-interceptors',
   PlatformTranslators = '/platform-translators',
   PlatformRoutes = '/platform-routes',
+  PlatformRouters = '/platform-routers',
   PlatformPolicies = '/platform-policies',
   PlatformPolicyAssignments = '/platform-policy-assignments',
   PlatformRoles = '/platform-roles',

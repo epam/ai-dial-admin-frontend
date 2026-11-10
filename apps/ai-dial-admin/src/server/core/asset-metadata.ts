@@ -13,6 +13,7 @@ import {
   DialRoleResource,
   DialRouteResource,
   DialToolsetResource,
+  DialRouterResource,
   DialTranslatorResource,
 } from '@/src/models/dial/resource';
 import { BucketType } from '@/src/models/dial/asset-list-item';
@@ -394,6 +395,24 @@ export const mergeModelResource = (
 };
 
 /**
+ * Routers are flat and unversioned like models, and Core's `GET` injects the same read-only
+ * `status`/`validationWarnings` projection into them.
+ */
+export const mergeRouterResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialRouterResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  return {
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTER], content),
+      ...validity,
+    },
+  } as DialRouterResource;
+};
+
+/**
  * App runners are flat and unversioned like models. The resource storage name and body `$id` are
  * independent: Core addresses the blob by the former and resolves runners by the latter.
  */
@@ -715,6 +734,7 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.CATALOG_SCHEMA]: mergeCatalogSchemaResource,
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
   [ResourceType.TRANSLATOR]: mergeTranslatorResource,
+  [ResourceType.ROUTER]: mergeRouterResource,
   [ResourceType.ROUTE]: mergeRouteResource,
   [ResourceType.ROLE]: mergeRoleResource,
   [ResourceType.PROJECT_KEY]: mergeKeyResource,

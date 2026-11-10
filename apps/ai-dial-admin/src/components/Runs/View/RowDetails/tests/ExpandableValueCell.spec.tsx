@@ -107,3 +107,35 @@ describe('ExpandableValueCell', () => {
     expect(getOpenButton()).toBeInTheDocument();
   });
 });
+
+describe('ExpandableValueCell overall score threshold', () => {
+  test('shows the above-threshold icon after the value', () => {
+    const { container } = render(
+      <ExpandableValueCell
+        field={field({ fieldKey: 'overallScore', primaryRaw: '0.7', isNumeric: true, primaryThreshold: 0.6 })}
+        onOpen={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Runs.TestCaseOverallScoreAboveThresholdTooltip')).toBeInTheDocument();
+    expect(container.querySelector('svg.text-score-abs-11')).toBeInTheDocument();
+  });
+
+  test('shows the below-threshold icon for a lower score and none without a threshold', () => {
+    const { container, rerender } = render(
+      <ExpandableValueCell
+        field={field({ fieldKey: 'overallScore', primaryRaw: '0', isNumeric: true, primaryThreshold: 0.6 })}
+        onOpen={vi.fn()}
+      />,
+    );
+    expect(container.querySelector('svg.text-score-abs-00')).toBeInTheDocument();
+
+    rerender(
+      <ExpandableValueCell
+        field={field({ fieldKey: 'overallScore', primaryRaw: '0', isNumeric: true })}
+        onOpen={vi.fn()}
+      />,
+    );
+    expect(container.querySelector('svg.text-score-abs-00')).not.toBeInTheDocument();
+  });
+});

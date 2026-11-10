@@ -21,6 +21,7 @@ import { MeasureRow } from '@/src/models/analytics/pipeline-ui';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { findMeasureFunction, isColumnlessFunction, toMeasureFunctions } from '@/src/utils/analytics/measure-functions';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
@@ -66,7 +67,9 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
 
   const available = toMeasureFunctions(functions);
   const fnOptions = available.map((fn) => toFunctionOption(fn.name, fn.signature, fn.description));
-  const columnOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
+  const columnOptions = fields
+    .filter((field) => !isProjectionOnly(field))
+    .map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
   const nameOptions = targetColumns.map((column) => ({ value: column.name, label: column.name }));
 
   const updateRow = (id: string, patch: Partial<MeasureRow>) =>
@@ -78,7 +81,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
           so a row whose function takes no column — or offers no distinct — lands out of line with the rest.
           The minimums are what the row costs before it starts scrolling sideways, so they stay near the
           shortest useful select rather than at a comfortable width. */}
-      <div className="grid grid-cols-[minmax(104px,1fr)_minmax(104px,1fr)_minmax(104px,1fr)_minmax(120px,1.3fr)_2rem_2rem] items-center gap-x-2 gap-y-2 overflow-x-auto">
+      <div className="grid grid-cols-[minmax(104px,1fr)_minmax(104px,1fr)_minmax(104px,1fr)_minmax(120px,1.3fr)_auto_auto] items-center gap-x-2 gap-y-2 overflow-x-auto pb-0.5 pr-0.5">
         {rows.length > 0 && (
           <>
             <Label label={t(AnalyticsPipelinesI18nKey.MeasureName)} />

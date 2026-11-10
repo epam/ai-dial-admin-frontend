@@ -5,7 +5,18 @@ import {
   getCostObjectFolderPath,
   getCostObjectFromFolder,
   getPolicyRecordPath,
+  isPolicyPathElementValid,
 } from '@/src/utils/policies/path';
+
+describe('isPolicyPathElementValid', () => {
+  test.each(['team-a', 'a', 'a.b_c:d@e[1](x)'])('accepts the Core path element %s', (value) => {
+    expect(isPolicyPathElementValid(value)).toBe(true);
+  });
+
+  test.each(['', undefined, 'team/a', 'team%20a', 'team a', 'team#a', 'team+a', 'team\na'])('rejects %j', (value) => {
+    expect(isPolicyPathElementValid(value)).toBe(false);
+  });
+});
 
 describe('getCostObjectFromFolder', () => {
   test.each([

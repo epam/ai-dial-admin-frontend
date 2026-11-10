@@ -18,6 +18,7 @@ const createDefaultExecutionResultsState = (): ExecutionResultsTabUiState => ({
   columnWidths: {},
   results: null,
   comparedResults: null,
+  testCaseScores: null,
 });
 
 const createDefaultHeatMapState = (): HeatMapTabUiState => ({

@@ -8,15 +8,21 @@ const isGroup = (column: ColDef | ColGroupDef): column is ColGroupDef =>
 const leafId = (column: ColDef): string | undefined => column.colId ?? column.field;
 
 /**
- * Blocks that move together: status, each metric (run 1, run 2, delta), and each extracted field.
- * The execution group is one flat list of different fields, so it is not a block.
+ * Blocks that move together: status, each metric (run 1, run 2, delta), each extracted field, and the
+ * Overall score pair. The execution group is a list of different fields, so it is not a block itself;
+ * only the nested groups inside it are.
  */
 export const collectCompareColumnBlocks = (columnDefs: (ColDef | ColGroupDef)[] | undefined): string[][] => {
   const blocks: string[][] = [];
 
   const visit = (nodes: (ColDef | ColGroupDef)[]) => {
     for (const node of nodes) {
-      if (!isGroup(node) || node.headerName === EXECUTION_GROUP_HEADER) {
+      if (!isGroup(node)) {
+        continue;
+      }
+
+      if (node.headerName === EXECUTION_GROUP_HEADER) {
+        visit((node.children as (ColDef | ColGroupDef)[]).filter(isGroup));
         continue;
       }
 

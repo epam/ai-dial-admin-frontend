@@ -82,15 +82,35 @@ describe('isRuleValid', () => {
       expect(isRuleValid({ ...RULE, function: fn, targets: [] })).toBe(false);
       expect(isRuleValid({ ...RULE, function: fn, targets: undefined })).toBe(false);
       expect(isRuleValid({ ...RULE, function: fn, targets: ['x'] })).toBe(true);
+      expect(isRuleValid({ ...RULE, function: fn, targets: [' '] })).toBe(true);
+      expect(isRuleValid({ ...RULE, function: fn, targets: ['x', ''] })).toBe(false);
+      expect(isRuleValid({ ...RULE, function: fn, targets: ['x', null as unknown as string] })).toBe(false);
     },
   );
 
   test.each([PolicySubjectFunction.TRUE, PolicySubjectFunction.FALSE])('needs no target for %s', (fn) => {
     expect(isRuleValid({ ...RULE, function: fn, targets: [] })).toBe(true);
+    expect(isRuleValid({ ...RULE, function: fn, targets: undefined })).toBe(true);
+    expect(isRuleValid({ ...RULE, function: fn, targets: ['', null as unknown as string] })).toBe(true);
   });
 
-  test.each([[''], ['   ']])('requires a source, rejecting %j', (source) => {
+  test.each([[''], ['   '], ['\t\n']])('requires a source, rejecting %j', (source) => {
     expect(isRuleValid({ ...RULE, source })).toBe(false);
+  });
+
+  test('rejects a missing source', () => {
+    expect(isRuleValid({ ...RULE, source: undefined as unknown as string })).toBe(false);
+    expect(isRuleValid({ ...RULE, source: null as unknown as string })).toBe(false);
+  });
+
+  test('rejects missing or unrecognized functions', () => {
+    expect(isRuleValid({ ...RULE, function: undefined as unknown as PolicySubjectFunction })).toBe(false);
+    expect(isRuleValid({ ...RULE, function: null as unknown as PolicySubjectFunction })).toBe(false);
+    expect(isRuleValid({ ...RULE, function: 'UNKNOWN' as PolicySubjectFunction })).toBe(false);
+  });
+
+  test('leaves Java regular expression syntax validation to Core', () => {
+    expect(isRuleValid({ ...RULE, function: PolicySubjectFunction.REGEX, targets: ['(?i)admin'] })).toBe(true);
   });
 });
 

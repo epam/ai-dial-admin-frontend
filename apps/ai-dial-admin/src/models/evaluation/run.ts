@@ -42,6 +42,8 @@ export interface AnalyticsResult extends ResultDto {
   requestBody?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
   grafanaTraceUrl?: string;
+  /** Client-only, never sent by the backend: the test case's overall score, joined in from `test_case_eval_scores`. */
+  testCaseScore?: number | null;
 }
 
 export enum ExtractionResultStatus {

@@ -6,10 +6,14 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
-import { ImportStatus } from '@/src/types/import';
+import { ConflictResolutionPolicy, ImportStatus } from '@/src/types/import';
+import { DialToolsetResourceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
+import { CLIENT_SECRET_PLACEHOLDER } from '@/src/components/EntityListView/Import/constants';
+import { ColDef } from 'ag-grid-community';
 import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  applyToolsetClientSecrets,
   changeFilesMap,
   generateAssetColumnsForImportGrid,
   generateAssetRowDataForImportGrid,
@@ -17,9 +21,11 @@ import {
   getImportResults,
   getModalTitle,
   getMultipleImportStatus,
+  hasOAuthToolsets,
   isErrorFileNode,
   isErrorPromptNode,
   isInvalidJson,
+  isOAuthToolsetFile,
 } from '../utils';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PromptsI18nKey, FoldersI18nKey, ApplicationsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
@@ -523,5 +529,258 @@ describe('getExistingFolderItems', () => {
 
   test('returns an empty list without a context', () => {
     expect(getExistingFolderItems(undefined)).toEqual([]);
+  });
+});
+
+const toolsetFile = (
+  authSettings: DialToolsetResourceAuthSettings | undefined,
+  overrides: Record<string, unknown> = {},
+): AssetApp =>
+  ({
+    id: 'toolsets/public/github__1.0.0',
+    name: 'github',
+    version: '1.0.0',
+    ...(authSettings ? { auth_settings: authSettings } : {}),
+    ...overrides,
+  }) as unknown as AssetApp;
+
+const oauthToolset = (authSettings: DialToolsetResourceAuthSettings = {}, overrides: Record<string, unknown> = {}) =>
+  toolsetFile(
+    { authentication_type: ToolsetAuthType.OAUTH, client_id: 'cid', client_secret_hint: 'ab12', ...authSettings },
+    overrides,
+  );
+
+const authSettingsOf = (file: unknown) => (file as { auth_settings?: DialToolsetResourceAuthSettings }).auth_settings;
+
+describe('Import :: isOAuthToolsetFile', () => {
+  test('matches OAUTH in either case', () => {
+    expect(isOAuthToolsetFile(oauthToolset())).toBe(true);
+    expect(isOAuthToolsetFile(toolsetFile({ authentication_type: 'oauth' as ToolsetAuthType }))).toBe(true);
+  });
+
+  test('rejects other auth types and files without auth settings', () => {
+    expect(isOAuthToolsetFile(toolsetFile({ authentication_type: ToolsetAuthType.API_KEY }))).toBe(false);
+    expect(isOAuthToolsetFile(toolsetFile({ authentication_type: ToolsetAuthType.NONE }))).toBe(false);
+    expect(isOAuthToolsetFile(toolsetFile({}))).toBe(false);
+    expect(isOAuthToolsetFile(toolsetFile(undefined))).toBe(false);
+  });
+});
+
+describe('Import :: hasOAuthToolsets', () => {
+  const entry = (files: AssetApp[], isInvalid = false): FileImportMap => ({ files, isInvalid });
+
+  test('is true when any valid file holds an OAUTH toolset', () => {
+    const map = new Map<string, FileImportMap>([
+      ['a.json', entry([toolsetFile({ authentication_type: ToolsetAuthType.API_KEY })])],
+      ['b.json', entry([oauthToolset()])],
+    ]);
+
+    expect(hasOAuthToolsets(map)).toBe(true);
+  });
+
+  test('ignores OAUTH toolsets in invalid files', () => {
+    expect(hasOAuthToolsets(new Map([['broken.json', entry([oauthToolset()], true)]]))).toBe(false);
+  });
+
+  test('is false when nothing is OAUTH or nothing is parsed', () => {
+    expect(hasOAuthToolsets(new Map([['a.json', entry([toolsetFile(undefined)])]]))).toBe(false);
+    expect(hasOAuthToolsets(new Map())).toBe(false);
+  });
+});
+
+describe('Import :: applyToolsetClientSecrets', () => {
+  const { OVERRIDE, SKIP } = ConflictResolutionPolicy;
+
+  test.each([OVERRIDE, SKIP])(
+    'gives an untouched OAUTH toolset the placeholder and drops the hint (%s)',
+    (resolution) => {
+      const [result] = applyToolsetClientSecrets([oauthToolset()], resolution);
+
+      expect(authSettingsOf(result)).toEqual({
+        authentication_type: ToolsetAuthType.OAUTH,
+        client_id: 'cid',
+        client_secret: CLIENT_SECRET_PLACEHOLDER,
+      });
+    },
+  );
+
+  test.each([OVERRIDE, SKIP])('keeps a non-blank secret as entered (%s)', (resolution) => {
+    const [result] = applyToolsetClientSecrets([oauthToolset({ client_secret: 'my-real-secret-123' })], resolution);
+
+    expect(authSettingsOf(result)?.client_secret).toBe('my-real-secret-123');
+    expect(authSettingsOf(result)).not.toHaveProperty('client_secret_hint');
+  });
+
+  test('omits a cleared secret under Override so Core keeps the stored one', () => {
+    const [result] = applyToolsetClientSecrets([oauthToolset({ client_secret: '' })], OVERRIDE);
+
+    expect(authSettingsOf(result)).not.toHaveProperty('client_secret');
+    expect(authSettingsOf(result)?.client_id).toBe('cid');
+  });
+
+  test.each(['', '   '])('falls back to the placeholder for a blank secret %j under Skip', (blank) => {
+    const [result] = applyToolsetClientSecrets([oauthToolset({ client_secret: blank })], SKIP);
+
+    expect(authSettingsOf(result)?.client_secret).toBe(CLIENT_SECRET_PLACEHOLDER);
+  });
+
+  test('leaves other authentication types untouched, reference included', () => {
+    const apiKey = toolsetFile({ authentication_type: ToolsetAuthType.API_KEY, api_key_header: 'Api-Key' });
+    const noAuth = toolsetFile(undefined);
+
+    const result = applyToolsetClientSecrets([apiKey, noAuth], SKIP);
+
+    expect(result[0]).toBe(apiKey);
+    expect(result[1]).toBe(noAuth);
+  });
+
+  test('keeps the rest of the toolset and does not mutate the input', () => {
+    const source = oauthToolset();
+    const snapshot = structuredClone(source);
+
+    const [result] = applyToolsetClientSecrets([source], SKIP);
+
+    expect(result).toMatchObject({ id: source.id, name: 'github', version: '1.0.0' });
+    expect(source).toEqual(snapshot);
+  });
+});
+
+describe('Import :: generateAssetRowDataForImportGrid with client secrets', () => {
+  const mapOf = (...files: AssetApp[]) => new Map<string, FileImportMap>([['t.json', { files, isInvalid: false }]]);
+
+  test('marks OAUTH rows and defaults their secret to the placeholder', () => {
+    const [row] = generateAssetRowDataForImportGrid(mapOf(oauthToolset()), undefined, undefined, false, true);
+
+    expect(row).toMatchObject({ isOAuth: true, clientSecret: CLIENT_SECRET_PLACEHOLDER });
+  });
+
+  test('shows the secret the file already carries, even a cleared one', () => {
+    const [carried] = generateAssetRowDataForImportGrid(
+      mapOf(oauthToolset({ client_secret: 'already-here-1' })),
+      undefined,
+      undefined,
+      false,
+      true,
+    );
+    const [cleared] = generateAssetRowDataForImportGrid(
+      mapOf(oauthToolset({ client_secret: '' })),
+      undefined,
+      undefined,
+      false,
+      true,
+    );
+
+    expect(carried.clientSecret).toBe('already-here-1');
+    expect(cleared.clientSecret).toBe('');
+  });
+
+  test('leaves other rows without a secret', () => {
+    const [row] = generateAssetRowDataForImportGrid(
+      mapOf(toolsetFile({ authentication_type: ToolsetAuthType.API_KEY })),
+      undefined,
+      undefined,
+      false,
+      true,
+    );
+
+    expect(row.isOAuth).toBe(false);
+    expect(row.clientSecret).toBeUndefined();
+  });
+
+  test('adds nothing unless asked (prompts, applications, files path)', () => {
+    const [row] = generateAssetRowDataForImportGrid(mapOf(oauthToolset()));
+
+    expect(row).not.toHaveProperty('isOAuth');
+    expect(row).not.toHaveProperty('clientSecret');
+  });
+});
+
+describe('Import :: generateAssetColumnsForImportGrid client secret column', () => {
+  const clientSecretColumn = { headerName: 'Client secret', getInputLabel: (name: string) => `label ${name}` };
+  const selectRenderer = (column: ColDef, data: Partial<AssetImportGridData>) =>
+    (column.cellRendererSelector as (params: { data: unknown }) => unknown)({ data });
+
+  test('adds an editable column between Version and File only when asked', () => {
+    const without = generateAssetColumnsForImportGrid(vi.fn());
+    const withColumn = generateAssetColumnsForImportGrid(vi.fn(), undefined, undefined, false, clientSecretColumn);
+
+    expect(without.map((column) => column.field)).toEqual(['assetName', 'version', 'name']);
+    expect(withColumn.map((column) => column.field)).toEqual(['assetName', 'version', 'clientSecret', 'name']);
+    expect(withColumn[2].headerName).toBe('Client secret');
+  });
+
+  test('renders the masked editor on OAUTH rows only', () => {
+    const column = generateAssetColumnsForImportGrid(vi.fn(), undefined, undefined, false, clientSecretColumn)[2];
+
+    expect(selectRenderer(column, { isOAuth: true })).toEqual({ component: expect.anything() });
+    expect(selectRenderer(column, { isOAuth: false })).toBeUndefined();
+    expect(selectRenderer(column, { isOAuth: true, invalid: true })).toBeUndefined();
+  });
+
+  test('does not render the editor in a readonly grid', () => {
+    const column = generateAssetColumnsForImportGrid(vi.fn(), undefined, true, false, clientSecretColumn)[2];
+
+    expect(selectRenderer(column, { isOAuth: true })).toBeUndefined();
+  });
+
+  test('labels each input with the row name and reports edits through onChange', () => {
+    const onChange = vi.fn();
+    const column = generateAssetColumnsForImportGrid(onChange, undefined, undefined, false, clientSecretColumn)[2];
+    const params = column.cellRendererParams as {
+      onChange: unknown;
+      getInputLabel: (data: AssetImportGridData) => string;
+    };
+
+    expect(params.onChange).toBe(onChange);
+    expect(params.getInputLabel(assetRow({ assetName: 'github' }))).toBe('label github');
+  });
+});
+
+describe('Import :: changeFilesMap client secret', () => {
+  const mapOf = (file: AssetApp) => new Map<string, FileImportMap>([['t.json', { files: [file], isInvalid: false }]]);
+
+  test('writes the secret into auth_settings and keeps the other auth fields', () => {
+    const prev = mapOf(oauthToolset());
+
+    const result = changeFilesMap(
+      prev,
+      assetRow({ name: 't.json', index: 0 }),
+      'clientSecret',
+      'typed-secret-123',
+      ApplicationRoute.AssetsToolsets,
+    );
+
+    expect(authSettingsOf(entryOf(result, 't.json').files[0])).toMatchObject({
+      authentication_type: ToolsetAuthType.OAUTH,
+      client_id: 'cid',
+      client_secret: 'typed-secret-123',
+    });
+    expect(authSettingsOf(entryOf(prev, 't.json').files[0])).not.toHaveProperty('client_secret');
+  });
+
+  test('stores a cleared value as an empty string, which Finish reads as "keep the stored secret"', () => {
+    const result = changeFilesMap(
+      mapOf(oauthToolset({ client_secret: 'typed-secret-123' })),
+      assetRow({ name: 't.json', index: 0 }),
+      'clientSecret',
+      '',
+      ApplicationRoute.AssetsToolsets,
+    );
+
+    expect(authSettingsOf(entryOf(result, 't.json').files[0])?.client_secret).toBe('');
+  });
+
+  test('ignores a toolset that is not OAUTH', () => {
+    const apiKey = toolsetFile({ authentication_type: ToolsetAuthType.API_KEY });
+
+    const result = changeFilesMap(
+      mapOf(apiKey),
+      assetRow({ name: 't.json', index: 0 }),
+      'clientSecret',
+      'typed-secret-123',
+      ApplicationRoute.AssetsToolsets,
+    );
+
+    expect(entryOf(result, 't.json').files[0]).toBe(apiKey);
   });
 });

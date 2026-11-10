@@ -15,6 +15,7 @@ import RouteRoles from './RouteRoles';
 interface Props {
   route: DialAppRoute;
   isAppRunnerView?: boolean;
+  isCoreRoleSource: boolean;
   roles: DialRole[];
   disabled?: boolean;
   parentRoles?: string[];

@@ -42,7 +42,7 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
-  const isPlatformModel = view === ApplicationRoute.PlatformModels;
+  const isPlatformModel = view === ApplicationRoute.PlatformModels || view === ApplicationRoute.PlatformRouters;
   const textFeatures = isPlatformModel ? modelResourceTextFeatures : resourceTextFeatures;
   const switchGroups = isPlatformModel ? modelResourceSwitchGroups : resourceSwitchGroups;
   const featureLabelMap: Record<string, FeaturesI18nKey> = isPlatformModel

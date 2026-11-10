@@ -432,6 +432,8 @@ export enum UsageLogField {
   // publishes them bare — so the grant resolves each against the fetched schema by column name rather than
   // by exact spelling, and the read selects whichever name that instance answered with.
   RequestBody = 'request_body',
+  RequestBodyFull = 'request_body_full',
+  RequestBodyRebuild = 'request_body_rebuild',
   ResponseBody = 'response_body',
   // A later addition to the hop log: an instance predating it does not persist the column, so it is named
   // only when the fetched schema reports it.
@@ -939,6 +941,7 @@ export interface HopRequestEnvelope {
   recordedBytes: number | null;
   // Set when the envelope's own total budget was reached, so the message list is short of what was recorded.
   isClamped: boolean;
+  isPartial: boolean;
 }
 
 // A clamp states itself **and** states by how much. One shape for every clamped thing, so the three places
@@ -989,6 +992,7 @@ export interface HopRawBody {
   state: HopReadState;
   text: string | null;
   clamp: HopClamp;
+  isPartial: boolean;
 }
 
 // Which sides a read was actually entitled to. A fact panel is built from both body columns, so a builder
@@ -1042,13 +1046,22 @@ export interface HopBodyFields extends HopBodyGrants {
   // enrichment that holds them where it reports them that way, bare where it does not. Held rather than
   // recomputed so the read selects exactly what the grant matched.
   requestField: string | null;
+  requestStatusField: string | null;
   responseFields: string[];
+}
+
+export enum RequestBodyRebuildStatus {
+  Stored = 'stored',
+  Rebuilt = 'rebuilt',
+  Partial = 'partial',
+  Resolvable = 'resolvable',
 }
 
 export interface SessionEntryBodyRow {
   trace_id: string;
   event_kind: string | null;
   request_body: string | null;
+  request_body_rebuild?: string | null;
   response_body: string | null;
   assembled_response?: string | null;
   // Selected by the inspector's own read so the dialect is resolved server-side from the endpoint rather than

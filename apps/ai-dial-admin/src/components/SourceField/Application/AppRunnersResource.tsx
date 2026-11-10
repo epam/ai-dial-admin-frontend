@@ -6,6 +6,7 @@ import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -28,6 +29,10 @@ interface Props {
   label?: string;
   isEntityImmutable?: boolean;
   disabled?: boolean;
+  /** A schema is not required: a blank value stays valid, and a clear control removes a selection. */
+  isOptional?: boolean;
+  /** Opens the picker popup instead of a dropdown, as for an application whose runner is fixed. */
+  isPopup?: boolean;
 }
 
 const AppRunnersResource: FC<Props> = ({
@@ -37,6 +42,8 @@ const AppRunnersResource: FC<Props> = ({
   label,
   isEntityImmutable = false,
   disabled,
+  isOptional = false,
+  isPopup = false,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -61,9 +68,13 @@ const AppRunnersResource: FC<Props> = ({
   }, [setIsModalOpen]);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !!currentValue });
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'sourceEntitySelector',
+      isValid: isOptional || !!currentValue,
+    });
     return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
-  }, [currentValue, t, dispatch]);
+  }, [currentValue, isOptional, t, dispatch]);
 
   useEffect(() => {
     setRunnerOptions(runners);
@@ -117,6 +128,8 @@ const AppRunnersResource: FC<Props> = ({
   );
   const openUrl = selectedRunner && getRunnerOpenUrl(selectedRunner, currentLocale);
 
+  const onClearSelection = useCallback(() => onChangeValue(undefined, undefined), [onChangeValue]);
+
   const onOpenInNewTab = useCallback(() => {
     if (openUrl) {
       window.open(openUrl, '_blank');
@@ -127,7 +140,7 @@ const AppRunnersResource: FC<Props> = ({
     setValueTitle(dropdownItems?.find((r) => r.value === currentValue)?.label || '');
   }, [currentValue, dropdownItems]);
 
-  return !isEntityImmutable ? (
+  return !isEntityImmutable && !isPopup ? (
     isRunnerResolving ? (
       <div className="relative w-full h-10">
         <Spinner size={18} fullWidth />
@@ -136,7 +149,7 @@ const AppRunnersResource: FC<Props> = ({
       <Select
         value={currentValue}
         searchable={true}
-        labelProps={{ label: label, required: true }}
+        labelProps={{ label: label, required: !isOptional }}
         id="sourceEntity"
         fieldClassName="w-full mt-1"
         disabled={isFieldDisabled || isRunnerResolving}
@@ -149,7 +162,7 @@ const AppRunnersResource: FC<Props> = ({
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
-          <Label label={label} required htmlFor="sourceEntity" />
+          <Label label={label} required={!isOptional} htmlFor="sourceEntity" />
           <InputPopup
             disabled={isFieldDisabled || isRunnerResolving}
             placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
@@ -173,6 +186,9 @@ const AppRunnersResource: FC<Props> = ({
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenInNewTab}
           />
+        )}
+        {isOptional && !!currentValue && !isFieldDisabled && (
+          <RemoveButton aria-label={t(ButtonsI18nKey.Clear)} onClick={onClearSelection} />
         )}
       </div>
     </div>

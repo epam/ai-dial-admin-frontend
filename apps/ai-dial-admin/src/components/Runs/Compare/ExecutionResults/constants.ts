@@ -33,8 +33,6 @@ export const EXECUTION_GROUP_HEADER = 'Execution';
 export const EXECUTION_STATUS_GROUP_HEADER = 'Execution status';
 export const EXTRACTED_GROUP_HEADER = 'Extracted';
 
-export const formatCompareColumnHeader = (runIndex: string, label: string) => `[${runIndex}] ${label}`;
-
 export const COMPARE_MISSING_DISPLAY = '—';
 
 export const compareMissingValueCellClassRules = {

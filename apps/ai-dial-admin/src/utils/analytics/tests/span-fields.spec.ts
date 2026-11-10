@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  HOP_REQUEST_BODY_FIELD,
+  HOP_REQUEST_BODY_FIELDS,
   HOP_RESPONSE_BODY_FIELDS,
   SPAN_BASE_FIELDS,
   SPAN_UNREADABLE_FIELDS,
@@ -44,12 +44,12 @@ describe('spanFields', () => {
   test('names no heavy column, and puts none in a group', () => {
     const { names, groups } = spanFields([
       ...NON_SENSITIVE_SCHEMA,
-      schemaField({ name: HOP_REQUEST_BODY_FIELD, heavy: true, tag: SpanFieldTag.Request }),
+      ...HOP_REQUEST_BODY_FIELDS.map((name) => schemaField({ name, heavy: true, tag: SpanFieldTag.Request })),
       ...HOP_RESPONSE_BODY_FIELDS.map((name) => schemaField({ name, heavy: true, tag: SpanFieldTag.Response })),
     ]);
     const grouped = groups.flatMap(({ fields }) => fields.map(({ name }) => name));
 
-    for (const body of [HOP_REQUEST_BODY_FIELD, ...HOP_RESPONSE_BODY_FIELDS]) {
+    for (const body of [...HOP_REQUEST_BODY_FIELDS, ...HOP_RESPONSE_BODY_FIELDS]) {
       expect(names).not.toContain(body);
       expect(grouped).not.toContain(body);
     }

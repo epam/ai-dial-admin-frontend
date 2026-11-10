@@ -1,6 +1,7 @@
 import {
   ROW_DETAIL_DURATION_FIELD_KEY,
   ROW_DETAIL_HTTP_FIELD_KEY,
+  ROW_DETAIL_OVERALL_SCORE_FIELD_KEY,
   ROW_DETAIL_PIVOT_DEFAULT_COL_WIDTH,
   ROW_DETAIL_PIVOT_DURATION_COL_WIDTH,
   ROW_DETAIL_PIVOT_HTTP_COL_WIDTH,
@@ -35,6 +36,8 @@ export const resolvePivotFieldWidthTier = (field: RowDetailField): PivotColumnWi
       return PivotColumnWidthTier.Http;
     case ROW_DETAIL_DURATION_FIELD_KEY:
       return PivotColumnWidthTier.Duration;
+    case ROW_DETAIL_OVERALL_SCORE_FIELD_KEY:
+      return PivotColumnWidthTier.Score;
     default:
       break;
   }

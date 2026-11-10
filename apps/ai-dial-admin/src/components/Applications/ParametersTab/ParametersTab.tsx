@@ -79,16 +79,23 @@ const ParametersTab: FC<Props> = ({
     const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
     setIsSchemeLoading(true);
     resolveAppRunnerScheme(
-      foundRunner ?? { $id: (application as DialApplicationResource).application_type_schema_id },
+      foundRunner ?? {
+        $id:
+          (application as DialApplicationResource).application_type_schema_id ??
+          (application as { applicationTypeSchemaId?: string }).applicationTypeSchemaId,
+      },
     ).then(({ runner: resolvedRunner, scheme: resolvedScheme }) => {
       const scheme = resolvedScheme ?? resolvedRunner;
       setIsSchemeLoading(false);
       setScheme(scheme);
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
       const targetUrl = getTargetUrl(view, application, config);
+      // A router's schema contributes no editor of its own (Core: "the schema contributes nothing else"), so
+      // its Parameters tab never offers the iframe UI view.
+      const hasUi = !!targetUrl && !isReadOnlyAdmin && view !== ApplicationRoute.PlatformRouters;
 
-      setViewItems(generateViewItems(t, view, !!targetUrl && !isReadOnlyAdmin, !!config));
-      setParamsView(getInitialParamsView(view, !!targetUrl && !isReadOnlyAdmin));
+      setViewItems(generateViewItems(t, view, hasUi, !!config));
+      setParamsView(getInitialParamsView(view, hasUi));
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

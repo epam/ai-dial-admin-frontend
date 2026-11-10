@@ -2,6 +2,7 @@ import { Avatar, AvatarShape, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
 import { DisplayNameCellRendererParams } from '@/src/components/Grid/CellRenderers/models';
+import EntityLinkCell from '@/src/components/Grid/CellRenderers/EntityLinkCell';
 import { getAvatarInitials } from '@/src/components/Grid/CellRenderers/utils';
 
 const noop = () => undefined;
@@ -12,6 +13,7 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
   const showId = Boolean(id) && id !== displayName;
   const iconUrl = params.data?.iconUrl as string | undefined;
   const TypeIcon = params.typeIcon;
+  const href = params.getHref?.(params.data);
 
   const renderIcon = () => {
     if (TypeIcon) {
@@ -39,7 +41,13 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
     <div className="flex h-full items-center gap-2 overflow-hidden">
       {renderIcon()}
       <div className="flex flex-col justify-center overflow-hidden">
-        <EllipsisTooltip className="dial-small-text text-primary" text={displayName ?? ''} />
+        {href ? (
+          <EntityLinkCell href={href}>
+            <EllipsisTooltip className="dial-small-text" text={displayName ?? ''} />
+          </EntityLinkCell>
+        ) : (
+          <EllipsisTooltip className="dial-small-text text-primary" text={displayName ?? ''} />
+        )}
         {showId && <EllipsisTooltip className="dial-tiny-text text-secondary" text={id ?? ''} />}
       </div>
     </div>

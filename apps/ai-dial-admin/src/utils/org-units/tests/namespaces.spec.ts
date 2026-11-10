@@ -2,7 +2,30 @@ import { describe, expect, test } from 'vitest';
 
 import { UnitNamespace } from '@/src/models/user-access';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getRouteNamespace } from '@/src/utils/org-units/namespaces';
+import { getRouteNamespace, ROUTABLE_NAMESPACES } from '@/src/utils/org-units/namespaces';
+
+describe('ROUTABLE_NAMESPACES', () => {
+  test('lists each namespace a route belongs to once', () => {
+    expect(new Set(ROUTABLE_NAMESPACES).size).toBe(ROUTABLE_NAMESPACES.length);
+    expect([...ROUTABLE_NAMESPACES].sort()).toEqual(
+      [
+        UnitNamespace.APPLICATIONS,
+        UnitNamespace.TOOLSETS,
+        UnitNamespace.PROMPTS,
+        UnitNamespace.FILES,
+        UnitNamespace.SKILLS,
+        UnitNamespace.PROJECTS,
+        UnitNamespace.CONVERSATIONS,
+        UnitNamespace.PUBLICATIONS,
+        UnitNamespace.ROLE_ASSIGNMENTS,
+      ].sort(),
+    );
+  });
+
+  test('excludes org-units, which no route uses', () => {
+    expect(ROUTABLE_NAMESPACES).not.toContain(UnitNamespace.ORG_UNITS);
+  });
+});
 
 describe('getRouteNamespace', () => {
   test.each([
