@@ -199,6 +199,17 @@ describe('FileManager — folder expansion', () => {
     expect(context.setExpandedFolders).toHaveBeenCalledWith(new Set([root, folder]));
     expect(onPathChange).toHaveBeenCalledWith(folder);
   });
+
+  test('selects the slash-terminated folder when a breadcrumb reports a path without one', () => {
+    const { context, onPathChange } = renderFolders({ expandedFolders: new Set([root]) });
+
+    act(() => lastProps().onPathChange?.('public/examples'));
+
+    expect(context.fetchFiles).toHaveBeenCalledWith(folder);
+    expect(context.setFilePath).toHaveBeenCalledWith(folder);
+    expect(context.setExpandedFolders).toHaveBeenCalledWith(new Set([root, folder]));
+    expect(onPathChange).toHaveBeenCalledWith(folder);
+  });
 });
 
 describe('FileManager — hidden files toggle', () => {
