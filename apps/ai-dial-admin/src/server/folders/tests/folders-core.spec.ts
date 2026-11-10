@@ -229,46 +229,64 @@ describe('Server :: Folders :: folders-core :: removeFolderCore', () => {
     vi.clearAllMocks();
   });
 
-  test('gathers resources only across the targeted types, publishes+approves, and best-effort cleans up', async () => {
+  test('deletes every item under the folder directly for the targeted types only, without a publication', async () => {
     (assetApi.getMetadata as any).mockImplementation((_t: unknown, type: ResourceType) =>
       type === ResourceType.PROMPT
-        ? Promise.resolve(folderNode('prompts/public/', [itemNode('prompts/public/a__1')]))
+        ? Promise.resolve(
+            folderNode('prompts/public/', [itemNode('prompts/public/a__1'), itemNode('prompts/public/sub/b__2')]),
+          )
         : Promise.resolve(null),
     );
-    (filesCoreApi.getFileMetadata as any).mockResolvedValue(null);
-    (publicationsApi.createPublication as any).mockResolvedValue({
-      success: true,
-      response: { url: 'publications/public/' },
-    });
-    (publicationsApi.approvePublication as any).mockResolvedValue({ success: true });
-    (assetApi.delete as any).mockRejectedValue(new Error('cleanup failed'));
-    (filesCoreApi.deleteFile as any).mockRejectedValue(new Error('cleanup failed'));
+    (assetApi.delete as any).mockResolvedValue({ success: true });
 
     const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.PROMPT]);
 
-    expect(publicationsApi.createPublication).toHaveBeenCalledWith(
-      TOKEN_MOCK,
-      'public/',
-      [{ action: 'DELETE', targetUrl: 'prompts/public/a__1' }],
-      undefined,
-    );
+    expect(assetApi.delete).toHaveBeenCalledTimes(2);
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/a__1', '*');
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/sub/b__2', '*');
     expect(assetApi.getMetadata).not.toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
       expect.anything(),
       expect.anything(),
     );
+    expect(publicationsApi.createPublication).not.toHaveBeenCalled();
+    expect(publicationsApi.approvePublication).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
   });
 
-  test('fails overall if the publish step itself fails', async () => {
-    (assetApi.getMetadata as any).mockResolvedValue(null);
-    (filesCoreApi.getFileMetadata as any).mockResolvedValue(null);
-    (publicationsApi.createPublication as any).mockResolvedValue({ success: false, errorMessage: 'boom' });
+  test('deletes files through the files client', async () => {
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue(
+      folderNode('files/public/', [itemNode('files/public/doc.txt')]),
+    );
+    (filesCoreApi.deleteFile as any).mockResolvedValue({ success: true });
+
+    const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.FILE]);
+
+    expect(filesCoreApi.deleteFile).toHaveBeenCalledWith(TOKEN_MOCK, 'public/doc.txt', '*');
+    expect(assetApi.delete).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+  });
+
+  test('stops at the first failed delete and returns its error', async () => {
+    (assetApi.getMetadata as any).mockResolvedValue(
+      folderNode('prompts/public/', [itemNode('prompts/public/a__1'), itemNode('prompts/public/b__1')]),
+    );
+    (assetApi.delete as any).mockResolvedValue({ success: false, errorMessage: 'boom' });
 
     const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.PROMPT]);
 
-    expect(result.success).toBe(false);
+    expect(assetApi.delete).toHaveBeenCalledOnce();
+    expect(result).toEqual({ success: false, errorMessage: 'boom' });
+  });
+
+  test('succeeds without deleting anything when the folder holds no items', async () => {
+    (assetApi.getMetadata as any).mockResolvedValue(null);
+
+    const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.PROMPT]);
+
+    expect(assetApi.delete).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
   });
 });
 
