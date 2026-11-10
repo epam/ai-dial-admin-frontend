@@ -146,3 +146,29 @@ SHALL open the panel without scrolling to a specific field.
 #### Scenario: Unmapped column opens without scrolling
 - **WHEN** the user clicks the test case name cell in the grid
 - **THEN** the panel opens for that row at the top of the table
+
+### Requirement: Text fields offer a Copy button in the side panel, the bottom drawer and the text popup
+
+Every value cell of the row detail that renders a field's value as text SHALL offer a Copy button that
+copies the field's full value to the clipboard, in both the side panel and the bottom drawer, and shows a
+confirmation notification naming the field. The button appears on cell hover and on keyboard focus, and
+activating it SHALL NOT open the popup. A metric cell, a score rendered as a filled score value, the
+execution status, the short right-aligned run figures (run number, overall score, HTTP status, duration),
+a failed value and an empty value SHALL NOT offer it. The text popup of a field SHALL carry a labeled Copy button
+that copies the value as shown there.
+
+#### Scenario: Copy a long value from the side panel
+- **WHEN** the user hovers a text value cell in the side panel and activates its Copy button
+- **THEN** the full, untruncated value is on the clipboard and the popup stays closed
+
+#### Scenario: Copy from the bottom drawer
+- **WHEN** the user activates the Copy button of a text value cell in the bottom drawer
+- **THEN** that value is on the clipboard and the popup stays closed
+
+#### Scenario: Metric, score and run-figure cells have no Copy button
+- **WHEN** a value cell shows a metric, a filled score, the execution status, or the run number, overall score, HTTP status or duration
+- **THEN** it offers no Copy button
+
+#### Scenario: Copy from the text popup
+- **WHEN** the user opens a text field's popup and activates its Copy button
+- **THEN** the value as shown in the popup is on the clipboard

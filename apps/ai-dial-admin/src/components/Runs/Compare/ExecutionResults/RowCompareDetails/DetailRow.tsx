@@ -5,6 +5,7 @@ import { FC, useState } from 'react';
 import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
+import CellCopyButton from '@/src/components/Runs/Details/RowDetails/CellCopyButton';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
 import ScoreThresholdTooltip from '@/src/components/Runs/Details/RowDetails/ScoreThresholdTooltip';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
@@ -14,6 +15,7 @@ import {
   ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { canCopyFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/can-copy-field-value';
 import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
@@ -73,12 +75,14 @@ const DetailRow: FC<Props> = ({
     const threshold = getRowDetailRunThreshold(row, run.slot);
     const isMissing = run.slot === CompareRunSlot.Secondary && !hasComparedMatch;
     const hasScore = !isMissing && !isStatusRow && getScoreFieldValue(raw, row.isScoreIndicator, isFailed) != null;
+    const canCopy = !isMissing && canCopyFieldValue(row, raw, isFailed) && raw != null;
 
     return (
       <ScoreThresholdTooltip key={run.slot} raw={raw} threshold={isMissing ? undefined : threshold}>
         <div
           className={mergeClasses(
             ROW_DETAIL_CELL_BASE,
+            'relative group/cell',
             isRightAligned && 'text-right',
             hasScore && 'p-0 flex',
             valueProps.className,
@@ -97,6 +101,7 @@ const DetailRow: FC<Props> = ({
               onOverflowChange={(isOverflowing) => onRunOverflowChange(run.slot, isOverflowing)}
             />
           )}
+          {canCopy && <CellCopyButton label={row.label} value={raw} />}
         </div>
       </ScoreThresholdTooltip>
     );

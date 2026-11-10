@@ -3,8 +3,9 @@
 import { FC, useMemo } from 'react';
 
 import type { Monaco } from '@monaco-editor/react';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import DiffEditor from '@/src/components/Common/MonacoEditor/DiffEditor';
-import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { ElementSize, Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -61,8 +62,14 @@ const FullscreenDiffViewer: FC<Props> = ({
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center px-4 py-2 shrink-0 dial-tiny-text border-b border-tertiary">
-          <span className="flex-1 text-secondary">{originalLabel}</span>
-          <span className="flex-1 text-secondary">{modifiedLabel}</span>
+          <div className="flex flex-1 items-center gap-2 min-w-0">
+            <span className="text-secondary truncate">{originalLabel}</span>
+            <CopyButton size={ElementSize.Small} value={original} valueLabel={`${fieldLabel} (${originalLabel})`} />
+          </div>
+          <div className="flex flex-1 items-center gap-2 min-w-0">
+            <span className="text-secondary truncate">{modifiedLabel}</span>
+            <CopyButton size={ElementSize.Small} value={modified} valueLabel={`${fieldLabel} (${modifiedLabel})`} />
+          </div>
         </div>
         <div className="flex-1 min-h-0">
           <DiffEditor
