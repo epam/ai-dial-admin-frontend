@@ -21,6 +21,7 @@ import { MeasureRow } from '@/src/models/analytics/pipeline-ui';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { findMeasureFunction, isColumnlessFunction, toMeasureFunctions } from '@/src/utils/analytics/measure-functions';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
@@ -66,7 +67,9 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
 
   const available = toMeasureFunctions(functions);
   const fnOptions = available.map((fn) => toFunctionOption(fn.name, fn.signature, fn.description));
-  const columnOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
+  const columnOptions = fields
+    .filter((field) => !isProjectionOnly(field))
+    .map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
   const nameOptions = targetColumns.map((column) => ({ value: column.name, label: column.name }));
 
   const updateRow = (id: string, patch: Partial<MeasureRow>) =>

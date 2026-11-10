@@ -23,6 +23,7 @@ import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n'
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 
 interface Props {
   row: PipelineFilterRow;
@@ -61,7 +62,7 @@ const FilterConditionRow: FC<Props> = ({ row, index, fields, onChange, onDelete 
   const columnOptions = useMemo(
     () =>
       fields
-        .filter((candidate) => !UNCOMPARABLE_TYPES.includes(candidate.type))
+        .filter((candidate) => !UNCOMPARABLE_TYPES.includes(candidate.type) && !isProjectionOnly(candidate))
         .map((candidate) => ({ value: candidate.name, label: `${candidate.name} · ${candidate.type}` })),
     [fields],
   );

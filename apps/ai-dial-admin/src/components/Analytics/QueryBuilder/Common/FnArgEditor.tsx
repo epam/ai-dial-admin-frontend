@@ -6,6 +6,7 @@ import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Co
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import { useFilterTree } from '@/src/components/Analytics/QueryBuilder/filter-tree-context';
+import { argumentFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   argumentFunctionOptions,
   emptyArgs,
@@ -63,6 +64,10 @@ const ExpressionArgEditor: FC<ExpressionArgProps> = ({
     () => (functions.length ? argumentFunctionOptions(functions) : undefined),
     [functions],
   );
+  const offeredFields = useMemo(
+    () => argumentFieldOptions(fieldOptions, value.field ? [value.field] : []),
+    [fieldOptions, value.field],
+  );
   const call = value.call;
   const calledFn = functionByName(functions, call?.fn ?? null);
 
@@ -84,7 +89,7 @@ const ExpressionArgEditor: FC<ExpressionArgProps> = ({
       <CategorizedFieldDropdown
         id={id}
         mode={FieldDropdownMode.Picker}
-        options={fieldOptions}
+        options={offeredFields}
         value={call?.fn ?? value.field}
         functions={functionOptions}
         placeholder={name}

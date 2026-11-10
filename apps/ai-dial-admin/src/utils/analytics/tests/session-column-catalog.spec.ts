@@ -458,6 +458,7 @@ describe('hopBodyFields', () => {
       isRequestReadable: true,
       isResponseReadable: true,
       requestField: UsageLogField.RequestBody,
+      requestStatusField: null,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
@@ -469,6 +470,7 @@ describe('hopBodyFields', () => {
       isRequestReadable: true,
       isResponseReadable: true,
       requestField: UsageLogField.RequestBody,
+      requestStatusField: null,
       responseFields: [UsageLogField.ResponseBody],
     });
   });
@@ -478,6 +480,7 @@ describe('hopBodyFields', () => {
       isRequestReadable: true,
       isResponseReadable: true,
       requestField: UsageLogField.RequestBody,
+      requestStatusField: null,
       responseFields: [UsageLogField.AssembledResponse],
     });
   });
@@ -489,6 +492,7 @@ describe('hopBodyFields', () => {
       isRequestReadable: false,
       isResponseReadable: false,
       requestField: null,
+      requestStatusField: null,
       responseFields: [],
     });
   });
@@ -506,6 +510,7 @@ describe('hopBodyFields', () => {
       isRequestReadable: false,
       isResponseReadable: true,
       requestField: null,
+      requestStatusField: null,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
@@ -515,6 +520,7 @@ describe('hopBodyFields', () => {
       isRequestReadable: true,
       isResponseReadable: false,
       requestField: UsageLogField.RequestBody,
+      requestStatusField: null,
       responseFields: [],
     });
   });
@@ -524,7 +530,42 @@ describe('hopBodyFields', () => {
       isRequestReadable: false,
       isResponseReadable: false,
       requestField: null,
+      requestStatusField: null,
       responseFields: [],
+    });
+  });
+
+  test('prefers the rebuilt request body and reads its status where the schema reports both', () => {
+    const payload = (name: UsageLogField) => `dial_usage_log_payload.${name}`;
+
+    expect(
+      hopBodyFields([
+        payload(UsageLogField.RequestBody),
+        payload(UsageLogField.RequestBodyFull),
+        payload(UsageLogField.RequestBodyRebuild),
+        payload(UsageLogField.ResponseBody),
+      ]),
+    ).toEqual({
+      isRequestReadable: true,
+      isResponseReadable: true,
+      requestField: payload(UsageLogField.RequestBodyFull),
+      requestStatusField: payload(UsageLogField.RequestBodyRebuild),
+      responseFields: [payload(UsageLogField.ResponseBody)],
+    });
+  });
+
+  test('reads the rebuilt request body without a status when the schema reports no status column', () => {
+    expect(hopBodyFields([UsageLogField.RequestBodyFull])).toMatchObject({
+      isRequestReadable: true,
+      requestField: UsageLogField.RequestBodyFull,
+      requestStatusField: null,
+    });
+  });
+
+  test('ignores a status column when the request side is read from the stored body', () => {
+    expect(hopBodyFields([UsageLogField.RequestBody, UsageLogField.RequestBodyRebuild])).toMatchObject({
+      requestField: UsageLogField.RequestBody,
+      requestStatusField: null,
     });
   });
 });
@@ -641,6 +682,7 @@ describe('composedSourceEntities', () => {
       isRequestReadable: true,
       isResponseReadable: true,
       requestField: 'dial_usage_log_payload.request_body',
+      requestStatusField: null,
       responseFields: ['dial_usage_log_payload.assembled_response', 'dial_usage_log_payload.response_body'],
     });
   });

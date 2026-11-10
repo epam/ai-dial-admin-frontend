@@ -3754,6 +3754,7 @@ export enum SessionsTraceI18nKey {
   InspectorShowFullMessage = 'SessionsTrace.InspectorShowFullMessage',
   InspectorHideFullMessage = 'SessionsTrace.InspectorHideFullMessage',
   InspectorEnvelopeClamped = 'SessionsTrace.InspectorEnvelopeClamped',
+  InspectorRequestPartial = 'SessionsTrace.InspectorRequestPartial',
   InspectorNoMessages = 'SessionsTrace.InspectorNoMessages',
   InspectorRaw = 'SessionsTrace.InspectorRaw',
   InspectorResponseFactsLabel = 'SessionsTrace.InspectorResponseFactsLabel',
