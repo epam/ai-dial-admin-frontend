@@ -75,6 +75,7 @@ const request = (overrides: Partial<HopRequestEnvelope> = {}): HopRequestEnvelop
   roleCounts: [],
   recordedBytes: 400,
   isClamped: false,
+  isPartial: false,
   ...overrides,
 });
 
@@ -111,6 +112,21 @@ const turn = (role: string, position?: number) => (position === undefined ? role
 beforeEach(() => vi.clearAllMocks());
 
 describe('HopChatPanel', () => {
+  test('describes the session as incomplete when the request was only partly rebuilt', () => {
+    renderPanel({ request: request({ isPartial: true }) });
+
+    expect(screen.getByRole('group', { name: SessionsTraceI18nKey.InspectorChatLabel })).toHaveAccessibleDescription(
+      SessionsTraceI18nKey.InspectorRequestPartial,
+    );
+    expect(screen.getByText('where is odesa?')).toBeTruthy();
+  });
+
+  test('states nothing about completeness for a whole request', () => {
+    renderPanel();
+
+    expect(screen.queryByText(SessionsTraceI18nKey.InspectorRequestPartial)).toBeNull();
+  });
+
   test('renders the history the span received, in recorded order', () => {
     renderPanel();
 

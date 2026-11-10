@@ -207,7 +207,9 @@ export const SESSION_GROUP_SUMMARY_FIELD: Record<string, string> = {
   [SpanFieldTag.Principal]: 'user_display_name',
 };
 
-export const HOP_REQUEST_BODY_FIELD: UsageLogField = UsageLogField.RequestBody;
+export const HOP_REQUEST_BODY_FIELDS: UsageLogField[] = [UsageLogField.RequestBodyFull, UsageLogField.RequestBody];
+
+export const HOP_REQUEST_REBUILD_FIELD: UsageLogField = UsageLogField.RequestBodyRebuild;
 
 export const HOP_RESPONSE_BODY_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
 

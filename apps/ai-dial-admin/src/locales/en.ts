@@ -4094,6 +4094,8 @@ export default {
     InspectorHideFullMessage: 'Hide full message',
     InspectorEnvelopeClamped:
       'Text shown for {shown} of {total} messages — the rest exceeded the read budget and can be opened one at a time.',
+    InspectorRequestPartial:
+      'Incomplete request — its earlier turns could not be recovered, so only the part this turn added is shown.',
     InspectorRaw: 'Raw',
     InspectorResponseFactsLabel: 'What answered',
     InspectorUpstreamModel: 'model',

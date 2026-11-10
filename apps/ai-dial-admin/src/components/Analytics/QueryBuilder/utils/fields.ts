@@ -19,6 +19,7 @@ import {
   isExpressionArg,
   requiredArgsFilled,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 
 export const family = (name: string): string => {
   const i = name.indexOf(':');
@@ -107,6 +108,7 @@ export const fieldsToOptions = (fields: AnalyticsEntityField[]): FieldOption[] =
     display_name: f.display_name,
     description: f.description,
     sensitive: f.sensitive,
+    isProjectionOnly: isProjectionOnly(f),
   }));
 
 // The alias a computed row (aggregate / group-by function) is prefilled with. The alias is that
@@ -222,10 +224,13 @@ const computedColumnOptions = (state: QueryBuilderState): FieldOption[] => {
 // Options for a position the service compares, groups or orders by — a filter operand, a plain group-by
 // column, a sort key. A map column is projection-only there, and one refused predicate or key rejects the
 // whole query, so it is withheld by its schema type; it stays offered to Select and to function arguments,
-// which is how one of its keys is read. A name already in `kept` stays listed, so a query authored elsewhere
-// still shows the field it names.
+// which is how one of its keys is read. A field the schema marks projection-only is withheld here too. A name
+// already in `kept` stays listed, so a query authored elsewhere still shows the field it names.
 export const comparableFieldOptions = (options: FieldOption[], kept: string[] = []): FieldOption[] =>
-  options.filter((o) => o.type !== AnalyticsFieldType.Map || kept.includes(o.name));
+  options.filter((o) => (o.type !== AnalyticsFieldType.Map && !o.isProjectionOnly) || kept.includes(o.name));
+
+export const argumentFieldOptions = (options: FieldOption[], kept: string[] = []): FieldOption[] =>
+  options.filter((o) => !o.isProjectionOnly || kept.includes(o.name));
 
 export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
   const plainColumns = state.groupBy

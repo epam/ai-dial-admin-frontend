@@ -14,7 +14,8 @@ import {
   IDENTITY_ENRICHMENT_FIELDS,
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
-  HOP_REQUEST_BODY_FIELD,
+  HOP_REQUEST_BODY_FIELDS,
+  HOP_REQUEST_REBUILD_FIELD,
   HOP_RESPONSE_BODY_FIELDS,
   INSIGHTS_ENRICHMENT,
   SPAN_BASE_FIELDS,
@@ -31,6 +32,7 @@ import {
   SpanFieldDescriptor,
   SpanFieldGroup,
   SpanFieldSet,
+  UsageLogField,
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
@@ -299,12 +301,18 @@ export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields =>
   const responseFields = HOP_RESPONSE_BODY_FIELDS.map((name) => byColumn.get(name)).filter(
     (name): name is string => name !== undefined,
   );
-  const requestField = byColumn.get(HOP_REQUEST_BODY_FIELD) ?? null;
+  const requestField =
+    HOP_REQUEST_BODY_FIELDS.map((name) => byColumn.get(name)).find((name) => name !== undefined) ?? null;
+  const requestStatusField =
+    requestField !== null && unqualified(requestField) === UsageLogField.RequestBodyFull
+      ? (byColumn.get(HOP_REQUEST_REBUILD_FIELD) ?? null)
+      : null;
 
   return {
     isRequestReadable: requestField !== null,
     isResponseReadable: responseFields.length > 0,
     requestField,
+    requestStatusField,
     responseFields,
   };
 };
