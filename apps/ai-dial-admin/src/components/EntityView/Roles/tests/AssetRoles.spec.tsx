@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import AssetRoles from '../AssetRoles';
@@ -19,8 +22,8 @@ let capturedIsEmptyData: boolean | undefined;
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: (props: {
-    rowData?: unknown;
-    columnDefs?: { field?: string }[];
+    rowData?: DialRole[];
+    columnDefs?: ColDef[];
     emptyDataProps?: { title?: string };
     getIsEmptyData?: () => boolean;
   }) => {
@@ -28,7 +31,19 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     capturedColumnDefs = props.columnDefs;
     capturedEmptyDataProps = props.emptyDataProps;
     capturedIsEmptyData = props.getIsEmptyData?.();
-    return <section aria-label="roles-grid" />;
+    const actions = props.columnDefs?.find((column) => column.field === ACTIONS_COLUMN_CEL_ID)?.cellRendererParams
+      ?.items as ActionMenuOperationDeclaration<DialRole>[] | undefined;
+    return (
+      <section aria-label="roles-grid">
+        {props.rowData?.flatMap((role) =>
+          (actions || []).map((action) => (
+            <button key={`${role.name}-${action.id}`} onClick={() => action.onClick(role)}>
+              {`${action.label} ${role.name}`}
+            </button>
+          )),
+        )}
+      </section>
+    );
   },
 }));
 
@@ -188,22 +203,82 @@ describe('AssetRoles', () => {
     expect(capturedColumnDefs?.some((col) => col.field === ACTIONS_COLUMN_CEL_ID)).toBe(true);
   });
 
-  test('a read-only admin sees granted roles without the toggle, Add button, or remove action column', async () => {
-    const { useIsReadOnlyAdmin } = await import('@/src/hooks/use-is-read-only-admin');
+  test.each([
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformRoutes,
+    ApplicationRoute.PlatformRouters,
+    ApplicationRoute.AssetsApplications,
+    ApplicationRoute.AssetsToolsets,
+  ])('opens a synthetic role from the %s view without changing membership', async (view) => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    render(<AssetRoles view={view} asset={{ userRoles: ['missing %?#'] }} roles={roles} onChange={onChange} />);
+
+    await user.click(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Open_in_new_tab} missing %?#` }));
+
+    expect(open).toHaveBeenCalledWith('/platform-roles/missing%20%25%3F%23', '_blank');
+    expect(onChange).not.toHaveBeenCalled();
+    open.mockRestore();
+  });
+
+  test('removes a selected role without changing the other role memberships', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <AssetRoles
+        view={ApplicationRoute.PlatformModels}
+        asset={{ userRoles: ['admin', 'missing'] }}
+        roles={roles}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Remove} admin` }));
+
+    expect(onChange).toHaveBeenCalledWith({ userRoles: ['missing'] });
+  });
+
+  test('allows opening an unrestricted role but not removing it', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    render(<AssetRoles view={ApplicationRoute.PlatformModels} asset={{}} roles={roles} onChange={onChange} />);
+
+    await user.click(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Open_in_new_tab} viewer` }));
+
+    expect(open).toHaveBeenCalledWith('/platform-roles/viewer', '_blank');
+    expect(
+      screen.queryByRole('button', { name: `${ActionMenuOperationI18nKey.Remove} viewer` }),
+    ).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+    open.mockRestore();
+  });
+
+  test('a read-only admin can open granted roles without mutation controls', async () => {
     vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     render(
       <AssetRoles
         view={ApplicationRoute.PlatformModels}
         asset={{ userRoles: ['admin'] }}
         roles={roles}
-        onChange={vi.fn()}
+        onChange={onChange}
       />,
     );
 
     expect(screen.queryByRole('button', { name: RolesI18nKey.AddRoles })).not.toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
-    expect(capturedColumnDefs?.some((col) => col.field === ACTIONS_COLUMN_CEL_ID)).toBe(false);
+    await user.click(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Open_in_new_tab} admin` }));
+    expect(open).toHaveBeenCalledWith('/platform-roles/admin', '_blank');
+    expect(
+      screen.queryByRole('button', { name: `${ActionMenuOperationI18nKey.Remove} admin` }),
+    ).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+    open.mockRestore();
     vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
   });
 });

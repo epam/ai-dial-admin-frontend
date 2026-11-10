@@ -407,6 +407,15 @@ describe('onOpenInNewTab', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(expect.stringContaining('/entity'), '_blank');
   });
 
+  test('opens a name-only Core role reference with one encoded path segment', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const name = 'role %2F & more';
+
+    onOpenInNewTab(ApplicationRoute.PlatformRoles, { name });
+
+    expect(windowOpenSpy).toHaveBeenCalledWith(`/platform-roles/${encodeURIComponent(name)}`, '_blank');
+  });
+
   test('calls window.open with correct url for undefined route', () => {
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
     onOpenInNewTab(undefined, { name: 'entity' });

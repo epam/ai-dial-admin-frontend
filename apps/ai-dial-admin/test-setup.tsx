@@ -40,6 +40,9 @@ vi.mock('next-auth/react', () => ({
 // ------------------ Next.js hooks ------------------
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
 vi.mock('next/navigation', () => ({
+  notFound: vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
   useRouter: vi.fn(),
   usePathname: vi.fn(),
   useSearchParams: vi.fn(() => new URLSearchParams()),

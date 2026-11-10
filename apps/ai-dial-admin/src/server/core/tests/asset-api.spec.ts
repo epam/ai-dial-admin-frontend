@@ -163,8 +163,24 @@ describe('Server :: Core :: AssetApi', () => {
     const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.PROMPT, 'folder/missing');
 
     expect(result.success).toBe(false);
+    expect(result.status).toBe(404);
     expect(fetch.mock.calls).toHaveLength(1);
   });
+
+  test.each([403, 404, 500])(
+    'getMergedWithEtag keeps a metadata status %i indeterminate after content succeeds',
+    async (status) => {
+      fetch.mockResponseOnce(JSON.stringify({ name: 'my-role' }), {
+        headers: { 'content-type': 'application/json' },
+      });
+      fetch.mockResponseOnce('metadata unavailable', { status });
+
+      const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
+
+      expect(result).toMatchObject({ success: false, errorMessage: 'Resource metadata not found' });
+      expect(result.status).toBeUndefined();
+    },
+  );
 
   test('move calls the generic Core ops/resource/move endpoint with prefixed, encoded URLs', async () => {
     fetch.mockResponseOnce(JSON.stringify({}));

@@ -75,6 +75,15 @@ describe('RoleAssetView', () => {
     expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
   });
 
+  test('restores editability and the format selector when a platform role replaces a file role', () => {
+    const { rerender } = render(<RoleAssetView etag="etag" originalRole={role()} models={[]} isConfigFileSource />);
+
+    rerender(<RoleAssetView etag="etag" originalRole={role({ name: 'platform-role' })} models={[]} />);
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(false);
+  });
+
   test('Should not mark the entity read-only for an admin-backed role', () => {
     render(<RoleAssetView etag="etag" originalRole={role()} models={[]} />);
 
