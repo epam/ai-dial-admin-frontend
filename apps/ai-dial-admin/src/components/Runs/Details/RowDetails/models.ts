@@ -26,10 +26,19 @@ export interface RowDetailField {
   secondaryFailed?: boolean;
   primaryInfo?: MetricFieldInfo;
   secondaryInfo?: MetricFieldInfo;
+  /** Only the overall score row carries these: each run's snapshotted threshold, for the above/below icon. */
+  primaryThreshold?: number | null;
+  secondaryThreshold?: number | null;
   diffKind: MetricDeltaKind;
   isNumeric: boolean;
   isScoreIndicator: boolean;
   isMetric: boolean;
+}
+
+/** The snapshotted score threshold of the opened row's run, and of the compared run in a comparison. */
+export interface RowDetailScoreThresholds {
+  primary?: number | null;
+  compared?: number | null;
 }
 
 export interface RowDetailSection {

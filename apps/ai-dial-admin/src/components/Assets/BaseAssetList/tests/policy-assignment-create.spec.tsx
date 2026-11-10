@@ -7,12 +7,20 @@ import { createPolicyAssignment } from '@/src/app/[lang]/platform-policy-assignm
 import { getPolicies } from '@/src/app/[lang]/platform-policies/actions';
 import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
 import { AssetFolderContextMap } from '@/src/components/Assets/BaseAssetList/utils';
-import { ButtonsI18nKey, EntityFieldsI18nKey, PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  PolicyAssignmentsI18nKey,
+  PolicySubjectsI18nKey,
+} from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { BucketType } from '@/src/models/dial/asset-list-item';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
+
+vi.mock('@/src/context/SaveValidationContext', async () => vi.importActual('@/src/context/SaveValidationContext'));
 
 vi.mock('@/src/app/[lang]/platform-policy-assignments/actions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/app/[lang]/platform-policy-assignments/actions')>()),
@@ -66,12 +74,18 @@ describe('BaseAssetList — policy assignment creation', () => {
 
   const openAssignment = async () => {
     const user = userEvent.setup();
-    render(<BaseAssetList view={ApplicationRoute.PlatformPolicyAssignments} />);
+    render(
+      <SaveValidationContextProvider>
+        <BaseAssetList view={ApplicationRoute.PlatformPolicyAssignments} />
+      </SaveValidationContextProvider>,
+    );
     await user.click(screen.getByRole('button', { name: 'Open create' }));
     await user.type(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), 'ta-x');
     const policy = await screen.findByRole('combobox', { name: new RegExp(PolicyAssignmentsI18nKey.Policy) });
     await user.click(policy);
     await user.click(await screen.findByText('team-a/policy'));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
+    expect(screen.getByRole('button', { name: PolicySubjectsI18nKey.AddRule })).toBeInTheDocument();
     return user;
   };
 
@@ -97,8 +111,15 @@ describe('BaseAssetList — policy assignment creation', () => {
     expect(showNotification).toHaveBeenCalledWith(getErrorNotification('Request error', message, 'request-123'));
     expect(createPolicyAssignment).toHaveBeenCalledOnce();
     expect(push).not.toHaveBeenCalled();
-    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` })).toHaveValue('ta-x');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Back }));
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` })).toHaveValue('ta-x');
+    expect(screen.getByRole('textbox', { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) })).toHaveValue(
+      'team-a',
+    );
+    expect(screen.getByRole('combobox', { name: new RegExp(PolicyAssignmentsI18nKey.Policy) })).toHaveValue(
+      'team-a/policy',
+    );
   });
 
   test('closes the form and navigates after creation succeeds', async () => {

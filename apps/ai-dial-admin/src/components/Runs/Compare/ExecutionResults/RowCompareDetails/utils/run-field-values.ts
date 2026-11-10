@@ -12,6 +12,10 @@ export const getRowDetailRunValue = (field: RowDetailField, slot: CompareRunSlot
     ? { raw: field.primaryRaw, isFailed: field.primaryFailed ?? false }
     : { raw: field.secondaryRaw, isFailed: field.secondaryFailed ?? false };
 
+/** The threshold an overall-score row holds for a run, laid out like `getRowDetailRunValue`. */
+export const getRowDetailRunThreshold = (field: RowDetailField, slot: CompareRunSlot): number | null | undefined =>
+  slot === CompareRunSlot.Primary ? field.primaryThreshold : field.secondaryThreshold;
+
 /** The `metricInfos` entry a row-detail field holds for a run, laid out like `getRowDetailRunValue`. */
 export const getRowDetailRunInfo = (field: RowDetailField, slot: CompareRunSlot): MetricFieldInfo | undefined =>
   slot === CompareRunSlot.Primary ? field.primaryInfo : field.secondaryInfo;

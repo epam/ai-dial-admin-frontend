@@ -13,6 +13,7 @@ import { PolicyAssignmentsFolderProvider } from '@/src/context/assets/PolicyAssi
 import { ProjectFolderProvider } from '@/src/context/assets/ProjectFolderContext';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { RolesFolderProvider } from '@/src/context/assets/RolesFolderContext';
+import { RoutersFolderProvider } from '@/src/context/assets/RoutersFolderContext';
 import { RoutesFolderProvider } from '@/src/context/assets/RoutesFolderContext';
 import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
@@ -26,6 +27,7 @@ export const AssetFolderProviders = composeProviders([
   CatalogSchemasFolderProvider,
   InterceptorsFolderProvider,
   TranslatorsFolderProvider,
+  RoutersFolderProvider,
   RoutesFolderProvider,
   PoliciesFolderProvider,
   PolicyAssignmentsFolderProvider,

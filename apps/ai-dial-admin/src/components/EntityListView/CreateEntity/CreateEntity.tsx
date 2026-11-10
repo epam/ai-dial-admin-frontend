@@ -93,11 +93,10 @@ const CreateEntity = <T extends CreateEntityBase>({
       return { name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T;
     }
 
-    if (route === ApplicationRoute.PlatformModels) {
+    if (route === ApplicationRoute.PlatformModels || route === ApplicationRoute.PlatformRouters) {
       return {
         name: '',
         description: '',
-        displayVersion: DEFAULT_NEW_ENTITY_VERSION,
         userRoles: [],
         ...initialValues,
       } as T;

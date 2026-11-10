@@ -78,6 +78,49 @@ describe('panel-columns', () => {
     expect(httpLeaves.every((leaf) => leaf.hide === true)).toBe(true);
   });
 
+  test('the grid heads every Execution field with one title over its per-run leaves', () => {
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
+    const gridDefs = deriveCompareGridColDefs(panelTree);
+    const executionGroup = gridDefs.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
+    const fields = getChildren(executionGroup) as ColGroupDef[];
+
+    expect(fields.map((field) => field.headerName)).toEqual([
+      '# Run number',
+      'Request',
+      'Turn',
+      'Overall score',
+      'HTTP',
+      'Duration',
+    ]);
+    expect(fields.every((field) => field.headerGroupComponent === EllipsisHeaderGroup)).toBe(true);
+    expect(fields.map((field) => getChildren(field).map(getColId))).toEqual([
+      ['runIndex', 'cmp_runIndex'],
+      ['requestIndex', 'cmp_requestIndex'],
+      ['turnIndex', 'cmp_turnIndex'],
+      ['overallScore', 'cmp_overallScore'],
+      ['http', 'cmp_http'],
+      ['duration', 'cmp_duration'],
+    ]);
+  });
+
+  test('the score columns keep the schema leaf props and the panel hide state in the grid', () => {
+    const schemaDefs = getFlatDefs();
+    const panelTree = buildComparePanelColumnTree(schemaDefs, runs);
+    const shown = [
+      { colId: 'overallScore', hide: false },
+      { colId: 'cmp_overallScore', hide: false },
+    ];
+    const gridDefs = deriveCompareGridColDefs(panelTree, shown, schemaDefs);
+    const executionGroup = gridDefs.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
+    const scoreGroup = getChildren(executionGroup).find((child) => child.headerName === 'Overall score') as ColDef;
+    const [primary, secondary] = getChildren(scoreGroup);
+
+    expect(primary.hide).toBe(false);
+    expect(secondary.hide).toBe(false);
+    expect(primary.cellRenderer).toBeDefined();
+    expect(secondary.cellRendererParams).toEqual({ threshold: undefined });
+  });
+
   test('buildComparePanelColumnTree hides execution leaves by default', () => {
     const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
@@ -86,7 +129,7 @@ describe('panel-columns', () => {
     expect(executionLeaves.every((leaf) => leaf.hide === true)).toBe(true);
   });
 
-  test('buildComparePanelColumnTree exposes Request and Turn as execution field groups', () => {
+  test('buildComparePanelColumnTree exposes Request, Turn and Overall score as execution field groups', () => {
     const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
     const fieldGroups = getChildren(executionGroup);
@@ -95,15 +138,19 @@ describe('panel-columns', () => {
       '# Run number',
       'Request',
       'Turn',
+      'Overall score',
       'HTTP',
       'Duration',
     ]);
 
     const requestLeaves = getChildren(fieldGroups[1]);
     const turnLeaves = getChildren(fieldGroups[2]);
+    const scoreLeaves = getChildren(fieldGroups[3]);
 
     expect(requestLeaves.map(getColId)).toEqual(['requestIndex', 'cmp_requestIndex']);
     expect(turnLeaves.map(getColId)).toEqual(['turnIndex', 'cmp_turnIndex']);
+    expect(scoreLeaves.map(getColId)).toEqual(['overallScore', 'cmp_overallScore']);
+    expect(scoreLeaves.every((leaf) => leaf.hide === true)).toBe(true);
   });
 
   test('buildComparePanelColumnTree nests execution status and metric groups', () => {
@@ -188,7 +235,10 @@ describe('panel-columns', () => {
 
       return {
         ...col,
-        children: children.map((child) => (getColId(child) === 'http' ? { ...child, hide: true } : child)),
+        children: children.map((field) => ({
+          ...field,
+          children: getChildren(field).map((leaf) => (getColId(leaf) === 'http' ? { ...leaf, hide: true } : leaf)),
+        })),
       };
     });
     const hiddenPanelTree = buildComparePanelColumnTree(hiddenFlatDefs, runs);
@@ -196,13 +246,29 @@ describe('panel-columns', () => {
 
     const flattened = flattenComparePanelColumnTree(mergedPanelTree);
     const executionGroup = flattened.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
-    const httpCol = getChildren(executionGroup).find((col) => getColId(col) === 'http');
+    const httpCol = getChildren(executionGroup)
+      .flatMap((field) => getChildren(field))
+      .find((col) => getColId(col) === 'http');
 
     expect(httpCol?.hide).toBe(true);
   });
 
   test('preserveFlatColDefHideState copies hide flags from previous flat defs', () => {
     const flatDefs = getFlatDefs();
+    const executionLeafIds = [
+      'runIndex',
+      'cmp_runIndex',
+      'requestIndex',
+      'cmp_requestIndex',
+      'turnIndex',
+      'cmp_turnIndex',
+      'overallScore',
+      'cmp_overallScore',
+      'http',
+      'cmp_http',
+      'duration',
+      'cmp_duration',
+    ];
     const visibleFlatDefs = preserveFlatColDefHideState(
       flatDefs,
       flatDefs.map((col) => {
@@ -213,29 +279,20 @@ describe('panel-columns', () => {
 
         return {
           ...col,
-          children: children.map((child) =>
-            [
-              'runIndex',
-              'cmp_runIndex',
-              'requestIndex',
-              'cmp_requestIndex',
-              'turnIndex',
-              'cmp_turnIndex',
-              'http',
-              'cmp_http',
-              'duration',
-              'cmp_duration',
-            ].includes(getColId(child) ?? '')
-              ? { ...child, hide: false }
-              : child,
-          ),
+          children: children.map((field) => ({
+            ...field,
+            children: getChildren(field).map((leaf) =>
+              executionLeafIds.includes(getColId(leaf) ?? '') ? { ...leaf, hide: false } : leaf,
+            ),
+          })),
         };
       }),
     );
 
     const executionGroup = visibleFlatDefs.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
-    const executionLeaves = getChildren(executionGroup);
+    const executionLeaves = getChildren(executionGroup).flatMap((field) => getChildren(field));
 
+    expect(executionLeaves).toHaveLength(executionLeafIds.length);
     expect(executionLeaves.every((leaf) => leaf.hide !== true)).toBe(true);
   });
 });

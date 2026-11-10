@@ -496,6 +496,7 @@ export const getTabsForAsset = (
   view: ApplicationRoute,
   featureFlags?: FeatureFlags,
   rolesWarning?: boolean,
+  hasParameters?: boolean,
 ): TabItem[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [
@@ -525,6 +526,16 @@ export const getTabsForAsset = (
       tabs.push(auditTab(t));
     }
     return tabs;
+  }
+  if (view === ApplicationRoute.PlatformRouters) {
+    // `Parameters` edits `applicationProperties`, which exists only against a picked app-type schema.
+    return [
+      propertiesTab(t),
+      featuresTab(t),
+      ...(hasParameters ? [parametersTab(t)] : []),
+      catalogTab(t),
+      rolesTab(t, rolesWarning),
+    ];
   }
   if (view === ApplicationRoute.PlatformAppRunners) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), appRouteTab(t), interceptorsTab(t)];

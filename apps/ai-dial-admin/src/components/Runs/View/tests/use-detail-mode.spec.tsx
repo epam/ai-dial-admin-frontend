@@ -50,6 +50,44 @@ describe('useDetailMode', () => {
     expect(getShownPanelProps().position).toBe(SidebarPosition.Bottom);
   });
 
+  it('hands the panel the opened row’s overall score, in the bottom drawer and after switching to the side panel', () => {
+    const scores = new Map<string, number | null>([
+      ['r1', 0.7],
+      ['r2', null],
+    ]);
+    const { result } = renderHook(() => useDetailMode([], undefined, scores));
+
+    act(() => result.current.openDetail('r1'));
+    expect(getShownPanelProps().testCaseScore).toBe(0.7);
+
+    mockShowSidebar.mockClear();
+    act(() => result.current.switchToSidebar());
+    expect(getShownPanelProps().testCaseScore).toBe(0.7);
+
+    mockShowSidebar.mockClear();
+    act(() => result.current.openDetail('r2'));
+    expect(getShownPanelProps().testCaseScore).toBeNull();
+  });
+
+  it('hands the panel the run’s score threshold in both positions', () => {
+    const { result } = renderHook(() => useDetailMode([], undefined, undefined, 0.6));
+
+    act(() => result.current.openDetail('r1'));
+    expect(getShownPanelProps().scoreThreshold).toBe(0.6);
+
+    mockShowSidebar.mockClear();
+    act(() => result.current.switchToSidebar());
+    expect(getShownPanelProps().scoreThreshold).toBe(0.6);
+  });
+
+  it('opens a row without a known score with no score for the panel', () => {
+    const { result } = renderHook(() => useDetailMode());
+
+    act(() => result.current.openDetail('r1'));
+
+    expect(getShownPanelProps().testCaseScore).toBeUndefined();
+  });
+
   it('keeps the panel open on same-row cell click and updates the focus field', () => {
     const { result } = renderHook(() => useDetailMode());
 

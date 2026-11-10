@@ -144,3 +144,40 @@ describe('DetailRow run order', () => {
     expect(getValueTexts(container)).toEqual(['No match', 'Berlin']);
   });
 });
+
+describe('DetailRow overall score threshold', () => {
+  const scoreRow = (overrides: Partial<RowDetailField> = {}) =>
+    row('overallScore', { primaryRaw: '0.7', secondaryRaw: '0.7', ...overrides });
+
+  test('reads each run’s score against that run’s own threshold', () => {
+    const { container } = renderDetailRow(scoreRow({ primaryThreshold: 0.6, secondaryThreshold: 0.8 }));
+    const [primary, secondary] = getValueCells(container, 'overallScore');
+
+    expect(primary.querySelector('svg.text-score-abs-11')).toBeInTheDocument();
+    expect(primary).toHaveTextContent('Runs.TestCaseOverallScoreAboveThresholdTooltip');
+    expect(secondary.querySelector('svg.text-score-abs-00')).toBeInTheDocument();
+    expect(secondary).toHaveTextContent('Runs.TestCaseOverallScoreBelowThresholdTooltip');
+  });
+
+  test('shows no icon in a run without a threshold', () => {
+    const { container } = renderDetailRow(scoreRow({ primaryThreshold: 0.6 }));
+    const [, secondary] = getValueCells(container, 'overallScore');
+
+    expect(secondary.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  test('shows no icon for a missing score', () => {
+    const { container } = renderDetailRow(scoreRow({ secondaryRaw: null, secondaryThreshold: 0.8 }));
+    const [, secondary] = getValueCells(container, 'overallScore');
+
+    expect(secondary.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  test('right-aligns the overall score cells', () => {
+    const { container } = renderDetailRow(scoreRow());
+    const [primary, secondary] = getValueCells(container, 'overallScore');
+
+    expect(primary).toHaveClass('text-right');
+    expect(secondary).toHaveClass('text-right');
+  });
+});
