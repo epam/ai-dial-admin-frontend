@@ -2,6 +2,7 @@ import { getAssetIdByNameAndVersion } from '@/src/components/EntityListView/Head
 import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import EditablePasswordCellRenderer from '@/src/components/Grid/CellRenderers/EditablePasswordCellRenderer';
 import { decodeCorePath } from '@/src/server/publications/path';
 import { getNameVersionForAsset, getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -19,8 +20,13 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
-import { ParsedAssets, AssetImportGridData } from '@/src/models/import-asset';
-import { ImportFileType, ImportStatus } from '@/src/types/import';
+import {
+  AssetImportGridData,
+  ClientSecretColumnOptions,
+  ParsedAssets,
+  ToolsetImportFile,
+} from '@/src/models/import-asset';
+import { ConflictResolutionPolicy, ImportFileType, ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath, updatePathWithName } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
@@ -28,6 +34,8 @@ import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCe
 import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DialToolsetResourceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
+import { CLIENT_SECRET_FIELD, CLIENT_SECRET_PLACEHOLDER } from '@/src/components/EntityListView/Import/constants';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
 
 /**
@@ -119,6 +127,74 @@ export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepSt
   return StepStatus.VALID;
 };
 
+const getToolsetAuthSettings = (file: unknown): DialToolsetResourceAuthSettings | undefined =>
+  (file as ToolsetImportFile).auth_settings;
+
+/** Core emits `OAUTH` but accepts either case on input, so a hand-edited file may carry `oauth` — compare folded. */
+export const isOAuthToolsetFile = (file: unknown): boolean =>
+  getToolsetAuthSettings(file)?.authentication_type?.toUpperCase() === ToolsetAuthType.OAUTH;
+
+const getAssetNameData = (file: DialFile | AssetApp, isVersionless?: boolean): { name: string; version?: string } => {
+  if (isVersionless) {
+    // A versionless prompt's name is the last id segment verbatim — a `__` in it is part
+    // of the name, never a name/version split.
+    return { name: file.id ? getFolderNameAndPath(file.id as string).name : (file.name as string) };
+  }
+  if (file.id) {
+    return getNameVersionFromAsset(decodeCorePath(getFolderNameAndPath(file.id as string).name));
+  }
+  return { name: file.name as string, version: (file as AssetApp).version as string };
+};
+
+/**
+ * Whether the import holds at least one valid OAUTH toolset.
+ *
+ * @param {Map<string, FileImportMap>} filesMap - parsed toolset files by file name
+ * @returns {boolean} - true when a valid OAUTH toolset is present
+ */
+export const hasOAuthToolsets = (filesMap: Map<string, FileImportMap>): boolean =>
+  [...filesMap.values()].some((value) => !value.isInvalid && value.files.some(isOAuthToolsetFile));
+
+/** Row fields of the client secret column; an OAUTH toolset shows what the file carries, else the placeholder. */
+const getClientSecretRowFields = (file: unknown): Pick<AssetImportGridData, 'isOAuth' | 'clientSecret'> => {
+  if (!isOAuthToolsetFile(file)) {
+    return { isOAuth: false };
+  }
+  return { isOAuth: true, clientSecret: getToolsetAuthSettings(file)?.client_secret ?? CLIENT_SECRET_PLACEHOLDER };
+};
+
+const resolveClientSecret = (secret: string | null | undefined, resolution: string): string | undefined => {
+  if (secret != null && secret.trim() !== '') {
+    return secret;
+  }
+  // A cleared cell declares "the secret already exists in Core, don't rewrite it" — only an Override can
+  // reach a stored secret; under Skip the toolset is new, so it still needs a value Core will accept.
+  const isCleared = secret != null;
+  return isCleared && resolution === ConflictResolutionPolicy.OVERRIDE ? void 0 : CLIENT_SECRET_PLACEHOLDER;
+};
+
+/**
+ * Gives every OAUTH toolset a `client_secret` Core accepts (exports never carry one) and drops the read-only
+ * `client_secret_hint`. Other toolsets are returned as they are.
+ *
+ * @param {T[]} files - toolset files about to be imported
+ * @param {string} resolution - conflict resolution policy the user picked
+ * @returns {T[]} - files with the client secret applied
+ */
+export const applyToolsetClientSecrets = <T extends object>(files: T[], resolution: string): T[] =>
+  files.map((file) => {
+    if (!isOAuthToolsetFile(file)) {
+      return file;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { client_secret_hint, client_secret, ...authSettings } = getToolsetAuthSettings(file) ?? {};
+    const clientSecret = resolveClientSecret(client_secret, resolution);
+    return {
+      ...file,
+      auth_settings: clientSecret === void 0 ? authSettings : { ...authSettings, client_secret: clientSecret },
+    };
+  });
+
 /**
  * Convert selected for import data into grid data with errors
  *
@@ -126,6 +202,7 @@ export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepSt
  * @param {?DialPrompt[]} [existingData] - array of already existing in current folder data
  * @param {?(t: string) => string} [t] - translation function
  * @param {?boolean} [isVersionless] - prompts import name-only (no `__version` split)
+ * @param {?boolean} [withClientSecret] - toolset import: give OAUTH rows an editable client secret
  * @returns {AssetImportGridData[]} - array of AssetImportGridData
  */
 export const generateAssetRowDataForImportGrid = (
@@ -133,6 +210,7 @@ export const generateAssetRowDataForImportGrid = (
   existingData?: (DialPrompt | AssetApp)[],
   t?: (t: string) => string,
   isVersionless?: boolean,
+  withClientSecret?: boolean,
 ): AssetImportGridData[] => {
   const data: AssetImportGridData[] = [];
 
@@ -140,18 +218,7 @@ export const generateAssetRowDataForImportGrid = (
     const { extension } = getNameExtensionFromFile(key);
     if (!value.isInvalid) {
       value.files.forEach((file, index) => {
-        let nameData: { name: string; version?: string };
-        if (isVersionless) {
-          // A versionless prompt's name is the last id segment verbatim — a `__` in it is part
-          // of the name, never a name/version split.
-          const idName = file.id ? getFolderNameAndPath(file.id as string).name : (file.name as string);
-          nameData = { name: idName };
-        } else if (file.id) {
-          nameData = getNameVersionFromAsset(decodeCorePath(getFolderNameAndPath(file.id as string).name));
-        } else {
-          nameData = { name: file.name as string, version: (file as AssetApp).version as string };
-        }
-
+        const nameData = getAssetNameData(file, isVersionless);
         data.push({
           index,
           name: key,
@@ -159,6 +226,7 @@ export const generateAssetRowDataForImportGrid = (
           assetName: nameData.name,
           existingNames: existingData?.map((p) => getFolderNameAndPath(p.path).name),
           extension,
+          ...(withClientSecret && getClientSecretRowFields(file)),
         });
       });
     } else {
@@ -223,6 +291,7 @@ export const generateFileRowDataForImportGrid = (
  * @param {?boolean} [withIcon] - render the file-name icon renderer
  * @param {?boolean} [readonly] - disable inline editing
  * @param {?boolean} [isVersionless] - omit the editable Version column (prompts)
+ * @param {?ClientSecretColumnOptions} [clientSecretColumn] - toolset import: add the editable client secret column
  * @returns {ColDef[]} - column definitions
  */
 export const generateAssetColumnsForImportGrid = (
@@ -230,6 +299,7 @@ export const generateAssetColumnsForImportGrid = (
   withIcon?: boolean,
   readonly?: boolean,
   isVersionless?: boolean,
+  clientSecretColumn?: ClientSecretColumnOptions,
 ): ColDef[] => {
   const columns: ColDef[] = [
     {
@@ -241,6 +311,7 @@ export const generateAssetColumnsForImportGrid = (
       },
       cellRendererParams: {
         onChange,
+        hideTriangle: true,
       },
     },
   ];
@@ -251,6 +322,22 @@ export const generateAssetColumnsForImportGrid = (
       field: 'version',
       cellClass: NO_BORDER_CLASS,
       cellRenderer: FormattedValueCellRenderer,
+    });
+  }
+
+  if (clientSecretColumn) {
+    columns.push({
+      headerName: clientSecretColumn.headerName,
+      field: CLIENT_SECRET_FIELD,
+      cellClass: NO_BORDER_CLASS,
+      cellRendererSelector: (params: ICellRendererParams) => {
+        const isEditable = params.data.isOAuth && !params.data.invalid && !readonly;
+        return isEditable ? { component: EditablePasswordCellRenderer } : void 0;
+      },
+      cellRendererParams: {
+        onChange,
+        getInputLabel: (data: AssetImportGridData) => clientSecretColumn.getInputLabel(data.assetName),
+      },
     });
   }
 
@@ -429,6 +516,11 @@ export const changeFilesMap = (
           name: value,
           id: targetFile.id ? getAssetIdByNameAndVersion(targetFile.id, value) : targetFile.id,
         };
+      } else if (field === CLIENT_SECRET_FIELD && targetFile && isOAuthToolsetFile(targetFile)) {
+        updatedValue.files[fileIndex] = {
+          ...targetFile,
+          auth_settings: { ...getToolsetAuthSettings(targetFile), client_secret: value },
+        } as unknown as typeof targetFile;
       }
     }
 
