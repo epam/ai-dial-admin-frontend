@@ -7,7 +7,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { toProjectList } from '@/src/server/core/project-metadata';
 import { toSkillList } from '@/src/server/core/skill-metadata';
 import { decodeCorePath, encodeCorePath, stripPrefix } from '@/src/server/publications/path';
-import { CoreResourceAction, CorePublicationResource, CorePublicationRule } from '@/src/server/publications/models';
+import { CorePublicationResource, CorePublicationRule } from '@/src/server/publications/models';
 import { ResourceType } from '@/src/types/resource-type';
 import { removeTrailingSlash, replacePathPrefix } from '@/src/utils/files/path';
 import { addTrailingSlash } from '@/src/utils/url';
@@ -178,37 +178,31 @@ export async function updateRulesCore(
 }
 
 /**
- * Deletes (unpublishes) a folder for a set of resource types: gathers every resource URL under
- * it across only the targeted types, publishes a DELETE-action publication for them, approves
- * it, then best-effort deletes the folder from each targeted type's own storage. That final
- * cleanup step swallows every exception — a documented workaround for Azure Blob Storage's
- * hierarchical-namespace empty-folder semantics (design D6) — so a cleanup failure must never
- * fail the overall folder delete.
+ * Deletes a folder for a set of resource types: gathers every resource URL under it across only the
+ * targeted types and deletes each one directly (`If-Match: *`), with no publication — the admin console
+ * holds admin access to the public space, which Core accepts for a direct delete. Folders are implicit
+ * for these types (Core rejects a folder-path delete with 400), so removing the last item removes the
+ * folder. Sequential and fail-fast, like {@link removeComplexFolderCore}: the first failed delete is
+ * returned and nothing already deleted is rolled back.
  */
 export async function removeFolderCore(
   token: Token,
   path: string,
   resourceTypes: ResourceType[],
 ): Promise<ServerActionResponse> {
-  const urlLists = await Promise.all(
-    resourceTypes.map((type) => gatherResourceUrls(readRecursiveMetadata(token, type), path)),
-  );
-  const resources: CorePublicationResource[] = urlLists
-    .flat()
-    .map((url) => ({ action: CoreResourceAction.DELETE, targetUrl: url }));
-
-  const publishResult = await createAndApprovePublication(token, path, resources);
-  if (!publishResult.success) {
-    return publishResult;
+  for (const type of resourceTypes) {
+    const urls = await gatherResourceUrls(readRecursiveMetadata(token, type), path);
+    for (const url of urls) {
+      const barePath = decodeCorePath(stripPrefix(url, RESOURCE_TYPE_PREFIX[type]));
+      const result =
+        type === ResourceType.FILE
+          ? await filesCoreApi.deleteFile(token, barePath, DEFAULT_ETAG)
+          : await assetApi.delete(token, type, barePath, DEFAULT_ETAG);
+      if (!result.success) {
+        return result;
+      }
+    }
   }
-
-  await Promise.allSettled(
-    resourceTypes.map((type) =>
-      type === ResourceType.FILE
-        ? filesCoreApi.deleteFile(token, path, DEFAULT_ETAG)
-        : assetApi.delete(token, type, path, DEFAULT_ETAG),
-    ),
-  );
 
   return { success: true };
 }
@@ -252,11 +246,10 @@ async function walkComplexFolder(
  * Deletes (recursively) a complex-resource grouping folder — the counterpart to {@link removeFolderCore}
  * for Skills and Projects, kept separate rather than folded into `ALL_TYPES`: they are folder-shaped
  * resources with their own dedicated v2 endpoints, not flat resources addressable through the generic
- * publication-based delete every other type uses. Deletes bottom-up — every resource first
+ * per-item delete the other types use. Deletes bottom-up — every resource first
  * (order-independent, they're atomic units), then every nested `.dial-folder` marker deepest-first, then
  * the target folder itself — since Core rejects a non-empty folder marker delete with a conflict. Every
- * delete is unconditional (`If-Match: *`), matching how {@link removeFolderCore}'s own folder-marker
- * cleanup step already treats a folder delete as best-effort rather than requiring a real etag per item.
+ * delete is unconditional (`If-Match: *`) rather than reading a real etag per item.
  */
 export async function removeComplexFolderCore(
   ops: ComplexFolderOps,
