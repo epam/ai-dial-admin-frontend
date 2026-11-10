@@ -8,7 +8,7 @@ import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import { getNoAvailableTitle, isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -17,6 +17,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -108,10 +109,19 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
 
   const isReadOnly = isAllRoles || isReadOnlyAdmin;
 
-  const columnDefs = useMemo(
-    () => (isReadOnly ? BASE_COLUMNS : [...BASE_COLUMNS, ACTION_COLUMN([getRemoveOperation(onRemoveRole)])]),
-    [isReadOnly, onRemoveRole],
-  );
+  const onOpenRole = useCallback((role?: DialRole) => {
+    if (role) {
+      onOpenInNewTab(ApplicationRoute.PlatformRoles, role);
+    }
+  }, []);
+
+  const columnDefs = useMemo(() => {
+    const actions = [getOpenInNewTabOperation(onOpenRole)];
+    if (!isReadOnly) {
+      actions.push(getRemoveOperation(onRemoveRole));
+    }
+    return [...BASE_COLUMNS, ACTION_COLUMN(actions)];
+  }, [isReadOnly, onOpenRole, onRemoveRole]);
 
   // When unrestricted (userRoles undefined), display all roles in the grid read-only.
   const displayedRoles = isAllRoles ? roles : selectedRoles;

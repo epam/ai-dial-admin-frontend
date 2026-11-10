@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import RoleAssetView from '@/src/components/Assets/Platform/Roles/View';
 import { PlatformRoleModelOption } from '@/src/components/Assets/Platform/Roles/models';
+import Page403 from '@/src/components/Page403/Page403';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -20,34 +21,74 @@ export default async function Page(params: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ configFile?: string }>;
 }) {
-  const isConfigFileMode = (await params.searchParams).configFile === 'true';
+  let isConfigFileMode = (await params.searchParams).configFile === 'true';
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const optionWarnings: EntitiesI18nKey[] = [];
 
   let etag = DEFAULT_ETAG;
   let role: DialRoleResource | null = null;
 
-  try {
-    const path = (await params.params).id;
+  // Next.js has already decoded the route segment; decoding it again corrupts literal percent sequences.
+  const path = (await params.params).id;
 
-    if (isConfigFileMode) {
-      const result = await getConfigFileRole(path);
-      role = result.success ? (result.data as unknown as DialRoleResource) : null;
-    } else {
-      role = await getRole(decodeURIComponent(path), etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return res?.response as DialRoleResource | null;
-      });
+  if (!isConfigFileMode) {
+    let result;
+    try {
+      result = await getRole(path, etag);
+    } catch (e) {
+      errorObjLog(e, 'Failed to fetch role asset data');
+      throw new Error('Failed to fetch role asset data');
     }
-  } catch (e) {
-    errorObjLog(e, 'Failed to fetch role asset data');
+
+    if (
+      result.success &&
+      result.response &&
+      typeof result.response === 'object' &&
+      !Array.isArray(result.response) &&
+      typeof result.response._metadata?.name === 'string'
+    ) {
+      role = result.response;
+      etag = result.etag || DEFAULT_ETAG;
+    } else if (!result.success && result.status === 404) {
+      isConfigFileMode = true;
+    } else if (!result.success && (result.status === 401 || result.status === 403)) {
+      return <Page403 />;
+    } else {
+      throw new Error('Failed to fetch role asset data');
+    }
+  }
+
+  if (isConfigFileMode) {
+    let result;
+    try {
+      result = await getConfigFileRole(path);
+    } catch (e) {
+      errorObjLog(e, 'Failed to fetch config-file role data');
+      throw new Error('Failed to fetch config-file role data');
+    }
+
+    if (
+      result.success &&
+      result.data &&
+      typeof result.data === 'object' &&
+      !Array.isArray(result.data) &&
+      typeof result.data.name === 'string'
+    ) {
+      role = result.data as unknown as DialRoleResource;
+    } else if (!result.success && result.failure.status === 404) {
+      notFound();
+    } else if (!result.success && (result.failure.status === 401 || result.failure.status === 403)) {
+      return <Page403 />;
+    } else {
+      throw new Error('Failed to fetch config-file role data');
+    }
+  }
+
+  if (role == null) {
+    throw new Error('Failed to fetch role asset data');
   }
 
   const models = await readConfigEntities<PlatformRoleModelOption>(token, ConfigFileEntityType.Models, optionWarnings);
-
-  if (role == null) {
-    notFound();
-  }
 
   return (
     <SaveValidationContextProvider>
