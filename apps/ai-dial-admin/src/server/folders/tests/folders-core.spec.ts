@@ -255,6 +255,19 @@ describe('Server :: Folders :: folders-core :: removeFolderCore', () => {
     expect(result.success).toBe(true);
   });
 
+  test('deletes the hidden .dial_folder marker together with the items', async () => {
+    (assetApi.getMetadata as any).mockResolvedValue(
+      folderNode('prompts/public/', [itemNode('prompts/public/sub/.dial_folder'), itemNode('prompts/public/a__1')]),
+    );
+    (assetApi.delete as any).mockResolvedValue({ success: true });
+
+    const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.PROMPT]);
+
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/sub/.dial_folder', '*');
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/a__1', '*');
+    expect(result.success).toBe(true);
+  });
+
   test('deletes files through the files client', async () => {
     (filesCoreApi.getFileMetadata as any).mockResolvedValue(
       folderNode('files/public/', [itemNode('files/public/doc.txt')]),

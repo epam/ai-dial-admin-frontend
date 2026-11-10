@@ -246,11 +246,10 @@ async function walkComplexFolder(
  * Deletes (recursively) a complex-resource grouping folder — the counterpart to {@link removeFolderCore}
  * for Skills and Projects, kept separate rather than folded into `ALL_TYPES`: they are folder-shaped
  * resources with their own dedicated v2 endpoints, not flat resources addressable through the generic
- * publication-based delete every other type uses. Deletes bottom-up — every resource first
+ * per-item delete the other types use. Deletes bottom-up — every resource first
  * (order-independent, they're atomic units), then every nested `.dial-folder` marker deepest-first, then
  * the target folder itself — since Core rejects a non-empty folder marker delete with a conflict. Every
- * delete is unconditional (`If-Match: *`), matching how {@link removeFolderCore}'s own folder-marker
- * cleanup step already treats a folder delete as best-effort rather than requiring a real etag per item.
+ * delete is unconditional (`If-Match: *`) rather than reading a real etag per item.
  */
 export async function removeComplexFolderCore(
   ops: ComplexFolderOps,
