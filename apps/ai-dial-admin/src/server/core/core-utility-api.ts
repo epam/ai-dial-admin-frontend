@@ -9,7 +9,6 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 
 export const DEPLOYMENTS_URL = 'v1/deployments';
 export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
-export const USER_INFO_URL = 'v1/user/info';
 export const USER_ROLE_ASSIGNMENTS_URL = 'v1/user/role-assignments';
 export const VERSION_URL = 'version';
 export const APPLICATION_TYPE_SCHEMAS_URL = 'v1/application_type_schemas/schemas';
@@ -28,8 +27,11 @@ const EMAIL_CLAIM = 'email';
  * The global-settings singleton lives on {@link SettingsApi} instead, which already owns that
  * resource. {@link UtilityApi} keeps the Admin-backend-owned import/export, version configuration,
  * and config-sync operations so those aren't duplicated or moved here.
+ *
+ * `getUserInfo` goes through the SDK; `getCoreVersion` stays hand-written because it reads `text/plain`.
  */
 export class CoreUtilityApi extends CoreApi {
+  // TODO: move the deployment reads onto the SDK (`getDeployment` and the listing) in the next phase.
   checkDeploymentByName(name: string, token: Token): Promise<Deployment | null> {
     return this.get(DEPLOYMENT_URL(name), token);
   }
@@ -43,7 +45,8 @@ export class CoreUtilityApi extends CoreApi {
   }
 
   async getUserInfo(token: Token): Promise<ServerActionResponse<{ userInfo: UserInfo }>> {
-    const result = (await this.getAction(USER_INFO_URL, token)) as ServerActionResponse<CoreUserInfoResponse>;
+    // The SDK's `UserInfoResponse` marks `roles` optional; Core always sends it, as `CoreUserInfoResponse` says.
+    const result = await this.sdkAction<CoreUserInfoResponse>(token, (init) => this.sdk.getUserInfo(init));
     if (!result.success) {
       return { ...result, response: undefined };
     }

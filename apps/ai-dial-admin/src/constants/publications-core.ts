@@ -11,8 +11,7 @@ export const CORE_PUBLICATION_UPDATE_URL = 'v1/ops/publication/update';
 export const CORE_PUBLICATION_CREATE_URL = 'v1/ops/publication/create';
 export const CORE_PUBLICATION_RULES_URL = 'v1/ops/publication/rule/list';
 
-/** DIAL Core file/bucket endpoints used by the publication file flow. */
-export const CORE_BUCKET_URL = 'v1/bucket';
+/** DIAL Core file endpoints used by the publication file flow. */
 export const CORE_FILES_URL = 'v1/files';
 export const CORE_FILES_METADATA_URL = 'v1/metadata/files';
 
