@@ -918,6 +918,9 @@ export default {
     CostPerMonth: 'Per month',
     CostObject: 'Cost object',
     CostObjectHint: 'Pins the policy to one cost object. Must match the folder of a project policy.',
+    CreateCostObjectHint:
+      'Sets the policy folder. With subject rules, it also pins the policy to this cost object; otherwise an assignment supplies it.',
+    InvalidPathElement: 'Use only letters, numbers, and . _ : @ [ ] ( ) -.',
     PriorityInvalid: 'Priority must be a whole number',
     AmountInvalid: 'Amount must be greater than 0',
     CostWindowRequired: 'Set a limit for at least one window',
@@ -1120,6 +1123,14 @@ export default {
       'Up to 30 files can be imported. Maximum {size} MB per file. Total size must not exceed {totalSize} MB',
     File: 'File',
     DropAnyFile: 'Drop file here',
+    ClientSecretWarningTitle:
+      'Client secrets aren’t included in imports. Add them manually to activate the imported toolsets.',
+    ClientSecretWarning:
+      'Toolsets with OAuth authentication are exported without their client secret, and Core rejects them without one. Enter the real secret in the Client secret column now, or change it later on the toolset page. You can edit {placeholder} or leave it as is for now, but OAuth sign-in will not work until a real secret is set.',
+    ClientSecretOverrideWarning:
+      'Override replaces the stored client secret of an existing toolset (and turns a dynamically registered toolset into a static one) with the value in this column. Clear the value to tell the import that the secret already exists in Core and must not be rewritten; if the toolset does not exist yet, its import fails. Or choose Skip.',
+    ClientSecretColumn: 'Client secret',
+    ClientSecretInputLabel: 'Client secret for {name}',
     InProgressTitle: 'Import in progress',
     InProgressDescription: 'Imported items will appear in {folder} folder once the import is complete',
     ImportFailed: 'Import failed',

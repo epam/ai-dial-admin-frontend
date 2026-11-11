@@ -15,7 +15,6 @@ const toGrantBody = (resources: ApprovedResource[]) => ({
   resources: resources.map(({ path, access }) => ({ url: path, access })),
 });
 
-// Core names an approved target `url`; the declaration it mirrors calls the same value `path`.
 export const toAdminConsentStatus = (status: CoreAdminConsentStatus): AdminConsentStatus => {
   const { grantedResources, ...rest } = status;
   return {

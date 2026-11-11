@@ -124,7 +124,7 @@ of a bulk selection), recursively deleting every skill and nested grouping folde
 before deleting the folder itself. This SHALL use Skills' own dedicated Core endpoints directly, not the
 generic cross-type folder-delete path used by the other five asset types (Prompts, Toolsets,
 Applications, Conversations, Files), since Skills are folder-shaped resources with no equivalent
-flat-resource/publication-based delete path.
+flat-resource per-item delete path.
 
 #### Scenario: Deleting a folder removes every skill and nested folder within it
 - **WHEN** a user deletes a grouping-folder row containing one or more skills, or nested grouping

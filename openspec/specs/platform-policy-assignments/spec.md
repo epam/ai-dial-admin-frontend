@@ -8,9 +8,7 @@ the one-level cost-object folder tree, and the Subjects rule editor with `platfo
 always `<costObject>/<id>`, its `costObject` is taken from the folder and never typed twice, and its `policy`
 is picked from the global policies and the cost object's own. Read and written directly through Core, never
 through the admin backend. Created by archiving change `add-platform-policies`.
-
 ## Requirements
-
 ### Requirement: Governance > Policy Assignments menu entry
 The system SHALL add a `Policy Assignments` item to the Governance group, directly after `Policies`,
 linking to `/platform-policy-assignments`. The item SHALL be a Core-direct item, shown only when
@@ -170,11 +168,16 @@ once.
 The system SHALL send assignment writes to Core and SHALL NOT re-implement Core's semantic rules (policy
 existence, cost-object ownership, subject pinned exactly once, instance-id collisions, `expiresAt` in the
 future). The system SHALL render Core's 400, 409, and 422 messages unchanged in an error notification
-and SHALL omit `id` from payloads.
+and SHALL omit `id` from payloads. A failed create SHALL show exactly one error notification and keep the
+create form open with the user's edits.
 
 #### Scenario: A 422 is shown as returned
 - **WHEN** Core answers 422 because the referenced policy does not exist
 - **THEN** that message is shown in the error notification and the form keeps the user's edits
+
+#### Scenario: Failed create shows one error
+- **WHEN** a valid assignment form is submitted and Core rejects the write, including a subject-rule error or priority conflict
+- **THEN** exactly one notification shows Core's unchanged error details and the create form remains open with the entered values
 
 ### Requirement: Assignments need no admin-backend call
 The system SHALL read and write assignments only through DIAL Core and SHALL NOT call the admin backend
@@ -183,3 +186,4 @@ or Core's config-file population for them.
 #### Scenario: No admin-backend request
 - **WHEN** a user lists, opens, saves, or deletes an assignment
 - **THEN** no request is made to the admin backend
+

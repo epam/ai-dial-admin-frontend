@@ -36,7 +36,7 @@ import {
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
 import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
-import { getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
@@ -54,12 +54,7 @@ interface Props {
   translators?: ResourceInfo[];
   getContext: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
-  onCreate?: (
-    asset: AssetWithVersion,
-    path?: string,
-    isCreateDuplicate?: boolean,
-    shouldCloseModal?: boolean,
-  ) => Promise<ServerActionResponse>;
+  onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
 }
 
 const CreateApplication: FC<Props> = ({
@@ -126,9 +121,12 @@ const CreateApplication: FC<Props> = ({
       folderId: folderContext.filePath,
       ...(!isPlatform && { display_version: asset.version }),
     } as unknown as AssetWithVersion;
-    const response = await protectedRequest(onCreate, entity, undefined, undefined, false);
+    const response = await protectedRequest(onCreate, entity);
     setIsLoading(false);
-    if (!response.success) return;
+    if (!response.success) {
+      showNotification(getErrorNotification(response.errorHeader, response.errorMessage, response.requestId));
+      return;
+    }
 
     showNotification(
       getSuccessNotification(

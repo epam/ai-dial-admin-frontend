@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { PolicySubjectFunction } from '@/src/models/dial/policy';
 import { assetApi } from '@/src/app/api/api';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { deleteCostObjectFolder } from '@/src/server/assets/delete-cost-object-folder';
@@ -71,6 +72,27 @@ describe('Platform policies :: server actions', () => {
     await createPolicy({ name: 'team-cap', folderId: 'team-a/', priority: 10, object: '*', cost: { day: 5 } } as any);
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.POLICY, 'team-a/team-cap', PAYLOAD);
+  });
+
+  test('writes a project policy with its subjects and cost object in the body', async () => {
+    vi.mocked(assetApi.put).mockResolvedValue(RESPONSE_MOCK);
+    const subject = [{ source: 'roles', function: PolicySubjectFunction.TRUE, targets: [] }];
+
+    await createPolicy({
+      name: 'team-cap',
+      folderId: 'platform/team-a/',
+      priority: 10,
+      object: '*',
+      cost: { day: 5 },
+      costObject: 'team-a',
+      subject,
+    });
+
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.POLICY, 'team-a/team-cap', {
+      ...PAYLOAD,
+      costObject: 'team-a',
+      subject,
+    });
   });
 
   test('createPolicy returns a Core rejection unchanged', async () => {

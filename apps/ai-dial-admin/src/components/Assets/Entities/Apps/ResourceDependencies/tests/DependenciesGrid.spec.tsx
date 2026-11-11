@@ -32,7 +32,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 const makeDependency = (linkId: string): ResourceDependency => ({
   kind: 'dial.resourceLink',
   link_id: linkId,
-  target: { path: `files/public/${linkId}/` },
+  target: { url: `files/public/${linkId}/` },
   access: [ResourceAccess.Read, ResourceAccess.Write],
   required: true,
 });
