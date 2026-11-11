@@ -2,6 +2,15 @@
 
 All notable infrastructure-relevant changes to this project will be documented in this file.
 
+## 0.24.0
+
+### Changed
+
+#### Analytics
+
+- The Sessions pages read ratings from enrichments instead of the `response_ratings` table. An enrichment counts as a rating enrichment when it carries `rate_pos_count`, `rate_zero_count` and `rate_neg_count`; its name and how it is built are up to the instance. One on the Sessions base table (`sessions` by default) feeds the rating pills, the feedback filter and the Rating column; one on `dial_usage_log`, grained by `response_id`, feeds the span and trace ratings and the feedback panel's list. Mark `comment_sample` sensitive and keep the counts non-sensitive, as in `response_ratings`. Without them the ratings are hidden rather than failing
+- The Sessions source — the base table and the fields that play the session id, time, project, title, cost and turns roles — is set on a new `Sessions source` tab of System Properties and stored by the Analytics service. Requires an Analytics service that stores that setting. Without a stored setting the pages use the default binding (`sessions`, `client_session_id`, `last_request_time`, `project_id`, `session_insights.title`, `total_price`, `turn_count`), so an instance that never saves it behaves as before
+
 ## 0.23.0
 
 ### Added

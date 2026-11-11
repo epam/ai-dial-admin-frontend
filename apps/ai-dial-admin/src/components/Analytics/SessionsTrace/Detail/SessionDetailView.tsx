@@ -10,21 +10,24 @@ import { useSessionTrace } from '@/src/components/Analytics/SessionsTrace/Detail
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import {
+  ColumnProvenance,
   SessionDetailRow,
+  SessionEnrichmentPanel,
   SessionFeedbackPage,
-  SessionInsightField,
   HopBodyGrants,
   SessionScope,
   SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
-import { feedbackByResponseId, isFeedbackPartial } from '@/src/utils/analytics/session-detail-fields';
 
 interface Props {
   session: SessionDetailRow;
-  // Which insight columns this instance's enrichment exposes, resolved on the server from the entity schema.
+  source: SessionsSource;
+  // Which enrichment panels this instance's schema exposes, resolved on the server from the entity schema.
   // Built there and only passed through here, so its identity is stable and the rail's memo keeps holding.
-  insightColumns: SessionInsightField[];
+  enrichmentPanels: SessionEnrichmentPanel[];
+  enrichmentProvenance: Record<string, ColumnProvenance>;
   // The record's remaining fields grouped by the schema's tags, resolved on the server beside the insight
   // columns for the same reason: the client has no schema of its own.
   metadataGroups: SpanFieldGroup[];
@@ -33,10 +36,17 @@ interface Props {
   nowMs: number;
 }
 
-const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups, feedback, bodyGrants, nowMs }) => {
+const SessionDetailView: FC<Props> = ({
+  session,
+  source,
+  enrichmentPanels,
+  enrichmentProvenance,
+  metadataGroups,
+  feedback,
+  bodyGrants,
+  nowMs,
+}) => {
   const t = useI18n();
-  const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
-  const ratingsByResponseId = useMemo(() => feedbackByResponseId(rows), [rows]);
   // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
   // consumer would give each hook a new object identity and re-fetch on every render.
   const scope = useMemo<SessionScope>(
@@ -58,9 +68,6 @@ const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups,
           spans={trace.spans}
           fieldGroups={trace.fieldGroups}
           bodyGrants={bodyGrants}
-          feedbackByResponseId={ratingsByResponseId}
-          isFeedbackPartial={isFeedbackPartial(rows, feedback?.total ?? null)}
-          isCommentTextReadable={feedback?.isCommentTextReadable ?? false}
           hasLoadError={trace.hasLoadError}
           selectedSpanId={selectedSpanId}
           onSelectSpan={onSelectSpan}
@@ -71,16 +78,15 @@ const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups,
         className={classNames('flex min-h-0 flex-1 flex-col gap-5', isTraceOpen && 'hidden')}
         inert={isLoading || isTraceOpen}
       >
-        <SessionDetailHeader session={session} nowMs={nowMs} />
+        <SessionDetailHeader session={session} source={source} nowMs={nowMs} />
         <SessionDetailBody
           session={session}
-          insightColumns={insightColumns}
+          source={source}
+          enrichmentPanels={enrichmentPanels}
+          enrichmentProvenance={enrichmentProvenance}
           metadataGroups={metadataGroups}
           scope={scope}
-          feedbackRows={rows}
-          feedbackTotal={feedback?.total ?? null}
-          ratings={feedback?.ratings ?? null}
-          isCommentTextReadable={feedback?.isCommentTextReadable ?? false}
+          feedback={feedback}
           onOpenTrace={onOpenTrace}
         />
       </div>

@@ -5,6 +5,7 @@ import { FC, useMemo } from 'react';
 
 import SessionValueFilter from '@/src/components/Analytics/SessionsTrace/List/SessionValueFilter';
 import SessionValueFloatingFilter from '@/src/components/Analytics/SessionsTrace/List/SessionValueFloatingFilter';
+import { useSessionGridStorage } from '@/src/components/Analytics/SessionsTrace/List/use-session-grid-storage';
 import { sessionDetailHref } from '@/src/components/Analytics/SessionsTrace/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { infiniteGridOptions } from '@/src/constants/ag-grid';
@@ -13,7 +14,6 @@ import {
   SESSIONS_GROUP_HEADER_HEIGHT,
   SESSIONS_HEADER_HEIGHT,
   SESSIONS_ROW_HEIGHT,
-  SESSIONS_STORAGE_KEY,
   SESSION_VALUE_FILTER,
   SESSION_VALUE_FLOATING_FILTER,
 } from '@/src/constants/analytics/sessions-trace';
@@ -21,6 +21,7 @@ import { SESSIONS_TRACE_COLUMN_GROUPS } from '@/src/constants/grid-columns/grid-
 import { useI18n } from '@/src/locales/client';
 import { SessionGridContext, SessionRow } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 
 const GRID_COMPONENTS = {
   [SESSION_VALUE_FILTER]: SessionValueFilter,
@@ -32,6 +33,7 @@ interface Props {
   gridContext: SessionGridContext;
   onGridReady: (event: GridReadyEvent) => void;
   schemaFields?: AnalyticsEntityField[] | null;
+  source: SessionsSource;
   isColumnsPanelOpen: boolean;
   onToggleColumnsPanel: () => void;
 }
@@ -46,12 +48,17 @@ const SessionsList: FC<Props> = ({
   gridContext,
   onGridReady,
   schemaFields,
+  source,
   isColumnsPanelOpen,
   onToggleColumnsPanel,
 }) => {
   const t = useI18n();
+  const storageKey = useSessionGridStorage(source.baseTable);
 
-  const columnDefs = useMemo(() => SESSIONS_TRACE_COLUMN_GROUPS(t, schemaFields ?? []), [t, schemaFields]);
+  const columnDefs = useMemo(
+    () => SESSIONS_TRACE_COLUMN_GROUPS(t, schemaFields ?? [], source),
+    [t, schemaFields, source],
+  );
 
   return (
     <div className="sessions-grid size-full">
@@ -78,7 +85,7 @@ const SessionsList: FC<Props> = ({
         onGridReady={onGridReady}
         getRowId={({ data }) => data.client_session_id}
         getHref={getSessionRowHref}
-        storageKey={SESSIONS_STORAGE_KEY}
+        storageKey={storageKey}
         isLiveData
         showColumnsPanel={isColumnsPanelOpen}
         toggleColumnsPanel={onToggleColumnsPanel}

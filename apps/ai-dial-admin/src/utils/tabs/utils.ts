@@ -1,7 +1,7 @@
 import { TabItem, TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { SystemPropertiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -17,6 +17,7 @@ export enum EntityViewTab {
   GlobalInterceptors = 'GlobalInterceptors',
   RateLimitSchedule = 'RateLimitSchedule',
   SpendingLimits = 'SpendingLimits',
+  SessionsSource = 'SessionsSource',
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
@@ -126,6 +127,11 @@ export const rateLimitScheduleTab = (t: (key: string) => string) => ({
 export const spendingLimitsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.SpendingLimits,
   label: t(TabsI18nKey.SpendingLimits),
+});
+
+export const sessionsSourceTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.SessionsSource,
+  label: t(SystemPropertiesI18nKey.SessionsSourceTitle),
 });
 
 export const parametersTab = (t: (key: string) => string) => ({
@@ -649,8 +655,9 @@ export const getDeploymentsViewTabs = (
   ];
 };
 
-export const getSystemPropertiesTabs = (t: (key: string) => string): TabItem[] => {
-  return [globalInterceptorsTab(t), rateLimitScheduleTab(t), spendingLimitsTab(t)];
+export const getSystemPropertiesTabs = (t: (key: string) => string, isAnalyticsEnabled?: boolean): TabItem[] => {
+  const tabs = [globalInterceptorsTab(t), rateLimitScheduleTab(t), spendingLimitsTab(t)];
+  return isAnalyticsEnabled ? [...tabs, sessionsSourceTab(t)] : tabs;
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabItem[] => {

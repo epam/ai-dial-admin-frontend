@@ -1,6 +1,6 @@
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { buildTreeFromParentPointer } from '@/src/components/Common/TreeGrid/utils';
-import { FILTERABLE_SPAN_KINDS } from '@/src/constants/analytics/sessions-trace';
+import { FILTERABLE_SPAN_KINDS, RATING_SIGNATURE_FIELDS } from '@/src/constants/analytics/sessions-trace';
 import {
   SessionFeedbackRow,
   SessionSpanRow,
@@ -10,11 +10,14 @@ import {
   HopOutcomeFilter,
   HopTreeNode,
   HopTreeRow,
+  ResponseRatingsField,
+  SpanFieldGroup,
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
 import { toMillis } from '@/src/utils/analytics/session-formatting';
 import { hopFactsOf, isFailedHop, spanKindOf, spanLabelOf, spanPhaseOf } from '@/src/utils/analytics/session-spans';
 import { toNumber } from '@/src/utils/analytics/scalar';
+import { ratingEnrichmentOf } from '@/src/utils/analytics/sessions-source';
 
 type SpanTreeRow = TreeRow<SessionSpanRow>;
 
@@ -190,18 +193,46 @@ export const flattenHopTree = (tree: HopTreeNode[]): HopTreeRow[] => {
   return rows;
 };
 
-// Ratings attach to spans by an exact join on the span's own response id, never by position: the rating source
-// is grained by the response id the client was answered under, and an in-turn hop normally records its
-// upstream's own id, which no rating names. That is a property of the recorded data, not a guarantee — an
-// application that relays its model's stream unchanged records the model's id on both hops. So each rated
-// response is placed on one span only, the shallowest that carries it: the hop nearest the client is the one
-// that answered it. Siblings at that depth keep start order, so the earliest wins.
+export const spanRatingNamespaceOf = (fieldGroups: SpanFieldGroup[] = []): string | null =>
+  ratingEnrichmentOf(
+    fieldGroups.flatMap(({ fields }) => fields.map(({ name, type }) => ({ name, type, source: name }))),
+  );
+
+export const isSpanCommentTextReadable = (fieldGroups: SpanFieldGroup[], namespace: string | null): boolean =>
+  namespace !== null &&
+  fieldGroups.some(({ fields }) =>
+    fields.some(({ name }) => name === `${namespace}.${ResponseRatingsField.CommentSample}`),
+  );
+
+export const spanFeedbackOf = (span: SessionSpanRow, namespace: string): SessionFeedbackRow | null => {
+  const row = span as unknown as Record<string, unknown>;
+  const read = <T>(fieldName: ResponseRatingsField): T | null => (row[`${namespace}.${fieldName}`] ?? null) as T | null;
+
+  if (RATING_SIGNATURE_FIELDS.every((fieldName) => read(fieldName as ResponseRatingsField) === null)) {
+    return null;
+  }
+
+  const comment = row[`${namespace}.${ResponseRatingsField.CommentSample}`];
+
+  return {
+    response_id: span.response_id ?? null,
+    first_rate_time: read(ResponseRatingsField.FirstRateTime),
+    last_rate_time: read(ResponseRatingsField.LastRateTime),
+    rate_pos_count: read(ResponseRatingsField.RatePosCount),
+    rate_zero_count: read(ResponseRatingsField.RateZeroCount),
+    rate_neg_count: read(ResponseRatingsField.RateNegCount),
+    rate_distinct_count: read(ResponseRatingsField.RateDistinctCount),
+    comment_count: read(ResponseRatingsField.CommentCount),
+    ...(comment === undefined ? {} : { comment_sample: comment as string | null }),
+  };
+};
+
 export const attributeFeedbackToSpans = (
   tree: HopTreeNode[],
-  byResponseId?: Map<string, SessionFeedbackRow>,
+  namespace: string | null,
 ): Map<string, SessionFeedbackRow> => {
   const bySpanId = new Map<string, SessionFeedbackRow>();
-  if (!byResponseId?.size) {
+  if (!namespace) {
     return bySpanId;
   }
 
@@ -210,8 +241,8 @@ export const attributeFeedbackToSpans = (
   while (level.length) {
     for (const { span } of level) {
       const responseId = span?.response_id;
-      const row = responseId ? byResponseId.get(responseId) : undefined;
-      if (span && responseId && row && !placed.has(responseId)) {
+      const row = span && responseId && !placed.has(responseId) ? spanFeedbackOf(span, namespace) : null;
+      if (span && responseId && row) {
         placed.add(responseId);
         bySpanId.set(span.core_span_id, row);
       }

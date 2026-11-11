@@ -1,10 +1,19 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { settingsApi } from '@/src/app/api/api';
+import { analyticsDataApi, sessionsSourceApi, settingsApi } from '@/src/app/api/api';
+import { DEFAULT_SESSIONS_SOURCE_SETTING } from '@/src/constants/analytics/sessions-source';
+import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { getProperties, updateProperties } from './actions';
+import {
+  getProperties,
+  getSessionsSource,
+  getSessionsSourceEntities,
+  getSessionsSourceSchema,
+  saveSessionsSource,
+  updateProperties,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -15,6 +24,7 @@ describe('System properties :: server actions', () => {
     vi.clearAllMocks();
     (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
     (getIsEnableAuthToggle as any).mockReturnValue(true);
+    clearEntitySchemaCache();
   });
 
   test('Should call getProperties action', async () => {
@@ -45,5 +55,58 @@ describe('System properties :: server actions', () => {
       undefined,
     );
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should read the stored sessions source', async () => {
+    const read = { success: true, response: DEFAULT_SESSIONS_SOURCE_SETTING };
+    vi.mocked(sessionsSourceApi.getSetting).mockResolvedValue(read);
+
+    const result = await getSessionsSource();
+    expect(sessionsSourceApi.getSetting).toHaveBeenCalledOnce();
+    expect(result).toBe(read);
+  });
+
+  test('Should save the sessions source without a global settings write', async () => {
+    const saved = { success: true, response: DEFAULT_SESSIONS_SOURCE_SETTING };
+    vi.mocked(sessionsSourceApi.putSetting).mockResolvedValue(saved);
+
+    const result = await saveSessionsSource(DEFAULT_SESSIONS_SOURCE_SETTING);
+    expect(sessionsSourceApi.putSetting).toHaveBeenCalledWith(DEFAULT_SESSIONS_SOURCE_SETTING);
+    expect(settingsApi.updateSystemProperties).not.toHaveBeenCalled();
+    expect(result).toBe(saved);
+  });
+
+  test('Should return a failed sessions source save as the service reported it', async () => {
+    const failure = { success: false, errorHeader: 'Bad Request', errorMessage: 'Unknown field' };
+    vi.mocked(sessionsSourceApi.putSetting).mockResolvedValue(failure);
+
+    expect(await saveSessionsSource(DEFAULT_SESSIONS_SOURCE_SETTING)).toEqual(failure);
+  });
+
+  test('Should list the analytics entities with the user token', async () => {
+    const read = { success: true, response: [{ name: 'sessions' }] };
+    vi.mocked(analyticsDataApi.getEntities).mockResolvedValue(read);
+
+    const result = await getSessionsSourceEntities();
+    expect(analyticsDataApi.getEntities).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(read);
+  });
+
+  test('Should read an entity schema with the user token and cache it', async () => {
+    const read = { success: true, response: { fields: [] } };
+    vi.mocked(analyticsDataApi.getEntitySchema).mockResolvedValue(read);
+
+    expect(await getSessionsSourceSchema('sessions')).toEqual(read);
+    expect(await getSessionsSourceSchema('sessions')).toEqual(read);
+    expect(analyticsDataApi.getEntitySchema).toHaveBeenCalledOnce();
+    expect(analyticsDataApi.getEntitySchema).toHaveBeenCalledWith('sessions', TOKEN_MOCK);
+  });
+
+  test('Should not cache a failed entity schema read', async () => {
+    vi.mocked(analyticsDataApi.getEntitySchema).mockResolvedValue({ success: false, status: 500 });
+
+    await getSessionsSourceSchema('sessions');
+    await getSessionsSourceSchema('sessions');
+    expect(analyticsDataApi.getEntitySchema).toHaveBeenCalledTimes(2);
   });
 });
