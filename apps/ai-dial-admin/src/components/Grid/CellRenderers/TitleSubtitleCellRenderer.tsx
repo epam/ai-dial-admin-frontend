@@ -13,6 +13,7 @@ export interface TitleSubtitleCellRendererParams<TData = unknown, TValue = unkno
   /** Second line — resolved from the row, so a column can pair its own value with any other field. */
   getSubtitle?: (data: TData | undefined) => string | undefined;
   getHref?: EntityHrefGetter<TData>;
+  isNewTab?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ const TitleSubtitleCellRenderer = <TData,>({
   data,
   getSubtitle,
   getHref,
+  isNewTab,
 }: TitleSubtitleCellRendererParams<TData>) => {
   const title = value == null ? '' : String(value);
   const subtitle = getSubtitle?.(data) ?? '';
@@ -38,7 +40,7 @@ const TitleSubtitleCellRenderer = <TData,>({
     <div className="flex size-full min-w-0 flex-col justify-center">
       {!!title &&
         (href ? (
-          <EntityLinkCell href={href} className="flex-none">
+          <EntityLinkCell href={href} className="flex-none" isNewTab={isNewTab}>
             <EllipsisTooltip className="dial-small-text" text={title} />
           </EntityLinkCell>
         ) : (
