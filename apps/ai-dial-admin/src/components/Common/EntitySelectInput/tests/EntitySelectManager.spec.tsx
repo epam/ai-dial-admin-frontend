@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getGridOptions } from '@/src/components/Common/FileManager/utils';
+import { MenuI18nKey } from '@/src/constants/i18n';
 import { MovableAssetListItem } from '@/src/models/dial/asset-list-item';
 import EntitySelectManager from '../EntitySelectManager';
 import { EntitySelectType } from '../models';
@@ -23,6 +24,10 @@ vi.mock('@/src/context/assets/SkillFolderContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/context/assets/SkillFolderContext')>()),
   useSkillFolder: () => mockFolder,
 }));
+vi.mock('@/src/context/assets/AppsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/AppsFolderContext')>()),
+  useAppsFolder: () => mockFolder,
+}));
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 vi.mock('@/src/components/Common/FileManager/utils', () => ({
   getGridOptions: vi.fn(() => ({})),
@@ -32,8 +37,9 @@ vi.mock('@/src/components/Common/FileManager/utils', () => ({
 // Stand-in for the library: exposes the selection and path callbacks the component hands it.
 vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-react-file-manager')>()),
-  DialFileManager: ({ handleSelectionClick, onPathChange }: any) => (
+  DialFileManager: ({ handleSelectionClick, onPathChange, rootItem }: any) => (
     <div>
+      {rootItem && <span>{rootItem.label}</span>}
       <button
         onClick={() => handleSelectionClick([{ nodeType: 'item', path: 'public/team/my-skill', id: 'unused-id' }])}
       >
@@ -263,5 +269,47 @@ describe('EntitySelectManager', () => {
     expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/team/');
     expect(mockFolder.setFilePath).toHaveBeenCalledWith('public/team/');
     expect(mockFolder.setExpandedFolders).toHaveBeenCalledWith(new Set(['public/team/']));
+  });
+});
+
+describe('EntitySelectManager — per-type root folders', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFolder.files = [];
+    mockFolder.expandedFolders = new Set<string>();
+    mockFolder.fetchedFoldersData = {};
+  });
+
+  const renderApplications = () =>
+    render(
+      <EntitySelectManager
+        entityType={EntitySelectType.Application}
+        value=""
+        isModalOpen
+        onChangeSelectedPaths={vi.fn()}
+      />,
+    );
+
+  test('loads the file, platform and public roots together for applications', () => {
+    renderApplications();
+
+    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
+  });
+
+  test('labels the tree root for applications, as no one bucket stands for it', () => {
+    renderApplications();
+
+    expect(screen.getByText(MenuI18nKey.Applications)).toBeTruthy();
+  });
+
+  test('loads only the public root, with no root label, for skills', () => {
+    render(
+      <EntitySelectManager entityType={EntitySelectType.Skill} value="" isModalOpen onChangeSelectedPath={vi.fn()} />,
+    );
+
+    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/');
+    expect(screen.queryByText(MenuI18nKey.Applications)).toBeNull();
   });
 });
