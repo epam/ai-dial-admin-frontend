@@ -11,6 +11,7 @@ import {
   Spinner,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import CostTrendCard from '@/src/components/TestSuites/Trends/CostRuntime/CostTrendCard';
 import RuntimeTrendCard from '@/src/components/TestSuites/Trends/CostRuntime/RuntimeTrendCard';
@@ -34,9 +35,14 @@ interface Props {
   selectedTestSuite: TestSuite;
   onStartRun?: () => void;
   onTrendsRunCountChange?: (runCount: number | null) => void;
+  /**
+   * When true (default), fill the parent and scroll inside — suite Trends tab.
+   * When false, size to content (min full parent height) and let the parent scroll — Eval Trends.
+   */
+  isFillHeight?: boolean;
 }
 
-const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChange }) => {
+const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChange, isFillHeight = true }) => {
   const t = useI18n();
   const { data, isLoading } = useTrendsData(selectedTestSuite.id);
   const isEmpty = !data || data.kpis.runCount === 0;
@@ -58,7 +64,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
 
   if (isLoading && !data) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className={classNames('flex items-center justify-center', isFillHeight ? 'h-full' : 'min-h-full')}>
         <Spinner size={40} fullWidth />
       </div>
     );
@@ -95,7 +101,12 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun, onTrendsRunCountChan
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 overflow-auto p-4">
+    <div
+      className={classNames(
+        'flex flex-col gap-4 p-4',
+        isFillHeight ? 'h-full min-h-0 overflow-auto' : 'min-h-full overflow-visible',
+      )}
+    >
       {data.kpis.runCount === 1 && (
         <Notification
           variant={NotificationVariant.Info}

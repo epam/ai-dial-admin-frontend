@@ -101,7 +101,7 @@ const PlatformApplicationView: FC<Props> = ({
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { visualizerConnector } = useAppContext();
+  const { visualizerConnector, featureFlags } = useAppContext();
 
   // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
   // of their own (they already *are* Core's view) — see `config-file-entity-views`. In unit mode the
@@ -132,19 +132,22 @@ const PlatformApplicationView: FC<Props> = ({
   );
 
   // MCP-configured applications get a Tools tab the same way the public Apps view does — MCP is fully
-  // supported for platform-bucket applications, unlike `function`/code-runtime apps.
+  // supported for platform-bucket applications, unlike `function`/code-runtime apps. Only
+  // `evaluationEnabled` is passed into `getTabsForAsset` so Audit (`analyticsUsageEnabled`) stays off.
   const tabs = useMemo(() => {
     const appRunner = getAppRunner(originalApp, schemes);
     const baseTabs = withPlatformApplicationTabs(
       t,
-      getTabsForAsset(t, ApplicationRoute.AssetsApplications),
+      getTabsForAsset(t, ApplicationRoute.AssetsApplications, {
+        evaluationEnabled: featureFlags.evaluationEnabled,
+      }),
       isAssetUnavailable(selectedAppUserRoles),
     );
     if (originalApp.mcp?.endpoint || appRunner?.['dial:applicationTypeMcp']) {
       return baseTabs.toSpliced(1, 0, toolsTab(t));
     }
     return baseTabs;
-  }, [t, originalApp, schemes, selectedAppUserRoles]);
+  }, [t, originalApp, schemes, selectedAppUserRoles, featureFlags.evaluationEnabled]);
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));

@@ -54,15 +54,30 @@ export const getCorrectConfig = (
   return null;
 };
 
+/**
+ * The deployment id evaluation suites and the parameters iframe use for an application. Public-bucket
+ * asset apps are addressed as `applications/<path>`; platform-bucket and Entities apps use `name`.
+ */
+export const getApplicationDeploymentId = (
+  view?: ApplicationRoute,
+  application?: DialApplication | DialApplicationResource | AssetApp,
+): string | undefined => {
+  if (
+    view === ApplicationRoute.AssetsApplications &&
+    !isPlatformBucketPath((application as AssetApp)?._metadata?.path)
+  ) {
+    const path = (application as AssetApp)?._metadata?.path;
+    return path ? `applications/${path}` : undefined;
+  }
+  return application?.name;
+};
+
 export const getTargetUrl = (
   view?: ApplicationRoute,
   application?: DialApplication | DialApplicationResource,
   frameConfig?: FrameConfig | null,
 ) => {
-  const id =
-    view === ApplicationRoute.AssetsApplications && !isPlatformBucketPath((application as AssetApp)?._metadata?.path)
-      ? `applications/${(application as AssetApp)?._metadata?.path}`
-      : application?.name;
+  const id = getApplicationDeploymentId(view, application);
   try {
     const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}&applicationName=${encodeURIComponent(frameConfig?.name as string)}`;
     return new URL(iframeUrl);
