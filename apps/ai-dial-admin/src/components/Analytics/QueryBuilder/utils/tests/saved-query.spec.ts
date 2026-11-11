@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   deriveSavedQueryEditor,
+  readChartYFields,
   toMetadataReplaceRequest,
   savedQueryPrimarySource,
   savedQuerySourcesLabel,
@@ -213,12 +214,12 @@ describe('toSavedQueryRequest', () => {
   });
 
   test('emits a chart configuration only for a query stored as a chart', () => {
-    const chartConfig = { type: ChartType.Bar, xField: 'project', yField: 'count' };
+    const chartConfig = { type: ChartType.Bar, xField: 'project', yFields: ['count'] };
 
     const asChart = toSavedQueryRequest(baseCapture({ resultView: QueryResultView.Chart, chartConfig }));
     const asTable = toSavedQueryRequest(baseCapture({ resultView: QueryResultView.Table, chartConfig }));
 
-    expect(asChart.chart).toEqual({ type: ChartType.Bar, x_field: 'project', y_field: 'count' });
+    expect(asChart.chart).toEqual({ type: ChartType.Bar, x_field: 'project', y_field: ['count'] });
     expect('chart' in asTable).toBeFalsy();
   });
 
@@ -226,7 +227,7 @@ describe('toSavedQueryRequest', () => {
     const request = toSavedQueryRequest(
       baseCapture({
         resultView: QueryResultView.Chart,
-        chartConfig: { type: ChartType.Pie, xField: null, yField: null },
+        chartConfig: { type: ChartType.Pie, xField: null, yFields: null },
       }),
     );
 
@@ -435,11 +436,21 @@ describe('toBuilderRestore', () => {
     const result = restore({
       query: { entity: 'a', mode: QueryMode.Row },
       result_view: QueryResultView.Chart,
-      chart: { type: ChartType.Line, x_field: 'project', y_field: 'count' },
+      chart: { type: ChartType.Line, x_field: 'project', y_field: ['count'] },
     });
 
     expect(result.resultView).toBe(QueryResultView.Chart);
-    expect(result.chartConfig).toEqual({ type: ChartType.Line, xField: 'project', yField: 'count' });
+    expect(result.chartConfig).toEqual({ type: ChartType.Line, xField: 'project', yFields: ['count'] });
+  });
+
+  test('restores a stored multi-column chart in its stored order', () => {
+    const result = restore({
+      query: { entity: 'a', mode: QueryMode.Row },
+      result_view: QueryResultView.Chart,
+      chart: { type: ChartType.Line, x_field: 'week', y_field: ['returning', 'fresh'] },
+    });
+
+    expect(result.chartConfig?.yFields).toEqual(['returning', 'fresh']);
   });
 
   test('leaves the chart configuration absent when the stored query has none', () => {
@@ -501,6 +512,29 @@ describe('toBuilderRestore', () => {
   });
 });
 
+describe('readChartYFields', () => {
+  test('keeps a list in its order', () => {
+    expect(readChartYFields(['b', 'a'])).toEqual(['b', 'a']);
+  });
+
+  test('reads a legacy single column name as a one-element list', () => {
+    expect(readChartYFields('count')).toEqual(['count']);
+  });
+
+  test('drops blank and non-string entries', () => {
+    expect(readChartYFields(['a', '', '  ', null as unknown as string, 'b'])).toEqual(['a', 'b']);
+  });
+
+  test('keeps an empty list empty', () => {
+    expect(readChartYFields([])).toEqual([]);
+  });
+
+  test('returns null for a missing Y axis', () => {
+    expect(readChartYFields(null)).toBeNull();
+    expect(readChartYFields(undefined)).toBeNull();
+  });
+});
+
 describe('toSavedQueryRequest ⇄ toBuilderRestore round trip', () => {
   test('a captured relative period comes back as the same period', () => {
     const request = toSavedQueryRequest(baseCapture({ time: { period: '2d', isCustom: false, range: RANGE } }));
@@ -536,7 +570,7 @@ describe('toMetadataReplaceRequest', () => {
     query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate },
     time: { mode: SavedQueryTimeMode.Relative, period: '7d' },
     result_view: QueryResultView.Chart,
-    chart: { type: ChartType.Bar, x_field: 'project', y_field: 'count' },
+    chart: { type: ChartType.Bar, x_field: 'project', y_field: ['count'] },
     generation: 2,
     created_at: '2026-08-01T00:00:00Z',
     updated_at: '2026-08-02T00:00:00Z',

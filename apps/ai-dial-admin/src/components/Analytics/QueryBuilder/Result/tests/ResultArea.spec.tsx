@@ -180,7 +180,7 @@ describe('QueryBuilder :: ResultArea', () => {
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
   test('chart view shows a hint for a grouped result with no aggregate columns', async () => {
@@ -211,7 +211,7 @@ describe('QueryBuilder :: ResultArea', () => {
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
   test('chart view shows the no-value-column hint for a fallback SQL result', async () => {

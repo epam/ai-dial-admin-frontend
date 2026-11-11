@@ -51,7 +51,7 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Result/ResultArea', () => ({
       <span>view: {view}</span>
       <span>axis: {chartConfig.xField ?? 'none'}</span>
       <button onClick={() => onChangeView(QueryResultView.Chart)}>pick chart view</button>
-      <button onClick={() => onChangeChartConfig({ type: ChartType.Bar, xField: 'project_id', yField: 'count' })}>
+      <button onClick={() => onChangeChartConfig({ type: ChartType.Bar, xField: 'project_id', yFields: ['count'] })}>
         pick axis
       </button>
     </div>

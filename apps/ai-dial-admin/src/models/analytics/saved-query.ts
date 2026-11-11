@@ -45,7 +45,7 @@ export type SavedQueryTime = SavedQueryRelativeTime | SavedQueryAbsoluteTime;
 export interface SavedQueryChart {
   type: ChartType;
   x_field: string | null;
-  y_field: string | null;
+  y_field: string[] | null;
 }
 
 export interface SavedQuery {

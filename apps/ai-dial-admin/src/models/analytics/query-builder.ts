@@ -273,7 +273,12 @@ export enum ChartType {
 export interface ChartConfig {
   type: ChartType;
   xField: string | null;
-  yField: string | null;
+  yFields: string[] | null;
+}
+
+export interface ResolvedChartAxes {
+  xField: string | null;
+  yFields: string[];
 }
 
 // Where a chart slot draws its column options from. Numeric means "any result column whose every
@@ -291,6 +296,7 @@ export enum ChartColumnSource {
 export interface ChartSlotDescriptor {
   xSource: ChartColumnSource;
   ySource: ChartColumnSource;
+  isMultiY: boolean;
   xLabelKey: QueryBuilderI18nKey;
   yLabelKey: QueryBuilderI18nKey;
 }

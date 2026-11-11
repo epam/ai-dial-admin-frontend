@@ -27,6 +27,8 @@ import { formatBucketLabel, formatBucketRange } from '@/src/components/Analytics
 import { buildValueHeatmapMatrix } from '@/src/components/Analytics/Usage/utils/heatmap';
 import { COMPARE_NAME_KEY } from '@/src/components/Analytics/Usage/utils/labels';
 import { buildChartOptions } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import SeriesChart from '@/src/components/Analytics/QueryBuilder/Result/SeriesChart';
+import { readChartYFields } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import {
   exactNumberText,
   formatResultValue,
@@ -66,7 +68,7 @@ type ComparedRow = Record<string, unknown> & { id: string; [ROW_DELTAS_FIELD]?: 
 const toChartConfig = (savedQuery: WidgetQuerySource): ChartConfig => ({
   type: savedQuery.chart?.type ?? ChartType.Bar,
   xField: savedQuery.chart?.x_field ?? null,
-  yField: savedQuery.chart?.y_field ?? null,
+  yFields: readChartYFields(savedQuery.chart?.y_field),
 });
 
 /**
@@ -143,9 +145,9 @@ const WidgetResult: FC<Props> = ({
   const chartOptions = useMemo(() => {
     if (!isChart || !meta.dimensionColumns.length || !meta.aggregateColumns.length) return null;
     const config = toChartConfig(savedQuery);
-    const { xField, yField } = resolveChartAxes(config, result, meta);
-    if (!xField || !yField) return null;
-    return buildChartOptions(config.type, result.rows, xField, yField, {
+    const { xField, yFields } = resolveChartAxes(config, result, meta);
+    if (!xField || !yFields.length) return null;
+    return buildChartOptions(config.type, result.rows, xField, yFields, {
       colors,
       dimensionColumns: meta.dimensionColumns,
       otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
@@ -248,9 +250,7 @@ const WidgetResult: FC<Props> = ({
   if (isChart) {
     // The canvas carries no semantics of its own, so the chart is named the way the usage dashboard's are.
     return chartOptions ? (
-      <div role="img" aria-label={savedQuery.name} className="size-full min-h-0">
-        <ReactECharts option={chartOptions} style={{ height: '100%', width: '100%' }} notMerge />
-      </div>
+      <SeriesChart option={chartOptions} ariaLabel={savedQuery.name} />
     ) : (
       <UsageEmptyState title={t(CustomDashboardsI18nKey.ChartUnavailable)} className="size-full" />
     );

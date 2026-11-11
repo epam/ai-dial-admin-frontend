@@ -159,7 +159,7 @@ export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[480px]';
 
 export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
 
-export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yField: null };
+export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yFields: null };
 
 // Pie shows at most this many slices; the remaining categories merge into one "Other" slice.
 export const PIE_MAX_SLICES = 10;
@@ -170,15 +170,31 @@ const AXIS_SLOTS = {
 };
 
 export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
-  [ChartType.Bar]: { xSource: ChartColumnSource.Dimensions, ySource: ChartColumnSource.Aggregates, ...AXIS_SLOTS },
-  [ChartType.Line]: { xSource: ChartColumnSource.Dimensions, ySource: ChartColumnSource.Aggregates, ...AXIS_SLOTS },
+  [ChartType.Bar]: {
+    xSource: ChartColumnSource.Dimensions,
+    ySource: ChartColumnSource.Aggregates,
+    isMultiY: true,
+    ...AXIS_SLOTS,
+  },
+  [ChartType.Line]: {
+    xSource: ChartColumnSource.Dimensions,
+    ySource: ChartColumnSource.Aggregates,
+    isMultiY: true,
+    ...AXIS_SLOTS,
+  },
   [ChartType.Pie]: {
     xSource: ChartColumnSource.Dimensions,
     ySource: ChartColumnSource.Aggregates,
+    isMultiY: false,
     xLabelKey: QueryBuilderI18nKey.ChartCategory,
     yLabelKey: QueryBuilderI18nKey.ChartValue,
   },
-  [ChartType.Scatter]: { xSource: ChartColumnSource.Numeric, ySource: ChartColumnSource.Numeric, ...AXIS_SLOTS },
+  [ChartType.Scatter]: {
+    xSource: ChartColumnSource.Numeric,
+    ySource: ChartColumnSource.Numeric,
+    isMultiY: false,
+    ...AXIS_SLOTS,
+  },
 };
 
 // A tooltip can show a short value in place; past this the value needs the viewer instead.
