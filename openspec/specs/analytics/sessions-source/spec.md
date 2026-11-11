@@ -1,11 +1,10 @@
-## Purpose
+# analytics/sessions-source Specification
 
+## Purpose
 The instance-wide Sessions source setting: which analytics table the Sessions pages are composed over, which of
 its fields play the session id, time, project, title, cost and turns roles, where the setting is edited and
 stored, and how the Sessions pages resolve every name they used to fix through it.
-
-## ADDED Requirements
-
+## Requirements
 ### Requirement: The Sessions source is one base table and six role fields
 
 The Sessions source SHALL consist of exactly one **base table** and a binding of six **roles** to fields of
@@ -100,6 +99,22 @@ Where the analytics service holds no stored setting, the Sessions pages SHALL us
 `session_insights.title`, Cost `total_price`, Turns `turn_count`. The tab SHALL show the default binding as
 unsaved values, so opening it and saving stores the default explicitly.
 
+Where no setting is stored and the analytics service reports no `sessions` entity to the caller, there is
+nothing to fall back to. The **Sessions** item SHALL then be left out of the Analytics menu, and opening a Sessions
+page directly SHALL render a "Sessions are not set up" state that points to the Sessions source tab, not a load
+error. A failure to decide — the setting or the schema read failing for any reason but the entity being absent —
+SHALL keep the item, so the page can report what went wrong.
+
+While no setting is stored the tab SHALL say so in visible text: that the Sessions pages read the `sessions` table
+with the default fields, and that the Sessions page is hidden from the menu while that table is missing. When the
+table is already missing, the tab SHALL say the page is hidden now and SHALL offer no binding to save until the
+operator chooses a table. Once a setting is stored the text SHALL NOT be shown.
+
+Only an absent setting SHALL mean the default. When the stored setting cannot be read — the caller lacks the
+privilege to read it, or the service fails — the Sessions pages SHALL render the Sessions source error stating that
+the setting could not be read, and SHALL NOT fall back to the default binding: the default may name a different
+table than the one the instance is configured for, and would render it with nothing on screen saying so.
+
 Wherever `analytics/sessions-listing`, `analytics/session-trace-listing` or `analytics/session-trace-detail` name
 the `sessions` entity or one of the fields above, the name SHALL be read as the field the configured binding
 assigns to that role. Those requirements are written against the default binding; this requirement is what
@@ -109,6 +124,25 @@ makes them hold for any other.
 
 - **WHEN** no Sessions source is stored and the Sessions page is opened
 - **THEN** the session query reads the `sessions` entity, ordered and bounded by `last_request_time`
+
+#### Scenario: No setting and no default table hides the Sessions page
+
+- **WHEN** no setting is stored and the analytics service reports no `sessions` entity
+- **THEN** the Analytics menu has no Sessions item
+- **AND** opening `/sessions` directly renders the not-set-up state pointing to the Sessions source tab
+
+#### Scenario: The tab explains the fallback while nothing is stored
+
+- **WHEN** the operator opens the Sessions source tab and no setting is stored
+- **THEN** the tab states that the `sessions` table is read with the default fields and that the Sessions page is
+  hidden while that table is missing
+- **AND** once a setting is saved the statement is gone
+
+#### Scenario: An unreadable setting is an error, not the default
+
+- **WHEN** the Sessions page is opened by a caller the analytics service refuses the stored setting to
+- **THEN** the page renders the Sessions source error stating that the setting could not be read
+- **AND** no session query runs
 
 #### Scenario: A configured table replaces the fixed name
 
@@ -149,3 +183,4 @@ the role and the field, rather than render a grid whose rows cannot be opened or
 - **WHEN** the Time role is bound to a field the caller's schema does not report
 - **THEN** the page reports an error naming the Time role and that field
 - **AND** no session query is issued
+

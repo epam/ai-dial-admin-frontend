@@ -22,13 +22,13 @@ export async function updateProperties(properties: GlobalSettings, etag: string 
 }
 
 export async function getSessionsSource(): Promise<ServerActionResponse<SessionsSourceSetting>> {
-  return sessionsSourceApi.getSetting();
+  return sessionsSourceApi.getSetting(await token());
 }
 
 export async function saveSessionsSource(
   setting: SessionsSourceSetting,
 ): Promise<ServerActionResponse<SessionsSourceSetting>> {
-  return sessionsSourceApi.putSetting(setting);
+  return sessionsSourceApi.putSetting(setting, await token());
 }
 
 export async function getSessionsSourceEntities(): Promise<ServerActionResponse<AnalyticsEntity[]>> {

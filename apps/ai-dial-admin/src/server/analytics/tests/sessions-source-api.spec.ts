@@ -1,37 +1,86 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 
 import { DEFAULT_SESSIONS_SOURCE_SETTING } from '@/src/constants/analytics/sessions-source';
-import { SessionsRole } from '@/src/models/analytics/sessions-source';
-import { SessionsSourceApi } from '@/src/server/analytics/sessions-source-api';
+import { SessionsSourceSettingDto } from '@/src/models/analytics/sessions-source';
+import { SESSIONS_SOURCE_URL, SessionsSourceApi } from '@/src/server/analytics/sessions-source-api';
+import { settingToDto } from '@/src/utils/analytics/sessions-source';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 
-describe('SessionsSourceApi', () => {
-  test('reads no setting before one is saved', async () => {
-    expect(await new SessionsSourceApi({ stored: null }).getSetting()).toEqual({ success: true });
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
+
+const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
+
+const stored: SessionsSourceSettingDto = {
+  ...settingToDto(DEFAULT_SESSIONS_SOURCE_SETTING),
+  updated_at: '2026-11-11T10:00:00Z',
+  updated_by: 'admin',
+};
+
+const errorBody = (status: number, error: string, message: string) => ({
+  status,
+  body: JSON.stringify({ error, message }),
+  ...JSON_HEADERS,
+});
+
+describe('Server :: SessionsSourceApi', () => {
+  const instance = new SessionsSourceApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
   });
 
-  test('reads back the setting it saved', async () => {
-    const api = new SessionsSourceApi({ stored: null });
-    const setting = { baseTable: 'runs', roles: { [SessionsRole.SessionId]: 'id', [SessionsRole.Time]: 'at' } };
+  test('getSetting issues GET v1/settings/sessions-source and maps the stored setting', async () => {
+    fetch.mockResponseOnce(JSON.stringify(stored), JSON_HEADERS);
 
-    const saved = await api.putSetting(setting);
+    const read = await instance.getSetting(TOKEN_MOCK);
 
-    expect(saved.success).toBe(true);
-    expect(saved.response?.baseTable).toBe('runs');
-    expect((await api.getSetting()).response).toEqual(saved.response);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/${SESSIONS_SOURCE_URL}`),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(read).toEqual(expect.objectContaining({ success: true, response: DEFAULT_SESSIONS_SOURCE_SETTING }));
   });
 
-  test('replaces the previously saved setting', async () => {
-    const api = new SessionsSourceApi({ stored: null });
+  test('getSetting answers success with no setting when none is stored', async () => {
+    fetch.mockResponseOnce(() => errorBody(404, 'setting_not_found', 'The sessions-source setting is not configured'));
 
-    await api.putSetting(DEFAULT_SESSIONS_SOURCE_SETTING);
-    await api.putSetting({ ...DEFAULT_SESSIONS_SOURCE_SETTING, baseTable: 'other' });
-
-    expect((await api.getSetting()).response?.baseTable).toBe('other');
+    expect(await instance.getSetting(TOKEN_MOCK)).toEqual({ success: true });
   });
 
-  test('shares one store across instances of the default store', async () => {
-    await new SessionsSourceApi().putSetting({ ...DEFAULT_SESSIONS_SOURCE_SETTING, baseTable: 'shared' });
+  test('getSetting reports a forbidden read as a failure, not as an unset setting', async () => {
+    fetch.mockResponseOnce(() => errorBody(403, 'forbidden', 'Access denied'));
 
-    expect((await new SessionsSourceApi().getSetting()).response?.baseTable).toBe('shared');
+    const read = await instance.getSetting(TOKEN_MOCK);
+
+    expect(read.success).toBe(false);
+    expect(read.status).toBe(403);
+    expect(read.response).toBeUndefined();
+  });
+
+  test('putSetting issues PUT with the service body and maps the stored setting', async () => {
+    fetch.mockResponseOnce(JSON.stringify(stored), JSON_HEADERS);
+
+    const saved = await instance.putSetting(DEFAULT_SESSIONS_SOURCE_SETTING, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/${SESSIONS_SOURCE_URL}`),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(settingToDto(DEFAULT_SESSIONS_SOURCE_SETTING)),
+      }),
+    );
+    expect(saved).toEqual(expect.objectContaining({ success: true, response: DEFAULT_SESSIONS_SOURCE_SETTING }));
+  });
+
+  test('putSetting carries the service message on a rejected setting', async () => {
+    fetch.mockResponseOnce(() => errorBody(422, 'validation_error', "roles.title names unknown field 'title'"));
+
+    const saved = await instance.putSetting(DEFAULT_SESSIONS_SOURCE_SETTING, TOKEN_MOCK);
+
+    expect(saved.success).toBe(false);
+    expect(saved.status).toBe(422);
+    expect(saved.errorMessage).toContain('roles.title');
   });
 });

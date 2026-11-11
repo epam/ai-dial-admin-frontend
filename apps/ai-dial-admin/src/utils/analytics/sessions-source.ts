@@ -7,6 +7,7 @@ import {
 } from '@/src/constants/analytics/sessions-source';
 import { RATING_SIGNATURE_FIELDS } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { ServerActionResponse } from '@/src/models/server-action';
 import {
   SessionsRole,
   SessionsSource,
@@ -154,3 +155,7 @@ export const canonicalSessionRow = <T extends Record<string, unknown>>(source: S
     },
     { ...raw },
   ) as T;
+
+const NOT_FOUND = 404;
+
+export const isEntityMissing = (read: ServerActionResponse): boolean => !read.success && read.status === NOT_FOUND;

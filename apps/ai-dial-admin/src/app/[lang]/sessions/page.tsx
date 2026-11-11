@@ -39,7 +39,7 @@ export default async function Page() {
   }
 
   if (!resolution.source) {
-    return <SessionsSourceError failure={resolution.failure} />;
+    return <SessionsSourceError failure={resolution.failure} problem={resolution.problem} />;
   }
 
   return <SessionsTraceView source={resolution.source} schemaFields={schemaFields} schemaFailure={schemaFailure} />;

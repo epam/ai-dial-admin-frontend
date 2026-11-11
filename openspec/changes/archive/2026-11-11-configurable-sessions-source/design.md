@@ -155,8 +155,11 @@ grid component, and wrapping it would change that component for one caller.
 
 ## Migration Plan
 
-1. Upgrade the analytics service to a version that stores the Sessions source setting. For ratings, give the base
-   table and `dial_usage_log` each an enrichment carrying the rating signature, and materialize them.
+1. Upgrade the analytics service to a version that serves `GET`/`PUT /v1/settings/sessions-source`. Reading the
+   setting needs `SETTINGS_READ`, which every read-only bundle carries; a `roles-mapping` that names raw
+   privileges must add it for Sessions users, who otherwise get the source error. Saving needs `SETTINGS_WRITE`.
+   For ratings, give the base table and `dial_usage_log` each an enrichment carrying the rating signature, and
+   materialize them.
 2. Deploy the frontend. Without a stored setting it runs on the default binding.
 3. Rollback: redeploy the previous frontend. The enrichments are additive and the previous build ignores them; the
    stored setting is ignored too.

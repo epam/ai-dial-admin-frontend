@@ -3,9 +3,7 @@
 ## Purpose
 
 The sessions log page: its route and guard, the filters and the second query that resolves the feedback filter, the provenance line, and the grid's columns, server-side ordering and per-column filtering.
-
 ## Requirements
-
 ### Requirement: Sessions page route, access guard, and server prefetch
 
 The system SHALL expose an Analytics page at `/sessions`, present in the `ApplicationRoute`
@@ -77,183 +75,15 @@ the client's own fetch, which is the first request the page makes against the en
 - **AND** the toolbar carries no schema-unavailable notice
 - **AND** the grid renders its curated columns and offers no derived column
 
-### Requirement: Feedback filter resolved through a second query
-
-The sessions page SHALL provide a feedback filter with exactly four mutually exclusive states — all,
-positive, negative, and rated — defaulting to all. It SHALL reuse the shared `SegmentedControl`.
-
-Feedback lives in the `response_ratings` entity — the per-response rollup of DIAL's rate events, keyed on the
-rated `response_id` and carrying the `chat_id` the rating was submitted from — which the session rollup
-does not include, and the structured-query DSL accepts a single `entity` with no join construct. A feedback
-filter SHALL therefore be resolved as two queries: first a candidate query over `response_ratings` returning
-the `chat_id` values carrying the requested feedback, then the session query over `sessions`
-narrowed to those ids with an `in` predicate. Both SHALL be issued server-side with the caller's token, and
-the `all` state SHALL issue only the session query, so the default path costs exactly one request per
-page.
-
-The two ids join without translation: the analytics service sets a session's id to the session's
-`chat_id` wherever the hop carries one, so a rating's `chat_id` is a `client_session_id` for exactly the
-sessions that have ratings. **A session that did not originate in DIAL Chat therefore has no rating and SHALL
-NOT be presented as unrated-by-measurement.** Coding-agent traffic submits no rate events, so any state other
-than `all` narrows the result to chat-origin sessions as a consequence of the data rather than as a filter on
-client type, and the affordance MUST NOT be described as one.
-
-`response_ratings` is provisioned per environment. Where the service answers the entity's schema with 404, a
-state other than `all` SHALL issue no candidate query and SHALL narrow the result to nothing — no session can
-carry feedback that is not recorded — rather than failing the grid. Any other failed schema read SHALL leave
-the candidate query to run and report its own error.
-
-#### Scenario: A feedback filter on an environment without ratings narrows to nothing
-
-- **GIVEN** the service answers the `response_ratings` schema with 404
-- **WHEN** the reader selects the positive feedback state
-- **THEN** no candidate query is issued
-- **AND** the grid states no sessions instead of a load failure
-
-The rating source SHALL be the per-response rollup rather than the raw rate-event log. The rollup partitions
-each response's events into additive counts, which is what allows a direction to be selected and counted from
-the same columns; the event log carries a single normalized `rate` from which the directions cannot be
-separated without one query per direction.
-
-Both queries SHALL be issued within a **single** request from the client when the first page of a result is
-fetched, rather than the client resolving candidates in one request and the page in another. The candidate
-ids SHALL be returned to the client alongside that first page.
-
-The candidate set SHALL be resolved once per filter state and reused across the pages of that result, rather
-than re-queried per page: the narrowing is a property of the filter, not of the page. The reuse SHALL be held
-per client, keyed by the filter state it was resolved under, and the ids SHALL be carried back with each
-later page of that result. The candidate set MUST NOT be held in a cache shared between callers: it is
-resolved under the caller's token, so serving one caller's set to another would narrow a result by rows the
-second caller's token never selected.
-
-When the candidate set reaches that limit the view SHALL state that the feedback-filtered result may be
-incomplete and that the sessions shown are the most recently rated ones. The cap truncates the result
-regardless of how it is ordered, and the ordering is the operator's to choose, so a truncated result MUST NOT
-be presented as the complete set of sessions carrying that feedback. The disclosure SHALL be visible
-while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
-
-The candidate query SHALL be aggregate mode over `response_ratings` grouped by `chat_id`, carry time bounds
-over `last_rate_time` matching the period the session query is bounded to, and an empty-id guard, and
-select `chat_id` plus `max(last_rate_time)`. It SHALL be ordered by most recent rating, so that if the
-candidate set reaches its limit the ids retained are the most recently rated ones. Its limit SHALL NOT exceed
-1000, the service's hard maximum.
-
-The rate predicates SHALL be:
-
-| State | Predicate |
-|---|---|
-| positive | `gt(rate_pos_count, 0)` |
-| negative | `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
-| rated | `gt(rate_pos_count, 0)` OR `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
-
-These SHALL select exactly what the previous predicates over the event log's normalized `rate` selected, and
-the negative state SHALL keep its present meaning: `rate_zero_count` counts the events the service normalized
-to zero — a boolean `false` among them — and `rate_neg_count` counts the unambiguously negative ones, so
-their union is what `le(rate, 0)` matched. The negative state MUST NOT be narrowed to the provably negative
-subset: that would silently drop every non-positive rating whose submitted form predates the service's
-captured-form column, which is most of the recorded history, and a filter that quietly stops returning rows
-it used to return is a worse failure than a figure that needs a caveat.
-
-`rated` SHALL be the union of the three value-bearing counts rather than an `IS NOT NULL` test. The rollup
-partitions a response's events into positive, zero, negative and value-less counts, so those three cover
-every event that carried a rating and exclude only an event whose body carried no rate at all — which is what
-the previous null comparison excluded. The rule that `rated` must not be expressed as a union of the other two
-states no longer applies: it existed because a rating outside the positive/negative split could not be
-detected, and the rollup's partition leaves nothing outside it.
-
-When the candidate query returns no ids the page SHALL return no rows **without** issuing the session
-query: the service rejects an empty `in` list with HTTP 400, and "nothing carries this feedback" is already
-the complete answer. Blank ids SHALL be dropped from the candidate set. When the candidate query fails, the
-failure SHALL propagate and the session query MUST NOT run.
-
-The page MUST NOT fall back to the raw rate-event log when the rollup is absent. The rollup is provisioned
-per instance exactly as the session and turn rollups are, and the page cannot render without those
-either, so an absent rating rollup SHALL surface as the read failing rather than as a second rating path
-maintained beside the first.
-
-#### Scenario: Feedback filter issues the candidate query then the narrowed query
-
-- **WHEN** a feedback state other than all is selected
-- **THEN** a query against `response_ratings` is issued first, carrying the state's rate predicate
-- **AND** a query against `sessions` follows, restricted to the returned ids by an `in` predicate
-- **AND** both carry the caller's token
-
-#### Scenario: The first page costs one request, not two
-
-- **WHEN** a feedback state other than all is selected and the first page of the result is fetched
-- **THEN** the client issues exactly one request for that page
-- **AND** the candidate ids are returned to the client with it
-
-#### Scenario: Later pages reuse the ids without re-resolving them
-
-- **WHEN** the operator scrolls to a further page of a feedback-filtered result
-- **THEN** no further query against `response_ratings` is issued
-- **AND** the page request carries the candidate ids the first page returned
-
-#### Scenario: The default state costs one query per page
-
-- **WHEN** the feedback filter is in its all state
-- **THEN** only the session query is issued and it carries no `in` predicate
-
-#### Scenario: A capped candidate set is disclosed
-
-- **WHEN** the candidate query returns its full limit of ids
-- **THEN** the view states that the result may be incomplete and covers the most recently rated
-  sessions
-
-#### Scenario: The disclosure clears when the filter state no longer caps
-
-- **WHEN** the operator changes to a filter state whose candidate set is below the limit
-- **THEN** the incompleteness disclosure is no longer shown
-
-#### Scenario: No session carries the feedback
-
-- **WHEN** the candidate query returns no ids
-- **THEN** no rows are returned
-- **AND** the session query is not issued
-
-#### Scenario: The candidate query fails
-
-- **WHEN** the candidate query returns a failure
-- **THEN** that failure is returned and the session query is not issued
-
-#### Scenario: Negative feedback includes a zero rating
-
-- **WHEN** the negative state is selected
-- **THEN** its predicate matches a session whose only rating was normalized to zero, alongside one
-  carrying an unambiguously negative rating
-- **AND** it selects the same sessions the previous non-positive predicate selected
-
-#### Scenario: Rated covers both thumbs
-
-- **WHEN** the rated state is selected
-- **THEN** its predicate matches every session the two thumb states match
-- **AND** it does not match a session whose only rate event carried no rating value
-
-#### Scenario: Feedback composes with the other filters
-
-- **WHEN** a feedback state is selected while a search term and a time range are applied
-- **THEN** the narrowed session query still carries the search predicates and the time bounds
-
-#### Scenario: An agent session falls outside every feedback state but all
-
-- **WHEN** a coding-agent session is in the period and the rated state is selected
-- **THEN** the session is absent from the result, its id having carried no rating
-- **AND** the affordance does not describe itself as filtering by client
-
-#### Scenario: An instance without the rating rollup reports a failed read
-
-- **WHEN** a feedback state is selected on an instance that does not carry `response_ratings`
-- **THEN** the read fails and the failure is reported
-- **AND** no query against a raw rate-event log is issued as a substitute
-
 ### Requirement: Provenance line and period summary
 
 The page header SHALL state which entities the view is composed over, listing each contributing entity by its
 real catalog name and colouring it with the same provenance colour the grid band uses, so the two cannot
 disagree. That list SHALL be derived from the entity schema the page fetches — the base entity, followed by
 each enrichment namespace the schema reports, in the order those namespaces first appear — together with any
-further entity the page itself queries to render a column. A hardcoded list is not permitted: enrichments are
+further entity the page itself queries to render a column. Each enrichment SHALL carry a provenance colour of
+its own, assigned by the order its namespace first appears in the schema rather than by its name, so two
+enrichments are told apart whether or not this frontend has ever heard of them. A hardcoded list is not permitted: enrichments are
 catalog objects provisioned per instance, so a fixed list states the composition the code was written against
 rather than the one the instance has. Every entity named SHALL be one the page actually queries; the line MUST
 NOT name a source the page does not read, and MUST NOT carry a "pending" or "not registered" marker — a source
@@ -263,8 +93,10 @@ entity alone rather than rendering an empty or partial list.
 The header SHALL show summary pills for the session count, the rated count, the count carrying negative
 feedback, and the total cost. All four SHALL be exact figures for the **selected time period**, obtained from
 the backend, and MUST NOT be computed from the rows currently loaded. The rated and negative counts SHALL be
-resolved by aggregating the rating source over the period, not by inspecting fetched rows, so that they stand
-complete from the first page and do not climb as the operator scrolls.
+resolved by aggregating the session rating enrichment's fields over the base entity in the period, not by
+inspecting fetched rows, so that they stand complete from the first page and do not climb as the operator
+scrolls. Where the caller's schema reports no session rating enrichment, the rated and negative pills SHALL
+NOT be shown.
 
 The pills SHALL report the period alone. The free-text search, the grid's column filters and the feedback
 filter SHALL narrow the grid and MUST NOT change any pill: the header answers what the period holds, and the
@@ -274,12 +106,11 @@ filters below it. A caveat carried only in a tooltip or only in assistive-techno
 stated for the reader looking at the header; the visible caption SHALL NOT replace the existing hover and
 assistive-technology text.
 
-The rated pill SHALL state the number of sessions carrying at least one rating in the period, as a bare
-count. It MUST NOT be rendered as a ratio over the session count: the two are bounded by different clocks
-— ratings by when they were submitted, sessions by when they were last active — so a session rated
-inside the period whose activity fell outside it counts toward one and not the other. Presented as a ratio
-those figures do not describe a proportion, and on a short period the pill can read above one, which states an
-impossibility. The count MUST NOT be clamped or adjusted to make a ratio look plausible.
+The rated pill SHALL state the number of sessions active in the period that carry at least one rating, as a
+bare count. The rating figures are fields of the base entity, so the pill is bounded by the session's Time
+field exactly as the session count is: a session active in the period counts with every rating it carries,
+whenever that rating was submitted, and a session rated during the period but active only outside it does not
+count. The count MUST NOT be clamped or adjusted.
 
 The pills SHALL be re-resolved whenever the applied period changes and whenever the page fetches the first page
 of a result, including the first page the client fetches after mount; a server-prefetched figure MUST NOT
@@ -291,8 +122,7 @@ grouped. That rounding is local to the summary and does not settle how the Cost 
 
 When the summary request fails, the pills SHALL report that the figures are unavailable rather than rendering
 zeros, which would assert an empty result that was never established. A rating aggregate that fails SHALL make
-the rated and negative pills unavailable without disturbing the session count or the cost, since they are
-resolved independently.
+the rated and negative pills unavailable without disturbing the session count or the cost.
 
 A failure to fetch the rows SHALL NOT by itself make the figures unavailable: they are resolved by their own
 request, so a row failure is no evidence about them. A failure that prevents the summary request from being
@@ -304,7 +134,8 @@ rather than the applied one.
 - **WHEN** the page renders for an instance whose sessions schema reports two enrichment namespaces
 - **THEN** the line names the base entity followed by both enrichment namespaces by their catalog names
 - **AND** each carries the provenance colour its columns carry in the grid band
-- **AND** an enrichment this frontend has no name for is still listed, under the unattributed provenance colour
+- **AND** an enrichment this frontend has no name for is still listed, under a provenance colour of its own
+- **AND** two enrichments never share a colour
 
 #### Scenario: An instance reporting no enrichments names the base entity alone
 
@@ -345,7 +176,7 @@ rather than the applied one.
 #### Scenario: The rated pill is a count, not a ratio
 
 - **WHEN** the rated pill renders
-- **THEN** it shows the number of sessions rated in the period and no denominator
+- **THEN** it shows the number of sessions active in the period that carry a rating, and no denominator
 - **AND** it is never rendered as a fraction of the session count
 
 #### Scenario: The cost pill shows whole dollars
@@ -370,6 +201,17 @@ rather than the applied one.
 - **WHEN** the rating aggregate fails but the session count and cost resolved
 - **THEN** the rated and negative pills report unavailability
 - **AND** the session count and cost pills show their resolved figures
+
+#### Scenario: No rating enrichment hides the rating pills
+
+- **WHEN** the caller's schema for the base entity reports no session rating enrichment
+- **THEN** the rated and negative pills are not shown
+- **AND** the session count and cost pills render as usual
+
+#### Scenario: A late rating on an active session counts
+
+- **WHEN** a session active in the period was rated after the period ended
+- **THEN** the rated pill counts it
 
 #### Scenario: A failed row fetch leaves the figures standing
 
@@ -461,127 +303,6 @@ pages already shown, and SHALL still raise the notification.
 - **WHEN** fetching a page after the first fails
 - **THEN** an error notification names the failure
 - **AND** the rows already loaded remain visible
-
-### Requirement: Rating column resolved for the displayed page
-
-The grid SHALL show a Rating column giving each session's positive and negative rating counts, attributed
-in the provenance band to `response_ratings` rather than to `sessions`.
-
-A session with no rating SHALL render the same unavailable placeholder as a session nobody rated. An
-agent session can carry no rating at all, so the empty cell SHALL NOT be styled or worded as a defect, and
-the column MUST NOT be hidden for such a row — a column that disappears per row reads as a rendering fault.
-
-Ratings SHALL be resolved by a query issued **after** the session query, restricted by `in` to exactly the
-session ids in the page just returned. Resolving them from the feedback filter's candidate set instead
-MUST NOT be done: that set is capped, so a displayed session could fall outside it and be reported as
-unrated when it is not. The ratings query SHALL be skipped entirely when the returned page has no rows.
-
-The two directions SHALL be resolved by a **single** query. The rating source partitions each response's
-events into additive counts, so the directions are separate columns rather than a split to be derived: one
-aggregate over `response_ratings` grouped by `chat_id`, restricted by `in` to the page's ids, selecting
-`sum(rate_pos_count)` for the positive side and `sum(rate_zero_count)` and `sum(rate_neg_count)` for the
-negative one. The previous rule requiring one query per direction SHALL NOT be carried forward: it existed
-because the event log's normalized `rate` is a signed integer from which `count` and `sum` cannot recover the
-two directions, and additive per-direction columns remove that obstacle entirely.
-
-The negative figure SHALL be the sum of the zero and negative counts, which is what the previous non-positive
-predicate counted, so the column's meaning is unchanged. Each side SHALL be counted from the **same** columns
-the corresponding feedback filter predicates on, which is what guarantees the column agrees with the filter:
-a session the Positive filter selected cannot then display a zero positive count, and the same holds for
-the negative side.
-
-The same query SHALL also select `sum(rate_bool_false_count)`, `sum(rate_raw_count)` and
-`sum(rate_event_count)`. These do not compose either figure: they state how much of the negative one is
-provably a thumbs-down, and how much of the session's feedback had its submitted form captured at all —
-which is a proportion, so the event count is named to give it a denominator. Where part of a negative figure is not established as a thumbs-down, that side SHALL
-carry a caveat saying so, and the caveat SHALL be reachable by keyboard and exposed to assistive technology —
-the figure is not redefined, it is disclosed. The caveat MUST NOT attribute the whole gap to an uncaptured
-form: a rating submitted as a numeric zero **is** captured, and is unestablished because the service has not
-fixed what a numeric zero means. Stating only the uncaptured cause would contradict the captured-form
-proportion quoted beside it. A cell whose negative figure is fully attributable, and a cell
-with no negative ratings, SHALL carry no caveat: a caveat on every cell would stop being read.
-
-The query SHALL carry time bounds over `last_rate_time` matching the period the session query is bounded
-to. Bounding them identically keeps the column and the feedback filter consistent. The consequence — a rating
-given outside the selected period is not counted — is accepted for that consistency.
-
-Both counts SHALL be displayed at all times, including a zero, so the absence of ratings on one side is visible
-rather than implied. A side carrying ratings SHALL be coloured — positive as success, negative as error, from
-theme tokens — and a side with none SHALL stay muted. Each side SHALL carry a text label for assistive
-technology, since the icons carry the meaning.
-
-When the ratings query fails, both counts SHALL be left unresolved and the cell SHALL render nothing rather
-than displaying zeros or a half-counted split, which would assert an absence of feedback that was never
-established. The session rows themselves SHALL still be returned.
-
-A comment indicator SHALL NOT be shown in the grid cell. The rating source's `comment_count` is catalogued
-**non**-sensitive, so the previous reason for withholding it — that the event log's comment column could not
-be counted by a caller without the elevated role — no longer holds. It is withheld on a different ground: the
-cell is a two-direction figure, a third signal in it is a design question of its own, and the session's
-comment count is stated on the detail view's feedback panel instead.
-
-#### Scenario: Ratings are resolved for exactly the page returned
-
-- **WHEN** a page of sessions is returned
-- **THEN** exactly one `response_ratings` aggregate query follows, restricted by `in` to that page's ids
-- **AND** it is not issued at all when the page has no rows
-
-#### Scenario: Both directions come from one query
-
-- **WHEN** the ratings query is built
-- **THEN** it selects the positive count and the two columns forming the negative count in one aggregate
-- **AND** no second query is issued for the other direction
-
-#### Scenario: Both directions are always shown
-
-- **WHEN** a session has positive ratings and no negative ones
-- **THEN** the cell shows the positive count coloured and a muted zero for the negative side
-
-#### Scenario: A session rated both ways shows both counts
-
-- **WHEN** a session carries one like and one dislike
-- **THEN** it shows one on each side, each coloured for its own direction
-
-#### Scenario: A zero-normalized rating still counts as negative
-
-- **WHEN** a session's only rating was submitted as a boolean false and normalized to zero
-- **THEN** its negative count is one
-- **AND** the figure matches what the previous non-positive count reported
-
-#### Scenario: An unattributable negative figure carries a caveat
-
-- **WHEN** part of a session's negative count comes from events whose submitted form was never captured
-- **THEN** the negative side carries a caveat stating that
-- **AND** the caveat is reachable by keyboard and exposed to assistive technology
-
-#### Scenario: The caveat names both causes of an unestablished rating
-
-- **WHEN** a session's negative figure includes a rating submitted as a numeric zero whose form was
-  captured
-- **THEN** the caveat states that such a rating is not established as a thumbs-down
-- **AND** it does not claim the rating was recorded without its submitted form
-
-#### Scenario: A fully attributable figure carries no caveat
-
-- **WHEN** every event behind a session's negative count had its submitted form captured
-- **THEN** the negative side carries no caveat
-
-#### Scenario: An unrated session is muted, not blank
-
-- **WHEN** a session has no ratings in the period
-- **THEN** both sides show a muted zero
-
-#### Scenario: A session that can carry no rating renders the ordinary placeholder
-
-- **WHEN** the grid renders a coding-agent session
-- **THEN** its Rating cell shows the same unavailable placeholder an unrated session shows
-- **AND** the column is still present for that row
-
-#### Scenario: A failed ratings lookup shows nothing rather than zero
-
-- **WHEN** the ratings query fails
-- **THEN** the session rows are still returned
-- **AND** their rating cells render nothing, asserting no absence of feedback
 
 ### Requirement: Session cells render composed values, not raw aggregates
 
@@ -1966,3 +1687,149 @@ programmatically rather than by styling alone.
 
 - **WHEN** the value query has failed and the operator closes the filter popup
 - **THEN** the notification is still shown
+
+### Requirement: The session rating enrichment is recognised by its fields
+
+Session-level feedback SHALL be read from a **session rating enrichment** of the base entity: an enrichment
+whose namespace reports the fields `rate_pos_count`, `rate_zero_count` and `rate_neg_count`. It SHALL be
+recognised by those fields under whatever namespace the schema reports them, and never by the enrichment's
+name. Where more than one namespace reports them, the first in schema order SHALL be used.
+
+The enrichment is one row per session, so its fields are read like any other enrichment field of the row: no
+second query, no candidate set and no lookup after the page. Where the caller's schema reports no such
+enrichment, the feedback filter, the Rating column and the rated and negative pills SHALL NOT be shown, and no
+query against a rating rollup or a rate-event log SHALL be issued in their place.
+
+#### Scenario: The rating enrichment is found under another namespace
+
+- **WHEN** the base entity's schema reports `rate_pos_count`, `rate_zero_count` and `rate_neg_count` under a namespace other than `session_ratings`
+- **THEN** the Rating column, the feedback filter and the rating pills read that namespace's fields
+
+#### Scenario: No rating enrichment, no rating features
+
+- **WHEN** the caller's schema reports no namespace carrying the three rating counts
+- **THEN** the grid offers no Rating column and the toolbar offers no feedback filter
+- **AND** no query is issued against `response_ratings` or `rate_analytics`
+
+### Requirement: Feedback filter narrows the session query by the rating enrichment
+
+The sessions page SHALL provide a feedback filter with exactly four mutually exclusive states — all,
+positive, negative, and rated — defaulting to all. It SHALL reuse the shared `SegmentedControl`.
+
+A state other than all SHALL add one predicate to the session query over the session rating enrichment's
+fields, and SHALL issue no other query:
+
+| State | Predicate |
+|---|---|
+| positive | `gt(rate_pos_count, 0)` |
+| negative | `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
+| rated | `gt(rate_pos_count, 0)` OR `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
+
+The negative state SHALL keep its meaning — the zero and the negative counts together — and MUST NOT be narrowed
+to the provably negative subset. `rated` SHALL be the union of the three value-bearing counts, which excludes
+only a rate event that carried no value.
+
+The predicate is part of the session query, so the result is exact and is paged like any other filtered result:
+there is no candidate cap and no incompleteness disclosure. The filter SHALL compose with the search, the column
+filters and the period exactly as those compose with each other.
+
+A session whose client submits no rate events carries no rating row, so any state other than all narrows the
+result to sessions that were rated. The affordance MUST NOT describe itself as filtering by client.
+
+#### Scenario: A feedback state costs no extra query
+
+- **WHEN** the negative state is selected and a page is fetched
+- **THEN** exactly one query is issued, against the base entity
+- **AND** it carries the negative predicate over the rating enrichment's fields
+
+#### Scenario: Negative feedback includes a zero rating
+
+- **WHEN** the negative state is selected
+- **THEN** its predicate matches a session whose only rating was normalized to zero, alongside one carrying an unambiguously negative rating
+
+#### Scenario: A feedback-filtered result is exact
+
+- **WHEN** more than a thousand sessions in the period carry the selected feedback
+- **THEN** all of them are reachable by scrolling
+- **AND** no incompleteness disclosure is shown
+
+#### Scenario: Feedback composes with the other filters
+
+- **WHEN** a feedback state is selected while a search term and a time range are applied
+- **THEN** the session query carries the feedback predicate, the search predicates and the time bounds together
+
+### Requirement: Rating column reads the rating enrichment of each row
+
+The grid SHALL show a Rating column giving each session's positive and negative rating counts, attributed in the
+provenance band to the session rating enrichment's namespace.
+
+The positive figure SHALL be `rate_pos_count`; the negative figure SHALL be `rate_zero_count` plus
+`rate_neg_count`. Both SHALL be read from the row itself. Each side SHALL be counted from the same fields the
+feedback filter predicates on, so a session the Positive filter selected cannot display a zero positive count,
+and the same holds for the negative side. The figures SHALL count every rating the session carries, whenever it
+was submitted.
+
+The row's `rate_bool_false_count`, `rate_raw_count` and `rate_event_count` SHALL decide the caveat. Where part of a
+negative figure is not established as a thumbs-down, that side SHALL carry a caveat saying so, reachable by
+keyboard and exposed to assistive technology. The caveat MUST NOT attribute the whole gap to an uncaptured form: a
+rating submitted as a numeric zero is captured and is unestablished because the service has not fixed what a
+numeric zero means. A fully attributable negative figure, and a cell with no negative ratings, SHALL carry no
+caveat.
+
+Both counts SHALL be displayed at all times, including a zero. A side carrying ratings SHALL be coloured —
+positive as success, negative as error, from theme tokens — and a side with none SHALL stay muted. Each side SHALL
+carry a text label for assistive technology. A session with no rating row SHALL show a muted zero on both sides.
+
+The fields the Rating column composes SHALL NOT also be offered as separate derived columns. A comment indicator
+SHALL NOT be shown in the cell; the session's comment count is stated on the detail view's feedback panel.
+
+#### Scenario: Ratings come with the page
+
+- **WHEN** a page of sessions is returned
+- **THEN** its Rating cells render from the page's own rows
+- **AND** no further query is issued for them
+
+#### Scenario: A zero-normalized rating still counts as negative
+
+- **WHEN** a session's only rating was submitted as a boolean false and normalized to zero
+- **THEN** its negative count is one
+
+#### Scenario: An unattributable negative figure carries a caveat
+
+- **WHEN** part of a session's negative count comes from events whose submitted form was never captured
+- **THEN** the negative side carries a caveat stating that
+- **AND** the caveat is reachable by keyboard and exposed to assistive technology
+
+#### Scenario: A fully attributable figure carries no caveat
+
+- **WHEN** every event behind a session's negative count had its submitted form captured
+- **THEN** the negative side carries no caveat
+
+#### Scenario: An unrated session is muted
+
+- **WHEN** a session carries no rating row
+- **THEN** both sides show a muted zero
+
+#### Scenario: Composed fields are not offered twice
+
+- **WHEN** the column picker lists the derived columns
+- **THEN** it offers no separate column for `rate_pos_count`, `rate_zero_count` or `rate_neg_count`
+
+### Requirement: The saved column state belongs to the table it was saved for
+
+The grid's saved column state SHALL record the base table it was saved under. On load, a saved state recorded for a
+table other than the configured base table SHALL be discarded and the grid SHALL render its default column state.
+The check SHALL run in every browser on every load, because the setting is changed in one browser and the saved
+states live in all of them.
+
+#### Scenario: A table change resets the saved columns
+
+- **WHEN** the operator's browser holds a column state saved for one base table and the setting now names another
+- **THEN** the grid renders its default column state
+- **AND** the stale state is not applied
+
+#### Scenario: The same table keeps the saved columns
+
+- **WHEN** the saved state was recorded for the configured base table
+- **THEN** the grid applies it
+

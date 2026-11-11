@@ -27,6 +27,7 @@ import { RuleFolderProvider } from '@/src/context/RuleFolderContext';
 import { ThemeProvider } from '@/src/context/ThemeContext';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { AccessMode } from '@/src/models/user-access';
+import { isSessionsSourceAvailable } from '@/src/server/analytics/sessions-availability';
 import { getUserAccess } from '@/src/server/user-access';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -53,6 +54,7 @@ export default async function Layout({ children, params }: { children: ReactNode
   }
 
   const isAnalyticsEnabled = getIsAnalyticsEnabled();
+  const isSessionsFlagOn = isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_SESSIONS_ENABLED);
   const featureFlags: FeatureFlags = {
     adminApiEnabled: getIsAdminApiEnabled(),
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
@@ -61,7 +63,7 @@ export default async function Layout({ children, params }: { children: ReactNode
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
     analyticsEnabled: isAnalyticsEnabled,
-    analyticsSessionsEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_SESSIONS_ENABLED),
+    analyticsSessionsEnabled: isSessionsFlagOn && (await isSessionsSourceAvailable(token)),
     analyticsUsageEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
     analyticsCustomDashboardsEnabled: getIsCustomDashboardsEnabled(),
     queryAssistantEnabled: isAnalyticsEnabled && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,

@@ -1,32 +1,29 @@
+import { Token } from '@/src/models/auth';
 import { SessionsSourceSetting, SessionsSourceSettingDto } from '@/src/models/analytics/sessions-source';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ANALYTICS_API } from '@/src/server/analytics/audit-api';
+import { BaseApi } from '@/src/server/base-api';
 import { settingFromDto, settingToDto } from '@/src/utils/analytics/sessions-source';
 
-interface SessionsSourceStore {
-  stored: SessionsSourceSettingDto | null;
-}
+export const SESSIONS_SOURCE_URL = `${ANALYTICS_API}/settings/sessions-source`;
 
-const STORE_KEY = Symbol.for('dial-admin.sessions-source-store');
+const NOT_FOUND = 404;
 
-const processStore = (): SessionsSourceStore => {
-  const holder = globalThis as unknown as Record<symbol, SessionsSourceStore | undefined>;
-  holder[STORE_KEY] ??= { stored: null };
+const toSetting = (
+  result: ServerActionResponse<SessionsSourceSettingDto>,
+): ServerActionResponse<SessionsSourceSetting> =>
+  result.success && result.response
+    ? { ...result, response: settingFromDto(result.response) }
+    : { ...result, response: undefined };
 
-  return holder[STORE_KEY];
-};
+export class SessionsSourceApi extends BaseApi {
+  async getSetting(token: Token): Promise<ServerActionResponse<SessionsSourceSetting>> {
+    const read: ServerActionResponse<SessionsSourceSettingDto> = await this.getAction(SESSIONS_SOURCE_URL, token);
 
-export class SessionsSourceApi {
-  constructor(private readonly store: SessionsSourceStore = processStore()) {}
-
-  async getSetting(): Promise<ServerActionResponse<SessionsSourceSetting>> {
-    const { stored } = this.store;
-
-    return stored ? { success: true, response: settingFromDto(stored) } : { success: true };
+    return !read.success && read.status === NOT_FOUND ? { success: true } : toSetting(read);
   }
 
-  async putSetting(setting: SessionsSourceSetting): Promise<ServerActionResponse<SessionsSourceSetting>> {
-    this.store.stored = { ...settingToDto(setting), updated_at: new Date().toISOString() };
-
-    return { success: true, response: settingFromDto(this.store.stored) };
+  async putSetting(setting: SessionsSourceSetting, token: Token): Promise<ServerActionResponse<SessionsSourceSetting>> {
+    return toSetting(await this.putAction(SESSIONS_SOURCE_URL, settingToDto(setting), token));
   }
 }

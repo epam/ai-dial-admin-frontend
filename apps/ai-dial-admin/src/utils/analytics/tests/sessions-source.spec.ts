@@ -5,6 +5,7 @@ import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics
 import { SessionsRole, SessionsSource, SessionsSourceSetting } from '@/src/models/analytics/sessions-source';
 import {
   canonicalSessionRow,
+  isEntityMissing,
   defaultSessionsSource,
   enrichmentNamespacesOf,
   ratingEnrichmentOf,
@@ -315,5 +316,14 @@ describe('canonicalSessionRow', () => {
 
     expect(canonicalSessionRow(defaultSessionsSource(), raw)).toEqual(raw);
     expect(canonicalSessionRow(defaultSessionsSource(), raw)).not.toBe(raw);
+  });
+});
+
+describe('isEntityMissing', () => {
+  test('is true only for a failed read the service answered 404', () => {
+    expect(isEntityMissing({ success: false, status: 404 })).toBe(true);
+    expect(isEntityMissing({ success: false, status: 500 })).toBe(false);
+    expect(isEntityMissing({ success: false })).toBe(false);
+    expect(isEntityMissing({ success: true })).toBe(false);
   });
 });

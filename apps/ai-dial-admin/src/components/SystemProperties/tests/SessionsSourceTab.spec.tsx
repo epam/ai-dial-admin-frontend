@@ -148,6 +148,38 @@ describe('SystemProperties — Sessions source tab', () => {
     );
   });
 
+  test('says the default binding is in use while nothing is stored', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+
+    expect(await screen.findByText(SystemPropertiesI18nKey.SessionsSourceDefaultInUse)).toBeTruthy();
+    expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeNull();
+  });
+
+  test('says the Sessions page is hidden and offers no binding when nothing is stored and the default table is missing', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
+    vi.mocked(getSessionsSourceEntities).mockResolvedValue({ success: true, response: [{ name: 'other_sessions' }] });
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+
+    expect(await screen.findByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeTruthy();
+    expect(baseTablePicker()).toHaveDisplayValue('');
+    expect(getSessionsSourceSchema).not.toHaveBeenCalled();
+  });
+
+  test('says nothing about the default once a binding is stored', async () => {
+    const user = userEvent.setup();
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceDefaultInUse)).toBeNull();
+    expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeNull();
+  });
+
   test('reports a failed read and does not present the default as the stored binding', async () => {
     const user = userEvent.setup();
     vi.mocked(getSessionsSource).mockResolvedValue({ success: false, errorMessage: 'Service unavailable' });

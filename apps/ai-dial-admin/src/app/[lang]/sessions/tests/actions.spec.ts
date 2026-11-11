@@ -40,7 +40,7 @@ import {
   QuerySortDirection,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { SessionsRole, SessionsSourceSetting } from '@/src/models/analytics/sessions-source';
+import { SessionsRole, SessionsSourceProblem, SessionsSourceSetting } from '@/src/models/analytics/sessions-source';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -243,7 +243,7 @@ describe('getSessions', () => {
 
     await getSessions(REQUEST);
 
-    expect(getSetting()).toHaveBeenCalledOnce();
+    expect(getSetting()).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(getEntitySchema()).toHaveBeenCalledWith('sessions', TOKEN_MOCK);
   });
 
@@ -415,6 +415,53 @@ describe('getSessionsSource', () => {
       cost: SessionsField.TotalPrice,
       ratingEnrichment: RATINGS,
     });
+  });
+
+  test('fails without a source rather than falling back to the default when the setting cannot be read', async () => {
+    getSetting().mockResolvedValue({ success: false, status: 403, errorMessage: 'Access denied' });
+
+    expect(await getSessionsSource()).toEqual({
+      source: null,
+      failure: null,
+      problem: SessionsSourceProblem.SettingUnreadable,
+    });
+    expect(getEntitySchema()).not.toHaveBeenCalled();
+  });
+
+  test('fails the session query without querying when the setting cannot be read', async () => {
+    getSetting().mockResolvedValue({ success: false, status: 403 });
+
+    const result = await getSessions(REQUEST);
+
+    expect(result.success).toBe(false);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  test('reports Sessions as not set up when nothing is stored and the default table does not exist', async () => {
+    getEntitySchema().mockResolvedValue({ success: false, status: 404 });
+
+    expect(await getSessionsSource()).toEqual({
+      source: null,
+      failure: null,
+      problem: SessionsSourceProblem.DefaultTableMissing,
+    });
+  });
+
+  test('keeps the default source when the default table schema fails for another reason', async () => {
+    getEntitySchema().mockResolvedValue({ success: false, status: 500 });
+
+    const resolution = await getSessionsSource();
+
+    expect(resolution.problem).toBeUndefined();
+    expect(resolution.source?.baseTable).toBe('sessions');
+  });
+
+  test('reports the setting read failure as the schema read failure', async () => {
+    getSetting().mockResolvedValue({ success: false, status: 403, errorMessage: 'Access denied' });
+
+    expect(await getSessionsSchema()).toEqual(
+      expect.objectContaining({ success: false, status: 403, errorMessage: 'Access denied' }),
+    );
   });
 
   test('resolves a stored binding against the caller schema, leaving unbound roles null', async () => {

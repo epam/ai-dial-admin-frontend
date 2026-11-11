@@ -52,6 +52,7 @@ export const useSessionsSource = (isActive: boolean) => {
   const [currentSetting, setCurrentSetting] = useState<SessionsSourceSetting>(EMPTY_SESSIONS_SOURCE_SETTING);
   const [tables, setTables] = useState<string[]>([]);
   const [schemas, setSchemas] = useState<Record<string, AnalyticsEntityField[]>>({});
+  const [isDefaultTableMissing, setIsDefaultTableMissing] = useState(false);
 
   const notifyFailure = useCallback(
     (title: string, read: ServerActionResponse) => {
@@ -72,16 +73,25 @@ export const useSessionsSource = (isActive: boolean) => {
         readSafely(getSessionsSourceEntities),
       ]);
 
+      const tableNames = entitiesRead.success ? (entitiesRead.response ?? []).map(({ name }) => name) : null;
+      const isDefaultMissing =
+        settingRead.success &&
+        !settingRead.response &&
+        tableNames != null &&
+        !tableNames.includes(DEFAULT_SESSIONS_SOURCE_SETTING.baseTable);
+
       if (settingRead.success) {
+        const fallback = isDefaultMissing ? EMPTY_SESSIONS_SOURCE_SETTING : DEFAULT_SESSIONS_SOURCE_SETTING;
         setSavedSetting(settingRead.response ?? null);
-        setCurrentSetting(settingRead.response ?? DEFAULT_SESSIONS_SOURCE_SETTING);
+        setCurrentSetting(settingRead.response ?? fallback);
+        setIsDefaultTableMissing(isDefaultMissing);
       } else {
         setIsReadFailed(true);
         notifyFailure(t(SystemPropertiesI18nKey.SessionsSourceReadFailed), settingRead);
       }
 
-      if (entitiesRead.success) {
-        setTables((entitiesRead.response ?? []).map(({ name }) => name));
+      if (tableNames) {
+        setTables(tableNames);
       } else {
         notifyFailure(t(SystemPropertiesI18nKey.SessionsSourceTablesReadFailed), entitiesRead);
       }
@@ -122,8 +132,8 @@ export const useSessionsSource = (isActive: boolean) => {
     if (savedSetting) {
       return savedSetting;
     }
-    return isReadFailed ? EMPTY_SESSIONS_SOURCE_SETTING : DEFAULT_SESSIONS_SOURCE_SETTING;
-  }, [isReadFailed, savedSetting]);
+    return isReadFailed || isDefaultTableMissing ? EMPTY_SESSIONS_SOURCE_SETTING : DEFAULT_SESSIONS_SOURCE_SETTING;
+  }, [isDefaultTableMissing, isReadFailed, savedSetting]);
 
   const isChanged = useMemo(() => {
     if (isLoading) {
@@ -173,6 +183,7 @@ export const useSessionsSource = (isActive: boolean) => {
       setSavedSetting(stored);
       setCurrentSetting(stored);
       setIsReadFailed(false);
+      setIsDefaultTableMissing(false);
       showNotification(getSuccessNotification(t(SystemPropertiesI18nKey.SessionsSourceSaved)));
     } else {
       notifyFailure(t(ErrorI18nKey.Error), res);
@@ -188,6 +199,8 @@ export const useSessionsSource = (isActive: boolean) => {
     tables: tableOptions,
     fields: schemas[baseTable],
     isLoading,
+    isUnsaved: !isLoading && !isReadFailed && !savedSetting,
+    isDefaultTableMissing,
     isChanged,
     isComplete,
     onChangeBaseTable,

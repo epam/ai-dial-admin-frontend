@@ -109,10 +109,16 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DEFAULT_SESSIONS_SOURCE_SETTING } from '@/src/constants/analytics/sessions-source';
 import {
   SessionsSource,
+  SessionsSourceProblem,
   SessionsSourceResolution,
   SessionsSourceSetting,
 } from '@/src/models/analytics/sessions-source';
-import { ratingEnrichmentOf, resolveSessionsSource, sourceFieldOf } from '@/src/utils/analytics/sessions-source';
+import {
+  isEntityMissing,
+  ratingEnrichmentOf,
+  resolveSessionsSource,
+  sourceFieldOf,
+} from '@/src/utils/analytics/sessions-source';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -142,21 +148,39 @@ const readBaseSchema = async (
   }
 };
 
-const readSetting = async (): Promise<ServerActionResponse<SessionsSourceSetting>> => {
+const readSetting = async (authToken: Token): Promise<ServerActionResponse<SessionsSourceSetting>> => {
   try {
-    return await sessionsSourceApi.getSetting();
+    const read = await sessionsSourceApi.getSetting(authToken);
+
+    if (!read.success) {
+      errorObjLog(read, 'Failed to read the Sessions source setting');
+    }
+
+    return read;
   } catch (error) {
-    errorObjLog(error, 'Failed to read the Sessions source setting; using the default binding');
+    errorObjLog(error, 'Failed to read the Sessions source setting');
     return { success: false };
   }
 };
 
 async function callerSource(authToken: Token): Promise<CallerSource> {
-  const setting = await readSetting();
+  const setting = await readSetting(authToken);
+
+  if (!setting.success) {
+    return {
+      resolution: { source: null, failure: null, problem: SessionsSourceProblem.SettingUnreadable },
+      schema: { ...setting, response: undefined },
+    };
+  }
+
   const schema = await readBaseSchema(
     setting.response?.baseTable ?? DEFAULT_SESSIONS_SOURCE_SETTING.baseTable,
     authToken,
   );
+
+  if (!setting.response && isEntityMissing(schema)) {
+    return { resolution: { source: null, failure: null, problem: SessionsSourceProblem.DefaultTableMissing }, schema };
+  }
 
   return { resolution: resolveSessionsSource(setting.response, schema.response?.fields), schema };
 }

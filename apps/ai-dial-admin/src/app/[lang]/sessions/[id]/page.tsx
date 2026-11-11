@@ -57,8 +57,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const source = resolution.source;
 
   if (!source) {
-    return resolution.failure ? (
-      <SessionsSourceError failure={resolution.failure} />
+    return resolution.failure || resolution.problem ? (
+      <SessionsSourceError failure={resolution.failure} problem={resolution.problem} />
     ) : (
       <SessionDetailError chatId={chatId} />
     );

@@ -4,7 +4,7 @@ import Page from '@/src/app/[lang]/sessions/page';
 import * as actions from '@/src/app/[lang]/sessions/actions';
 import SessionsSourceError from '@/src/components/Analytics/SessionsTrace/SessionsSourceError';
 import SessionsTraceView from '@/src/components/Analytics/SessionsTrace/SessionsTraceView';
-import { SessionsRole } from '@/src/models/analytics/sessions-source';
+import { SessionsRole, SessionsSourceProblem } from '@/src/models/analytics/sessions-source';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
@@ -53,6 +53,19 @@ describe('sessions-trace page', () => {
 
     expect(page.type).toBe(SessionsSourceError);
     expect(page.props).toEqual({ failure });
+  });
+
+  test('renders the source error rather than the default source when the setting cannot be read', async () => {
+    sessionsSource().mockResolvedValue({
+      source: null,
+      failure: null,
+      problem: SessionsSourceProblem.SettingUnreadable,
+    });
+
+    const page = await renderPage();
+
+    expect(page.type).toBe(SessionsSourceError);
+    expect(page.props).toEqual({ failure: null, problem: SessionsSourceProblem.SettingUnreadable });
   });
 
   test('falls back to the default source when resolving the source throws', async () => {

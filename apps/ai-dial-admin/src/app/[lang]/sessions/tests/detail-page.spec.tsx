@@ -9,7 +9,7 @@ import {
   getSessionsSchema,
   getSessionsSource,
 } from '@/src/app/[lang]/sessions/actions';
-import { SessionsRole } from '@/src/models/analytics/sessions-source';
+import { SessionsRole, SessionsSourceProblem } from '@/src/models/analytics/sessions-source';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
@@ -254,6 +254,16 @@ describe('session detail route', () => {
     expect(detail()).not.toHaveBeenCalled();
     expect(schema()).not.toHaveBeenCalled();
     expect(feedback()).not.toHaveBeenCalled();
+  });
+
+  test('a setting that cannot be read fails the page with the source error before any session query', async () => {
+    sourceOf().mockResolvedValue({ source: null, failure: null, problem: SessionsSourceProblem.SettingUnreadable });
+
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('SessionsSourceError');
+    expect(propsOf(node).problem).toBe(SessionsSourceProblem.SettingUnreadable);
+    expect(detail()).not.toHaveBeenCalled();
   });
 
   test('a source that cannot be resolved renders the error state before any session query', async () => {

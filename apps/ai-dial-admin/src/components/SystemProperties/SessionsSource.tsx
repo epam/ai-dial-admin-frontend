@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { Select, SelectOption } from '@epam/ai-dial-ui-kit';
+import { Notification, NotificationType, NotificationVariant, Select, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SESSIONS_ROLES } from '@/src/constants/analytics/sessions-source';
 import { BasicI18nKey, SystemPropertiesI18nKey } from '@/src/constants/i18n';
@@ -17,11 +17,22 @@ interface Props {
   tables: string[];
   fields?: AnalyticsEntityField[];
   isLoading?: boolean;
+  isUnsaved?: boolean;
+  isDefaultTableMissing?: boolean;
   onChangeBaseTable: (table: string) => void;
   onChangeRole: (role: SessionsRole, field: string | null) => void;
 }
 
-const SessionsSource: FC<Props> = ({ setting, tables, fields, isLoading, onChangeBaseTable, onChangeRole }) => {
+const SessionsSource: FC<Props> = ({
+  setting,
+  tables,
+  fields,
+  isLoading,
+  isUnsaved,
+  isDefaultTableMissing,
+  onChangeBaseTable,
+  onChangeRole,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = isReadOnlyAdmin || isLoading;
@@ -43,6 +54,19 @@ const SessionsSource: FC<Props> = ({ setting, tables, fields, isLoading, onChang
       <p className="dial-small-text text-secondary mb-4 max-w-[560px]">
         {t(SystemPropertiesI18nKey.SessionsSourceDescription)}
       </p>
+      {isUnsaved && (
+        <div className="mb-4 max-w-[560px]">
+          <Notification
+            type={NotificationType.SectionMessage}
+            variant={isDefaultTableMissing ? NotificationVariant.Warning : NotificationVariant.Info}
+            message={t(
+              isDefaultTableMissing
+                ? SystemPropertiesI18nKey.SessionsSourceDefaultMissing
+                : SystemPropertiesI18nKey.SessionsSourceDefaultInUse,
+            )}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-4 max-w-[420px]">
         <Select
           id="sessions-source-base-table"

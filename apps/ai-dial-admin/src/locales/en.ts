@@ -3987,6 +3987,11 @@ export default {
     SchemaLoadFailed: 'Could not load the sessions schema, so the columns that depend on it were dropped.',
     SourceRoleMissing:
       'The Sessions source binds the {role} role to "{field}", which this account cannot read. Check the Sessions source in System Properties.',
+    SourceSettingReadFailed:
+      'Could not read the Sessions source setting, so the table these pages read is unknown. Your account may lack access to analytics settings.',
+    SourceNotConfiguredTitle: 'Sessions are not set up',
+    SourceNotConfigured:
+      'No Sessions source is saved and there is no sessions table to fall back to. Choose a table in System Properties → Sessions source.',
     SummaryUnavailableHint: 'Could not be loaded.',
     RatingUp: 'Positive ratings in the selected period',
     RatingDown: 'Negative ratings in the selected period',
@@ -4326,6 +4331,10 @@ export default {
     SessionsSourceTitle: 'Sessions source',
     SessionsSourceDescription:
       'Chooses the table the Sessions pages read and the field that plays each role in it. The analytics service stores one value for the whole instance.',
+    SessionsSourceDefaultInUse:
+      'No Sessions source is saved, so the Sessions pages read the sessions table with the fields shown below. If that table is ever missing, the Sessions page is hidden from the menu until a table is saved here.',
+    SessionsSourceDefaultMissing:
+      'No Sessions source is saved and there is no sessions table, so the Sessions page is hidden from the menu. Choose a table and save to show it.',
     SessionsSourceBaseTableLabel: 'Base table',
     SessionsSourceBaseTablePlaceholder: 'Select a table',
     SessionsSourceBaseTableCaveat:

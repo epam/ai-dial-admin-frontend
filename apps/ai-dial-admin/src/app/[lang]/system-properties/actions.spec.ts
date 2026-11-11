@@ -62,7 +62,7 @@ describe('System properties :: server actions', () => {
     vi.mocked(sessionsSourceApi.getSetting).mockResolvedValue(read);
 
     const result = await getSessionsSource();
-    expect(sessionsSourceApi.getSetting).toHaveBeenCalledOnce();
+    expect(sessionsSourceApi.getSetting).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(read);
   });
 
@@ -71,7 +71,7 @@ describe('System properties :: server actions', () => {
     vi.mocked(sessionsSourceApi.putSetting).mockResolvedValue(saved);
 
     const result = await saveSessionsSource(DEFAULT_SESSIONS_SOURCE_SETTING);
-    expect(sessionsSourceApi.putSetting).toHaveBeenCalledWith(DEFAULT_SESSIONS_SOURCE_SETTING);
+    expect(sessionsSourceApi.putSetting).toHaveBeenCalledWith(DEFAULT_SESSIONS_SOURCE_SETTING, TOKEN_MOCK);
     expect(settingsApi.updateSystemProperties).not.toHaveBeenCalled();
     expect(result).toBe(saved);
   });

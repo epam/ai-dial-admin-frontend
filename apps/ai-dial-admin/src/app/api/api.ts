@@ -184,7 +184,9 @@ export const dashboardsApi = new DashboardsApi({
   host: process.env.DIAL_ANALYTICS_API_URL,
 });
 
-export const sessionsSourceApi = new SessionsSourceApi();
+export const sessionsSourceApi = new SessionsSourceApi({
+  host: process.env.DIAL_ANALYTICS_API_URL,
+});
 
 export const analyticsAuditApi = new AnalyticsAuditApi({
   host: process.env.DIAL_ANALYTICS_API_URL,

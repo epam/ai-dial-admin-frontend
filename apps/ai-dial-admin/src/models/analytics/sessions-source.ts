@@ -54,7 +54,13 @@ export interface SessionsSourceRoleFailure {
   field: string;
 }
 
+export enum SessionsSourceProblem {
+  SettingUnreadable = 'settingUnreadable',
+  DefaultTableMissing = 'defaultTableMissing',
+}
+
 export interface SessionsSourceResolution {
   source: SessionsSource | null;
   failure: SessionsSourceRoleFailure | null;
+  problem?: SessionsSourceProblem;
 }
