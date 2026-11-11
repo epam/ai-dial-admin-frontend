@@ -64,11 +64,11 @@ export const SUMMARY_PANELS_GRID_CLASS =
 
 export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
 
-/** Card with a footer pinned to the bottom (Overall Score's "Based on completed test cases"). */
-export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-between';
-
-/** Card whose content sits right under the title however tall the row is stretched by its neighbours. */
-export const ANALYTICS_KPI_CARD_TOP_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-start gap-2';
+/**
+ * Every card is title / figure / footer: the kit card pins its `description` slot to the bottom, so with one
+ * shared gap the three levels line up across the row however tall the row is stretched by its neighbours.
+ */
+export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 gap-2';
 
 export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
 

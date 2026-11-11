@@ -4,7 +4,10 @@ import { FC, useMemo } from 'react';
 
 import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { formatFieldValue } from '@/src/components/Runs/Details/BottomDrawer/utils';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   isOpen: boolean;
@@ -14,6 +17,7 @@ interface Props {
 }
 
 const FullscreenValueViewer: FC<Props> = ({ isOpen, fieldLabel, value, onClose }) => {
+  const t = useI18n();
   const displayText = useMemo(() => {
     const formatted = formatFieldValue(value);
     const trimmed = formatted.trim();
@@ -32,6 +36,11 @@ const FullscreenValueViewer: FC<Props> = ({ isOpen, fieldLabel, value, onClose }
       onClose={onClose}
       header={fieldLabel}
       headerDivider
+      footer={
+        <div className="flex items-center justify-center px-4 py-2 shrink-0">
+          <CopyButton buttonLabel={t(ButtonsI18nKey.Copy)} value={displayText} valueLabel={fieldLabel} />
+        </div>
+      }
       portalId="FullscreenValueViewer"
       open={isOpen}
       size={PopupSize.Lg}

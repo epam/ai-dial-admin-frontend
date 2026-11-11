@@ -4,7 +4,9 @@ import { FC, useCallback } from 'react';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 
+import CellCopyButton from '@/src/components/Runs/Details/RowDetails/CellCopyButton';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
+import { canCopyFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/can-copy-field-value';
 import ScoreThresholdTooltip from '@/src/components/Runs/Details/RowDetails/ScoreThresholdTooltip';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
@@ -31,6 +33,8 @@ const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
   const isFailed = field.primaryFailed ?? false;
   const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
   const hasScore = !isStatusRow && getScoreFieldValue(raw, field.isScoreIndicator, isFailed) != null;
+
+  const canCopy = canCopyFieldValue(field, raw, isFailed) && raw != null;
 
   const onOpenFullValue = useCallback(() => onOpen(field), [onOpen, field]);
 
@@ -70,6 +74,7 @@ const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
             <OpenPopup />
           </span>
         </button>
+        {canCopy && <CellCopyButton label={field.label} value={raw} />}
       </div>
     </ScoreThresholdTooltip>
   );
