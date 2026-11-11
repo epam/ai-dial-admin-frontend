@@ -108,13 +108,17 @@ For a **SQL run**, the executed SQL SHALL be translated to the structured DSL th
 
 When the backend rejects the translation — the SQL view accepts constructs the DSL cannot express, so this is an expected outcome and SHALL NOT fail the run or discard the result — the run SHALL still be charted, with its columns classified from the returned rows instead: every returned column SHALL be offered as a dimension, since without the query's semantics the client cannot tell which column is a dimension, and only columns whose every value is a number SHALL be offered as an aggregate. A column that is numeric but semantically a dimension (a time bucket returned as an epoch number, a numeric code) will consequently appear in both selectors; the user's pick decides. Such a run SHALL NOT be reported as an aggregate-mode run.
 
-For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
+For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. The Y selector SHALL accept several aggregate columns, and each picked column SHALL render as its own series against the one X axis, in the order picked, each in a distinct colour taken from the shared chart palette. With two or more series the chart SHALL show a legend naming each series and an axis tooltip listing every series' value at the hovered X value, and bars sharing an X value SHALL stand side by side rather than stack; with one series the chart SHALL look as a single-series chart does, with the Y axis titled by that column and no legend. Removing every Y pick SHALL leave the chart with no valid pick. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
 
 For **pie**, the same two selectors SHALL be labeled Category (group-by/bucket columns) and Value (aggregate columns). The chart SHALL show at most the top 10 categories by value as slices; any remaining categories SHALL be merged into a single "Other" slice.
 
 For **scatter**, both selectors SHALL be labeled X axis and Y axis and SHALL offer the result's numeric columns — the group-by/bucket and aggregate columns whose every value is numeric or date-like, each counted once even where a run's dimension and aggregate lists overlap. Each result row (one group) SHALL render as one point, with the row's dimension values available in the point tooltip; scatter SHALL NOT re-order rows. The scatter type SHALL be offered only when the result has at least two numeric columns; otherwise it is hidden from the chart-type control.
 
-Switching chart type SHALL keep a column pick that is valid for the new type's selector and SHALL fall back to that selector's first valid default otherwise.
+**Pie** and **scatter** SHALL take exactly one column in their Value or Y selector.
+
+Switching chart type SHALL keep the column picks that are valid for the new type's selector and SHALL fall back to that selector's first valid default when none is. Switching to pie or scatter SHALL keep only the first valid Y pick.
+
+A chart's Y columns SHALL be stored with the saved query as a list in pick order, a single-series chart as a one-element list, and SHALL be restored in that order when the query is opened. A stored chart whose Y axis is a single column name rather than a list SHALL open as a single-series chart on that column, and an empty or blank entry in a stored list SHALL be ignored.
 
 Everywhere the chart names a column — selector options, in-chart axis titles, and point tooltips — a group-by/bucket column SHALL display by its schema display name when the executed entity defines one (raw name otherwise); aggregate and scalar-function columns display by their user-authored alias. The labels SHALL follow the executed query's entity, not the currently selected source.
 
@@ -153,6 +157,38 @@ Each reason the Chart view has nothing to render SHALL have its own hint text na
 
 - **WHEN** the user configured Category and Value on a pie and switches to the bar type
 - **THEN** the same columns stay selected as X and Y
+
+#### Scenario: A line chart plots two aggregates as two series
+
+- **WHEN** an aggregate result grouped by a time bucket has two aggregate columns and the user picks both on the Y selector of a line chart
+- **THEN** the chart draws two lines over the same X axis, each in its own colour
+- **AND** a legend names both series and the tooltip at an X value lists both values
+
+#### Scenario: Bars of several series stand side by side
+
+- **WHEN** the user picks two aggregate columns on the Y selector of a bar chart
+- **THEN** each X value shows one bar per series next to each other, not stacked
+
+#### Scenario: A single series keeps the single-series look
+
+- **WHEN** a bar or line chart has one Y column picked
+- **THEN** the Y axis is titled by that column and no legend is shown
+
+#### Scenario: Switching to pie keeps the first series
+
+- **WHEN** a line chart has two Y columns picked and the user switches to the pie type
+- **THEN** the Value selector holds the first of the two columns
+- **AND** the pie is drawn from that column alone
+
+#### Scenario: A multi-series chart survives a save and reopen
+
+- **WHEN** the user saves a query whose line chart has two Y columns and opens it again
+- **THEN** the chart shows the same two series in the same order
+
+#### Scenario: A query saved with one Y column opens unchanged
+
+- **WHEN** the user opens a saved query whose stored chart names its Y axis as a single column
+- **THEN** the chart renders a single series on that column
 
 #### Scenario: Comparable X values are ordered on the axis
 
