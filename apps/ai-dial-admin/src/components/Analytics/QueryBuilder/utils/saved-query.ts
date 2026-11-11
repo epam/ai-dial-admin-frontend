@@ -42,10 +42,16 @@ const toSavedQueryTime = (time: SavedQueryTimeIntentInput): SavedQueryTime => {
   };
 };
 
+export const readChartYFields = (yField: SavedQueryChart['y_field'] | string | undefined): string[] | null => {
+  if (yField == null) return null;
+  const entries: unknown[] = typeof yField === 'string' ? [yField] : yField;
+  return entries.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '');
+};
+
 const toSavedQueryChart = (chartConfig: ChartConfig): SavedQueryChart => ({
   type: chartConfig.type,
   x_field: chartConfig.xField,
-  y_field: chartConfig.yField,
+  y_field: chartConfig.yFields,
 });
 
 interface SavedQueryRequestParts {
@@ -204,7 +210,7 @@ export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryResto
     time: toTimeRestore(saved.time, knownPeriods),
     resultView: saved.result_view ?? QueryResultView.Table,
     chartConfig: saved.chart
-      ? { type: saved.chart.type, xField: saved.chart.x_field, yField: saved.chart.y_field }
+      ? { type: saved.chart.type, xField: saved.chart.x_field, yFields: readChartYFields(saved.chart.y_field) }
       : void 0,
   };
 };

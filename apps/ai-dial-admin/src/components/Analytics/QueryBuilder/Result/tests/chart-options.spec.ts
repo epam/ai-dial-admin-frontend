@@ -7,6 +7,7 @@ import {
   buildLineChartOptions,
   buildPieChartOptions,
   buildScatterChartOptions,
+  buildSeriesLegend,
   getNumericColumns,
   getStrictNumericColumns,
 } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
@@ -33,17 +34,17 @@ const CONTEXT = {
 
 describe('QueryBuilder :: chart-options', () => {
   test('bar options map x categories and numeric y values', () => {
-    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', ['total']);
     expect(options.xAxis.data).toEqual(['gpt-4o', 'claude', 'gemini']);
     expect(options.series).toEqual([
-      { type: 'bar', data: [120, 80, null], barMaxWidth: 48, itemStyle: { color: COLORS.accent } },
+      { type: 'bar', name: 'total', data: [120, 80, null], barMaxWidth: 48, itemStyle: { color: COLORS.accent } },
     ]);
     expect(options.yAxis.name).toBe('total');
     expect(options.color).toBe(COLORS.accent);
   });
 
   test('line options build a smooth line series without area fill', () => {
-    const options = buildLineChartOptions(COLORS, ROWS, 'deployment', 'total');
+    const options = buildLineChartOptions(COLORS, ROWS, 'deployment', ['total']);
     expect(options.series[0].type).toBe('line');
     expect(options.series[0].smooth).toBe(true);
     expect(options.series[0].areaStyle).toBeUndefined();
@@ -51,13 +52,13 @@ describe('QueryBuilder :: chart-options', () => {
 
   test('object x values are stringified and non-numeric y values become null', () => {
     const rows = [{ key: { a: 1 }, total: 'not-a-number' }];
-    const options = buildBarChartOptions(COLORS, rows, 'key', 'total');
+    const options = buildBarChartOptions(COLORS, rows, 'key', ['total']);
     expect(options.xAxis.data).toEqual(['{"a":1}']);
     expect(options.series[0].data).toEqual([null]);
   });
 
   test('empty rows build empty axes and series data', () => {
-    const options = buildBarChartOptions(COLORS, [], 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, [], 'deployment', ['total']);
     expect(options.xAxis.data).toEqual([]);
     expect(options.series[0].data).toEqual([]);
   });
@@ -68,7 +69,7 @@ describe('QueryBuilder :: chart-options', () => {
       { bucket: '2026-07-12T00:00:00Z', cnt: 1 },
       { bucket: '2026-07-12T10:00:00Z', cnt: 2 },
     ];
-    const options = buildBarChartOptions(COLORS, rows, 'bucket', 'cnt');
+    const options = buildBarChartOptions(COLORS, rows, 'bucket', ['cnt']);
     expect(options.xAxis.data).toEqual(['2026-07-12T00:00:00Z', '2026-07-12T10:00:00Z', '2026-07-13T08:00:00Z']);
     expect(options.series[0].data).toEqual([1, 2, 3]);
   });
@@ -79,19 +80,99 @@ describe('QueryBuilder :: chart-options', () => {
       { code: '41', cnt: 7 },
       { code: 100, cnt: 6 },
     ];
-    const options = buildBarChartOptions(COLORS, rows, 'code', 'cnt');
+    const options = buildBarChartOptions(COLORS, rows, 'code', ['cnt']);
     expect(options.xAxis.data).toEqual(['41', '100', '200']);
     expect(options.series[0].data).toEqual([7, 6, 5]);
   });
 
   test('plain-text x values keep the query row order', () => {
-    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', ['total']);
     expect(options.xAxis.data).toEqual(['gpt-4o', 'claude', 'gemini']);
   });
 
   test('x labels are truncated to a fixed width, keeping the axis readable for long values', () => {
-    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', ['total']);
     expect(options.xAxis.axisLabel).toMatchObject({ width: 120, overflow: 'truncate' });
+  });
+
+  describe('multi-series', () => {
+    const SERIES_ROWS = [
+      { week: '2026-10-05', fresh: 4, returning: 10 },
+      { week: '2026-10-12', fresh: 6, returning: 12 },
+    ];
+
+    test('draws one line per Y column in pick order, coloured from the series palette', () => {
+      const options = buildLineChartOptions(COLORS, SERIES_ROWS, 'week', ['returning', 'fresh']);
+      expect(options.series.map((s: { name: string; data: number[] }) => [s.name, s.data])).toEqual([
+        ['returning', [10, 12]],
+        ['fresh', [4, 6]],
+      ]);
+      expect(options.series.map((s: { lineStyle: { color: string } }) => s.lineStyle.color)).toEqual(
+        CHART_SERIES_COLOR_CYCLE.slice(0, 2),
+      );
+    });
+
+    test('drops the Y-axis title and leaves the legend to the page when there are several series', () => {
+      const options = buildChartOptions(ChartType.Line, SERIES_ROWS, 'week', ['fresh', 'returning'], {
+        ...CONTEXT,
+        columnLabels: { fresh: 'New', returning: 'Returning' },
+      });
+      expect(options.legend).toBeUndefined();
+      expect(options.yAxis.name).toBeUndefined();
+      expect(options.series.map((s: { name: string }) => s.name)).toEqual(['New', 'Returning']);
+    });
+
+    test('keeps a single series without a legend and with the Y-axis title', () => {
+      const options = buildChartOptions(ChartType.Line, SERIES_ROWS, 'week', ['fresh'], CONTEXT);
+      expect(options.legend).toBeUndefined();
+      expect(options.yAxis.name).toBe('fresh');
+    });
+
+    test('fades the other series while one series of several is focused', () => {
+      const line = buildLineChartOptions(COLORS, SERIES_ROWS, 'week', ['fresh', 'returning']);
+      const bar = buildBarChartOptions(COLORS, SERIES_ROWS, 'week', ['fresh', 'returning']);
+      for (const s of [...line.series, ...bar.series]) expect(s.emphasis).toEqual({ focus: 'series' });
+      expect(buildLineChartOptions(COLORS, SERIES_ROWS, 'week', ['fresh']).series[0].emphasis).toBeUndefined();
+    });
+
+    test('groups bars of several series side by side instead of stacking them', () => {
+      const options = buildBarChartOptions(COLORS, SERIES_ROWS, 'week', ['fresh', 'returning']);
+      expect(options.series).toHaveLength(2);
+      expect(options.series.every((s: { type: string; stack?: string }) => s.type === 'bar' && !s.stack)).toBe(true);
+    });
+
+    test('repeats the palette past its last colour', () => {
+      const fields = CHART_SERIES_COLOR_CYCLE.map((_, index) => `m${index}`).concat('extra');
+      const options = buildBarChartOptions(COLORS, [], 'week', fields);
+      expect(options.series.at(-1).itemStyle.color).toBe(CHART_SERIES_COLOR_CYCLE[0]);
+    });
+
+    test('lists every series of a multi-series chart as a legend entry with its colour', () => {
+      const options = buildChartOptions(ChartType.Bar, SERIES_ROWS, 'week', ['fresh', 'returning'], {
+        ...CONTEXT,
+        columnLabels: { fresh: 'New' },
+      });
+      expect(buildSeriesLegend(options)).toEqual([
+        { id: '0-New', label: 'New', color: CHART_SERIES_COLOR_CYCLE[0], seriesIndex: 0 },
+        { id: '1-returning', label: 'returning', color: CHART_SERIES_COLOR_CYCLE[1], seriesIndex: 1 },
+      ]);
+    });
+
+    test('lists no legend entries for a single series, a pie, or no chart', () => {
+      expect(buildSeriesLegend(buildChartOptions(ChartType.Line, SERIES_ROWS, 'week', ['fresh'], CONTEXT))).toEqual([]);
+      expect(
+        buildSeriesLegend(buildChartOptions(ChartType.Pie, SERIES_ROWS, 'week', ['fresh', 'returning'], CONTEXT)),
+      ).toEqual([]);
+      expect(buildSeriesLegend(null)).toEqual([]);
+    });
+
+    test('pie and scatter draw only from the first Y column', () => {
+      const pie = buildChartOptions(ChartType.Pie, SERIES_ROWS, 'week', ['fresh', 'returning'], CONTEXT);
+      expect(pie.series[0].data.map((slice: { value: number }) => slice.value)).toEqual([6, 4]);
+      const scatter = buildChartOptions(ChartType.Scatter, SERIES_ROWS, 'returning', ['fresh', 'returning'], CONTEXT);
+      expect(scatter.series).toHaveLength(1);
+      expect(scatter.yAxis.name).toBe('fresh');
+    });
   });
 
   describe('getNumericColumns', () => {
@@ -195,19 +276,19 @@ describe('QueryBuilder :: chart-options', () => {
         { deployment: '', total: 2 },
         { deployment: 'gpt', total: 1 },
       ];
-      const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', 'total', CONTEXT);
+      const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', ['total'], CONTEXT);
       expect((bar.xAxis as { data: string[] }).data).toContain('(no value)');
-      const pie = buildChartOptions(ChartType.Pie, rows, 'deployment', 'total', CONTEXT);
+      const pie = buildChartOptions(ChartType.Pie, rows, 'deployment', ['total'], CONTEXT);
       expect((pie.series as Array<{ data: Array<{ name: string }> }>)[0].data.map((slice) => slice.name)).toContain(
         '(no value)',
       );
     });
 
     test('routes each type to its series shape', () => {
-      expect(buildChartOptions(ChartType.Bar, ROWS, 'deployment', 'total', CONTEXT).series[0].type).toBe('bar');
-      expect(buildChartOptions(ChartType.Line, ROWS, 'deployment', 'total', CONTEXT).series[0].type).toBe('line');
-      expect(buildChartOptions(ChartType.Pie, ROWS, 'deployment', 'total', CONTEXT).series[0].type).toBe('pie');
-      expect(buildChartOptions(ChartType.Scatter, ROWS, 'total', 'total', CONTEXT).series[0].type).toBe('scatter');
+      expect(buildChartOptions(ChartType.Bar, ROWS, 'deployment', ['total'], CONTEXT).series[0].type).toBe('bar');
+      expect(buildChartOptions(ChartType.Line, ROWS, 'deployment', ['total'], CONTEXT).series[0].type).toBe('line');
+      expect(buildChartOptions(ChartType.Pie, ROWS, 'deployment', ['total'], CONTEXT).series[0].type).toBe('pie');
+      expect(buildChartOptions(ChartType.Scatter, ROWS, 'total', ['total'], CONTEXT).series[0].type).toBe('scatter');
     });
 
     test('axis titles and scatter tooltips use display labels when provided', () => {
@@ -216,9 +297,9 @@ describe('QueryBuilder :: chart-options', () => {
         { total_tokens: 10, total: 1 },
         { total_tokens: 20, total: 2 },
       ];
-      const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', 'total', labeled);
+      const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', ['total'], labeled);
       expect(bar.yAxis.name).toBe('Total');
-      const scatter = buildChartOptions(ChartType.Scatter, rows, 'total_tokens', 'total', labeled);
+      const scatter = buildChartOptions(ChartType.Scatter, rows, 'total_tokens', ['total'], labeled);
       expect(scatter.xAxis.name).toBe('Total tokens');
       expect(scatter.yAxis.name).toBe('Total');
       expect(scatter.tooltip.formatter({ name: '', value: [10, 1] })).toBe('Total tokens: 10<br/>Total: 1');

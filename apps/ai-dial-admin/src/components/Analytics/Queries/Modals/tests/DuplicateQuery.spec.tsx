@@ -37,7 +37,7 @@ const STRUCTURED: SavedQuery = {
   query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate },
   time: { mode: SavedQueryTimeMode.Relative, period: '7d' },
   result_view: QueryResultView.Chart,
-  chart: { type: ChartType.Bar, x_field: 'project', y_field: 'count' },
+  chart: { type: ChartType.Bar, x_field: 'project', y_field: ['count'] },
   generation: 3,
   created_at: '2026-08-01T00:00:00Z',
   updated_at: '2026-08-02T00:00:00Z',

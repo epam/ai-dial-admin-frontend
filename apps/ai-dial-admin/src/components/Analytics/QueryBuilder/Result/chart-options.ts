@@ -5,6 +5,7 @@ import { PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
 import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
+import { ChartLegendEntry } from '@/src/components/Analytics/Usage/Charts/ChartLegend';
 import { ChartBuildContext, ChartType, PieSlice } from '@/src/models/analytics/query-builder';
 
 type ResultRows = Array<Record<string, unknown>>;
@@ -73,7 +74,7 @@ export const bucketTopSlices = (
   return [...slices.slice(0, maxSlices), { name: otherLabel, value: other }];
 };
 
-const baseOptions = (colors: ChartColors, xData: string[], yField: string): EChartsOption => ({
+const baseOptions = (colors: ChartColors, xData: string[], yName?: string): EChartsOption => ({
   title: { show: false },
   tooltip: { trigger: 'axis', ...CHART_TOOLTIP_STYLE },
   xAxis: {
@@ -88,7 +89,7 @@ const baseOptions = (colors: ChartColors, xData: string[], yField: string): ECha
   },
   yAxis: {
     type: 'value',
-    name: yField,
+    name: yName,
     nameTextStyle: { color: colors.neutral, fontSize: 12, fontWeight: 500 },
     axisLabel: { color: colors.neutral },
     splitLine: { show: true, lineStyle: { color: colors.track, width: 1 } },
@@ -102,21 +103,34 @@ const buildCartesianOptions = (
   type: ChartType,
   rows: ResultRows,
   xField: string,
-  yField: string,
-  yLabel: string = yField,
+  yFields: string[],
+  label: (column: string) => string = (column) => column,
   emptyLabel = '',
 ): EChartsOption => {
   const ordered = sortRowsByX(rows, xField);
   const xData = ordered.map((row) => renderCategory(row[xField], emptyLabel));
-  const yData = ordered.map((row) => toNumber(row[yField]));
-  const options = baseOptions(colors, xData, yLabel);
+  const isMultiSeries = yFields.length > 1;
+  const options = baseOptions(colors, xData, isMultiSeries ? void 0 : label(yFields[0]));
 
-  if (type === ChartType.Bar) {
-    options.series = [{ type: 'bar', data: yData, barMaxWidth: 48, itemStyle: { color: colors.accent } }];
-    return options;
-  }
+  options.series = yFields.map((yField, index) => {
+    const data = ordered.map((row) => toNumber(row[yField]));
+    const color = isMultiSeries ? CHART_SERIES_COLOR_CYCLE[index % CHART_SERIES_COLOR_CYCLE.length] : colors.accent;
+    const name = label(yField);
+    if (type === ChartType.Bar) {
+      const focus = isMultiSeries ? { emphasis: { focus: 'series' }, blur: { itemStyle: { opacity: 0.2 } } } : {};
+      return { type: 'bar', name, data, barMaxWidth: 48, itemStyle: { color }, ...focus };
+    }
+    const lineStyle = isMultiSeries
+      ? {
+          itemStyle: { color },
+          lineStyle: { color },
+          emphasis: { focus: 'series' },
+          blur: { lineStyle: { opacity: 0.2 }, itemStyle: { opacity: 0.2 } },
+        }
+      : {};
+    return { type: 'line', name, data, smooth: true, ...lineStyle };
+  });
 
-  options.series = [{ type: 'line', data: yData, smooth: true }];
   return options;
 };
 
@@ -124,15 +138,15 @@ export const buildBarChartOptions = (
   colors: ChartColors,
   rows: ResultRows,
   xField: string,
-  yField: string,
-): EChartsOption => buildCartesianOptions(colors, ChartType.Bar, rows, xField, yField);
+  yFields: string[],
+): EChartsOption => buildCartesianOptions(colors, ChartType.Bar, rows, xField, yFields);
 
 export const buildLineChartOptions = (
   colors: ChartColors,
   rows: ResultRows,
   xField: string,
-  yField: string,
-): EChartsOption => buildCartesianOptions(colors, ChartType.Line, rows, xField, yField);
+  yFields: string[],
+): EChartsOption => buildCartesianOptions(colors, ChartType.Line, rows, xField, yFields);
 
 export const buildPieChartOptions = (
   colors: ChartColors,
@@ -213,10 +227,11 @@ export const buildChartOptions = (
   type: ChartType,
   rows: ResultRows,
   xField: string,
-  yField: string,
+  yFields: string[],
   context: ChartBuildContext,
 ): EChartsOption => {
   const label = (column: string): string => context.columnLabels[column] ?? column;
+  const [yField] = yFields;
   if (type === ChartType.Pie) {
     return buildPieChartOptions(context.colors, rows, xField, yField, context.otherLabel, context.emptyLabel);
   }
@@ -231,5 +246,23 @@ export const buildChartOptions = (
       label(yField),
     );
   }
-  return buildCartesianOptions(context.colors, type, rows, xField, yField, label(yField), context.emptyLabel);
+  return buildCartesianOptions(context.colors, type, rows, xField, yFields, label, context.emptyLabel);
+};
+
+interface CartesianSeries {
+  type?: string;
+  name?: string;
+  itemStyle?: { color?: string };
+}
+
+export const buildSeriesLegend = (options: EChartsOption | null): ChartLegendEntry[] => {
+  const series: CartesianSeries[] = Array.isArray(options?.series) ? options.series : [];
+  const isCartesian = series.every((entry) => entry.type === 'bar' || entry.type === 'line');
+  if (series.length < 2 || !isCartesian) return [];
+  return series.map((entry, index) => ({
+    id: `${index}-${entry.name ?? ''}`,
+    label: entry.name ?? '',
+    color: entry.itemStyle?.color,
+    seriesIndex: index,
+  }));
 };

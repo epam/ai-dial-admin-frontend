@@ -89,7 +89,7 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Result/ResultArea', () => ({
         chart: {chartConfig.type}/{chartConfig.xField ?? 'none'}
       </span>
       <button onClick={() => onChangeView(QueryResultView.Chart)}>use chart view</button>
-      <button onClick={() => onChangeChartConfig({ type: ChartType.Pie, xField: 'project_id', yField: 'count' })}>
+      <button onClick={() => onChangeChartConfig({ type: ChartType.Pie, xField: 'project_id', yFields: ['count'] })}>
         change axes
       </button>
     </div>
@@ -371,7 +371,7 @@ describe('QueryBuilder — a stored saved query', () => {
     renderPage(
       savedQuery({
         result_view: QueryResultView.Chart,
-        chart: { type: ChartType.Line, x_field: 'project_id', y_field: 'count' },
+        chart: { type: ChartType.Line, x_field: 'project_id', y_field: ['count'] },
       }),
     );
 

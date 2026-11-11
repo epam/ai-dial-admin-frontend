@@ -2,11 +2,13 @@
 
 import { FC, useMemo } from 'react';
 
-import ReactECharts from 'echarts-for-react';
+import classNames from 'classnames';
 import { NoDataContent, SegmentedControl, Select } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 
 import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import SeriesChart from '@/src/components/Analytics/QueryBuilder/Result/SeriesChart';
+import { keepValidYFields, resolveYFields } from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
 import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useChartColors } from '@/src/hooks/use-chart-colors';
@@ -46,7 +48,10 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   // Config fields are null until the user picks — defaults are the slot's first valid column
   // (for Y, the first column not already on X, so a fresh scatter gets two distinct axes).
   const xField = config.xField ?? xOptions[0] ?? null;
-  const yField = config.yField ?? yOptions.find((c) => c !== xField) ?? yOptions[0] ?? null;
+  const yFields = useMemo(
+    () => resolveYFields(config.yFields, yOptions, xField, descriptor.isMultiY),
+    [config.yFields, yOptions, xField, descriptor.isMultiY],
+  );
 
   // Scatter needs two numeric columns to mean anything — with fewer, the type is hidden entirely.
   const scatterUnavailable = numericColumns.length < 2;
@@ -63,16 +68,19 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
     onChangeConfig({
       type,
       xField: keepIfValid(config.xField, columnsFor(next.xSource)),
-      yField: keepIfValid(config.yField, columnsFor(next.ySource)),
+      yFields: keepValidYFields(config.yFields, columnsFor(next.ySource), next.isMultiY),
     });
   };
 
   const labelFor = (column: string): string => meta.columnLabels[column] ?? column;
 
+  const onChangeYFields = (value: string | string[]) =>
+    onChangeConfig({ ...config, yFields: Array.isArray(value) ? value : [value] });
+
   const options = useMemo(
     () =>
-      xField && yField
-        ? buildChartOptions(config.type, result.rows, xField, yField, {
+      xField && yFields.length
+        ? buildChartOptions(config.type, result.rows, xField, yFields, {
             colors,
             dimensionColumns: meta.dimensionColumns,
             otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
@@ -80,10 +88,10 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
             columnLabels: meta.columnLabels,
           })
         : null,
-    [config.type, result.rows, xField, yField, meta.dimensionColumns, meta.columnLabels, t, colors],
+    [config.type, result.rows, xField, yFields, meta.dimensionColumns, meta.columnLabels, t, colors],
   );
 
-  if (!options) {
+  if (!xField || !yOptions.length) {
     return <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />;
   }
 
@@ -106,19 +114,25 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
               onChange={(v) => onChangeConfig({ ...config, xField: v as string })}
             />
           </div>
-          <div className="w-[200px]">
+          <div className={classNames(descriptor.isMultiY ? 'w-[280px]' : 'w-[200px]')}>
             <Select
               prefix={`${t(descriptor.yLabelKey)}: `}
               ariaLabel={t(descriptor.yLabelKey)}
               options={yOptions.map((c) => ({ value: c, label: labelFor(c) }))}
-              value={yField ?? undefined}
-              onChange={(v) => onChangeConfig({ ...config, yField: v as string })}
+              multiple={descriptor.isMultiY}
+              collapseTagOverflow={descriptor.isMultiY}
+              value={descriptor.isMultiY ? yFields : yFields[0]}
+              onChange={onChangeYFields}
             />
           </div>
         </div>
       </div>
       <div className="min-h-0 flex-1">
-        <ReactECharts option={options} style={{ height: '100%', width: '100%' }} notMerge />
+        {options ? (
+          <SeriesChart option={options} />
+        ) : (
+          <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />
+        )}
       </div>
     </div>
   );
