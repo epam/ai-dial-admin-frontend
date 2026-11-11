@@ -978,7 +978,7 @@ describe('QueryBuilder :: SQL view Run', () => {
 
     await user.click(await screen.findByRole('radio', { name: 'QueryBuilder.ViewChart' }));
     expect(await screen.findByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
   test('a rejected translation still shows the result and raises no notification', async () => {

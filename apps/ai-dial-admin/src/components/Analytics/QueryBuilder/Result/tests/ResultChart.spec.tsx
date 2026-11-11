@@ -34,7 +34,7 @@ describe('QueryBuilder :: ResultChart', () => {
   test('bar labels the selectors as axes with dimension/aggregate defaults', () => {
     renderChart();
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toHaveDisplayValue(/Deployment/);
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toHaveDisplayValue(/total/);
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis, total' })).toBeInTheDocument();
   });
 
   test('dimension columns display by their schema display name, aggregates by their alias', () => {
@@ -44,33 +44,33 @@ describe('QueryBuilder :: ResultChart', () => {
   });
 
   test('pie relabels the selectors as Category and Value', () => {
-    renderChart({ type: ChartType.Pie, xField: null, yField: null });
+    renderChart({ type: ChartType.Pie, xField: null, yFields: null });
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartCategory' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartValue' })).toBeInTheDocument();
   });
 
   test('scatter defaults its two axes to distinct numeric columns', () => {
-    renderChart({ type: ChartType.Scatter, xField: null, yField: null });
+    renderChart({ type: ChartType.Scatter, xField: null, yFields: null });
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toHaveDisplayValue(/total/);
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toHaveDisplayValue(/tokens/);
   });
 
   test('switching to a compatible type keeps the column picks', async () => {
     const user = userEvent.setup();
-    const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yField: 'total' });
+    const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yFields: ['total'] });
 
     await user.click(screen.getByRole('radio', { name: 'Pie' }));
 
-    expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Pie, xField: 'deployment', yField: 'total' });
+    expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Pie, xField: 'deployment', yFields: ['total'] });
   });
 
   test('switching type drops a pick the new slot cannot hold', async () => {
     const user = userEvent.setup();
-    const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yField: 'total' });
+    const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yFields: ['total'] });
 
     await user.click(screen.getByRole('radio', { name: 'Scatter' }));
 
-    expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Scatter, xField: null, yField: 'total' });
+    expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Scatter, xField: null, yFields: ['total'] });
   });
 
   test('scatter is hidden when the result has fewer than two numeric columns', () => {
@@ -111,12 +111,64 @@ describe('QueryBuilder :: ResultChart', () => {
       columns: ['deployment', 'total'],
       rows: [{ deployment: 'gpt-4o', total: 120 }],
     };
-    renderChart({ type: ChartType.Scatter, xField: null, yField: null }, result, {
+    renderChart({ type: ChartType.Scatter, xField: null, yFields: null }, result, {
       ...META,
       dimensionColumns: [],
       aggregateColumns: [],
     });
 
     expect(screen.getByText('QueryBuilder.ChartNoAxisSelection')).toBeInTheDocument();
+  });
+
+  describe('several Y columns', () => {
+    test('restores a stored multi-column pick as one tag per column', () => {
+      renderChart({ type: ChartType.Line, xField: 'deployment', yFields: ['tokens', 'total'] });
+      expect(screen.getByRole('button', { name: 'Remove tokens' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Remove total' })).toBeInTheDocument();
+    });
+
+    test('adds a second column to the Y picks', async () => {
+      const user = userEvent.setup();
+      const onChangeConfig = renderChart({ type: ChartType.Bar, xField: 'deployment', yFields: ['total'] });
+
+      await user.click(screen.getByRole('combobox', { name: /QueryBuilder.ChartYAxis/ }));
+      await user.click(await screen.findByRole('option', { name: /tokens/ }));
+
+      expect(onChangeConfig).toHaveBeenCalledWith({
+        type: ChartType.Bar,
+        xField: 'deployment',
+        yFields: ['total', 'tokens'],
+      });
+    });
+
+    test('removes a column from the Y picks', async () => {
+      const user = userEvent.setup();
+      const onChangeConfig = renderChart({ type: ChartType.Line, xField: 'deployment', yFields: ['total', 'tokens'] });
+
+      await user.click(screen.getByRole('button', { name: 'Remove total' }));
+
+      expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Line, xField: 'deployment', yFields: ['tokens'] });
+    });
+
+    test('keeps the selectors and names the missing pick when every Y column is removed', () => {
+      renderChart({ type: ChartType.Bar, xField: 'deployment', yFields: [] });
+      expect(screen.getByText('QueryBuilder.ChartNoAxisSelection')).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
+    });
+
+    test('switching to pie keeps only the first Y column', async () => {
+      const user = userEvent.setup();
+      const onChangeConfig = renderChart({ type: ChartType.Line, xField: 'deployment', yFields: ['tokens', 'total'] });
+
+      await user.click(screen.getByRole('radio', { name: 'Pie' }));
+
+      expect(onChangeConfig).toHaveBeenCalledWith({ type: ChartType.Pie, xField: 'deployment', yFields: ['tokens'] });
+    });
+
+    test('ignores a stored column the result no longer returns', () => {
+      renderChart({ type: ChartType.Line, xField: 'deployment', yFields: ['gone', 'total'] });
+      expect(screen.queryByRole('button', { name: 'Remove gone' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Remove total' })).toBeInTheDocument();
+    });
   });
 });
