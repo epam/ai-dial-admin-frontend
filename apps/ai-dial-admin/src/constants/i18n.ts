@@ -2272,7 +2272,6 @@ export enum TestSuitesI18nKey {
   DatasetRequiredForMetrics = 'TestSuites.DatasetRequiredForMetrics',
   OpenDataset = 'TestSuites.OpenDataset',
   ChangeDataset = 'TestSuites.ChangeDataset',
-  TestCasesPrivateTagTooltip = 'TestSuites.TestCasesPrivateTagTooltip',
   NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
   More = 'TestSuites.More',
   AttachDataset = 'TestSuites.AttachDataset',

@@ -2345,8 +2345,6 @@ export default {
     DatasetRequiredForMetrics: 'Please link a dataset to this test suite before adding metrics.',
     OpenDataset: 'Open dataset',
     ChangeDataset: 'Change dataset',
-    TestCasesPrivateTagTooltip:
-      'Test cases are private to this suite. To share them with other suites, publish them to a new dataset or attach from existing one.',
     NoTestCasesDescription: 'Add test cases manually or attach from dataset',
     More: 'More',
     AttachDataset: 'Attach dataset',
