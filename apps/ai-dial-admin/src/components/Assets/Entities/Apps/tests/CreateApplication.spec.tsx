@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { ASSET_APPLICATION_CREATE_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
-import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -115,6 +115,33 @@ describe('CreateApplication', () => {
     expect(screen.queryByText('resource-source-field')).toBeNull();
   });
 
+  test('shows the Details and Source steps with Details current', () => {
+    renderCreateApplication();
+
+    expect(screen.getByRole('button', { name: TabsI18nKey.Properties })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: EntitiesI18nKey.SourceType })).not.toHaveAttribute('aria-current');
+  });
+
+  test('keeps Source unreachable from the step indicator while details are invalid', async () => {
+    const user = userEvent.setup();
+    renderCreateApplication();
+
+    await user.click(screen.getByRole('button', { name: EntitiesI18nKey.SourceType }));
+
+    expect(screen.queryByText('resource-source-field')).toBeNull();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Next })).toBeDisabled();
+  });
+
+  test('returns to Details from Source with Back', async () => {
+    renderCreateApplication();
+    const user = await advanceToSource();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Back }));
+
+    expect(screen.queryByText('resource-source-field')).toBeNull();
+    expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
+  });
+
   test('omits version for a platform destination', () => {
     renderCreateApplication({ filePath: 'platform/' });
 
@@ -132,7 +159,7 @@ describe('CreateApplication', () => {
         view: ApplicationRoute.AssetsApplications,
       }),
     );
-    expect(screen.getByText('resource-source-field').closest('[role="dialog"]')).toHaveClass('max-h-[750px]');
+    expect(screen.getByText('resource-source-field').parentElement).toHaveClass('max-h-[540px]');
   });
 
   test('disables creation until an Interfaces source is configured', async () => {

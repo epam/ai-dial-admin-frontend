@@ -133,3 +133,24 @@ export interface RunTotalCosts {
 export interface RunsTotalCostsRequest {
   runIds: string[];
 }
+
+/**
+ * `GET /api/v1/costs/deployment/{id}` totals for one `[from, to]` window.
+ * A phase is `null` when dial-adas has no matching usage rows (not the same as `$0`).
+ */
+export interface DeploymentCosts {
+  totalTestCaseCost: number | null;
+  totalMetricEvalCost: number | null;
+}
+
+/** Empty / unknown period — both phases missing, same shape as a successful “no usage” response. */
+export const EMPTY_DEPLOYMENT_COSTS: DeploymentCosts = {
+  totalTestCaseCost: null,
+  totalMetricEvalCost: null,
+};
+
+/** Current and previous month-to-date windows from `getDeploymentPeriodCosts`. */
+export interface DeploymentPeriodCosts {
+  current: DeploymentCosts;
+  previous: DeploymentCosts;
+}

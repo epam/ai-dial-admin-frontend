@@ -108,6 +108,15 @@ Prefer existing building blocks over custom HTML/components:
 - **Tabular data:** use ag-grid (`GridView` → `AgGridWrapper`) — never build tables with CSS grid/flex.
 - **Common behaviors:** reuse existing deps — `re-resizable` (resizable panels), `react-dnd`
   (drag & drop). Don't reimplement these.
+- **Multi-step flows:** every wizard or multi-step modal uses the ui-kit `Steps` indicator (with
+  `getStepStatusLabels` from `Common/Steps/utils`) and `StepperModalButtons` for the footer, inside one
+  `Popup` that stays mounted across steps. Never swap a whole `Popup` per step, and never build a bespoke
+  step indicator. Derive each step's `status` from the validity of its fields (`useMemo`) rather than
+  syncing it through state. A trailing informative step — a result or a secret shown after the action
+  already ran — passes `isLastStepInformative` to `StepperModalButtons` (Finish on the step before it, Close
+  only on it) and marks the earlier steps `disabled`. Exemplar:
+  `TestSuites/Modals/Create/CreateTestSuite.tsx`; informative last step:
+  `Assets/Platform/Keys/CreateKeyModal.tsx`.
 - Follow existing patterns in `src/components/` when structuring a new feature.
 
 **Discovering what ui-kit offers:** query the `ai-dial-ui-kit` MCP server (declared in `.mcp.json`)
@@ -174,5 +183,6 @@ truncation rules (`break-all`, `EllipsisTooltip`, no duplicate AG Grid cell tool
 ## §12 Exemplars
 
 - Common building blocks: `src/components/Common/CopyButton`, `src/components/Common/Accordion`.
+- Multi-step modal: `src/components/TestSuites/Modals/Create/CreateTestSuite.tsx` (see §5).
 - Entity pattern: a `<Entity>/View/View.tsx` + `TabsContent` + `List/`.
 - Grid `isSkipRefresh`: `src/components/TestSuites/TestCaseSchema/SchemaManager.tsx`.

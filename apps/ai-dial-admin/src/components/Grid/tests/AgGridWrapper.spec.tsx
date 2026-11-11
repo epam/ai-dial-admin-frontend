@@ -130,6 +130,18 @@ describe('AgGridWrapper', () => {
     expect(suppress?.(params({ key: 'ArrowLeft', target: document.body }))).toBe(true);
   });
 
+  test('leaves Tab to the browser inside a text field so focus moves to the next input', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'name' }]} rowData={[]} />);
+    const suppress = (gridOptions().defaultColDef as ColDef).suppressKeyboardEvent;
+    const params = (target: EventTarget) =>
+      ({ event: { key: 'Tab', target }, editing: false }) as unknown as Parameters<
+        NonNullable<ColDef['suppressKeyboardEvent']>
+      >[0];
+
+    expect(suppress?.(params(document.createElement('input')))).toBe(true);
+    expect(suppress?.(params(document.createElement('div')))).toBe(false);
+  });
+
   test('lets caller grid options override the wrapper defaults', () => {
     render(
       <AgGridWrapper
