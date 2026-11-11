@@ -19,8 +19,6 @@ export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
 
 /** Aggregate output aliases requested from the query. */
 export const COUNT_ALIAS = 'count';
-export const AVG_DURATION_ALIAS = 'avg_duration_ms';
-export const AVG_METRIC_EVAL_DURATION_ALIAS = 'avg_metric_eval_duration_ms';
 export const TOTAL_DURATION_ALIAS = 'total_duration_ms';
 export const TOTAL_METRIC_EVAL_DURATION_ALIAS = 'total_metric_eval_duration_ms';
 

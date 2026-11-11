@@ -21,6 +21,7 @@ vi.mock('@/src/context/SaveValidationContext', async () => vi.importActual('@/sr
 const nameInput = () => screen.getByRole('textbox', { name: /entityfields.id/i });
 const costObjectInput = () => screen.getByRole('textbox', { name: new RegExp(PoliciesI18nKey.CostObject) });
 const nextButton = () => screen.getByRole('button', { name: ButtonsI18nKey.Next });
+const stepButton = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
 const createButton = () => screen.getByRole('button', { name: ButtonsI18nKey.Create });
 
 const renderModal = (filePath = 'platform/', names: string[] = [], route = ApplicationRoute.PlatformPolicies) => {
@@ -80,6 +81,32 @@ describe('CreatePolicyModal', () => {
     expect(costObject).toHaveValue('team-a');
     expect(costObject).toBeDisabled();
     expect(nextButton()).toBeDisabled();
+  });
+
+  test('shows the Details and Subjects steps with Details current', () => {
+    renderModal();
+    expect(stepButton(TabsI18nKey.Properties)).toHaveAttribute('aria-current', 'step');
+    expect(stepButton(TabsI18nKey.Subjects)).not.toHaveAttribute('aria-current');
+  });
+
+  test('keeps Subjects unreachable from the step indicator while details are invalid', async () => {
+    const user = userEvent.setup();
+    renderModal();
+    await user.click(stepButton(TabsI18nKey.Subjects));
+    expect(stepButton(TabsI18nKey.Properties)).toHaveAttribute('aria-current', 'step');
+    expect(screen.queryByRole('button', { name: PolicySubjectsI18nKey.AddRule })).toBeNull();
+  });
+
+  test('offers Back, Cancel and Create on the Subjects step', async () => {
+    const user = userEvent.setup();
+    renderModal();
+    fillDetails();
+    await user.click(stepButton(TabsI18nKey.Subjects));
+    expect(stepButton(TabsI18nKey.Subjects)).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Back })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Cancel })).toBeInTheDocument();
+    expect(createButton()).toBeEnabled();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Next })).toBeNull();
   });
 
   test('requires a unique name, integer priority and a positive cost window before Next', () => {

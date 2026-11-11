@@ -1,22 +1,15 @@
 import {
-  AVG_DURATION_ALIAS,
-  AVG_METRIC_EVAL_DURATION_ALIAS,
   RUN_ID_FIELD,
+  TOTAL_DURATION_ALIAS,
+  TOTAL_METRIC_EVAL_DURATION_ALIAS,
 } from '@/src/components/Runs/Summary/constants';
+import { parseDurationMs } from '@/src/components/Runs/Summary/utils';
 import { ComboTrendPoint, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { StructuredQueryResult } from '@/src/models/evaluation/structured-query';
 
-const toFiniteOrNull = (raw: unknown): number | null => {
-  if (raw == null) {
-    return null;
-  }
-  const num = Number(raw);
-  return Number.isFinite(num) ? num : null;
-};
-
 /**
- * Maps `eval_summaries` aggregate rows onto `runOrder` as combo source/metrics durations (ms).
- * Runs with no row stay null/null.
+ * Maps `eval_summaries` sum rows onto `runOrder` as source/metrics durations (ms), rounded the same
+ * way as the Run Summary total. Runs with no row stay null/null.
  */
 export const parseTrendsRuntimeResult = (
   result: StructuredQueryResult | null,
@@ -29,9 +22,10 @@ export const parseTrendsRuntimeResult = (
     if (typeof runId !== 'string') {
       continue;
     }
+    const summed = { rows: [row] };
     byRunId.set(runId, {
-      source: toFiniteOrNull(row[AVG_DURATION_ALIAS]),
-      metrics: toFiniteOrNull(row[AVG_METRIC_EVAL_DURATION_ALIAS]),
+      source: parseDurationMs(summed, TOTAL_DURATION_ALIAS),
+      metrics: parseDurationMs(summed, TOTAL_METRIC_EVAL_DURATION_ALIAS),
     });
   }
 

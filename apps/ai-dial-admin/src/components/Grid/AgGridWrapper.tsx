@@ -58,6 +58,8 @@ const isTextEntryTarget = (target: EventTarget | null): boolean => {
 const suppressArrowKeys = (params: SuppressKeyboardEventParams) => {
   const key = params.event.key;
   if (ARROW_KEYS.includes(key)) return true;
+  // AG Grid would move cell focus instead of focusing the next input; leave Tab to the browser.
+  if (key === 'Tab' && isTextEntryTarget(params.event.target)) return true;
   // Cell-renderer inputs are not AG Grid editors, so Ctrl/Cmd+A would select every row
   // and preventDefault would block selecting the field text. Suppress only that shortcut.
   // Use event.code (physical KeyA) — event.key is layout-dependent (e.g. "ф" on Russian).
