@@ -1,8 +1,8 @@
 'use client';
 
-import { Popup } from '@epam/ai-dial-ui-kit';
+import { Popup, Step, StepStatus, Steps } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import PolicyCreateProperties from '@/src/components/Assets/Platform/Policies/CreateProperties';
 import { NEW_POLICY_DEFAULTS } from '@/src/components/Assets/Platform/Policies/constants';
@@ -10,7 +10,8 @@ import PolicyAssignmentCreateProperties from '@/src/components/Assets/Platform/P
 import { PolicyCreateStep } from '@/src/components/Assets/Platform/PolicySubjects/constants';
 import { PolicyCreateDraft } from '@/src/components/Assets/Platform/PolicySubjects/models';
 import SubjectRulesEditor from '@/src/components/Assets/Platform/PolicySubjects/SubjectRulesEditor';
-import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -84,14 +85,9 @@ const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, getContext, onClos
   const onChangeSubjects = useCallback((subject?: PolicySubjectRule[]) => {
     setDraft((current) => ({ ...current, subject }));
   }, []);
-  const onNext = useCallback(() => {
-    if (!isDetailsValid) return;
+  const onChangeStep = useCallback((id: string) => {
     hasChangedStep.current = true;
-    setStep(PolicyCreateStep.Subjects);
-  }, [isDetailsValid]);
-  const onBack = useCallback(() => {
-    hasChangedStep.current = true;
-    setStep(PolicyCreateStep.Details);
+    setStep(id as PolicyCreateStep);
   }, []);
 
   const onSubmit = useCallback(async () => {
@@ -138,21 +134,33 @@ const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, getContext, onClos
     onClose,
   ]);
 
+  const steps = useMemo<Step[]>(
+    () => [
+      {
+        id: PolicyCreateStep.Details,
+        name: t(TabsI18nKey.Properties),
+        status: isDetailsValid ? StepStatus.VALID : undefined,
+      },
+      {
+        id: PolicyCreateStep.Subjects,
+        name: t(TabsI18nKey.Subjects),
+        status: isSubjectsStep && areRulesValid(draft.subject) ? StepStatus.VALID : undefined,
+      },
+    ],
+    [t, isDetailsValid, isSubjectsStep, draft.subject],
+  );
+  const title = getCreateEntityTitle(route, t);
+
   return (
-    <Popup
-      open={isOpen}
-      header={getCreateEntityTitle(route, t)}
-      portalId="CreatePolicy"
-      onClose={onClose}
-      mainButtons={getFormPopupButtons({
-        cancelLabel: t(isSubjectsStep ? ButtonsI18nKey.Back : ButtonsI18nKey.Cancel),
-        submitLabel: t(isSubjectsStep ? ButtonsI18nKey.Create : ButtonsI18nKey.Next),
-        isSubmitDisabled: isCreating || !isDetailsValid || (isSubjectsStep && !areRulesValid(draft.subject)),
-        onCancel: isSubjectsStep ? onBack : onClose,
-        onSubmit: isSubjectsStep ? onSubmit : onNext,
-      })}
-    >
-      <div className="flex flex-col overflow-auto px-6 py-4">
+    <Popup open={isOpen} header={title} portalId="CreatePolicy" onClose={onClose}>
+      <div className="flex flex-col overflow-auto px-6 py-4 gap-y-6">
+        <Steps
+          steps={steps}
+          currentStep={step}
+          onChangeStep={onChangeStep}
+          ariaLabel={title}
+          statusLabels={getStepStatusLabels(t)}
+        />
         <div hidden={isSubjectsStep}>
           <h2 ref={detailsHeadingRef} tabIndex={-1} className="sr-only">
             {t(TabsI18nKey.Properties)}
@@ -177,6 +185,16 @@ const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, getContext, onClos
           </div>
         )}
       </div>
+
+      <StepperModalButtons
+        steps={steps}
+        currentStep={steps.find((item) => item.id === step)}
+        finishButtonLabel={t(ButtonsI18nKey.Create)}
+        isLoading={isCreating}
+        onChangeStep={onChangeStep}
+        onFinishClick={onSubmit}
+        onClose={onClose}
+      />
     </Popup>
   );
 };

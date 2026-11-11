@@ -1,16 +1,17 @@
 'use client';
 
-import { Popup } from '@epam/ai-dial-ui-kit';
+import { Popup, Step, StepStatus, Steps } from '@epam/ai-dial-ui-kit';
 
-import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import { createKey } from '@/src/app/[lang]/platform-keys/actions';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
+import { ButtonsI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -34,12 +35,13 @@ interface Props {
 }
 
 /**
- * Two-step duplicate modal for platform keys.
+ * Two-step duplicate modal for platform keys, rendered as one popup with the ui-kit `Steps` indicator.
  *
  * Step 1 (Name): user renames the clone; `project` and `roles` are copied silently from the
  * source entity. Submit generates a new key client-side and calls `createKey`.
  * Step 2 (Reveal): shows the generated key value with a copy button — same UX as the
- * `CreateKeyModal` reveal step. Close navigates to the new key's detail page.
+ * `CreateKeyModal` reveal step. It is an informative last step: the Name step is locked and the
+ * footer offers only Close, which navigates to the new key's detail page.
  *
  * This modal owns its own `createKey` call (does not go through `handleDuplicate` /
  * `handleCreateAsset`) so it can show the Reveal step before closing.
@@ -88,59 +90,63 @@ const DuplicatePlatformKeyModal: FC<Props> = ({ isOpen, names, entity, onClose }
     }
   }, [entity.name, name, onClose, router]);
 
-  if (step === DuplicateStep.Name) {
-    return (
-      <Popup
-        open={isOpen}
-        header={getCloneTitle(ApplicationRoute.PlatformKeys, t)}
-        portalId="DuplicatePlatformKey"
-        onClose={onClose}
-        mainButtons={
-          isLoading
-            ? []
-            : getFormPopupButtons({
-                cancelLabel: t(ButtonsI18nKey.Cancel),
-                submitLabel: t(ButtonsI18nKey.Duplicate),
-                isSubmitDisabled: !isValid,
-                onCancel: onClose,
-                onSubmit: onSubmit,
-              })
-        }
-      >
-        {isLoading ? (
-          <PopupLoader />
-        ) : (
-          <>
-            <div className="flex flex-col px-6 py-4 gap-y-8">
-              <IdControl entity={{ name }} names={names} onChangeEntity={onChangeName} />
-            </div>
-          </>
-        )}
-      </Popup>
-    );
-  }
+  const onChangeStep = useCallback((id: string) => setStep(id as DuplicateStep), []);
+  const isRevealStep = step === DuplicateStep.Reveal;
+  const onCloseModal = isRevealStep ? onCloseAndNavigate : onClose;
+
+  const steps = useMemo<Step[]>(
+    () => [
+      {
+        id: DuplicateStep.Name,
+        name: t(EntityFieldsI18nKey.name),
+        status: isValid ? StepStatus.VALID : undefined,
+        disabled: isRevealStep,
+      },
+      {
+        id: DuplicateStep.Reveal,
+        name: t(KeysI18nKey.KeyValueRevealTitle),
+        status: isRevealStep ? StepStatus.VALID : undefined,
+        disabled: !isRevealStep,
+      },
+    ],
+    [t, isValid, isRevealStep],
+  );
+
+  const title = getCloneTitle(ApplicationRoute.PlatformKeys, t);
 
   return (
-    <Popup
-      open={isOpen}
-      header={t(KeysI18nKey.KeyValueRevealTitle)}
-      portalId="DuplicatePlatformKeyReveal"
-      onClose={onCloseAndNavigate}
-      mainButtons={getFormPopupButtons({
-        cancelLabel: t(ButtonsI18nKey.Close),
-        submitLabel: t(ButtonsI18nKey.Create),
-        submitClassName: 'hidden',
-        onCancel: onCloseAndNavigate,
-        onSubmit: onCloseAndNavigate,
-      })}
-    >
-      <div className="flex flex-col gap-4 px-6 py-4">
-        <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
-        <div className="flex items-center gap-2">
-          <code className="body-2 font-mono break-all">{createdKeyValue}</code>
-          <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={createdKeyValue} />
-        </div>
+    <Popup open={isOpen} header={title} portalId="DuplicatePlatformKey" onClose={onCloseModal}>
+      <div className="flex flex-col py-4 px-6 gap-y-6">
+        <Steps
+          steps={steps}
+          currentStep={step}
+          onChangeStep={onChangeStep}
+          ariaLabel={title}
+          statusLabels={getStepStatusLabels(t)}
+        />
+        {step === DuplicateStep.Name &&
+          (isLoading ? <PopupLoader /> : <IdControl entity={{ name }} names={names} onChangeEntity={onChangeName} />)}
+        {isRevealStep && (
+          <div className="flex flex-col gap-4">
+            <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
+            <div className="flex items-center gap-2">
+              <code className="body-2 font-mono break-all">{createdKeyValue}</code>
+              <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={createdKeyValue} />
+            </div>
+          </div>
+        )}
       </div>
+
+      <StepperModalButtons
+        steps={steps}
+        currentStep={steps.find((item) => item.id === step)}
+        finishButtonLabel={t(ButtonsI18nKey.Duplicate)}
+        isLastStepInformative
+        isLoading={isLoading}
+        onChangeStep={onChangeStep}
+        onFinishClick={onSubmit}
+        onClose={onCloseModal}
+      />
     </Popup>
   );
 };

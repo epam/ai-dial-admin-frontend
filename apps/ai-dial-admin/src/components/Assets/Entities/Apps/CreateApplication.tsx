@@ -1,19 +1,20 @@
 'use client';
 
-import { Popup } from '@epam/ai-dial-ui-kit';
+import { Popup, Step, StepStatus, Steps } from '@epam/ai-dial-ui-kit';
 
-import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import {
   ASSET_APPLICATION_CREATE_SOURCE_ITEMS,
   ASSET_APPLICATION_INTERFACES_SOURCE_TYPE,
 } from '@/src/components/SourceField/constants';
-import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
@@ -168,79 +169,94 @@ const CreateApplication: FC<Props> = ({
     (source === 'schema' && !!asset.application_type_schema_id) ||
     (source === 'code-app' && !!codeAppEditorUrl) ||
     (source === 'endpoints' && !!asset.endpoint && isValidEndpoint(asset.endpoint));
-  if (step === CreateStep.Details) {
-    return (
-      <Popup
-        open={isOpen}
-        header={getCreateEntityTitle(ApplicationRoute.AssetsApplications, t)}
-        portalId="CreateApplicationDetails"
-        onClose={onCloseAndReset}
-        mainButtons={getFormPopupButtons({
-          cancelLabel: t(ButtonsI18nKey.Cancel),
-          submitLabel: t(ButtonsI18nKey.Next),
-          isSubmitDisabled: !isDetailsValid,
-          onCancel: onCloseAndReset,
-          onSubmit: onNext,
-        })}
-      >
-        <div className="flex flex-col gap-y-8 px-6 py-4">
-          <AssetProperties
-            view={ApplicationRoute.AssetsApplications}
-            versionsMap={versionsMap}
-            entity={asset as unknown as DeploymentAsset}
-            names={names}
-            hideVersionField={isPlatform}
-            isUniqueNameError={isUniqueNameError}
-            onChangeEntity={(entity) => {
-              setAsset(entity as DialApplicationResource);
-              setIsUniqueNameError(false);
-            }}
-          />
-        </div>
-      </Popup>
-    );
-  }
+  const isSourceStep = step === CreateStep.Source;
+
+  const onChangeStep = useCallback(
+    (id: string) => {
+      if (id === CreateStep.Source) {
+        void onNext();
+        return;
+      }
+      setStep(id as CreateStep);
+    },
+    [onNext],
+  );
+
+  const steps = useMemo<Step[]>(
+    () => [
+      {
+        id: CreateStep.Details,
+        name: t(TabsI18nKey.Properties),
+        status: isDetailsValid ? StepStatus.VALID : undefined,
+      },
+      {
+        id: CreateStep.Source,
+        name: t(EntitiesI18nKey.SourceType),
+        status: isSourceStep && isSourceValid && isValid ? StepStatus.VALID : undefined,
+      },
+    ],
+    [t, isDetailsValid, isSourceStep, isSourceValid, isValid],
+  );
+  const title = getCreateEntityTitle(ApplicationRoute.AssetsApplications, t);
 
   return (
-    <Popup
-      open={isOpen}
-      header={t(EntitiesI18nKey.SourceType)}
-      portalId="CreateApplicationSource"
-      className="max-h-[750px]"
-      onClose={onCloseAndReset}
-      mainButtons={
-        isLoading
-          ? []
-          : getFormPopupButtons({
-              cancelLabel: t(ButtonsI18nKey.Back),
-              submitLabel: t(ButtonsI18nKey.Create),
-              isSubmitDisabled: !isSourceValid || !isValid,
-              onCancel: () => setStep(CreateStep.Details),
-              onSubmit: onCreateApplication,
-            })
-      }
-    >
-      {isLoading ? (
-        <PopupLoader />
-      ) : (
-        <>
-          <div className="flex min-h-0 flex-col overflow-auto px-6 py-4">
-            <ResourceSourceField
-              id="sourceType"
-              label={t(EntitiesI18nKey.SourceType)}
-              entity={asset}
-              onChange={setAsset}
+    <Popup open={isOpen} header={title} portalId="CreateApplication" onClose={onCloseAndReset}>
+      <div className="flex flex-col gap-y-6 px-6 py-4">
+        <Steps
+          steps={steps}
+          currentStep={step}
+          onChangeStep={onChangeStep}
+          ariaLabel={title}
+          statusLabels={getStepStatusLabels(t)}
+        />
+        {step === CreateStep.Details && (
+          <div className="flex flex-col gap-y-8">
+            <AssetProperties
               view={ApplicationRoute.AssetsApplications}
-              sourceItems={ASSET_APPLICATION_CREATE_SOURCE_ITEMS}
-              runners={runners}
-              initialSource={source}
-              onSourceChange={setSource}
-              translators={translators}
-              codeAppEditorUrl={codeAppEditorUrl}
+              versionsMap={versionsMap}
+              entity={asset as unknown as DeploymentAsset}
+              names={names}
+              hideVersionField={isPlatform}
+              isUniqueNameError={isUniqueNameError}
+              onChangeEntity={(entity) => {
+                setAsset(entity as DialApplicationResource);
+                setIsUniqueNameError(false);
+              }}
             />
           </div>
-        </>
-      )}
+        )}
+        {isSourceStep &&
+          (isLoading ? (
+            <PopupLoader />
+          ) : (
+            <div className="flex min-h-0 max-h-[540px] flex-col overflow-auto">
+              <ResourceSourceField
+                id="sourceType"
+                label={t(EntitiesI18nKey.SourceType)}
+                entity={asset}
+                onChange={setAsset}
+                view={ApplicationRoute.AssetsApplications}
+                sourceItems={ASSET_APPLICATION_CREATE_SOURCE_ITEMS}
+                runners={runners}
+                initialSource={source}
+                onSourceChange={setSource}
+                translators={translators}
+                codeAppEditorUrl={codeAppEditorUrl}
+              />
+            </div>
+          ))}
+      </div>
+
+      <StepperModalButtons
+        steps={steps}
+        currentStep={steps.find((item) => item.id === step)}
+        finishButtonLabel={t(ButtonsI18nKey.Create)}
+        isLoading={isLoading}
+        onChangeStep={onChangeStep}
+        onNextStep={onNext}
+        onFinishClick={onCreateApplication}
+        onClose={onCloseAndReset}
+      />
     </Popup>
   );
 };
