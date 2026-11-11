@@ -106,7 +106,12 @@ export class CoreApi extends BaseApi {
   }
 }
 
-/** `null` means the request was aborted (logout or the caller's own signal); anything else rethrows. */
+/**
+ * `null` means the request was aborted (logout or the caller's own signal); anything else rethrows.
+ * Only `AbortError` counts, as in `BaseApi`: a signal from `AbortSignal.timeout()` rejects with `TimeoutError`
+ * and is rethrown. The one timed Core call, `ProjectsCoreApi.getProjectArchiveSizes`, bypasses both paths and
+ * catches its own errors; the first timeout on an adapter-backed call decides how both paths map it.
+ */
 const runSdkCall = async (token: Token | undefined, call: CoreSdkCall): Promise<CoreSdkResult | null> => {
   try {
     return await call({ headers: getAuthorizationHeader(token), parseAs: 'text' });

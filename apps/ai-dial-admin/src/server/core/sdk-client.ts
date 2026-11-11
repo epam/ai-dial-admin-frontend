@@ -29,7 +29,27 @@ export const coreFetch = async (input: RequestInfo | URL, init?: RequestInit): P
       signal: AbortSignal.any([controller.signal, request.signal]),
     });
   } finally {
+    // Unregistered once the headers arrive, before `openapi-fetch` reads the body — the same window
+    // `BaseApi.fetchRegistered` covers. Core has already authorized the token by then, so logout
+    // cancels requests in flight, not body reads.
     requestRegistry.unregister(requestId);
+  }
+};
+
+/**
+ * The SDK builds a `Request` per call, which rejects a relative URL with an opaque `Failed to parse URL`.
+ * Failing here instead names the misconfigured variable.
+ */
+const assertAbsoluteCoreHost = (host: string): void => {
+  let protocol: string | undefined;
+  try {
+    protocol = new URL(host).protocol;
+  } catch {
+    protocol = undefined;
+  }
+
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    throw new Error(`DIAL_CORE_API_URL must be an absolute http(s) URL, got "${host}"`);
   }
 };
 
@@ -40,6 +60,7 @@ export const coreFetch = async (input: RequestInfo | URL, init?: RequestInit): P
 export const getCoreSdk = (host = ''): DIAL_SDK => {
   let sdk = sdkByHost.get(host);
   if (!sdk) {
+    assertAbsoluteCoreHost(host);
     sdk = createSDK({ baseUrl: host, fetch: coreFetch });
     sdkByHost.set(host, sdk);
   }

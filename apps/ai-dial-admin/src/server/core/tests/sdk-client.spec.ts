@@ -24,6 +24,13 @@ describe('getCoreSdk', () => {
     expect(getCoreSdk(CORE_TEST_URL)).not.toBe(getCoreSdk('http://other-core.test/'));
   });
 
+  test.each(['', 'test/', 'core.example.com', 'ftp://core.example.com'])(
+    'rejects %j with an error naming DIAL_CORE_API_URL',
+    (host) => {
+      expect(() => getCoreSdk(host)).toThrow(/DIAL_CORE_API_URL must be an absolute http\(s\) URL/);
+    },
+  );
+
   test('joins a slash-terminated host with the SDK paths without a double slash', async () => {
     fetch.mockResponseOnce(JSON.stringify({ bucket: 'b' }), { headers: { 'content-type': 'application/json' } });
 
