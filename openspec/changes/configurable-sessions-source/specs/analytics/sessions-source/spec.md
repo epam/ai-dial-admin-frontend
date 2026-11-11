@@ -23,7 +23,8 @@ that table's entity schema:
 The base table SHALL be chosen from the entities the analytics service lists. A role's field SHALL be chosen
 from the fields the base table's entity schema reports — its own fields and every enrichment field the schema
 flattens into it — restricted to the types that role accepts. A role SHALL NOT be bound to an array- or
-object-typed field. One field MAY serve more than one role.
+object-typed field, to a field the schema flags sensitive, or to a projection-only field: the setting is read by
+every analyst, and a sensitive field is absent from the schema of one without that clearance. One field MAY serve more than one role.
 
 The composition SHALL be the base table and the enrichments its entity schema reports, and nothing else. The
 setting SHALL NOT offer a second table: data that belongs on a session reaches the pages as an enrichment of
@@ -43,6 +44,11 @@ the base table, which the catalog joins, and the trace view keeps its own fixed 
 
 - **WHEN** the base table's schema reports an array-typed string field
 - **THEN** no role picker offers it
+
+#### Scenario: Sensitive and projection-only fields are never offered
+
+- **WHEN** the base table's schema reports a string field flagged sensitive and another flagged projection-only
+- **THEN** no role picker offers either of them
 
 ### Requirement: The setting is edited on the System Properties page and stored by the analytics service
 

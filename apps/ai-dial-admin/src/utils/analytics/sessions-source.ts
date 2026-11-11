@@ -31,7 +31,7 @@ export const ratingEnrichmentOf = (fields: AnalyticsEntityField[] = []): string 
 };
 
 export const isFieldFitForRole = (role: SessionsRole, field: AnalyticsEntityField): boolean =>
-  SESSIONS_ROLE_FIELD_TYPES[role].includes(field.type);
+  !field.sensitive && !field.projection_only && SESSIONS_ROLE_FIELD_TYPES[role].includes(field.type);
 
 export const roleFieldOptions = (role: SessionsRole, fields: AnalyticsEntityField[] = []): AnalyticsEntityField[] =>
   fields.filter((field) => isFieldFitForRole(role, field));

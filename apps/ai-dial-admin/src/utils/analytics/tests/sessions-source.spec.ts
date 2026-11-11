@@ -156,6 +156,16 @@ describe('roleFieldOptions', () => {
     expect(names).not.toContain('traces');
   });
 
+  test('never offers a sensitive or projection-only field', () => {
+    const fields = [
+      { ...schemaField('user_email'), sensitive: true },
+      { ...schemaField('session_insights.title_preview'), projection_only: true },
+      schemaField('session_insights.title'),
+    ];
+
+    expect(roleFieldOptions(SessionsRole.Title, fields).map(({ name }) => name)).toEqual(['session_insights.title']);
+  });
+
   test('offers only string fields to the string roles, never uuid or enum ones', () => {
     const fields = [
       schemaField('session_key', AnalyticsFieldType.Uuid),
