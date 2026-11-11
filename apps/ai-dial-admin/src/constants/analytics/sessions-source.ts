@@ -18,13 +18,11 @@ export const REQUIRED_SESSIONS_ROLES: SessionsRole[] = [SessionsRole.SessionId, 
 
 export const SESSIONS_ROLES: SessionsRole[] = Object.values(SessionsRole);
 
-const STRING_TYPES = [AnalyticsFieldType.String, AnalyticsFieldType.Uuid, AnalyticsFieldType.Enum];
-
 export const SESSIONS_ROLE_FIELD_TYPES: Record<SessionsRole, AnalyticsFieldType[]> = {
-  [SessionsRole.SessionId]: STRING_TYPES,
+  [SessionsRole.SessionId]: [AnalyticsFieldType.String],
   [SessionsRole.Time]: [AnalyticsFieldType.Timestamp],
-  [SessionsRole.Project]: STRING_TYPES,
-  [SessionsRole.Title]: STRING_TYPES,
+  [SessionsRole.Project]: [AnalyticsFieldType.String],
+  [SessionsRole.Title]: [AnalyticsFieldType.String],
   [SessionsRole.Cost]: [AnalyticsFieldType.Decimal, AnalyticsFieldType.Integer, AnalyticsFieldType.Long],
   [SessionsRole.Turns]: [AnalyticsFieldType.Integer, AnalyticsFieldType.Long],
 };

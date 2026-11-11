@@ -156,6 +156,18 @@ describe('roleFieldOptions', () => {
     expect(names).not.toContain('traces');
   });
 
+  test('offers only string fields to the string roles, never uuid or enum ones', () => {
+    const fields = [
+      schemaField('session_key', AnalyticsFieldType.Uuid),
+      schemaField('session_insights.sentiment', AnalyticsFieldType.Enum),
+      schemaField('project_id'),
+    ];
+
+    [SessionsRole.SessionId, SessionsRole.Project, SessionsRole.Title].forEach((role) =>
+      expect(roleFieldOptions(role, fields).map(({ name }) => name)).toEqual(['project_id']),
+    );
+  });
+
   test('returns nothing without a schema', () => {
     expect(roleFieldOptions(SessionsRole.Title)).toEqual([]);
   });
