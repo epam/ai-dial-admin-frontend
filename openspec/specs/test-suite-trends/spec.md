@@ -575,12 +575,14 @@ row and Metric Trends. Each card SHALL:
   **Metrics cost** / **Metrics runtime** label, and a total-line label (**Cost** / **Time**)
 - draw one stacked bar per Trends-window run (source/blue under metrics/violet), scaled to a shared
   nice Y ceiling with five external ticks (`$…` for Cost via the shared run-cost formatter; duration
-  via the shared suite run-time formatter)
+  via the Run Summary duration formatter — seconds with one decimal under a minute, then minutes and
+  seconds, then hours and minutes)
 - overlay a total line whose points sit on each stack top (sum of present segments; a run with both
   segments missing is a gap with no bar and no point)
 - load Cost from one-shot `GET /test-suite-runs/{id}/costs` per window run (`avgTestCaseCost` /
   `avgMetricEvalCost`); load Runtime from one `eval_summaries` aggregate grouped by run id
-  (`avg(exec_duration_ms)` / `avg(metric_eval_duration_ms)`)
+  (`sum(exec_duration_ms)` / `sum(metric_eval_duration_ms)`), the same totals the Run Summary Total
+  Runtime card shows
 - label runs under the plot with the shared Trends rotated run-name glyph
 - show a loading indicator while the card’s fetch is in flight with no points yet, and the shared
   empty state when every run lacks figures
@@ -601,10 +603,10 @@ row and Metric Trends. Each card SHALL:
 - **WHEN** a run’s `/costs` payload has no finite averages
 - **THEN** that run has no Cost Trend bar segment and no total-line point
 
-#### Scenario: Runtime averages map to bar segments
+#### Scenario: Runtime totals map to bar segments
 
-- **WHEN** a run’s `eval_summaries` aggregate returns `avg_duration_ms` `100` and
-  `avg_metric_eval_duration_ms` `40`
+- **WHEN** a run’s `eval_summaries` aggregate returns `total_duration_ms` `100` and
+  `total_metric_eval_duration_ms` `40`
 - **THEN** that run’s Runtime Trend bar stacks source `100` under metrics `40` and the total line
   point is `140`
 

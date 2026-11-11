@@ -1,8 +1,8 @@
 /** Number of Y ticks including 0 (Figma Cost / Runtime trend). */
 export const COMBO_TREND_Y_TICK_COUNT = 5;
 
-/** Width reserved left of the bordered plot for combo Y labels (Figma 48px). */
-export const COMBO_TREND_Y_LABEL_WIDTH_PX = 48;
+/** Width reserved left of the bordered plot for combo Y labels. Fits a run-duration tick such as "59m 59s". */
+export const COMBO_TREND_Y_LABEL_WIDTH_PX = 80;
 
 /** Shared column cap so a run label and its stacked bar share one center pitch. */
 export const COMBO_TREND_COLUMN_MAX_PX = 52;
@@ -39,10 +39,25 @@ export const niceCeil = (value: number): number => {
 };
 
 /**
+ * Steps used by the axis. `1.2` and `1.5` sit between 1 and 2 so a rough step just above a
+ * power of ten (109s → 120s) does not double (109s → 200s) and leave a large empty band.
+ */
+const NICE_STEP_FRACTIONS = [1, 1.2, 1.5, 2, 2.5, 3, 5, 10];
+
+/**
  * Nice step for equal tick spacing: ceil the rough step, then multiply by tick gaps.
  * Keeps ceilings like 120 for max≈117 instead of jumping to 200.
  */
-export const niceStep = (value: number): number => niceCeil(value);
+export const niceStep = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return 1;
+  }
+  const exp = Math.floor(Math.log10(value));
+  const magnitude = 10 ** exp;
+  const fraction = value / magnitude;
+  const niceFraction = NICE_STEP_FRACTIONS.find((candidate) => fraction <= candidate + 1e-9) ?? 10;
+  return niceFraction * magnitude;
+};
 
 /**
  * Five equally spaced ticks from a nice ceiling down to 0 for the combo trend Y axis.
