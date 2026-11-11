@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, GhostButton } from '@epam/ai-dial-ui-kit';
+import { Avatar, EllipsisTooltip, GhostButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
@@ -34,7 +34,7 @@ const MetricCard: FC<Props> = ({ metric, onEdit, onDelete }) => {
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex flex-row items-center gap-2">
           <Avatar name={metric.name ?? ''} />
-          <span className="dial-body-semi min-w-0 flex-1 truncate text-primary">{metric.name}</span>
+          <EllipsisTooltip text={metric.name} />
         </div>
 
         {metric.description && (

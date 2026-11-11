@@ -1,3 +1,4 @@
+import { ColDef } from 'ag-grid-community';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import { FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
@@ -6,26 +7,47 @@ import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
 
+type ColumnFactoryArgs = [Intl.LocalesArgument, Intl.DateTimeFormatOptions | undefined, boolean];
+
+/**
+ * The file manager's `NAME_COLUMN`/`SIZE_COLUMN` are curried factories that its own column hook resolves
+ * with the locale and layout, so a plain `{ ...column }` spread turns them into an empty column.
+ * Wraps a factory instead of spreading it.
+ */
+export const withoutFilters = (column: unknown): ColDef | ((...args: ColumnFactoryArgs) => ColDef) => {
+  const noFilters = { filter: false, floatingFilter: false };
+  if (typeof column === 'function') {
+    return (...args: ColumnFactoryArgs) => ({
+      ...(column as (...a: ColumnFactoryArgs) => ColDef)(...args),
+      ...noFilters,
+    });
+  }
+  return { ...(column as ColDef), ...noFilters };
+};
+
 export const getGridColumns = (view: ApplicationRoute, hasFoldersToDelete: boolean, itemsToDelete?: DialFile[]) => {
   const GRID_NAME_COLUMN = {
     colId: FileManagerColumnKey.Name,
     field: 'name',
     headerName: 'Name',
-    width: 200,
+    flex: 3,
+    minWidth: 200,
   };
 
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
     field: 'author',
     headerName: 'Author',
-    width: 200,
+    flex: 1,
+    minWidth: 120,
   };
 
   const VERSION_COLUMN = {
     colId: FileManagerColumnKey.Version,
     field: 'version',
     headerName: 'Version',
-    width: 200,
+    width: 110,
+    suppressSizeToFit: true,
     cellRenderer: FormattedValueCellRenderer,
   };
 

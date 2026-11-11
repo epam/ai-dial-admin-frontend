@@ -139,3 +139,28 @@ describe('ExpandableValueCell overall score threshold', () => {
     expect(container.querySelector('svg.text-score-abs-00')).not.toBeInTheDocument();
   });
 });
+
+describe('ExpandableValueCell copy', () => {
+  test('copies the full value without opening the field', async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    const longValue = 'y'.repeat(2000);
+    render(<ExpandableValueCell field={field({ label: 'requestBody', primaryRaw: longValue })} onOpen={onOpen} />);
+
+    await user.click(screen.getByRole('button', { name: 'copy requestBody' }));
+
+    expect(await navigator.clipboard.readText()).toBe(longValue);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['a metric', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' }],
+    ['a score', { isScoreIndicator: true, primaryRaw: '0.8' }],
+    ['a failed value', { primaryFailed: true }],
+    ['a missing value', { primaryRaw: null }],
+  ])('offers no copy for %s', (_, overrides) => {
+    render(<ExpandableValueCell field={field(overrides)} onOpen={vi.fn()} />);
+
+    expect(screen.queryByRole('button', { name: /^copy/ })).toBeNull();
+  });
+});

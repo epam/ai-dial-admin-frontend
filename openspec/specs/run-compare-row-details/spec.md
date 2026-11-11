@@ -221,3 +221,22 @@ defined by `run-value-popups` for a metric field and the text diff for any other
 #### Scenario: Other rows keep the text diff
 - **WHEN** the user activates the popup control of a non-metric row in the sidebar table
 - **THEN** the text diff of both runs opens
+
+### Requirement: Compare text fields offer a Copy button per run
+
+In a comparison, every text value cell of the right-sidebar table SHALL offer a Copy button that copies
+that run's full value, and the bottom pivot SHALL offer the same per cell, under the rules of
+`run-row-details`. A run without a match SHALL offer none. The text diff popup SHALL offer one Copy button
+per side, each named after its run, copying that side's value.
+
+#### Scenario: Copy one run's value from the sidebar table
+- **WHEN** the user activates the Copy button in the secondary run's cell of a text row
+- **THEN** the secondary run's value is on the clipboard
+
+#### Scenario: Copy one side of the text diff
+- **WHEN** the user activates the Copy button above the modified side of the text diff
+- **THEN** the modified value is on the clipboard
+
+#### Scenario: A run without a match has no Copy button
+- **WHEN** the compared run has no match for the row
+- **THEN** its cell offers no Copy button

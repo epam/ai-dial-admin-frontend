@@ -26,35 +26,38 @@ const field = (fieldKey: string, overrides: Partial<RowDetailField> = {}): RowDe
   ...overrides,
 });
 
+const getOpenButton = () =>
+  screen.getAllByRole('button').find((button) => button.getAttribute('aria-haspopup') === 'dialog') as HTMLElement;
+
 describe('PivotValueCell', () => {
   test('right-aligns the HTTP field', () => {
     render(<PivotValueCell field={field('httpStatusCode')} />);
 
-    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+    expect(getOpenButton()).toHaveClass('justify-end', 'text-right');
   });
 
   test('right-aligns the run number field', () => {
     render(<PivotValueCell field={field('runNumber', { isNumeric: false })} />);
 
-    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+    expect(getOpenButton()).toHaveClass('justify-end', 'text-right');
   });
 
   test('right-aligns the duration field', () => {
     render(<PivotValueCell field={field('execDurationMs')} />);
 
-    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+    expect(getOpenButton()).toHaveClass('justify-end', 'text-right');
   });
 
   test('right-aligns a metric field rendered as a score value', () => {
     render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
 
-    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+    expect(getOpenButton()).toHaveClass('justify-end', 'text-right');
   });
 
   test('drops the cell padding so a score fills the cell', () => {
     render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
 
-    const button = screen.getByRole('button');
+    const button = getOpenButton();
     expect(button).toHaveClass('p-0');
     expect(button).not.toHaveClass('p-3');
     expect(screen.getByText('0.800')).toHaveClass('bg-score-abs-09');
@@ -63,7 +66,7 @@ describe('PivotValueCell', () => {
   test('draws no right or bottom border around a score, so adjacent scores read as one field', () => {
     render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
 
-    expect(screen.getByRole('button')).toHaveClass('border-r-0', 'border-b-0');
+    expect(getOpenButton()).toHaveClass('border-r-0', 'border-b-0');
   });
 
   test('still draws the diff wrapper border around a score', () => {
@@ -74,7 +77,7 @@ describe('PivotValueCell', () => {
       />,
     );
 
-    const button = screen.getByRole('button');
+    const button = getOpenButton();
     expect(button).toHaveClass('border-r', 'border-b');
     expect(button).not.toHaveClass('border-r-0', 'border-b-0');
   });
@@ -84,13 +87,13 @@ describe('PivotValueCell', () => {
       <PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: null })} isFailed />,
     );
 
-    expect(screen.getByRole('button')).toHaveClass('p-3');
+    expect(getOpenButton()).toHaveClass('p-3');
   });
 
   test('leaves an unrelated field left-aligned, even a numeric one', () => {
     render(<PivotValueCell field={field('score')} />);
 
-    const button = screen.getByRole('button');
+    const button = getOpenButton();
     expect(button).toHaveClass('text-left');
     expect(button).not.toHaveClass('justify-end');
   });
@@ -99,7 +102,7 @@ describe('PivotValueCell', () => {
     const longValue = 'x'.repeat(2000);
     render(<PivotValueCell field={field('responseBody')} raw={longValue} />);
 
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(getOpenButton());
 
     expect(screen.getByRole('dialog', { name: 'responseBody' })).toHaveTextContent(longValue);
   });
@@ -126,7 +129,7 @@ describe('PivotValueCell', () => {
   test('keeps the plain value viewer for a field that is not a metric', async () => {
     render(<PivotValueCell field={field('responseBody')} raw="body" />);
 
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(getOpenButton());
 
     expect(screen.getByRole('dialog', { name: 'responseBody' })).toHaveTextContent('body');
     expect(screen.queryByText('Runs.MetricScoreLabel')).toBeNull();
@@ -137,7 +140,7 @@ describe('PivotValueCell', () => {
     const longValue = 'x'.repeat(2000);
     render(<PivotValueCell field={field('responseBody')} raw={longValue} onOpenFullscreen={onOpenFullscreen} />);
 
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(getOpenButton());
 
     expect(onOpenFullscreen).toHaveBeenCalledOnce();
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -153,7 +156,7 @@ describe('PivotValueCell', () => {
     test('keeps the cell at its own height instead of growing with the content', () => {
       render(<PivotValueCell field={field('answer', { primaryRaw: 'x '.repeat(2000) })} />);
 
-      expect(screen.getByRole('button')).toHaveClass('h-full', 'overflow-hidden');
+      expect(getOpenButton()).toHaveClass('h-full', 'overflow-hidden');
     });
 
     test('keeps the whole value in the cell instead of ending it with an ellipsis', () => {
@@ -185,15 +188,16 @@ describe('PivotValueCell', () => {
         </>,
       );
 
-      const buttons = screen.getAllByRole('button');
+      const buttons = screen
+        .getAllByRole('button')
+        .filter((button) => button.getAttribute('aria-haspopup') === 'dialog');
       expect(buttons).toHaveLength(3);
-      buttons.forEach((button) => expect(button).toHaveAttribute('aria-haspopup', 'dialog'));
     });
 
     test('shows the open icon on keyboard focus as well as on hover, hidden from assistive technology', () => {
       render(<PivotValueCell field={field('answer', { primaryRaw: 'text' })} />);
 
-      const icon = screen.getByRole('button').querySelector('[aria-hidden="true"]');
+      const icon = getOpenButton().querySelector('[aria-hidden="true"]');
       expect(icon).toHaveClass('group-hover:opacity-100', 'group-focus-visible:opacity-100');
     });
 
@@ -210,10 +214,36 @@ describe('PivotValueCell', () => {
     test('opens the text popup for a short value and the status as well', async () => {
       render(<PivotValueCell field={field('executionStatus', { primaryRaw: 'COMPLETED' })} />);
 
-      await userEvent.click(screen.getByRole('button'));
+      await userEvent.click(getOpenButton());
 
       expect(screen.getByRole('dialog', { name: 'executionStatus' })).toHaveTextContent('COMPLETED');
     });
+  });
+});
+
+describe('PivotValueCell copy', () => {
+  test('copies the full value without opening the popup', async () => {
+    const user = userEvent.setup();
+    const longValue = 'x'.repeat(2000);
+    render(<PivotValueCell field={field('responseBody')} raw={longValue} />);
+
+    await user.click(screen.getByRole('button', { name: 'copy responseBody' }));
+
+    expect(await navigator.clipboard.readText()).toBe(longValue);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  test('offers no copy for a metric, a score, a failed value or an empty value', () => {
+    render(
+      <>
+        <PivotValueCell field={field('metric', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.8' })} />
+        <PivotValueCell field={field('overall', { isScoreIndicator: true, primaryRaw: '0.8' })} />
+        <PivotValueCell field={field('failed', { primaryRaw: 'text' })} isFailed />
+        <PivotValueCell field={field('empty', { primaryRaw: null })} />
+      </>,
+    );
+
+    expect(screen.queryByRole('button', { name: /^copy/ })).toBeNull();
   });
 });
 
@@ -244,6 +274,6 @@ describe('PivotValueCell overall score threshold', () => {
   test('right-aligns the overall score like the other short figures', () => {
     render(<PivotValueCell field={score()} />);
 
-    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+    expect(getOpenButton()).toHaveClass('justify-end', 'text-right');
   });
 });

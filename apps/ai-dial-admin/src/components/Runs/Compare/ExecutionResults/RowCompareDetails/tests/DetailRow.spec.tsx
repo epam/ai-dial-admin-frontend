@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import DetailRow from '../DetailRow';
@@ -163,7 +164,7 @@ describe('DetailRow overall score threshold', () => {
     const { container } = renderDetailRow(scoreRow({ primaryThreshold: 0.6 }));
     const [, secondary] = getValueCells(container, 'overallScore');
 
-    expect(secondary.querySelector('svg')).not.toBeInTheDocument();
+    expect(secondary.querySelector('svg.text-score-abs-11, svg.text-score-abs-00')).not.toBeInTheDocument();
   });
 
   test('shows no icon for a missing score', () => {
@@ -179,5 +180,42 @@ describe('DetailRow overall score threshold', () => {
 
     expect(primary).toHaveClass('text-right');
     expect(secondary).toHaveClass('text-right');
+  });
+});
+
+describe('DetailRow copy', () => {
+  test('offers a copy button for each run that holds a text value, and copies that run’s value', async () => {
+    const user = userEvent.setup();
+    renderDetailRow(row('answer', { primaryRaw: 'Paris', secondaryRaw: 'Berlin' }));
+
+    const buttons = screen.getAllByRole('button', { name: 'copy answer' });
+    expect(buttons).toHaveLength(2);
+
+    await user.click(buttons[1]);
+
+    expect(await navigator.clipboard.readText()).toBe('Berlin');
+  });
+
+  test('offers no copy for the run that has no match', () => {
+    render(
+      <DetailRow
+        row={row('answer', { primaryRaw: 'Paris', secondaryRaw: null })}
+        hasComparedMatch={false}
+        noMatchLabel="No match"
+        failedLabel="Failed"
+        onOpenDiff={vi.fn()}
+        openDiffLabel="Open diff"
+        hideHighlights={false}
+        runs={runs}
+      />,
+    );
+
+    expect(screen.getAllByRole('button', { name: 'copy answer' })).toHaveLength(1);
+  });
+
+  test('offers no copy for a metric', () => {
+    renderDetailRow(row('precision', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.5' }));
+
+    expect(screen.queryByRole('button', { name: /^copy/ })).toBeNull();
   });
 });

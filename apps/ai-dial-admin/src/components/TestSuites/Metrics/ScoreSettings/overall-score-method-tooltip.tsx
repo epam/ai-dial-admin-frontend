@@ -1,12 +1,29 @@
 import { ReactNode } from 'react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreConfig, OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
 
 import { FunctionParameterSource, FunctionParameterSourceType } from './models';
 import { getFunctionName, getFunctionParameterSources, getOverallScoreFormulaLabelKey } from './utils';
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+/** Short name of an overall-score method: "Mean of N metrics", "Weighted mean of N metrics" or "Specific function". */
+export const getOverallScoreMethodName = (
+  overallScore: OverallScoreConfig,
+  t: Translate,
+  metricCount: number,
+): string => {
+  switch (overallScore.type) {
+    case OverallScoreType.Function:
+      return t(TestSuitesI18nKey.OverallScoreFunction);
+    case OverallScoreType.WeightedMean:
+      return t(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics, { count: overallScore.weights.length || metricCount });
+    case OverallScoreType.Mean:
+    default:
+      return t(TestSuitesI18nKey.TrendsMeanOfNMetrics, { count: metricCount });
+  }
+};
 
 const sourceTypeLabel = (source: FunctionParameterSource, t: Translate): string => {
   switch (source.$type) {
@@ -89,12 +106,11 @@ export const buildOverallScoreMethodTooltip = (
 
   if (type === OverallScoreType.WeightedMean && suite.overallScore?.type === OverallScoreType.WeightedMean) {
     const weights = suite.overallScore.weights;
-    const count = weights.length || metricCount;
     return (
       <div className="flex flex-col gap-0">
         <MethodHeader
           title={`${methodLabel}:`}
-          subtitle={t(TestSuitesI18nKey.TrendsWeightedMeanOfNMetrics, { count })}
+          subtitle={getOverallScoreMethodName(suite.overallScore, t, metricCount)}
         />
         {weights.map((weight) => (
           <span key={`${weight.metricName}-${weight.outputField}`} className="tiny">
@@ -106,10 +122,12 @@ export const buildOverallScoreMethodTooltip = (
     );
   }
 
-  const count = metricCount > 0 ? metricCount : 0;
   return (
     <div className="flex flex-col gap-0">
-      <MethodHeader title={`${methodLabel}:`} subtitle={t(TestSuitesI18nKey.TrendsMeanOfNMetrics, { count })} />
+      <MethodHeader
+        title={`${methodLabel}:`}
+        subtitle={getOverallScoreMethodName({ type: OverallScoreType.Mean }, t, metricCount)}
+      />
       <span className="tiny">{t(TestSuitesI18nKey.OverallScoreMeanFormula)}</span>
     </div>
   );

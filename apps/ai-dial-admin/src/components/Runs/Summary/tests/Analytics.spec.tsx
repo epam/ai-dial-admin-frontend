@@ -150,24 +150,31 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.queryByText(TestSuitesI18nKey.TrendsThresholdLabel)).not.toBeInTheDocument();
   });
 
-  test('keeps content right under the title on every card except the one with a pinned footer', async () => {
-    mockQueries({ rows: [] }, { rows: [] }, { rows: [] });
-    getRunsTotalCostsMock.mockResolvedValue(totals(null, null));
-    await renderLoaded({ run: buildRun({ status: RunStatus.CANCELLED, completedAt: 1 }), overallScore: 0.812 });
-    await waitFor(() => expect(within(card(RunsI18nKey.TotalRunCost)).queryByRole('status')).toBeNull());
+  test('lays every card out with the same shape so title, figure and footer line up across the row', async () => {
+    await renderLoaded({ overallScore: 0.812 });
 
-    for (const title of [
+    const titles = [
       RunsI18nKey.TestCasesCompleted,
-      // A threshold needs score rows; this run has none, so it is rated by completion.
-      RunsI18nKey.CompletionRate,
+      RunsI18nKey.ThresholdPassRate,
+      RunsI18nKey.OverallScore,
       RunsI18nKey.TotalRuntime,
       RunsI18nKey.TotalRunCost,
-    ]) {
-      expect(within(card(title)).getByText('—')).toBeTruthy();
-      expect(card(title).className).toContain('justify-start');
-      expect(card(title).className).not.toContain('justify-between');
-    }
-    expect(card(RunsI18nKey.OverallScore).className).toContain('justify-between');
+    ];
+    const classNames = titles.map((title) => card(title).className);
+
+    expect(new Set(classNames).size).toBe(1);
+    expect(classNames[0]).not.toContain('justify-');
+  });
+
+  test('puts the threshold line in the pinned footer, below the percent and the bar', async () => {
+    await renderLoaded();
+
+    const rate = card(RunsI18nKey.ThresholdPassRate);
+    const footer = rate.lastElementChild as HTMLElement;
+
+    expect(within(footer).getByText(TestSuitesI18nKey.TrendsThresholdLabel)).toBeInTheDocument();
+    expect(within(footer).queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(within(rate).getByRole('progressbar', { name: RunsI18nKey.ThresholdPassRate })).toBeInTheDocument();
   });
 
   test('no longer renders the superseded cards', async () => {
@@ -202,17 +209,19 @@ describe('Runs Summary :: Analytics', () => {
     expect(rate.getByText('0.5')).toBeInTheDocument();
   });
 
-  test('shows the overall score with its glyph, footer and info control', async () => {
+  test('shows the overall score with its glyph, method name and info control', async () => {
     await renderLoaded({ overallScore: 0.812, metricSnapshotCount: 3 });
 
     const overall = within(card(RunsI18nKey.OverallScore));
     expect(overall.getByText('0.812')).toBeInTheDocument();
-    expect(overall.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
+    expect(overall.getByText(TestSuitesI18nKey.TrendsBasedOnMethod)).toBeInTheDocument();
     expect(overall.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeInTheDocument();
   });
 
-  test('omits the info control for a run that has no suite snapshot', async () => {
+  test('omits the info control and method name for a run that has no suite snapshot', async () => {
     await renderLoaded({ run: buildRun({ suiteSnapshot: undefined }), overallScore: 0.812 });
+
+    expect(within(card(RunsI18nKey.OverallScore)).queryByText(TestSuitesI18nKey.TrendsBasedOnMethod)).toBeNull();
 
     expect(
       within(card(RunsI18nKey.OverallScore)).queryByRole('button', {
