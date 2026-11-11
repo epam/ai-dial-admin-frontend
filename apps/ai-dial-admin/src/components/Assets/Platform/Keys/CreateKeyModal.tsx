@@ -1,8 +1,7 @@
 'use client';
 
-import { Popup, Input } from '@epam/ai-dial-ui-kit';
+import { Input, Popup, PopupSize, Step, StepStatus, Steps } from '@epam/ai-dial-ui-kit';
 
-import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { SelectionChangedEvent } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
@@ -11,6 +10,8 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createKey, getKeyRolesOptions } from '@/src/app/[lang]/platform-keys/actions';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -19,7 +20,7 @@ import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   KeysI18nKey,
-  RolesI18nKey,
+  TabsI18nKey,
 } from '@/src/constants/i18n';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -46,7 +47,7 @@ interface Props {
 }
 
 /**
- * Three-step key creation modal.
+ * Three-step key creation modal, rendered as one popup with the ui-kit `Steps` indicator.
  *
  * Step 1 (Details): resource name (identifier) + project. Both are required by Core's
  * `validateProjectKey`, which rejects a blank `project` with a 400.
@@ -55,7 +56,8 @@ interface Props {
  * Role selection mirrors `KeyRoles`/`AddEntitiesView`: a grid of chosen roles with a remove
  * action, and an Add button that opens `AddEntitiesGrid` (checkbox multi-select).
  * Step 3 (Reveal): the generated key value with a copy button. Only visible here — Core
- * never returns `key` on subsequent GETs (`@JsonProperty(WRITE_ONLY)`).
+ * never returns `key` on subsequent GETs (`@JsonProperty(WRITE_ONLY)`). It is an informative last
+ * step: the earlier steps are locked once the key exists and the footer offers only Close.
  *
  * This modal cannot go through `handleCreateAsset` because that helper always calls
  * `handleModalClose()` immediately on success, which would prevent the reveal step from
@@ -129,130 +131,116 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
     }
   }, [asset.name, createdKeyValue, onClose, router]);
 
-  const onSubmit = useCallback(() => {
-    if (step === CreateStep.Details) {
-      setStep(CreateStep.Roles);
-      return;
-    }
-    if (step === CreateStep.Roles) {
-      const generated = generateKey();
-      setIsLoading(true);
-      createKey({ ...asset, roles: selectedRoleNames, key: generated }).then((res) => {
-        setIsLoading(false);
-        if (res.success) {
-          setCreatedKeyValue(generated);
-          setStep(CreateStep.Reveal);
-          // `asset` is seeded as `{ name, project }` with no `folderId` — the list displays
-          // `fetchedFoldersData['platform/']`, so refresh the view's root folder, not `undefined`.
-          fetchFiles(`${getRootFolder(ApplicationRoute.PlatformKeys)}/`);
-        }
-      });
-      return;
-    }
-    // Reveal step — close (navigates to the new key's detail page via onCloseAndReset).
-    onCloseAndReset();
-  }, [step, asset, selectedRoleNames, fetchFiles, onCloseAndReset]);
+  const onCreate = useCallback(() => {
+    const generated = generateKey();
+    setIsLoading(true);
+    createKey({ ...asset, roles: selectedRoleNames, key: generated }).then((res) => {
+      setIsLoading(false);
+      if (res.success) {
+        setCreatedKeyValue(generated);
+        setStep(CreateStep.Reveal);
+        // `asset` is seeded as `{ name, project }` with no `folderId` — the list displays
+        // `fetchedFoldersData['platform/']`, so refresh the view's root folder, not `undefined`.
+        fetchFiles(`${getRootFolder(ApplicationRoute.PlatformKeys)}/`);
+      }
+    });
+  }, [asset, selectedRoleNames, fetchFiles]);
 
-  const onBack = useCallback(() => {
-    setStep(CreateStep.Details);
-  }, []);
+  const onChangeStep = useCallback((id: string) => setStep(id as CreateStep), []);
 
   const isDetailsValid = !!asset.name && !!asset.project;
   const isRolesValid = selectedRoleNames.length > 0;
+  const isRevealStep = step === CreateStep.Reveal;
 
-  if (step === CreateStep.Details) {
-    return (
-      <Popup
-        open={isOpen}
-        header={getCreateEntityTitle(ApplicationRoute.PlatformKeys, t)}
-        portalId="CreateKeyDetails"
-        onClose={onCloseAndReset}
-        mainButtons={getFormPopupButtons({
-          cancelLabel: t(ButtonsI18nKey.Cancel),
-          submitLabel: t(ButtonsI18nKey.Next),
-          isSubmitDisabled: !isDetailsValid,
-          onCancel: onCloseAndReset,
-          onSubmit: onSubmit,
-        })}
-      >
-        <div className="flex flex-col px-6 py-4 gap-y-8">
-          <IdControl entity={asset} names={names} onChangeEntity={onChangeName} />
-          <Input
-            id="project"
-            labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
-            placeholder={t(EntityPlaceholdersI18nKey.Project)}
-            value={asset.project}
-            onChange={onChangeProject}
-            containerClassName="w-full"
-          />
-        </div>
-      </Popup>
-    );
-  }
+  const steps = useMemo<Step[]>(
+    () => [
+      {
+        id: CreateStep.Details,
+        name: t(TabsI18nKey.Properties),
+        status: isDetailsValid ? StepStatus.VALID : undefined,
+        disabled: isRevealStep,
+      },
+      {
+        id: CreateStep.Roles,
+        name: t(TabsI18nKey.Roles),
+        status: isRolesValid ? StepStatus.VALID : undefined,
+        disabled: isRevealStep,
+      },
+      {
+        id: CreateStep.Reveal,
+        name: t(KeysI18nKey.KeyValueRevealTitle),
+        status: isRevealStep ? StepStatus.VALID : undefined,
+        disabled: !isRevealStep,
+      },
+    ],
+    [t, isDetailsValid, isRolesValid, isRevealStep],
+  );
 
-  if (step === CreateStep.Roles) {
-    return (
-      <Popup
-        open={isOpen}
-        header={t(RolesI18nKey.AddRoles)}
-        portalId="CreateKeyRoles"
-        onClose={onCloseAndReset}
-        className="max-h-[540px]"
-        mainButtons={
-          isLoading
-            ? []
-            : getFormPopupButtons({
-                cancelLabel: t(ButtonsI18nKey.Back),
-                submitLabel: t(ButtonsI18nKey.Create),
-                isSubmitDisabled: !isRolesValid,
-                onCancel: onBack,
-                onSubmit: onSubmit,
-              })
-        }
-      >
-        {isLoading ? (
-          <PopupLoader />
-        ) : (
-          <>
-            <div className="flex flex-col px-6 py-4 h-full min-h-0">
-              <p className="text-secondary dial-small-paragraph-text mb-4">{t(KeysI18nKey.BearerRolesDescription)}</p>
-              <GridView
-                emptyDataProps={{ title: t(KeysI18nKey.NoRolesAvailable) }}
-                columnDefs={rolesColumnDefs}
-                rowData={roles}
-                additionalGridOptions={{
-                  ...MULTI_ROW_SELECTION,
-                  onSelectionChanged: onRolesSelectionChanged,
-                }}
-              />
-            </div>
-          </>
-        )}
-      </Popup>
-    );
-  }
+  const title = getCreateEntityTitle(ApplicationRoute.PlatformKeys, t);
 
   return (
-    <Popup
-      open={isOpen}
-      header={t(KeysI18nKey.KeyValueRevealTitle)}
-      portalId="CreateKeyReveal"
-      onClose={onCloseAndReset}
-      mainButtons={getFormPopupButtons({
-        cancelLabel: t(ButtonsI18nKey.Close),
-        submitLabel: t(ButtonsI18nKey.Create),
-        submitClassName: 'hidden',
-        onCancel: onCloseAndReset,
-        onSubmit: onCloseAndReset,
-      })}
-    >
-      <div className="flex flex-col gap-4 px-6 py-4">
-        <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
-        <div className="flex items-center gap-2">
-          <code className="body-2 font-mono break-all">{createdKeyValue}</code>
-          <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={createdKeyValue} />
+    <Popup open={isOpen} header={title} portalId="CreateKey" size={PopupSize.Md} onClose={onCloseAndReset}>
+      <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[460px]">
+        <Steps
+          steps={steps}
+          currentStep={step}
+          onChangeStep={onChangeStep}
+          ariaLabel={title}
+          statusLabels={getStepStatusLabels(t)}
+        />
+        <div className="flex-1 min-h-0 flex flex-col">
+          {step === CreateStep.Details && (
+            <div className="flex flex-col gap-y-8">
+              <IdControl entity={asset} names={names} onChangeEntity={onChangeName} />
+              <Input
+                id="project"
+                labelProps={{ label: t(EntityFieldsI18nKey.project), required: true }}
+                placeholder={t(EntityPlaceholdersI18nKey.Project)}
+                value={asset.project}
+                onChange={onChangeProject}
+                containerClassName="w-full"
+              />
+            </div>
+          )}
+          {step === CreateStep.Roles &&
+            (isLoading ? (
+              <PopupLoader />
+            ) : (
+              <div className="flex flex-col h-full min-h-0">
+                <p className="text-secondary dial-small-paragraph-text mb-4">{t(KeysI18nKey.BearerRolesDescription)}</p>
+                <GridView
+                  emptyDataProps={{ title: t(KeysI18nKey.NoRolesAvailable) }}
+                  columnDefs={rolesColumnDefs}
+                  rowData={roles}
+                  additionalGridOptions={{
+                    ...MULTI_ROW_SELECTION,
+                    onSelectionChanged: onRolesSelectionChanged,
+                  }}
+                />
+              </div>
+            ))}
+          {isRevealStep && (
+            <div className="flex flex-col gap-4">
+              <p className="body-2">{t(KeysI18nKey.KeyValueRevealDescription)}</p>
+              <div className="flex items-center gap-2">
+                <code className="body-2 font-mono break-all">{createdKeyValue}</code>
+                <CopyButton valueLabel={t(KeysI18nKey.KeyValueRevealTitle)} value={createdKeyValue} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <StepperModalButtons
+        steps={steps}
+        currentStep={steps.find((item) => item.id === step)}
+        finishButtonLabel={t(ButtonsI18nKey.Create)}
+        isLastStepInformative
+        isLoading={isLoading}
+        onChangeStep={onChangeStep}
+        onFinishClick={onCreate}
+        onClose={onCloseAndReset}
+      />
     </Popup>
   );
 };
