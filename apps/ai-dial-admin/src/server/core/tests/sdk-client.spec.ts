@@ -114,6 +114,16 @@ describe('coreFetch', () => {
     expect(headers.get('authorization')).toBe('Bearer t');
   });
 
+  test('is aborted by the registry when called with a URL string and no caller signal', async () => {
+    fetch.mockImplementationOnce(hangUntilAborted);
+
+    // `new Request(url)` still carries a never-aborting signal, so `AbortSignal.any` gets two real signals.
+    const pending = coreFetch(`${CORE_TEST_URL}v1/bucket`);
+    requestRegistry.cancelAll();
+
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
   test('accepts a URL string as well as a Request', async () => {
     fetch.mockResponseOnce('{}');
 
