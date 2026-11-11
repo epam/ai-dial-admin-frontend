@@ -26,20 +26,21 @@ Cross-suite average pass rate still has no deployment-scoped aggregate API.
 **Non-Goals:**
 - Implementing the cross-suite average pass-rate KPI card in this change.
 - Changing `test-suite-trends` chart or KPI contracts.
-- Assets entity views, run start from this tab, or Trends deep-link on open-in-new-tab.
+- Run start from this tab, or Trends deep-link on open-in-new-tab.
 
 ## Decisions
 
 1. **New tab id `EntityViewTab.EvalTrends`.** Keeps the suite tab’s `EntityViewTab.Trends` /
-   `Tabs.Trends` wording. Label uses `Tabs.EvalTrends`. Insert after Interceptors and before
-   Audit; omit when `!evaluationEnabled`.
+   `Tabs.Trends` wording. Label uses `Tabs.EvalTrends`. Append after Audit (always last when
+   present); omit when `!evaluationEnabled`.
 
-2. **Shared client tab component.** One component mounted from Models and Applications
-   `TabsContent`, keyed by entity `name` (that value is `deploymentRef.id` when suites are created).
-   Query `test_suites` with OR equality on `deployment_ref::id` and `mcp_deployment_ref::id`, sort
-   by name, page through results so the dropdown is complete. List projection from
-   `mapTestSuiteRow` is enough for `Trends` (needs `id`) and the source-kind label (suite type +
-   refs).
+2. **Shared client tab component.** One component under `components/EvalTrendsTab`, mounted from
+   Entities and Ai Gateway Models/Applications `TabsContent`, keyed by the entity’s deployment id
+   (`getModelDeploymentId` for models; `getApplicationDeploymentId` for applications — public-bucket
+   apps use `applications/<path>`, platform/Entities apps use `name`). Query `test_suites` with OR
+   equality on `deployment_ref::id` and `mcp_deployment_ref::id`, sort by name, page through results
+   so the dropdown is complete. List projection from `mapTestSuiteRow` is enough for `Trends`
+   (needs `id`) and the source-kind label (suite type + refs).
 
 3. **Toolbar layout.** “View in Test Suite:” + compact searchable ui-kit `Select` +
    “Open in new tab” (`onOpenInNewTab(ApplicationRoute.TestSuites, { id })`). Preview runs badge

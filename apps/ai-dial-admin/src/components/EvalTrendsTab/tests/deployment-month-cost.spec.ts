@@ -5,7 +5,7 @@ import {
   formatGroupedMonthCost,
   formatMonthCostDelta,
   sumDeploymentCostParts,
-} from '@/src/components/EntityView/EvalTrends/deployment-month-cost';
+} from '@/src/components/EvalTrendsTab/deployment-month-cost';
 
 describe('buildMonthCostWindows', () => {
   test('builds month-to-date and matching previous-month spans', () => {

@@ -4,13 +4,10 @@ import { FC, useMemo } from 'react';
 
 import { Spinner, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 
-import {
-  formatGroupedMonthCost,
-  formatMonthCostDelta,
-} from '@/src/components/EntityView/EvalTrends/deployment-month-cost';
-import EvalMonthCostDeltaBadge from '@/src/components/EntityView/EvalTrends/EvalMonthCostDeltaBadge';
-import EvalMonthCostTooltip from '@/src/components/EntityView/EvalTrends/EvalMonthCostTooltip';
-import { useDeploymentMonthCosts } from '@/src/components/EntityView/EvalTrends/use-deployment-month-costs';
+import { formatGroupedMonthCost, formatMonthCostDelta } from '@/src/components/EvalTrendsTab/deployment-month-cost';
+import EvalMonthCostDeltaBadge from '@/src/components/EvalTrendsTab/EvalMonthCostDeltaBadge';
+import EvalMonthCostTooltip from '@/src/components/EvalTrendsTab/EvalMonthCostTooltip';
+import { useDeploymentMonthCosts } from '@/src/components/EvalTrendsTab/use-deployment-month-costs';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

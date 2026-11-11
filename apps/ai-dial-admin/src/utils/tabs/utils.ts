@@ -429,8 +429,8 @@ export const getApplicationTabs = (t: (key: string) => string, featureFlags?: Fe
     appRouteTab(t),
     rolesTab(t),
     interceptorsTab(t),
-    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
     ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
+    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
   ];
 };
 
@@ -440,8 +440,8 @@ export const getModelsTabs = (t: (key: string) => string, featureFlags?: Feature
     featuresTab(t),
     rolesTab(t),
     interceptorsTab(t),
-    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
     ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
+    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
   ];
 };
 
@@ -502,7 +502,7 @@ export const getUsageLogTabs = (t: (key: string) => string): TabItem[] => {
 export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
-  featureFlags?: FeatureFlags,
+  featureFlags?: Partial<FeatureFlags>,
   rolesWarning?: boolean,
   hasParameters?: boolean,
 ): TabItem[] => {
@@ -516,6 +516,7 @@ export const getTabsForAsset = (
       appRouteTab(t),
       // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
       ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),
+      ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
     ];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
@@ -532,6 +533,9 @@ export const getTabsForAsset = (
     const tabs = [propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
     if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
       tabs.push(auditTab(t));
+    }
+    if (featureFlags?.evaluationEnabled) {
+      tabs.push(evalTrendsTab(t));
     }
     return tabs;
   }

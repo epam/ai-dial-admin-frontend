@@ -2,6 +2,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import { ParamsView } from '@/src/types/parameters';
 import {
+  getApplicationDeploymentId,
   getAppRunner,
   getCorrectConfig,
   getFrameConfig,
@@ -731,6 +732,28 @@ describe('getCorrectConfig', () => {
     const result = getCorrectConfig(placeholderScheme as any, application as any, 'dark', session);
 
     expect(result?.host).toBe('https://code-app-editor.com');
+  });
+});
+
+describe('getApplicationDeploymentId', () => {
+  test('returns applications/<path> for a public-bucket asset application', () => {
+    const application = { _metadata: { path: 'folder/my-app__1.0.0' }, name: 'my-app' } as any;
+    expect(getApplicationDeploymentId(ApplicationRoute.AssetsApplications, application)).toBe(
+      'applications/folder/my-app__1.0.0',
+    );
+  });
+
+  test('returns the application name for a platform-bucket application', () => {
+    const application = { _metadata: { path: 'platform/my-app' }, name: 'my-app' } as any;
+    expect(getApplicationDeploymentId(ApplicationRoute.AssetsApplications, application)).toBe('my-app');
+  });
+
+  test('returns the application name for Entities applications', () => {
+    expect(getApplicationDeploymentId(ApplicationRoute.Applications, { name: 'my-app' } as any)).toBe('my-app');
+  });
+
+  test('returns undefined when a public-bucket asset application has no path', () => {
+    expect(getApplicationDeploymentId(ApplicationRoute.AssetsApplications, { name: 'my-app' } as any)).toBeUndefined();
   });
 });
 

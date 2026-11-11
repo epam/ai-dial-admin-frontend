@@ -7,7 +7,7 @@ import {
   buildMonthCostWindows,
   MonthCostWindows,
   sumDeploymentCostParts,
-} from '@/src/components/EntityView/EvalTrends/deployment-month-cost';
+} from '@/src/components/EvalTrendsTab/deployment-month-cost';
 
 export interface DeploymentMonthCostsState {
   windows: MonthCostWindows;

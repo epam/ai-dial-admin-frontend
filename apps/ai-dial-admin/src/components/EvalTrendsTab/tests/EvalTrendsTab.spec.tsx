@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import EvalTrendsTab from '@/src/components/EntityView/EvalTrends/EvalTrendsTab';
+import EvalTrendsTab from '@/src/components/EvalTrendsTab/EvalTrendsTab';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 
-import EvalMonthCostCard from '@/src/components/EntityView/EvalTrends/EvalMonthCostCard';
+import EvalMonthCostCard from '@/src/components/EvalTrendsTab/EvalMonthCostCard';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 
 const getDeploymentPeriodCostsMock = vi.fn();

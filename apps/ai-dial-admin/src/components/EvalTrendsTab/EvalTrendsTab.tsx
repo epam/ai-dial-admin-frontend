@@ -14,9 +14,9 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
-import AllSuitesTrendsHeader from '@/src/components/EntityView/EvalTrends/AllSuitesTrendsHeader';
-import EvalMonthCostCard from '@/src/components/EntityView/EvalTrends/EvalMonthCostCard';
-import { useEntityTestSuites } from '@/src/components/EntityView/EvalTrends/use-entity-test-suites';
+import AllSuitesTrendsHeader from '@/src/components/EvalTrendsTab/AllSuitesTrendsHeader';
+import EvalMonthCostCard from '@/src/components/EvalTrendsTab/EvalMonthCostCard';
+import { useEntityTestSuites } from '@/src/components/EvalTrendsTab/use-entity-test-suites';
 import Trends from '@/src/components/TestSuites/Trends/Trends';
 import TrendsPreviewRunsBadge from '@/src/components/TestSuites/Trends/TrendsPreviewRunsBadge';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';

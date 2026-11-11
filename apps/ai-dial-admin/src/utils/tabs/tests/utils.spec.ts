@@ -131,8 +131,8 @@ describe('Entities :: tabs', () => {
       featuresTab(t),
       rolesTab(t),
       interceptorsTab(t),
-      evalTrendsTab(t),
       auditTab(t),
+      evalTrendsTab(t),
     ]);
   });
 
@@ -173,8 +173,8 @@ describe('Entities :: tabs', () => {
       appRouteTab(t),
       rolesTab(t),
       interceptorsTab(t),
-      evalTrendsTab(t),
       auditTab(t),
+      evalTrendsTab(t),
     ]);
   });
 
@@ -285,6 +285,37 @@ describe('Entities :: tabs', () => {
     expect(withResourceDependenciesTab([propertiesTab(t)], t)).toEqual([propertiesTab(t), resourceDependenciesTab(t)]);
   });
 
+  test('appends Eval Trends for AssetsApplications when evaluationEnabled is true', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications, flags({ evaluationEnabled: true }))).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      interceptorsTab(t),
+      appRouteTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
+  test('places Eval Trends after Audit for AssetsApplications when both evaluation and usage audit are enabled', () => {
+    expect(
+      getTabsForAsset(
+        t,
+        ApplicationRoute.AssetsApplications,
+        flags({ evaluationEnabled: true, analyticsUsageEnabled: true }),
+      ),
+    ).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      interceptorsTab(t),
+      appRouteTab(t),
+      auditTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
   test('offers an asset application the Audit tab only behind the analytics usage flag', () => {
     const tabsWith = (overrides: Partial<FeatureFlags>) =>
       getTabsForAsset(t, ApplicationRoute.AssetsApplications, flags(overrides));
@@ -369,6 +400,34 @@ describe('Entities :: tabs', () => {
       rolesTab(t),
       interceptorsTab(t),
       auditTab(t),
+    ]);
+  });
+
+  test('includes Eval Trends for PlatformModels when evaluationEnabled is true', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ evaluationEnabled: true }))).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
+  test('places Eval Trends after Audit for PlatformModels when both evaluation and audit are enabled', () => {
+    const tabs = getTabsForAsset(
+      t,
+      ApplicationRoute.PlatformModels,
+      flags({ evaluationEnabled: true, dashboardEnabled: true, adminApiEnabled: true }),
+    );
+    expect(tabs).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+      evalTrendsTab(t),
     ]);
   });
 

@@ -6,7 +6,7 @@ import { assetApi, datasetsApi, runsApi, structuredQueryApi, testSuitesApi } fro
 import {
   buildTestSuitesForDeploymentQuery,
   EVAL_TRENDS_SUITES_PAGE_SIZE,
-} from '@/src/components/EntityView/EvalTrends/build-suites-for-deployment-query';
+} from '@/src/components/EvalTrendsTab/build-suites-for-deployment-query';
 import { collectEvaluationPages } from '@/src/components/ListView/Evaluation/utils/collect-evaluation-pages';
 import {
   buildTestSuitesQuery,

@@ -4,36 +4,69 @@
 
 ### Requirement: Eval Trends tab on Models and Applications
 
-When `evaluationEnabled` is true, the admin Models and Applications entity views SHALL include an
-**Eval Trends** tab after Interceptors and before Audit (when Audit is present). When
-`evaluationEnabled` is false, the tab SHALL be omitted. Assets Models / Assets Applications views
-SHALL NOT gain this tab from this capability.
+When `evaluationEnabled` is true, the Entities Models and Applications entity views SHALL include an
+**Eval Trends** tab after Audit (when Audit is present), always as the last tab. When
+`evaluationEnabled` is false, the tab SHALL be omitted.
 
 #### Scenario: Tab present when evaluation is enabled
 
-- **WHEN** a user opens an admin Model or Application view and `evaluationEnabled` is true
-- **THEN** the tab list includes Eval Trends after Interceptors
+- **WHEN** a user opens an Entities Model or Application view and `evaluationEnabled` is true
+- **THEN** the tab list includes Eval Trends as the last tab, after Audit when Audit is present
 
 #### Scenario: Tab omitted when evaluation is disabled
 
 - **WHEN** `evaluationEnabled` is false
-- **THEN** the Models and Applications tab lists do not include Eval Trends
+- **THEN** the Entities Models and Applications tab lists do not include Eval Trends
+
+### Requirement: Eval Trends tab on Ai Gateway Models and Applications
+
+When `evaluationEnabled` is true, Ai Gateway Platform Models and both Ai Gateway Applications
+buckets (public and platform) SHALL include an **Eval Trends** tab as the last tab, after Audit
+when Audit is present. When `evaluationEnabled` is false, the tab SHALL be omitted. Adding the tab
+to Applications MUST NOT unlock the asset Audit tab solely because evaluation is enabled.
+
+#### Scenario: Platform Models tab present when evaluation is enabled
+
+- **WHEN** a user opens an Ai Gateway Platform Model view and `evaluationEnabled` is true
+- **THEN** the tab list includes Eval Trends as the last tab, after Audit when Audit is present
+
+#### Scenario: Applications tab present without unlocking Audit
+
+- **WHEN** a user opens an Ai Gateway Applications view with `evaluationEnabled` true and
+  `analyticsUsageEnabled` false
+- **THEN** the tab list includes Eval Trends as the last tab and does not include Audit
+
+#### Scenario: Ai Gateway tab omitted when evaluation is disabled
+
+- **WHEN** `evaluationEnabled` is false
+- **THEN** Ai Gateway Platform Models and Applications tab lists do not include Eval Trends
 
 ### Requirement: Suites for the current entity
 
 On the Eval Trends tab, the system SHALL load test suites whose `deployment_ref.id` or
-`mcp_deployment_ref.id` equals the entity’s `name`, sorted by suite name, including every page of
-results. While the list is loading, the tab SHALL show a loading indicator.
+`mcp_deployment_ref.id` equals the entity’s deployment id, sorted by suite name, including every
+page of results. While the list is loading, the tab SHALL show a loading indicator.
+
+For Platform Models the deployment id is `getModelDeploymentId(name)` (the bare model name). For
+applications the deployment id is `getApplicationDeploymentId(view, application)`: public-bucket
+asset applications use `applications/<metadata.path>`; platform-bucket and Entities applications
+use `name`.
 
 #### Scenario: Suites match the entity deployment id
 
-- **WHEN** the entity name is `gpt-4` and suites exist with `deployment_ref.id` or
+- **WHEN** the entity deployment id is `gpt-4` and suites exist with `deployment_ref.id` or
   `mcp_deployment_ref.id` equal to `gpt-4`
 - **THEN** those suites appear in the suite dropdown, sorted by name
 
+#### Scenario: Public-bucket application uses applications path id
+
+- **WHEN** the view is Assets Applications, the application is not on the platform bucket, and
+  `_metadata.path` is `folder/my-app__1.0.0`
+- **THEN** suites are loaded for deployment id `applications/folder/my-app__1.0.0`
+
 #### Scenario: No matching suites
 
-- **WHEN** no suites match the entity name
+- **WHEN** no suites match the entity deployment id
 - **THEN** the tab shows an informational empty state and does not render the suite Trends view
 
 ### Requirement: Suite picker and open in new tab

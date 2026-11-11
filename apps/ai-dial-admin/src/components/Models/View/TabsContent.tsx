@@ -5,7 +5,7 @@ import ContainerStatusBanner from '@/src/components/Deployments/Common/Container
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import EvalTrendsTab from '@/src/components/EntityView/EvalTrends/EvalTrendsTab';
+import EvalTrendsTab from '@/src/components/EvalTrendsTab/EvalTrendsTab';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';

@@ -3,7 +3,7 @@
 import { Dispatch, FC, Fragment, Ref, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
-import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import { getApplicationDeploymentId, getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import ApplicationAssetProperties from '@/src/components/Assets/Entities/Apps/Properties';
 import ResourceFeatures from '@/src/components/Assets/Resources/ResourceFeatures';
 import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
@@ -14,7 +14,7 @@ import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import AssetApplicationAppRoutes from '@/src/components/Assets/ObjectAppRoutes/AssetApplicationAppRoutes';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
-import EvalTrendsTab from '@/src/components/EntityView/EvalTrends/EvalTrendsTab';
+import EvalTrendsTab from '@/src/components/EvalTrendsTab/EvalTrendsTab';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
@@ -106,6 +106,7 @@ const TabsContent: FC<Props> = ({
     (selectedApplication as DialApplicationResource).catalog_schema_id,
     (selectedApplication as DialApplicationResource).catalog_properties,
   );
+  const deploymentId = getApplicationDeploymentId(view, selectedApplication);
 
   const onChangeAsset = (application: DialApplicationResource) => {
     onChangeApplication(application as DialApplication);
@@ -287,9 +288,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Audit && <EntityAudit key={discardKey} entity={selectedApplication} view={view} />}
-      {activeTab === EntityViewTab.EvalTrends && selectedApplication.name && (
-        <EvalTrendsTab deploymentId={selectedApplication.name} />
-      )}
+      {activeTab === EntityViewTab.EvalTrends && deploymentId && <EvalTrendsTab deploymentId={deploymentId} />}
     </>
   );
 };

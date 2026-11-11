@@ -8,7 +8,8 @@ comparing recent runs requires navigating away.
 
 ## What Changes
 
-- Add an **Eval Trends** tab on the admin Models and Applications views when evaluation is enabled.
+- Add an **Eval Trends** tab on Entities and Ai Gateway Models/Applications views when evaluation is
+  enabled.
 - Load that entity’s test suites (matched by deployment / MCP deployment id), let the user pick one,
   open the suite in a new tab, and reuse the existing suite Trends view for the selection.
 - Show the Trends Preview runs badge in the tab body (not on the entity tab line).
@@ -19,7 +20,6 @@ comparing recent runs requires navigating away.
 
 ## Non-goals
 
-- Assets Models / Assets Applications tab lists.
 - Starting a run from the entity Eval Trends tab.
 - Deep-linking the new-tab suite open to the suite’s Trends tab (suite view has no tab query param).
 - Client-side composition of cross-suite pass-rate aggregates from per-run APIs.
@@ -38,8 +38,9 @@ that surface on the entity views (plus the deployment cost strip).
 
 ## Impact
 
-- Tab lists: `getModelsTabs` / `getApplicationTabs` gated by `evaluationEnabled`.
-- Shared tab UI under Models/Applications view `TabsContent`.
+- Tab lists: `getModelsTabs` / `getApplicationTabs` / `getTabsForAsset` (PlatformModels and
+  AssetsApplications) gated by `evaluationEnabled`.
+- Shared tab UI at `components/EvalTrendsTab`, mounted from Models and Applications `TabsContent`.
 - Structured query for `test_suites` filtered by `deployment_ref::id` / `mcp_deployment_ref::id`.
 - Eval API `GET /api/v1/costs/deployment/{id}?from=&to=` for month-to-date and previous-period totals.
 - i18n for the new tab label, toolbar strings, and cost card copy.
