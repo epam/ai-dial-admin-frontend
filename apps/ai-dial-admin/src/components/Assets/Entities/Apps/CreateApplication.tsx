@@ -1,6 +1,7 @@
 'use client';
 
 import { Popup, Step, StepStatus, Steps } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { useRouter } from 'next/navigation';
@@ -31,6 +32,7 @@ import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAssetDestinationError, getAssetPathsFromVersions } from '@/src/utils/validation/asset-version';
 import { ResourceType } from '@/src/types/resource-type';
+import { CODE_APP_SOURCE_TYPE } from '@/src/utils/entities/application-source';
 import {
   getCreateEntityTitle,
   getCreateNotificationDescription,
@@ -167,7 +169,7 @@ const CreateApplication: FC<Props> = ({
   const isSourceValid =
     (source === ASSET_APPLICATION_INTERFACES_SOURCE_TYPE && Object.keys(asset.interfaces ?? {}).length) ||
     (source === 'schema' && !!asset.application_type_schema_id) ||
-    (source === 'code-app' && !!codeAppEditorUrl) ||
+    (source === CODE_APP_SOURCE_TYPE && !!codeAppEditorUrl) ||
     (source === 'endpoints' && !!asset.endpoint && isValidEndpoint(asset.endpoint));
   const isSourceStep = step === CreateStep.Source;
 
@@ -229,7 +231,12 @@ const CreateApplication: FC<Props> = ({
           (isLoading ? (
             <PopupLoader />
           ) : (
-            <div className="flex min-h-0 max-h-[540px] flex-col overflow-auto">
+            <div
+              className={classNames(
+                'flex min-h-0 flex-col',
+                source !== CODE_APP_SOURCE_TYPE && 'max-h-[540px] overflow-auto',
+              )}
+            >
               <ResourceSourceField
                 id="sourceType"
                 label={t(EntitiesI18nKey.SourceType)}

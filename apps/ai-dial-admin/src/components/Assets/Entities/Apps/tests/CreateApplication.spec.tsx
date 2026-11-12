@@ -12,6 +12,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
+import { CODE_APP_SOURCE_TYPE } from '@/src/utils/entities/application-source';
 import CreateApplication from '../CreateApplication';
 
 const mockSourceField = vi.fn();
@@ -40,6 +41,7 @@ vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
   default: (props: {
     entity: { interfaces?: Record<string, unknown> };
     onChange: (entity: { interfaces?: Record<string, unknown> }) => void;
+    onSourceChange: (source: string) => void;
   }) => {
     mockSourceField(props);
     return createElement(
@@ -57,6 +59,8 @@ vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
         },
         'configure interfaces',
       ),
+      createElement('button', { onClick: () => props.onSourceChange(CODE_APP_SOURCE_TYPE) }, 'select code app'),
+      createElement('button', { onClick: () => props.onSourceChange('interfaces') }, 'select interfaces'),
     );
   },
 }));
@@ -160,6 +164,21 @@ describe('CreateApplication', () => {
       }),
     );
     expect(screen.getByText('resource-source-field').parentElement).toHaveClass('max-h-[540px]');
+  });
+
+  test('uses the popup scroll region for Code App and restores the bounded region for Interfaces', async () => {
+    renderCreateApplication();
+    const user = await advanceToSource();
+    const sourceContainer = screen.getByText('resource-source-field').parentElement;
+
+    expect(sourceContainer).toHaveClass('max-h-[540px]', 'overflow-auto');
+    await user.click(screen.getByRole('button', { name: 'select code app' }));
+    expect(sourceContainer).not.toHaveClass('max-h-[540px]');
+    expect(sourceContainer).not.toHaveClass('overflow-auto');
+    expect(sourceContainer?.parentElement?.parentElement).toHaveClass('overflow-auto');
+
+    await user.click(screen.getByRole('button', { name: 'select interfaces' }));
+    expect(sourceContainer).toHaveClass('max-h-[540px]', 'overflow-auto');
   });
 
   test('disables creation until an Interfaces source is configured', async () => {
