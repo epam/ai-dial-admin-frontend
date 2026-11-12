@@ -49,6 +49,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   },
 }));
 
+const getTable = vi.hoisted(() => vi.fn());
+vi.mock('@/src/app/[lang]/tables/actions', () => ({ getTable }));
+
 const formatWith = (col: ColDef | undefined, value: unknown): string =>
   (col?.valueFormatter as (p: ValueFormatterParams) => string)({ value } as ValueFormatterParams);
 
@@ -356,5 +359,56 @@ describe('QueryBuilder :: ResultArea — Export CSV', () => {
     await user.hover(screen.getByRole('button', { name: EXPORT_NAME }));
 
     expect((await screen.findByRole('tooltip')).textContent).toBe('QueryBuilder.ExportCsvSqlHint');
+  });
+});
+
+describe('QueryBuilder :: ResultArea :: access hint', () => {
+  const EMPTY = { columns: [], rows: [] };
+  const restricted = (isRestricted?: boolean) => ({
+    success: true,
+    response: { permissions: { rows_restricted: isRestricted } },
+  });
+
+  test('says no rows match the access when the source reports its rows restricted', async () => {
+    getTable.mockResolvedValue(restricted(true));
+    renderArea({ result: EMPTY, meta: { ...ROW_META, source: 'events' } });
+
+    expect(await screen.findByText('QueryBuilder.NoRowsForAccess')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
+    expect(getTable).toHaveBeenCalledExactlyOnceWith('events');
+  });
+
+  test.each([
+    ['is not restricted', () => getTable.mockResolvedValue(restricted(false))],
+    ['omits the flag', () => getTable.mockResolvedValue(restricted())],
+    ['cannot be read', () => getTable.mockResolvedValue({ success: false })],
+    ['fails to answer', () => getTable.mockRejectedValue(new Error('down'))],
+  ])('keeps the plain empty state when the source %s', async (_name, arrange) => {
+    getTable.mockClear();
+    arrange();
+    renderArea({ result: EMPTY, meta: { ...ROW_META, source: 'events' } });
+
+    await act(async () => {});
+
+    expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.NoRowsForAccess')).not.toBeInTheDocument();
+  });
+
+  test('asks nothing for a SQL run, which names no source', async () => {
+    getTable.mockClear();
+    renderArea({ result: EMPTY, meta: SQL_FALLBACK_META });
+
+    await act(async () => {});
+
+    expect(getTable).not.toHaveBeenCalled();
+  });
+
+  test('asks nothing for a result that has rows', async () => {
+    getTable.mockClear();
+    renderArea({ result: AGG_RESULT, meta: { ...AGG_META, source: 'events' } });
+
+    await act(async () => {});
+
+    expect(getTable).not.toHaveBeenCalled();
   });
 });

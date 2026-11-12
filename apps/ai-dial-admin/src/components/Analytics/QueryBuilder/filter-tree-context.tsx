@@ -4,14 +4,18 @@ import { createContext, useContext } from 'react';
 
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { CallerValue } from '@/src/models/analytics/query-builder';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 
 // The tree is edited in place, so every edit ends by asking the owner to re-render through `refresh`.
 export interface FilterTreeContextValue {
   fields: AnalyticsEntityField[];
   functions: QueryFunction[];
+  callerValues: CallerValue[];
   refresh: () => void;
 }
+
+const NO_CALLER_VALUES: CallerValue[] = [];
 
 export const FilterTreeContext = createContext<FilterTreeContextValue | null>(null);
 
@@ -24,5 +28,10 @@ export const useFilterTree = (): FilterTreeContextValue => {
   if (own) return own;
   if (!builder) throw new Error('useFilterTree must be used within FilterTreeContext or QueryBuilderContext');
 
-  return { fields: builder.state.fields, functions: builder.state.functions, refresh: builder.refresh };
+  return {
+    fields: builder.state.fields,
+    functions: builder.state.functions,
+    callerValues: NO_CALLER_VALUES,
+    refresh: builder.refresh,
+  };
 };

@@ -42,6 +42,7 @@ export enum FilterNodeKind {
 export enum FilterOperandKind {
   Literal = 'literal',
   Function = 'function',
+  Param = 'param',
 }
 
 // One condition. Its left operand is either a schema column (fn = null, named by `field`) or a
@@ -61,6 +62,13 @@ export interface FilterPredicateNode {
   rightKind: FilterOperandKind;
   rightFn: string | null;
   rightArgs: FnArgValue[];
+  rightParam: string | null;
+}
+
+export interface CallerValue {
+  name: string;
+  label: string;
+  description: string;
 }
 
 export interface FilterGroupNode {
@@ -337,6 +345,7 @@ export interface ExecutedQueryMeta {
   aggregateColumns: string[];
   columnLabels: Record<string, string>;
   columnValueClasses: Record<string, ResultValueClass>;
+  source?: string;
 }
 
 export interface ResultColumnClassification {
