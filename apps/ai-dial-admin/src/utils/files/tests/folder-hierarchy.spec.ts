@@ -1,7 +1,7 @@
 import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { describe, expect, test, vi } from 'vitest';
-import { loadFolderHierarchy } from '../folder-hierarchy';
+import { loadFolderHierarchy, shouldRestoreFolderHierarchy } from '../folder-hierarchy';
 
 const createItem = (path: string) =>
   ({ name: path.split('/').at(-1), path, nodeType: DialFileNodeType.ITEM, bucket: BucketType.Public }) as AssetListItem;
@@ -109,5 +109,31 @@ describe('Folder Hierarchy :: loadFolderHierarchy', () => {
       expandedFolders: new Set(),
       filePath: '',
     });
+  });
+});
+
+describe('Folder Hierarchy :: shouldRestoreFolderHierarchy', () => {
+  test('Should restore a nested folder the cache does not hold', () => {
+    expect(shouldRestoreFolderHierarchy('public/team/', { 'public/': [] })).toBe(true);
+  });
+
+  test('Should restore a nested folder when there is no cache object', () => {
+    expect(shouldRestoreFolderHierarchy('public/team/')).toBe(true);
+  });
+
+  test('Should not restore a nested folder whose contents are cached', () => {
+    expect(shouldRestoreFolderHierarchy('public/team/', { 'public/team/': [createItem('public/team/x')] })).toBe(false);
+  });
+
+  test('Should not restore a nested folder cached as empty', () => {
+    expect(shouldRestoreFolderHierarchy('public/team/', { 'public/team/': [] })).toBe(false);
+  });
+
+  test('Should not restore a root folder', () => {
+    expect(shouldRestoreFolderHierarchy('public/', {})).toBe(false);
+  });
+
+  test.each([undefined, null, ''])('Should not restore an empty selection (%s)', (filePath) => {
+    expect(shouldRestoreFolderHierarchy(filePath, {})).toBe(false);
   });
 });
