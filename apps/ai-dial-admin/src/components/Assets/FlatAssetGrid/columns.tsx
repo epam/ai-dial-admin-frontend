@@ -11,6 +11,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getCostObjectOfRecord } from '@/src/utils/policies/path';
 
 const COST_OBJECT_COL_ID = 'costObject';
+const ASSET_ICON_SIZE = 28;
 
 /** Policies and assignments are stored under a cost object, shown as a column instead of a folder. */
 export const isCostObjectView = (view: ApplicationRoute): boolean =>
@@ -21,7 +22,7 @@ const getNameColumn = (view: ApplicationRoute, getHref: EntityHrefGetter, nameHe
   colId: 'name',
   headerName: nameHeader,
   cellRenderer: DisplayNameCellRenderer,
-  cellRendererParams: { typeIcon: ASSET_TYPE_ICONS[view], getHref },
+  cellRendererParams: { typeIcon: ASSET_TYPE_ICONS[view], iconSize: ASSET_ICON_SIZE, getHref },
   filterValueGetter: ({ data }) => displayNameFilterValue(data),
   ...nameColumnSizing,
 });

@@ -10,8 +10,9 @@ import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlat
 import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
 import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ASSETS_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetTabsI18nKey, PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -155,6 +156,7 @@ const FlatAssetGrid: FC<Props> = ({
           emptyDataProps={{ title: emptyState.title, description: emptyState.description }}
           additionalGridOptions={{
             ...(isSelectMode ? MULTI_ROW_SELECTION : {}),
+            rowHeight: ASSETS_ROW_HEIGHT,
             onSelectionChanged,
           }}
           onGridReady={onGridReady}

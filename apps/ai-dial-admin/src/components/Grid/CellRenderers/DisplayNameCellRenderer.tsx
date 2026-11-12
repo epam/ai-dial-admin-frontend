@@ -13,6 +13,7 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
   const showId = Boolean(id) && id !== displayName;
   const iconUrl = params.data?.iconUrl as string | undefined;
   const TypeIcon = params.typeIcon;
+  const iconSize = params.iconSize ?? 40;
   const href = params.getHref?.(params.data);
 
   const renderIcon = () => {
@@ -24,15 +25,15 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
       );
     }
     if (iconUrl) {
-      return <FilledIcon fileUrl={iconUrl} onChange={noop} disabled size={40} />;
+      return <FilledIcon fileUrl={iconUrl} onChange={noop} disabled size={iconSize} />;
     }
     return (
       <Avatar
         name={displayName ?? ''}
         initials={getAvatarInitials(displayName)}
         shape={AvatarShape.Square}
-        size={40}
-        textClassName="dial-h3-text"
+        size={iconSize}
+        textClassName={iconSize < 40 ? 'dial-small-text-semi' : 'dial-h3-text'}
       />
     );
   };

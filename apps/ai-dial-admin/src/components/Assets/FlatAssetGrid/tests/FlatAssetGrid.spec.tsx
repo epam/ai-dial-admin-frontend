@@ -8,6 +8,7 @@ import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import FlatAssetGrid from '../FlatAssetGrid';
+import { getFlatAssetColumns } from '../columns';
 import { FlatAssets } from '../models';
 import { PlatformModalType, usePlatformAssetActions } from '../use-platform-asset-actions';
 
@@ -120,6 +121,17 @@ const renderGrid = (props: Partial<React.ComponentProps<typeof FlatAssetGrid>> =
       {...props}
     />,
   );
+
+describe('FlatAssetGrid :: icon size', () => {
+  test.each([AssetSource.Platform, AssetSource.ConfigFile] as const)('uses 28px entity icons for %s', (source) => {
+    const columns = getFlatAssetColumns(ApplicationRoute.PlatformModels, source, () => undefined, {
+      name: 'Name',
+      costObject: 'Cost object',
+    });
+
+    expect(columns[0].cellRendererParams).toEqual(expect.objectContaining({ iconSize: 28 }));
+  });
+});
 
 describe('FlatAssetGrid :: Platform source', () => {
   const user = userEvent.setup();
