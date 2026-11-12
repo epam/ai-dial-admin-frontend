@@ -3,9 +3,11 @@ import { describe, expect, test } from 'vitest';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { PlatformRoleModelOption, PlatformSharingType } from '../models';
 import {
+  addApplicationLimits,
   addModelLimits,
   applySharingChange,
   clearModelLimits,
+  getApplicationLimitKey,
   getAssetSharingData,
   getAvailableModels,
   getDefaultPlaceholder,
@@ -246,5 +248,42 @@ describe('Platform role model limits', () => {
 
   test('removes a model entry only when the user removes the model', () => {
     expect(removeModelLimit({ modelA: {}, modelB: { week: 30 } }, 'modelA')).toEqual({ modelB: { week: 30 } });
+  });
+});
+
+describe('getApplicationLimitKey', () => {
+  test('keys a public application by its applications resource reference', () => {
+    expect(getApplicationLimitKey('public/team/app/1.0')).toBe('applications/public/team/app/1.0');
+  });
+
+  test('keys a platform application by its name', () => {
+    expect(getApplicationLimitKey('platform/platformApp')).toBe('platformApp');
+  });
+
+  test('keys a config-file application, whose path is already its name, by that name', () => {
+    expect(getApplicationLimitKey('fileApp')).toBe('fileApp');
+  });
+});
+
+describe('addApplicationLimits', () => {
+  test('attaches each picked application under its key with empty limits', () => {
+    expect(addApplicationLimits({ modelA: { day: 1 } }, ['public/app/1.0', 'platform/pa', 'fa'])).toEqual({
+      modelA: { day: 1 },
+      'applications/public/app/1.0': {},
+      pa: {},
+      fa: {},
+    });
+  });
+
+  test('keeps the limits of an application that is already attached', () => {
+    expect(addApplicationLimits({ pa: { minute: 5 } }, ['platform/pa'])).toEqual({ pa: { minute: 5 } });
+  });
+
+  test('collapses a key picked twice into one entry', () => {
+    expect(addApplicationLimits(undefined, ['platform/pa', 'pa'])).toEqual({ pa: {} });
+  });
+
+  test('leaves the limits unchanged for an empty pick', () => {
+    expect(addApplicationLimits({ modelA: {} }, [])).toEqual({ modelA: {} });
   });
 });

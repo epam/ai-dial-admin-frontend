@@ -15,6 +15,7 @@ import AppView from '@/src/components/Assets/Entities/Apps/View';
 
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: vi.fn(),
+  AppsFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({

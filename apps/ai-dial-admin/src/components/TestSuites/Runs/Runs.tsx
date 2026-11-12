@@ -242,7 +242,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const columnDefs = useMemo(
     () => [
-      ...withNameLink(SUITE_RUNS_COLUMN, getRunHref, 'testRunName'),
+      ...withNameLink(SUITE_RUNS_COLUMN, getRunHref, 'testRunName', { isNewTab: true }),
       ACTION_COLUMN(
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonAppearance, ButtonVariant, ButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
@@ -40,7 +40,6 @@ interface Props {
   onPublish?: (displayName: string, description?: string) => void;
   onAttachDataset?: (datasetId: string) => void;
   onBeforeAttach?: () => boolean;
-  datasetTag?: ReactNode;
 }
 
 const HeaderButtons: FC<Props> = ({
@@ -56,7 +55,6 @@ const HeaderButtons: FC<Props> = ({
   onPublish,
   onAttachDataset,
   onBeforeAttach,
-  datasetTag,
 }) => {
   const t = useI18n();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -161,8 +159,6 @@ const HeaderButtons: FC<Props> = ({
           }
         />
       )}
-
-      {datasetTag ? <div className="shrink-0">{datasetTag}</div> : null}
 
       {isImportModalOpen &&
         createPortal(

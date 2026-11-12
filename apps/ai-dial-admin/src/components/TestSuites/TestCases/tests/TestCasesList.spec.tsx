@@ -33,7 +33,6 @@ let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value:
 let capturedRowData: Record<string, unknown>[] | null = null;
 let capturedOnGridReady: ((event: { api: unknown }) => void) | null = null;
 let capturedListLabel: unknown = null;
-let capturedDatasetTag: unknown = null;
 let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
 let capturedTurnActionHandlers: Record<string, (row: any) => void> | null = null;
 let capturedDuplicateOperation: ActionMenuOperationDeclaration<GroupedGridRow> | undefined;
@@ -99,14 +98,12 @@ vi.mock('@/src/components/TestSuites/utils/columns', async (importOriginal) => (
 }));
 
 vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
-  default: ({ selectedTestSuiteId, datasetTag, testCaseCount }: any) => {
-    capturedDatasetTag = datasetTag;
+  default: ({ selectedTestSuiteId, testCaseCount }: any) => {
     capturedTestCaseCount = testCaseCount;
     return (
       <div>
         <div>Header Buttons</div>
         <div>Test Suite ID: {selectedTestSuiteId}</div>
-        <div data-testid="dataset-tag">{datasetTag}</div>
       </div>
     );
   },
@@ -165,7 +162,6 @@ describe('TestCasesList', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
@@ -297,7 +293,6 @@ describe('TestCasesList — dirty tracking', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
@@ -387,7 +382,6 @@ describe('TestCasesList — header and included-only filter', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
@@ -422,7 +416,6 @@ describe('TestCasesList — header and included-only filter', () => {
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.OpenDataset })).toBeInTheDocument();
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeInTheDocument();
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeInTheDocument();
-    expect(screen.getByTestId('dataset-tag').textContent).toBe('');
   });
 
   test('renders included-only switch addon', async () => {
@@ -595,7 +588,6 @@ describe('TestCasesList — multi-turn grouping', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
