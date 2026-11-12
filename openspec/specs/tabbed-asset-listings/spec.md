@@ -114,7 +114,7 @@ Toolsets SHALL show no count after the title. The count SHALL NOT change when th
 The system SHALL show the Create button at the end of the tab row only while the Platform tab is active, and SHALL hide it for a
 read-only admin. It SHALL NOT be shown on the Public tab, which keeps the file manager's own Import / Folder /
 Entity dropdown, nor on the config.json tab, which is read-only. On Platform-only listings (no tab row) the
-Create button SHALL still be shown at the end of the (otherwise empty) tab row.
+Create button SHALL be shown at the end of the header.
 
 #### Scenario: Platform tab offers Create
 
