@@ -2,13 +2,16 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Page from '@/src/app/[lang]/sessions/[id]/page';
 import {
+  getEnrichmentTagOrders,
   getSessionDetail,
   getSessionFeedback,
   getHopBodyGrants,
   getSessionsSchema,
+  getSessionsSource,
 } from '@/src/app/[lang]/sessions/actions';
-import { SessionsField } from '@/src/models/analytics/sessions-trace';
+import { SessionsRole, SessionsSourceProblem } from '@/src/models/analytics/sessions-source';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 vi.mock('@/src/app/[lang]/sessions/actions');
 vi.mock('@/src/server/analytics/analytics-access');
@@ -39,6 +42,7 @@ const DETAIL_ROW = {
   avg_duration_ms: 0,
   deployments: ['anthropic.claude-opus-4-8'],
   traces: ['0a3f1d9c8b7e6a5f'],
+  client_session_source: 'chat_id',
   'session_insights.title': 'Refund policy for EU orders',
 };
 
@@ -47,6 +51,8 @@ const detail = () => getSessionDetail as unknown as ReturnType<typeof vi.fn>;
 const feedback = () => getSessionFeedback as unknown as ReturnType<typeof vi.fn>;
 const schema = () => getSessionsSchema as unknown as ReturnType<typeof vi.fn>;
 const availability = () => getHopBodyGrants as unknown as ReturnType<typeof vi.fn>;
+const sourceOf = () => getSessionsSource as unknown as ReturnType<typeof vi.fn>;
+const tagOrders = () => getEnrichmentTagOrders as unknown as ReturnType<typeof vi.fn>;
 
 const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'sessions' }));
 
@@ -57,6 +63,9 @@ const componentName = (node: Awaited<ReturnType<typeof render>>): string => {
   return type?.name ?? '';
 };
 
+const propsOf = (node: Awaited<ReturnType<typeof render>>): Record<string, unknown> =>
+  (node as unknown as { props: Record<string, unknown> }).props;
+
 const grantsOfNode = (node: Awaited<ReturnType<typeof render>>): Record<string, boolean> =>
   (node as unknown as { props: { bodyGrants: Record<string, boolean> } }).props.bodyGrants;
 
@@ -64,7 +73,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   forbidden().mockResolvedValue(false);
   detail().mockResolvedValue({ success: true, response: { session: DETAIL_ROW } });
-  feedback().mockResolvedValue({ success: true, response: { rows: [], total: 0 } });
+  feedback().mockResolvedValue({
+    success: true,
+    response: { rows: [], total: 0, isCommentTextReadable: false, isAvailable: true },
+  });
+  sourceOf().mockResolvedValue({ source: defaultSessionsSource(), failure: null });
+  tagOrders().mockResolvedValue({});
   schema().mockResolvedValue({ success: true, response: { fields: SCHEMA_FIELDS } });
   availability().mockResolvedValue({
     success: true,
@@ -106,6 +120,15 @@ describe('session detail route', () => {
     expect(componentName(await render(CHAT_ID))).toBe('SessionDetailError');
   });
 
+  test('a rejected feedback query still renders the session', async () => {
+    feedback().mockRejectedValue(new TypeError('fetch failed'));
+
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('SessionDetailView');
+    expect(propsOf(node).feedback).toBeNull();
+  });
+
   test('a failed feedback query still renders the session', async () => {
     feedback().mockResolvedValue({ success: false, errorMessage: 'boom' });
 
@@ -117,7 +140,7 @@ describe('session detail route', () => {
 
     await render(raw);
 
-    expect(detail()).toHaveBeenCalledWith('sessions/eRxsos/chathub-claude4', expect.anything());
+    expect(detail()).toHaveBeenCalledWith('sessions/eRxsos/chathub-claude4');
   });
 
   test('decodes an id carrying percent-encoded query text', async () => {
@@ -125,49 +148,81 @@ describe('session detail route', () => {
 
     await render(raw);
 
-    expect(detail()).toHaveBeenCalledWith('chat/en/give%20me%20gdp-1786535692111', expect.anything());
+    expect(detail()).toHaveBeenCalledWith('chat/en/give%20me%20gdp-1786535692111');
   });
 
-  test('requests the session and its feedback for the same id', async () => {
+  test('reads the rated responses over the session scope and its own window', async () => {
     await render(CHAT_ID);
 
-    expect(detail()).toHaveBeenCalledWith(
-      CHAT_ID,
-      expect.arrayContaining([expect.objectContaining({ name: SessionsField.ChatId })]),
+    expect(feedback()).toHaveBeenCalledWith(
+      { id: CHAT_ID, source: 'chat_id' },
+      DETAIL_ROW.first_request_time,
+      DETAIL_ROW.last_request_time,
     );
-    expect(feedback()).toHaveBeenCalledWith(CHAT_ID);
   });
 
-  // The builder is handed the schema's fields, not their names: the insight half of the select is discovered
-  // from the namespace, and the panel reads each column's label, hint and type off the same report.
-  test('builds the detail query from the fields the schema reports', async () => {
-    const fields = [{ name: SessionsField.ChatId, source: 'chat_id', type: 'string' }];
+  test('reads no feedback for a session that does not exist', async () => {
+    detail().mockResolvedValue({ success: true, response: { session: null } });
+
+    await expect(render(CHAT_ID)).rejects.toBe(notFoundError);
+    expect(feedback()).not.toHaveBeenCalled();
+  });
+
+  test('passes the resolved source and one panel per enrichment to the view', async () => {
+    const fields = [
+      ...SCHEMA_FIELDS,
+      { name: 'quality.verdict', type: 'string', source: 'verdict', tag: 'risk' },
+      { name: 'quality.engine', type: 'string', source: 'engine', tag: 'system' },
+    ];
     schema().mockResolvedValue({ success: true, response: { fields } });
+    sourceOf().mockResolvedValue({
+      source: { ...defaultSessionsSource(), enrichments: ['session_insights', 'quality'] },
+      failure: null,
+    });
+    tagOrders().mockResolvedValue({ quality: ['system'] });
+
+    const props = propsOf(await render(CHAT_ID));
+    const panels = props.enrichmentPanels as { namespace: string; groups: { tag: string }[] }[];
+
+    expect(tagOrders()).toHaveBeenCalledWith(['session_insights', 'quality']);
+    expect(panels.map(({ namespace }) => namespace)).toEqual(['session_insights', 'quality']);
+    expect(panels[1].groups.map(({ tag }) => tag)).toEqual(['risk', 'system']);
+    expect(props.enrichmentProvenance).toEqual({ session_insights: 'insights', quality: expect.any(String) });
+    expect(props.source).toMatchObject({ baseTable: 'sessions' });
+  });
+
+  test('asks no tag order of the session rating enrichment', async () => {
+    sourceOf().mockResolvedValue({
+      source: {
+        ...defaultSessionsSource(),
+        enrichments: ['session_insights', 'session_ratings'],
+        ratingEnrichment: 'session_ratings',
+      },
+      failure: null,
+    });
 
     await render(CHAT_ID);
 
-    expect(detail()).toHaveBeenCalledWith(CHAT_ID, fields);
+    expect(tagOrders()).toHaveBeenCalledWith(['session_insights']);
   });
 
-  test('renders the session when the schema cannot be read', async () => {
+  test('renders the session without enrichment panels when the schema cannot be read', async () => {
     schema().mockResolvedValue({ success: false });
 
-    expect(componentName(await render(CHAT_ID))).toBe('SessionDetailView');
-    expect(detail()).toHaveBeenCalledWith(CHAT_ID, undefined);
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('SessionDetailView');
+    expect(propsOf(node).enrichmentPanels).toEqual([]);
   });
 
-  // The request layer rethrows a connection failure rather than reporting it in the payload, so a rejected
-  // schema read would reject the whole wave and error a session the required-only projection resolves.
   test('renders the session when the schema read rejects', async () => {
     schema().mockRejectedValue(new TypeError('fetch failed'));
 
     expect(componentName(await render(CHAT_ID))).toBe('SessionDetailView');
-    expect(detail()).toHaveBeenCalledWith(CHAT_ID, undefined);
+    expect(detail()).toHaveBeenCalledWith(CHAT_ID);
   });
 
-  // Only the session query depends on the schema. Queueing the feedback and turn reads behind it would
-  // add a round trip to every detail view for nothing.
-  test('issues the feedback and turn reads without waiting for the schema', async () => {
+  test('issues the session read without waiting for the schema', async () => {
     let releaseSchema: (value: unknown) => void = () => undefined;
     schema().mockReturnValue(
       new Promise((resolve) => {
@@ -176,15 +231,46 @@ describe('session detail route', () => {
     );
 
     const pending = render(CHAT_ID);
-    // The route awaits the access check and the route params before the read wave, so a single microtask
-    // is not enough to reach it.
-    await vi.waitFor(() => expect(feedback()).toHaveBeenCalledWith(CHAT_ID));
-    expect(detail()).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(detail()).toHaveBeenCalledWith(CHAT_ID));
 
     releaseSchema({ success: true, response: { fields: SCHEMA_FIELDS } });
-    await pending;
 
-    expect(detail()).toHaveBeenCalledOnce();
+    expect(componentName(await pending)).toBe('SessionDetailView');
+  });
+
+  test('renders the session when the tag orders cannot be read', async () => {
+    tagOrders().mockRejectedValue(new TypeError('fetch failed'));
+
+    expect(componentName(await render(CHAT_ID))).toBe('SessionDetailView');
+  });
+
+  test('a required role the schema does not report fails the page with its name before any session query', async () => {
+    sourceOf().mockResolvedValue({ source: null, failure: { role: SessionsRole.Time, field: 'ended_at' } });
+
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('SessionsSourceError');
+    expect(propsOf(node).failure).toEqual({ role: SessionsRole.Time, field: 'ended_at' });
+    expect(detail()).not.toHaveBeenCalled();
+    expect(schema()).not.toHaveBeenCalled();
+    expect(feedback()).not.toHaveBeenCalled();
+  });
+
+  test('a setting that cannot be read fails the page with the source error before any session query', async () => {
+    sourceOf().mockResolvedValue({ source: null, failure: null, problem: SessionsSourceProblem.SettingUnreadable });
+
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('SessionsSourceError');
+    expect(propsOf(node).problem).toBe(SessionsSourceProblem.SettingUnreadable);
+    expect(detail()).not.toHaveBeenCalled();
+  });
+
+  test('a source that cannot be resolved renders the error state before any session query', async () => {
+    sourceOf().mockRejectedValue(new TypeError('fetch failed'));
+
+    expect(componentName(await render(CHAT_ID))).toBe('SessionDetailError');
+    expect(detail()).not.toHaveBeenCalled();
   });
 
   // The bodies are one region of a trace. A session whose header, panels, figures and trace listing all

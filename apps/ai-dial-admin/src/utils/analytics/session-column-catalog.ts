@@ -10,14 +10,13 @@ import {
   SESSION_VALUE_FLOATING_FILTER,
   CURATED_COMPOSED_FIELDS,
   DATE_FIELD_TYPES,
-  ENRICHMENT_PROVENANCE,
+  ENRICHMENT_PROVENANCE_PALETTE,
   IDENTITY_ENRICHMENT_FIELDS,
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
   HOP_REQUEST_BODY_FIELDS,
   HOP_REQUEST_REBUILD_FIELD,
   HOP_RESPONSE_BODY_FIELDS,
-  INSIGHTS_ENRICHMENT,
   SPAN_BASE_FIELDS,
   SPAN_UNREADABLE_FIELDS,
   UNTAGGED_SPAN_FIELD_TAG,
@@ -37,6 +36,7 @@ import {
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
 import { columnHeaderName, enrichmentOf, unqualified } from '@/src/utils/analytics/session-enrichment';
+import { enrichmentNamespacesOf, ratingEnrichmentOf } from '@/src/utils/analytics/sessions-source';
 
 const UNFILTERABLE: Partial<ColDef> = { filter: false, floatingFilter: false };
 
@@ -52,50 +52,26 @@ const consumedFields = (columns: ColDef[]): Set<string> =>
 // likewise not free to project, and likewise better fetched on demand.
 const isSourceBacked = (field: AnalyticsEntityField): boolean => field.name === field.source;
 
-// An enrichment this frontend cannot name takes the unattributed colour rather than a fourth hue. Shared
-// with `columnProvenance` so the provenance line and the grid band attribute a namespace identically.
-const enrichmentProvenance = (enrichment: string): ColumnProvenance =>
-  ENRICHMENT_PROVENANCE[enrichment] ?? ColumnProvenance.Other;
+export const enrichmentProvenance = (enrichment: string, fields: AnalyticsEntityField[] = []): ColumnProvenance => {
+  const rating = ratingEnrichmentOf(fields);
 
-export const composedSourceEntities = (
-  baseEntity: string,
-  fields: AnalyticsEntityField[] = [],
-  queriedEntities: ProvenanceEntity[] = [],
-): ProvenanceEntity[] => {
-  const namespaces: string[] = [];
+  if (enrichment === rating) {
+    return ColumnProvenance.Feedback;
+  }
 
-  fields.forEach((field) => {
-    const enrichment = enrichmentOf(field.name);
-    if (enrichment && !namespaces.includes(enrichment)) {
-      namespaces.push(enrichment);
-    }
-  });
+  const position = enrichmentNamespacesOf(fields)
+    .filter((namespace) => namespace !== rating)
+    .indexOf(enrichment);
 
-  // An entity can reach here twice: the day ratings arrive as an enrichment, the schema reports the
-  // namespace while the queried list still names the table. Naming it once keeps the line honest and the
-  // rendered keys unique — and the declared attribution wins, because the derived one falls back to the
-  // unattributed colour for any namespace this frontend cannot name, which would paint the line grey while
-  // the grid band paints the same source amber.
-  const declared = new Map(queriedEntities.map((entity) => [entity.name, entity]));
-
-  const entities: ProvenanceEntity[] = [
-    { name: baseEntity, provenance: ColumnProvenance.Sessions },
-    ...namespaces.map((name) => declared.get(name) ?? { name, provenance: enrichmentProvenance(name) }),
-    ...queriedEntities,
-  ];
-
-  const seen = new Set<string>();
-
-  return entities.filter((entity) => {
-    if (seen.has(entity.name)) {
-      return false;
-    }
-    seen.add(entity.name);
-    return true;
-  });
+  return ENRICHMENT_PROVENANCE_PALETTE[position] ?? ColumnProvenance.Other;
 };
 
-export const columnProvenance = (fieldName: string): ColumnProvenance => {
+export const composedSourceEntities = (baseEntity: string, fields: AnalyticsEntityField[] = []): ProvenanceEntity[] => [
+  { name: baseEntity, provenance: ColumnProvenance.Sessions },
+  ...enrichmentNamespacesOf(fields).map((name) => ({ name, provenance: enrichmentProvenance(name, fields) })),
+];
+
+export const columnProvenance = (fieldName: string, fields: AnalyticsEntityField[] = []): ColumnProvenance => {
   const composed = COMPOSED_COLUMN_PROVENANCE[fieldName];
   if (composed) {
     return composed;
@@ -106,7 +82,7 @@ export const columnProvenance = (fieldName: string): ColumnProvenance => {
     return ColumnProvenance.Sessions;
   }
 
-  return enrichmentProvenance(enrichment);
+  return enrichmentProvenance(enrichment, fields);
 };
 
 // `heavy` is deliberately not a test here: it is a transfer-cost hint, and it governs whether a field is
@@ -120,8 +96,12 @@ export const columnProvenance = (fieldName: string): ColumnProvenance => {
 const isOfferable = (field: AnalyticsEntityField, consumed: Set<string>): boolean =>
   !NON_SCALAR_FIELD_TYPES.includes(field.type) && !consumed.has(field.name);
 
-export const offerableSchemaFields = (curated: ColDef[], fields: AnalyticsEntityField[] = []): string[] => {
-  const consumed = consumedFields(curated);
+export const offerableSchemaFields = (
+  curated: ColDef[],
+  fields: AnalyticsEntityField[] = [],
+  composed: string[] = [],
+): string[] => {
+  const consumed = new Set([...consumedFields(curated), ...composed]);
 
   return fields.filter((field) => isOfferable(field, consumed)).map((field) => field.name);
 };
@@ -228,8 +208,12 @@ const toCatalogColumn = (field: AnalyticsEntityField): ColDef => ({
   hide: true,
 });
 
-export const buildSessionColumnCatalog = (curated: ColDef[], fields: AnalyticsEntityField[] = []): ColDef[] => {
-  const offerable = new Set(offerableSchemaFields(curated, fields));
+export const buildSessionColumnCatalog = (
+  curated: ColDef[],
+  fields: AnalyticsEntityField[] = [],
+  composed: string[] = [],
+): ColDef[] => {
+  const offerable = new Set(offerableSchemaFields(curated, fields, composed));
 
   return [...curated, ...fields.filter((field) => offerable.has(field.name)).map(toCatalogColumn)];
 };
@@ -242,7 +226,7 @@ export const sessionColumnGroups = (catalog: ColDef[], fields: AnalyticsEntityFi
 
   catalog.forEach((column) => {
     const fieldName = column.field as string;
-    const provenance = columnProvenance(fieldName);
+    const provenance = columnProvenance(fieldName, fields);
     const source = enrichmentOf(fieldName);
     const tag = tagByField.get(fieldName) ?? '';
     // Keyed on the source too, not just the origin: every enrichment this frontend cannot name shares the
@@ -368,7 +352,7 @@ export const spanFields = (schemaFields: AnalyticsEntityField[] = []): SpanField
 // the usage panel states in headline form is still stated in full here, because the headline rounds it.
 export const sessionFields = (schemaFields: AnalyticsEntityField[] = []): SpanFieldSet => {
   const isRead = ({ name, heavy }: AnalyticsEntityField): boolean =>
-    (!heavy || name === SessionsField.Traces) && enrichmentOf(name) !== INSIGHTS_ENRICHMENT;
+    (!heavy || name === SessionsField.Traces) && !enrichmentOf(name);
 
   return {
     names: schemaFields.filter(isRead).map(({ name }) => name),

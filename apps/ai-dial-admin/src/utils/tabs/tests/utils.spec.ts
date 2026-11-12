@@ -46,6 +46,7 @@ import {
   getRouteTabs,
   getRunTabs,
   getSystemPropertiesTabs,
+  sessionsSourceTab,
   getTabsForAsset,
   getTestSuiteRequestTemplateTabs,
   getTestSuiteTabs,
@@ -586,6 +587,15 @@ describe('Entities :: tabs', () => {
       globalInterceptorsTab(t),
       rateLimitScheduleTab(t),
       spendingLimitsTab(t),
+    ]);
+  });
+
+  test('adds the sessions source tab to system properties when analytics is enabled', () => {
+    expect(getSystemPropertiesTabs(t, true)).toEqual([
+      globalInterceptorsTab(t),
+      rateLimitScheduleTab(t),
+      spendingLimitsTab(t),
+      sessionsSourceTab(t),
     ]);
   });
 

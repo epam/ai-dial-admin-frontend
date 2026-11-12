@@ -6,9 +6,19 @@ import {
   SessionInsightsState,
   SessionsField,
 } from '@/src/models/analytics/sessions-trace';
+import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { readableWords } from '@/src/utils/analytics/session-formatting';
-import { sessionInsightsState, insightColumnsOf, insightValueText } from '@/src/utils/analytics/session-insights';
+import {
+  enrichmentColumnsOf,
+  enrichmentPanelsOf,
+  enrichmentTagLabelKey,
+  groupFieldsByTag,
+  insightValueText,
+  sessionInsightsState,
+} from '@/src/utils/analytics/session-insights';
+
+const NS = 'session_insights';
 
 const row = (fields: Partial<SessionDetailRow> = {}): SessionDetailRow =>
   ({ client_session_id: 'Lrr0e6L5bpTND3IY_dN0_', ...fields }) as SessionDetailRow;
@@ -27,9 +37,9 @@ const column = (name: string, overrides: Partial<SessionInsightField> = {}): Ses
   ...overrides,
 });
 
-describe('insightColumnsOf', () => {
-  test('keeps only the columns the insight enrichment exposes', () => {
-    const columns = insightColumnsOf([
+describe('enrichmentColumnsOf', () => {
+  test('keeps only the columns of the named enrichment', () => {
+    const columns = enrichmentColumnsOf(NS, [
       schemaField('total_tokens'),
       schemaField('session_insights.language'),
       schemaField('deployment_ref.display_name'),
@@ -40,7 +50,7 @@ describe('insightColumnsOf', () => {
 
   // The point of deriving the set from the schema: an enrichment that gains a column needs no release here.
   test('keeps a column no frontend list enumerates', () => {
-    const columns = insightColumnsOf([schemaField('session_insights.some_future_signal')]);
+    const columns = enrichmentColumnsOf(NS, [schemaField('session_insights.some_future_signal')]);
 
     expect(columns.map(({ name }) => name)).toEqual(['session_insights.some_future_signal']);
   });
@@ -48,7 +58,7 @@ describe('insightColumnsOf', () => {
   test.each([AnalyticsFieldType.Object, AnalyticsFieldType.Array, AnalyticsFieldType.Map])(
     'drops a %s column, which the panel could not render as a value',
     (type) => {
-      const columns = insightColumnsOf([
+      const columns = enrichmentColumnsOf(NS, [
         schemaField('session_insights.topic'),
         schemaField('session_insights.non_scalar', { type }),
       ]);
@@ -58,7 +68,7 @@ describe('insightColumnsOf', () => {
   );
 
   test('takes the label and the hint from what the schema reports', () => {
-    const [resolved] = insightColumnsOf([
+    const [resolved] = enrichmentColumnsOf(NS, [
       schemaField('session_insights.risk_level', { display_name: 'Risk · Level', description: 'Severity.' }),
     ]);
 
@@ -66,13 +76,13 @@ describe('insightColumnsOf', () => {
   });
 
   test('labels a column the schema does not name from its own field name', () => {
-    const [resolved] = insightColumnsOf([schemaField('session_insights.resolution_status')]);
+    const [resolved] = enrichmentColumnsOf(NS, [schemaField('session_insights.resolution_status')]);
 
     expect(resolved.label).toBe('Resolution status');
   });
 
   test('preserves the schema order', () => {
-    const columns = insightColumnsOf([
+    const columns = enrichmentColumnsOf(NS, [
       schemaField('session_insights.summary'),
       schemaField('session_insights.language'),
       schemaField('session_insights.topic'),
@@ -86,8 +96,122 @@ describe('insightColumnsOf', () => {
   });
 
   test('reports nothing for an instance whose schema carries no enrichment', () => {
-    expect(insightColumnsOf([schemaField('total_tokens')])).toEqual([]);
-    expect(insightColumnsOf()).toEqual([]);
+    expect(enrichmentColumnsOf(NS, [schemaField('total_tokens')])).toEqual([]);
+    expect(enrichmentColumnsOf(NS)).toEqual([]);
+  });
+});
+
+describe('enrichmentColumnsOf — tags', () => {
+  test('carries the tag the schema reports and omits an absent one', () => {
+    const columns = enrichmentColumnsOf(NS, [
+      schemaField(`${NS}.topic`, { tag: 'insight' }),
+      schemaField(`${NS}.language`),
+    ]);
+
+    expect(columns[0].tag).toBe('insight');
+    expect(columns[1]).not.toHaveProperty('tag');
+  });
+});
+
+describe('groupFieldsByTag', () => {
+  const tagged = (name: string, tag?: string) => column(name, tag ? { tag } : {});
+  const tagsOf = (fields: ReturnType<typeof tagged>[], order?: string[]) =>
+    groupFieldsByTag(fields, order).map(({ tag }) => tag);
+
+  test('orders the groups by the declared tag order', () => {
+    expect(tagsOf([tagged('a', 'quality'), tagged('b', 'insight')], ['insight', 'quality'])).toEqual([
+      'insight',
+      'quality',
+    ]);
+  });
+
+  test('keeps a tag the declared order omits, after the declared ones, with system last', () => {
+    const fields = [tagged('a', 'system'), tagged('b', 'risk'), tagged('c', 'insight')];
+
+    expect(tagsOf(fields, ['insight', 'system'])).toEqual(['insight', 'risk', 'system']);
+  });
+
+  test('orders undeclared tags by their first field without a declared order', () => {
+    expect(tagsOf([tagged('a', 'risk'), tagged('b'), tagged('c', 'risk')])).toEqual(['risk', '']);
+  });
+
+  test('holds every field of a tag in its group, in schema order', () => {
+    const [group] = groupFieldsByTag([tagged('a', 'risk'), tagged('b', 'risk')]);
+
+    expect(group.fields.map(({ name }) => name)).toEqual(['a', 'b']);
+  });
+
+  test('ignores a declared tag no field carries', () => {
+    expect(tagsOf([tagged('a', 'risk')], ['insight'])).toEqual(['risk']);
+  });
+
+  test('returns no groups for no fields', () => {
+    expect(groupFieldsByTag([])).toEqual([]);
+  });
+});
+
+describe('enrichmentPanelsOf', () => {
+  const RATING = ['rate_pos_count', 'rate_zero_count', 'rate_neg_count'].map((name) =>
+    schemaField(`session_ratings.${name}`, { type: AnalyticsFieldType.Integer }),
+  );
+
+  test('renders one panel per enrichment namespace, in schema order, each with its own fields', () => {
+    const panels = enrichmentPanelsOf([
+      schemaField('total_tokens'),
+      schemaField('quality.score'),
+      schemaField(`${NS}.topic`),
+      schemaField('quality.verdict'),
+    ]);
+
+    expect(panels.map(({ namespace, fields }) => [namespace, fields.map(({ name }) => name)])).toEqual([
+      ['quality', ['quality.score', 'quality.verdict']],
+      [NS, [`${NS}.topic`]],
+    ]);
+  });
+
+  test('titles a panel by its namespace', () => {
+    expect(enrichmentPanelsOf([schemaField('quality.score')])[0].title).toBe('quality');
+  });
+
+  test('renders no panel for the session rating enrichment', () => {
+    const panels = enrichmentPanelsOf([...RATING, schemaField(`${NS}.topic`)]);
+
+    expect(panels.map(({ namespace }) => namespace)).toEqual([NS]);
+  });
+
+  test('groups a panel by the declared tag order of its own namespace', () => {
+    const [panel] = enrichmentPanelsOf(
+      [
+        schemaField(`${NS}.engine`, { tag: 'system' }),
+        schemaField(`${NS}.risk`, { tag: 'risk' }),
+        schemaField(`${NS}.topic`, { tag: 'insight' }),
+      ],
+      { [NS]: ['insight', 'system'], other: ['risk'] },
+    );
+
+    expect(panel.groups.map(({ tag }) => tag)).toEqual(['insight', 'risk', 'system']);
+  });
+
+  test('renders no panel for a namespace with no scalar field', () => {
+    expect(enrichmentPanelsOf([schemaField('quality.blob', { type: AnalyticsFieldType.Object })])).toEqual([]);
+  });
+
+  test('renders no panel without a schema', () => {
+    expect(enrichmentPanelsOf()).toEqual([]);
+  });
+});
+
+describe('enrichmentTagLabelKey', () => {
+  test('labels a session tag with its session key', () => {
+    expect(enrichmentTagLabelKey('insight')).toBe(SessionsTraceI18nKey.TagInsight);
+  });
+
+  test('falls back to the hop-log tag vocabulary', () => {
+    expect(enrichmentTagLabelKey('tracing')).toBe(SessionsTraceI18nKey.SpanTagTracing);
+  });
+
+  test('reports no key for a tag neither vocabulary knows', () => {
+    expect(enrichmentTagLabelKey('risk')).toBeUndefined();
   });
 });
 

@@ -13,10 +13,12 @@ const PERIOD: SessionPeriodSummary = {
 interface Options {
   period?: SessionPeriodSummary | null;
   periodLabel?: string;
+  hasCost?: boolean;
+  hasRatings?: boolean;
 }
 
-const renderSummary = ({ period = PERIOD, periodLabel = '7d' }: Options = {}) =>
-  render(<SessionsSummary period={period} periodLabel={periodLabel} />);
+const renderSummary = ({ period = PERIOD, periodLabel = '7d', hasCost, hasRatings }: Options = {}) =>
+  render(<SessionsSummary period={period} periodLabel={periodLabel} hasCost={hasCost} hasRatings={hasRatings} />);
 
 const srOnlyTexts = (container: HTMLElement) =>
   Array.from(container.querySelectorAll('.sr-only')).map((node) => node.textContent);
@@ -161,5 +163,36 @@ describe('SessionsSummary', () => {
     expect(screen.getByText('$0')).toBeInTheDocument();
     expect(screen.queryByText('—')).not.toBeInTheDocument();
     expect(screen.queryByTitle(SessionsTraceI18nKey.SummaryUnavailableHint)).not.toBeInTheDocument();
+  });
+});
+
+describe('SessionsSummary :: the bound source', () => {
+  test('shows every pill on the default binding', () => {
+    renderSummary();
+
+    expect(screen.getAllByRole('group')).toHaveLength(4);
+  });
+
+  test('drops the cost pill without a Cost role', () => {
+    renderSummary({ hasCost: false });
+
+    expect(screen.getByText('212')).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryCost)).not.toBeInTheDocument();
+    expect(screen.queryByText('$654')).not.toBeInTheDocument();
+  });
+
+  test('drops the rated and negative pills without a rating enrichment', () => {
+    renderSummary({ hasRatings: false });
+
+    expect(screen.getByText('$654')).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryRated)).not.toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryWith)).not.toBeInTheDocument();
+  });
+
+  test('keeps the session count alone with neither', () => {
+    renderSummary({ hasCost: false, hasRatings: false });
+
+    expect(screen.getAllByRole('group')).toHaveLength(1);
+    expect(pillFor(SessionsTraceI18nKey.SummarySessions)).toHaveTextContent('212');
   });
 });

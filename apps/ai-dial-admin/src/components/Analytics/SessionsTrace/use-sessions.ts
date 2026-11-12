@@ -25,6 +25,7 @@ import {
   FeedbackFilter,
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import {
   catalogValueTypes,
   filterableColumnFields,
@@ -43,14 +44,6 @@ import { timePeriodLabel } from '@/src/utils/time-filter/period-label';
 const filterKey = ({ search, startMs, endMs, feedback }: SessionFilters): string =>
   [search, startMs, endMs, feedback].join('|');
 
-// The ids the first page of a result resolved, held for the rest of that result's pages. It stays in the
-// browser: the set is resolved under the caller's token, so a server-side cache keyed on the filter state
-// would narrow one caller's result by ids another caller's token selected.
-interface CandidateIds {
-  key: string;
-  ids: string[];
-}
-
 // Keyed on everything the resolution depends on — the period and the column filters — so a new result
 // resolves its own sets rather than inheriting one that no longer describes it.
 interface ResolvedArrayFilters {
@@ -61,7 +54,7 @@ interface ResolvedArrayFilters {
 const arrayFilterKey = (filters: SessionFilters, columnFilters: SessionColumnFilter[]): string =>
   JSON.stringify([filters.startMs, filters.endMs, columnFilters]);
 
-export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
+export const useSessions = (schemaFields: AnalyticsEntityField[] | null | undefined, source: SessionsSource) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
@@ -72,7 +65,6 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
   const [period, setPeriod] = useState<SessionPeriodSummary | null>(null);
   const [isEmptyResult, setIsEmptyResult] = useState(false);
   const [isFirstPageLoading, setIsFirstPageLoading] = useState(true);
-  const [isFeedbackCapped, setIsFeedbackCapped] = useState(false);
 
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
@@ -95,14 +87,14 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
   const key = filterKey(filters);
 
   const modelScope: SessionModelScope = useMemo(() => {
-    const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields ?? []);
+    const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields ?? [], source);
     return {
       sortableFields: sortableColumnFields(columns),
       filterableFields: filterableColumnFields(columns),
       valueTypes: catalogValueTypes(schemaFields ?? []),
       projectableFields: projectableSchemaFields(columns, schemaFields ?? []),
     };
-  }, [schemaFields, t]);
+  }, [schemaFields, source, t]);
 
   // The fields whose columns must be re-fetched when revealed, for the two different reasons a page can lack
   // one: an enrichment field was never joined, and a heavy field was deliberately left out of the projection.
@@ -115,7 +107,6 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
     [modelScope],
   );
 
-  const candidateRef = useRef<CandidateIds | null>(null);
   const arrayFilterRef = useRef<ResolvedArrayFilters | null>(null);
 
   // The filter state the page is currently showing. A request carries the key it was issued under, so a
@@ -135,10 +126,8 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
         const isFirstPage = startRow === 0;
         const sort = translateSessionSortModel(params.sortModel, modelScope);
         const columnFilters = translateSessionFilterModel(params.filterModel as SessionGridFilterModel, modelScope);
-        // A later page reuses the ids the first page of this result resolved; a stale set from a previous
-        // filter state is not sent, because the first page of the new one resolves its own.
-        const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
-        // Same rule for the resolved value sets, on their own key.
+        // A later page reuses the value sets the first page of this result resolved; a stale set from a
+        // previous filter state is not sent, because the first page of the new one resolves its own.
         const arrayKey = arrayFilterKey(filters, columnFilters);
         const arrayFilters =
           !isFirstPage && arrayFilterRef.current?.key === arrayKey ? arrayFilterRef.current.filters : undefined;
@@ -172,7 +161,6 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
             visibleEnrichmentFields,
             offset: startRow,
             limit: endRow - startRow,
-            ...(chatIds ? { chatIds } : {}),
             ...(arrayFilters ? { arrayFilters } : {}),
           });
 
@@ -181,9 +169,7 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
           const page = result.response as SessionsPage | undefined;
 
           if (isFirstPage) {
-            candidateRef.current = page?.candidates ? { key, ids: page.candidates.ids } : null;
             arrayFilterRef.current = page?.arrayFilters ? { key: arrayKey, filters: page.arrayFilters } : null;
-            setIsFeedbackCapped(Boolean(page?.candidates?.isCapped));
             // Nothing cancels a request whose filter state has moved on, so a slow response can land after
             // the period changed and put the previous period's figures under the new caption — the exact
             // mismatch clearing them was meant to prevent. Only the current filter state may set them.
@@ -236,7 +222,6 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
         gridApi?.getFilterModel() as SessionGridFilterModel,
         modelScope,
       );
-      const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
       const arrayKey = arrayFilterKey(filters, columnFilters);
       const arrayFilters = arrayFilterRef.current?.key === arrayKey ? arrayFilterRef.current.filters : undefined;
 
@@ -244,13 +229,12 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
         ...filters,
         field: fieldName,
         columnFilters,
-        ...(chatIds ? { chatIds } : {}),
         ...(arrayFilters ? { arrayFilters } : {}),
       });
 
       return result.success ? { ...result, response: result.response ?? [] } : result;
     },
-    [filters, gridApi, key, modelScope],
+    [filters, gridApi, modelScope],
   );
 
   const gridContext: SessionGridContext = useMemo(() => ({ requestFieldValues }), [requestFieldValues]);
@@ -321,7 +305,6 @@ export const useSessions = (schemaFields?: AnalyticsEntityField[] | null) => {
     isPeriodPending: period === null && isFirstPageLoading,
     isEmptyResult,
     isFirstPageLoading,
-    isFeedbackCapped,
     hasLoadError,
     search,
     onSearchChange,

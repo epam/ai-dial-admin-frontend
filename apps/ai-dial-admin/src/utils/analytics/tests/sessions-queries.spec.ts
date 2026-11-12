@@ -5,7 +5,7 @@ import {
   SESSION_ARRAY_VALUE_SOURCE,
   SESSION_FIELD_VALUE_COUNT_ALIAS,
   SESSION_FIELD_VALUE_LIMIT,
-  FEEDBACK_CANDIDATE_LIMIT,
+  SESSION_RATING_SELECT_FIELDS,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/sessions-trace';
 import {
@@ -16,7 +16,6 @@ import {
   SessionScalarOperator,
   SessionTotalsField,
   SessionsField,
-  FeedbackField,
   FeedbackFilter,
   ResponseRatingsField,
   UsageLogField,
@@ -38,18 +37,19 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { TimeRange } from '@/src/models/time-range';
 import {
   buildArrayValueResolutionQuery,
   buildSessionFieldValuesQuery,
   buildSessionHopBodyQuery,
   buildSessionListQuery,
-  buildSessionRatingCountsQuery,
-  buildSessionRatingsQuery,
+  buildSessionRatedResponsesQuery,
   buildSessionRatingTotalsQuery,
   buildSessionTotalsQuery,
-  buildRatedSessionIdsQuery,
+  buildSessionTracePageQuery,
 } from '@/src/utils/analytics/sessions-queries';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const RANGE: TimeRange = {
   startDate: new Date('2026-07-21T00:00:00.000Z'),
@@ -60,6 +60,34 @@ const START_MS = '1784592000000';
 const END_MS = '1785196800000';
 
 const PAGE = { offset: 0, limit: 100 };
+
+const RATING_NAMESPACE = 'response_ratings';
+
+const RATED_SOURCE: SessionsSource = {
+  ...defaultSessionsSource(),
+  enrichments: ['session_insights', RATING_NAMESPACE],
+  ratingEnrichment: RATING_NAMESPACE,
+};
+
+const CUSTOM_SOURCE: SessionsSource = {
+  baseTable: 'agent_runs',
+  sessionId: 'run_key',
+  time: 'ended_at',
+  project: null,
+  title: null,
+  cost: null,
+  turns: 'steps',
+  enrichments: ['custom_ratings'],
+  ratingEnrichment: 'custom_ratings',
+};
+
+const DEFAULT_ROLE_FIELDS = [
+  SessionsField.ChatId,
+  SessionsField.LastRequestTime,
+  SessionsField.ProjectId,
+  SessionsField.TotalPrice,
+  SessionsField.TurnCount,
+];
 
 const groupArgs = (filter: unknown): QueryPredicate[] => (filter as QueryGroup).args as QueryPredicate[];
 
@@ -88,13 +116,11 @@ describe('buildSessionListQuery :: shape', () => {
     expect(JSON.stringify(query.select)).not.toContain(QueryExprType.Fn);
   });
 
-  // With a schema in hand only row identity is unconditional: every other field a column reads arrives
-  // classified by cost, so a curated field the service later marks heavy is gated like any other.
-  test('names only row identity unconditionally once the caller has classified fields', () => {
-    const names = selectNames(buildList({ sourceFields: ['project_id', 'total_price'] }));
+  test('names only the role-bound fields unconditionally once the caller has classified fields', () => {
+    const names = selectNames(buildList({ sourceFields: ['project_id', 'success_count'] }));
 
-    expect(names).toEqual([SessionsField.ChatId, 'project_id', 'total_price']);
-    expect(names).not.toContain(SessionsField.TurnCount);
+    expect(names).toEqual([...DEFAULT_ROLE_FIELDS, 'success_count']);
+    expect(names).not.toContain(SessionsField.UserHash);
     expect(names).not.toContain(SessionsField.Deployments);
   });
 
@@ -110,35 +136,28 @@ describe('buildSessionListQuery :: shape', () => {
     const names = selectNames(buildList());
 
     expect(names).toEqual([
-      SessionsField.ChatId,
-      SessionsField.ProjectId,
+      ...DEFAULT_ROLE_FIELDS,
       SessionsField.UserHash,
-      SessionsField.TurnCount,
       SessionsField.TotalTokens,
-      SessionsField.TotalPrice,
-      SessionsField.LastRequestTime,
       SessionsField.FirstRequestTime,
       SessionsField.Deployments,
     ]);
   });
 
-  // The title is an enrichment column, so it reaches the select the way every enrichment field does — while
-  // its column is visible — and by its qualified flat name, sent whole rather than as a path.
-  test('names the title by its qualified flat name while its column is visible', () => {
-    const names = selectNames(buildList({ visibleEnrichmentFields: [SessionsField.InsightTitle] }));
+  test('names the title by its qualified flat name once the schema confirms the Title role', () => {
+    const names = selectNames(buildList({ source: { ...defaultSessionsSource(), title: SessionsField.InsightTitle } }));
 
     expect(names).toContain('session_insights.title');
+  });
+
+  test('leaves the title out when the schemaless default drops the enrichment-bound Title role', () => {
+    expect(selectNames(buildList())).not.toContain(SessionsField.InsightTitle);
   });
 
   test('leaves the hidden curated enrichment columns out of the default projection', () => {
     const names = selectNames(buildList());
 
-    for (const hidden of [
-      SessionsField.InsightTitle,
-      SessionsField.InsightSentiment,
-      SessionsField.InsightTopic,
-      SessionsField.Traces,
-    ]) {
+    for (const hidden of [SessionsField.InsightSentiment, SessionsField.InsightTopic, SessionsField.Traces]) {
       expect(names).not.toContain(hidden);
     }
   });
@@ -347,31 +366,145 @@ describe('buildSessionListQuery :: column filters', () => {
   });
 });
 
-describe('buildSessionListQuery :: feedback narrowing by chat id', () => {
-  test('narrows by an in predicate over the candidate ids', () => {
-    const node = groupArgs(buildList({ chatIds: ['a', 'b'] }).filter).find((arg) => arg.op === QueryOperator.In);
+describe('buildSessionListQuery :: feedback predicate', () => {
+  const rateNode = (feedback: FeedbackFilter, source: SessionsSource = RATED_SOURCE) =>
+    groupArgs(buildList({ feedback, source }).filter).slice(2)[0];
 
-    expect(fieldName(node as QueryPredicate)).toBe(SessionsField.ChatId);
-    expect(node?.args[1]).toEqual({
-      type: QueryExprType.Array,
-      items: [
-        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'a' },
-        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'b' },
+  test('Positive narrows on the enrichment positive count alone', () => {
+    expect(rateNode(FeedbackFilter.Positive)).toEqual({
+      op: QueryOperator.Gt,
+      args: [
+        { type: QueryExprType.Field, name: `${RATING_NAMESPACE}.${ResponseRatingsField.RatePosCount}` },
+        { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '0' },
       ],
     });
   });
 
-  // The service rejects an empty in list with a 400, and "no candidates" is answered without a query.
-  test('an empty id list adds no in predicate', () => {
-    expect(groupArgs(buildList({ chatIds: [] }).filter).some((node) => node.op === QueryOperator.In)).toBe(false);
+  test('Negative is a union over the non-positive counts, zero included', () => {
+    const node = rateNode(FeedbackFilter.Negative) as unknown as QueryGroup;
+
+    expect(String(node.op)).toBe(QueryLogicalOperator.Or);
+    expect((node.args as QueryPredicate[]).map(fieldName)).toEqual([
+      `${RATING_NAMESPACE}.${ResponseRatingsField.RateZeroCount}`,
+      `${RATING_NAMESPACE}.${ResponseRatingsField.RateNegCount}`,
+    ]);
+    (node.args as QueryPredicate[]).forEach((arg) => expect(arg.op).toBe(QueryOperator.Gt));
   });
 
-  test('narrowing composes with search and the time bounds', () => {
-    const args = groupArgs(buildList({ search: 'acme', chatIds: ['a'] }).filter);
+  test('Rated is a union over every value-bearing count', () => {
+    const node = rateNode(FeedbackFilter.Rated) as unknown as QueryGroup;
 
-    expect(args.filter((node) => [QueryOperator.Ge, QueryOperator.Le].includes(node.op))).toHaveLength(2);
-    expect(args.some((node) => (node as unknown as QueryGroup).op === QueryLogicalOperator.Or)).toBe(true);
-    expect(args.some((node) => node.op === QueryOperator.In)).toBe(true);
+    expect((node.args as QueryPredicate[]).map(fieldName)).toEqual([
+      `${RATING_NAMESPACE}.${ResponseRatingsField.RatePosCount}`,
+      `${RATING_NAMESPACE}.${ResponseRatingsField.RateZeroCount}`,
+      `${RATING_NAMESPACE}.${ResponseRatingsField.RateNegCount}`,
+    ]);
+  });
+
+  test('reads the counts of whichever namespace the source names as its rating enrichment', () => {
+    const node = rateNode(FeedbackFilter.Positive, CUSTOM_SOURCE);
+
+    expect(fieldName(node)).toBe(`custom_ratings.${ResponseRatingsField.RatePosCount}`);
+  });
+
+  test('All adds no rate predicate', () => {
+    expect(groupArgs(buildList({ feedback: FeedbackFilter.All, source: RATED_SOURCE }).filter)).toHaveLength(2);
+  });
+
+  test.each([FeedbackFilter.Positive, FeedbackFilter.Negative, FeedbackFilter.Rated])(
+    'a %s filter adds no predicate when the source has no rating enrichment',
+    (feedback) => {
+      expect(groupArgs(buildList({ feedback }).filter)).toHaveLength(2);
+      expect(JSON.stringify(buildList({ feedback }).filter)).not.toContain('rate_');
+    },
+  );
+
+  test('names no candidate session ids', () => {
+    const args = groupArgs(buildList({ feedback: FeedbackFilter.Rated, source: RATED_SOURCE }).filter);
+
+    expect(args.some((node) => node.op === QueryOperator.In)).toBe(false);
+  });
+
+  test('the predicate composes with search and the time bounds', () => {
+    const args = groupArgs(
+      buildList({ search: 'acme', feedback: FeedbackFilter.Positive, source: RATED_SOURCE }).filter,
+    );
+
+    expect(args).toHaveLength(4);
+    expect(args.at(-1)?.op).toBe(QueryOperator.Gt);
+  });
+});
+
+describe('buildSessionListQuery :: rating enrichment projection', () => {
+  test('projects the rating enrichment count fields whatever columns are visible', () => {
+    const names = selectNames(buildList({ source: RATED_SOURCE, sourceFields: [SessionsField.ChatId] }));
+
+    expect(names).toEqual(
+      expect.arrayContaining(SESSION_RATING_SELECT_FIELDS.map((name) => `${RATING_NAMESPACE}.${name}`)),
+    );
+  });
+
+  test('projects no rating field without a rating enrichment', () => {
+    expect(selectNames(buildList()).some((name) => name.includes('rate_'))).toBe(false);
+  });
+});
+
+describe('buildSessionListQuery :: a custom source', () => {
+  const buildCustom = (overrides: Partial<Parameters<typeof buildSessionListQuery>[0]> = {}) =>
+    buildList({ source: CUSTOM_SOURCE, ...overrides });
+
+  test('reads the bound base table', () => {
+    expect(buildCustom().entity).toBe('agent_runs');
+  });
+
+  test('always projects the role-bound fields, even with a classified field list', () => {
+    const names = selectNames(buildCustom({ sourceFields: ['region'] }));
+
+    expect(names.slice(0, 3)).toEqual(['run_key', 'ended_at', 'steps']);
+    expect(names).toContain('region');
+  });
+
+  test('projects a requested canonical field under the name its role is bound to', () => {
+    const names = selectNames(buildCustom({ sourceFields: [SessionsField.TurnCount] }));
+
+    expect(names).toContain('steps');
+    expect(names).not.toContain(SessionsField.TurnCount);
+  });
+
+  test('drops a requested canonical field whose role is unbound', () => {
+    const names = selectNames(buildCustom({ sourceFields: [SessionsField.TotalPrice, SessionsField.ProjectId] }));
+
+    expect(names).not.toContain(SessionsField.TotalPrice);
+    expect(names).not.toContain(SessionsField.ProjectId);
+  });
+
+  test('bounds the period by the Time field', () => {
+    const bounds = groupArgs(buildCustom().filter);
+
+    expect(bounds.map(fieldName)).toEqual(['ended_at', 'ended_at']);
+  });
+
+  test('searches the session id alone when no Project is bound', () => {
+    const group = groupArgs(buildCustom({ search: 'acme' }).filter)[2] as unknown as QueryGroup;
+
+    expect((group.args as QueryPredicate[]).map(fieldName)).toEqual(['run_key']);
+  });
+
+  test('sorts by the Time field and breaks ties on the session id', () => {
+    expect(buildCustom().sort).toEqual([
+      { field: 'ended_at', dir: QuerySortDirection.Desc },
+      { field: 'run_key', dir: QuerySortDirection.Asc },
+    ]);
+  });
+
+  test('maps a caller sort key and a column filter on a canonical field to the bound field', () => {
+    const query = buildCustom({
+      sort: [{ field: SessionsField.TurnCount, direction: QuerySortDirection.Desc }],
+      columnFilters: [{ field: SessionsField.TurnCount, operator: SessionFilterOperator.GreaterThan, value: '3' }],
+    });
+
+    expect(query.sort?.[0].field).toBe('steps');
+    expect(fieldName(groupArgs(query.filter).at(-1) as QueryPredicate)).toBe('steps');
   });
 });
 
@@ -461,6 +594,22 @@ describe('buildSessionTotalsQuery', () => {
     ]);
   });
 
+  test('omits the cost sum without a Cost role and reads the bound table and Time field', () => {
+    const query = buildSessionTotalsQuery(RANGE, CUSTOM_SOURCE);
+
+    expect(query.entity).toBe('agent_runs');
+    expect(query.select).toEqual([
+      { expr: { type: QueryExprType.Fn, name: 'count', args: [] }, as: SessionTotalsField.Sessions },
+    ]);
+    expect(groupArgs(query.filter).map(fieldName)).toEqual(['ended_at', 'ended_at']);
+  });
+
+  test('sums the field the Cost role is bound to', () => {
+    const query = buildSessionTotalsQuery(RANGE, { ...CUSTOM_SOURCE, cost: 'spend' });
+
+    expect(JSON.stringify(query.select?.[1])).toContain('"spend"');
+  });
+
   test('takes no page and no sort — one row is the whole answer', () => {
     expect(buildTotals().page).toBeUndefined();
     expect(buildTotals().sort).toBeUndefined();
@@ -479,28 +628,23 @@ describe('buildSessionTotalsQuery', () => {
 
   test('is narrower than the list query whenever the list is filtered', () => {
     expect(buildTotals().filter).not.toEqual(buildList({ search: 'acme' }).filter);
-    expect(buildTotals().filter).not.toEqual(buildList({ chatIds: ['a'] }).filter);
+    expect(buildTotals().filter).not.toEqual(
+      buildList({ feedback: FeedbackFilter.Rated, source: RATED_SOURCE }).filter,
+    );
   });
 });
 
 describe('buildSessionRatingTotalsQuery', () => {
-  const build = (feedback: FeedbackFilter) => buildSessionRatingTotalsQuery({ range: RANGE, feedback });
+  const build = (feedback: FeedbackFilter, source: SessionsSource = RATED_SOURCE) =>
+    buildSessionRatingTotalsQuery({ range: RANGE, feedback, source });
 
-  test('counts distinct sessions, not rate events', () => {
+  test('counts sessions of the base entity', () => {
     const query = build(FeedbackFilter.Rated);
 
-    expect(query.entity).toBe('response_ratings');
+    expect(query.entity).toBe('sessions');
     expect(query.mode).toBe(QueryMode.Aggregate);
     expect(query.select).toEqual([
-      {
-        expr: {
-          type: QueryExprType.Fn,
-          name: 'count',
-          args: [{ type: QueryExprType.Field, name: ResponseRatingsField.ChatId }],
-          distinct: true,
-        },
-        as: SessionRatingTotalsField.Sessions,
-      },
+      { expr: { type: QueryExprType.Fn, name: 'count', args: [] }, as: SessionRatingTotalsField.Sessions },
     ]);
   });
 
@@ -509,26 +653,30 @@ describe('buildSessionRatingTotalsQuery', () => {
     expect(build(FeedbackFilter.Rated).page).toBeUndefined();
   });
 
-  test('bounds the count by the rating clock, not the session clock', () => {
+  test('bounds the count by the session Time field', () => {
     const bounds = groupArgs(build(FeedbackFilter.Rated).filter).filter((node) =>
       [QueryOperator.Ge, QueryOperator.Le].includes(node.op),
     );
 
-    expect(bounds).toHaveLength(2);
-    bounds.forEach((node) => expect(fieldName(node)).toBe(ResponseRatingsField.LastRateTime));
+    expect(bounds.map(fieldName)).toEqual([SessionsField.LastRequestTime, SessionsField.LastRequestTime]);
   });
 
-  // Half of all rate events carry no chat id — direct API calls, not sessions.
-  test('excludes rate events carrying no session id', () => {
-    const guard = groupArgs(build(FeedbackFilter.Rated).filter).find(
-      (node) => node.op === QueryOperator.Ne && fieldName(node) === ResponseRatingsField.ChatId,
-    );
+  test('narrows by the same predicate the list query carries', () => {
+    const totals = groupArgs(build(FeedbackFilter.Negative).filter);
+    const list = groupArgs(buildList({ feedback: FeedbackFilter.Negative, source: RATED_SOURCE }).filter);
 
-    expect(guard).toBeDefined();
+    expect(totals).toEqual(list);
   });
 
   test('the rated and negative counts ask different questions of the same rows', () => {
     expect(build(FeedbackFilter.Rated).filter).not.toEqual(build(FeedbackFilter.Negative).filter);
+  });
+
+  test('reads a custom base table under its own Time field', () => {
+    const query = build(FeedbackFilter.Rated, CUSTOM_SOURCE);
+
+    expect(query.entity).toBe('agent_runs');
+    expect(groupArgs(query.filter).slice(0, 2).map(fieldName)).toEqual(['ended_at', 'ended_at']);
   });
 
   test('is pure — same inputs, same query, and it never reads the clock', () => {
@@ -536,215 +684,94 @@ describe('buildSessionRatingTotalsQuery', () => {
   });
 });
 
-describe('buildRatedSessionIdsQuery', () => {
-  const build = (feedback: FeedbackFilter) => buildRatedSessionIdsQuery({ range: RANGE, feedback });
+describe('buildSessionRatedResponsesQuery', () => {
+  const WINDOW = { fromMs: 1000, toMs: 2000 };
 
-  const filterArgs = (feedback: FeedbackFilter) => groupArgs(build(feedback).filter);
-
-  const rateNode = (feedback: FeedbackFilter) =>
-    filterArgs(feedback).find(
-      (node) =>
-        String(node.op) === QueryLogicalOperator.Or ||
-        (fieldName(node) !== undefined && fieldName(node) !== ResponseRatingsField.ChatId && !isTimeBound(node)),
-    );
-
-  const isTimeBound = (node: QueryPredicate) =>
-    [QueryOperator.Ge, QueryOperator.Le].includes(node.op) && fieldName(node) === ResponseRatingsField.LastRateTime;
-
-  const RATED_STATES = [FeedbackFilter.Positive, FeedbackFilter.Negative, FeedbackFilter.Rated];
-
-  test.each(RATED_STATES)('%s targets the rating rollup grouped by chat_id', (feedback) => {
-    const query = build(feedback);
-
-    expect(query.entity).toBe('response_ratings');
-    expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual([ResponseRatingsField.ChatId]);
-  });
-
-  test('selects the session id and its most recent rating time', () => {
-    const query = build(FeedbackFilter.Rated);
-
-    expect(query.select?.[0]).toEqual({ expr: { type: QueryExprType.Field, name: ResponseRatingsField.ChatId } });
-    expect(query.select?.[1].as).toBe(FeedbackField.LastRated);
-    expect(query.select?.[1].expr).toMatchObject({
-      name: 'max',
-      args: [{ type: QueryExprType.Field, name: ResponseRatingsField.LastRateTime }],
+  const build = (overrides: Partial<Parameters<typeof buildSessionRatedResponsesQuery>[0]> = {}) =>
+    buildSessionRatedResponsesQuery({
+      scope: { id: 'chat-1', source: 'chat_id' },
+      window: WINDOW,
+      namespace: RATING_NAMESPACE,
+      limit: 50,
+      isCommentTextReadable: true,
+      ...overrides,
     });
-  });
 
-  test.each(RATED_STATES)('%s references no unqueryable column', (feedback) => {
-    const serialized = JSON.stringify(build(feedback));
+  const aliases = (query: StructuredQuery) => (query.select as QueryOutputColumn[]).slice(1).map(({ as }) => as);
 
-    ['comment_sample', 'comments', 'trace_id', 'core_span_id', '_updated_at'].forEach((column) => {
-      expect(serialized).not.toContain(column);
-    });
-  });
-
-  test('Positive selects on the positive count alone', () => {
-    expect(rateNode(FeedbackFilter.Positive)).toEqual({
-      op: QueryOperator.Gt,
-      args: [
-        { type: QueryExprType.Field, name: ResponseRatingsField.RatePosCount },
-        { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '0' },
-      ],
-    });
-  });
-
-  test('Negative is a union over the non-positive counts, zero included', () => {
-    const node = rateNode(FeedbackFilter.Negative) as unknown as QueryGroup;
-
-    expect(String(node.op)).toBe(QueryLogicalOperator.Or);
-    expect((node.args as QueryPredicate[]).map(fieldName)).toEqual([
-      ResponseRatingsField.RateZeroCount,
-      ResponseRatingsField.RateNegCount,
-    ]);
-    (node.args as QueryPredicate[]).forEach((arg) => expect(arg.op).toBe(QueryOperator.Gt));
-  });
-
-  test('Rated is a union over every value-bearing count', () => {
-    const node = rateNode(FeedbackFilter.Rated) as unknown as QueryGroup;
-
-    expect(String(node.op)).toBe(QueryLogicalOperator.Or);
-    expect((node.args as QueryPredicate[]).map(fieldName)).toEqual([
-      ResponseRatingsField.RatePosCount,
-      ResponseRatingsField.RateZeroCount,
-      ResponseRatingsField.RateNegCount,
-    ]);
-  });
-
-  test('Rated names no column that could hold a rate event without a value', () => {
-    const serialized = JSON.stringify(build(FeedbackFilter.Rated));
-
-    expect(serialized).not.toContain(ResponseRatingsField.RateEventCount);
-    expect(serialized).not.toContain('rate_null_count');
-  });
-
-  test.each(RATED_STATES)('%s bounds last_rate_time, guards empty ids and stays a flat AND of four', (feedback) => {
-    const args = filterArgs(feedback);
-    const bounds = args.filter(isTimeBound);
-    const guard = args.find((node) => node.op === QueryOperator.Ne && fieldName(node) === ResponseRatingsField.ChatId);
-
-    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual([START_MS, END_MS]);
-    expect((guard?.args[1] as QueryValueExpr).value).toBe('');
-    expect((build(feedback).filter as QueryGroup).op).toBe(QueryLogicalOperator.And);
-    expect(args).toHaveLength(4);
-  });
-
-  test('All adds no rate predicate', () => {
-    expect(filterArgs(FeedbackFilter.All)).toHaveLength(3);
-  });
-
-  // The candidate set is capped, so ordering by most recent rating keeps the rows the page is likeliest to show.
-  test('orders by most recent rating with a stable tiebreaker, capped at the service maximum', () => {
-    const query = build(FeedbackFilter.Rated);
-
-    expect(query.sort).toEqual([
-      { field: FeedbackField.LastRated, dir: QuerySortDirection.Desc },
-      { field: ResponseRatingsField.ChatId, dir: QuerySortDirection.Asc },
-    ]);
-    expect(query.page).toEqual({ type: 'offset', offset: 0, limit: FEEDBACK_CANDIDATE_LIMIT, include_total: false });
-    expect(FEEDBACK_CANDIDATE_LIMIT).toBeLessThanOrEqual(1000);
-  });
-
-  test('varies only by feedback state for a fixed range', () => {
-    expect(build(FeedbackFilter.Positive)).toEqual(build(FeedbackFilter.Positive));
-    expect(build(FeedbackFilter.Positive)).not.toEqual(build(FeedbackFilter.Negative));
-  });
-});
-
-describe('buildSessionRatingsQuery', () => {
-  const build = (chatIds = ['a', 'b']) => buildSessionRatingsQuery({ range: RANGE, chatIds });
-
-  const summed = (query: StructuredQuery) =>
-    (query.select as QueryOutputColumn[]).slice(1).map((column) => ({
-      as: column.as,
-      field: ((column.expr as QueryFnExpr).args?.[0] as QueryFieldExpr)?.name,
-      fn: (column.expr as QueryFnExpr).name,
-    }));
-
-  test('reads the rating rollup grouped by chat_id, restricted to the ids given', () => {
+  test('groups the usage log by response id', () => {
     const query = build();
 
-    expect(query.entity).toBe('response_ratings');
+    expect(query.entity).toBe(USAGE_LOG_ENTITY);
     expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual([ResponseRatingsField.ChatId]);
-    expect(query.select?.[0]).toEqual({ expr: { type: QueryExprType.Field, name: ResponseRatingsField.ChatId } });
-    expect(groupArgs(query.filter).find((node) => node.op === QueryOperator.In)?.args[1]).toMatchObject({
-      type: QueryExprType.Array,
+    expect(query.group_by).toEqual([UsageLogField.ResponseId]);
+    expect(query.select?.[0]).toEqual({ expr: { type: QueryExprType.Field, name: UsageLogField.ResponseId } });
+  });
+
+  test('takes the max of each namespaced rating field under its bare name', () => {
+    const [first] = (build().select as QueryOutputColumn[]).slice(1);
+
+    expect(first).toEqual({
+      expr: {
+        type: QueryExprType.Fn,
+        name: 'max',
+        args: [{ type: QueryExprType.Field, name: `${RATING_NAMESPACE}.${ResponseRatingsField.FirstRateTime}` }],
+      },
+      as: ResponseRatingsField.FirstRateTime,
     });
   });
 
-  test('answers both directions from one query', () => {
-    expect(summed(build())).toEqual([
-      { as: FeedbackField.RatingUp, field: ResponseRatingsField.RatePosCount, fn: 'sum' },
-      { as: FeedbackField.RateZero, field: ResponseRatingsField.RateZeroCount, fn: 'sum' },
-      { as: FeedbackField.RateNegative, field: ResponseRatingsField.RateNegCount, fn: 'sum' },
-      { as: FeedbackField.RateBoolFalse, field: ResponseRatingsField.RateBoolFalseCount, fn: 'sum' },
-      { as: FeedbackField.RateRaw, field: ResponseRatingsField.RateRawCount, fn: 'sum' },
-      { as: FeedbackField.RateEvents, field: ResponseRatingsField.RateEventCount, fn: 'sum' },
-    ]);
+  test('reads the comment sample only where comment text is readable', () => {
+    expect(aliases(build())).toContain(ResponseRatingsField.CommentSample);
+    expect(aliases(build({ isCommentTextReadable: false }))).not.toContain(ResponseRatingsField.CommentSample);
+    expect(aliases(build({ isCommentTextReadable: false }))).toContain(ResponseRatingsField.CommentCount);
   });
 
-  test('projects the form columns the negative figure caveat is drawn from', () => {
-    const aliases = summed(build()).map((column) => column.as);
-
-    expect(aliases).toContain(FeedbackField.RateBoolFalse);
-    expect(aliases).toContain(FeedbackField.RateRaw);
-  });
-
-  test('carries no rate predicate of its own', () => {
+  test('scopes by the session, the window and a positive rate event count', () => {
     const args = groupArgs(build().filter);
 
     expect(args.map(fieldName)).toEqual([
-      ResponseRatingsField.LastRateTime,
-      ResponseRatingsField.LastRateTime,
-      ResponseRatingsField.ChatId,
+      UsageLogField.ChatId,
+      UsageLogField.RequestTime,
+      UsageLogField.RequestTime,
+      `${RATING_NAMESPACE}.${ResponseRatingsField.RateEventCount}`,
     ]);
+    expect(args.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['chat-1', '1000', '2000', '0']);
+    expect(args.at(-1)?.op).toBe(QueryOperator.Gt);
   });
 
-  test('bounds last_rate_time to the selected period', () => {
-    const bounds = groupArgs(build().filter).filter((node) => fieldName(node) === ResponseRatingsField.LastRateTime);
+  test('scopes a non-chat session by the client session id', () => {
+    const args = groupArgs(build({ scope: { id: 'run-1', source: 'harness' } }).filter);
 
-    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual([START_MS, END_MS]);
+    expect(fieldName(args[0])).toBe(UsageLogField.ClientSessionId);
   });
 
-  // Restricted to the page's ids, so the limit tracks that count — a cap below it would silently report a
-  // displayed session as unrated.
-  test('pages for exactly the ids requested, never zero', () => {
-    expect((build(['a', 'b', 'c']).page as QueryOffsetPage).limit).toBe(3);
-    expect((build([]).page as QueryOffsetPage).limit).toBe(1);
+  test('orders by the latest rating with a stable tiebreaker and pages by the limit', () => {
+    const query = build({ limit: 7 });
+
+    expect(query.sort).toEqual([
+      { field: ResponseRatingsField.LastRateTime, dir: QuerySortDirection.Desc },
+      { field: UsageLogField.ResponseId, dir: QuerySortDirection.Asc },
+    ]);
+    expect((query.page as QueryOffsetPage).limit).toBe(7);
   });
 });
 
-describe('buildSessionRatingCountsQuery', () => {
-  const build = () => buildSessionRatingCountsQuery('chat-1');
+describe('buildSessionTracePageQuery', () => {
+  const WINDOW = { fromMs: 1000, toMs: 2000 };
 
-  test('narrows to one session by equality and requests a single row', () => {
-    const query = build();
-    const predicate = query.filter as QueryPredicate;
+  test('filters by the project when one is known', () => {
+    const args = groupArgs(
+      buildSessionTracePageQuery({ id: 'chat-1', source: 'chat_id' }, 'acme', WINDOW, 0, 10).filter,
+    );
 
-    expect(query.entity).toBe('response_ratings');
-    expect(query.group_by).toEqual([ResponseRatingsField.ChatId]);
-    expect(predicate.op).toBe(QueryOperator.Eq);
-    expect(fieldName(predicate)).toBe(ResponseRatingsField.ChatId);
-    expect((query.page as QueryOffsetPage).limit).toBe(1);
+    expect(args.map(fieldName)).toContain(UsageLogField.ProjectId);
   });
 
-  test('carries no time bound', () => {
-    expect(JSON.stringify(build())).not.toContain(ResponseRatingsField.LastRateTime);
-  });
+  test('drops the project predicate when the session has no project', () => {
+    const args = groupArgs(buildSessionTracePageQuery({ id: 'chat-1', source: 'chat_id' }, null, WINDOW, 0, 10).filter);
 
-  test('projects the same figures the grid column reads', () => {
-    const aliases = (build().select as QueryOutputColumn[]).slice(1).map((column) => column.as);
-
-    expect(aliases).toEqual([
-      FeedbackField.RatingUp,
-      FeedbackField.RateZero,
-      FeedbackField.RateNegative,
-      FeedbackField.RateBoolFalse,
-      FeedbackField.RateRaw,
-      FeedbackField.RateEvents,
-    ]);
+    expect(args.map(fieldName)).toEqual([UsageLogField.ChatId, UsageLogField.RequestTime, UsageLogField.RequestTime]);
   });
 });
 
@@ -962,13 +989,20 @@ describe('buildSessionFieldValuesQuery', () => {
     expect((build().page as QueryOffsetPage).limit).toBe(SESSION_FIELD_VALUE_LIMIT);
   });
 
-  test('carries the period, the search term and the feedback candidates', () => {
-    const query = build({ search: 'acme', chatIds: ['chat-1'] });
+  test('carries the period, the search term and the feedback predicate', () => {
+    const query = build({ search: 'acme', feedback: FeedbackFilter.Positive, source: RATED_SOURCE });
     const predicates = groupArgs(query.filter);
 
     expect(predicates.filter((node) => fieldName(node) === SessionsField.LastRequestTime)).toHaveLength(2);
     expect(JSON.stringify(query.filter)).toContain('acme');
-    expect(JSON.stringify(query.filter)).toContain('chat-1');
+    expect(JSON.stringify(query.filter)).toContain(`${RATING_NAMESPACE}.${ResponseRatingsField.RatePosCount}`);
+  });
+
+  test('groups a canonical field under the name its role is bound to on a custom source', () => {
+    const query = build({ field: SessionsField.TurnCount, source: CUSTOM_SOURCE });
+
+    expect(query.entity).toBe('agent_runs');
+    expect(query.group_by).toEqual(['steps']);
   });
 
   test("carries another column's filter", () => {

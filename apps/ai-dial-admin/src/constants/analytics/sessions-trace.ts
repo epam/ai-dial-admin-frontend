@@ -13,7 +13,6 @@ import {
   SessionScalarOperator,
   SessionsField,
   MessageRole,
-  ProvenanceEntity,
   ResponseRatingsField,
   SpanFieldTag,
   SpanKind,
@@ -25,14 +24,20 @@ import { GridFilterType } from '@/src/types/grid-filter';
 
 export const SESSIONS_ENTITY = 'sessions';
 
-export const FEEDBACK_ENTITY = 'response_ratings';
-
 export const USAGE_LOG_ENTITY = 'dial_usage_log';
 
-// The namespace the `sessions` entity exposes its session-insight columns under. Named once: the detail
-// query selects by it, the panel's field set is derived from it, and the provenance map is keyed on it, so
-// the three cannot disagree about what counts as an insight column.
-export const INSIGHTS_ENRICHMENT = 'session_insights';
+export const RATING_SIGNATURE_FIELDS: string[] = [
+  ResponseRatingsField.RatePosCount,
+  ResponseRatingsField.RateZeroCount,
+  ResponseRatingsField.RateNegCount,
+];
+
+export const SESSION_RATING_SELECT_FIELDS: string[] = [
+  ...RATING_SIGNATURE_FIELDS,
+  ResponseRatingsField.RateBoolFalseCount,
+  ResponseRatingsField.RateRawCount,
+  ResponseRatingsField.RateEventCount,
+];
 
 // The rollup's `client_session_source` value meaning "this id came from a session header". Every other
 // value names a coding-harness header, whose hops carry no `chat_id`.
@@ -213,11 +218,7 @@ export const HOP_REQUEST_REBUILD_FIELD: UsageLogField = UsageLogField.RequestBod
 
 export const HOP_RESPONSE_BODY_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
 
-export const FEEDBACK_CANDIDATE_LIMIT = 1000;
-
 export const RATING_COUNT_EXCLUSIVE_MIN = 0;
-
-export const OPTIONAL_FEEDBACK_FIELDS: ResponseRatingsField[] = [ResponseRatingsField.CommentSample];
 
 export const SESSIONS_TIME_PERIOD = '7d';
 
@@ -235,6 +236,8 @@ export const SESSIONS_HEADER_STACK_HEIGHT =
   SESSIONS_GROUP_HEADER_HEIGHT + SESSIONS_HEADER_HEIGHT + SESSIONS_FLOATING_FILTER_HEIGHT;
 
 export const SESSIONS_STORAGE_KEY = 'analytics/sessions';
+
+export const SESSIONS_STORAGE_TABLE_KEY = `${SESSIONS_STORAGE_KEY}/base-table`;
 
 // Below a dollar, cost is rendered at significant digits; from a dollar up, rounded and abbreviated.
 export const COST_COMPACT_THRESHOLD = 1;
@@ -388,13 +391,14 @@ export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType
   [AnalyticsFieldType.Timestamp]: QueryValueType.Timestamp,
 };
 
-export const ENRICHMENT_PROVENANCE: Record<string, ColumnProvenance> = {
-  [INSIGHTS_ENRICHMENT]: ColumnProvenance.Insights,
-};
+export const ENRICHMENT_PROVENANCE_PALETTE: ColumnProvenance[] = [
+  ColumnProvenance.Insights,
+  ColumnProvenance.Tertiary,
+  ColumnProvenance.Info,
+];
 
 export const PROVENANCE_LABEL_KEY: Partial<Record<ColumnProvenance, string>> = {
   [ColumnProvenance.Sessions]: SessionsTraceI18nKey.ProvenanceSessions,
-  [ColumnProvenance.Insights]: SessionsTraceI18nKey.ProvenanceInsights,
   [ColumnProvenance.Feedback]: SessionsTraceI18nKey.ProvenanceFeedback,
 };
 
@@ -402,6 +406,8 @@ export const PROVENANCE_HINT_KEY: Record<ColumnProvenance, string> = {
   [ColumnProvenance.Sessions]: SessionsTraceI18nKey.ProvenanceSessionsHint,
   [ColumnProvenance.Insights]: SessionsTraceI18nKey.ProvenanceInsightsHint,
   [ColumnProvenance.Feedback]: SessionsTraceI18nKey.ProvenanceFeedbackHint,
+  [ColumnProvenance.Tertiary]: SessionsTraceI18nKey.ProvenanceEnrichmentHint,
+  [ColumnProvenance.Info]: SessionsTraceI18nKey.ProvenanceEnrichmentHint,
   [ColumnProvenance.Other]: SessionsTraceI18nKey.ProvenanceEnrichmentHint,
 };
 
@@ -490,6 +496,8 @@ export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
   [ColumnProvenance.Sessions]: 'text-accent-primary',
   [ColumnProvenance.Insights]: 'text-accent-secondary',
   [ColumnProvenance.Feedback]: 'text-warning',
+  [ColumnProvenance.Tertiary]: 'text-accent-tertiary',
+  [ColumnProvenance.Info]: 'text-info',
   [ColumnProvenance.Other]: 'text-secondary',
 };
 
@@ -617,16 +625,9 @@ export const UNAVAILABLE_VALUE = '—';
 
 export const SESSION_FEEDBACK_LIMIT = 100;
 
-export const SESSION_INSIGHTS_PANEL: SessionPanelFrame = {
-  panel: SessionDetailPanel.Insights,
-  sourceEntity: SESSIONS_ENTITY,
-  provenance: ColumnProvenance.Insights,
-  labelKey: SessionsTraceI18nKey.DetailPanelInsights,
-};
-
 export const SESSION_FEEDBACK_PANEL: SessionPanelFrame = {
   panel: SessionDetailPanel.Feedback,
-  sourceEntity: FEEDBACK_ENTITY,
+  sourceEntity: USAGE_LOG_ENTITY,
   provenance: ColumnProvenance.Feedback,
   labelKey: SessionsTraceI18nKey.DetailPanelFeedback,
 };
@@ -701,12 +702,8 @@ export const SESSION_DETAIL_PANELS: SessionPanelDefinition[] = [
   },
 ];
 
-export const QUERIED_SOURCE_ENTITIES: ProvenanceEntity[] = [
-  { provenance: ColumnProvenance.Feedback, name: FEEDBACK_ENTITY },
-];
-
 // Columns whose origin cannot be read off a field name, because they have no field of this entity: Rating is
-// composed from the rating rollup's lookups.
+// composed from the rating enrichment's counts.
 export const COMPOSED_COLUMN_PROVENANCE: Record<string, ColumnProvenance> = {
   [SessionColumn.Rating]: ColumnProvenance.Feedback,
 };

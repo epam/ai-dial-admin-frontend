@@ -13,6 +13,9 @@ interface Props {
   isChanged: boolean;
   isScheduleValid: boolean;
   isCostObjectInvalid: boolean;
+  isSessionsSourceInvalid?: boolean;
+  isAnalyticsEnabled?: boolean;
+  disableSave?: boolean;
   onSave?: () => void;
   onDiscard?: () => void;
   activeTab: EntityViewTab;
@@ -23,16 +26,20 @@ const Header: FC<Props> = ({
   isChanged,
   isScheduleValid,
   isCostObjectInvalid,
+  isSessionsSourceInvalid,
+  isAnalyticsEnabled,
+  disableSave,
   onSave,
   onDiscard,
   activeTab,
   onChangeTab,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = getSystemPropertiesTabs(t).map((tab) => {
+  const tabs = getSystemPropertiesTabs(t, isAnalyticsEnabled).map((tab) => {
     const isInvalid =
       (tab.id === EntityViewTab.RateLimitSchedule && !isScheduleValid) ||
-      (tab.id === EntityViewTab.SpendingLimits && isCostObjectInvalid);
+      (tab.id === EntityViewTab.SpendingLimits && isCostObjectInvalid) ||
+      (tab.id === EntityViewTab.SessionsSource && isSessionsSourceInvalid);
     const statusProps = getTabStatusProps(t, isInvalid ? TabStatus.Error : undefined);
     // Tabs appends the status label directly to the tab name for assistive technology.
     return {
@@ -47,7 +54,7 @@ const Header: FC<Props> = ({
       <div className="min-w-0 mr-3 flex-1">
         <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={onChangeTab} ariaLabel={t(TabsI18nKey.ListLabel)} />
       </div>
-      {isChanged && <ChangedEntityButtons onDiscard={onDiscard} onSave={onSave} />}
+      {isChanged && <ChangedEntityButtons disableSave={disableSave} onDiscard={onDiscard} onSave={onSave} />}
     </div>
   );
 };

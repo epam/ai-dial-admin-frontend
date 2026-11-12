@@ -1,7 +1,7 @@
 'use client';
 
 import { GhostButton, Search } from '@epam/ai-dial-ui-kit';
-import { IconAlertTriangle, IconColumns2 } from '@tabler/icons-react';
+import { IconColumns2 } from '@tabler/icons-react';
 import { FC } from 'react';
 
 import FeedbackFilterControl from '@/src/components/Analytics/SessionsTrace/Toolbar/FeedbackFilterControl';
@@ -12,8 +12,6 @@ import { useI18n } from '@/src/locales/client';
 import { FeedbackFilter } from '@/src/models/analytics/sessions-trace';
 import { TimeRange } from '@/src/models/time-range';
 
-const NOTICE_ICON_SIZE = 14;
-
 interface Props {
   search: string;
   onSearchChange: (value: string) => void;
@@ -23,7 +21,7 @@ interface Props {
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
   feedback: FeedbackFilter;
   onFeedbackChange: (value: FeedbackFilter) => void;
-  isFeedbackCapped: boolean;
+  hasFeedbackFilter: boolean;
   onToggleColumnsPanel: () => void;
 }
 
@@ -36,7 +34,7 @@ const SessionsToolbar: FC<Props> = ({
   onTimeRangeChange,
   feedback,
   onFeedbackChange,
-  isFeedbackCapped,
+  hasFeedbackFilter,
   onToggleColumnsPanel,
 }) => {
   const t = useI18n();
@@ -58,19 +56,13 @@ const SessionsToolbar: FC<Props> = ({
         onTimeRangeChange={onTimeRangeChange}
       />
       <div className="ml-auto flex flex-wrap items-center gap-4">
-        <FeedbackFilterControl feedback={feedback} onFeedbackChange={onFeedbackChange} />
+        {hasFeedbackFilter && <FeedbackFilterControl feedback={feedback} onFeedbackChange={onFeedbackChange} />}
         <GhostButton
           label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
       </div>
-      {isFeedbackCapped && (
-        <div className="flex w-full items-center gap-1.5 text-warning dial-tiny-text" role="status">
-          <IconAlertTriangle size={NOTICE_ICON_SIZE} aria-hidden />
-          <span>{t(SessionsTraceI18nKey.FeedbackCappedNotice)}</span>
-        </div>
-      )}
     </div>
   );
 };

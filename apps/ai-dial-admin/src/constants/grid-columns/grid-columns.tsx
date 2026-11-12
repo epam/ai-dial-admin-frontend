@@ -83,6 +83,7 @@ import {
   OPTIONAL_CURATED_COLUMN_FIELDS,
   PROVENANCE_HINT_KEY,
   PROVENANCE_LABEL_KEY,
+  SESSION_RATING_SELECT_FIELDS,
   SORTABLE_SESSION_FIELDS,
 } from '@/src/constants/analytics/sessions-trace';
 import { sessionTopics, formatCompactNumber, formatFixedCost } from '@/src/utils/analytics/session-formatting';
@@ -94,6 +95,8 @@ import {
   SessionsField,
 } from '@/src/models/analytics/sessions-trace';
 import { QueryValueType } from '@/src/models/analytics/query';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
+import { defaultSessionsSource, roleBoundFields, sourceFieldOf } from '@/src/utils/analytics/sessions-source';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { Publication } from '@/src/models/dial/publications';
@@ -888,29 +891,67 @@ const sessionFilterPreset = (fieldName?: string): Partial<ColDef> => {
 // not report fails the whole listing.
 const ENTITY_FIELDS = new Set<string>(Object.values(SessionsField));
 
-const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntityField[]): ColDef[] => {
+const isBoundColumn = (column: ColDef, source: SessionsSource): boolean => {
+  if (column.field === SessionColumn.Rating) {
+    return source.ratingEnrichment !== null;
+  }
+
+  return sourceFieldOf(source, column.field as string) !== null;
+};
+
+const availableCuratedColumns = (
+  columns: ColDef[],
+  schemaFields: AnalyticsEntityField[],
+  source: SessionsSource,
+): ColDef[] => {
   const available = new Set(schemaFields.map(({ name }) => name));
   const candidates = available.size ? ENTITY_FIELDS : new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
 
-  return columns.filter((column) => !candidates.has(column.field as string) || available.has(column.field as string));
+  return columns.filter((column) => {
+    const fieldName = column.field as string;
+    const bound = sourceFieldOf(source, fieldName) ?? fieldName;
+
+    return isBoundColumn(column, source) && (!candidates.has(fieldName) || available.has(bound));
+  });
 };
 
-const curatedSessionColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
-  restrictSort(availableCuratedColumns(BASE_SESSIONS_TRACE_COLUMNS(t), schemaFields), SORTABLE_SESSION_FIELDS).map(
-    (column) => ({
-      ...column,
-      ...sessionFilterPreset(column.field),
-      ...(column.field === SessionsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
-    }),
-  );
+const curatedSessionColumns = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[],
+  source: SessionsSource,
+): ColDef[] =>
+  restrictSort(
+    availableCuratedColumns(BASE_SESSIONS_TRACE_COLUMNS(t), schemaFields, source),
+    SORTABLE_SESSION_FIELDS,
+  ).map((column) => ({
+    ...column,
+    ...sessionFilterPreset(column.field),
+    ...(column.field === SessionsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
+  }));
 
 // The curated set plus one column per field the fetched schema reports and no curated column already reads,
 // so the count is whatever the instance carries. With no schema in hand the curated columns are all there is:
 // an unfetched schema is not evidence that a field exists, and a column that can never fill is of no use.
+const UNBOUND_HIDDEN_FIELDS: SessionsField[] = [SessionsField.TotalPrice, SessionsField.TurnCount];
+
+const composedSessionFields = (source: SessionsSource): string[] => [
+  ...roleBoundFields(source),
+  ...UNBOUND_HIDDEN_FIELDS.filter((fieldName) => sourceFieldOf(source, fieldName) === null),
+  ...(source.ratingEnrichment
+    ? SESSION_RATING_SELECT_FIELDS.map((fieldName) => `${source.ratingEnrichment}.${fieldName}`)
+    : []),
+];
+
 export const SESSIONS_TRACE_COLUMNS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
-): ColDef[] => buildSessionColumnCatalog(curatedSessionColumns(t, schemaFields), schemaFields);
+  source: SessionsSource = defaultSessionsSource(),
+): ColDef[] =>
+  buildSessionColumnCatalog(
+    curatedSessionColumns(t, schemaFields, source),
+    schemaFields,
+    composedSessionFields(source),
+  );
 
 // The origin is what a reader needs to interpret an empty cell — a rollup value cannot be missing, an
 // enrichment value is missing until the evaluation reaches it — so it stays legible even where the tag
@@ -936,17 +977,15 @@ const groupHeaderName = (t: (key: string) => string, group: SessionColumnGroup):
   return group.provenance === ColumnProvenance.Sessions ? tagLabel : `${origin} · ${tagLabel}`;
 };
 
-// A named origin identifies its source on its own — one origin, one enrichment — so its id needs no more
-// than the pair. `Other` is the catch-all every unnamed enrichment shares, so there the source is what keeps
-// two of them from claiming one id.
 const groupId = ({ provenance, source, tag }: SessionColumnGroup): string =>
-  [provenance === ColumnProvenance.Other ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
+  [source ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
 
 export const SESSIONS_TRACE_COLUMN_GROUPS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
+  source: SessionsSource = defaultSessionsSource(),
 ): ColGroupDef[] => {
-  const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields);
+  const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields, source);
 
   return sessionColumnGroups(columns, schemaFields).map((group) => {
     const headerName = groupHeaderName(t, group);

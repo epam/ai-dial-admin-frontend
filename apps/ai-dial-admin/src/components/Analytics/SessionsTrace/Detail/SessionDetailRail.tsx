@@ -5,16 +5,14 @@ import { FC, ReactNode, memo, useMemo } from 'react';
 
 import SessionDetailPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailPanel';
 import SessionRailShell from '@/src/components/Analytics/SessionsTrace/Detail/SessionRailShell';
-import RatingCounts from '@/src/components/Analytics/SessionsTrace/RatingCounts';
 import SessionFeedbackPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionFeedbackPanel';
 import SessionFieldRows from '@/src/components/Analytics/SessionsTrace/Detail/SessionFieldRows';
 import SessionRecordJson from '@/src/components/Analytics/SessionsTrace/Detail/SessionRecordJson';
 import SpanFieldsSection from '@/src/components/Analytics/SessionsTrace/Detail/SpanFieldsSection';
-import SessionInsightsPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionInsightsPanel';
+import SessionEnrichmentPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionEnrichmentPanel';
 import {
   SESSION_DETAIL_PANELS,
   SESSION_FEEDBACK_PANEL,
-  SESSION_INSIGHTS_PANEL,
   INSIGHTS_ABSENCE_KEY,
   PROVENANCE_TEXT_CLASS,
   SESSION_FIELD_LABEL_KEY,
@@ -23,16 +21,21 @@ import {
 } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import {
+  ColumnProvenance,
   SessionDetailPanel as Panel,
   SessionDetailRow,
-  SessionFeedbackRow,
-  SessionInsightField,
+  SessionEnrichmentPanel as EnrichmentPanel,
+  SessionFeedbackPage,
   SessionInsightsState,
-  SessionRatingCounts,
   SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
-import { resolveSessionField } from '@/src/utils/analytics/session-detail-fields';
+import {
+  resolveSessionField,
+  roleScopedPanels,
+  sessionRatingFigures,
+} from '@/src/utils/analytics/session-detail-fields';
 import { sessionInsightsState } from '@/src/utils/analytics/session-insights';
 
 const ICON_SIZE = 16;
@@ -46,25 +49,24 @@ const PANEL_ICON: Record<Panel, ReactNode> = {
 
 interface Props {
   session: SessionDetailRow;
-  insightColumns: SessionInsightField[];
+  source: SessionsSource;
+  enrichmentPanels: EnrichmentPanel[];
+  enrichmentProvenance: Record<string, ColumnProvenance>;
   metadataGroups: SpanFieldGroup[];
-  feedback: SessionFeedbackRow[];
-  feedbackTotal: number | null;
-  ratings: SessionRatingCounts | null;
-  isCommentTextReadable: boolean;
+  feedback: SessionFeedbackPage | null;
 }
 
 const SessionDetailRail: FC<Props> = ({
   session,
-  insightColumns,
+  source,
+  enrichmentPanels,
+  enrichmentProvenance,
   metadataGroups,
   feedback,
-  feedbackTotal,
-  ratings,
-  isCommentTextReadable,
 }) => {
   const t = useI18n();
-  const insightsState = sessionInsightsState(session, insightColumns);
+  const ratings = sessionRatingFigures(session);
+  const detailPanels = useMemo(() => roleScopedPanels(SESSION_DETAIL_PANELS, source), [source]);
   // The schema's own label unless this view states the column more exactly: `success_count` counts turns with
   // at least one successful hop, which the catalog's name does not say.
   const groups = useMemo(
@@ -82,25 +84,32 @@ const SessionDetailRail: FC<Props> = ({
 
   return (
     <SessionRailShell className="flex-col gap-4 overflow-y-auto">
-      {insightsState === SessionInsightsState.Available ? (
-        <SessionDetailPanel
-          icon={PANEL_ICON[Panel.Insights]}
-          iconClassName={PROVENANCE_TEXT_CLASS[SESSION_INSIGHTS_PANEL.provenance]}
-          title={t(SESSION_INSIGHTS_PANEL.labelKey)}
-          source={SESSION_INSIGHTS_PANEL.sourceEntity}
-        >
-          <SessionInsightsPanel session={session} columns={insightColumns} />
-        </SessionDetailPanel>
-      ) : (
-        <p className="text-secondary dial-small-text">{t(INSIGHTS_ABSENCE_KEY[insightsState])}</p>
-      )}
-      {SESSION_DETAIL_PANELS.map(({ panel, sourceEntity, provenance, labelKey, layout, fields }) => (
+      {enrichmentPanels.map((panel) => {
+        const state = sessionInsightsState(session, panel.fields);
+
+        return (
+          <SessionDetailPanel
+            key={panel.namespace}
+            icon={PANEL_ICON[Panel.Insights]}
+            iconClassName={PROVENANCE_TEXT_CLASS[enrichmentProvenance[panel.namespace] ?? ColumnProvenance.Other]}
+            title={panel.title}
+            source={panel.namespace}
+          >
+            {state === SessionInsightsState.Available ? (
+              <SessionEnrichmentPanel session={session} panel={panel} headingField={source.title} />
+            ) : (
+              <p className="text-secondary dial-small-text">{t(INSIGHTS_ABSENCE_KEY[state])}</p>
+            )}
+          </SessionDetailPanel>
+        );
+      })}
+      {detailPanels.map(({ panel, provenance, labelKey, layout, fields }) => (
         <SessionDetailPanel
           key={panel}
           icon={PANEL_ICON[panel]}
           iconClassName={PROVENANCE_TEXT_CLASS[provenance]}
           title={t(labelKey)}
-          source={sourceEntity}
+          source={source.baseTable}
         >
           <SessionFieldRows
             fields={fields.map((definition) => resolveSessionField(definition, session))}
@@ -112,7 +121,7 @@ const SessionDetailRail: FC<Props> = ({
         icon={PANEL_ICON[Panel.Metadata]}
         iconClassName={PROVENANCE_TEXT_CLASS[SESSION_METADATA_PANEL.provenance]}
         title={t(SESSION_METADATA_PANEL.labelKey)}
-        source={SESSION_METADATA_PANEL.sourceEntity}
+        source={source.baseTable}
         action={<SessionRecordJson session={session} />}
         isFramed={groups.length === 0}
       >
@@ -131,12 +140,9 @@ const SessionDetailRail: FC<Props> = ({
         icon={PANEL_ICON[Panel.Feedback]}
         iconClassName={PROVENANCE_TEXT_CLASS[SESSION_FEEDBACK_PANEL.provenance]}
         title={t(SESSION_FEEDBACK_PANEL.labelKey)}
-        source={SESSION_FEEDBACK_PANEL.sourceEntity}
+        source={source.ratingEnrichment ?? SESSION_FEEDBACK_PANEL.sourceEntity}
       >
-        <div className="flex flex-col gap-3">
-          {ratings && <RatingCounts counts={ratings} />}
-          <SessionFeedbackPanel rows={feedback} total={feedbackTotal} isCommentTextReadable={isCommentTextReadable} />
-        </div>
+        <SessionFeedbackPanel ratings={ratings} feedback={feedback} />
       </SessionDetailPanel>
     </SessionRailShell>
   );
