@@ -12,6 +12,7 @@ import {
   GridOptions,
   GridReadyEvent,
   GridSizeChangedEvent,
+  SuppressHeaderKeyboardEventParams,
   SuppressKeyboardEventParams,
 } from 'ag-grid-community';
 import { MutableRefObject, useCallback, useMemo, useRef, useState } from 'react';
@@ -49,17 +50,25 @@ export interface AgGridProps<T> {
 
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 const TEXT_ENTRY_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
+const CELL_INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [role="button"], [contenteditable="true"]';
 
 const isTextEntryTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) return false;
   return TEXT_ENTRY_TAGS.has(target.tagName) || !!target.isContentEditable;
 };
 
+// Cell renderers put focus on inputs and icon buttons; AG Grid Tab would otherwise trap there.
+const isRowInteractiveTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+  // Only body rows — header Tab is handled by suppressHeaderKeyboardEvent.
+  return !!target.closest('.ag-row') && !!target.closest(CELL_INTERACTIVE_SELECTOR);
+};
+
 const suppressArrowKeys = (params: SuppressKeyboardEventParams) => {
   const key = params.event.key;
   if (ARROW_KEYS.includes(key)) return true;
-  // AG Grid would move cell focus instead of focusing the next input; leave Tab to the browser.
-  if (key === 'Tab' && isTextEntryTarget(params.event.target)) return true;
+  // Leave Tab to the browser so focus walks every focusable control in the row.
+  if (key === 'Tab' && isRowInteractiveTarget(params.event.target)) return true;
   // Cell-renderer inputs are not AG Grid editors, so Ctrl/Cmd+A would select every row
   // and preventDefault would block selecting the field text. Suppress only that shortcut.
   // Use event.code (physical KeyA) — event.key is layout-dependent (e.g. "ф" on Russian).
@@ -67,10 +76,17 @@ const suppressArrowKeys = (params: SuppressKeyboardEventParams) => {
   return isSelectAll && isTextEntryTarget(params.event.target);
 };
 
+// Title-row Tab stays with AG Grid (sequential header cells). Leaving every header Tab to the
+// browser interlaced title cells with the filter row. On the floating-filter row, leave Tab to
+// the browser so focus walks the search inputs and then into the body.
+const suppressHeaderTab = (params: SuppressHeaderKeyboardEventParams) =>
+  params.event.key === 'Tab' && params.headerRowIndex > 0;
+
 // The built-in floating filter waits for Enter when a filter includes an Apply button.
 const DEFAULT_COL_DEF: ColDef = {
   floatingFilterComponent: FloatingFilter,
   suppressKeyboardEvent: suppressArrowKeys,
+  suppressHeaderKeyboardEvent: suppressHeaderTab,
 };
 
 const withFormattedValueRenderer = (columnDefs: ColDef[]): ColDef[] =>
