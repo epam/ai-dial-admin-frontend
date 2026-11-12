@@ -469,6 +469,20 @@ describe('FilterCondition caller value', () => {
     expect(comparedAgainst()).not.toBeInTheDocument();
   });
 
+  test('forgets the picked caller value when the condition is switched back to a value', async () => {
+    const node: FilterPredicateNode = {
+      ...predicateOn('chat_id'),
+      rightKind: FilterOperandKind.Param,
+      rightParam: 'caller.project',
+    };
+    const user = renderWithCallerValues(node);
+
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.ComparedAgainst }));
+    await user.click(screen.getByRole('option', { name: QueryBuilderI18nKey.Value }));
+
+    expect(node).toMatchObject({ rightKind: FilterOperandKind.Literal, rightParam: null });
+  });
+
   test('is not offered inside the Query Builder, which supplies no caller values', () => {
     renderCondition(predicateOn('chat_id'));
 

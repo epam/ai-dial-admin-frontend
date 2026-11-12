@@ -212,6 +212,7 @@ const FilterCondition: FC<Props> = ({
   const onChangeRightKind = (value: string) => {
     node.rightKind = value as FilterOperandKind;
     if (node.rightKind !== FilterOperandKind.Literal) node.isNull = false;
+    if (node.rightKind !== FilterOperandKind.Param) node.rightParam = null;
     refresh();
   };
 
