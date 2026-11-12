@@ -55,3 +55,16 @@ export const WIDGET_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'PLN'];
 
 // What the service answers a read the caller may not make; a saved query it may not see answers 404.
 export const WIDGET_DENIED_STATUSES = [403, 404];
+
+export const WIDGET_PIE_SLICE_BANDS = [
+  { maxWidth: 4, sliceCount: 5, legendColumns: 1 },
+  { maxWidth: 8, sliceCount: 10, legendColumns: 2 },
+] as const;
+
+export const WIDGET_PIE_WIDEST_BAND = { sliceCount: 15, legendColumns: 3 } as const;
+
+export const WIDGET_PIE_SHORT_MAX_HEIGHT = 3;
+
+export const WIDGET_PIE_SHORT_LEGEND_ROWS = 4;
+
+export const WIDGET_PIE_SHORT_DONUT_SIZE = 140;

@@ -320,11 +320,6 @@ export interface ChartBuildContext {
   columnLabels: Record<string, string>;
 }
 
-export interface PieSlice {
-  name: string;
-  value: number;
-}
-
 // How a result cell renders its value. Resolved from the executed query, not from the live builder
 // state, so what the grid shows follows the run that produced the shown result.
 export enum ResultValueClass {

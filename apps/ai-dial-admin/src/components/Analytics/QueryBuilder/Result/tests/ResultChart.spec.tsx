@@ -49,6 +49,17 @@ describe('QueryBuilder :: ResultChart', () => {
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartValue' })).toBeInTheDocument();
   });
 
+  test('draws the pie as a donut with its total, the top 10 categories and the rest as Other', () => {
+    const rows = Array.from({ length: 12 }, (_, index) => ({ deployment: `m${index}`, total: 12 - index, tokens: 1 }));
+    renderChart({ type: ChartType.Pie, xField: 'deployment', yFields: ['total'] }, { columns: RESULT.columns, rows });
+
+    expect(screen.getByText('78')).toBeInTheDocument();
+    expect(screen.getByText('total')).toBeInTheDocument();
+    expect(screen.getByText('m9')).toBeInTheDocument();
+    expect(screen.queryByText('m10')).toBeNull();
+    expect(screen.getByText('QueryBuilder.ChartOtherSlice')).toBeInTheDocument();
+  });
+
   test('scatter defaults its two axes to distinct numeric columns', () => {
     renderChart({ type: ChartType.Scatter, xField: null, yFields: null });
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toHaveDisplayValue(/total/);
