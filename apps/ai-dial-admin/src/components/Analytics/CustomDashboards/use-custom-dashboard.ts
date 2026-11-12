@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { isEqual } from 'lodash';
+
 import {
   replaceDashboard,
   resolveInlineWidgetQuery,
@@ -97,10 +99,10 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
     const ids = resolutionIdsRef.current;
     Object.keys(ids).forEach((key) => (ids[key] += 1));
     setQueries(storedQueriesRef.current);
+    if (draft && !isEqual(draft.time, toDashboardRequest(stored).time)) resetTimeFilter(stored);
     setDraft(null);
-    resetTimeFilter(stored);
     setCompare(stored.compare ?? ComparePeriod.Off);
-  }, [resetTimeFilter, stored]);
+  }, [draft, resetTimeFilter, stored]);
 
   const onSave = useCallback(async () => {
     if (!draft) return;

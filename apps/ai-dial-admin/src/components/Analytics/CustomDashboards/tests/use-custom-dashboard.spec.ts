@@ -172,4 +172,27 @@ describe('useCustomDashboard', () => {
     expect(result.current.timeFilter.timeRange.endDate.getTime()).toBeGreaterThan(before);
     vi.useRealTimers();
   });
+
+  test('keeps the time range on Cancel when edit mode changed nothing, so no widget runs again', () => {
+    const { result } = renderDashboard(false);
+    const before = result.current.timeFilter.timeRange;
+
+    act(() => result.current.onEdit());
+    act(() => result.current.onDiscard());
+
+    expect(result.current.isEditing).toBe(false);
+    expect(result.current.timeFilter.timeRange).toBe(before);
+  });
+
+  test('puts the stored period back on Discard after the period was changed in edit mode', () => {
+    const { result } = renderDashboard(false);
+
+    act(() => result.current.onEdit());
+    act(() => result.current.onTimePeriodChange('30d'));
+    expect(result.current.timeFilter.timePeriod).toBe('30d');
+
+    act(() => result.current.onDiscard());
+
+    expect(result.current.timeFilter.timePeriod).toBe('7d');
+  });
 });
