@@ -58,6 +58,7 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
 
   const timeFilter = useTimeFilter({ defaultTimeFilter: toTimeFilterValue(resolved.dashboard.time) });
   const [compare, setCompare] = useState<ComparePeriod>(resolved.dashboard.compare ?? ComparePeriod.Off);
+  const [refreshToken, setRefreshToken] = useState(0);
 
   const isEditing = draft !== null;
   const widgets = draft?.widgets ?? stored.widgets;
@@ -171,6 +172,14 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
     [resolveQuery],
   );
 
+  const onRefresh = useCallback(() => {
+    if (!timeFilter.isCustom) timeFilter.onTimePeriodChange(timeFilter.timePeriod);
+    setRefreshToken((token) => token + 1);
+    widgets
+      .filter((widget) => queriesRef.current[getWidgetQueryKey(widget)]?.kind === WidgetQueryKind.Failed)
+      .forEach(onRetryQuery);
+  }, [timeFilter, widgets, onRetryQuery]);
+
   const onAddWidget = useCallback(
     (widget: NewWidget) => {
       editWidgets((current) => appendWidget(current, widget));
@@ -230,6 +239,7 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
     queries,
     timeFilter,
     compare,
+    refreshToken,
     isEditing,
     hasChanges,
     isSaving,
@@ -238,6 +248,7 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
     onSave,
     onTimePeriodChange,
     onTimeRangeChange,
+    onRefresh,
     onCompareChange,
     onAddWidget,
     onUpdateWidget,

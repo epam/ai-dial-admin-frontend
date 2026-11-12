@@ -17,6 +17,7 @@ interface Options {
   period?: string;
   // The compared window, for a view that draws one; the compared run never takes a preset period.
   previousRange?: TimeRange;
+  refreshToken?: number;
 }
 
 interface WidgetData {
@@ -60,6 +61,7 @@ export const useDashboardWidgetData = ({
   range,
   period,
   previousRange,
+  refreshToken = 0,
 }: Options): WidgetData => {
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [previousResult, setPreviousResult] = useState<StructuredQueryResult | null>(null);
@@ -125,7 +127,7 @@ export const useDashboardWidgetData = ({
     // `range`, `rowLimit` and `previousRange` reach the effect through `rangeKey`, which composite SQL keeps
     // constant.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widgetQuery, rangeKey, retryToken]);
+  }, [widgetQuery, rangeKey, retryToken, refreshToken]);
 
   const onRetry = useCallback(() => setRetryToken((token) => token + 1), []);
 
