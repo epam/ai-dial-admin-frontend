@@ -230,6 +230,24 @@ its widgets reference.
 - **WHEN** a dashboard with widgets is deleted
 - **THEN** every saved query its widgets referenced is still listed on the queries page
 
+### Requirement: A custom dashboard refreshes on request
+
+A custom dashboard SHALL NOT poll. Its controls bar SHALL offer `Refresh`, in view mode and in edit mode,
+which re-runs every widget once per activation and is disabled while any widget is loading. For a preset
+period a refresh SHALL recompute the range from the current time; a custom range SHALL be reused unchanged.
+
+#### Scenario: Refresh re-runs every widget
+
+- **WHEN** the user activates `Refresh`
+- **THEN** every widget runs its query again
+- **AND** the control is disabled until they all settle
+
+#### Scenario: Refresh slides a preset window
+
+- **GIVEN** the period is a preset and time has passed since the dashboard opened
+- **WHEN** the user activates `Refresh`
+- **THEN** every widget reads the range ending now
+
 ### Requirement: View mode and edit mode
 
 A custom dashboard SHALL open in view mode, in which widgets can be neither moved nor resized. Its header
@@ -351,13 +369,15 @@ In edit mode each widget's menu SHALL offer Edit settings (title, description, V
 same rules as Add widget, plus the SQL statement of an inline query) and Remove. In both modes a widget that
 references a saved query SHALL offer Open query, which navigates to that saved query's page; a widget with
 an inline query SHALL NOT. A widget without a title SHALL be headed by its saved query's name. A widget's description
-SHALL be shown under its title; a Single value widget, whose card has no room for it, SHALL offer it as an info
-hint beside its title instead. A dashboard's description SHALL be shown under the dashboard's controls.
+SHALL be shown under its title on one line, cut with an ellipsis when it does not fit and shown in full on hover;
+a Single value widget, whose card has no room for it, SHALL offer it as an info hint beside its title instead. An
+info hint on a widget SHALL sit directly beside the title text. A dashboard's description SHALL be shown under the dashboard's controls.
 
 #### Scenario: A widget's description is shown
 
 - **WHEN** a widget has a description
-- **THEN** its card shows the description under the title
+- **THEN** its card shows the description under the title on one line
+- **AND** a description longer than the card is cut with an ellipsis and shown in full on hover
 
 #### Scenario: Untitled widget uses the query name
 
@@ -437,7 +457,7 @@ computed as on the usage dashboard. A Single value widget SHALL show the change 
 a Time series widget SHALL draw the compared window as a second, dashed line aligned bucket by bucket; a
 table SHALL show each aggregate figure with its change badge beside it, drawn by the usage breakdown's own
 measure cell, against the compared row with the same dimension values, and no badge for a row the compared
-window lacks. Share, Activity heatmap, a chart, and composite SQL widgets SHALL show only the current
+window lacks. Pie chart, Activity heatmap, a chart, and composite SQL widgets SHALL show only the current
 window. The widget's "A rise is" setting SHALL colour the badges of Single value and table views.
 
 A chart, donut or share whose category value is empty SHALL name that category "(no value)" rather than
@@ -466,47 +486,77 @@ leave its label blank, on a widget and on the query page alike.
 
 ### Requirement: A widget offers only the views its result fits
 
-A widget SHALL have a view: the query's own view (the default — its stored table or chart), Table,
-Single value, Time series, Share or Activity heatmap. Edit settings SHALL offer a View picker listing only
-the views the widget's latest result fits, judged from the executed query's dimension and aggregate
+A widget SHALL have a view: the query's own view, Table, Single value, Time series, Pie chart, Activity
+heatmap, Bar chart, Line chart or Scatter chart. Edit settings SHALL offer a View picker listing
+only the views the widget's latest result fits, judged from the executed query's dimension and aggregate
 columns:
 
-- Table and the query's own view fit every result.
+- The query's own view follows the table or chart kept on the saved query, and SHALL be offered only for a
+  widget that references a saved query keeping a view. A widget on an inline query — SQL typed into Add
+  widget, or a copy made on publishing — SHALL NOT offer it.
+- Table fits every result.
+- Bar chart, Line chart and Scatter chart SHALL fit exactly when the query page offers the same chart type
+  for that result: Bar and Line need a dimension column and an aggregate column, Scatter needs two numeric
+  columns. One rule SHALL decide this for both the query page and the widget. Bar and Line draw every
+  aggregate column not on the X axis as its own series; Scatter draws one. A picked chart
+  of the type the query keeps SHALL use the query's own axes; otherwise the first column that is not an
+  aggregate is the X axis.
 - Single value fits one row with no dimension column and at least one aggregate column; it shows one
   aggregate — the one chosen in Edit settings, by default the first — as the usage dashboard's KPI card:
   the widget title (or the column's label), the figure, its trend over the range as a sparkline, and while
   comparing the change badge and the compared value. The badge is coloured by the widget's "A rise is"
   setting — good news (the default) or bad news.
 
-A Single value or Share widget SHALL have a Unit setting — Number (the default), Money, Percent (the
+A Single value or Pie chart widget SHALL have a Unit setting — Number (the default), Money, Percent (the
 figure is already a percentage) or Duration (milliseconds) — that writes its figures the way the usage
 dashboard writes the matching measure. Money SHALL also take a currency, US dollars by default, whose sign
 prefixes the figure.
 - Time series fits exactly one dimension column, of a date-time value, and at least one aggregate column;
   it plots the first aggregate over that column in time order. A lone line is named by its column; only
   beside a compared line is it named the current period.
-- Share fits exactly one dimension column that is not a date-time value and at least one aggregate column;
-  it shows the first aggregate as the usage dashboard's donut: its largest five values with the rest folded
-  into Others, the total in the ring, and a legend stating each slice's figure and share.
+- Pie chart fits exactly one dimension column that is not a date-time value and at least one aggregate column;
+  it shows the first aggregate as the usage dashboard's donut: its largest values with the rest folded into
+  Others, the total in the ring, and a legend stating each slice's figure and share. How many values it names
+  follows the widget's width on the 12-column grid — up to 4 columns 5, up to 8 columns 10, wider 15 — with the
+  legend in columns of six rows beside the ring; a widget three grid rows tall takes four legend rows, names only
+  what those rows hold with one kept for Others, and draws a smaller ring, so nothing is clipped. A widget in its
+  query's own view whose query keeps a pie draws the same donut on that pie's Category and Value.
 - Activity heatmap fits exactly one date-time dimension column and at least one aggregate column; it sums
   the first aggregate by day and hour of day over the calendar week (Monday to Sunday) holding the end of
   the dashboard range, whatever range is selected — the usage dashboard's heatmap grid, a row for every day
   and hours still to come left empty.
 
-Every widget SHALL be framed by the usage dashboard's card, and the Single value, Time series, Share and
+Every widget SHALL be framed by the usage dashboard's card, and the Single value, Time series, Pie chart and
 Activity heatmap views SHALL be drawn by the usage dashboard's own KPI card, line chart, donut and heatmap
 grid, so a widget and the matching usage dashboard block look the same.
 
-A composite SQL widget SHALL offer only Table and the query's own view. A widget whose stored view no
-longer fits its result SHALL render the query's own view. Add widget and Add to dashboard SHALL create a
-widget with the query's own view.
+A composite SQL result SHALL be read the way the query page reads it — every column a dimension, and every
+column holding only numbers an aggregate — so it offers Table, the charts, and a Pie chart of its first
+column that is not a number by its first numeric column, and none of Single value, Time series or Activity
+heatmap. A query keeping a pie chart resolves to the Pie chart view. A widget whose stored view no longer fits its result SHALL render the
+query's own view when it is offered; otherwise the chart its inline query keeps when that fits, otherwise
+Table. Add widget and Add to dashboard SHALL create a widget with no view of its own, which resolves the same
+way.
 
 #### Scenario: Views that do not fit are not offered
 
 - **GIVEN** a widget whose result has one text dimension and one aggregate
 - **WHEN** the user opens its settings
-- **THEN** the View picker offers the query's own view, Table and Share, and not Single value, Time series
-  or Activity heatmap
+- **THEN** the View picker offers the query's own view, Table, Pie chart, Bar chart and Line chart, and not
+  Single value, Time series, Activity heatmap or Scatter chart
+
+#### Scenario: A typed SQL widget offers charts, not the query's view
+
+- **GIVEN** a widget on typed SQL whose result has a text column and two numeric columns
+- **WHEN** the user opens its settings
+- **THEN** the View picker offers Table, Pie chart, Bar chart, Line chart and Scatter chart
+- **AND** it does not offer the query's own view
+
+#### Scenario: A picked bar chart draws every aggregate
+
+- **GIVEN** a widget whose result has one dimension and two aggregates
+- **WHEN** the user picks Bar chart
+- **THEN** the widget draws both aggregates as series, side by side, with a legend
 
 #### Scenario: A view that stopped fitting falls back
 

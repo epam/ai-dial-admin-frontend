@@ -1,5 +1,6 @@
 import { CustomDashboardsI18nKey } from '@/src/constants/i18n';
 import { DashboardCreatePermissions, WidgetPlacement, WidgetSize, WidgetView } from '@/src/models/analytics/dashboard';
+import { ChartType } from '@/src/models/analytics/query-builder';
 
 export const DASHBOARD_GRID_COLUMNS = 12;
 
@@ -46,6 +47,22 @@ export const WIDGET_VIEW_LABEL_KEY: Record<WidgetView, CustomDashboardsI18nKey> 
   [WidgetView.TimeSeries]: CustomDashboardsI18nKey.ViewTimeSeries,
   [WidgetView.Share]: CustomDashboardsI18nKey.ViewShare,
   [WidgetView.Heatmap]: CustomDashboardsI18nKey.ViewHeatmap,
+  [WidgetView.BarChart]: CustomDashboardsI18nKey.ViewBarChart,
+  [WidgetView.LineChart]: CustomDashboardsI18nKey.ViewLineChart,
+  [WidgetView.ScatterChart]: CustomDashboardsI18nKey.ViewScatterChart,
+};
+
+export const CHART_TYPE_BY_WIDGET_VIEW: Partial<Record<WidgetView, ChartType>> = {
+  [WidgetView.BarChart]: ChartType.Bar,
+  [WidgetView.LineChart]: ChartType.Line,
+  [WidgetView.ScatterChart]: ChartType.Scatter,
+};
+
+export const WIDGET_VIEW_BY_CHART_TYPE: Record<ChartType, WidgetView> = {
+  [ChartType.Bar]: WidgetView.BarChart,
+  [ChartType.Line]: WidgetView.LineChart,
+  [ChartType.Pie]: WidgetView.Share,
+  [ChartType.Scatter]: WidgetView.ScatterChart,
 };
 
 export const DEFAULT_CURRENCY = 'USD';

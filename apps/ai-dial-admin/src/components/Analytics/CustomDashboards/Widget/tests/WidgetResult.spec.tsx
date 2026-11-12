@@ -25,6 +25,8 @@ const RESULT = {
   ],
 };
 
+const PIE_LAYOUT = { sliceCount: 5, legendRowsPerColumn: 6, donutSize: 200 };
+
 const WEEK = { startDate: new Date('2026-10-12T00:00:00Z'), endDate: new Date('2026-10-19T00:00:00Z') };
 
 const sourceWithChart = (chart: SavedQueryChart): WidgetQuerySource => ({
@@ -45,7 +47,7 @@ const renderResult = (chart: SavedQueryChart) =>
       compare={ComparePeriod.Off}
       heatmapWeek={WEEK}
       isRiseGood
-      pieLayout={{ sliceCount: 5, legendRowsPerColumn: 6, donutSize: 200 }}
+      pieLayout={PIE_LAYOUT}
     />,
   );
 
@@ -67,6 +69,74 @@ describe('WidgetResult — query chart', () => {
     const legacy = { type: ChartType.Bar, x_field: 'week', y_field: 'fresh' } as unknown as SavedQueryChart;
     renderResult(legacy);
     expect(drawnSeriesNames()).toEqual(['fresh']);
+  });
+});
+
+describe('WidgetResult — chart view', () => {
+  const TABLE_SOURCE: WidgetQuerySource = {
+    name: 'Users per week',
+    sql: 'SELECT 1',
+    result_view: QueryResultView.Table,
+  };
+
+  const renderView = (view: WidgetView, savedQuery: WidgetQuerySource = TABLE_SOURCE) =>
+    render(
+      <WidgetResult
+        savedQuery={savedQuery}
+        result={RESULT}
+        meta={META}
+        view={view}
+        previousResult={null}
+        compare={ComparePeriod.Off}
+        heatmapWeek={WEEK}
+        isRiseGood
+        pieLayout={PIE_LAYOUT}
+      />,
+    );
+
+  beforeEach(() => {
+    vi.mocked(ReactECharts).mockClear();
+  });
+
+  test('draws every aggregate as a series of a picked bar or line chart', () => {
+    renderView(WidgetView.BarChart);
+    expect(screen.getByRole('img', { name: 'Users per week' })).toBeTruthy();
+    expect(drawnSeriesNames()).toEqual(['fresh', 'returning']);
+  });
+
+  test("keeps the query's own axes when the picked chart is of its type", () => {
+    renderView(
+      WidgetView.LineChart,
+      sourceWithChart({ type: ChartType.Line, x_field: 'week', y_field: ['returning'] }),
+    );
+    expect(drawnSeriesNames()).toEqual(['returning']);
+  });
+
+  test('puts the first column that is not a figure on X for an untranslated SQL result', () => {
+    render(
+      <WidgetResult
+        savedQuery={TABLE_SOURCE}
+        result={{
+          rows: [
+            { calls: 3, topic: 'travel' },
+            { calls: 5, topic: 'food' },
+          ],
+        }}
+        meta={{
+          ...META,
+          kind: QueryRequestKind.Sql,
+          dimensionColumns: ['calls', 'topic'],
+          aggregateColumns: ['calls'],
+        }}
+        view={WidgetView.BarChart}
+        previousResult={null}
+        compare={ComparePeriod.Off}
+        heatmapWeek={WEEK}
+        isRiseGood
+        pieLayout={PIE_LAYOUT}
+      />,
+    );
+    expect(drawnSeriesNames()).toEqual(['calls']);
   });
 });
 

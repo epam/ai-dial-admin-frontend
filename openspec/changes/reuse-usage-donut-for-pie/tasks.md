@@ -20,7 +20,7 @@
 
 ## 5. Custom dashboards spec
 
-- [ ] 5.1 After epam/ai-dial-admin-frontend#5518 merges, state in `openspec/changes/add-custom-dashboards/specs/analytics/custom-dashboards/spec.md` that a widget's Pie chart view and a pie query's own view draw the donut with 5, 10 or 15 slices by width, the legend in columns of six rows
+- [x] 5.1 After epam/ai-dial-admin-frontend#5518 merges, state in `openspec/changes/add-custom-dashboards/specs/analytics/custom-dashboards/spec.md` that a widget's Pie chart view and a pie query's own view draw the donut with 5, 10 or 15 slices by width, the legend in columns of six rows
 
 ## 6. Browser verification
 
@@ -28,4 +28,4 @@
 
 ## 7. Quality checks
 
-- [ ] 7.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test` and fix every failure
+- [x] 7.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test` and fix every failure

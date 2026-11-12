@@ -3,7 +3,14 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
-import { IconDotsVertical, IconLayoutGrid, IconPencilMinus, IconPlus, IconTrashX } from '@tabler/icons-react';
+import {
+  IconDotsVertical,
+  IconLayoutGrid,
+  IconPencilMinus,
+  IconPlus,
+  IconRefresh,
+  IconTrashX,
+} from '@tabler/icons-react';
 import { GhostButton } from '@epam/ai-dial-ui-kit';
 
 import { deleteDashboard, replaceDashboard } from '@/src/app/[lang]/dashboards/custom-actions';
@@ -20,9 +27,14 @@ import {
   WidgetSettings,
   WidgetSourceKind,
 } from '@/src/components/Analytics/CustomDashboards/models';
-import { isComparingView, resolveWidgetView } from '@/src/components/Analytics/CustomDashboards/utils/widget-views';
+import {
+  getWidgetView,
+  isComparingView,
+  resolveWidgetView,
+} from '@/src/components/Analytics/CustomDashboards/utils/widget-views';
+import { toggleId } from '@/src/components/Analytics/CustomDashboards/utils/id-set';
 import { getDashboardWriteErrorNotification } from '@/src/components/Analytics/CustomDashboards/utils/write-error';
-import { toStoredWidgetSettings } from '@/src/components/Analytics/CustomDashboards/utils/widget-settings';
+import { toWidgetViewPatch } from '@/src/components/Analytics/CustomDashboards/utils/widget-settings';
 import CompareSelect from '@/src/components/Analytics/Usage/Controls/CompareSelect';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import { ComparePeriod } from '@/src/components/Analytics/Usage/models';
@@ -90,7 +102,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
   const router = useRouter();
   const { showNotification } = useNotification();
   const dashboard = useCustomDashboard(resolved, isInitiallyEditing);
-  const { stored, widgets, queries, timeFilter, compare, isEditing } = dashboard;
+  const { stored, widgets, queries, timeFilter, compare, refreshToken, isEditing } = dashboard;
   const canWrite = stored.permissions.write;
   const isPublic = stored.visibility === DashboardVisibility.Public;
 
@@ -101,15 +113,14 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<PendingPublish | null>(null);
   const [deniedIds, setDeniedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [loadingIds, setLoadingIds] = useState<ReadonlySet<string>>(() => new Set());
 
   const onDeniedChange = useCallback((id: string, isDenied: boolean) => {
-    setDeniedIds((prev) => {
-      if (prev.has(id) === isDenied) return prev;
-      const next = new Set(prev);
-      if (isDenied) next.add(id);
-      else next.delete(id);
-      return next;
-    });
+    setDeniedIds((prev) => toggleId(prev, id, isDenied));
+  }, []);
+
+  const onLoadingChange = useCallback((id: string, isLoading: boolean) => {
+    setLoadingIds((prev) => toggleId(prev, id, isLoading));
   }, []);
 
   const writeDetails = useCallback(
@@ -218,6 +229,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
         range={timeFilter.timeRange}
         period={timeFilter.isCustom ? undefined : timeFilter.timePeriod}
         compare={compare}
+        refreshToken={refreshToken}
         isEditing={isEditing}
         isFirst={index === 0}
         isLast={index === ordered.length - 1}
@@ -226,11 +238,14 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
         onMove={onMoveWidget}
         onResize={onResizeWidget}
         onDeniedChange={onDeniedChange}
+        onLoadingChange={onLoadingChange}
         onRetryQuery={onRetryQuery}
       />
     ),
     [
       onDeniedChange,
+      onLoadingChange,
+      refreshToken,
       onRetryQuery,
       queries,
       timeFilter.timeRange,
@@ -287,6 +302,10 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
   const editedQuery = editedWidget ? queries[getWidgetQueryKey(editedWidget)] : undefined;
   const isEditedComposite = editedQuery?.kind === WidgetQueryKind.CompositeSql;
   const editedSql = editedWidget?.inline_query?.sql;
+  const editedView = editedWidget
+    ? resolveWidgetView(getWidgetView(editedWidget), edited.fittingViews, getWidgetQuerySource(editedQuery))
+    : WidgetView.Query;
+  const isEditedViewUnset = !!editedWidget && getWidgetView(editedWidget) == null;
   // In view mode only: in edit mode the author still needs the widgets, to remove or fix them.
   const isNothingAvailable = !isEditing && widgets.length > 0 && widgets.every((widget) => deniedIds.has(widget.id));
 
@@ -308,6 +327,12 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
         />
         <CompareSelect value={compare} onChange={dashboard.onCompareChange} />
         <div className="grow" />
+        <GhostButton
+          iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+          label={t(ButtonsI18nKey.Refresh)}
+          disabled={loadingIds.size > 0}
+          onClick={dashboard.onRefresh}
+        />
         {isEditing ? (
           <>
             <GhostButton
@@ -389,7 +414,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
             title: editedWidget.title ?? '',
             description: editedWidget.description ?? '',
             rowCount: String(editedWidget.row_limit),
-            view: resolveWidgetView(editedWidget.view, edited.fittingViews),
+            view: editedView,
             valueColumn: editedWidget.value_column ?? edited.valueColumns[0]?.value ?? '',
             changeDirection: editedWidget.change_direction ?? ChangeDirection.HigherIsBetter,
             valueFormat: editedWidget.settings?.value_format ?? WidgetValueFormat.Number,
@@ -401,26 +426,25 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
           fittingViews={edited.fittingViews}
           valueColumns={edited.valueColumns}
           isQueryViewTable={isEditedQueryTable}
-          onSubmit={(settings, rowLimit) =>
+          onSubmit={(settings, rowLimit) => {
+            const viewPatch = toWidgetViewPatch(settings, editedWidget.settings, editedView, isEditedViewUnset);
             dashboard.onUpdateWidget(editedWidget.id, {
               title: settings.title || undefined,
               description: settings.description || undefined,
               row_limit: isEditedComposite ? editedWidget.row_limit : rowLimit,
-              // The query's own view is the default, so it is stored as no view at all.
-              view: settings.view === WidgetView.Query ? undefined : settings.view,
+              view: viewPatch.view,
               value_column: settings.view === WidgetView.SingleValue ? settings.valueColumn || undefined : undefined,
               // Higher is better is the default, so only the other direction is stored.
               change_direction:
                 settings.changeDirection === ChangeDirection.LowerIsBetter ? ChangeDirection.LowerIsBetter : undefined,
-              // A plain number and US dollars are the defaults, so only a departure from them is stored.
-              settings: toStoredWidgetSettings(editedWidget.settings, settings),
+              settings: viewPatch.settings,
               // An inline SQL statement — typed, or copied from a SQL query — is the widget's own and edited in place;
               // a copied structured body has no editor here and stays as it was copied.
               ...(editedWidget.inline_query && editedSql != null
                 ? { inline_query: { ...editedWidget.inline_query, name: settings.title, sql: settings.sql } }
                 : {}),
-            })
-          }
+            });
+          }}
           onClose={() => setEdited(null)}
         />
       )}
