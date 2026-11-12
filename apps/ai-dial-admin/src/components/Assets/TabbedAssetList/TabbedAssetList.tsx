@@ -48,7 +48,7 @@ const TAB_LABEL_KEYS: Record<AssetSource, AssetTabsI18nKey> = {
 };
 
 /**
- * One layout for every platform entity listing, Applications and Toolsets: a header (title, count), a tab row for the sources that exist with the Create button at its end,
+ * One layout for every platform entity listing, Applications and Toolsets: a header (title, count), a tab row for the sources that exist (with the Create button at its end),
  * a tab row for the sources that exist, and the active source's body. Public is the file manager on the single
  * `public/` root; Platform and config.json are flat grids.
  */
@@ -104,6 +104,15 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
   const canCreate = !isReadOnlyAdmin && activeSource === AssetSource.Platform;
   const hasTabs = sources.length > 1;
   const onCloseCreate = useCallback(() => setIsCreateOpen(false), []);
+  // With a tab row the button ends that row; a listing with a single source has no tab row, so it stays in the header.
+  const createButton = canCreate ? (
+    <PrimaryButton
+      label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
+      aria-label={t(ButtonsI18nKey.Create)}
+      iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+      onClick={() => setIsCreateOpen(true)}
+    />
+  ) : null;
 
   return (
     <div className="flex size-full flex-col">
@@ -118,28 +127,20 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
           {activeSource !== AssetSource.Public && <ResetFiltersButton gridApi={gridApi} />}
+          {!hasTabs && createButton}
         </div>
       </div>
-      {(hasTabs || canCreate) && (
+      {hasTabs && (
         <div className="mb-4 flex min-w-0 items-end justify-between gap-4">
           <div className="min-w-0 flex-1">
-            {hasTabs && (
-              <Tabs
-                ariaLabel={t(AssetTabsI18nKey.TabsLabel)}
-                tabs={tabs}
-                activeTabId={activeSource}
-                onTabChange={onChangeTab}
-              />
-            )}
-          </div>
-          {canCreate && (
-            <PrimaryButton
-              label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-              aria-label={t(ButtonsI18nKey.Create)}
-              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-              onClick={() => setIsCreateOpen(true)}
+            <Tabs
+              ariaLabel={t(AssetTabsI18nKey.TabsLabel)}
+              tabs={tabs}
+              activeTabId={activeSource}
+              onTabChange={onChangeTab}
             />
-          )}
+          </div>
+          {createButton}
         </div>
       )}
       <div className="min-h-0 flex-1">

@@ -14,7 +14,7 @@ The system SHALL add an `App Runners` menu item to the Assets section of the adm
 
 ### Requirement: App-runner asset list is flat with create and delete actions
 
-The system SHALL render the Platform App Runner list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button) and delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
+The system SHALL render the Platform App Runner list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
 
 #### Scenario: List shows entries without a folder tree
 
@@ -28,7 +28,7 @@ The system SHALL render the Platform App Runner list as the Platform tab's flat 
 
 #### Scenario: Create action requests both identities
 
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal requests required storage `name`, declared `$id`, and display name fields
 - **AND** submitting valid values creates the resource and navigates to its detail view
 

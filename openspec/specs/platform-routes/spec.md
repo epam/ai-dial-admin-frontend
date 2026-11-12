@@ -15,7 +15,7 @@ The system SHALL add a `Routes` menu item to the Assets section of the admin men
 - **THEN** `Routes` appears immediately after `Interceptors`
 
 ### Requirement: Route asset list is flat with create and delete actions
-The system SHALL render the route asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button) and delete actions and
+The system SHALL render the route asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and
 no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: List shows entries without a folder tree
@@ -27,7 +27,7 @@ no folder-create, rename-folder, or move-into-folder controls.
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
 
 #### Scenario: Create action opens the route create modal
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting the route's name and one required Path, with no Display Name or Description field
 - **AND** the Path input uses the existing route-path validation and shows its inline validation error when empty or invalid
 - **AND** Create remains unavailable until both the name and Path are valid

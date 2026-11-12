@@ -33,7 +33,7 @@ after `App Runners`, linking to a new `/platform-catalog-schemas` route.
 
 ### Requirement: Catalog-schema list is flat with create, duplicate, and delete actions
 
-The system SHALL render the catalog-schema list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button), duplicate, and delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
+The system SHALL render the catalog-schema list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button), duplicate, and delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
 
 #### Scenario: List shows entries without a folder tree
 
@@ -48,7 +48,7 @@ The system SHALL render the catalog-schema list as the Platform tab's flat grid 
 
 #### Scenario: Create action requests both identities
 
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal requests required storage `name`, declared `$id`, entity type, and display name fields
 - **AND** submitting valid values creates the resource and refreshes the list
 

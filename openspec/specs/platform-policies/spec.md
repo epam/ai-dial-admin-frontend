@@ -60,7 +60,7 @@ from Core's resource metadata and the policy's path, and SHALL NOT fetch each ro
 - **THEN** only metadata requests are issued, with no content request per row
 
 ### Requirement: Policy create modal
-The system SHALL open a create modal from the Create button on the tab row requesting the policy name, an optional
+The system SHALL open a create modal from the Create button requesting the policy name, an optional
 **Cost object**, and the budget fields Core requires on every write (priority, what the policy applies to,
 and a cost limit). A blank cost object SHALL create a global policy; a value SHALL create a project policy in
 the folder of that cost object. The name and the cost object SHALL follow Core's entity-name rule. After success the system

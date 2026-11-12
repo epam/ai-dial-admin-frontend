@@ -13,7 +13,7 @@ The system SHALL add a `Roles` menu item to the Assets section of the admin menu
 - **THEN** `Roles` appears immediately after `Routes`
 
 ### Requirement: Role asset list is flat with create and delete actions
-The system SHALL render the role asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button) and delete actions and
+The system SHALL render the role asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and
 no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: List shows entries without a folder tree
@@ -25,7 +25,7 @@ no folder-create, rename-folder, or move-into-folder controls.
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
 
 #### Scenario: Create action opens the role create modal
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting only the role's name — no display name or description field,
   since `Role` has neither — and submitting it creates the resource and navigates to its detail view
 

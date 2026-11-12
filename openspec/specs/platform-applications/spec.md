@@ -59,7 +59,7 @@ the file manager's current, unrestricted action set.
 - **THEN** the full existing action set is offered, unchanged from current behavior
 
 #### Scenario: Create offers a single Application entry on the Platform tab
-- **WHEN** the user activates the Create button on the tab row while the Platform tab is active
+- **WHEN** the user activates the Create button while the Platform tab is active
 - **THEN** the create-application modal opens for a platform application, with no folder-create or import entries
 
 ### Requirement: Platform bucket application rows use the same column set as other platform entities

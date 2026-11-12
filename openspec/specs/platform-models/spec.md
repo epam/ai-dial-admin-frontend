@@ -10,7 +10,7 @@ The system SHALL add a `Models` menu item as the first entry in the Assets secti
 - **THEN** `Models` is its first item, appearing before App Runners/Apps/Toolsets/Conversations/Prompts/Files
 
 ### Requirement: Model asset list is flat with create and delete actions
-The system SHALL render the model asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button) and delete actions and no folder-create, rename-folder, or move-into-folder controls — unlike the Apps Public tab, which supports arbitrary nested folders.
+The system SHALL render the model asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and no folder-create, rename-folder, or move-into-folder controls — unlike the Apps Public tab, which supports arbitrary nested folders.
 
 The shared create dispatch SHALL remove its transient `folderId` and merged-read `_metadata` fields before it invokes the model create server action. All remaining model content and identity fields SHALL be preserved for the server action's existing Core payload transformation.
 
@@ -23,7 +23,7 @@ The shared create dispatch SHALL remove its transient `folderId` and merged-read
 - **THEN** neither a create-folder action nor a move-to-folder action is offered, unlike the Apps Public tab
 
 #### Scenario: Create action opens the model create modal
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting the model's name, and submitting it creates the model resource and navigates to its detail view
 
 #### Scenario: A created model with a colon in its name opens through an encoded detail route

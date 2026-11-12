@@ -11,7 +11,7 @@ after `App Runners`, linking to a new `/assets-interceptors` route.
 - **THEN** `Interceptors` appears immediately after `App Runners` and before `Applications`
 
 ### Requirement: Interceptor asset list is flat with create and delete actions
-The system SHALL render the interceptor asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button) and delete actions and
+The system SHALL render the interceptor asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and
 no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: List shows entries without a folder tree
@@ -23,7 +23,7 @@ no folder-create, rename-folder, or move-into-folder controls.
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
 
 #### Scenario: Create action opens the interceptor create modal
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting the interceptor's name and display name, and submitting it
   creates the resource and navigates to its detail view
 

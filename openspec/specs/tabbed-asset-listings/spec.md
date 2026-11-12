@@ -8,7 +8,8 @@ The shared listing shell for every platform entity, Assets Applications and Asse
 The system SHALL render every platform entity listing, the Assets Applications listing and the Assets Toolsets
 listing with the same layout: a header row, a tab row, then the active tab's body. The header SHALL show the page
 title and an optional count after the title in `dial-small-text text-secondary`. The tab row SHALL show the tabs and,
-at its end, a Create button when the active tab allows creating. The page SHALL work with a single file-manager root, `public/`; `platform/` and `file/` SHALL
+at its end, a Create button when the active tab allows creating; a listing with no tab row SHALL show that
+button at the end of the header instead. The page SHALL work with a single file-manager root, `public/`; `platform/` and `file/` SHALL
 NOT appear as roots, folders or tree nodes anywhere in the file manager.
 
 #### Scenario: Listing shows header, tabs and body

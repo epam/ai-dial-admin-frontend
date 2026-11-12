@@ -17,7 +17,7 @@ after `Interceptors`, linking to a new `/platform-translators` route.
 - **THEN** `Translators` appears immediately after `Interceptors` and before `Routes`
 
 ### Requirement: Translator asset list is flat with create and delete actions
-The system SHALL render the translator asset list with a flat Platform tab and a config.json tab, built on the shared tabbed listing. The Platform tab SHALL retain create (tab-row button) and delete actions; the config.json tab SHALL list config-file-defined translators and expose no mutating action.
+The system SHALL render the translator asset list with a flat Platform tab and a config.json tab, built on the shared tabbed listing. The Platform tab SHALL retain create (Create button) and delete actions; the config.json tab SHALL list config-file-defined translators and expose no mutating action.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/platform-translators`
@@ -36,7 +36,7 @@ The system SHALL render the translator asset list with a flat Platform tab and a
 - **THEN** no create-folder, move-to-folder, or duplicate action is offered
 
 #### Scenario: Create action opens the translator create modal
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting only the translator's name — no display name or description
   field, since `Translator` has neither — and submitting it creates the resource and navigates to its
   detail view

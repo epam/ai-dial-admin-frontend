@@ -19,7 +19,7 @@ the AI Gateway group icon and from the `Routes` entry's icon.
 
 ### Requirement: Router asset list is flat with create and delete actions
 The system SHALL render the router asset list with a flat Platform tab and a config.json tab, built on the
-shared tabbed listing. The Platform tab SHALL offer create (tab-row button), duplicate, and delete actions and no
+shared tabbed listing. The Platform tab SHALL offer create (Create button), duplicate, and delete actions and no
 create-folder, move, or rename action. The config.json tab SHALL list config-file-defined routers and
 expose no mutating action.
 
@@ -28,7 +28,7 @@ expose no mutating action.
 - **THEN** all router resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: Create opens a modal with identity fields
-- **WHEN** a user activates the Create button on the tab row
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting the router's id, display name, display version, and description, and submitting
   it creates the resource under `routers/platform/{name}` and navigates to its detail view
 

@@ -59,7 +59,7 @@ while the Public tab keeps the file manager's current, unrestricted action set.
 - **THEN** the full existing action set is offered, unchanged from current behavior
 
 #### Scenario: Create offers a single Toolset entry on the Platform tab
-- **WHEN** the user activates the Create button on the tab row while the Platform tab is active in the Toolsets listing
+- **WHEN** the user activates the Create button while the Platform tab is active in the Toolsets listing
 - **THEN** the create-toolset modal opens for a platform toolset, with no folder-create or import entries
 
 ### Requirement: Platform bucket toolset rows use the same column set as other platform entities
