@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getGridOptions } from '@/src/components/Common/FileManager/utils';
-import { MenuI18nKey } from '@/src/constants/i18n';
 import { MovableAssetListItem } from '@/src/models/dial/asset-list-item';
 import EntitySelectManager from '../EntitySelectManager';
 import { EntitySelectType } from '../models';
@@ -175,7 +174,7 @@ describe('EntitySelectManager', () => {
     rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="bucket1/missing-skill" isModalOpen />);
 
     expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
-    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/', true, true);
   });
 
   test('does not request the hierarchy again once the value folder is known to be empty', () => {
@@ -184,14 +183,14 @@ describe('EntitySelectManager', () => {
 
     expect(mockFolder.fetchFolderHierarchy).not.toHaveBeenCalled();
     expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
-    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/', true, true);
   });
 
   test('does not request the value hierarchy again after falling back to the root', () => {
     mockFolder.files = [{ path: 'public/' }];
     mockFolder.fetchedFoldersData = { 'bucket1/': [] };
     const { rerender } = renderManager({ value: 'bucket1/missing-skill' });
-    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['public/'], true, true);
+    expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/', true, true);
     mockFolder.fetchFolderHierarchy.mockClear();
 
     mockFolder.files = [{ path: 'public/' }, { path: 'public/team/' }];
@@ -272,7 +271,7 @@ describe('EntitySelectManager', () => {
   });
 });
 
-describe('EntitySelectManager — per-type root folders', () => {
+describe('EntitySelectManager — single public root', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFolder.files = [];
@@ -280,36 +279,13 @@ describe('EntitySelectManager — per-type root folders', () => {
     mockFolder.fetchedFoldersData = {};
   });
 
-  const renderApplications = () =>
-    render(
-      <EntitySelectManager
-        entityType={EntitySelectType.Application}
-        value=""
-        isModalOpen
-        onChangeSelectedPaths={vi.fn()}
-      />,
-    );
-
-  test('loads the file, platform and public roots together for applications', () => {
-    renderApplications();
-
-    expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
-    expect(mockFolder.fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
-  });
-
-  test('labels the tree root for applications, as no one bucket stands for it', () => {
-    renderApplications();
-
-    expect(screen.getByText(MenuI18nKey.Applications)).toBeTruthy();
-  });
-
-  test('loads only the public root, with no root label, for skills', () => {
-    render(
-      <EntitySelectManager entityType={EntitySelectType.Skill} value="" isModalOpen onChangeSelectedPath={vi.fn()} />,
-    );
+  test.each([
+    [EntitySelectType.Skill, 'onChangeSelectedPath'],
+    [EntitySelectType.Application, 'onChangeSelectedPaths'],
+  ])('loads only the public root for %s when it is not asked for several sources', (entityType, callback) => {
+    render(<EntitySelectManager entityType={entityType} value="" isModalOpen {...{ [callback]: vi.fn() }} />);
 
     expect(mockFolder.fetchFiles).toHaveBeenCalledOnce();
     expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/');
-    expect(screen.queryByText(MenuI18nKey.Applications)).toBeNull();
   });
 });

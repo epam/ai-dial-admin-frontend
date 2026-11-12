@@ -40,7 +40,7 @@ const { SaveValidationContextProvider }: typeof import('@/src/context/SaveValida
   '@/src/context/SaveValidationContext',
 );
 
-// Every root already fetched; `taken` exists only in Core's configuration file.
+// Both folders already fetched; `taken` is held by `public/other/` only.
 const contextOn = (filePath: string) =>
   ({
     files: [],
@@ -49,10 +49,8 @@ const contextOn = (filePath: string) =>
     filePath,
     setFilePath: vi.fn(),
     fetchedFoldersData: {
-      'platform/': [],
       'public/': [],
       'public/other/': [{ name: 'taken', path: 'public/other/taken__1.0.0', version: '1.0.0' }],
-      'file/': [{ name: 'taken', path: 'file/taken' }],
     },
     fetchFiles: vi.fn(),
     isFetchingFiles: false,
@@ -70,48 +68,13 @@ const Modal = ({ filePath }: { filePath: string }): ReactNode => (
       endpoint: 'http://box/mcp',
       transport: ToolsetTransport.HTTP,
     }}
-    shouldOpenOnPlatform
     onClose={vi.fn()}
   />
 );
 
 const createButton = () => screen.getByRole('button', { name: 'Buttons.Create' });
 
-describe('CreateAsset — name validity across buckets', () => {
-  test('keeps Create disabled for a configuration-file name after switching to platform', () => {
-    const { rerender } = render(
-      <SaveValidationContextProvider>
-        <Modal filePath="public/" />
-      </SaveValidationContextProvider>,
-    );
-    expect(createButton()).toBeEnabled();
-
-    rerender(
-      <SaveValidationContextProvider>
-        <Modal filePath="platform/" />
-      </SaveValidationContextProvider>,
-    );
-
-    expect(createButton()).toBeDisabled();
-  });
-
-  test('enables Create again once the same name is moved back to public', () => {
-    const { rerender } = render(
-      <SaveValidationContextProvider>
-        <Modal filePath="platform/" />
-      </SaveValidationContextProvider>,
-    );
-    expect(createButton()).toBeDisabled();
-
-    rerender(
-      <SaveValidationContextProvider>
-        <Modal filePath="public/" />
-      </SaveValidationContextProvider>,
-    );
-
-    expect(createButton()).toBeEnabled();
-  });
-
+describe('CreateAsset — name validity across folders', () => {
   test('re-checks the name when moving to another public folder that already holds it', () => {
     const { rerender } = render(
       <SaveValidationContextProvider>

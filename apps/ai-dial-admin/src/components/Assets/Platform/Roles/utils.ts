@@ -4,8 +4,8 @@ import { SharingGridData } from '@/src/components/Roles/models';
 import { APPLICATIONS_PREFIX } from '@/src/constants/publications-core';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { DialCoreRoleLimits, DialCoreRoleShare, DialRoleShare } from '@/src/models/dial/role-limits';
-import { getFolderNameAndPath } from '@/src/utils/files/path';
-import { isPublicPath } from '@/src/utils/files/root-folder';
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { platformSharingDefaults } from './constants';
 import { PlatformRoleModelLimitRow, PlatformRoleModelOption, PlatformSharingType } from './models';
 
@@ -161,21 +161,20 @@ export const addModelLimits = (
   );
 
 /**
- * The `limits` key of an application picked from the applications tree. Core keys a public application by its
- * resource reference, while a platform or config-file application is keyed by its name alone (a config-file row's
- * path is already its name, a platform row's path is `platform/{name}`).
+ * The `limits` key of a picked application. Core keys a public application by its resource reference, while a
+ * platform or config-file application is keyed by its name alone.
  */
-export const getApplicationLimitKey = (path: string): string =>
-  isPublicPath(path) ? `${APPLICATIONS_PREFIX}${path}` : getFolderNameAndPath(path).name;
+export const getApplicationLimitKey = ({ source, path, name }: PickedEntity): string =>
+  source === AssetSource.Public ? `${APPLICATIONS_PREFIX}${path}` : name;
 
 /** Attaches the picked applications; a key already in `limits` keeps its entry, so re-picking it is a no-op. */
 export const addApplicationLimits = (
   limits: Record<string, DialCoreRoleLimits> | undefined,
-  paths: string[],
+  entities: PickedEntity[],
 ): Record<string, DialCoreRoleLimits> =>
   addModelLimits(
     limits,
-    paths.map((path) => ({ name: getApplicationLimitKey(path) })),
+    entities.map((entity) => ({ name: getApplicationLimitKey(entity) })),
   );
 
 export const removeModelLimit = (

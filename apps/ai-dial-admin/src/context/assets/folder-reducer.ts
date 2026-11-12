@@ -65,25 +65,6 @@ export const folderReducer = <T extends AssetListItem>(
       return { files, fetchedFoldersData, expandedFolders, filePath, hasFetchError: false };
     }
 
-    case FolderActionType.RootsLoaded: {
-      const shouldReplaceCache = action.refreshData && action.isLatestRequest;
-      const fetchedFoldersData = shouldReplaceCache
-        ? action.fetchedFoldersData
-        : { ...state.fetchedFoldersData, ...action.fetchedFoldersData };
-
-      if (!action.isLatestRequest) {
-        return { ...state, fetchedFoldersData };
-      }
-
-      return {
-        files: action.files,
-        fetchedFoldersData,
-        hasFetchError: false,
-        expandedFolders: new Set(action.refreshData ? [action.openPath] : [...state.expandedFolders, action.openPath]),
-        filePath: !state.filePath || action.resetFolder ? action.openPath : state.filePath,
-      };
-    }
-
     case FolderActionType.FolderLoaded: {
       const files = mergeFiles<T>(state.files, action.fetched, action.path);
       const shouldReplaceCache = action.refreshData && action.isLatestRequest;

@@ -25,17 +25,11 @@ import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/ap
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
-import {
-  bulkDeletePolicies,
-  createPolicy,
-  getPolicy,
-  removePolicyFolder,
-} from '@/src/app/[lang]/platform-policies/actions';
+import { bulkDeletePolicies, createPolicy, getPolicy } from '@/src/app/[lang]/platform-policies/actions';
 import {
   bulkDeletePolicyAssignments,
   createPolicyAssignment,
   getPolicyAssignment,
-  removePolicyAssignmentFolder,
 } from '@/src/app/[lang]/platform-policy-assignments/actions';
 import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { bulkDeleteProjects, getProject } from '@/src/app/[lang]/projects/actions';
@@ -93,13 +87,7 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import {
-  isFileRootPath,
-  isNestedPlatformView,
-  isPlatformBucketView,
-  isPlatformDualBucketView,
-  PLATFORM_ROOT_FOLDER,
-} from '@/src/utils/files/root-folder';
+import { isNestedPlatformView, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { getCostObjectFromFolder } from '@/src/utils/policies/path';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -163,7 +151,7 @@ export const getAssetNameColumn =
     };
   };
 
-export const getGridColumns = (view: ApplicationRoute, currentPath?: string, getItemHref?: EntityHrefGetter) => {
+export const getGridColumns = (view: ApplicationRoute, getItemHref?: EntityHrefGetter) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
     field: 'author',
@@ -197,18 +185,8 @@ export const getGridColumns = (view: ApplicationRoute, currentPath?: string, get
   // `useFileManagerColumns`, but that union is not in ag-grid's own type.
   const NAME_COLUMN_DEF = getAssetNameColumn('Name', view, getItemHref) as unknown as ColDef;
 
-  if (isFileRootPath(currentPath)) {
-    return [NAME_COLUMN_DEF];
-  }
-
-  // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
-  // resource's storage name; schema body `$id` values are available after opening the resource.
-  if (
-    isPlatformBucketView(view) ||
-    view === ApplicationRoute.Skills ||
-    view === ApplicationRoute.Projects ||
-    isPlatformDualBucketView(view, currentPath)
-  ) {
+  // Skills and projects are unversioned, so they share a metadata-only column set.
+  if (view === ApplicationRoute.Skills || view === ApplicationRoute.Projects) {
     return [
       NAME_COLUMN_DEF,
       AUTHOR_COLUMN,
@@ -632,17 +610,6 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformPolicyAssignments]: bulkDeletePolicyAssignments,
   [ApplicationRoute.Skills]: bulkDeleteSkills,
   [ApplicationRoute.Projects]: bulkDeleteProjects,
-};
-
-/**
- * A nested platform view's folder is a cost object, which Core keeps no marker for: deleting it deletes
- * the records under it, and it goes with the last one.
- */
-export const RemoveCostObjectFolderActionMap: Partial<
-  Record<ApplicationRoute, (path: string) => Promise<ServerActionResponse<Record<string, unknown>>>>
-> = {
-  [ApplicationRoute.PlatformPolicies]: removePolicyFolder,
-  [ApplicationRoute.PlatformPolicyAssignments]: removePolicyAssignmentFolder,
 };
 
 export const PlatformBulkDeleteAssetActionMap: Partial<

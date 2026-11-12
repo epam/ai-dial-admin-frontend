@@ -2,11 +2,11 @@
 
 import { FC } from 'react';
 
-import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
+import TabbedAssetList from '@/src/components/Assets/TabbedAssetList/TabbedAssetList';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const RoutersList: FC = () => {
-  return <BaseAssetList view={ApplicationRoute.PlatformRouters} />;
+  return <TabbedAssetList view={ApplicationRoute.PlatformRouters} />;
 };
 
 export default RoutersList;

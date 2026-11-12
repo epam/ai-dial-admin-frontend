@@ -7,7 +7,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
-import { NEW_POLICY_DEFAULTS } from '@/src/components/Assets/Platform/Policies/constants';
 import { ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -31,12 +30,6 @@ import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
-import {
-  DUAL_BUCKET_VIEWS,
-  getRootFolder,
-  isNestedPlatformView,
-  isPlatformBucketPath,
-} from '@/src/utils/files/root-folder';
 import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreateEntityBase extends BaseEntity {
@@ -82,51 +75,9 @@ const CreateEntity = <T extends CreateEntityBase>({
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
 
-  // Applications and Toolsets are the asset-with-version routes that also have a flat, unversioned
-  // bucket (`platform/`) — the current folder (where "New Application"/"New Toolset" was invoked
-  // from) is the only signal available at create time to tell the two apart (design.md's
-  // `platform-applications`/`platform-toolsets` capabilities).
-  const isPlatformDualBucketCreate = DUAL_BUCKET_VIEWS.includes(route) && isPlatformBucketPath(folderContext?.filePath);
-
   const [currentEntity, setEntity] = useState<T>(() => {
-    if (isAssetWithVersion(route) && !isPlatformDualBucketCreate) {
+    if (isAssetWithVersion(route)) {
       return { name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T;
-    }
-
-    if (route === ApplicationRoute.PlatformModels || route === ApplicationRoute.PlatformRouters) {
-      return {
-        name: '',
-        description: '',
-        userRoles: [],
-        ...initialValues,
-      } as T;
-    }
-
-    if (route === ApplicationRoute.PlatformTranslators) {
-      return {
-        name: '',
-        ...initialValues,
-      } as T;
-    }
-
-    if (route === ApplicationRoute.PlatformRoutes) {
-      return { name: '', description: '', userRoles: [], ...initialValues } as T;
-    }
-
-    // The cost object is the folder: start in the one the list is showing, which the modal's field can change.
-    if (route === ApplicationRoute.PlatformPolicies) {
-      return { name: '', ...NEW_POLICY_DEFAULTS, folderId: folderContext?.filePath, ...initialValues } as unknown as T;
-    }
-
-    if (route === ApplicationRoute.PlatformPolicyAssignments) {
-      return { name: '', folderId: folderContext?.filePath, ...initialValues } as T;
-    }
-
-    if (
-      isPlatformDualBucketCreate &&
-      (route === ApplicationRoute.AssetsApplications || route === ApplicationRoute.AssetsToolsets)
-    ) {
-      return { name: '', description: '', user_roles: [], ...initialValues } as T;
     }
 
     return { name: '', description: '', ...initialValues } as T;
@@ -150,7 +101,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       const entity = {
         ...updatedEntity,
         name: updatedEntity.name?.trim(),
-        ...(isAssetWithVersion(route) && !isPlatformDualBucketCreate && { display_version: updatedEntity.version }),
+        ...(isAssetWithVersion(route) && { display_version: updatedEntity.version }),
       };
 
       const isUnique = RoutesForCheckingUniqueName.includes(route)
@@ -174,8 +125,7 @@ const CreateEntity = <T extends CreateEntityBase>({
         }
       }
 
-      // A nested platform view's modal asks for the cost object, so the folder it chose is kept.
-      if (isAssetView(route) && !isNestedPlatformView(route)) {
+      if (isAssetView(route)) {
         entity.folderId = folderContext?.filePath;
       }
       // An app runner is identified by `$id`, not `name`, so both the toast and the navigation target
@@ -186,11 +136,6 @@ const CreateEntity = <T extends CreateEntityBase>({
         if (res.success) {
           if (isAssetView(route)) {
             folderContext?.fetchFiles(folderContext?.filePath);
-          }
-          if (isNestedPlatformView(route)) {
-            // The record may sit in a cost object the list is not showing, which also adds that folder to the root.
-            folderContext?.fetchFiles(entity.folderId || `${getRootFolder(route)}/`);
-            folderContext?.fetchFiles(`${getRootFolder(route)}/`);
           }
           showNotification(
             getSuccessNotification(
@@ -225,17 +170,7 @@ const CreateEntity = <T extends CreateEntityBase>({
         }
       });
     },
-    [
-      route,
-      createEntity,
-      getEntityById,
-      folderContext,
-      isPlatformDualBucketCreate,
-      showNotification,
-      t,
-      router,
-      onClose,
-    ],
+    [route, createEntity, getEntityById, folderContext, showNotification, t, router, onClose],
   );
 
   useEffect(() => {
@@ -257,7 +192,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       });
     }
 
-    if (isAssetWithVersion(route) && !isPlatformDualBucketCreate) {
+    if (isAssetWithVersion(route)) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'version',
@@ -265,7 +200,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       });
     }
 
-    if (route === ApplicationRoute.Routes || route === ApplicationRoute.PlatformRoutes) {
+    if (route === ApplicationRoute.Routes) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'path',
@@ -302,7 +237,6 @@ const CreateEntity = <T extends CreateEntityBase>({
           onChangeEntity={onChangeEntity}
           initialValues={initialValues}
           isModal={isModal}
-          hideVersionField={isPlatformDualBucketCreate}
         />
       </div>
     </Popup>

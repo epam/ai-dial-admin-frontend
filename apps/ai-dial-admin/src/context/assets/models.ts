@@ -30,7 +30,6 @@ export enum FolderActionType {
   ExpandedFoldersSet = 'expandedFoldersSet',
   FetchFailed = 'fetchFailed',
   HierarchyLoaded = 'hierarchyLoaded',
-  RootsLoaded = 'rootsLoaded',
   FolderLoaded = 'folderLoaded',
   FolderToggled = 'folderToggled',
 }
@@ -47,12 +46,6 @@ interface RequestOutcome {
   resetFolder?: boolean;
 }
 
-export interface RootsLoadedPayload<T extends AssetListItem> extends RequestOutcome {
-  files: T[];
-  fetchedFoldersData: Record<string, T[]>;
-  openPath: string;
-}
-
 export interface FolderLoadedPayload<T extends AssetListItem> extends RequestOutcome {
   path: string;
   fetched: T[];
@@ -64,6 +57,5 @@ export type FolderAction<T extends AssetListItem> =
   | { type: FolderActionType.ExpandedFoldersSet; value: SetStateAction<Set<string>> }
   | { type: FolderActionType.FetchFailed }
   | { type: FolderActionType.HierarchyLoaded; hierarchy: FolderHierarchy<T> }
-  | ({ type: FolderActionType.RootsLoaded } & RootsLoadedPayload<T>)
   | ({ type: FolderActionType.FolderLoaded } & FolderLoadedPayload<T>)
   | { type: FolderActionType.FolderToggled; folderPath: string; options: ToggleFolderOptions };

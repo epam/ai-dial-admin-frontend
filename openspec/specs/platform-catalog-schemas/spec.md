@@ -9,9 +9,7 @@ meta-schema validation that substitutes for Core's absent write-time checks. The
 API-written resources and exposes the operator-managed file-declared population through a synthetic,
 read-only `file` root. The consumer side (`catalog_schema_id` / `catalog_properties` on deployments)
 belongs to `catalog-properties-editing`.
-
 ## Requirements
-
 ### Requirement: Catalog > Catalog Schemas menu entry
 
 The system SHALL add a `Catalog Schemas` menu item to the Catalog section of the admin menu, directly
@@ -35,12 +33,12 @@ after `App Runners`, linking to a new `/platform-catalog-schemas` route.
 
 ### Requirement: Catalog-schema list is flat with create, duplicate, and delete actions
 
-The system SHALL render the catalog-schema list as a single, non-nested list of entries under the `platform` root, built on the shared asset list, exposing create, duplicate, delete, and bulk-delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
+The system SHALL render the catalog-schema list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button), duplicate, and delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
 
 #### Scenario: List shows entries without a folder tree
 
 - **WHEN** a user opens `/platform-catalog-schemas`
-- **THEN** all catalog-schema resources are shown as direct entries with no folder-expand affordance
+- **THEN** all catalog-schema resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: Duplicate action creates a copy with separate identities
 
@@ -48,14 +46,9 @@ The system SHALL render the catalog-schema list as a single, non-nested list of 
 - **THEN** the modal shows Name `agent-schema-copy`, ID `https://dial.example.com/catalog_schemas/agent-copy`, and display name `Agent`
 - **AND** submitting valid values sends the edited Name and ID with the source schema's remaining properties through the existing Core-backed create flow
 
-#### Scenario: The folder tree offers no folder actions
-
-- **WHEN** a user opens the context menu on the catalog-schema folder tree's root
-- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered
-
 #### Scenario: Create action requests both identities
 
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button on the tab row
 - **THEN** a modal requests required storage `name`, declared `$id`, entity type, and display name fields
 - **AND** submitting valid values creates the resource and refreshes the list
 
@@ -65,15 +58,10 @@ The system SHALL render the catalog-schema list as a single, non-nested list of 
 - **THEN** the `Name` column shows the decoded storage name
 - **AND** no content request is made merely to display the declared `$id`
 
-#### Scenario: Bulk delete removes the selected schemas
-
-- **WHEN** a user selects several catalog schemas and confirms bulk delete
-- **THEN** each selected schema is deleted and the list refreshes without them
-
 #### Scenario: A read-only admin is offered no mutating actions
 
 - **WHEN** a read-only admin opens the catalog-schema list
-- **THEN** no create, duplicate, delete, or bulk-delete action is offered
+- **THEN** no create, duplicate, or delete action is offered
 
 ### Requirement: Catalog-schema list columns are metadata-only
 
@@ -184,7 +172,6 @@ metadata, not a deployment: it has no endpoints, no routing, no interceptor chai
 - **WHEN** a user opens a catalog schema's detail view
 - **THEN** no `Audit` tab is present, no Core-sync status banner is rendered in the header, and the
   header offers no create action for any other entity
-
 
 ### Requirement: Properties tab content
 
@@ -467,3 +454,4 @@ The detail view SHALL show the loaded Core storage name separately from declared
 - **WHEN** an admin opens an API-written Catalog Schema whose storage name differs from `$id`
 - **THEN** the Properties view shows both values distinctly
 - **AND** neither value is editable
+

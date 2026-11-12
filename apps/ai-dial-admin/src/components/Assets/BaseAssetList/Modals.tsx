@@ -7,14 +7,8 @@ import CreateApplication from '@/src/components/Assets/Entities/Apps/CreateAppli
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import CreateKeyModal from '@/src/components/Assets/Platform/Keys/CreateKeyModal';
-import CreatePolicyModal from '@/src/components/Assets/Platform/PolicySubjects/CreatePolicyModal';
 import DuplicateAsset from '@/src/components/Assets/Modals/DuplicateAsset';
-import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
-import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
-import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { isPlatformBucketView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -86,8 +80,6 @@ const Modals: FC<Props> = ({
 
   const renderCreateModal = () => {
     switch (view) {
-      case ApplicationRoute.PlatformKeys:
-        return <CreateKeyModal isOpen={isModalOpen} names={entityNames} onClose={onClose} />;
       case ApplicationRoute.AssetsApplications:
         return (
           <CreateApplication
@@ -96,18 +88,6 @@ const Modals: FC<Props> = ({
             versionsMap={versionsMap}
             runners={runners}
             translators={translators}
-            getContext={getContext}
-            onClose={onClose}
-            onCreate={onCreate}
-          />
-        );
-      case ApplicationRoute.PlatformPolicies:
-      case ApplicationRoute.PlatformPolicyAssignments:
-        return (
-          <CreatePolicyModal
-            route={view}
-            isOpen={isModalOpen}
-            names={entityNames}
             getContext={getContext}
             onClose={onClose}
             onCreate={onCreate}
@@ -132,39 +112,6 @@ const Modals: FC<Props> = ({
   };
 
   const renderDuplicateModal = () => {
-    if (view === ApplicationRoute.PlatformKeys) {
-      return duplicateItem ? (
-        <DuplicatePlatformKeyModal
-          isOpen={isModalOpen}
-          names={entityNames}
-          entity={duplicateItem as unknown as DialKeyResource}
-          onClose={onClose}
-        />
-      ) : null;
-    }
-
-    // A platform-bucket application/toolset row duplicates the same flat, unversioned way the
-    // six other flat platform views already do (design.md D2/`platform-applications`/
-    // `platform-toolsets`) — the row's own `folderId` decides it (reliably `'platform/'` for a
-    // platform-bucket row since `fix-platform-bucket-folder-storage`; a `.path` fallback used to
-    // be needed here and was the cause of Issue #4420 — `.path` never carries the bucket prefix,
-    // so it always won the `||` and made this check false for a platform-bucket row).
-    const isFlatPlatformDuplicate =
-      isPlatformBucketView(view) || isPlatformDualBucketView(view, duplicateItem?._metadata?.folderId);
-
-    if (isFlatPlatformDuplicate) {
-      return (
-        <DuplicatePlatformAsset
-          view={view}
-          isModalOpen={isModalOpen}
-          onClose={onClose}
-          names={entityNames}
-          entity={duplicateItem as unknown as PlatformAsset}
-          onDuplicate={(asset) => onDuplicate?.(asset as unknown as AssetWithVersion)}
-        />
-      );
-    }
-
     return (
       <DuplicateAsset
         context={getContext}

@@ -58,7 +58,7 @@ read never falls back to them.
 | Applications                                          | Config file                                  | `GET /openai/applications`                    |
 | Runner details                                        | Config-file read                             | `GET /v1/application_type_schemas/schema?id=` |
 | Translators, roles, interceptors, global interceptors | Core configuration                           | Skipped                                       |
-| File tree roots                                       | `file`, `platform`, `public`                 | `public` only                                 |
+| Applications / Toolsets listing tabs                  | Public, Platform, config.json                | Public only (no tab row)                      |
 
 The `/openai/*` lists hold exactly the deployments Core accepts as a dependency from the caller, so they are
 the valid choices. A failed list read leaves that picker empty and shows the option-list-unavailable warning.
@@ -66,7 +66,6 @@ the valid choices. A failed list read leaves that picker empty and shows the opt
 ## Known gaps
 
 - Deleting a publication request is not gated by unit permissions.
-- The `file` root still loads for the Applications and Toolsets detail views in unit mode.
 - Platform and Entities pages are hidden only through the menu; direct URLs are not guarded.
 - A unit user cannot re-save an application whose existing dependencies or interceptors they cannot use, even
   when only the display name changed. Core is expected to check only references a write adds.
@@ -82,4 +81,4 @@ the valid choices. A failed list read leaves that picker empty and shows the opt
 | Permission checks and menu filter | `src/utils/org-units/`                                                |
 | Detail views read-only            | `src/hooks/use-entity-read-only-at.ts`                                |
 | Caller-scoped picker reads        | `src/server/config-entities/read-caller-options.ts`, `CoreUtilityApi` |
-| File roots                        | `src/utils/files/root-folder.ts`                                      |
+| Listing sources (tabs)            | `src/utils/files/asset-sources.ts`                                    |

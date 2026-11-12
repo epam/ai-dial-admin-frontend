@@ -1,9 +1,7 @@
 ## Purpose
 
 The `Assets > Interceptors` admin surface: a flat, unversioned list and two-tab detail view over DIAL Core's `interceptors/platform` config resources — a first-class, server-validated Core resource type — read and written directly through Core rather than the admin backend. It also introduces `AssetInterceptorOrigin`, widening every entity-surface interceptor-attach picker to offer both the admin-BE-tracked population and this Core-only asset population.
-
 ## Requirements
-
 ### Requirement: Assets > Interceptors menu entry
 The system SHALL add an `Interceptors` menu item to the Assets section of the admin menu, directly
 after `App Runners`, linking to a new `/assets-interceptors` route.
@@ -13,30 +11,25 @@ after `App Runners`, linking to a new `/assets-interceptors` route.
 - **THEN** `Interceptors` appears immediately after `App Runners` and before `Applications`
 
 ### Requirement: Interceptor asset list is flat with create and delete actions
-The system SHALL render the interceptor asset list as a single, non-nested list of entries under the
-`platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and
+The system SHALL render the interceptor asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (tab-row button) and delete actions and
 no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/assets-interceptors`
-- **THEN** all interceptor resources are shown as direct entries with no folder-expand affordance
+- **THEN** all interceptor resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: No create-folder or move action is present
-- **WHEN** a user opens the interceptor asset list toolbar and row actions
+- **WHEN** a user opens the interceptor asset list header and row actions
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
 
 #### Scenario: Create action opens the interceptor create modal
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button on the tab row
 - **THEN** a modal opens requesting the interceptor's name and display name, and submitting it
   creates the resource and navigates to its detail view
 
-#### Scenario: Bulk delete removes the selected interceptors
-- **WHEN** a user selects several interceptors and confirms bulk delete
-- **THEN** each selected interceptor is deleted and the list refreshes without them
-
 #### Scenario: A read-only admin is offered no mutating actions
 - **WHEN** a read-only admin opens the interceptor asset list
-- **THEN** no create, delete, or bulk-delete action is offered
+- **THEN** no create or delete action is offered
 
 ### Requirement: Interceptor asset list columns are metadata-only
 The system SHALL show name, author, created-at, and updated-at columns for interceptor assets, all
@@ -210,3 +203,4 @@ write, and its model SHALL carry both fields, which it does not today.
 
 - **WHEN** an admin opens a Catalog interceptor carrying no `catalog_schema_id`
 - **THEN** the Properties and parameter-schema tabs behave exactly as before
+
