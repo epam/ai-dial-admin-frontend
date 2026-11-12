@@ -6,9 +6,13 @@ import classNames from 'classnames';
 import { NoDataContent, SegmentedControl, Select } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 
-import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import { buildChartOptions } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import SeriesChart from '@/src/components/Analytics/QueryBuilder/Result/SeriesChart';
 import { keepValidYFields, resolveYFields } from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
+import {
+  getAvailableChartTypes,
+  getChartNumericColumns,
+} from '@/src/components/Analytics/QueryBuilder/utils/chart-types';
 import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useChartColors } from '@/src/hooks/use-chart-colors';
@@ -30,10 +34,8 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   // Deduplicated: a SQL run the backend could not translate offers every column as a dimension, so
   // its numeric columns are in both lists — counting them twice would offer scatter a single column
   // to plot against itself.
-  const numericColumns = useMemo(
-    () => getNumericColumns(result.rows, [...new Set([...meta.dimensionColumns, ...meta.aggregateColumns])]),
-    [result.rows, meta.dimensionColumns, meta.aggregateColumns],
-  );
+  const numericColumns = useMemo(() => getChartNumericColumns(result.rows, meta), [result.rows, meta]);
+  const availableTypes = useMemo(() => getAvailableChartTypes(result.rows, meta), [result.rows, meta]);
 
   const columnsFor = (source: ChartColumnSource): string[] => {
     if (source === ChartColumnSource.Dimensions) return meta.dimensionColumns;
@@ -53,11 +55,8 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
     [config.yFields, yOptions, xField, descriptor.isMultiY],
   );
 
-  // Scatter needs two numeric columns to mean anything — with fewer, the type is hidden entirely.
-  const scatterUnavailable = numericColumns.length < 2;
-
   const typeOptions: SegmentedControlItem<ChartType>[] = CHART_TYPE_OPTIONS.filter(
-    (o) => !(o.value === ChartType.Scatter && scatterUnavailable),
+    (o) => o.value === config.type || availableTypes.includes(o.value as ChartType),
   ).map((o) => ({ value: o.value as ChartType, label: o.label }));
 
   // Switching type keeps a pick that is valid for the new type's slot; an invalid pick falls back

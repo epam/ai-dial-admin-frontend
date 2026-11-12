@@ -146,4 +146,53 @@ describe('useCustomDashboard', () => {
 
     expect(result.current.queries[KEY]).toEqual(composite('SELECT 2'));
   });
+
+  test('resolves a failed query again on Refresh', async () => {
+    vi.mocked(resolveInlineWidgetQuery).mockRejectedValueOnce(new Error('network'));
+    const { result } = renderDashboard();
+    await act(async () => result.current.onUpdateWidget('w-1', sqlPatch('SELECT 2')));
+    expect(result.current.queries[KEY]).toEqual({ kind: WidgetQueryKind.Failed });
+
+    vi.mocked(resolveInlineWidgetQuery).mockResolvedValueOnce(composite('SELECT 2'));
+    await act(async () => result.current.onRefresh());
+
+    expect(result.current.queries[KEY]).toEqual(composite('SELECT 2'));
+    expect(result.current.refreshToken).toBe(1);
+  });
+
+  test('recomputes a preset range from now on Refresh', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-01T00:00:00Z'));
+    const { result } = renderDashboard(false);
+    const before = result.current.timeFilter.timeRange.endDate.getTime();
+
+    vi.setSystemTime(new Date('2026-11-01T01:00:00Z'));
+    act(() => result.current.onRefresh());
+
+    expect(result.current.timeFilter.timeRange.endDate.getTime()).toBeGreaterThan(before);
+    vi.useRealTimers();
+  });
+
+  test('keeps the time range on Cancel when edit mode changed nothing, so no widget runs again', () => {
+    const { result } = renderDashboard(false);
+    const before = result.current.timeFilter.timeRange;
+
+    act(() => result.current.onEdit());
+    act(() => result.current.onDiscard());
+
+    expect(result.current.isEditing).toBe(false);
+    expect(result.current.timeFilter.timeRange).toBe(before);
+  });
+
+  test('puts the stored period back on Discard after the period was changed in edit mode', () => {
+    const { result } = renderDashboard(false);
+
+    act(() => result.current.onEdit());
+    act(() => result.current.onTimePeriodChange('30d'));
+    expect(result.current.timeFilter.timePeriod).toBe('30d');
+
+    act(() => result.current.onDiscard());
+
+    expect(result.current.timeFilter.timePeriod).toBe('7d');
+  });
 });

@@ -104,4 +104,18 @@ describe('useDashboardWidgetData', () => {
     expect(result.current.result).toBeNull();
     expect(result.current.isDenied).toBe(true);
   });
+
+  test('runs again when the refresh token changes, with the range unchanged', async () => {
+    const { result, rerender } = renderHook(
+      ({ refreshToken }) =>
+        useDashboardWidgetData({ widgetQuery: WIDGET_QUERY, rowLimit: 10, range: RANGE, refreshToken }),
+      { initialProps: { refreshToken: 0 } },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    rerender({ refreshToken: 1 });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(executeQuery).toHaveBeenCalledTimes(2);
+  });
 });
