@@ -2,6 +2,8 @@ import { MarkedPrivilege } from '@/src/components/Analytics/Tables/access/models
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { TableGrantKey } from '@/src/models/analytics/table';
 
+export const EVERYONE_ROLE = '*';
+
 export const ALL_GRANT_KEYS: TableGrantKey[] = [
   TableGrantKey.Get,
   TableGrantKey.Read,

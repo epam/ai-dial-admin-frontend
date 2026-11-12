@@ -2784,6 +2784,7 @@ export enum QueryBuilderI18nKey {
   Value = 'QueryBuilder.Value',
   ValueType = 'QueryBuilder.ValueType',
   ComparedAgainst = 'QueryBuilder.ComparedAgainst',
+  CallerValue = 'QueryBuilder.CallerValue',
   Direction = 'QueryBuilder.Direction',
   Nulls = 'QueryBuilder.Nulls',
   Select = 'QueryBuilder.Select',
@@ -2813,6 +2814,7 @@ export enum QueryBuilderI18nKey {
   StructuredQueryJson = 'QueryBuilder.StructuredQueryJson',
   Run = 'QueryBuilder.Run',
   NoRows = 'QueryBuilder.NoRows',
+  NoRowsForAccess = 'QueryBuilder.NoRowsForAccess',
   Total = 'QueryBuilder.Total',
   FieldPlaceholder = 'QueryBuilder.FieldPlaceholder',
   ValuePlaceholder = 'QueryBuilder.ValuePlaceholder',
@@ -3150,6 +3152,14 @@ export enum AnalyticsTableAccessI18nKey {
   RowsRestricted = 'AnalyticsTableAccess.RowsRestricted',
   RowsRestrictedTooltip = 'AnalyticsTableAccess.RowsRestrictedTooltip',
   SensitiveLocked = 'AnalyticsTableAccess.SensitiveLocked',
+  EveryoneLabel = 'AnalyticsTableAccess.EveryoneLabel',
+  EveryoneDescription = 'AnalyticsTableAccess.EveryoneDescription',
+  EveryoneLockReason = 'AnalyticsTableAccess.EveryoneLockReason',
+  EveryoneAllRowsWarning = 'AnalyticsTableAccess.EveryoneAllRowsWarning',
+  CallerUserHash = 'AnalyticsTableAccess.CallerUserHash',
+  CallerUserHashHint = 'AnalyticsTableAccess.CallerUserHashHint',
+  CallerProject = 'AnalyticsTableAccess.CallerProject',
+  CallerProjectHint = 'AnalyticsTableAccess.CallerProjectHint',
 }
 
 export enum AnalyticsPipelinesI18nKey {

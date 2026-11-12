@@ -12,6 +12,7 @@ import {
   normalizeAccess,
   planAccessSave,
   planRoleRemoval,
+  roleLabel,
   selectionFromAccess,
   summarizeFilter,
 } from '@/src/components/Analytics/Tables/access/utils';
@@ -298,5 +299,32 @@ describe('summarizeFilter', () => {
     };
 
     expect(summarizeFilter(filter)).toBe('t ≥ now()');
+  });
+});
+
+describe('summarizeFilter — caller values', () => {
+  const field = { type: QueryExprType.Field as const, name: 'project_id' };
+  const param = { type: QueryExprType.Param as const, name: 'caller.project' };
+
+  test.each([
+    ['on the right', [field, param], 'project_id = caller.project'],
+    ['on the left', [param, field], 'caller.project = project_id'],
+  ])('names the caller value %s', (_name, args, expected) => {
+    expect(summarizeFilter({ op: QueryOperator.Eq, args })).toBe(expected);
+  });
+});
+
+describe('roleLabel', () => {
+  test('labels the everyone grantee and leaves a provider role as its name', () => {
+    expect(roleLabel('*', 'Everyone')).toBe('Everyone');
+    expect(roleLabel('team-x', 'Everyone')).toBe('team-x');
+  });
+});
+
+describe('planAccessSave — everyone', () => {
+  test('adds the literal grantee to the read list beside its members', () => {
+    expect(planAccessSave(access({ read: ['team-x'] }), '*', selection({ read: true }))).toEqual({
+      read: ['team-x', '*'],
+    });
   });
 });

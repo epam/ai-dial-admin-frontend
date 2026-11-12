@@ -1,4 +1,4 @@
-import { ALL_GRANT_KEYS } from '@/src/components/Analytics/Tables/access/constants';
+import { ALL_GRANT_KEYS, EVERYONE_ROLE } from '@/src/components/Analytics/Tables/access/constants';
 import {
   MarkedPrivilege,
   PrivilegeMark,
@@ -29,6 +29,9 @@ export const normalizeAccess = (access?: Partial<TableAccess> | null): TableAcce
   ...emptyAccess(),
   ...Object.fromEntries(ALL_GRANT_KEYS.map((key) => [key, access?.[key] ?? []])),
 });
+
+export const roleLabel = (role: string, everyoneLabel: string): string =>
+  role === EVERYONE_ROLE ? everyoneLabel : role;
 
 const compareRoles = (a: string, b: string): number => a.localeCompare(b, undefined, { sensitivity: 'base' });
 
@@ -134,13 +137,14 @@ const OPERATOR_SYMBOLS: Record<QueryOperator, string> = {
 const summarizeExpr = (expr: QueryExpr): string => {
   switch (expr.type) {
     case QueryExprType.Field:
+    case QueryExprType.Param:
       return expr.name;
     case QueryExprType.Value:
       return expr.value ?? 'null';
     case QueryExprType.Array:
       return expr.items.map((item) => item.value ?? 'null').join(', ');
     default:
-      return `${expr.name}(${expr.args.map(summarizeExpr).join(', ')})`;
+      return `${expr.name}(${(expr.args ?? []).map(summarizeExpr).join(', ')})`;
   }
 };
 

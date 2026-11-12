@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -525,5 +525,161 @@ describe('RoleDrawer — a refused row limit', () => {
 
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.SaveRowLimit })).toBeInTheDocument();
+  });
+});
+
+describe('RoleDrawer — the everyone grantee', () => {
+  const everyone = /EveryoneLabel/;
+
+  const pickEveryone = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole('combobox', { name: new RegExp(AnalyticsTableAccessI18nKey.StepRole) }));
+    await user.click(screen.getByRole('option', { name: everyone }));
+  };
+
+  test('offers Everyone first, with its description, ahead of the catalog roles', async () => {
+    const user = userEvent.setup();
+    renderDrawer(makeAccess({ read: ['team-x'] }), { role: null });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+
+    const [first] = screen.getAllByRole('option');
+    expect(first).toHaveTextContent(AnalyticsTableAccessI18nKey.EveryoneLabel);
+    expect(first).toHaveTextContent(AnalyticsTableAccessI18nKey.EveryoneDescription);
+  });
+
+  test('does not offer Everyone once the table has an entry for it', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess({ read: ['*'] });
+    access.rows = ['*'].map(row);
+    renderDrawer(access, { role: null });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+
+    expect(screen.queryByRole('option', { name: everyone })).toBeNull();
+  });
+
+  test('keeps showing Everyone in the picker once its new entry is stored', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess();
+    const props = { tableName: 'project_costs_daily', columns: COLUMNS, isSystem: false, role: null, onClose: vi.fn() };
+    const { rerender } = render(<RoleDrawer {...props} access={access} />);
+
+    await pickEveryone(user);
+    rerender(<RoleDrawer {...props} access={{ ...access, rows: ['*'].map(row) }} />);
+
+    expect(
+      screen.getByRole('combobox', {
+        name: `${AnalyticsTableAccessI18nKey.StepRole}, ${AnalyticsTableAccessI18nKey.EveryoneLabel}`,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  test('shows the label, not the literal grantee, when editing its entry', () => {
+    renderDrawer(makeAccess({ read: ['*'] }), { role: '*' });
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.EveryoneLabel)).toBeInTheDocument();
+    expect(screen.queryByText('*')).toBeNull();
+  });
+
+  test('locks Write and Modify with the reason and leaves Read selectable', async () => {
+    const user = userEvent.setup();
+    renderDrawer(makeAccess(), { role: null });
+
+    await pickEveryone(user);
+
+    expect(card(AnalyticsTableAccessI18nKey.ColWrite)).toBeDisabled();
+    expect(card(AnalyticsTableAccessI18nKey.ColModify)).toBeDisabled();
+    expect(card(AnalyticsTableAccessI18nKey.ColRead)).toBeEnabled();
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.EveryoneLockReason)).toBeInTheDocument();
+  });
+
+  test('drops a Write selection made for another role once Everyone is picked', async () => {
+    const user = userEvent.setup();
+    const { access } = renderDrawer(makeAccess(), { role: null });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsTableAccessI18nKey.StepRole }));
+    await user.click(screen.getByRole('option', { name: /^team-z/ }));
+    await user.click(card(AnalyticsTableAccessI18nKey.ColWrite));
+    await pickEveryone(user);
+    await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
+    await user.click(saveButton());
+
+    expect(access.saveGrants).toHaveBeenCalledWith('*', expect.objectContaining({ read: true, write: false }));
+  });
+
+  test('warns before saving that everyone will read every row, and keeps Save enabled', async () => {
+    const user = userEvent.setup();
+    renderDrawer(makeAccess(), { role: null });
+
+    await pickEveryone(user);
+    await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
+
+    expect(screen.getByRole('status')).toHaveTextContent(AnalyticsTableAccessI18nKey.EveryoneAllRowsWarning);
+    expect(saveButton()).toBeEnabled();
+
+    await user.click(screen.getByRole('radio', { name: AnalyticsTableAccessI18nKey.RowsSome }));
+
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.EveryoneAllRowsWarning)).toBeNull();
+  });
+
+  test('shows no such warning for a provider role that reads all rows', () => {
+    renderDrawer();
+
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.EveryoneAllRowsWarning)).toBeNull();
+  });
+
+  test('stores the row limit before the grants', async () => {
+    const user = userEvent.setup();
+    const { access, onClose } = renderDrawer(makeAccess(), { role: null });
+
+    await pickEveryone(user);
+    await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
+    await user.click(screen.getByRole('radio', { name: AnalyticsTableAccessI18nKey.RowsSome }));
+    await user.click(screen.getByRole('button', { name: 'set-limit' }));
+    await user.click(saveButton());
+
+    expect(access.saveRowPolicy).toHaveBeenCalledExactlyOnceWith('*', FILTER);
+    expect(access.saveRowPolicy.mock.invocationCallOrder[0]).toBeLessThan(
+      access.saveGrants.mock.invocationCallOrder[0],
+    );
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  });
+
+  test('sends no grants and keeps Save role when the row limit is refused', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess();
+    access.saveRowPolicy.mockResolvedValue({ isOk: false, errorMessage: 'unknown param' });
+    const { onClose } = renderDrawer(access, { role: null });
+
+    await pickEveryone(user);
+    await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
+    await user.click(screen.getByRole('radio', { name: AnalyticsTableAccessI18nKey.RowsSome }));
+    await user.click(screen.getByRole('button', { name: 'set-limit' }));
+    await user.click(saveButton());
+
+    expect(access.saveGrants).not.toHaveBeenCalled();
+    expect(saveButton()).toBeEnabled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  test('shows the lifted-policies answer as a banner, not a notification', async () => {
+    const user = userEvent.setup();
+    const access = makeAccess({ get: ['*'] });
+    access.saveGrants.mockResolvedValue({
+      isOk: true,
+      result: {
+        ineffective_grants: [
+          { role: '*', key: TableGrantKey.Read, reason: IneffectiveGrantReason.LiftsRowPolicies, message: 'lifts' },
+        ],
+      },
+    });
+    renderDrawer(access, { role: '*' });
+
+    await user.click(card(AnalyticsTableAccessI18nKey.ColRead));
+    await user.click(saveButton());
+
+    expect(await screen.findByText('lifts')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.Done })).toBeInTheDocument();
+    expect(showNotification).not.toHaveBeenCalled();
   });
 });

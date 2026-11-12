@@ -67,7 +67,9 @@ const parseFilterNode = (node: QueryFilterNode, functions: QueryFunction[]): Fil
   }
 
   const pred = node as QueryPredicate;
-  const [left, right] = pred.args || [];
+  const [first, second] = pred.args || [];
+  const isParamFirst = first?.type === QueryExprType.Param && second?.type === QueryExprType.Field;
+  const [left, right] = isParamFirst ? [second, first] : [first, second];
   const predicate: FilterPredicateNode = {
     id: nextId(),
     kind: FilterNodeKind.Predicate,
@@ -81,7 +83,13 @@ const parseFilterNode = (node: QueryFilterNode, functions: QueryFunction[]): Fil
     rightKind: FilterOperandKind.Literal,
     rightFn: null,
     rightArgs: [],
+    rightParam: null,
   };
+
+  if (right?.type === QueryExprType.Param) {
+    predicate.rightKind = FilterOperandKind.Param;
+    predicate.rightParam = right.name;
+  }
 
   // A function operand is shown as the call it is. One the catalog does not name cannot be shown at
   // all — such a query is not builder-representable, so it never reaches here.
@@ -166,9 +174,24 @@ const isExprRepresentable = (expr: QueryExpr, functions: QueryFunction[] | null,
 // The editor holds exactly two operands, so a predicate with any other count would come back changed.
 // An array belongs to `in` alone — under any other operator it would collapse into one literal — and
 // `in` holds nothing but an array, since the editor would split a single value on its commas.
-const isPredicateRepresentable = (pred: QueryPredicate, functions: QueryFunction[] | null): boolean => {
+const isCallerComparison = (pred: QueryPredicate): boolean => {
+  const types = (pred.args || []).map((arg) => arg.type);
+
+  return (
+    (pred.op === QueryOperator.Eq || pred.op === QueryOperator.Ne) &&
+    types.includes(QueryExprType.Field) &&
+    types.includes(QueryExprType.Param)
+  );
+};
+
+const isPredicateRepresentable = (
+  pred: QueryPredicate,
+  functions: QueryFunction[] | null,
+  isCallerValueAllowed: boolean,
+): boolean => {
   const args = pred.args || [];
   if (args.length !== 2) return false;
+  if (isCallerValueAllowed && isCallerComparison(pred)) return true;
   const [left, right] = args;
   if (!isExprRepresentable(left, functions)) return false;
   if (pred.op === QueryOperator.In) return right.type === QueryExprType.Array && isListRepresentable(right.items);
@@ -213,10 +236,11 @@ export const isFilterRepresentable = (
   node: QueryFilterNode,
   depth: number,
   functions: QueryFunction[] | null,
+  isCallerValueAllowed = false,
 ): boolean => {
-  if (!isGroup(node)) return isPredicateRepresentable(node as QueryPredicate, functions);
+  if (!isGroup(node)) return isPredicateRepresentable(node as QueryPredicate, functions, isCallerValueAllowed);
   if (depth >= 2) return false;
-  return (node.args || []).every((child) => isFilterRepresentable(child, depth + 1, functions));
+  return (node.args || []).every((child) => isFilterRepresentable(child, depth + 1, functions, isCallerValueAllowed));
 };
 
 // The names the service gives a select list's output columns, mirroring its OutputColumnNaming: an

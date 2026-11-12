@@ -16,7 +16,11 @@ import { FC, useMemo, useState } from 'react';
 import Drawer from '@/src/components/Common/Drawer/Drawer';
 import PrivilegeCard from '@/src/components/Analytics/Tables/access/PrivilegeCard';
 import RowLimitEditor, { RowLimitValue } from '@/src/components/Analytics/Tables/access/RowLimitEditor';
-import { MARKED_PRIVILEGES, SYSTEM_LOCKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
+import {
+  EVERYONE_ROLE,
+  MARKED_PRIVILEGES,
+  SYSTEM_LOCKED_PRIVILEGES,
+} from '@/src/components/Analytics/Tables/access/constants';
 import { DrawerPhase, RoleSelection, RowsMode } from '@/src/components/Analytics/Tables/access/models';
 import { findNamedField } from '@/src/components/Analytics/Tables/access/row-limit';
 import { TableAccessState } from '@/src/components/Analytics/Tables/access/use-table-access';
@@ -26,9 +30,15 @@ import {
   isGetHeld,
   isRowsStepOffered,
   isSensitiveStepOffered,
+  roleLabel,
   selectionFromAccess,
 } from '@/src/components/Analytics/Tables/access/utils';
-import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import {
+  AnalyticsTableAccessI18nKey,
+  AnalyticsTablesI18nKey,
+  BasicI18nKey,
+  ButtonsI18nKey,
+} from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsTableColumn, IneffectiveGrant, TableGrantKey } from '@/src/models/analytics/table';
@@ -72,17 +82,42 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
   const [isSaving, setIsSaving] = useState(false);
 
   const isLocked = phase !== DrawerPhase.Editing;
+  const isEveryone = role === EVERYONE_ROLE;
+  const everyoneLabel = t(AnalyticsTableAccessI18nKey.EveryoneLabel);
+  const displayedRole = roleLabel(role, everyoneLabel);
   const isRowsOffered = isRowsStepOffered(selection);
   const isRowLimitSet = isRowsOffered && rowsMode === RowsMode.Some;
   const sensitiveColumns = columns.filter((column) => column.sensitive).map((column) => column.name);
 
   const roleOptions = useMemo(() => {
     const taken = new Set(access.rows.map((row) => row.role));
+    const everyone =
+      taken.has(EVERYONE_ROLE) && role !== EVERYONE_ROLE
+        ? []
+        : [
+            {
+              value: EVERYONE_ROLE,
+              label: everyoneLabel,
+              description: t(AnalyticsTableAccessI18nKey.EveryoneDescription),
+            },
+          ];
 
-    return catalogRoles
-      .filter(({ name }) => name === role || !taken.has(name))
-      .map(({ name, origin }) => ({ value: name, label: name, description: CONFIG_ENTITY_ORIGIN_LABEL[origin] }));
-  }, [catalogRoles, access.rows, role]);
+    return [
+      ...everyone,
+      ...catalogRoles
+        .filter(({ name }) => name !== EVERYONE_ROLE && (name === role || !taken.has(name)))
+        .map(({ name, origin }) => ({ value: name, label: name, description: CONFIG_ENTITY_ORIGIN_LABEL[origin] })),
+    ];
+  }, [catalogRoles, access.rows, role, everyoneLabel, t]);
+
+  const isPolicySavedFirst = isEveryone && isRowLimitSet;
+  const everyoneLockReason = isEveryone ? AnalyticsTableAccessI18nKey.EveryoneLockReason : null;
+  const lockReason = isSystem ? AnalyticsTableAccessI18nKey.SystemLockReason : everyoneLockReason;
+
+  const onChangeRole = (next: string) => {
+    setRole(next);
+    if (next === EVERYONE_ROLE) setSelection((prev) => ({ ...prev, write: false, modify: false }));
+  };
 
   const canSave =
     !isSaving &&
@@ -124,13 +159,22 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
       return;
     }
 
+    if (isPolicySavedFirst) {
+      const policy = await access.saveRowPolicy(role, rowLimit.filter);
+      if (!policy.isOk) {
+        setRowLimitError(policy.errorMessage);
+        setIsSaving(false);
+        return;
+      }
+    }
+
     const grants = await access.saveGrants(role, selection);
     if (!grants.isOk) {
       setIsSaving(false);
       return;
     }
 
-    const isRowLimitSaved = await onSaveRowLimit();
+    const isRowLimitSaved = isPolicySavedFirst || (await onSaveRowLimit());
     setIsSaving(false);
     if (!isRowLimitSaved) return;
 
@@ -178,7 +222,9 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
     <Drawer
       isOpen
       ariaLabel={
-        isNew ? t(AnalyticsTableAccessI18nKey.DrawerAddTitle) : t(AnalyticsTableAccessI18nKey.DrawerLabel, { role })
+        isNew
+          ? t(AnalyticsTableAccessI18nKey.DrawerAddTitle)
+          : t(AnalyticsTableAccessI18nKey.DrawerLabel, { role: displayedRole })
       }
       header={
         <div className="flex flex-col">
@@ -214,11 +260,12 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
             options={roleOptions}
             value={role}
             searchable
-            disabled={isLocked || isCatalogLoading}
-            onChange={(next) => setRole(next as string)}
+            caption={isCatalogLoading ? t(BasicI18nKey.Loading) : undefined}
+            disabled={isLocked}
+            onChange={(next) => onChangeRole(next as string)}
           />
         ) : (
-          <span className="rounded-xl bg-layer-4 px-3 py-2.5 dial-small-text">{role}</span>
+          <span className="rounded-xl bg-layer-4 px-3 py-2.5 dial-small-text">{displayedRole}</span>
         )}
       </section>
 
@@ -230,14 +277,14 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
               {MARKED_PRIVILEGES.map(({ key, label }) => {
                 const isGet = key === TableGrantKey.Get;
                 const isImplied = isGet && !selection.get && (selection.read || selection.modify);
-                const isSystemLocked = isSystem && SYSTEM_LOCKED_PRIVILEGES.includes(key);
+                const isPrivilegeLocked = !!lockReason && SYSTEM_LOCKED_PRIVILEGES.includes(key);
 
                 return (
                   <PrivilegeCard
                     key={key}
                     label={t(label)}
-                    isSelected={isGet ? isGetHeld(selection) : selection[key] && !isSystemLocked}
-                    isDisabled={isLocked || isSystemLocked || isImplied}
+                    isSelected={isGet ? isGetHeld(selection) : selection[key] && !isPrivilegeLocked}
+                    isDisabled={isLocked || isPrivilegeLocked || isImplied}
                     caption={
                       isImplied
                         ? t(AnalyticsTableAccessI18nKey.ViaPrivilege, {
@@ -254,9 +301,7 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
                 );
               })}
             </div>
-            {isSystem && (
-              <p className="dial-small-text text-secondary">{t(AnalyticsTableAccessI18nKey.SystemLockReason)}</p>
-            )}
+            {lockReason && <p className="dial-small-text text-secondary">{t(lockReason)}</p>}
             {banners([TableGrantKey.Get, TableGrantKey.Read, TableGrantKey.Write, TableGrantKey.Modify])}
           </section>
 
@@ -294,6 +339,14 @@ const RoleDrawer: FC<Props> = ({ tableName, columns, isSystem, access, role: edi
                 onChange={(next) => setRowsMode(next as RowsMode)}
               />
               <p className="dial-tiny-text text-secondary">{t(AnalyticsTableAccessI18nKey.RowsScope)}</p>
+              {isEveryone && rowsMode === RowsMode.All && phase === DrawerPhase.Editing && (
+                <Notification
+                  role="status"
+                  type={NotificationType.SectionMessage}
+                  variant={NotificationVariant.Warning}
+                  message={t(AnalyticsTableAccessI18nKey.EveryoneAllRowsWarning)}
+                />
+              )}
               {rowsMode === RowsMode.Some && (
                 <RowLimitEditor
                   key={role}

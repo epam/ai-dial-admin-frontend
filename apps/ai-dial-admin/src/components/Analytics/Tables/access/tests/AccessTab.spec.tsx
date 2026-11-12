@@ -335,3 +335,36 @@ describe('AccessTab — before the data has loaded', () => {
     expect(screen.queryByText(/drawer:/)).toBeNull();
   });
 });
+
+describe('AccessTab — the everyone grantee', () => {
+  const everyoneRow: RoleRow = {
+    role: '*',
+    marks: { ...none, get: PrivilegeMark.Implied, read: PrivilegeMark.Stored },
+    isSensitive: false,
+    rowsKind: RowsCellKind.Policy,
+    filter: {
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field as const, name: 'project_id' },
+        { type: QueryExprType.Param as const, name: 'caller.project' },
+      ],
+    },
+  };
+
+  test('labels the grantee and summarizes its caller-value limit', () => {
+    renderTab(makeState({ rows: [...ROWS, everyoneRow] }));
+
+    expect(rowOf('*').getByText(AnalyticsTableAccessI18nKey.EveryoneLabel)).toBeInTheDocument();
+    expect(rowOf('*').getByText('project_id = caller.project')).toBeInTheDocument();
+  });
+
+  test('finds the grantee by its label in the role search', async () => {
+    const user = userEvent.setup();
+    renderTab(makeState({ rows: [...ROWS, everyoneRow] }));
+
+    await user.type(screen.getByRole('textbox'), 'everyonelabel');
+
+    expect(screen.getByRole('group', { name: 'row-*' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'row-team-x' })).toBeNull();
+  });
+});
