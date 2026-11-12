@@ -1,9 +1,13 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-react-file-manager';
+import {
+  DialFileManager,
+  DialFileNodeType,
+  DialRootFolder,
+  FileManagerGridRow,
+} from '@epam/ai-dial-react-file-manager';
 
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
@@ -29,7 +33,8 @@ const EntitySelectManager: FC<Props> = ({
   onChangeSelectedPaths,
 }) => {
   const isMultiple = onChangeSelectedPaths != null;
-  const { route, gridColumns, useFolder } = ENTITY_SELECT_CONFIGS[entityType];
+  const { route, rootFolders, rootLabelI18nKey, gridColumns, useFolder } = ENTITY_SELECT_CONFIGS[entityType];
+  const isMultiRoot = rootFolders.length > 1;
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const {
@@ -62,8 +67,8 @@ const EntitySelectManager: FC<Props> = ({
           fetchFolderHierarchy?.(`${path}/`, true);
         }
       } else {
-        fetchFiles(`${ROOT_FOLDER}/`);
-        setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+        fetchFiles(isMultiRoot ? rootFolders : rootFolders[0]);
+        setLoadedPaths(new Set(rootFolders));
       }
     }
     // Runs only when the tree empties or the popup toggles. Deliberately not dependencies:
@@ -100,10 +105,10 @@ const EntitySelectManager: FC<Props> = ({
     if (isLeafEmpty) {
       setUnresolvedValue(value);
       // The array form replaces the tree outright, dropping the placeholder folders of the missing path.
-      fetchFiles([`${ROOT_FOLDER}/`], true, true);
-      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+      fetchFiles(rootFolders, true, true);
+      setLoadedPaths(new Set(rootFolders));
     }
-  }, [value, isValueUnresolved, fetchedFoldersData, isModalOpen, fetchFiles]);
+  }, [value, isValueUnresolved, fetchedFoldersData, isModalOpen, fetchFiles, rootFolders]);
 
   const onPathChange = useCallback(
     (nextPath: string | undefined) => {
@@ -160,6 +165,7 @@ const EntitySelectManager: FC<Props> = ({
         contentClassName="!px-3 !gap-0 !pb-0"
         path={filePath}
         items={files as []}
+        rootItem={isMultiRoot && rootLabelI18nKey ? ({ label: t(rootLabelI18nKey) } as DialRootFolder) : undefined}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
         navigationPanelOptions={{ searchable: false }}

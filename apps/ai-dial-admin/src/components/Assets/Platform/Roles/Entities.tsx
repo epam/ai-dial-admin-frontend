@@ -1,7 +1,6 @@
 'use client';
 
-import { PrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import { ButtonDropdown, ButtonVariant, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -10,15 +9,16 @@ import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation, getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { DialCoreRoleLimits } from '@/src/models/dial/role-limits';
+import AddApplicationsPopup from './AddApplicationsPopup';
 import { getPlatformRoleModelColumns, MODEL_PICKER_COLUMNS } from './entities-columns';
 import { PlatformRoleModelLimitRow, PlatformRoleModelOption } from './models';
 import {
+  addApplicationLimits,
   addModelLimits,
   clearModelLimits,
   getAvailableModels,
@@ -39,6 +39,7 @@ const RoleEntities: FC<Props> = ({ selectedRole, models, isSkipRefresh, onChange
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [gridApi, setGridApi] = useState<GridApi>();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApplicationsModalOpen, setIsApplicationsModalOpen] = useState(false);
   const roleRef = useRef(selectedRole);
   const onChangeRef = useRef(onChangeRole);
 
@@ -109,6 +110,24 @@ const RoleEntities: FC<Props> = ({ selectedRole, models, isSkipRefresh, onChange
     setIsModalOpen(false);
   }, []);
 
+  const onAddApplications = useCallback((paths: string[]) => {
+    const updatedRole = {
+      ...roleRef.current,
+      limits: addApplicationLimits(roleRef.current.limits, paths),
+    };
+    roleRef.current = updatedRole;
+    onChangeRef.current(updatedRole);
+    setIsApplicationsModalOpen(false);
+  }, []);
+
+  const addItems = useMemo<DropdownItem[]>(
+    () => [
+      { key: 'models', label: t(RolesI18nKey.AddModels), onClick: () => setIsModalOpen(true) },
+      { key: 'applications', label: t(RolesI18nKey.AddApplications), onClick: () => setIsApplicationsModalOpen(true) },
+    ],
+    [t],
+  );
+
   const columns = useMemo(() => {
     const modelColumns = getPlatformRoleModelColumns(onChangeModelLimit, isReadOnlyAdmin);
     return isReadOnlyAdmin
@@ -150,16 +169,12 @@ const RoleEntities: FC<Props> = ({ selectedRole, models, isSkipRefresh, onChange
             {t(TabsI18nKey.Entities)}: {data.length}
           </h1>
           {!isReadOnlyAdmin && (
-            <PrimaryButton
-              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-              label={t(ButtonsI18nKey.Add)}
-              onClick={() => setIsModalOpen(true)}
-            />
+            <ButtonDropdown label={t(ButtonsI18nKey.Add)} items={addItems} variant={ButtonVariant.Primary} />
           )}
         </div>
         <GridView<PlatformRoleModelLimitRow>
           getIsEmptyData={() => data.length === 0}
-          emptyDataProps={{ title: t(EntitiesI18nKey.NoModels) }}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
           onGridReady={onGridReady}
         />
       </div>
@@ -177,6 +192,13 @@ const RoleEntities: FC<Props> = ({ selectedRole, models, isSkipRefresh, onChange
           />,
           document.body,
         )}
+      {!isReadOnlyAdmin && isApplicationsModalOpen && (
+        <AddApplicationsPopup
+          isOpen={isApplicationsModalOpen}
+          onClose={() => setIsApplicationsModalOpen(false)}
+          onApply={onAddApplications}
+        />
+      )}
     </>
   );
 };
