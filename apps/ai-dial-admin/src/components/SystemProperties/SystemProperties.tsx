@@ -25,7 +25,9 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import { DEFAULT_SPENDING_LIMITS } from './constants';
 import Header from './Header';
+import { useSessionsSource } from './hooks/use-sessions-source';
 import RateLimitSchedule from './RateLimitSchedule';
+import SessionsSource from './SessionsSource';
 import SpendingLimits from './SpendingLimits';
 import { isRateLimitScheduleValid } from './utils/rate-limit-schedule';
 import { isDefaultCostObjectValid } from './utils/spending-limits';
@@ -37,9 +39,16 @@ interface Props {
   doesSettingsExist: boolean;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  isAnalyticsEnabled?: boolean;
 }
 
-const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSettingsExist, optionWarnings }) => {
+const SystemProperties: FC<Props> = ({
+  interceptors,
+  globalSettings,
+  doesSettingsExist,
+  optionWarnings,
+  isAnalyticsEnabled,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -59,6 +68,9 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
     (currentSettings?.spendingLimits ?? DEFAULT_SPENDING_LIMITS).defaultCostObject,
   );
   const isScheduleValid = isRateLimitScheduleValid(currentSettings?.rateLimitSchedule);
+  const isSessionsSourceTab = activeTab === EntityViewTab.SessionsSource;
+  const sessionsSource = useSessionsSource(!!isAnalyticsEnabled && isSessionsSourceTab);
+  const isSessionsSourceInvalid = !sessionsSource.isLoading && !sessionsSource.isComplete;
 
   // Reset clears registered fields, so re-register even if the value did not change.
   useEffect(() => {
@@ -136,11 +148,14 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   return (
     <div className={ENTITY_VIEW_CLASS_NAME}>
       <Header
-        isChanged={isChanged}
+        isChanged={isSessionsSourceTab ? sessionsSource.isChanged : isChanged}
         isScheduleValid={isScheduleValid}
         isCostObjectInvalid={isCostObjectInvalid}
-        onSave={onSave}
-        onDiscard={onDiscard}
+        isSessionsSourceInvalid={isSessionsSourceInvalid}
+        isAnalyticsEnabled={isAnalyticsEnabled}
+        disableSave={isSessionsSourceTab ? !sessionsSource.isComplete : undefined}
+        onSave={isSessionsSourceTab ? sessionsSource.onSave : onSave}
+        onDiscard={isSessionsSourceTab ? sessionsSource.onDiscard : onDiscard}
         activeTab={activeTab}
         onChangeTab={changeTab}
       />
@@ -163,6 +178,18 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
           <SpendingLimits
             spendingLimits={currentSettings?.spendingLimits}
             onChangeSpendingLimits={changeSpendingLimits}
+          />
+        )}
+        {isAnalyticsEnabled && isSessionsSourceTab && (
+          <SessionsSource
+            setting={sessionsSource.setting}
+            tables={sessionsSource.tables}
+            fields={sessionsSource.fields}
+            isLoading={sessionsSource.isLoading}
+            isUnsaved={sessionsSource.isUnsaved}
+            isDefaultTableMissing={sessionsSource.isDefaultTableMissing}
+            onChangeBaseTable={sessionsSource.onChangeBaseTable}
+            onChangeRole={sessionsSource.onChangeRole}
           />
         )}
       </div>

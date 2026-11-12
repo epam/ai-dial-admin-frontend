@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import SessionFeedbackPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionFeedbackPanel';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
-import { SessionFeedbackRow } from '@/src/models/analytics/sessions-trace';
+import { SessionFeedbackPage, SessionFeedbackRow, SessionRatingCounts } from '@/src/models/analytics/sessions-trace';
 
 const row = (overrides: Partial<SessionFeedbackRow> = {}): SessionFeedbackRow => ({
   response_id: 'chatcmpl-a',
@@ -17,8 +17,27 @@ const row = (overrides: Partial<SessionFeedbackRow> = {}): SessionFeedbackRow =>
   ...overrides,
 });
 
-const setup = (rows: SessionFeedbackRow[] = [row()], total: number | null = rows.length, isReadable = false) =>
-  render(<SessionFeedbackPanel rows={rows} total={total} isCommentTextReadable={isReadable} />);
+const RATINGS: SessionRatingCounts = {
+  rating_up: 2,
+  rating_down: 1,
+  provable_down: 1,
+  captured_form: 0,
+  rate_events: 3,
+};
+
+const setup = (
+  rows: SessionFeedbackRow[] = [row()],
+  total: number | null = rows.length,
+  isReadable = false,
+  overrides: Partial<SessionFeedbackPage> = {},
+  ratings: SessionRatingCounts | null = RATINGS,
+) =>
+  render(
+    <SessionFeedbackPanel
+      ratings={ratings}
+      feedback={{ rows, total, isCommentTextReadable: isReadable, isAvailable: true, ...overrides }}
+    />,
+  );
 
 describe('SessionFeedbackPanel', () => {
   test('states that a session carries no ratings rather than rendering an empty list', () => {
@@ -89,6 +108,39 @@ describe('SessionFeedbackPanel', () => {
     setup([row()], 6);
 
     expect(screen.getByText(SessionsTraceI18nKey.DetailFeedbackPartial)).toBeInTheDocument();
+  });
+
+  test('declares a list that came back full partial', () => {
+    setup([row()], null);
+
+    expect(screen.getByText(SessionsTraceI18nKey.DetailFeedbackPartial)).toBeInTheDocument();
+  });
+
+  test('states the direction figures from the session record', () => {
+    setup();
+
+    expect(screen.getByText(SessionsTraceI18nKey.RatingUpTotal)).toBeInTheDocument();
+  });
+
+  test('states no direction figures where the schema has no session rating enrichment', () => {
+    setup([row()], 1, false, {}, null);
+
+    expect(screen.getByText(SessionsTraceI18nKey.DetailRatedResponse)).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.RatingUpTotal)).toBeNull();
+  });
+
+  test('lists no responses and states figures only without a response rating enrichment', () => {
+    setup([], 0, false, { isAvailable: false });
+
+    expect(screen.getByText(SessionsTraceI18nKey.RatingUpTotal)).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailNoRatings)).toBeNull();
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailRatedResponse)).toBeNull();
+  });
+
+  test('renders nothing without a feedback read', () => {
+    render(<SessionFeedbackPanel ratings={null} feedback={null} />);
+
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailNoRatings)).toBeNull();
   });
 
   test('makes no partial claim for a complete list', () => {

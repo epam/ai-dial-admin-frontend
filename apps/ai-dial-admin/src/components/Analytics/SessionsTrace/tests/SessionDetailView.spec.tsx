@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SessionDetailView from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailView';
 import { BasicI18nKey, SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { SessionDetailRow, HopDialect, HopReadState } from '@/src/models/analytics/sessions-trace';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const getSessionSpans = vi.fn();
 const getSessionHopRequest = vi.fn();
@@ -92,7 +93,9 @@ const renderView = (props: Partial<ComponentProps<typeof SessionDetailView>> = {
   render(
     <SessionDetailView
       session={SESSION}
-      insightColumns={[]}
+      source={defaultSessionsSource()}
+      enrichmentPanels={[]}
+      enrichmentProvenance={{}}
       metadataGroups={[]}
       feedback={null}
       bodyGrants={{ isRequestReadable: true, isResponseReadable: true }}
@@ -214,6 +217,32 @@ describe('SessionDetailView', () => {
 
   // Nothing to open, but the view still has something to say. The listing resolves its own traces, so
   // emptiness is a property of that read.
+  test('reads the trace listing under the session project', async () => {
+    renderView();
+
+    expect(await screen.findByText('gpt-one')).toBeInTheDocument();
+    expect(getSessionTracePage).toHaveBeenCalledWith(
+      { id: 'chat-1', source: 'chat_id' },
+      'project',
+      SESSION.first_request_time,
+      SESSION.last_request_time,
+      0,
+    );
+  });
+
+  test('reads the trace listing with no project predicate without a Project role', async () => {
+    renderView({ source: { ...defaultSessionsSource(), project: null } });
+
+    expect(await screen.findByText('gpt-one')).toBeInTheDocument();
+    expect(getSessionTracePage).toHaveBeenCalledWith(
+      { id: 'chat-1', source: 'chat_id' },
+      null,
+      SESSION.first_request_time,
+      SESSION.last_request_time,
+      0,
+    );
+  });
+
   test('a session with no recorded traces states so rather than reporting an error', async () => {
     getSessionTracePage.mockResolvedValue({ success: true, response: { groups: [], hasMore: false } });
     renderView();

@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import SessionInsightsPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionInsightsPanel';
+import SessionEnrichmentPanel from '@/src/components/Analytics/SessionsTrace/Detail/SessionEnrichmentPanel';
 import { SessionDetailRow, SessionsField } from '@/src/models/analytics/sessions-trace';
+import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { insightColumnsOf } from '@/src/utils/analytics/session-insights';
+import { enrichmentPanelsOf } from '@/src/utils/analytics/session-insights';
 
 const row = (fields: Partial<SessionDetailRow>): SessionDetailRow =>
   ({ chat_id: 'Lrr0e6L5bpTND3IY_dN0_', ...fields }) as SessionDetailRow;
@@ -47,10 +48,21 @@ const EVALUATED: Partial<SessionDetailRow> = {
   [SessionsField.InsightLanguage]: 'en',
 };
 
-const setup = (fields: Partial<SessionDetailRow> = EVALUATED, schema: AnalyticsEntityField[] = SCHEMA) =>
-  render(<SessionInsightsPanel session={row(fields)} columns={insightColumnsOf(schema)} />);
+const setup = (
+  fields: Partial<SessionDetailRow> = EVALUATED,
+  schema: AnalyticsEntityField[] = SCHEMA,
+  headingField: string | null = SessionsField.InsightTitle,
+  tagOrders: Record<string, string[]> = {},
+) =>
+  render(
+    <SessionEnrichmentPanel
+      session={row(fields)}
+      panel={enrichmentPanelsOf(schema, tagOrders)[0]}
+      headingField={headingField}
+    />,
+  );
 
-describe('SessionInsightsPanel', () => {
+describe('SessionEnrichmentPanel', () => {
   test('states every field the enrichment reported a value for', () => {
     setup();
 
@@ -114,6 +126,48 @@ describe('SessionInsightsPanel', () => {
     setup();
 
     expect(screen.queryByText('Rotating a shared API key')).toBeNull();
+  });
+
+  test('states the title field like any other when no Title role is bound to it', () => {
+    setup(EVALUATED, SCHEMA, null);
+
+    expect(screen.getByText('Rotating a shared API key')).toBeInTheDocument();
+  });
+
+  test('renders the summary of an enrichment under any namespace as prose', () => {
+    const schema: AnalyticsEntityField[] = [
+      { name: 'quality.summary', source: 'summary', type: AnalyticsFieldType.String },
+      { name: 'quality.score', source: 'score', type: AnalyticsFieldType.Integer, display_name: 'Score' },
+    ];
+    setup({ 'quality.summary': SUMMARY, 'quality.score': 4 } as Partial<SessionDetailRow>, schema, null);
+
+    expect(screen.getByText(SUMMARY).tagName).toBe('P');
+    expect(screen.getByText('4')).toBeInTheDocument();
+  });
+
+  test('groups the fields by tag in the declared order, labelling each group', () => {
+    const schema: AnalyticsEntityField[] = [
+      { name: 'quality.engine', source: 'engine', type: AnalyticsFieldType.String, tag: 'system' },
+      { name: 'quality.risk', source: 'risk', type: AnalyticsFieldType.String, tag: 'risk' },
+      { name: 'quality.topic', source: 'topic', type: AnalyticsFieldType.String, tag: 'insight' },
+    ];
+    setup(
+      { 'quality.engine': 'v2', 'quality.risk': 'low', 'quality.topic': 'billing' } as Partial<SessionDetailRow>,
+      schema,
+      null,
+      { quality: ['insight', 'system'] },
+    );
+
+    const headings = screen.getAllByRole('heading').map(({ textContent }) => textContent);
+
+    expect(headings).toEqual([SessionsTraceI18nKey.TagInsight, 'Risk', SessionsTraceI18nKey.SpanTagSystem]);
+    expect(screen.getByRole('region', { name: 'Risk' })).toHaveTextContent('low');
+  });
+
+  test('states no group heading when every field shares one tag', () => {
+    setup();
+
+    expect(screen.queryByRole('heading')).toBeNull();
   });
 
   test('a closed-vocabulary value renders as readable words rather than the raw token', () => {

@@ -9,7 +9,6 @@ import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
 import { SESSIONS_HEADER_STACK_HEIGHT, SESSIONS_TIME_PERIOD } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import {
-  SessionCandidateIds,
   SessionColumn,
   SessionFilterOperator,
   SessionPageRequest,
@@ -20,6 +19,8 @@ import {
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const getSessions = vi.fn();
 
@@ -111,10 +112,9 @@ const lastRequest = (): SessionPageRequest => getSessions.mock.calls.at(-1)?.[0]
 
 interface PageExtras {
   period?: SessionPeriodSummary;
-  candidates?: SessionCandidateIds;
 }
 
-// A first page carries the period figures and any candidate ids; a later page carries neither.
+// A first page carries the period figures; a later page carries none.
 const okPage = (rows: SessionRow[], extras: PageExtras = { period: PERIOD }) => ({
   success: true,
   response: {
@@ -159,8 +159,14 @@ const SCHEMA_FIELDS = [
   { name: SessionsField.InsightTopics, type: AnalyticsFieldType.String, source: 'topics' },
 ] as AnalyticsEntityField[];
 
-const renderView = (schemaFields?: AnalyticsEntityField[]) => {
-  const result = render(<SessionsTraceView schemaFields={schemaFields} />);
+const RATED_SOURCE: SessionsSource = {
+  ...defaultSessionsSource(),
+  enrichments: ['session_ratings'],
+  ratingEnrichment: 'session_ratings',
+};
+
+const renderView = (schemaFields?: AnalyticsEntityField[], source: SessionsSource = RATED_SOURCE) => {
+  const result = render(<SessionsTraceView schemaFields={schemaFields} source={source} />);
   onReady?.({ api: gridApi } as GridReadyEvent);
   return result;
 };
@@ -280,49 +286,93 @@ describe('SessionsTraceView :: paging', () => {
   });
 });
 
-describe('SessionsTraceView :: feedback candidates', () => {
-  const CANDIDATES: SessionCandidateIds = { ids: ['a', 'b'], isCapped: false };
-
+describe('SessionsTraceView :: feedback filter', () => {
   const selectNegative = async () => {
     const user = userEvent.setup();
     await user.click(screen.getByText(SessionsTraceI18nKey.FeedbackNegative));
   };
 
-  test('sends no ids on the first block, letting the request resolve them', async () => {
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: CANDIDATES }));
+  test('sends the selected feedback state and no candidate ids', async () => {
     renderView();
 
     await selectNegative();
     await fetchBlock();
 
-    expect(lastRequest().chatIds).toBeUndefined();
+    expect(lastRequest()).toMatchObject({ feedback: FeedbackFilter.Negative });
+    expect(lastRequest()).not.toHaveProperty('chatIds');
   });
 
-  test('carries the ids the first block returned into a later block', async () => {
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: CANDIDATES }));
+  test('a later block carries the same feedback state, changing nothing else', async () => {
     renderView();
 
     await selectNegative();
     await fetchBlock();
+    const first = lastRequest();
 
     getSessions.mockResolvedValue(laterPage(SECOND_PAGE));
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
 
-    expect(lastRequest().chatIds).toEqual(['a', 'b']);
+    expect({ ...lastRequest(), offset: 0 }).toEqual({ ...first, offset: 0 });
   });
 
-  test('does not carry ids resolved under a previous filter state', async () => {
-    const user = userEvent.setup();
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: CANDIDATES }));
+  test('shows no capped notice, the predicate being exact', async () => {
     renderView();
 
     await selectNegative();
     await fetchBlock();
 
-    await user.click(screen.getByText(SessionsTraceI18nKey.FeedbackPositive));
-    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    expect(await screen.findByText('212')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
 
-    expect(lastRequest().chatIds).toBeUndefined();
+describe('SessionsTraceView :: the bound source', () => {
+  const CUSTOM_SOURCE: SessionsSource = {
+    baseTable: 'agent_runs',
+    sessionId: 'run_key',
+    time: 'ended_at',
+    project: null,
+    title: null,
+    cost: null,
+    turns: 'steps',
+    enrichments: [],
+    ratingEnrichment: null,
+  };
+
+  test('renders the default binding with the feedback filter and every pill', () => {
+    renderView();
+
+    expect(screen.getByText(SessionsTraceI18nKey.Feedback)).toBeInTheDocument();
+    expect(screen.getByText(SessionsTraceI18nKey.SummaryRated)).toBeInTheDocument();
+    expect(screen.getByText(SessionsTraceI18nKey.SummaryCost)).toBeInTheDocument();
+  });
+
+  test('names the configured base table on the provenance line', () => {
+    renderView(undefined, CUSTOM_SOURCE);
+
+    expect(screen.getByText('agent_runs')).toBeInTheDocument();
+  });
+
+  test('hides the feedback filter and the rating pills without a rating enrichment', () => {
+    renderView(undefined, { ...RATED_SOURCE, ratingEnrichment: null });
+
+    expect(screen.getByText(SessionsTraceI18nKey.SummarySessions)).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.Feedback)).not.toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryRated)).not.toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryWith)).not.toBeInTheDocument();
+  });
+
+  test('hides the cost pill without a Cost role', () => {
+    renderView(undefined, { ...RATED_SOURCE, cost: null });
+
+    expect(screen.getByText(SessionsTraceI18nKey.SummaryRated)).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.SummaryCost)).not.toBeInTheDocument();
+  });
+
+  test('pends only the pills the source supports', () => {
+    renderView(undefined, CUSTOM_SOURCE);
+
+    expect(screen.getAllByText('—')).toHaveLength(1);
   });
 });
 
@@ -403,68 +453,11 @@ describe('SessionsTraceView :: sort and column filters', () => {
   });
 });
 
-describe('SessionsTraceView :: capped feedback result', () => {
-  const cappedIds: SessionCandidateIds = {
-    ids: Array.from({ length: 1000 }, (_unused, index) => `c${index}`),
-    isCapped: true,
-  };
-
-  const selectNegative = async () => {
-    const user = userEvent.setup();
-    await user.click(screen.getByText(SessionsTraceI18nKey.FeedbackNegative));
-  };
-
-  test('discloses that a capped feedback result may be incomplete', async () => {
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: cappedIds }));
-    renderView();
-
-    await selectNegative();
-    await fetchBlock();
-
-    expect(await screen.findByText(SessionsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument();
-  });
-
-  test('shows no disclosure when the candidate set is below the limit', async () => {
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: { ids: ['a'], isCapped: false } }));
-    renderView();
-
-    await selectNegative();
-    await fetchBlock();
-
-    expect(screen.queryByText(SessionsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument();
-  });
-
-  test('drops the disclosure when the request fails', async () => {
-    getSessions.mockResolvedValue({ success: false, status: 500 });
-    renderView();
-
-    await selectNegative();
-    await fetchBlock();
-
-    expect(screen.queryByText(SessionsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument();
-  });
-
-  test('clears the disclosure when the feedback filter returns to all', async () => {
-    const user = userEvent.setup();
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: cappedIds }));
-    renderView();
-
-    await selectNegative();
-    await fetchBlock();
-    expect(await screen.findByText(SessionsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument();
-
-    await user.click(screen.getByText(SessionsTraceI18nKey.FeedbackAll));
-    getSessions.mockResolvedValue(okPage(FIRST_PAGE));
-    await fetchBlock();
-
-    await waitFor(() => expect(screen.queryByText(SessionsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument());
-  });
-});
-
 describe('SessionsTraceView :: schema availability', () => {
   test('reports a failed schema read by notification rather than as a toolbar notice', async () => {
     render(
       <SessionsTraceView
+        source={RATED_SOURCE}
         schemaFields={null}
         schemaFailure={{ errorHeader: 'Upstream unavailable', errorMessage: 'schema read timed out' }}
       />,
@@ -479,7 +472,7 @@ describe('SessionsTraceView :: schema availability', () => {
   });
 
   test('falls back to its own title when the service supplied no header', async () => {
-    render(<SessionsTraceView schemaFields={null} schemaFailure={{}} />);
+    render(<SessionsTraceView source={RATED_SOURCE} schemaFields={null} schemaFailure={{}} />);
 
     await vi.waitFor(() =>
       expect(showNotificationSpy).toHaveBeenCalledWith(
@@ -495,7 +488,7 @@ describe('SessionsTraceView :: schema availability', () => {
   });
 
   test('still renders the curated columns when the schema is unavailable', () => {
-    render(<SessionsTraceView schemaFields={null} schemaFailure={{}} />);
+    render(<SessionsTraceView source={RATED_SOURCE} schemaFields={null} schemaFailure={{}} />);
 
     expect(screen.getByRole('heading', { name: SessionsTraceI18nKey.Title })).toBeInTheDocument();
   });

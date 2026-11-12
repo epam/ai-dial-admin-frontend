@@ -2,21 +2,19 @@ import { ColDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import { SESSIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import {
-  ColumnProvenance,
-  SessionColumn,
-  SessionsField,
-  ProvenanceEntity,
-  UsageLogField,
-} from '@/src/models/analytics/sessions-trace';
+import { ColumnProvenance, SessionColumn, SessionsField, UsageLogField } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import {
   availableSelectFields,
+  buildSessionColumnCatalog,
   catalogValueTypes,
   columnProvenance,
   composedSourceEntities,
+  enrichmentProvenance,
   sessionColumnGroups,
+  sessionFields,
   filterableColumnFields,
   offerableSchemaFields,
   projectableSchemaFields,
@@ -26,8 +24,10 @@ import {
 import {
   SESSION_VALUE_FILTER,
   SESSION_VALUE_FLOATING_FILTER,
+  ENRICHMENT_PROVENANCE_PALETTE,
   OPTIONAL_USAGE_LOG_FIELDS,
 } from '@/src/constants/analytics/sessions-trace';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const t = (key: string) => key;
 
@@ -184,15 +184,112 @@ describe('columnProvenance', () => {
   });
 
   test('attributes a qualified name to the enrichment that supplies it', () => {
-    expect(columnProvenance(SessionsField.InsightTopics)).toBe(ColumnProvenance.Insights);
+    expect(columnProvenance(SessionsField.InsightTopics, SCHEMA)).toBe(ColumnProvenance.Insights);
   });
 
-  test('attributes an unknown enrichment to neither the rollup nor a named origin', () => {
+  test('attributes an enrichment the schema does not report to the unattributed origin', () => {
     expect(columnProvenance('conversation_buckets.bucket')).toBe(ColumnProvenance.Other);
   });
 
   test('attributes the composed rating column to the feedback source', () => {
     expect(columnProvenance(SessionColumn.Rating)).toBe(ColumnProvenance.Feedback);
+  });
+});
+
+describe('enrichmentProvenance', () => {
+  const RATING_FIELDS = ['rate_pos_count', 'rate_zero_count', 'rate_neg_count'].map((name) =>
+    enrichmentField(name, { type: AnalyticsFieldType.Long }, 'session_ratings'),
+  );
+
+  const schema = [
+    enrichmentField('title', {}, 'alpha'),
+    ...RATING_FIELDS,
+    enrichmentField('value', {}, 'beta'),
+    enrichmentField('value', {}, 'gamma'),
+    enrichmentField('value', {}, 'delta'),
+  ];
+
+  test('colours enrichments by the order their namespace first appears, skipping the rating enrichment', () => {
+    expect(['alpha', 'beta', 'gamma'].map((namespace) => enrichmentProvenance(namespace, schema))).toEqual(
+      ENRICHMENT_PROVENANCE_PALETTE,
+    );
+  });
+
+  test('gives the rating enrichment the feedback colour wherever it appears', () => {
+    expect(enrichmentProvenance('session_ratings', schema)).toBe(ColumnProvenance.Feedback);
+  });
+
+  test('gives a namespace past the palette the unattributed colour', () => {
+    expect(enrichmentProvenance('delta', schema)).toBe(ColumnProvenance.Other);
+  });
+
+  test('colours by position rather than by name', () => {
+    expect(enrichmentProvenance('session_insights', [enrichmentField('x', {}, 'beta'), ...SCHEMA])).toBe(
+      ColumnProvenance.Tertiary,
+    );
+  });
+
+  test('reads a namespace the schema does not report as unattributed', () => {
+    expect(enrichmentProvenance('alpha')).toBe(ColumnProvenance.Other);
+  });
+});
+
+describe('buildSessionColumnCatalog', () => {
+  test('does not offer a field the composed list names', () => {
+    const catalog = buildSessionColumnCatalog([], [sourceField('steps'), sourceField('region')], ['steps']);
+
+    expect(fieldsOf(catalog)).toEqual(['region']);
+  });
+
+  test('offers every scalar field without a composed list', () => {
+    expect(offerableSchemaFields([], [sourceField('steps'), sourceField('region')])).toEqual(['steps', 'region']);
+  });
+});
+
+describe('SESSIONS_TRACE_COLUMNS :: a custom source', () => {
+  const RATING_FIELDS = ['rate_pos_count', 'rate_zero_count', 'rate_neg_count', 'rate_event_count'].map((name) =>
+    enrichmentField(name, { type: AnalyticsFieldType.Long }, 'session_ratings'),
+  );
+
+  const CUSTOM: SessionsSource = {
+    baseTable: 'agent_runs',
+    sessionId: 'run_key',
+    time: 'ended_at',
+    project: null,
+    title: null,
+    cost: null,
+    turns: 'steps',
+    enrichments: ['session_ratings'],
+    ratingEnrichment: 'session_ratings',
+  };
+
+  const CUSTOM_SCHEMA = [
+    sourceField('run_key'),
+    sourceField('ended_at', { type: AnalyticsFieldType.Timestamp }),
+    sourceField('steps', { type: AnalyticsFieldType.Long }),
+    sourceField('region'),
+    ...RATING_FIELDS,
+  ];
+
+  test('derives no column for a role-bound field or a rating count', () => {
+    const offered = fieldsOf(SESSIONS_TRACE_COLUMNS(t, CUSTOM_SCHEMA, CUSTOM));
+
+    expect(offered).toContain('region');
+    ['run_key', 'ended_at', 'steps', ...RATING_FIELDS.map(({ name }) => name)].forEach((name) =>
+      expect(offered).not.toContain(name),
+    );
+  });
+});
+
+describe('sessionFields', () => {
+  test('reads the base table fields and excludes every enrichment field', () => {
+    const { names } = sessionFields([
+      sourceField('run_key'),
+      enrichmentField('title'),
+      enrichmentField('rate_pos_count', {}, 'session_ratings'),
+    ]);
+
+    expect(names).toEqual(['run_key']);
   });
 });
 
@@ -214,7 +311,7 @@ describe('sessionColumnGroups', () => {
     const costGroups = groups(withBuckets).filter((group) => group.tag === 'cost');
 
     expect(costGroups).toHaveLength(2);
-    expect(costGroups.map((group) => group.provenance)).toEqual([ColumnProvenance.Sessions, ColumnProvenance.Other]);
+    expect(costGroups.map((group) => group.provenance)).toEqual([ColumnProvenance.Sessions, ColumnProvenance.Tertiary]);
   });
 
   // Every unnamed enrichment shares the one `Other` origin, so without the source in the key two of them
@@ -222,6 +319,8 @@ describe('sessionColumnGroups', () => {
   test('keeps two enrichments it cannot name in separate groups when they share a tag', () => {
     const withTwo = [
       ...SCHEMA,
+      enrichmentField('alpha', { tag: 'response' }, 'conversation_alpha'),
+      enrichmentField('beta', { tag: 'response' }, 'conversation_beta'),
       enrichmentField('cost_bucket', { tag: 'cost' }, 'conversation_buckets'),
       enrichmentField('cost_rank', { tag: 'cost' }, 'conversation_topics'),
     ];
@@ -234,7 +333,7 @@ describe('sessionColumnGroups', () => {
 
   test('names the enrichment supplying a group, even one it holds no label for', () => {
     const withBuckets = [...SCHEMA, enrichmentField('bucket', { tag: 'cost' }, 'conversation_buckets')];
-    const unknown = groups(withBuckets).find((group) => group.provenance === ColumnProvenance.Other);
+    const unknown = groups(withBuckets).find((group) => group.provenance === ColumnProvenance.Tertiary);
 
     expect(unknown?.source).toBe('conversation_buckets');
   });
@@ -257,7 +356,16 @@ describe('sessionColumnGroups', () => {
   });
 
   test('collapses to one group per origin when the schema reports no tags', () => {
-    expect(groups([]).map((group) => group.provenance)).toEqual([ColumnProvenance.Sessions, ColumnProvenance.Feedback]);
+    expect(groups([]).map((group) => group.provenance)).toEqual([ColumnProvenance.Sessions]);
+  });
+
+  test('adds the feedback group for the Rating column under a source with a rating enrichment', () => {
+    const rated: SessionsSource = { ...defaultSessionsSource(), ratingEnrichment: 'session_ratings' };
+
+    expect(sessionColumnGroups(SESSIONS_TRACE_COLUMNS(t, [], rated), []).map((group) => group.provenance)).toEqual([
+      ColumnProvenance.Sessions,
+      ColumnProvenance.Feedback,
+    ]);
   });
 });
 
@@ -618,20 +726,17 @@ describe('composedSourceEntities', () => {
     source: name.includes('.') ? name.slice(name.indexOf('.') + 1) : name,
   });
 
-  const RATINGS: ProvenanceEntity = { name: 'response_ratings', provenance: ColumnProvenance.Feedback };
+  test('names the base entity first, then each enrichment in schema order', () => {
+    const entities = composedSourceEntities('agent_runs', [
+      field('chat_id'),
+      field('session_insights.title'),
+      field('conversation_buckets.turn_bucket'),
+    ]);
 
-  test('names the base entity first, then each enrichment, then the queried entities', () => {
-    const entities = composedSourceEntities(
-      'sessions',
-      [field('chat_id'), field('session_insights.title'), field('conversation_buckets.turn_bucket')],
-      [RATINGS],
-    );
-
-    expect(entities.map((entity) => entity.name)).toEqual([
-      'sessions',
-      'session_insights',
-      'conversation_buckets',
-      'response_ratings',
+    expect(entities).toEqual([
+      { name: 'agent_runs', provenance: ColumnProvenance.Sessions },
+      { name: 'session_insights', provenance: ColumnProvenance.Insights },
+      { name: 'conversation_buckets', provenance: ColumnProvenance.Tertiary },
     ]);
   });
 
@@ -644,10 +749,10 @@ describe('composedSourceEntities', () => {
     expect(entities.filter((entity) => entity.name === 'session_insights')).toHaveLength(1);
   });
 
-  test('attributes an enrichment it cannot name to the unattributed provenance', () => {
+  test('colours an enrichment it has never heard of by its position', () => {
     const [, unknown] = composedSourceEntities('sessions', [field('some_future_enrichment.value')]);
 
-    expect(unknown).toEqual({ name: 'some_future_enrichment', provenance: ColumnProvenance.Other });
+    expect(unknown).toEqual({ name: 'some_future_enrichment', provenance: ColumnProvenance.Insights });
   });
 
   test('names the base entity alone when the schema reports no enrichment', () => {
@@ -663,10 +768,17 @@ describe('composedSourceEntities', () => {
   // The day ratings arrive as an enrichment, the schema reports the namespace while the queried list still
   // names the table. The declared attribution has to win: the derived one falls back to the unattributed
   // colour, which would paint the line grey while the grid band paints the same source as feedback.
-  test('names an entity once, keeping the declared attribution over the derived fallback', () => {
-    const entities = composedSourceEntities('sessions', [field('response_ratings.rate_pos_count')], [RATINGS]);
+  test('attributes the rating enrichment to the feedback provenance', () => {
+    const entities = composedSourceEntities('sessions', [
+      field('response_ratings.rate_pos_count'),
+      field('response_ratings.rate_zero_count'),
+      field('response_ratings.rate_neg_count'),
+    ]);
 
-    expect(entities).toEqual([{ name: 'sessions', provenance: ColumnProvenance.Sessions }, RATINGS]);
+    expect(entities).toEqual([
+      { name: 'sessions', provenance: ColumnProvenance.Sessions },
+      { name: 'response_ratings', provenance: ColumnProvenance.Feedback },
+    ]);
   });
   // The same three columns are published bare by one instance and qualified by the enrichment that holds
   // them by another. The grant matches on the column's own name so neither spelling withdraws the tabs, and

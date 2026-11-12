@@ -69,4 +69,16 @@ describe('system properties page', () => {
 
     expect(page).toMatchObject({ globalSettings: null, doesSettingsExist: false, optionWarnings: [] });
   });
+
+  test('offers the sessions source tab only when analytics is enabled', async () => {
+    vi.mocked(settingsApi.getSystemProperties).mockResolvedValue({ success: false, status: 404 });
+
+    vi.stubEnv('ANALYTICS_ENABLED', 'true');
+    expect(await renderPage()).toMatchObject({ isAnalyticsEnabled: true });
+
+    vi.stubEnv('ANALYTICS_ENABLED', 'false');
+    expect(await renderPage()).toMatchObject({ isAnalyticsEnabled: false });
+
+    vi.unstubAllEnvs();
+  });
 });

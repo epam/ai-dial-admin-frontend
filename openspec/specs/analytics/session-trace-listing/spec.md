@@ -1233,148 +1233,6 @@ list of field names, so a field newly typed as a closed vocabulary reads as word
 - **WHEN** the insights panel renders a value row for a field the schema types as a closed vocabulary
 - **THEN** its value reads as readable words rather than the raw underscored token
 
-### Requirement: Session detail feedback reads the rating source
-
-The detail view SHALL read this session's ratings from the rating source and SHALL state, **in the
-feedback panel**, how many were positive and how many negative. A session with no ratings SHALL state
-zero in both directions rather than rendering them as unavailable.
-
-Those figures SHALL come from an **aggregate scoped to the session**, not from counting the rows the
-panel loaded. The listed ratings are bounded, so counting them reports the bound rather than the session:
-a session with more rated responses than the view requested would state the count of the ones on screen
-while presenting it as the session's total. The figures SHALL therefore be exact regardless of how many
-the panel lists, and the list's own bound SHALL be disclosed separately.
-
-The negative figure SHALL be composed on the same terms as the grid's — the zero and negative counts
-together — and SHALL carry the same keyboard-reachable caveat where part of it is not attributable to a
-captured submitted form.
-
-The feedback panel SHALL list the session's rated **responses**, most recently rated first. The rating
-source rolls a response's rate events into one row per rated response, so the list's grain is the response
-rather than the individual event: a response rated more than once appears once. Each listed entry SHALL state
-its direction, and the time it was rated. Where a response's first and last rating times differ, the entry
-SHALL state the window rather than a single time, so a re-rated response does not present its latest rating as
-its only one.
-
-An entry whose response carries more than one distinct rating value SHALL state that its own ratings
-disagree. The source reports that condition directly, and a single direction shown for such a response would
-present one side of a contested rating as the response's verdict.
-
-Each entry SHALL state how many comments its response carries. The comment **count** is catalogued
-non-sensitive and is therefore stated for every caller. The comment **text** is catalogued sensitive, so it
-SHALL be named only when the fetched schema reports it — the same gate the transcript's body columns use —
-and an entry SHALL distinguish a response with no comments from one whose comment text this caller may not
-read. An entry MUST NOT render a comment as flatly unavailable where the count says there is one.
-
-Each card, and each assistant message, SHALL also show the ratings attributed to its trace, and attribution
-SHALL be an **exact join on the response id**. The trace's figures query resolves the set of response ids the
-trace recorded, and the rating source is grained by response id, so the two join directly.
-
-Attribution MUST NOT fall back to time. The former rule — a rating belongs to the last trace that had started
-when the rating was submitted — is not stable under a paged listing: it is evaluated over the traces loaded
-so far, so a rating submitted after the last loaded trace attaches to that trace and then moves to a
-different card once the next page arrives. A figure that changes because the reader scrolled is worse than an
-absent one.
-
-A rating whose response id matches no loaded trace SHALL therefore go unattributed rather than being placed
-by time. The panel's own figures come from an aggregate scoped to the session rather than from what the
-listing attributed, so such a rating is still counted — it is left unplaced on a card, not lost.
-
-When more rated responses exist than the view requested, the panel SHALL say the list is partial rather than
-presenting it as complete. That disclosure is about the **list**; the panel's direction figures are exact and
-SHALL NOT be qualified by it.
-
-#### Scenario: Rating counts render with the ratings they summarise
-
-- **WHEN** a session has positive and negative ratings
-- **THEN** the feedback panel states the count in each direction
-
-#### Scenario: The counts are exact, not the loaded subset
-
-- **WHEN** a session has more rated responses than the panel lists
-- **THEN** the stated direction counts cover every rated response of the session
-- **AND** they are not derived from the listed entries
-
-#### Scenario: An unrated session reports zero
-
-- **WHEN** a session has no ratings
-- **THEN** the feedback panel states zero in both directions
-
-#### Scenario: An assistant message shows its turn's ratings
-
-- **WHEN** a rated response's id is among those the turn's trace recorded
-- **THEN** that turn's assistant message shows it in the matching direction
-- **AND** the attribution does not depend on when the rating was submitted
-
-#### Scenario: Individual ratings are listed
-
-- **WHEN** a session has ratings
-- **THEN** the feedback panel lists each rated response with its direction and rating time, most recently
-  rated first
-- **AND** a response rated more than once appears as one entry rather than one per event
-
-#### Scenario: A re-rated response states its window, not one time
-
-- **WHEN** a listed response's first and last rating times differ
-- **THEN** the entry states the window rather than a single time
-
-#### Scenario: A contested response says its ratings disagree
-
-- **WHEN** a listed response carries more than one distinct rating value
-- **THEN** the entry states that its ratings disagree
-
-#### Scenario: A listed rating's comment is marked unavailable
-
-- **WHEN** the feedback panel lists a response carrying comments and the schema reports no comment text column
-- **THEN** the entry states how many comments the response carries
-- **AND** the comment text renders as unavailable to this caller rather than as absent
-- **AND** that is distinguished from a response carrying no comments at all
-
-#### Scenario: Comment text is read where the schema reports it
-
-- **WHEN** the schema reports the comment text column
-- **THEN** the query names it and the entry renders the comment
-
-#### Scenario: A response with no rating value is labelled neither way
-
-- **WHEN** a listed response's rate events carried no rating value at all
-- **THEN** the entry states that it carries no rating value
-- **AND** it is labelled neither positive nor negative, matching the figures that count it in neither
-
-#### Scenario: The comment count is stated alongside a readable comment
-
-- **WHEN** a listed response carries three comments and this caller may read the comment text
-- **THEN** the entry states the count as well as the text
-- **AND** the text is not presented as the response's only comment
-
-#### Scenario: A session-wide figure is not announced as period-scoped
-
-- **WHEN** the detail view's rating figures render
-- **THEN** their accessible names state the session's ratings without claiming a selected period
-- **AND** the grid's own figures, which are period-bounded, keep an accessible name that says so
-
-#### Scenario: A partial rating list says so
-
-- **WHEN** a session has more rated responses than the view requested
-- **THEN** the panel states that the list is partial
-- **AND** the panel's direction figures are not qualified by that disclosure
-
-#### Scenario: A card's ratings are joined by response id
-
-- **WHEN** a rated response's id is among those a loaded trace recorded
-- **THEN** that trace's card shows the rating in the matching direction
-
-#### Scenario: An unmatched rating is left unplaced rather than guessed
-
-- **WHEN** a rated response's id matches no loaded trace
-- **THEN** no card is credited with that rating
-- **AND** the feedback panel's direction figures still count it
-
-#### Scenario: Attribution does not move when a further page loads
-
-- **WHEN** a rating is attributed to a trace and a further page of traces is appended
-- **THEN** the rating stays on the same card
-
 ### Requirement: The session detail view presents its traces without a view switch
 
 The session detail view SHALL present the session's **traces** and SHALL NOT offer a view switch.
@@ -1761,3 +1619,104 @@ console's own making and SHALL require no additional read.
 
 - **WHEN** the reader activates the JSON control
 - **THEN** no query is issued
+
+### Requirement: Every enrichment of the base entity has its own panel
+
+The detail view SHALL render **one panel per enrichment namespace** the base entity's schema reports, in the
+order the namespaces first appear, instead of a single panel tied to one named enrichment. Each panel SHALL follow
+every rule of "The insights panel's field set is derived from the enrichment's schema", applied to its own
+namespace: the field set comes from the schema, a field the record carries no value for is omitted, a value
+renders in full, and whether the session was reached at all is decided over the namespace as a whole.
+
+The session rating enrichment SHALL NOT get a panel of its own: the feedback panel states it.
+
+A panel's title SHALL be the enrichment's display name where the catalog reports one, and otherwise its namespace.
+A field's label SHALL be the field's display name where the schema reports one, and otherwise its name with the
+namespace dropped, underscores read as spaces and the first letter capitalised.
+
+A panel's fields SHALL be grouped by their tag. The groups SHALL be ordered first by the enrichment's declared tag
+order, then by any other tag in the order its first field appears, with the `system` tag always last. A tag the
+declared order omits SHALL still form a group: the declared order is a preference, not a whitelist.
+
+#### Scenario: Two enrichments render two panels
+
+- **WHEN** the base entity's schema reports two enrichment namespaces and the record carries values for both
+- **THEN** the detail view renders two panels, in schema order, each holding only its own namespace's fields
+
+#### Scenario: A panel without a catalog display name is titled by namespace
+
+- **WHEN** the catalog reports no display name for an enrichment
+- **THEN** its panel is titled by the enrichment's namespace
+
+#### Scenario: A field without a display name gets a readable label
+
+- **WHEN** a field named `<namespace>.resolution_status` reports no display name
+- **THEN** its label reads "Resolution status"
+
+#### Scenario: An undeclared tag still forms a group
+
+- **WHEN** an enrichment declares the tag order `insight`, `system` and some of its fields carry the tag `risk`
+- **THEN** the panel shows the groups `insight`, `risk`, `system` in that order
+
+#### Scenario: The rating enrichment has no panel of its own
+
+- **WHEN** the base entity's schema reports a session rating enrichment
+- **THEN** no enrichment panel is rendered for it
+- **AND** its figures appear in the feedback panel
+
+### Requirement: Session detail feedback reads the rating enrichments
+
+The detail view SHALL state, **in the feedback panel**, how many of the session's ratings were positive and how many
+negative, read from the session rating enrichment's fields on the session record. They are the same fields the
+grid's Rating column reads, so the two SHALL agree for the same session. A session with no rating row SHALL state
+zero in both directions. The negative figure SHALL be composed on the same terms as the grid's and SHALL carry
+the same keyboard-reachable caveat.
+
+The panel SHALL list the session's rated **responses**, most recently rated first, read from the **response rating
+enrichment** on the usage log: an enrichment of `dial_usage_log` grained by response id, recognised by the same
+three rating counts the session rating enrichment carries. A response recorded on more than one hop SHALL be
+listed once. Each entry SHALL state its direction and when it was rated; where its first and last rating times
+differ, the window. An entry whose response carries more than one distinct rating value SHALL state that its
+ratings disagree. An entry whose rate events carried no rating value SHALL be labelled neither positive nor
+negative.
+
+Each entry SHALL state how many comments its response carries. The comment **text** is catalogued sensitive, so it
+SHALL be named only when the fetched schema reports it, and an entry SHALL distinguish a response with no comments
+from one whose comment text this caller may not read.
+
+Each card, and each assistant message, SHALL show the ratings of the rated responses its trace recorded, joined
+exactly on the response id and counting each rated response once per trace. Attribution MUST NOT fall back to
+time, so a rating does not move when a further page of traces loads.
+
+When more rated responses exist than the panel lists, it SHALL say the list is partial; the direction figures come
+from the session record and SHALL NOT be qualified by that disclosure. Where the usage log's schema reports no
+response rating enrichment, the panel SHALL state the direction figures and no list, and no card SHALL state a
+rating.
+
+#### Scenario: Panel figures agree with the grid
+
+- **WHEN** a session's grid row shows two positive and one negative rating
+- **THEN** its feedback panel states two positive and one negative
+
+#### Scenario: Rated responses are listed from the usage log
+
+- **WHEN** the session's hops recorded three rated responses, one of them on two hops
+- **THEN** the panel lists three entries, most recently rated first
+
+#### Scenario: Comment text respects the schema
+
+- **WHEN** a listed response carries comments and the caller's schema reports no comment text field
+- **THEN** the entry states the comment count
+- **AND** the text renders as unavailable to this caller rather than as absent
+
+#### Scenario: A relayed response is counted once on its card
+
+- **WHEN** a trace recorded a rated response id on a span and on a span nested beneath it
+- **THEN** the trace's card counts that rating once
+
+#### Scenario: No response rating enrichment, no list
+
+- **WHEN** the usage log's schema reports no response rating enrichment
+- **THEN** the feedback panel states the direction figures and lists no responses
+- **AND** no card shows a rating
+

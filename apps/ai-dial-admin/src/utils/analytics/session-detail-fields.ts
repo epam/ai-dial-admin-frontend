@@ -9,6 +9,8 @@ import {
   SessionsField,
   RatingCounts,
   ResolvedSessionField,
+  SessionPanelDefinition,
+  SessionRatingCounts,
 } from '@/src/models/analytics/sessions-trace';
 import {
   formatCompactNumber,
@@ -17,6 +19,7 @@ import {
   formatSignificantCost,
   toMillis,
 } from '@/src/utils/analytics/session-formatting';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
@@ -112,10 +115,25 @@ export const isFeedbackReRated = (row: SessionFeedbackRow): boolean => {
   return first !== null && last !== null && first !== last;
 };
 
-// The rating source is grained by response id, so each id names at most one row. A row with no id cannot be
-// placed on a span and is left out rather than keyed under an empty string a span might also carry.
-export const feedbackByResponseId = (rows: SessionFeedbackRow[]): Map<string, SessionFeedbackRow> =>
-  new Map(rows.flatMap((row) => (row.response_id ? [[row.response_id, row] as const] : [])));
-
 export const isFeedbackPartial = (rows: SessionFeedbackRow[], total: number | null): boolean =>
-  total !== null && total > rows.length;
+  total === null ? rows.length > 0 : total > rows.length;
+
+export const sessionRatingFigures = (record: SessionDetailRow): SessionRatingCounts | null => {
+  const { rating_up, rating_down, provable_down, captured_form, rate_events } = record as SessionDetailRow &
+    SessionRatingCounts;
+
+  return rating_up == null && rating_down == null
+    ? null
+    : { rating_up, rating_down, provable_down, captured_form, rate_events };
+};
+
+const ROLE_BOUND_FIELDS: Partial<Record<SessionsField, (source: SessionsSource) => string | null>> = {
+  [SessionsField.TotalPrice]: ({ cost }) => cost,
+  [SessionsField.TurnCount]: ({ turns }) => turns,
+};
+
+export const roleScopedPanels = (panels: SessionPanelDefinition[], source: SessionsSource): SessionPanelDefinition[] =>
+  panels.map((panel) => ({
+    ...panel,
+    fields: panel.fields.filter(({ column }) => !column || ROLE_BOUND_FIELDS[column]?.(source) !== null),
+  }));

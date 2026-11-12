@@ -7,7 +7,6 @@ import {
   SESSION_SPAN_LIMIT,
   SPAN_BASE_FIELDS,
   SESSION_TRACE_PAGE_SIZE,
-  FEEDBACK_ENTITY,
   OPTIONAL_DETAIL_SELECT_FIELDS,
   REQUIRED_DETAIL_SELECT_FIELDS,
   USAGE_LOG_ENTITY,
@@ -38,7 +37,7 @@ import {
 } from '@/src/models/analytics/query';
 import {
   buildSessionDetailQuery,
-  buildSessionFeedbackQuery,
+  buildSessionRatedResponsesQuery,
   buildSessionSpansQuery,
   buildSessionTraceFiguresQuery,
   buildSessionTracePageQuery,
@@ -51,8 +50,17 @@ const CHAT_SCOPE: SessionScope = { id: CHAT_ID, source: CHAT_ID_SESSION_SOURCE }
 const ALL_FIELDS: string[] = Object.values(SessionsField);
 // The builder takes the schema's fields rather than their names, because the insight half of the select is
 // discovered from the namespace and the panel reads the type off the same report.
+const ROLE_FIELD_TYPES: Record<string, AnalyticsFieldType> = {
+  [SessionsField.LastRequestTime]: AnalyticsFieldType.Timestamp,
+  [SessionsField.TotalPrice]: AnalyticsFieldType.Decimal,
+  [SessionsField.TurnCount]: AnalyticsFieldType.Long,
+};
 const asSchemaFields = (names: string[]): AnalyticsEntityField[] =>
-  names.map((name) => ({ name, source: name.slice(name.indexOf('.') + 1), type: AnalyticsFieldType.String }));
+  names.map((name) => ({
+    name,
+    source: name.slice(name.indexOf('.') + 1),
+    type: ROLE_FIELD_TYPES[name] ?? AnalyticsFieldType.String,
+  }));
 const detailQuery = (availableFields: string[] | undefined = ALL_FIELDS) =>
   buildSessionDetailQuery(CHAT_ID, availableFields && asSchemaFields(availableFields));
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
@@ -286,26 +294,33 @@ describe('buildSessionDetailQuery', () => {
   });
 });
 
-describe('buildSessionFeedbackQuery', () => {
-  const ALL_FEEDBACK_FIELDS: string[] = Object.values(ResponseRatingsField);
-  const feedbackQuery = (limit = SESSION_FEEDBACK_LIMIT, schemaFields: string[] | undefined = ALL_FEEDBACK_FIELDS) =>
-    buildSessionFeedbackQuery(CHAT_ID, limit, schemaFields);
+describe('buildSessionRatedResponsesQuery', () => {
+  const NS = 'response_feedback';
+  const WINDOW = paddedUtcDayRange(['2026-07-22T11:50:28.506Z', '2026-07-22T12:00:52.157Z']) as SessionTraceWindow;
+  const ratedQuery = (overrides: Partial<Parameters<typeof buildSessionRatedResponsesQuery>[0]> = {}) =>
+    buildSessionRatedResponsesQuery({
+      scope: CHAT_SCOPE,
+      window: WINDOW,
+      namespace: NS,
+      limit: SESSION_FEEDBACK_LIMIT,
+      isCommentTextReadable: false,
+      ...overrides,
+    });
+  const aliases = (select?: QueryOutputColumn[]) =>
+    (select ?? []).map(({ as, expr }) => as ?? (expr as QueryFieldExpr).name);
 
-  test('reads the rating rollup in row mode, filtered to one session', () => {
-    const query = feedbackQuery();
-    const predicate = asPredicate(query.filter);
+  test('reads the usage log grouped by response id, so a response recorded on two hops is listed once', () => {
+    const query = ratedQuery();
 
-    expect(query.entity).toBe(FEEDBACK_ENTITY);
-    expect(FEEDBACK_ENTITY).toBe('response_ratings');
-    expect(query.mode).toBe(QueryMode.Row);
-    expect(predicate.op).toBe(QueryOperator.Eq);
-    expect(predicate.args[0]).toEqual({ type: QueryExprType.Field, name: ResponseRatingsField.ChatId });
+    expect(query.entity).toBe(USAGE_LOG_ENTITY);
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toEqual([UsageLogField.ResponseId]);
   });
 
-  test('selects the response grain: both times, the direction counts, disagreement and comments', () => {
-    const names = selectedNames(feedbackQuery().select);
+  test('reads every figure from the rating enrichment namespace', () => {
+    const query = ratedQuery();
 
-    expect(names).toEqual([
+    expect(aliases(query.select)).toEqual([
       ResponseRatingsField.ResponseId,
       ResponseRatingsField.FirstRateTime,
       ResponseRatingsField.LastRateTime,
@@ -314,41 +329,28 @@ describe('buildSessionFeedbackQuery', () => {
       ResponseRatingsField.RateNegCount,
       ResponseRatingsField.RateDistinctCount,
       ResponseRatingsField.CommentCount,
-      ResponseRatingsField.CommentSample,
     ]);
+    expect(JSON.stringify(query.select)).toContain(`${NS}.${ResponseRatingsField.RatePosCount}`);
   });
 
-  test('names the comment text only when the schema reports it', () => {
-    const withoutText = ALL_FEEDBACK_FIELDS.filter((name) => name !== ResponseRatingsField.CommentSample);
-    const names = selectedNames(feedbackQuery(SESSION_FEEDBACK_LIMIT, withoutText).select);
-
-    expect(names).not.toContain(ResponseRatingsField.CommentSample);
-    expect(names).toContain(ResponseRatingsField.CommentCount);
+  test('names the comment text only when the caller may read it', () => {
+    expect(aliases(ratedQuery().select)).not.toContain(ResponseRatingsField.CommentSample);
+    expect(aliases(ratedQuery({ isCommentTextReadable: true }).select)).toContain(ResponseRatingsField.CommentSample);
   });
 
-  test('always names the comment count, which the service does not gate', () => {
-    const names = selectedNames(buildSessionFeedbackQuery(CHAT_ID, SESSION_FEEDBACK_LIMIT).select);
+  test('scopes the read to the session hops inside its window, rated responses only', () => {
+    const filter = JSON.stringify(ratedQuery().filter);
 
-    expect(names).toContain(ResponseRatingsField.CommentCount);
-    expect(names).not.toContain(ResponseRatingsField.CommentSample);
+    expect(filter).toContain(CHAT_ID);
+    expect(filter).toContain(UsageLogField.RequestTime);
+    expect(filter).toContain(`${NS}.${ResponseRatingsField.RateEventCount}`);
   });
 
-  test('never selects the full comment set, which is sensitive and an array', () => {
-    expect(JSON.stringify(feedbackQuery())).not.toContain('"comments"');
-  });
+  test('sorts most recently rated first, bounded by the limit', () => {
+    const query = ratedQuery({ limit: 50 });
 
-  test('sorts most recently rated first and requests a total', () => {
-    const query = feedbackQuery(50);
-
-    expect(query.sort).toEqual([{ field: ResponseRatingsField.LastRateTime, dir: QuerySortDirection.Desc }]);
-
-    const page = query.page as QueryOffsetPage;
-    expect(page.limit).toBe(50);
-    expect(page.include_total).toBe(true);
-  });
-
-  test('carries no time bound', () => {
-    expect(JSON.stringify(feedbackQuery().filter)).not.toContain(ResponseRatingsField.LastRateTime);
+    expect(query.sort?.[0]).toEqual({ field: ResponseRatingsField.LastRateTime, dir: QuerySortDirection.Desc });
+    expect((query.page as QueryOffsetPage).limit).toBe(50);
   });
 });
 
@@ -660,5 +662,17 @@ describe('the roots and figures passes are scoped identically', () => {
 
     expect(boundsOf(roots.filter)).toEqual(boundsOf(figures.filter));
     expect(boundsOf(figures.filter)).toEqual({ fromMs: window().fromMs, toMs: window().toMs });
+  });
+});
+
+describe('buildSessionDetailQuery — rating enrichment', () => {
+  test('selects the rating counts the schema reports for the rating enrichment', () => {
+    const ratingFields = ['rate_pos_count', 'rate_zero_count', 'rate_neg_count', 'rate_event_count'].map(
+      (name) => `session_ratings.${name}`,
+    );
+    const names = selectedNames(detailQuery([...ALL_FIELDS, ...ratingFields]).select);
+
+    expect(names).toEqual(expect.arrayContaining(ratingFields));
+    expect(names).not.toContain('session_ratings.rate_raw_count');
   });
 });
