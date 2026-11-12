@@ -1,11 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  bucketTopSlices,
   buildBarChartOptions,
   buildChartOptions,
   buildLineChartOptions,
-  buildPieChartOptions,
   buildScatterChartOptions,
   buildSeriesLegend,
   getNumericColumns,
@@ -158,17 +156,12 @@ describe('QueryBuilder :: chart-options', () => {
       ]);
     });
 
-    test('lists no legend entries for a single series, a pie, or no chart', () => {
+    test('lists no legend entries for a single series or no chart', () => {
       expect(buildSeriesLegend(buildChartOptions(ChartType.Line, SERIES_ROWS, 'week', ['fresh'], CONTEXT))).toEqual([]);
-      expect(
-        buildSeriesLegend(buildChartOptions(ChartType.Pie, SERIES_ROWS, 'week', ['fresh', 'returning'], CONTEXT)),
-      ).toEqual([]);
       expect(buildSeriesLegend(null)).toEqual([]);
     });
 
-    test('pie and scatter draw only from the first Y column', () => {
-      const pie = buildChartOptions(ChartType.Pie, SERIES_ROWS, 'week', ['fresh', 'returning'], CONTEXT);
-      expect(pie.series[0].data.map((slice: { value: number }) => slice.value)).toEqual([6, 4]);
+    test('scatter draws only from the first Y column', () => {
       const scatter = buildChartOptions(ChartType.Scatter, SERIES_ROWS, 'returning', ['fresh', 'returning'], CONTEXT);
       expect(scatter.series).toHaveLength(1);
       expect(scatter.yAxis.name).toBe('fresh');
@@ -203,35 +196,6 @@ describe('QueryBuilder :: chart-options', () => {
 
     test('empty rows yield no numeric columns', () => {
       expect(getStrictNumericColumns([], ['count'])).toEqual([]);
-    });
-  });
-
-  describe('bucketTopSlices', () => {
-    test('few categories sort by value descending with no Other slice', () => {
-      const slices = bucketTopSlices(ROWS, 'deployment', 'total', 'Other');
-      expect(slices).toEqual([
-        { name: 'gpt-4o', value: 120 },
-        { name: 'claude', value: 80 },
-        { name: 'gemini', value: 0 },
-      ]);
-    });
-
-    test('categories beyond the cap merge into one Other slice with the summed value', () => {
-      const rows = Array.from({ length: 12 }, (_, i) => ({ model: `m${i}`, cnt: 12 - i }));
-      const slices = bucketTopSlices(rows, 'model', 'cnt', 'Other', 10);
-      expect(slices).toHaveLength(11);
-      expect(slices[0]).toEqual({ name: 'm0', value: 12 });
-      expect(slices[10]).toEqual({ name: 'Other', value: 3 });
-    });
-  });
-
-  describe('pie', () => {
-    test('pie options bucket slices and cycle the shared series palette', () => {
-      const options = buildPieChartOptions(COLORS, ROWS, 'deployment', 'total', 'Other');
-      expect(options.series[0].type).toBe('pie');
-      expect(options.series[0].data[0]).toEqual({ name: 'gpt-4o', value: 120 });
-      expect(options.color).toBe(CHART_SERIES_COLOR_CYCLE);
-      expect(options.tooltip.trigger).toBe('item');
     });
   });
 
@@ -271,23 +235,18 @@ describe('QueryBuilder :: chart-options', () => {
   });
 
   describe('buildChartOptions dispatch', () => {
-    test('names a category with no value on the axis and in a pie', () => {
+    test('names a category with no value on the axis', () => {
       const rows = [
         { deployment: '', total: 2 },
         { deployment: 'gpt', total: 1 },
       ];
       const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', ['total'], CONTEXT);
       expect((bar.xAxis as { data: string[] }).data).toContain('(no value)');
-      const pie = buildChartOptions(ChartType.Pie, rows, 'deployment', ['total'], CONTEXT);
-      expect((pie.series as Array<{ data: Array<{ name: string }> }>)[0].data.map((slice) => slice.name)).toContain(
-        '(no value)',
-      );
     });
 
     test('routes each type to its series shape', () => {
       expect(buildChartOptions(ChartType.Bar, ROWS, 'deployment', ['total'], CONTEXT).series[0].type).toBe('bar');
       expect(buildChartOptions(ChartType.Line, ROWS, 'deployment', ['total'], CONTEXT).series[0].type).toBe('line');
-      expect(buildChartOptions(ChartType.Pie, ROWS, 'deployment', ['total'], CONTEXT).series[0].type).toBe('pie');
       expect(buildChartOptions(ChartType.Scatter, ROWS, 'total', ['total'], CONTEXT).series[0].type).toBe('scatter');
     });
 

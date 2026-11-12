@@ -515,8 +515,12 @@ prefixes the figure.
   it plots the first aggregate over that column in time order. A lone line is named by its column; only
   beside a compared line is it named the current period.
 - Pie chart fits exactly one dimension column that is not a date-time value and at least one aggregate column;
-  it shows the first aggregate as the usage dashboard's donut: its largest five values with the rest folded
-  into Others, the total in the ring, and a legend stating each slice's figure and share.
+  it shows the first aggregate as the usage dashboard's donut: its largest values with the rest folded into
+  Others, the total in the ring, and a legend stating each slice's figure and share. How many values it names
+  follows the widget's width on the 12-column grid — up to 4 columns 5, up to 8 columns 10, wider 15 — with the
+  legend in columns of six rows beside the ring; a widget three grid rows tall takes four legend rows, names only
+  what those rows hold with one kept for Others, and draws a smaller ring, so nothing is clipped. A widget in its
+  query's own view whose query keeps a pie draws the same donut on that pie's Category and Value.
 - Activity heatmap fits exactly one date-time dimension column and at least one aggregate column; it sums
   the first aggregate by day and hour of day over the calendar week (Monday to Sunday) holding the end of
   the dashboard range, whatever range is selected — the usage dashboard's heatmap grid, a row for every day

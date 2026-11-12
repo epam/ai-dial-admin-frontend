@@ -1,13 +1,7 @@
-import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
-import { DonutSliceView, TimedValue } from '@/src/components/Analytics/Usage/models';
-import { formatChartNumber, getSliceColor } from '@/src/components/Analytics/Usage/utils/chart-options';
-import { formatPercent, getDeltaRatio } from '@/src/components/Analytics/Usage/utils/format';
-import { ChartColors } from '@/src/components/Common/MetricCard/models';
+import { TimedValue } from '@/src/components/Analytics/Usage/models';
+import { getDeltaRatio } from '@/src/components/Analytics/Usage/utils/format';
 
 type ResultRows = Array<Record<string, unknown>>;
-
-// The donut names its largest slices and folds the rest, as the usage dashboard's share chart does.
-const SHARE_SLICE_COUNT = 5;
 
 export interface SingleValueFigure {
   value: number | null;
@@ -80,46 +74,4 @@ export const getBucketWidthMs = (points: TimedValue[]): number => {
     .map((point, index) => point.bucketMs - points[index].bucketMs)
     .filter((gap) => gap > 0);
   return gaps.length ? Math.min(...gaps) : HOUR_MS;
-};
-
-export interface ShareFigure {
-  slices: DonutSliceView[];
-  total: number;
-}
-
-/**
- * The largest values by name, the rest summed into one grey slice, labelled the way the usage dashboard's
- * share legend is: the figure and its share of the total.
- */
-export const buildShareFigure = (
-  colors: ChartColors,
-  rows: ResultRows,
-  dimensionColumn: string,
-  valueColumn: string,
-  otherLabel: string,
-  formatValue: (value: number) => string = formatChartNumber,
-  emptyLabel = '',
-): ShareFigure => {
-  const ranked = rows
-    .map((row) => ({ name: renderCell(row[dimensionColumn]) || emptyLabel, value: toNumber(row[valueColumn]) ?? 0 }))
-    .filter((entry) => entry.value > 0)
-    .sort((a, b) => b.value - a.value);
-  const total = ranked.reduce((sum, entry) => sum + entry.value, 0);
-
-  const shown = ranked.slice(0, SHARE_SLICE_COUNT).map((entry) => ({ ...entry, isOther: false }));
-  const rest = ranked.slice(SHARE_SLICE_COUNT).reduce((sum, entry) => sum + entry.value, 0);
-  const entries = rest > 0 ? [...shown, { name: otherLabel, value: rest, isOther: true }] : shown;
-
-  return {
-    total,
-    slices: entries.map((entry, index) => ({
-      id: entry.isOther ? '__other' : entry.name,
-      label: entry.name,
-      value: entry.value,
-      isOther: entry.isOther,
-      valueLabel: formatValue(entry.value),
-      shareLabel: total ? formatPercent(entry.value / total, 0) : null,
-      color: getSliceColor(colors, index, entry.isOther),
-    })),
-  };
 };

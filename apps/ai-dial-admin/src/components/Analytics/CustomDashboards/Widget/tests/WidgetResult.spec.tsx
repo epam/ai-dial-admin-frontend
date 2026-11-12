@@ -25,6 +25,8 @@ const RESULT = {
   ],
 };
 
+const PIE_LAYOUT = { sliceCount: 5, legendRowsPerColumn: 6, donutSize: 200 };
+
 const WEEK = { startDate: new Date('2026-10-12T00:00:00Z'), endDate: new Date('2026-10-19T00:00:00Z') };
 
 const sourceWithChart = (chart: SavedQueryChart): WidgetQuerySource => ({
@@ -45,6 +47,7 @@ const renderResult = (chart: SavedQueryChart) =>
       compare={ComparePeriod.Off}
       heatmapWeek={WEEK}
       isRiseGood
+      pieLayout={PIE_LAYOUT}
     />,
   );
 
@@ -87,6 +90,7 @@ describe('WidgetResult — chart view', () => {
         compare={ComparePeriod.Off}
         heatmapWeek={WEEK}
         isRiseGood
+        pieLayout={PIE_LAYOUT}
       />,
     );
 
@@ -129,8 +133,49 @@ describe('WidgetResult — chart view', () => {
         compare={ComparePeriod.Off}
         heatmapWeek={WEEK}
         isRiseGood
+        pieLayout={PIE_LAYOUT}
       />,
     );
     expect(drawnSeriesNames()).toEqual(['calls']);
+  });
+});
+
+describe('WidgetResult — pie', () => {
+  const PIE_META: ExecutedQueryMeta = { ...META, dimensionColumns: ['model'], aggregateColumns: ['calls'] };
+  const PIE_RESULT = {
+    rows: Array.from({ length: 12 }, (_, index) => ({ model: `m${index}`, calls: 12 - index })),
+  };
+
+  const renderPie = (
+    view: WidgetView,
+    pieSliceCount: number,
+    savedQuery = sourceWithChart({ type: ChartType.Pie, x_field: 'model', y_field: ['calls'] }),
+  ) =>
+    render(
+      <WidgetResult
+        savedQuery={savedQuery}
+        result={PIE_RESULT}
+        meta={PIE_META}
+        view={view}
+        previousResult={null}
+        compare={ComparePeriod.Off}
+        heatmapWeek={WEEK}
+        isRiseGood
+        pieLayout={{ sliceCount: pieSliceCount, legendRowsPerColumn: 6, donutSize: 200 }}
+      />,
+    );
+
+  test('names as many categories as its slice count and folds the rest into Other', () => {
+    renderPie(WidgetView.Share, 7);
+    expect(screen.getByText('m6')).toBeTruthy();
+    expect(screen.queryByText('m7')).toBeNull();
+    expect(screen.getByText('QueryBuilder.ChartOtherSlice')).toBeTruthy();
+  });
+
+  test("draws a pie query's own view as the same donut, with its total", () => {
+    renderPie(WidgetView.Query, 10);
+    expect(screen.getByText('m9')).toBeTruthy();
+    expect(screen.queryByText('m10')).toBeNull();
+    expect(screen.getByText('78')).toBeTruthy();
   });
 });

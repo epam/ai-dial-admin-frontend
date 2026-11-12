@@ -161,7 +161,6 @@ export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartT
 
 export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yFields: null };
 
-// Pie shows at most this many slices; the remaining categories merge into one "Other" slice.
 export const PIE_MAX_SLICES = 10;
 
 const AXIS_SLOTS = {

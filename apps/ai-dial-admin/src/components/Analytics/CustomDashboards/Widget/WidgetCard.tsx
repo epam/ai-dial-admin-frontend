@@ -20,6 +20,7 @@ import { WidgetResultOptions } from '@/src/components/Analytics/CustomDashboards
 import SingleValueWidget from '@/src/components/Analytics/CustomDashboards/Widget/SingleValueWidget';
 import { useWidgetSparkline } from '@/src/components/Analytics/CustomDashboards/Widget/use-widget-sparkline';
 import WidgetResult from '@/src/components/Analytics/CustomDashboards/Widget/WidgetResult';
+import { getWidgetPieLayout } from '@/src/components/Analytics/CustomDashboards/utils/pie-slices';
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import { MAX_WIDGET_ROWS, WIDGET_MENU_SIZES } from '@/src/constants/analytics/dashboards';
@@ -322,6 +323,7 @@ const WidgetCard: FC<Props> = ({
         valueFormat={widget.settings?.value_format}
         currency={widget.settings?.currency}
         isRiseGood={widget.change_direction !== ChangeDirection.LowerIsBetter}
+        pieLayout={getWidgetPieLayout(widget.layout)}
       />
     );
   };
