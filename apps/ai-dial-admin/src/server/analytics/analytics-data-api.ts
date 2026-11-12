@@ -131,7 +131,7 @@ export const TABLE_ROWS_URL = (name: string): string => `${TABLE_URL(name)}/rows
 export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/access`;
 export const TABLE_ROW_POLICIES_URL = (name: string): string => `${TABLE_URL(name)}/row-policies`;
 export const TABLE_ROW_POLICY_URL = (name: string, role: string): string =>
-  `${TABLE_ROW_POLICIES_URL(name)}/${encodeURIComponent(role)}`;
+  `${TABLE_ROW_POLICIES_URL(name)}/${encodeURIComponent(role).replaceAll('*', '%2A')}`;
 
 export const TABLE_BACKFILL_URL = 'v1/data-sync/backfill';
 export const TABLE_BACKFILL_LIST_URL = (state?: TableBackfillState): string =>

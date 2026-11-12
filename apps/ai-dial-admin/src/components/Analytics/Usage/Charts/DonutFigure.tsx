@@ -19,12 +19,15 @@ interface Props {
   centerCaption: string;
   size: number;
   legendClassName?: string;
+  legendRowsPerColumn?: number;
   /** Called once the legend has been scrolled near its end, so its owner can read the next rows. */
   onLegendEndReached?: () => void;
 }
 
 /** How close to the end counts as reaching it, so the next rows are asked for before the gap shows. */
 const LEGEND_END_THRESHOLD_PX = 48;
+
+const LEGEND_COLUMN_MAX_WIDTH_PX = 280;
 
 const DonutFigure: FC<Props> = ({
   slices,
@@ -33,6 +36,7 @@ const DonutFigure: FC<Props> = ({
   centerCaption,
   size,
   legendClassName,
+  legendRowsPerColumn,
   onLegendEndReached,
 }) => {
   const t = useI18n();
@@ -54,6 +58,17 @@ const DonutFigure: FC<Props> = ({
   );
 
   const legend = legendSlices ?? slices;
+  const legendColumns = legendRowsPerColumn ? Math.max(1, Math.ceil(legend.length / legendRowsPerColumn)) : 1;
+  const legendWidthStyle = legendRowsPerColumn ? { maxWidth: legendColumns * LEGEND_COLUMN_MAX_WIDTH_PX } : undefined;
+  const legendStyle =
+    legendColumns > 1
+      ? {
+          ...legendWidthStyle,
+          gridTemplateRows: `repeat(${legendRowsPerColumn}, auto)`,
+          gridAutoFlow: 'column' as const,
+          gridAutoColumns: 'minmax(0, 1fr)',
+        }
+      : legendWidthStyle;
 
   return (
     /*
@@ -81,7 +96,12 @@ const DonutFigure: FC<Props> = ({
        * past the card on both sides.
        */}
       <ul
-        className={classNames('flex min-w-0 flex-[1_1_400px] flex-col gap-4', legendClassName)}
+        className={classNames(
+          'min-w-0 flex-[1_1_400px]',
+          legendColumns > 1 ? 'grid gap-x-8 gap-y-4' : 'flex flex-col gap-4',
+          legendClassName,
+        )}
+        style={legendStyle}
         onScroll={(event) => {
           if (!onLegendEndReached) {
             return;

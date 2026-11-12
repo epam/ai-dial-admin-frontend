@@ -76,7 +76,7 @@ Things that cost time or fail silently if you don't know them:
 - What a capability is specified to do → `openspec/specs/<capability>/spec.md` (`openspec list --specs`
   to find it). Why it was built that way → the archived change under `openspec/changes/archive/`;
   `proposal.md` holds the alternatives, `design.md` the accepted tradeoff.
-- Which commit/PR area owns a set of files → `.claude/reference/areas.md`
+- Which commit/PR area owns a set of files → `docs/areas.md`
 - What ui-kit offers and its real props → the `ai-dial-ui-kit` MCP server (`searchEntity`,
   `getEntityDetails`, `getMigrationGuides`), not a grep through `node_modules`
 

@@ -87,6 +87,9 @@ const rightOperand = (node: FilterPredicateNode, functions: QueryFunction[]): Qu
     if (!fn || !requiredArgsFilled(fn, node.rightArgs, functions)) return null;
     return fnExpr(fn, node.rightArgs, functions);
   }
+  if (node.rightKind === FilterOperandKind.Param) {
+    return node.rightParam ? { type: QueryExprType.Param, name: node.rightParam } : null;
+  }
   if (node.isNull) return { type: QueryExprType.Value, value_type: QueryValueType.Null, value: null };
   if (node.op === QueryOperator.In) {
     const items: QueryValueExpr[] = node.value

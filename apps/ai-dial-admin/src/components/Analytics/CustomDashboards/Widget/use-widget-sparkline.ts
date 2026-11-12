@@ -19,13 +19,21 @@ interface Options {
   range: TimeRange;
   period?: string;
   isEnabled: boolean;
+  refreshToken?: number;
 }
 
 /**
  * The trend under a Single value card, as the usage dashboard draws one: the same query over the same range,
  * bucketed by time. A separate run, so a slow trend never holds up the figure; a failed one draws no line.
  */
-export const useWidgetSparkline = ({ widgetQuery, column, range, period, isEnabled }: Options): number[] => {
+export const useWidgetSparkline = ({
+  widgetQuery,
+  column,
+  range,
+  period,
+  isEnabled,
+  refreshToken = 0,
+}: Options): number[] => {
   const [points, setPoints] = useState<number[]>([]);
   const runIdRef = useRef(0);
   const rangeKey = `${range.startDate.getTime()}-${range.endDate.getTime()}`;
@@ -55,7 +63,7 @@ export const useWidgetSparkline = ({ widgetQuery, column, range, period, isEnabl
     void run();
     // `range` reaches the effect through `rangeKey`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widgetQuery, column, rangeKey, period, isEnabled]);
+  }, [widgetQuery, column, rangeKey, period, isEnabled, refreshToken]);
 
   return points;
 };

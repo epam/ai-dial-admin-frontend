@@ -44,6 +44,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
+import { shouldRestoreFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { addTrailingSlash } from '@/src/utils/url';
 import MoveItemsModal from './MoveItemsModal';
@@ -135,6 +136,7 @@ const FileManager: FC<Props> = ({
   const {
     files,
     fetchFiles,
+    fetchFolderHierarchy,
     isFetchingFiles,
     filePath,
     setFilePath,
@@ -193,7 +195,12 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      fetchFiles(ROOT_PATH);
+      // A selection that outlived the tree (back from a details page) needs its chain, not just the root.
+      if (fetchFolderHierarchy && shouldRestoreFolderHierarchy(filePath, fetchedFoldersData)) {
+        fetchFolderHierarchy(filePath, true);
+      } else {
+        fetchFiles(ROOT_PATH);
+      }
       setLoadedPaths(new Set([ROOT_PATH]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

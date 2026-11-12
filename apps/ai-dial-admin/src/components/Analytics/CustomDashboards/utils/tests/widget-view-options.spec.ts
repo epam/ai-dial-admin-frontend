@@ -2,22 +2,10 @@ import { describe, expect, test } from 'vitest';
 
 import {
   buildRowDeltas,
-  buildShareFigure,
   buildSingleValueFigure,
   getBucketWidthMs,
   toTimedValues,
 } from '@/src/components/Analytics/CustomDashboards/utils/widget-view-options';
-import { ChartColors } from '@/src/components/Common/MetricCard/models';
-
-const COLORS: ChartColors = {
-  success: '#0f0',
-  warning: '#ff0',
-  error: '#f00',
-  accent: '#00f',
-  neutral: '#888',
-  value: '#fff',
-  track: '#222',
-};
 
 const HOUR_MS = 60 * 60 * 1000;
 const START = Date.parse('2026-10-26T00:00:00Z');
@@ -35,37 +23,6 @@ describe('buildSingleValueFigure', () => {
     expect(buildSingleValueFigure([{ cost: '3.5' }], 'cost')).toEqual({ value: 3.5, previous: null, deltaRatio: null });
     expect(buildSingleValueFigure([{ cost: 2 }], 'cost', [{ cost: 0 }]).deltaRatio).toBeNull();
     expect(buildSingleValueFigure([{ cost: null }], 'cost').value).toBeNull();
-  });
-});
-
-describe('buildShareFigure', () => {
-  test('keeps the five largest values, folds the rest into Others and labels each share', () => {
-    const rows = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((name, index) => ({ model: name, calls: 10 - index }));
-    const { slices, total } = buildShareFigure(COLORS, rows, 'model', 'calls', 'Others');
-
-    expect(total).toBe(49);
-    expect(slices.map((slice) => slice.label)).toEqual(['a', 'b', 'c', 'd', 'e', 'Others']);
-    expect(slices[5]).toEqual(expect.objectContaining({ value: 9, isOther: true, color: COLORS.neutral }));
-    expect(slices[0]).toEqual(expect.objectContaining({ valueLabel: '10', shareLabel: '20%' }));
-  });
-
-  test('leaves out zero values and adds no Others when everything fits', () => {
-    const rows = [
-      { model: 'a', calls: 2 },
-      { model: 'b', calls: 0 },
-    ];
-    expect(buildShareFigure(COLORS, rows, 'model', 'calls', 'Others').slices.map((slice) => slice.label)).toEqual([
-      'a',
-    ]);
-  });
-
-  test('names a share with no value instead of leaving its label blank', () => {
-    const rows = [
-      { model: '', calls: 2 },
-      { model: null, calls: 1 },
-    ];
-    const { slices } = buildShareFigure(COLORS, rows, 'model', 'calls', 'Others', undefined, '(no value)');
-    expect(slices.map((slice) => slice.label)).toEqual(['(no value)', '(no value)']);
   });
 });
 

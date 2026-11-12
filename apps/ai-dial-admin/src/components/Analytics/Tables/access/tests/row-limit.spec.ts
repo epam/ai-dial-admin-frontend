@@ -8,7 +8,14 @@ import {
   parseFilterJson,
 } from '@/src/components/Analytics/Tables/access/row-limit';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryExprType, QueryFilterNode, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
+import {
+  CallerValueName,
+  QueryExprType,
+  QueryFilterNode,
+  QueryOperator,
+  QueryValueType,
+} from '@/src/models/analytics/query';
+import { FilterOperandKind } from '@/src/models/analytics/query-builder';
 import { createGroup, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 
 const filter: QueryFilterNode = {
@@ -130,6 +137,18 @@ describe('hasUnfinishedCondition', () => {
     root.children.push({ ...filled(), value });
 
     expect(hasUnfinishedCondition(root)).toBe(true);
+  });
+
+  test('is true for a caller-value condition with no value picked, and false once one is', () => {
+    const root = createGroup();
+    const condition = { ...filled(), value: '', rightKind: FilterOperandKind.Param };
+    root.children.push(condition);
+
+    expect(hasUnfinishedCondition(root)).toBe(true);
+
+    condition.rightParam = CallerValueName.Project;
+
+    expect(hasUnfinishedCondition(root)).toBe(false);
   });
 
   test('is true for an is-one-of condition with no non-blank item', () => {

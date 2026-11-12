@@ -110,6 +110,7 @@ export enum IneffectiveGrantReason {
   AlreadyGlobal = 'already_global',
   EnrichmentReadInert = 'enrichment_read_inert',
   SensitiveWithoutVerb = 'sensitive_without_verb',
+  LiftsRowPolicies = 'lifts_row_policies',
 }
 
 export interface IneffectiveGrant {

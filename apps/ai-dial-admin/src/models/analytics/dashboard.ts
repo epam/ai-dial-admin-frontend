@@ -1,7 +1,7 @@
 import { ComparePeriod } from '@/src/components/Analytics/Usage/models';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { StructuredQuery } from '@/src/models/analytics/query';
-import { QueryResultView } from '@/src/models/analytics/query-builder';
+import { ChartType, QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryChart, SavedQueryTime } from '@/src/models/analytics/saved-query';
 
 // A position on the dashboard grid, in grid units: `x`/`w` in columns, `y`/`h` in rows.
@@ -53,7 +53,12 @@ export interface DashboardWidgetSettings {
   value_format?: WidgetValueFormat;
   // The ISO 4217 code a money figure is written in; absent means US dollars.
   currency?: string;
+  chart?: WidgetChartSettings;
   [key: string]: unknown;
+}
+
+export interface WidgetChartSettings {
+  type: ChartType;
 }
 
 export type DashboardSettings = Record<string, unknown>;
@@ -136,6 +141,9 @@ export enum WidgetView {
   TimeSeries = 'time_series',
   Share = 'share',
   Heatmap = 'heatmap',
+  BarChart = 'bar_chart',
+  LineChart = 'line_chart',
+  ScatterChart = 'scatter_chart',
 }
 
 export enum WidgetValueFormat {

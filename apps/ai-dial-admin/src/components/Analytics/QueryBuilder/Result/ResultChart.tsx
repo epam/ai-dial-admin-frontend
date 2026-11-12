@@ -6,10 +6,18 @@ import classNames from 'classnames';
 import { NoDataContent, SegmentedControl, Select } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 
-import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import { buildChartOptions } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import SeriesChart from '@/src/components/Analytics/QueryBuilder/Result/SeriesChart';
+import DonutFigure from '@/src/components/Analytics/Usage/Charts/DonutFigure';
+import { DONUT_LEGEND_ROWS_PER_COLUMN, DONUT_SIZE } from '@/src/components/Analytics/Usage/constants';
+import { formatChartNumber } from '@/src/components/Analytics/Usage/utils/chart-options';
+import { buildShareFigure } from '@/src/components/Analytics/Usage/utils/share-figure';
 import { keepValidYFields, resolveYFields } from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
-import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
+import {
+  getAvailableChartTypes,
+  getChartNumericColumns,
+} from '@/src/components/Analytics/QueryBuilder/utils/chart-types';
+import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS, PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
@@ -30,10 +38,8 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   // Deduplicated: a SQL run the backend could not translate offers every column as a dimension, so
   // its numeric columns are in both lists — counting them twice would offer scatter a single column
   // to plot against itself.
-  const numericColumns = useMemo(
-    () => getNumericColumns(result.rows, [...new Set([...meta.dimensionColumns, ...meta.aggregateColumns])]),
-    [result.rows, meta.dimensionColumns, meta.aggregateColumns],
-  );
+  const numericColumns = useMemo(() => getChartNumericColumns(result.rows, meta), [result.rows, meta]);
+  const availableTypes = useMemo(() => getAvailableChartTypes(result.rows, meta), [result.rows, meta]);
 
   const columnsFor = (source: ChartColumnSource): string[] => {
     if (source === ChartColumnSource.Dimensions) return meta.dimensionColumns;
@@ -53,11 +59,8 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
     [config.yFields, yOptions, xField, descriptor.isMultiY],
   );
 
-  // Scatter needs two numeric columns to mean anything — with fewer, the type is hidden entirely.
-  const scatterUnavailable = numericColumns.length < 2;
-
   const typeOptions: SegmentedControlItem<ChartType>[] = CHART_TYPE_OPTIONS.filter(
-    (o) => !(o.value === ChartType.Scatter && scatterUnavailable),
+    (o) => o.value === config.type || availableTypes.includes(o.value as ChartType),
   ).map((o) => ({ value: o.value as ChartType, label: o.label }));
 
   // Switching type keeps a pick that is valid for the new type's slot; an invalid pick falls back
@@ -77,9 +80,24 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   const onChangeYFields = (value: string | string[]) =>
     onChangeConfig({ ...config, yFields: Array.isArray(value) ? value : [value] });
 
+  const isPie = config.type === ChartType.Pie;
+  const [valueField] = yFields;
+
+  const share = useMemo(
+    () =>
+      isPie && xField && valueField
+        ? buildShareFigure(colors, result.rows, xField, valueField, {
+            otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
+            sliceCount: PIE_MAX_SLICES,
+            emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
+          })
+        : null,
+    [isPie, colors, result.rows, xField, valueField, t],
+  );
+
   const options = useMemo(
     () =>
-      xField && yFields.length
+      !isPie && xField && yFields.length
         ? buildChartOptions(config.type, result.rows, xField, yFields, {
             colors,
             dimensionColumns: meta.dimensionColumns,
@@ -88,7 +106,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
             columnLabels: meta.columnLabels,
           })
         : null,
-    [config.type, result.rows, xField, yFields, meta.dimensionColumns, meta.columnLabels, t, colors],
+    [isPie, config.type, result.rows, xField, yFields, meta.dimensionColumns, meta.columnLabels, t, colors],
   );
 
   if (!xField || !yOptions.length) {
@@ -128,11 +146,19 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
         </div>
       </div>
       <div className="min-h-0 flex-1">
-        {options ? (
-          <SeriesChart option={options} />
-        ) : (
-          <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />
+        {share && (
+          <div className="flex size-full flex-col justify-center overflow-auto">
+            <DonutFigure
+              slices={share.slices}
+              centerValue={formatChartNumber(share.total)}
+              centerCaption={labelFor(valueField)}
+              size={DONUT_SIZE}
+              legendRowsPerColumn={DONUT_LEGEND_ROWS_PER_COLUMN}
+            />
+          </div>
         )}
+        {options && <SeriesChart option={options} />}
+        {!share && !options && <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />}
       </div>
     </div>
   );

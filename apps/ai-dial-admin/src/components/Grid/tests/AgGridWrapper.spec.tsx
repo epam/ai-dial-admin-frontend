@@ -130,7 +130,7 @@ describe('AgGridWrapper', () => {
     expect(suppress?.(params({ key: 'ArrowLeft', target: document.body }))).toBe(true);
   });
 
-  test('leaves Tab to the browser inside a text field so focus moves to the next input', () => {
+  test('leaves Tab to the browser on row inputs and buttons so focus moves to the next control', () => {
     render(<AgGridWrapper columnDefs={[{ field: 'name' }]} rowData={[]} />);
     const suppress = (gridOptions().defaultColDef as ColDef).suppressKeyboardEvent;
     const params = (target: EventTarget) =>
@@ -138,8 +138,32 @@ describe('AgGridWrapper', () => {
         NonNullable<ColDef['suppressKeyboardEvent']>
       >[0];
 
-    expect(suppress?.(params(document.createElement('input')))).toBe(true);
+    const row = document.createElement('div');
+    row.className = 'ag-row';
+    const input = document.createElement('input');
+    const button = document.createElement('button');
+    row.append(input, button);
+    document.body.appendChild(row);
+
+    expect(suppress?.(params(input))).toBe(true);
+    expect(suppress?.(params(button))).toBe(true);
+    expect(suppress?.(params(document.createElement('input')))).toBe(false);
     expect(suppress?.(params(document.createElement('div')))).toBe(false);
+
+    row.remove();
+  });
+
+  test('keeps AG Grid Tab on the title row and leaves Tab to the browser on the filter row', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'name' }]} rowData={[]} />);
+    const suppressHeader = (gridOptions().defaultColDef as ColDef).suppressHeaderKeyboardEvent;
+    const params = (key: string, headerRowIndex: number) =>
+      ({ event: { key }, headerRowIndex }) as unknown as Parameters<
+        NonNullable<ColDef['suppressHeaderKeyboardEvent']>
+      >[0];
+
+    expect(suppressHeader?.(params('Tab', 0))).toBe(false);
+    expect(suppressHeader?.(params('Tab', 1))).toBe(true);
+    expect(suppressHeader?.(params('ArrowLeft', 1))).toBe(false);
   });
 
   test('lets caller grid options override the wrapper defaults', () => {
