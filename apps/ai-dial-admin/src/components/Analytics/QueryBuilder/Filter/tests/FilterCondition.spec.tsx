@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import FilterCondition from '@/src/components/Analytics/QueryBuilder/Filter/FilterCondition';
 import { QueryBuilderContext, QueryBuilderContextValue } from '@/src/components/Analytics/QueryBuilder/context';
+import { FilterTreeContext } from '@/src/components/Analytics/QueryBuilder/filter-tree-context';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { toCompactSelectOptions } from '@/src/components/Analytics/QueryBuilder/utils/options';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
@@ -396,5 +397,81 @@ describe('FilterCondition map fields', () => {
     await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.Field }));
 
     expect(screen.getByRole('listbox', { name: QueryBuilderI18nKey.Field })).toHaveTextContent('attributes');
+  });
+});
+
+describe('FilterCondition caller value', () => {
+  const CALLER_VALUES = [
+    { name: 'caller.user_hash', label: 'User hash', description: 'hash hint' },
+    { name: 'caller.project', label: 'Project', description: 'project hint' },
+  ];
+
+  const Harness = ({ node }: { node: FilterPredicateNode }) => {
+    const [, setRevision] = useState(0);
+    const parent = createGroup();
+    parent.children.push(node);
+
+    return (
+      <FilterTreeContext.Provider
+        value={{ fields: [], functions: [], callerValues: CALLER_VALUES, refresh: () => setRevision((n) => n + 1) }}
+      >
+        <FilterCondition node={node} parent={parent} fieldOptions={FIELD_OPTIONS} operatorOptions={operatorOptions} />
+      </FilterTreeContext.Provider>
+    );
+  };
+
+  const renderWithCallerValues = (node: FilterPredicateNode) => {
+    render(<Harness node={node} />);
+    return userEvent.setup();
+  };
+
+  const comparedAgainst = () => screen.queryByRole('button', { name: QueryBuilderI18nKey.ComparedAgainst });
+
+  const switchToCallerValue = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.ComparedAgainst }));
+    await user.click(screen.getByRole('option', { name: QueryBuilderI18nKey.CallerValue }));
+  };
+
+  test('offers a caller value for an equality on a string column, with both values to pick', async () => {
+    const node = predicateOn('chat_id');
+    const user = renderWithCallerValues(node);
+
+    await switchToCallerValue(user);
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.CallerValue }));
+    await user.click(screen.getByRole('option', { name: 'Project' }));
+
+    expect(node).toMatchObject({ rightKind: FilterOperandKind.Param, rightParam: 'caller.project' });
+    expect(screen.queryByLabelText(QueryBuilderI18nKey.ValuePlaceholder)).not.toBeInTheDocument();
+  });
+
+  test.each([
+    ['another operator', predicateOn('chat_id', QueryOperator.Ico)],
+    ['a column that is not a string', predicateOn('total_tokens')],
+    ['an enum column', predicateOn('sentiment')],
+  ])('does not offer a caller value for %s', (_name, node) => {
+    renderWithCallerValues(node);
+
+    expect(comparedAgainst()).not.toBeInTheDocument();
+  });
+
+  test('returns the condition to an empty literal when the operator leaves equality', async () => {
+    const node: FilterPredicateNode = {
+      ...predicateOn('chat_id'),
+      rightKind: FilterOperandKind.Param,
+      rightParam: 'caller.project',
+    };
+    const user = renderWithCallerValues(node);
+
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.Operator }));
+    await user.click(screen.getByRole('option', { name: QueryBuilderI18nKey.OperatorIn }));
+
+    expect(node).toMatchObject({ rightKind: FilterOperandKind.Literal, rightParam: null, value: '' });
+    expect(comparedAgainst()).not.toBeInTheDocument();
+  });
+
+  test('is not offered inside the Query Builder, which supplies no caller values', () => {
+    renderCondition(predicateOn('chat_id'));
+
+    expect(comparedAgainst()).not.toBeInTheDocument();
   });
 });

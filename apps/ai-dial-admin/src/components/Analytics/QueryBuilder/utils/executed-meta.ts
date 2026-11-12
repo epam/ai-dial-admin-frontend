@@ -143,5 +143,6 @@ export const buildExecutedMeta = (
     aggregateColumns,
     columnLabels: buildColumnLabels(resultColumns, fields),
     columnValueClasses: buildColumnValueClasses(resultColumns, fields, measureColumns, response.rows ?? []),
+    source: request.query.entity,
   };
 };

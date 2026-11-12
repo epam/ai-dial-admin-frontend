@@ -31,6 +31,7 @@ import { VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   FieldDropdownMode,
   FieldOption,
@@ -70,6 +71,7 @@ const comparedSummary = (node: FilterPredicateNode, options: FieldOption[], righ
   if (node.rightKind === FilterOperandKind.Function) {
     return node.rightFn ? callSummary(node.rightFn, node.rightArgs, options, rightFn) : '…';
   }
+  if (node.rightKind === FilterOperandKind.Param) return node.rightParam || '…';
   return node.isNull ? 'null' : node.value || '…';
 };
 
@@ -93,6 +95,9 @@ const BOOLEAN_ACTIVE = QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension];
 const fieldTypeOf = (options: FieldOption[], name: string): string | undefined =>
   options.find((o) => o.name === name)?.type;
 
+const isCallerValueComparable = (op: QueryOperator, type?: string): boolean =>
+  (op === QueryOperator.Eq || op === QueryOperator.Ne) && type === AnalyticsFieldType.String;
+
 const FilterCondition: FC<Props> = ({
   node,
   parent,
@@ -102,7 +107,7 @@ const FilterCondition: FC<Props> = ({
   isFunctionOperandOffered,
 }) => {
   const t = useI18n();
-  const { fields, functions, refresh } = useFilterTree();
+  const { fields, functions, callerValues, refresh } = useFilterTree();
 
   const fn = functionByName(functions, node.fn);
   const rightFn = functionByName(functions, node.rightFn);
@@ -115,14 +120,8 @@ const FilterCondition: FC<Props> = ({
   // offered there — and a condition switched to `in` is returned to a literal below.
   const isRightFunctionOffered = !!functionOptions?.length && node.op !== QueryOperator.In;
   const isComparedToFunction = node.rightKind === FilterOperandKind.Function;
-
-  const rightKindOptions: SelectOption[] = useMemo(
-    () => [
-      { value: FilterOperandKind.Literal, label: t(QueryBuilderI18nKey.Value) },
-      { value: FilterOperandKind.Function, label: t(QueryBuilderI18nKey.Function) },
-    ],
-    [t],
-  );
+  const isComparedToCallerValue = node.rightKind === FilterOperandKind.Param;
+  const isComparedToLiteral = node.rightKind === FilterOperandKind.Literal;
 
   // One resolver for both type-dependent rules below, so the value type and the operator list can
   // never disagree about what the left operand is.
@@ -131,6 +130,32 @@ const FilterCondition: FC<Props> = ({
     return fn ? functionResultType(fn, node.args, fields) : undefined;
   };
   const resolvedOperandType = operandType();
+
+  const isCallerValueOffered =
+    !!callerValues.length && !node.fn && isCallerValueComparable(node.op, resolvedOperandType);
+
+  const rightKindOptions: SelectOption[] = useMemo(
+    () => [
+      { value: FilterOperandKind.Literal, label: t(QueryBuilderI18nKey.Value) },
+      ...(isRightFunctionOffered
+        ? [{ value: FilterOperandKind.Function, label: t(QueryBuilderI18nKey.Function) }]
+        : []),
+      ...(isCallerValueOffered ? [{ value: FilterOperandKind.Param, label: t(QueryBuilderI18nKey.CallerValue) }] : []),
+    ],
+    [t, isRightFunctionOffered, isCallerValueOffered],
+  );
+
+  const callerValueOptions: SelectOption[] = useMemo(
+    () => callerValues.map(({ name, label, description }) => ({ value: name, label, description })),
+    [callerValues],
+  );
+
+  const guardCallerValue = (type?: string) => {
+    if (node.rightKind !== FilterOperandKind.Param || isCallerValueComparable(node.op, type)) return;
+    node.rightKind = FilterOperandKind.Literal;
+    node.rightParam = null;
+    node.value = '';
+  };
 
   // The unfiltered `operatorOptions` still back the collapsed summary below, so a JSON-authored predicate
   // carrying a withheld operator still reads by name instead of falling back to its code.
@@ -151,6 +176,7 @@ const FilterCondition: FC<Props> = ({
     const fieldType = fieldTypeOf(fieldOptions, value);
     node.valueType = defaultValueType(fieldType);
     guardEnumOperator(fieldType);
+    guardCallerValue(fieldType);
     refresh();
   };
 
@@ -163,6 +189,7 @@ const FilterCondition: FC<Props> = ({
     const resultType = functionResultType(picked, node.args, fields);
     node.valueType = defaultValueType(resultType);
     guardEnumOperator(resultType);
+    guardCallerValue();
     refresh();
   };
 
@@ -177,13 +204,19 @@ const FilterCondition: FC<Props> = ({
   const onChangeOperator = (value: string) => {
     node.op = value as QueryOperator;
     if (!isNullableOperator(node.op)) node.isNull = false;
-    if (node.op === QueryOperator.In) node.rightKind = FilterOperandKind.Literal;
+    if (node.op === QueryOperator.In && isComparedToFunction) node.rightKind = FilterOperandKind.Literal;
+    guardCallerValue(resolvedOperandType);
     refresh();
   };
 
   const onChangeRightKind = (value: string) => {
     node.rightKind = value as FilterOperandKind;
-    if (node.rightKind === FilterOperandKind.Function) node.isNull = false;
+    if (node.rightKind !== FilterOperandKind.Literal) node.isNull = false;
+    refresh();
+  };
+
+  const onChangeCallerValue = (value: string) => {
+    node.rightParam = value;
     refresh();
   };
 
@@ -263,7 +296,7 @@ const FilterCondition: FC<Props> = ({
             onChange={onChangeOperator}
           />
         </div>
-        {isRightFunctionOffered && (
+        {rightKindOptions.length > 1 && (
           <div className="min-w-[104px] flex-1">
             <CompactSelect
               ariaLabel={t(QueryBuilderI18nKey.ComparedAgainst)}
@@ -273,7 +306,17 @@ const FilterCondition: FC<Props> = ({
             />
           </div>
         )}
-        {!isComparedToFunction && (
+        {isComparedToCallerValue && (
+          <div className="min-w-[104px] flex-1">
+            <CompactSelect
+              ariaLabel={t(QueryBuilderI18nKey.CallerValue)}
+              options={callerValueOptions}
+              value={node.rightParam ?? ''}
+              onChange={onChangeCallerValue}
+            />
+          </div>
+        )}
+        {isComparedToLiteral && (
           <div className="min-w-[104px] flex-1">
             <CompactSelect
               ariaLabel={t(QueryBuilderI18nKey.ValueType)}
@@ -314,7 +357,7 @@ const FilterCondition: FC<Props> = ({
         </>
       )}
       {!node.isNull &&
-        !isComparedToFunction &&
+        isComparedToLiteral &&
         (isBoolean ? (
           <div
             role="group"
