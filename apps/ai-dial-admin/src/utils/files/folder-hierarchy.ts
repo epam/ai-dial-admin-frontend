@@ -5,6 +5,23 @@ import { FolderHierarchy, LoadFolderHierarchyParams } from '@/src/utils/files/mo
 import { isFolder } from '@/src/utils/files/path';
 
 /**
+ * A selected folder below the root whose contents the tree does not hold, so a listing that mounts
+ * with it needs its chain loaded rather than just the roots.
+ */
+export const shouldRestoreFolderHierarchy = (
+  filePath?: string | null,
+  fetchedFoldersData?: Record<string, unknown>,
+): boolean => {
+  if (!filePath) {
+    return false;
+  }
+
+  const hasFolderBelowRoot = filePath.split('/').filter(Boolean).length > 1;
+
+  return hasFolderBelowRoot && fetchedFoldersData?.[filePath] == null;
+};
+
+/**
  * Walks `fullPath` one folder at a time and returns the tree down to it, the items of every level and
  * the folders to expand, or `null` as soon as one level cannot be loaded.
  *
