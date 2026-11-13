@@ -19,11 +19,12 @@ const SessionFeedbackPanel: FC<Props> = ({ ratings, feedback }) => {
   const rows = feedback?.rows ?? [];
   const total = feedback?.total ?? null;
   const isListed = feedback?.isAvailable ?? false;
+  const hasRatings = !!ratings?.rating_up || !!ratings?.rating_down || rows.length > 0;
 
   return (
     <div className="flex flex-col gap-3">
-      {ratings && <RatingCounts counts={ratings} />}
-      {isListed && rows.length === 0 && (
+      {hasRatings && ratings && <RatingCounts counts={ratings} />}
+      {!hasRatings && (ratings || isListed) && (
         <p className="dial-small-text text-secondary">{t(SessionsTraceI18nKey.DetailNoRatings)}</p>
       )}
       {isListed && rows.length > 0 && (

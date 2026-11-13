@@ -317,6 +317,7 @@ const groupSchemaFields = (
       label: columnHeaderName(field),
       type: field.type,
       tag,
+      ...(field.description ? { description: field.description } : {}),
     };
 
     byTag.set(tag, [...(byTag.get(tag) ?? []), descriptor]);

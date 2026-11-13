@@ -13,10 +13,11 @@ import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { TransformOutput, TransformType } from '@/src/models/analytics/pipeline';
+import { TransformOutput, TransformPreset, TransformType } from '@/src/models/analytics/pipeline';
 import { OutputRefinementKind, OutputRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { PIPELINE_SELECT_DEFAULTS, SYSTEM_COLUMN_TAG } from '@/src/constants/analytics/pipelines';
+import { isRoutePreset } from '@/src/utils/analytics/transform-dto';
 
 const isSameDeclaration = (a: TransformOutput[], b?: TransformOutput[]): boolean =>
   JSON.stringify(a) === JSON.stringify(b ?? []);
@@ -24,6 +25,7 @@ const isSameDeclaration = (a: TransformOutput[], b?: TransformOutput[]): boolean
 interface Props {
   outputs?: TransformOutput[];
   type: TransformType;
+  preset?: TransformPreset;
   /** The resolved target's columns: an output's name is one of them, and the column owns its type. */
   columns: AnalyticsTableColumn[];
   /** False until the target resolves — the name control has nothing to offer before then. */
@@ -41,7 +43,16 @@ interface Props {
 const REFINEMENT_SELECT_CLASS = 'w-[220px] shrink-0';
 const REFINEMENT_FIELD_CLASS = 'min-w-[180px] flex-1';
 
-const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled, hasRefinement = true, onChange }) => {
+const OutputsEditor: FC<Props> = ({
+  outputs,
+  type,
+  preset,
+  columns,
+  isReady,
+  isDisabled,
+  hasRefinement = true,
+  onChange,
+}) => {
   const t = useI18n();
 
   const [rows, setRows] = useState<OutputRow[]>(() => toOutputRows(outputs, type));
@@ -81,6 +92,15 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
   );
 
   const isSql = type === TransformType.Sql;
+  const expressionMember = isRoutePreset(preset) ? 'source' : 'jsonata';
+  const expressionLabel = t(
+    isRoutePreset(preset) ? AnalyticsPipelinesI18nKey.OutputSource : AnalyticsPipelinesI18nKey.OutputJsonata,
+  );
+  const identityError = t(
+    isRoutePreset(preset)
+      ? AnalyticsPipelinesI18nKey.OutputSourceIdentity
+      : AnalyticsPipelinesI18nKey.OutputJsonataIdentity,
+  );
 
   const writableColumns = useMemo(() => columns.filter((column) => column.tag !== SYSTEM_COLUMN_TAG), [columns]);
 
@@ -90,7 +110,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
   );
 
   const refinementOptions = [
-    { value: OutputRefinementKind.Jsonata, label: t(AnalyticsPipelinesI18nKey.OutputJsonata) },
+    { value: OutputRefinementKind.Jsonata, label: expressionLabel },
     { value: OutputRefinementKind.Values, label: t(AnalyticsPipelinesI18nKey.OutputValues) },
   ];
 
@@ -201,7 +221,8 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
             // Marked rather than blocking: the service refuses it, and the field sits under the column
             // select, so typing the column name into it is the likely mistake to warn about early.
-            const isIdentityJsonata = Boolean(row.jsonata.trim()) && row.jsonata.trim() === row.name.trim();
+            const expression = row[expressionMember];
+            const isIdentityExpression = Boolean(expression.trim()) && expression.trim() === row.name.trim();
             const refinements = hasColumnDomain
               ? refinementOptions.filter((option) => option.value !== OutputRefinementKind.Values)
               : refinementOptions;
@@ -258,16 +279,16 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
                       {(hasColumnDomain || row.refinement !== OutputRefinementKind.Values) && (
                         <Input
-                          id={`transform-output-jsonata-${index}`}
+                          id={`transform-output-${expressionMember}-${index}`}
                           containerClassName={REFINEMENT_FIELD_CLASS}
-                          labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputJsonata) }}
-                          aria-label={named(AnalyticsPipelinesI18nKey.OutputJsonata)}
-                          value={row.jsonata}
+                          labelProps={{ label: expressionLabel }}
+                          aria-label={`${expressionLabel} ${index + 1}`}
+                          value={expression}
                           disabled={isDisabled}
                           className="font-mono"
-                          error={isIdentityJsonata ? t(AnalyticsPipelinesI18nKey.OutputJsonataIdentity) : undefined}
-                          invalid={isIdentityJsonata}
-                          onChange={(value) => updateRow(row.id, { jsonata: value ?? '' })}
+                          error={isIdentityExpression ? identityError : undefined}
+                          invalid={isIdentityExpression}
+                          onChange={(value) => updateRow(row.id, { [expressionMember]: value ?? '' })}
                         />
                       )}
                     </div>

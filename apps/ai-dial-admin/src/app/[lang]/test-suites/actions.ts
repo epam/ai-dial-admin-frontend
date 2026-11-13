@@ -6,6 +6,7 @@ import { assetApi, datasetsApi, runsApi, structuredQueryApi, testSuitesApi } fro
 import {
   buildTestSuitesForDeploymentQuery,
   EVAL_TRENDS_SUITES_PAGE_SIZE,
+  toStoredDeploymentId,
 } from '@/src/components/EvalTrendsTab/build-suites-for-deployment-query';
 import { collectEvaluationPages } from '@/src/components/ListView/Evaluation/utils/collect-evaluation-pages';
 import {
@@ -76,7 +77,7 @@ export async function getTestSuitesForDeployment(deploymentId: string) {
 
   return collectEvaluationPages(async (page) => {
     const result = await structuredQueryApi.execute(
-      buildTestSuitesForDeploymentQuery(deploymentId, page, EVAL_TRENDS_SUITES_PAGE_SIZE),
+      buildTestSuitesForDeploymentQuery(toStoredDeploymentId(deploymentId), page, EVAL_TRENDS_SUITES_PAGE_SIZE),
       token,
     );
     return mapTestSuitesQueryResult(result, page, EVAL_TRENDS_SUITES_PAGE_SIZE);

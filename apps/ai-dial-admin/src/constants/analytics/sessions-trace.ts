@@ -627,14 +627,12 @@ export const SESSION_FEEDBACK_LIMIT = 100;
 
 export const SESSION_FEEDBACK_PANEL: SessionPanelFrame = {
   panel: SessionDetailPanel.Feedback,
-  sourceEntity: USAGE_LOG_ENTITY,
   provenance: ColumnProvenance.Feedback,
   labelKey: SessionsTraceI18nKey.DetailPanelFeedback,
 };
 
 export const SESSION_METADATA_PANEL: SessionPanelFrame = {
   panel: SessionDetailPanel.Metadata,
-  sourceEntity: SESSIONS_ENTITY,
   provenance: ColumnProvenance.Sessions,
   labelKey: SessionsTraceI18nKey.DetailPanelMetadata,
 };
@@ -655,7 +653,6 @@ export const SESSION_FIELD_LABEL_KEY: Record<string, string> = {
 export const SESSION_DETAIL_PANELS: SessionPanelDefinition[] = [
   {
     panel: SessionDetailPanel.Usage,
-    sourceEntity: SESSIONS_ENTITY,
     provenance: ColumnProvenance.Sessions,
     labelKey: SessionsTraceI18nKey.DetailPanelUsage,
     layout: SessionPanelLayout.Grid,

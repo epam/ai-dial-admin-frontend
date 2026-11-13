@@ -158,6 +158,30 @@ describe('SystemProperties — Sessions source tab', () => {
     expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeNull();
   });
 
+  test('offers only the base table while the default binding is in use', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    expect(screen.queryByRole('combobox', { name: new RegExp(roleLabel(SessionsRole.Time)) })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: new RegExp(roleLabel(SessionsRole.Turns)) })).toBeNull();
+  });
+
+  test('offers the role fields once another base table is chosen over the default', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+
+    await chooseOption(user, baseTablePicker(), 'other_sessions');
+
+    expect(await screen.findByRole('combobox', { name: new RegExp(roleLabel(SessionsRole.Time)) })).toBeTruthy();
+    expect(rolePicker(SessionsRole.SessionId)).toHaveDisplayValue('client_session_id');
+  });
+
   test('says the Sessions page is hidden and offers no binding when nothing is stored and the default table is missing', async () => {
     const user = userEvent.setup();
     vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
@@ -167,7 +191,22 @@ describe('SystemProperties — Sessions source tab', () => {
 
     expect(await screen.findByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeTruthy();
     expect(baseTablePicker()).toHaveDisplayValue('');
+    expect(screen.queryByRole('combobox', { name: new RegExp(roleLabel(SessionsRole.Time)) })).toBeNull();
+    expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceRoleRequired)).toBeNull();
     expect(getSessionsSourceSchema).not.toHaveBeenCalled();
+  });
+
+  test('offers the role fields once a table is chosen where the default table is missing', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
+    vi.mocked(getSessionsSourceEntities).mockResolvedValue({ success: true, response: [{ name: 'other_sessions' }] });
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+    await screen.findByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing);
+
+    await chooseOption(user, baseTablePicker(), 'other_sessions');
+
+    expect(await screen.findByRole('combobox', { name: new RegExp(roleLabel(SessionsRole.Time)) })).toBeTruthy();
   });
 
   test('says nothing about the default once a binding is stored', async () => {
@@ -195,7 +234,7 @@ describe('SystemProperties — Sessions source tab', () => {
       ),
     );
     expect(baseTablePicker()).toHaveDisplayValue('');
-    expect(rolePicker(SessionsRole.Time)).toHaveDisplayValue('');
+    expect(screen.queryByRole('combobox', { name: new RegExp(roleLabel(SessionsRole.Time)) })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
   });
 

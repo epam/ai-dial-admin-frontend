@@ -4,6 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi, sessionsSourceApi } from '@/src/app/api/api';
 import {
+  EnrichmentDefinition,
   SessionArrayFilter,
   SessionArrayValueSource,
   SessionColumnFilter,
@@ -1170,16 +1171,20 @@ export async function getHopBodyGrants(): Promise<ServerActionResponse<HopBodyGr
   return { success: true, response: { isRequestReadable, isResponseReadable } };
 }
 
-export async function getEnrichmentTagOrders(namespaces: string[]): Promise<Record<string, string[]>> {
+export async function getEnrichmentDefinitions(namespaces: string[]): Promise<Record<string, EnrichmentDefinition>> {
   const authToken = await token();
   const reads = await Promise.all(
     namespaces.map(async (namespace) => {
       try {
         const read = await analyticsDataApi.getTable(namespace, authToken);
-        return [namespace, read.response?.tag_order ?? []] as const;
+        const definition: EnrichmentDefinition = {
+          tagOrder: read.response?.tag_order ?? [],
+          ...(read.response?.description ? { description: read.response.description } : {}),
+        };
+        return [namespace, definition] as const;
       } catch (error) {
         errorObjLog(error, `Failed to read the ${namespace} table definition`);
-        return [namespace, []] as const;
+        return [namespace, { tagOrder: [] }] as const;
       }
     }),
   );
