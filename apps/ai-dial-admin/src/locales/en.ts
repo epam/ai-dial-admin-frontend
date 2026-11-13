@@ -4569,6 +4569,7 @@ export default {
     No: 'No',
     LinkIdRequired: 'Link ID is required',
     AccessRequired: 'Select at least one access right',
+    WriteNotAllowed: 'Write access is not allowed on {type} targets',
     LinkIdDuplicate: 'This Link ID is already used by another dependency',
     PathRequired: 'Target path is required',
     PathRoot: 'Target must start with one of: {roots}',

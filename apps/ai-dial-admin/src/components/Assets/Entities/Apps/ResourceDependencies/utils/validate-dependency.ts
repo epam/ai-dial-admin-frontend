@@ -5,6 +5,7 @@ import {
   DECLARABLE_TYPE_ROOTS,
   MAX_DECLARED_DEPENDENCIES,
   PERSONAL_TARGET_FORM,
+  WRITE_FORBIDDEN_TYPE_ROOTS,
 } from '../constants';
 import { DependencyFormErrors, DependencyFormValues, ValidationIssue } from '../models';
 
@@ -97,14 +98,22 @@ export const validatePath = (path: string): ValidationIssue | null => {
   return null;
 };
 
-export const validateAccess = (access: ResourceAccess[]): ValidationIssue | null =>
-  access.length > 0 ? null : { key: ResourceDependenciesI18nKey.AccessRequired };
+export const validateAccess = (access: ResourceAccess[], path: string): ValidationIssue | null => {
+  if (access.length === 0) {
+    return { key: ResourceDependenciesI18nKey.AccessRequired };
+  }
+  const [root] = getSegments(path.trim());
+  if (access.includes(ResourceAccess.Write) && WRITE_FORBIDDEN_TYPE_ROOTS.includes(root)) {
+    return { key: ResourceDependenciesI18nKey.WriteNotAllowed, params: { type: root } };
+  }
+  return null;
+};
 
 export const validateDependency = (values: DependencyFormValues, otherLinkIds: string[]): DependencyFormErrors => {
   const errors: DependencyFormErrors = {};
   const linkIdIssue = validateLinkId(values.linkId, otherLinkIds);
   const pathIssue = validatePath(values.path);
-  const accessIssue = validateAccess(values.access);
+  const accessIssue = validateAccess(values.access, values.path);
   if (linkIdIssue) {
     errors.linkId = linkIdIssue;
   }
