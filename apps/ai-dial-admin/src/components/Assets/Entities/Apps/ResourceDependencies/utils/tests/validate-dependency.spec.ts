@@ -28,7 +28,7 @@ describe('validatePath', () => {
   );
 
   test('accepts every declarable root', () => {
-    ['files', 'prompts', 'conversations', 'applications', 'toolsets', 'skills'].forEach((root) => {
+    ['files', 'prompts', 'conversations', 'applications', 'toolsets', 'skills', 'projects'].forEach((root) => {
       expect(validatePath(`${root}/public/x`)).toBeNull();
     });
   });
