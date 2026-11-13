@@ -132,7 +132,8 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
     const params = { data, value: 'badge', colDef: column } as ICellRendererParams<SchemaFieldRow>;
     const view = render(<Renderer {...params} />);
 
-    expect(screen.getByRole('combobox')).toHaveValue('Badge');
+    expect(screen.getByRole('combobox')).toHaveValue('');
+    expect(screen.getByText('Badge')).toBeInTheDocument();
     await user.click(screen.getByRole('combobox'));
     await user.click(screen.getByText(BasicI18nKey.None));
     expect(onChange).toHaveBeenCalledWith('', data);

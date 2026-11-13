@@ -30,7 +30,8 @@ const renderWithState = (initial?: SpendingLimitsModel) => {
   return { getLimits: () => latest };
 };
 
-const getMode = () => screen.getByRole('combobox', { name: SystemPropertiesI18nKey.SpendingLimitModeLabel });
+const getMode = () =>
+  screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.SpendingLimitModeLabel}`) });
 const getCostObject = () => screen.getByRole('textbox', { name: SystemPropertiesI18nKey.DefaultCostObjectLabel });
 
 describe('SpendingLimits', () => {
@@ -54,7 +55,7 @@ describe('SpendingLimits', () => {
   test('reflects the stored mode and default cost object with the mode hint', () => {
     renderSpendingLimits({ spendingLimits: LIMITS });
 
-    expect(getMode()).toHaveDisplayValue(SystemPropertiesI18nKey.SpendingLimitModeShadow);
+    expect(getMode()).toHaveAccessibleName(new RegExp(SystemPropertiesI18nKey.SpendingLimitModeShadow));
     expect(getCostObject()).toHaveValue('TEAM-A');
     expect(screen.getByText(SystemPropertiesI18nKey.SpendingLimitModeShadowHint)).toBeTruthy();
   });
@@ -64,7 +65,7 @@ describe('SpendingLimits', () => {
     const onChangeSpendingLimits = vi.fn();
     renderSpendingLimits({ onChangeSpendingLimits });
 
-    expect(getMode()).toHaveDisplayValue(SystemPropertiesI18nKey.SpendingLimitModeOff);
+    expect(getMode()).toHaveAccessibleName(new RegExp(SystemPropertiesI18nKey.SpendingLimitModeOff));
     expect(getCostObject()).toHaveValue('ORG');
     await user.click(getCostObject());
     await user.tab();

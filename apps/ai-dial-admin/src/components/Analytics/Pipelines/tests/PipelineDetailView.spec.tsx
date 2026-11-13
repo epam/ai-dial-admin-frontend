@@ -671,7 +671,7 @@ describe('PipelineDetailView', () => {
   test('still offers the rule its own target even though it is taken', async () => {
     renderView();
 
-    // The 2.0 select carries the chosen option as the value of its readonly combobox, not as text.
-    expect(await screen.findByDisplayValue('turn_feedback')).toBeTruthy();
+    // The 2.0 select draws the chosen option in the content slot; the input value stays empty.
+    expect(await screen.findByText('turn_feedback')).toBeTruthy();
   });
 });

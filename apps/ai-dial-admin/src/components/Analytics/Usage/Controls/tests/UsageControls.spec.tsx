@@ -34,27 +34,26 @@ describe('UsageControls', () => {
   test('names the view and the comparison the page is reading under', () => {
     renderControls();
 
-    expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeTruthy();
-    expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) })).toBeTruthy();
   });
 
   test('states the selected view and comparison in their own fields', () => {
     renderControls();
 
-    const viewField = screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }) as HTMLInputElement;
-    const compareField = screen.getByRole('combobox', {
-      name: AnalyticsUsageI18nKey.CompareLabel,
-    }) as HTMLInputElement;
-
-    expect(viewField.value).toContain(AnalyticsUsageI18nKey.ViewLlm);
-    expect(compareField.value).toContain(AnalyticsUsageI18nKey.ComparePreviousPeriod);
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }),
+    ).toHaveAccessibleName(new RegExp(AnalyticsUsageI18nKey.ViewLlm));
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }),
+    ).toHaveAccessibleName(new RegExp(AnalyticsUsageI18nKey.ComparePreviousPeriod));
   });
 
   test('offers only the views it is handed, as an entity dashboard does, even when that is one', async () => {
     const user = userEvent.setup();
     renderControls({ views: [UsageView.Llm] });
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }));
 
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([AnalyticsUsageI18nKey.ViewLlm]);
   });
@@ -80,7 +79,7 @@ describe('UsageControls', () => {
     const onViewChange = vi.fn();
     renderControls({ onViewChange });
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }));
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
 
     expect(onViewChange).toHaveBeenCalledWith(UsageView.Mcp);
@@ -90,7 +89,7 @@ describe('UsageControls', () => {
     const user = userEvent.setup();
     renderControls();
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }));
 
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
       AnalyticsUsageI18nKey.ViewLlm,
@@ -104,7 +103,7 @@ describe('UsageControls', () => {
     const onCompareChange = vi.fn();
     renderControls({ onCompareChange });
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }));
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.CompareOff }));
 
     expect(onCompareChange).toHaveBeenCalledWith(ComparePeriod.Off);
@@ -115,7 +114,7 @@ describe('UsageControls', () => {
     const onCompareChange = vi.fn();
     renderControls({ onCompareChange });
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }));
 
     expect(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ComparePreviousMonth })).toBeInTheDocument();
 

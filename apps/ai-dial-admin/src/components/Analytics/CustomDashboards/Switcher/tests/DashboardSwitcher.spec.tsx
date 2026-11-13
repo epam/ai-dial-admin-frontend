@@ -55,7 +55,7 @@ describe('DashboardSwitcher', () => {
 
   const openSwitcher = async () => {
     const user = userEvent.setup();
-    await user.click(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.Switcher }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Switcher}`) }));
     return user;
   };
 

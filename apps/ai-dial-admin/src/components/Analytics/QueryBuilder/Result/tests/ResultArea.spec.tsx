@@ -182,7 +182,7 @@ describe('QueryBuilder :: ResultArea', () => {
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
@@ -213,7 +213,7 @@ describe('QueryBuilder :: ResultArea', () => {
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 

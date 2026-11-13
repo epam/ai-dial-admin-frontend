@@ -273,8 +273,8 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration?.isEditorEnabled && (
               <div className="flex-1 flex flex-row items-center gap-3">
-                {/* ui-kit Select has no content-width mode: its field is an input with the browser's default width. */}
-                <div className="shrink-0 [&_input]:field-sizing-content">
+                {/* Select 2.0 draws the label in the content slot; shrink the field to that text, not the collapsed input. */}
+                <div className="shrink-0 [&_.dial-kit-select]:!w-auto [&_[aria-label=input-container]]:!w-auto">
                   <VersionsSelect
                     selected={image.id}
                     versions={versions}

@@ -22,7 +22,9 @@ describe('SettingsModal', () => {
     expect(screen.getByText(SettingsModalI18nKey.Settings)).toBeInTheDocument();
 
     expect(screen.getByText(SettingsModalI18nKey.Theme)).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: SettingsModalI18nKey.Theme })).toHaveDisplayValue('Light');
+    const theme = screen.getByRole('combobox', { name: `${SettingsModalI18nKey.Theme}, Light` });
+    expect(theme).toHaveValue('');
+    expect(screen.getByText('Light')).toBeInTheDocument();
 
     const saveBtn = screen.getByRole('button', { name: ButtonsI18nKey.Save });
 

@@ -135,7 +135,7 @@ describe('UsageDashboard', () => {
 
     expect(screen.getByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeTruthy();
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }));
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeNull();
@@ -148,7 +148,7 @@ describe('UsageDashboard', () => {
     await settled();
     runQueryMock.mockClear();
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }));
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewRoutes }));
 
     // The same eight reads against the new view: comparison stays on, so each window is read again.
@@ -156,8 +156,8 @@ describe('UsageDashboard', () => {
     expect(runQueryMock).toHaveBeenCalledTimes(8);
     expect(groupings().filter((grouping) => grouping === 'route_owner')).toHaveLength(3);
     expect(
-      (screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }) as HTMLInputElement).value,
-    ).toContain(AnalyticsUsageI18nKey.ComparePreviousPeriod);
+      screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }),
+    ).toHaveAccessibleName(new RegExp(AnalyticsUsageI18nKey.ComparePreviousPeriod));
     expect(screen.queryByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeNull();
   });
 

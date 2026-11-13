@@ -35,10 +35,9 @@ interface Props {
 }
 
 /*
- * Explicit widths, because the 2.0 `Select` cannot shrink-wrap its own text: its field is an
- * `<input>` at `width: 100%`, and an input with no `size` falls back to a twenty-character
- * intrinsic width — which is why both selects rendered the same ~200px whatever they said. Each one
- * is sized to its longest option instead, so the controls make one row.
+ * Explicit widths, because the 2.0 `Select` field defaults to `width: 100%` and does not
+ * shrink-wrap the content-slot label. Each control is sized to its longest option instead, so the
+ * row stays compact.
  */
 const VIEW_SELECT_WIDTH = 'w-[124px]';
 
