@@ -10,7 +10,11 @@ import {
   ValueType,
 } from '@/src/models/evaluation/structured-query';
 
-import { buildTestSuitesForDeploymentQuery, EVAL_TRENDS_SUITES_PAGE_SIZE } from '../build-suites-for-deployment-query';
+import {
+  buildTestSuitesForDeploymentQuery,
+  EVAL_TRENDS_SUITES_PAGE_SIZE,
+  toStoredDeploymentId,
+} from '../build-suites-for-deployment-query';
 
 describe('buildTestSuitesForDeploymentQuery', () => {
   test('filters by deployment_ref::id or mcp_deployment_ref::id and sorts by name', () => {
@@ -47,6 +51,13 @@ describe('buildTestSuitesForDeploymentQuery', () => {
       },
     });
     expect(query.select?.some((column) => column.expr.type === ExprType.Field && column.expr.name === 'id')).toBe(true);
+  });
+
+  test('encodes each path segment so a folder with spaces matches the stored deployment id', () => {
+    expect(toStoredDeploymentId('applications/public/QA/Code Apps ALS/msh-oauth-resource-app__1.0.0')).toBe(
+      'applications/public/QA/Code%20Apps%20ALS/msh-oauth-resource-app__1.0.0',
+    );
+    expect(toStoredDeploymentId('gpt-4')).toBe('gpt-4');
   });
 
   test('offsets by page size for later pages', () => {
