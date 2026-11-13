@@ -25,6 +25,8 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { isFullAdminCaller } from '@/src/server/user-access';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { buildApplicationTracesUrls } from '@/src/utils/grafana/build-application-traces-urls';
+import { getGrafanaConfig } from '@/src/utils/grafana/get-grafana-config';
 import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
 import { getApp, getConfigFileApplication, getPlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
 
@@ -127,6 +129,11 @@ export default async function Page(params: {
     notFound();
   }
 
+  // No Core path (a config-file application) means no deployment to match, so no links.
+  const grafanaConfig = getGrafanaConfig(process.env);
+  const appPath = app._metadata?.path;
+  const grafanaLinks = grafanaConfig && appPath ? buildApplicationTracesUrls(grafanaConfig, appPath) : null;
+
   return (
     <SaveValidationContextProvider>
       {isPlatformBucket ? (
@@ -143,6 +150,7 @@ export default async function Page(params: {
           catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
           isConfigFileSource={isConfigFileMode}
+          grafanaLinks={grafanaLinks}
         />
       ) : (
         <AppView
@@ -156,6 +164,7 @@ export default async function Page(params: {
           translators={translators}
           catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
+          grafanaLinks={grafanaLinks}
         />
       )}
     </SaveValidationContextProvider>

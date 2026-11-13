@@ -844,6 +844,12 @@ export default {
       'This interceptor is applied to all entities in the system as a global. To manage entity relationships list, use the JSON editor.',
     GlobalMessage: 'Interceptor is Global',
   },
+  GrafanaLinks: {
+    Traces: 'Traces in Grafana',
+    AllTraces: 'All traces',
+    ErrorTraces: 'Errors only',
+    OpensInNewTab: 'opens in a new tab',
+  },
   Telemetry: {
     SystemUsage: 'System Usage',
     EntitiesConsumption: 'Calls by Entities',
