@@ -2,7 +2,7 @@
 
 import { FC, useMemo, useState } from 'react';
 
-import { Checkbox, Input, Popup, PopupSize, Switch } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Input, Label, Popup, PopupSize, Switch } from '@epam/ai-dial-ui-kit';
 
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { ButtonsI18nKey, ResourceDependenciesI18nKey } from '@/src/constants/i18n';
@@ -87,7 +87,7 @@ const DependencyModal: FC<Props> = ({ isEdit, initialValues, otherLinkIds, onClo
           onChange={(path) => onChangeValues({ path: path ?? '' }, 'path')}
         />
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-secondary">{t(ResourceDependenciesI18nKey.Access)}</legend>
+          <Label label={t(ResourceDependenciesI18nKey.Access)} />
           <div className="flex flex-row gap-6">
             <Checkbox
               id="resourceDependencyRead"

@@ -40,7 +40,7 @@ const getRootIssue = (segments: string[], rawSegmentCount: number): ValidationIs
     return { key: ResourceDependenciesI18nKey.PathRoot, params: { roots: DECLARABLE_TYPE_ROOTS.join(', ') } };
   }
   if (rawSegmentCount < MIN_RAW_SEGMENTS) {
-    return { key: ResourceDependenciesI18nKey.PathTypeRoot, params: { type: root } };
+    return { key: ResourceDependenciesI18nKey.PathTypeRoot, params: { type: root, bucket: '{bucket}' } };
   }
   return null;
 };

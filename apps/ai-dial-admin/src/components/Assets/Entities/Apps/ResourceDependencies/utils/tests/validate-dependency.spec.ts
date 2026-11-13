@@ -48,16 +48,18 @@ describe('validatePath', () => {
     expect(validatePath('users/abc/files/x')?.key).toBe(ResourceDependenciesI18nKey.PathUsers);
   });
 
-  test('rejects the bare type root', () => {
-    const issue = validatePath('files/');
-
-    expect(issue?.key).toBe(ResourceDependenciesI18nKey.PathTypeRoot);
-    expect(issue?.params?.type).toBe('files');
+  test.each([
+    ['files/', 'files'],
+    ['files/public', 'files'],
+    ['skills/{current-user}', 'skills'],
+  ])('rejects incomplete path %s with a bucket example', (path, root) => {
+    expect(validatePath(path)).toEqual({
+      key: ResourceDependenciesI18nKey.PathTypeRoot,
+      params: { type: root, bucket: '{bucket}' },
+    });
   });
 
-  test('rejects a bucket with nothing after it, accepting it as a folder', () => {
-    expect(validatePath('files/public')?.key).toBe(ResourceDependenciesI18nKey.PathTypeRoot);
-    expect(validatePath('skills/{current-user}')?.key).toBe(ResourceDependenciesI18nKey.PathTypeRoot);
+  test('accepts a bucket path with a trailing slash as a folder', () => {
     expect(validatePath('files/public/')).toBeNull();
     expect(validatePath('skills/{current-user}/')).toBeNull();
   });
