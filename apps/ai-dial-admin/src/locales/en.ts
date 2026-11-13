@@ -4343,7 +4343,7 @@ export default {
     SessionsSourceDescription:
       'Chooses the table the Sessions pages read and the field that plays each role in it. The analytics service stores one value for the whole instance.',
     SessionsSourceDefaultInUse:
-      'No Sessions source is saved, so the Sessions pages read the sessions table with the fields shown below. If that table is ever missing, the Sessions page is hidden from the menu until a table is saved here.',
+      'No Sessions source is saved, so the Sessions pages read the sessions table with its default fields. Choose another table to map its fields. If the sessions table is ever missing, the Sessions page is hidden from the menu until a table is saved here.',
     SessionsSourceDefaultMissing:
       'No Sessions source is saved and there is no sessions table, so the Sessions page is hidden from the menu. Choose a table and save to show it.',
     SessionsSourceBaseTableLabel: 'Base table',

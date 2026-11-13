@@ -187,6 +187,7 @@ const SystemProperties: FC<Props> = ({
             fields={sessionsSource.fields}
             isLoading={sessionsSource.isLoading}
             isUnsaved={sessionsSource.isUnsaved}
+            isUsingDefaults={sessionsSource.isUsingDefaults}
             isDefaultTableMissing={sessionsSource.isDefaultTableMissing}
             onChangeBaseTable={sessionsSource.onChangeBaseTable}
             onChangeRole={sessionsSource.onChangeRole}
